@@ -204,7 +204,7 @@ public class PlexPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public async Task Should_Not_Throw_For_Null_PlexPath()
     {
@@ -236,7 +236,7 @@ public class PlexPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public async Task Should_Not_Throw_For_Null_LocalPath()
     {

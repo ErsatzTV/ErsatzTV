@@ -17,4 +17,5 @@ public class Metadata
     public List<Studio> Studios { get; set; }
     public List<Actor> Actors { get; set; }
     public List<MetadataGuid> Guids { get; set; }
+    public List<Subtitle> Subtitles { get; set; }
 }

@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -10,10 +11,7 @@ public class MetadataRepository : IMetadataRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<bool> RemoveActor(Actor actor)
     {
@@ -165,6 +163,8 @@ public class MetadataRepository : IMetadataRepository
                     existingStream.AttachedPic = incomingStream.AttachedPic;
                     existingStream.PixelFormat = incomingStream.PixelFormat;
                     existingStream.BitsPerRawSample = incomingStream.BitsPerRawSample;
+                    existingStream.FileName = incomingStream.FileName;
+                    existingStream.MimeType = incomingStream.MimeType;
                 }
 
                 var chaptersToAdd = incoming.Chapters
@@ -479,6 +479,74 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
+    public async Task<bool> UpdateSubtitles(Metadata metadata, List<Subtitle> subtitles)
+    {
+        int metadataId = metadata.Id;
+
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<Metadata> maybeMetadata = metadata switch
+        {
+            EpisodeMetadata => await dbContext.EpisodeMetadata
+                .Include(em => em.Subtitles)
+                .SelectOneAsync(em => em.Id, em => em.Id == metadataId)
+                .MapT(em => (Metadata)em),
+            MovieMetadata => await dbContext.MovieMetadata
+                .Include(mm => mm.Subtitles)
+                .SelectOneAsync(mm => mm.Id, mm => mm.Id == metadataId)
+                .MapT(mm => (Metadata)mm),
+            MusicVideoMetadata => await dbContext.MusicVideoMetadata
+                .Include(mvm => mvm.Subtitles)
+                .SelectOneAsync(mvm => mvm.Id, mm => mm.Id == metadataId)
+                .MapT(mvm => (Metadata)mvm),
+            OtherVideoMetadata => await dbContext.OtherVideoMetadata
+                .Include(ovm => ovm.Subtitles)
+                .SelectOneAsync(ovm => ovm.Id, mm => mm.Id == metadataId)
+                .MapT(ovm => (Metadata)ovm),
+            _ => None
+        };
+
+        foreach (Metadata existing in maybeMetadata)
+        {
+            var toAdd = subtitles.Filter(s => existing.Subtitles.All(es => es.StreamIndex != s.StreamIndex)).ToList();
+            var toRemove = existing.Subtitles.Filter(es => subtitles.All(s => s.StreamIndex != es.StreamIndex))
+                .ToList();
+            var toUpdate = subtitles.Except(toAdd).ToList();
+
+            if (toAdd.Any() || toRemove.Any() || toUpdate.Any())
+            {
+                // add
+                existing.Subtitles.AddRange(toAdd);
+
+                // remove
+                existing.Subtitles.RemoveAll(s => toRemove.Contains(s));
+
+                // update
+                foreach (Subtitle incomingSubtitle in toUpdate)
+                {
+                    Subtitle existingSubtitle =
+                        existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
+
+                    existingSubtitle.Codec = incomingSubtitle.Codec;
+                    existingSubtitle.Default = incomingSubtitle.Default;
+                    existingSubtitle.Forced = incomingSubtitle.Forced;
+                    existingSubtitle.SDH = incomingSubtitle.SDH;
+                    existingSubtitle.Language = incomingSubtitle.Language;
+                    existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
+                    existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+                }
+
+                return await dbContext.SaveChangesAsync() > 0;
+            }
+
+            // nothing to do
+            return true;
+        }
+
+        // no metadata
+        return false;
+    }
+
     public async Task<bool> RemoveGenre(Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -491,7 +559,9 @@ public class MetadataRepository : IMetadataRepository
     public async Task<bool> RemoveTag(Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id = @TagId", new { TagId = tag.Id })
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Tag WHERE Id = @TagId AND ExternalCollectionId = @ExternalCollectionId",
+                new { TagId = tag.Id, tag.ExternalCollectionId })
             .Map(result => result > 0);
     }
 

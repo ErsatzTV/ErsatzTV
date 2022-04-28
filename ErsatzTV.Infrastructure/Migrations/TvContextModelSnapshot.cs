@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.4");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -239,10 +239,16 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Number")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PreferredLanguageCode")
+                    b.Property<string>("PreferredAudioLanguageCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredSubtitleLanguageCode")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("StreamingMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SubtitleMode")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("UniqueId")
@@ -391,6 +397,26 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.ToTable("Director", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.EmbyCollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmbyCollection", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.EmbyConnection", b =>
                 {
                     b.Property<int>("Id")
@@ -499,23 +525,22 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("AudioChannels")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("AudioCodec")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("AudioFormat")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("AudioSampleRate")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool?>("DeinterlaceVideo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<int>("HardwareAcceleration")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("NormalizeAudio")
-                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("NormalizeFramerate")
                         .ValueGeneratedOnAdd()
@@ -525,16 +550,10 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<bool>("NormalizeLoudness")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("NormalizeVideo")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("ResolutionId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ThreadCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Transcode")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("VaapiDevice")
@@ -548,9 +567,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<int>("VideoBufferSize")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("VideoCodec")
-                        .HasColumnType("TEXT");
 
                     b.Property<int>("VideoFormat")
                         .HasColumnType("INTEGER");
@@ -666,6 +682,26 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("SongMetadataId");
 
                     b.ToTable("Genre");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.JellyfinCollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("JellyfinCollection", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.JellyfinConnection", b =>
@@ -905,6 +941,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<bool>("Default")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("FileName")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Forced")
                         .HasColumnType("INTEGER");
 
@@ -919,6 +958,9 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<int>("MediaVersionId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MimeType")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PixelFormat")
                         .HasColumnType("TEXT");
@@ -1332,14 +1374,28 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("PlayoutId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("PreferredAudioLanguageCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredSubtitleLanguageCode")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("Start")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("SubtitleMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("WatermarkId")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("PlayoutId");
+
+                    b.HasIndex("WatermarkId");
 
                     b.ToTable("PlayoutItem", (string)null);
                 });
@@ -1349,6 +1405,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AnchorDate")
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("CollectionId")
                         .HasColumnType("INTEGER");
@@ -1500,6 +1559,12 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int?>("PreRollFillerId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("PreferredAudioLanguageCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredSubtitleLanguageCode")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
@@ -1509,7 +1574,13 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<TimeSpan?>("StartTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("SubtitleMode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("TailFillerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("WatermarkId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -1533,6 +1604,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("SmartCollectionId");
 
                     b.HasIndex("TailFillerId");
+
+                    b.HasIndex("WatermarkId");
 
                     b.ToTable("ProgramScheduleItem", (string)null);
                 });
@@ -1797,6 +1870,97 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.ToTable("Style");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Subtitle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ArtistMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Codec")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Default")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("EpisodeMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Forced")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsExtracted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Language")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MovieMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MusicVideoMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("OtherVideoMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("SDH")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<int?>("SeasonMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ShowMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SongMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StreamIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SubtitleKind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
+
+                    b.HasIndex("EpisodeMetadataId");
+
+                    b.HasIndex("MovieMetadataId");
+
+                    b.HasIndex("MusicVideoMetadataId");
+
+                    b.HasIndex("OtherVideoMetadataId");
+
+                    b.HasIndex("SeasonMetadataId");
+
+                    b.HasIndex("ShowMetadataId");
+
+                    b.HasIndex("SongMetadataId");
+
+                    b.ToTable("Subtitle", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -1808,6 +1972,9 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<int?>("EpisodeMetadataId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ExternalCollectionId")
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("MovieMetadataId")
                         .HasColumnType("INTEGER");
@@ -2298,6 +2465,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.Episode");
 
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Key")
                         .HasColumnType("TEXT");
 
@@ -2307,6 +2477,9 @@ namespace ErsatzTV.Infrastructure.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexMovie", b =>
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.Movie");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Key")
                         .HasColumnType("TEXT");
@@ -2318,6 +2491,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.Season");
 
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Key")
                         .HasColumnType("TEXT");
 
@@ -2327,6 +2503,9 @@ namespace ErsatzTV.Infrastructure.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexShow", b =>
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.Show");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Key")
                         .HasColumnType("TEXT");
@@ -2942,9 +3121,16 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany()
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("MediaItem");
 
                     b.Navigation("Playout");
+
+                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutProgramScheduleAnchor", b =>
@@ -3089,6 +3275,11 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasForeignKey("TailFillerId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
+                        .WithMany()
+                        .HasForeignKey("WatermarkId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Collection");
 
                     b.Navigation("FallbackFiller");
@@ -3108,6 +3299,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("SmartCollection");
 
                     b.Navigation("TailFiller");
+
+                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.SeasonMetadata", b =>
@@ -3188,6 +3381,45 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .WithMany("Styles")
                         .HasForeignKey("ArtistMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Subtitle", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("ArtistMetadataId");
+
+                    b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("EpisodeMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MovieMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("MovieMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MusicVideoMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("MusicVideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.OtherVideoMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("OtherVideoMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.SeasonMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("SeasonMetadataId");
+
+                    b.HasOne("ErsatzTV.Core.Domain.ShowMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("ShowMetadataId");
+
+                    b.HasOne("ErsatzTV.Core.Domain.SongMetadata", null)
+                        .WithMany("Subtitles")
+                        .HasForeignKey("SongMetadataId");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Tag", b =>
@@ -3609,6 +3841,8 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Navigation("Styles");
 
+                    b.Navigation("Subtitles");
+
                     b.Navigation("Tags");
                 });
 
@@ -3639,6 +3873,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Guids");
 
                     b.Navigation("Studios");
+
+                    b.Navigation("Subtitles");
 
                     b.Navigation("Tags");
 
@@ -3692,6 +3928,8 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Navigation("Studios");
 
+                    b.Navigation("Subtitles");
+
                     b.Navigation("Tags");
 
                     b.Navigation("Writers");
@@ -3716,6 +3954,8 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Navigation("Studios");
 
+                    b.Navigation("Subtitles");
+
                     b.Navigation("Tags");
                 });
 
@@ -3730,6 +3970,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Guids");
 
                     b.Navigation("Studios");
+
+                    b.Navigation("Subtitles");
 
                     b.Navigation("Tags");
                 });
@@ -3760,6 +4002,8 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Navigation("Studios");
 
+                    b.Navigation("Subtitles");
+
                     b.Navigation("Tags");
                 });
 
@@ -3774,6 +4018,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Guids");
 
                     b.Navigation("Studios");
+
+                    b.Navigation("Subtitles");
 
                     b.Navigation("Tags");
                 });
@@ -3794,6 +4040,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Guids");
 
                     b.Navigation("Studios");
+
+                    b.Navigation("Subtitles");
 
                     b.Navigation("Tags");
                 });

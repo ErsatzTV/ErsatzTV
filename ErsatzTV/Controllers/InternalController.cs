@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using CliWrap;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Extensions;
 using MediatR;
@@ -43,11 +44,27 @@ public class InternalController : ControllerBase
                     result.Match<IActionResult>(
                         processModel =>
                         {
-                            Process process = processModel.Process;
+                            Command command = processModel.Process;
 
-                            _logger.LogInformation(
-                                "ffmpeg arguments {FFmpegArguments}",
-                                string.Join(" ", process.StartInfo.ArgumentList));
+                            _logger.LogInformation("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+                            var process = new Process
+                            {
+                                StartInfo = new ProcessStartInfo
+                                {
+                                    FileName = command.TargetFilePath,
+                                    Arguments = command.Arguments,
+                                    RedirectStandardOutput = true,
+                                    RedirectStandardError = false,
+                                    UseShellExecute = false,
+                                    CreateNoWindow = true
+                                }
+                            };
+
+                            foreach ((string key, string value) in command.EnvironmentVariables)
+                            {
+                                process.StartInfo.Environment[key] = value;
+                            }
+
                             process.Start();
                             return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
                         },

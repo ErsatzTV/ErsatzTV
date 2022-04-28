@@ -20,7 +20,7 @@ public class CreateFFmpegProfileHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await validation.Apply(profile => PersistFFmpegProfile(dbContext, profile));
+        return await LanguageExtensions.Apply(validation, profile => PersistFFmpegProfile(dbContext, profile));
     }
 
     private static async Task<CreateFFmpegProfileResult> PersistFFmpegProfile(
@@ -32,19 +32,19 @@ public class CreateFFmpegProfileHandler :
         return new CreateFFmpegProfileResult(ffmpegProfile.Id);
     }
 
-    private async Task<Validation<BaseError, FFmpegProfile>> Validate(TvContext dbContext, CreateFFmpegProfile request) =>
+    private async Task<Validation<BaseError, FFmpegProfile>> Validate(
+        TvContext dbContext,
+        CreateFFmpegProfile request) =>
         (ValidateName(request), ValidateThreadCount(request), await ResolutionMustExist(dbContext, request))
         .Apply(
             (name, threadCount, resolutionId) => new FFmpegProfile
             {
                 Name = name,
                 ThreadCount = threadCount,
-                Transcode = request.Transcode,
                 HardwareAcceleration = request.HardwareAcceleration,
                 VaapiDriver = request.VaapiDriver,
                 VaapiDevice = request.VaapiDevice,
                 ResolutionId = resolutionId,
-                NormalizeVideo = request.NormalizeVideo,
                 VideoFormat = request.VideoFormat,
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,
@@ -54,8 +54,8 @@ public class CreateFFmpegProfileHandler :
                 NormalizeLoudness = request.NormalizeLoudness,
                 AudioChannels = request.AudioChannels,
                 AudioSampleRate = request.AudioSampleRate,
-                NormalizeAudio = request.NormalizeAudio,
-                NormalizeFramerate = request.NormalizeFramerate
+                NormalizeFramerate = request.NormalizeFramerate,
+                DeinterlaceVideo = request.DeinterlaceVideo
             });
 
     private static Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>

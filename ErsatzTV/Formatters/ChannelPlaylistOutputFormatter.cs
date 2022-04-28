@@ -19,5 +19,5 @@ public class ChannelPlaylistOutputFormatter : TextOutputFormatter
 
     public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding) =>
         // ReSharper disable once PossibleNullReferenceException
-        context.HttpContext.Response.WriteAsync(((ChannelPlaylist) context.Object).ToM3U());
+        context.HttpContext.Response.WriteAsync(((ChannelPlaylist)context.Object).ToM3U());
 }

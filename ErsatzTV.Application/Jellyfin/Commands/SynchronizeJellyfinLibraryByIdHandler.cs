@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Threading.Channels;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -18,6 +19,7 @@ public class SynchronizeJellyfinLibraryByIdHandler :
 
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
+    private readonly ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeJellyfinLibraryByIdHandler> _logger;
 
@@ -31,6 +33,7 @@ public class SynchronizeJellyfinLibraryByIdHandler :
         ILibraryRepository libraryRepository,
         IEntityLocker entityLocker,
         IConfigElementRepository configElementRepository,
+        ChannelWriter<IJellyfinBackgroundServiceRequest> jellyfinWorkerChannel,
         ILogger<SynchronizeJellyfinLibraryByIdHandler> logger)
     {
         _mediaSourceRepository = mediaSourceRepository;
@@ -40,61 +43,81 @@ public class SynchronizeJellyfinLibraryByIdHandler :
         _libraryRepository = libraryRepository;
         _entityLocker = entityLocker;
         _configElementRepository = configElementRepository;
+        _jellyfinWorkerChannel = jellyfinWorkerChannel;
         _logger = logger;
     }
 
     public Task<Either<BaseError, string>> Handle(
         ForceSynchronizeJellyfinLibraryById request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
     public Task<Either<BaseError, string>> Handle(
         SynchronizeJellyfinLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
-    private Task<Either<BaseError, string>>
-        Handle(ISynchronizeJellyfinLibraryById request) =>
-        Validate(request)
-            .MapT(parameters => Synchronize(parameters).Map(_ => parameters.Library.Name))
-            .Bind(v => v.ToEitherAsync());
-
-    private async Task<Unit> Synchronize(RequestParameters parameters)
+    private async Task<Either<BaseError, string>>
+        HandleImpl(ISynchronizeJellyfinLibraryById request, CancellationToken cancellationToken)
     {
-        var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        return await validation.Match(
+            parameters => Synchronize(parameters, cancellationToken),
+            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+    }
+
+    private async Task<Either<BaseError, string>> Synchronize(
+        RequestParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            switch (parameters.Library.MediaKind)
+            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+            if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                case LibraryMediaKind.Movies:
-                    await _jellyfinMovieLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection.Address,
-                        parameters.ConnectionParameters.ApiKey,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
-                case LibraryMediaKind.Shows:
-                    await _jellyfinTelevisionLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection.Address,
-                        parameters.ConnectionParameters.ApiKey,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
+                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
+                {
+                    LibraryMediaKind.Movies =>
+                        await _jellyfinMovieLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection.Address,
+                            parameters.ConnectionParameters.ApiKey,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath,
+                            cancellationToken),
+                    LibraryMediaKind.Shows =>
+                        await _jellyfinTelevisionLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection.Address,
+                            parameters.ConnectionParameters.ApiKey,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath,
+                            cancellationToken),
+                    _ => Unit.Default
+                };
+
+                if (result.IsRight)
+                {
+                    parameters.Library.LastScan = DateTime.UtcNow;
+                    await _libraryRepository.UpdateLastScan(parameters.Library);
+
+                    await _jellyfinWorkerChannel.WriteAsync(
+                        new SynchronizeJellyfinCollections(parameters.Library.MediaSourceId),
+                        cancellationToken);
+                }
+
+                return result.Map(_ => parameters.Library.Name);
+            }
+            else
+            {
+                _logger.LogDebug("Skipping unforced scan of jellyfin media library {Name}", parameters.Library.Name);
             }
 
-            parameters.Library.LastScan = DateTime.UtcNow;
-            await _libraryRepository.UpdateLastScan(parameters.Library);
+            return parameters.Library.Name;
         }
-        else
+        finally
         {
-            _logger.LogDebug(
-                "Skipping unforced scan of jellyfin media library {Name}",
-                parameters.Library.Name);
+            _entityLocker.UnlockLibrary(parameters.Library.Id);
         }
-
-        _entityLocker.UnlockLibrary(parameters.Library.Id);
-        return Unit.Default;
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(

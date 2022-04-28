@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CliWrap;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Streaming;
@@ -43,6 +44,18 @@ public class IptvController : ControllerBase
         _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString()))
             .Map<ChannelGuide, IActionResult>(Ok);
 
+    [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
+    public Task<IActionResult> GetHDHRVideo(string channelNumber, [FromQuery] string mode = "ts")
+    {
+        // don't redirect to the correct channel mode for HDHR clients; always use TS
+        if (mode != "ts" && mode != "ts-legacy")
+        {
+            mode = "ts";
+        }
+
+        return GetTransportStreamVideo(channelNumber, mode);
+    }
+
     [HttpGet("iptv/channel/{channelNumber}.ts")]
     public async Task<IActionResult> GetTransportStreamVideo(
         string channelNumber,
@@ -80,12 +93,28 @@ public class IptvController : ControllerBase
                 result => result.Match<IActionResult>(
                     processModel =>
                     {
-                        Process process = processModel.Process;
+                        Command command = processModel.Process;
 
                         _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
-                        // _logger.LogDebug(
-                        //     "ffmpeg concat arguments {FFmpegArguments}",
-                        //     string.Join(" ", process.StartInfo.ArgumentList));
+                        _logger.LogInformation("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+                        var process = new Process
+                        {
+                            StartInfo = new ProcessStartInfo
+                            {
+                                FileName = command.TargetFilePath,
+                                Arguments = command.Arguments,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = false,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            }
+                        };
+
+                        foreach ((string key, string value) in command.EnvironmentVariables)
+                        {
+                            process.StartInfo.Environment[key] = value;
+                        }
+
                         process.Start();
                         return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
                     },

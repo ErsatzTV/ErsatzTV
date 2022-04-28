@@ -165,7 +165,7 @@ public class EpisodeNfoReader : IEpisodeNfoReader
         if (nfo != null)
         {
             var actor = new ActorNfo();
-            var element = (XElement) XNode.ReadFrom(reader);
+            var element = (XElement)XNode.ReadFrom(reader);
 
             XElement name = element.Element("name");
             if (name != null)

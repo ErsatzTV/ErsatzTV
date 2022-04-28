@@ -4,7 +4,7 @@ namespace ErsatzTV.Core.Domain;
 
 public class Channel
 {
-    public static string NumberValidator = @"^[0-9]+(\.[0-9])?$";
+    public static string NumberValidator = @"^[0-9]+(\.[0-9]{1,2})?$";
 
     public Channel(Guid uniqueId) => UniqueId = uniqueId;
     public int Id { get; set; }
@@ -22,5 +22,7 @@ public class Channel
     public StreamingMode StreamingMode { get; set; }
     public List<Playout> Playouts { get; set; }
     public List<Artwork> Artwork { get; set; }
-    public string PreferredLanguageCode { get; set; }
+    public string PreferredAudioLanguageCode { get; set; }
+    public string PreferredSubtitleLanguageCode { get; set; }
+    public ChannelSubtitleMode SubtitleMode { get; set; }
 }

@@ -46,7 +46,7 @@
                 }
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Language">@context.PreferredLanguageCode</MudTd>
+            <MudTd DataLabel="Language">@context.PreferredAudioLanguageCode</MudTd>
             <MudTd DataLabel="Mode">@GetStreamingMode(context.StreamingMode)</MudTd>
             <MudTd DataLabel="FFmpeg Profile">
                 @if (context.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
@@ -127,11 +127,11 @@
             Option<CultureInfo> maybeCultureInfo = allCultures.Find(
                 ci => string.Equals(
                     ci.ThreeLetterISOLanguageName,
-                    channel.PreferredLanguageCode,
+                    channel.PreferredAudioLanguageCode,
                     StringComparison.OrdinalIgnoreCase));
 
             maybeCultureInfo.Match(
-                cultureInfo => processedChannels.Add(channel with { PreferredLanguageCode = cultureInfo.EnglishName }),
+                cultureInfo => processedChannels.Add(channel with { PreferredAudioLanguageCode = cultureInfo.EnglishName }),
                 () => processedChannels.Add(channel));
         }
 

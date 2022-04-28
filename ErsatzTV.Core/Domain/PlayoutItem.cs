@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain;
 
-[DebuggerDisplay("{MediaItemId} - {Start} - {Finish}")]
+[DebuggerDisplay("{MediaItemId} - {StartOffset} - {FinishOffset}")]
 public class PlayoutItem
 {
     public int Id { get; set; }
@@ -20,9 +20,14 @@ public class PlayoutItem
     public TimeSpan InPoint { get; set; }
     public TimeSpan OutPoint { get; set; }
     public string ChapterTitle { get; set; }
-
+    public ChannelWatermark Watermark { get; set; }
+    public int? WatermarkId { get; set; }
+    public string PreferredAudioLanguageCode { get; set; }
+    public string PreferredSubtitleLanguageCode { get; set; }
+    public ChannelSubtitleMode? SubtitleMode { get; set; }
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
+
     public DateTimeOffset? GuideFinishOffset => GuideFinish.HasValue
         ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
         : null;

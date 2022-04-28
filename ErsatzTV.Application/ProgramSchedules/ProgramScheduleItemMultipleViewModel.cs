@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -25,7 +26,11 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel midRollFiller,
         FillerPresetViewModel postRollFiller,
         FillerPresetViewModel tailFiller,
-        FillerPresetViewModel fallbackFiller) : base(
+        FillerPresetViewModel fallbackFiller,
+        WatermarkViewModel watermark,
+        string preferredAudioLanguageCode,
+        string preferredSubtitleLanguageCode,
+        ChannelSubtitleMode? subtitleMode) : base(
         id,
         index,
         startType,
@@ -43,7 +48,11 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         midRollFiller,
         postRollFiller,
         tailFiller,
-        fallbackFiller) =>
+        fallbackFiller,
+        watermark,
+        preferredAudioLanguageCode,
+        preferredSubtitleLanguageCode,
+        subtitleMode) =>
         Count = count;
 
     public int Count { get; }

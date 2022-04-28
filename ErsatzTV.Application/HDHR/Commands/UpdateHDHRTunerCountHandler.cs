@@ -4,7 +4,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.HDHR;
 
-public class UpdateHDHRTunerCountHandler : MediatR.IRequestHandler<UpdateHDHRTunerCount, Either<BaseError, Unit>>
+public class UpdateHDHRTunerCountHandler : IRequestHandler<UpdateHDHRTunerCount, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
 

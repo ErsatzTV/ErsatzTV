@@ -22,4 +22,8 @@ public interface IProgramScheduleItemRequest
     int? PostRollFillerId { get; }
     int? TailFillerId { get; }
     int? FallbackFillerId { get; }
+    int? WatermarkId { get; }
+    string PreferredAudioLanguageCode { get; }
+    string PreferredSubtitleLanguageCode { get; }
+    ChannelSubtitleMode? SubtitleMode { get; }
 }

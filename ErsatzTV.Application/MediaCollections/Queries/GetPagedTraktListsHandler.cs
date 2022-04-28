@@ -9,10 +9,8 @@ public class GetPagedTraktListsHandler : IRequestHandler<GetPagedTraktLists, Pag
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPagedTraktListsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetPagedTraktListsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<PagedTraktListsViewModel> Handle(
         GetPagedTraktLists request,

@@ -10,12 +10,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class DeleteTraktListHandler : TraktCommandBase, MediatR.IRequestHandler<DeleteTraktList, Either<BaseError, Unit>>
+public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTraktList, Either<BaseError, Unit>>
 {
-    private readonly ISearchRepository _searchRepository;
-    private readonly ISearchIndex _searchIndex;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
+    private readonly ISearchIndex _searchIndex;
+    private readonly ISearchRepository _searchRepository;
 
     public DeleteTraktListHandler(
         ITraktApiClient traktApiClient,

@@ -11,7 +11,7 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
     private readonly CancellationTokenSource _cts = new();
 
     protected CancellationToken CancellationToken => _cts.Token;
-        
+
     [Inject]
     private NavigationManager NavManager { get; set; }
 

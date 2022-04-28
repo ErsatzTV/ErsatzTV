@@ -83,4 +83,34 @@ public interface IJellyfinApi
         string includeItemTypes = "Episode",
         [Query]
         bool recursive = true);
+
+    [Get("/Items")]
+    public Task<JellyfinLibraryItemsResponse> GetCollectionLibraryItems(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string userId,
+        [Query]
+        string parentId,
+        [Query]
+        string fields = "Etag",
+        [Query]
+        string includeItemTypes = "BoxSet",
+        [Query]
+        bool recursive = true);
+
+    [Get("/Items")]
+    public Task<JellyfinLibraryItemsResponse> GetCollectionItems(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string userId,
+        [Query]
+        string parentId,
+        [Query]
+        string fields = "Etag",
+        [Query]
+        string includeItemTypes = "Movie,Series,Season,Episode",
+        [Query]
+        bool recursive = true);
 }

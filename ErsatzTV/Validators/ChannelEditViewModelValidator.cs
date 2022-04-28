@@ -10,13 +10,13 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
     public ChannelEditViewModelValidator()
     {
         RuleFor(x => x.Number).Matches(Channel.NumberValidator)
-            .WithMessage("Invalid channel number; one decimal is allowed for subchannels");
+            .WithMessage("Invalid channel number; two decimals are allowed for subchannels");
 
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.Group).NotEmpty();
         RuleFor(x => x.FFmpegProfileId).GreaterThan(0);
 
-        RuleFor(x => x.PreferredLanguageCode)
+        RuleFor(x => x.PreferredAudioLanguageCode)
             .Must(
                 languageCode => CultureInfo.GetCultures(CultureTypes.NeutralCultures)
                     .Any(
@@ -24,7 +24,7 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
                             ci.ThreeLetterISOLanguageName,
                             languageCode,
                             StringComparison.OrdinalIgnoreCase)))
-            .When(vm => !string.IsNullOrWhiteSpace(vm.PreferredLanguageCode))
-            .WithMessage("Preferred language code is invalid");
+            .When(vm => !string.IsNullOrWhiteSpace(vm.PreferredAudioLanguageCode))
+            .WithMessage("Preferred audio language code is invalid");
     }
 }

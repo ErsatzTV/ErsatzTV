@@ -29,5 +29,8 @@ public class PlayoutProgramScheduleAnchorConfiguration : IEntityTypeConfiguratio
             .HasForeignKey(i => i.MediaItemId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
+
+        builder.Property(i => i.AnchorDate)
+            .IsRequired(false);
     }
 }

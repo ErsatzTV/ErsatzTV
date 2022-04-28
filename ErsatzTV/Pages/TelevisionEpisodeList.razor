@@ -85,8 +85,14 @@
                         }
                         @if (episode.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
+                        else if (episode.State == MediaItemState.Unavailable)
+                        {
+                            <div style="position: absolute; right: 10px; top: 8px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
                             </div>
                         }
                     </MudPaper>
@@ -113,6 +119,14 @@
                         <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
                         <MudText>File Not Found:&nbsp;</MudText>
                         <MudText>@episode.Path</MudText>
+                    </div>
+                }
+                else if (episode.State == MediaItemState.Unavailable)
+                {
+                    <div class="mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                        <MudText>Unavailable:&nbsp;</MudText>
+                        <MudText>@episode.LocalPath</MudText>
                     </div>
                 }
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -163,7 +177,7 @@
     private readonly int _pageNumber = 1;
 
     private TelevisionEpisodeCardResultsViewModel _data;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -180,7 +194,7 @@
             }
             catch (Exception)
             {
-                // ignored
+    // ignored
             }
         }
     }
@@ -219,7 +233,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null), _cts.Token);
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }

@@ -4,6 +4,8 @@ public class DecoderMpeg4Cuvid : DecoderBase
 {
     public override string Name => "mpeg4_cuvid";
 
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+
     public override IList<string> InputOptions(InputFile inputFile)
     {
         IList<string> result = base.InputOptions(inputFile);
@@ -13,6 +15,4 @@ public class DecoderMpeg4Cuvid : DecoderBase
 
         return result;
     }
-
-    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
 }

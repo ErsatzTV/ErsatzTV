@@ -11,10 +11,7 @@ public class SongRepository : ISongRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public SongRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public SongRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, MediaItemScanResult<Song>>> GetOrAdd(
         LibraryPath libraryPath,
@@ -102,8 +99,8 @@ public class SongRepository : ISongRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, SongMetadataId) VALUES (@Name, @MetadataId)",
-            new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            "INSERT INTO Tag (Name, SongMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+            new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
     public async Task<List<SongMetadata>> GetSongsForCards(List<int> ids)

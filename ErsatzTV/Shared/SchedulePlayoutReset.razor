@@ -1,0 +1,84 @@
+﻿@using ErsatzTV.Application.Playouts
+@implements IDisposable
+@inject IMediator _mediator
+@inject ISnackbar _snackbar
+@inject ILogger<SchedulePlayoutReset> _logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText>
+                    @FormatText()
+                </MudText>
+            </MudContainer>
+            <MudSelect Class="mb-6 mx-4" Label="Daily Reset Time" @bind-Value="_resetTime">
+                <MudSelectItem Value="@(Option<TimeSpan>.None)">Do not automatically reset</MudSelectItem>
+                @for (var i = 1; i < 48; i++)
+                {
+                    var time = TimeSpan.FromHours(i * 0.5);
+                    string formatted = DateTime.Today.Add(time).ToShortTimeString();
+                    <MudSelectItem Value="@(Option<TimeSpan>.Some(time))">@formatted</MudSelectItem>
+                }
+            </MudSelect>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Save Changes
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int PlayoutId { get; set; }
+
+    [Parameter]
+    public string ChannelName { get; set; }
+
+    [Parameter]
+    public string ScheduleName { get; set; }
+
+    [Parameter]
+    public Option<TimeSpan> DailyResetTime { get; set; }
+
+    private string FormatText() => $"Enter the time that the playout on channel {ChannelName} with schedule {ScheduleName} should reset every day";
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private Option<TimeSpan> _resetTime;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override void OnParametersSet() => _resetTime = DailyResetTime;
+
+    private async Task Submit()
+    {
+        Either<BaseError, PlayoutNameViewModel> maybeResult =
+            await _mediator.Send(new UpdatePlayout(PlayoutId, _resetTime), _cts.Token);
+
+        maybeResult.Match(
+            playout => { MudDialog.Close(DialogResult.Ok(playout)); },
+            error =>
+            {
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Error updating Playout: {Error}", error.Value);
+                MudDialog.Close(DialogResult.Cancel());
+            });
+    }
+
+    private void Cancel(MouseEventArgs e) => MudDialog.Cancel();
+}

@@ -12,9 +12,9 @@ namespace ErsatzTV.Infrastructure.Trakt;
 
 public class TraktApiClient : ITraktApiClient
 {
+    private readonly ILogger<TraktApiClient> _logger;
     private readonly ITraktApi _traktApi;
     private readonly IOptions<TraktConfiguration> _traktConfiguration;
-    private readonly ILogger<TraktApiClient> _logger;
 
     public TraktApiClient(
         ITraktApi traktApi,
@@ -52,26 +52,13 @@ public class TraktApiClient : ITraktApiClient
             return BaseError.New(ex.Message);
         }
     }
-        
-    private static ITraktApi JsonService()
-    {
-        return RestService.For<ITraktApi>(
-            "https://api.trakt.tv",
-            new RefitSettings
-            {
-                ContentSerializer = new NewtonsoftJsonContentSerializer(
-                    new JsonSerializerSettings {
-                        ContractResolver = new SnakeCasePropertyNamesContractResolver()
-                    })
-            });
-    }
 
     public async Task<Either<BaseError, List<TraktListItemWithGuids>>> GetUserListItems(string user, string list)
     {
         try
         {
             var result = new List<TraktListItemWithGuids>();
-                
+
             List<TraktListItemResponse> apiItems = await _traktApi.GetUserListItems(
                 _traktConfiguration.Value.ClientId,
                 user,
@@ -138,6 +125,18 @@ public class TraktApiClient : ITraktApiClient
             return BaseError.New(ex.Message);
         }
     }
+
+    private static ITraktApi JsonService() =>
+        RestService.For<ITraktApi>(
+            "https://api.trakt.tv",
+            new RefitSettings
+            {
+                ContentSerializer = new NewtonsoftJsonContentSerializer(
+                    new JsonSerializerSettings
+                    {
+                        ContractResolver = new SnakeCasePropertyNamesContractResolver()
+                    })
+            });
 
     private static List<string> GuidsFromIds(TraktListItemIds ids)
     {

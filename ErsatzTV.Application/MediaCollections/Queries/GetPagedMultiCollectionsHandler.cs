@@ -9,10 +9,8 @@ public class GetPagedMultiCollectionsHandler : IRequestHandler<GetPagedMultiColl
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPagedMultiCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetPagedMultiCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<PagedMultiCollectionsViewModel> Handle(
         GetPagedMultiCollections request,

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class DeleteMultiCollectionHandler : MediatR.IRequestHandler<DeleteMultiCollection, Either<BaseError, Unit>>
+public class DeleteMultiCollectionHandler : IRequestHandler<DeleteMultiCollection, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 

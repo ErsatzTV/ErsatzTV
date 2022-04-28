@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -16,9 +15,9 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly FFmpegProcessService _ffmpegProcessService;
-    private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
+    private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
@@ -32,17 +31,23 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger = logger;
     }
 
-    public async Task<Process> ForPlayoutItem(
+    public async Task<Command> ForPlayoutItem(
         string ffmpegPath,
+        string ffprobePath,
         bool saveReports,
         Channel channel,
         MediaVersion videoVersion,
         MediaVersion audioVersion,
         string videoPath,
         string audioPath,
+        List<Subtitle> subtitles,
+        string preferredAudioLanguage,
+        string preferredSubtitleLanguage,
+        ChannelSubtitleMode subtitleMode,
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
+        Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
@@ -53,8 +58,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate)
     {
-        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
-        Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
+        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
+        Option<MediaStream> maybeAudioStream =
+            await _ffmpegStreamSelector.SelectAudioStream(
+                audioVersion,
+                channel.StreamingMode,
+                channel.Number,
+                preferredAudioLanguage);
+        Option<Subtitle> maybeSubtitle =
+            await _ffmpegStreamSelector.SelectSubtitleStream(
+                videoVersion,
+                subtitles,
+                channel.StreamingMode,
+                channel.Number,
+                preferredSubtitleLanguage,
+                subtitleMode);
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
@@ -70,7 +88,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             targetFramerate);
 
         Option<WatermarkOptions> watermarkOptions =
-            await _ffmpegProcessService.GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
+            await _ffmpegProcessService.GetWatermarkOptions(
+                ffprobePath,
+                channel,
+                playoutItemWatermark,
+                globalWatermark,
+                videoVersion,
+                None,
+                None);
 
         Option<List<FadePoint>> maybeFadePoints = watermarkOptions
             .Map(o => o.Watermark)
@@ -93,7 +118,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FFmpegProfileAudioFormat.Copy => AudioFormat.Copy,
             _ => throw new ArgumentOutOfRangeException($"unexpected audio format {playbackSettings.VideoFormat}")
         };
-        
+
         var audioState = new AudioState(
             audioFormat,
             playbackSettings.AudioChannels,
@@ -120,8 +145,35 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
-        var watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
-        
+        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
+            subtitle =>
+            {
+                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded && !subtitle.IsExtracted)
+                {
+                    _logger.LogWarning("Subtitles are not yet available for this item");
+                    return None;
+                }
+
+                var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
+                    subtitle.IsImage ? subtitle.StreamIndex : 0,
+                    subtitle.Codec,
+                    StreamKind.Video);
+
+                string path = subtitle.IsImage
+                    ? videoPath
+                    : Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+
+                return new SubtitleInputFile(
+                    path,
+                    new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
+                    false);
+
+                // TODO: figure out HLS direct
+                // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
+            }).Flatten();
+
+        Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
+
         string videoFormat = playbackSettings.VideoFormat switch
         {
             FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
@@ -187,18 +239,115 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ptsOffset);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
-        
+
         var pipelineBuilder = new PipelineBuilder(
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
+            subtitleInputFile,
             FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
             _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
-        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
+        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
     }
+
+    public Task<Command> ForError(
+        string ffmpegPath,
+        Channel channel,
+        Option<TimeSpan> duration,
+        string errorMessage,
+        bool hlsRealtime,
+        long ptsOffset) =>
+        _ffmpegProcessService.ForError(ffmpegPath, channel, duration, errorMessage, hlsRealtime, ptsOffset);
+
+    public Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
+    {
+        var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
+
+        var concatInputFile = new ConcatInputFile(
+            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
+            resolution);
+
+        var pipelineBuilder = new PipelineBuilder(
+            None,
+            None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            _logger);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Concat(
+            concatInputFile,
+            FFmpegState.Concat(saveReports, channel.Name));
+
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
+    }
+
+    public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
+        _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
+
+    public Command ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
+    {
+        var videoInputFile = new VideoInputFile(
+            inputFile,
+            new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, None, true) });
+
+        var pipelineBuilder = new PipelineBuilder(
+            videoInputFile,
+            None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            _logger);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));
+
+        return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
+    }
+
+    public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
+        _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
+
+    public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
+        _ffmpegProcessService.ExtractAttachedPicAsPng(ffmpegPath, inputFile, streamIndex, outputFile);
+
+    public Task<Either<BaseError, string>> GenerateSongImage(
+        string ffmpegPath,
+        string ffprobePath,
+        Option<string> subtitleFile,
+        Channel channel,
+        Option<ChannelWatermark> playoutItemWatermark,
+        Option<ChannelWatermark> globalWatermark,
+        MediaVersion videoVersion,
+        string videoPath,
+        bool boxBlur,
+        Option<string> watermarkPath,
+        WatermarkLocation watermarkLocation,
+        int horizontalMarginPercent,
+        int verticalMarginPercent,
+        int watermarkWidthPercent,
+        CancellationToken cancellationToken) =>
+        _ffmpegProcessService.GenerateSongImage(
+            ffmpegPath,
+            ffprobePath,
+            subtitleFile,
+            channel,
+            playoutItemWatermark,
+            globalWatermark,
+            videoVersion,
+            videoPath,
+            boxBlur,
+            watermarkPath,
+            watermarkLocation,
+            horizontalMarginPercent,
+            verticalMarginPercent,
+            watermarkWidthPercent,
+            cancellationToken);
 
     private Option<WatermarkInputFile> GetWatermarkInputFile(
         Option<WatermarkOptions> watermarkOptions,
@@ -261,77 +410,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return None;
     }
 
-    public Task<Process> ForError(
-        string ffmpegPath,
-        Channel channel,
-        Option<TimeSpan> duration,
-        string errorMessage,
-        bool hlsRealtime,
-        long ptsOffset) =>
-        _ffmpegProcessService.ForError(ffmpegPath, channel, duration, errorMessage, hlsRealtime, ptsOffset);
-
-    public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
-    {
-        var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
-
-        var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
-            resolution);
-
-        var pipelineBuilder = new PipelineBuilder(None, None, None, FileSystemLayout.FFmpegReportsFolder, _logger);
-
-        FFmpegPipeline pipeline = pipelineBuilder.Concat(
-            concatInputFile,
-            FFmpegState.Concat(saveReports, channel.Name));
-
-        return GetProcess(ffmpegPath, None, None, None, concatInputFile, pipeline);
-    }
-
-    public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
-        _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
-
-    public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
-        _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
-
-    public Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
-        _ffmpegProcessService.ExtractAttachedPicAsPng(ffmpegPath, inputFile, streamIndex, outputFile);
-
-    public Task<Either<BaseError, string>> GenerateSongImage(
-        string ffmpegPath,
-        Option<string> subtitleFile,
-        Channel channel,
-        Option<ChannelWatermark> globalWatermark,
-        MediaVersion videoVersion,
-        string videoPath,
-        bool boxBlur,
-        Option<string> watermarkPath,
-        WatermarkLocation watermarkLocation,
-        int horizontalMarginPercent,
-        int verticalMarginPercent,
-        int watermarkWidthPercent,
-        CancellationToken cancellationToken) =>
-        _ffmpegProcessService.GenerateSongImage(
-            ffmpegPath,
-            subtitleFile,
-            channel,
-            globalWatermark,
-            videoVersion,
-            videoPath,
-            boxBlur,
-            watermarkPath,
-            watermarkLocation,
-            horizontalMarginPercent,
-            verticalMarginPercent,
-            watermarkWidthPercent,
-            cancellationToken);
-
-    private Process GetProcess(
+    private Command GetCommand(
         string ffmpegPath,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<ConcatInputFile> concatInputFile,
-        FFmpegPipeline pipeline)
+        FFmpegPipeline pipeline,
+        bool log = true)
     {
         IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
         IEnumerable<string> loggedVideoFilters =
@@ -339,12 +425,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IEnumerable<string> loggedAudioFilters =
             audioInputFile.Map(f => f.FilterSteps.Map(af => af.GetType().Name)).Flatten();
 
-        _logger.LogDebug(
-            "FFmpeg pipeline {PipelineSteps}, {AudioFilters}, {VideoFilters}",
-            loggedSteps,
-            loggedAudioFilters,
-            loggedVideoFilters
-        );
+        if (log)
+        {
+            _logger.LogDebug(
+                "FFmpeg pipeline {PipelineSteps}, {AudioFilters}, {VideoFilters}",
+                loggedSteps,
+                loggedAudioFilters,
+                loggedVideoFilters
+            );
+        }
 
         IList<EnvironmentVariable> environmentVariables =
             CommandGenerator.GenerateEnvironmentVariables(pipeline.PipelineSteps);
@@ -355,35 +444,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             concatInputFile,
             pipeline.PipelineSteps);
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = ffmpegPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = false,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8
-        };
-
         if (environmentVariables.Any())
         {
             _logger.LogDebug("FFmpeg environment variables {EnvVars}", environmentVariables);
         }
 
-        foreach ((string key, string value) in environmentVariables)
-        {
-            startInfo.EnvironmentVariables[key] = value;
-        }
-
-        foreach (string argument in arguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        return new Process
-        {
-            StartInfo = startInfo
-        };
+        return Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null))
+            .WithEnvironmentVariables(environmentVariables.ToDictionary(e => e.Key, e => e.Value));
     }
 
     private static Option<string> VaapiDriverName(HardwareAccelerationMode accelerationMode, VaapiDriver driver)
@@ -402,12 +472,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     return "nouveau";
             }
         }
-        
+
         return Option<string>.None;
     }
 
-    private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice)
-    {
-        return accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
-    }
+    private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice) =>
+        accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
 }

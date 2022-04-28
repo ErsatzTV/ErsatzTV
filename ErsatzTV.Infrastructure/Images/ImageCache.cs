@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
+using System.Security.Cryptography;
 using System.Text;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -6,12 +8,8 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using Decoder = System.Drawing.Common.Blurhash.Decoder;
+using Encoder = System.Drawing.Common.Blurhash.Encoder;
 
 namespace ErsatzTV.Infrastructure.Images;
 
@@ -19,43 +17,16 @@ public class ImageCache : IImageCache
 {
     private static readonly SHA1 Crypto;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly ILogger<ImageCache> _logger;
-    private readonly IMemoryCache _memoryCache;
     private readonly ITempFilePool _tempFilePool;
 
     static ImageCache() => Crypto = SHA1.Create();
 
     public ImageCache(
         ILocalFileSystem localFileSystem,
-        IMemoryCache memoryCache,
-        ITempFilePool tempFilePool,
-        ILogger<ImageCache> logger)
+        ITempFilePool tempFilePool)
     {
         _localFileSystem = localFileSystem;
-        _memoryCache = memoryCache;
         _tempFilePool = tempFilePool;
-        _logger = logger;
-    }
-
-    public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
-    {
-        await using var inStream = new MemoryStream(imageBuffer);
-        using Image image = await Image.LoadAsync(inStream);
-
-        var size = new Size { Height = height };
-
-        image.Mutate(
-            i => i.Resize(
-                new ResizeOptions
-                {
-                    Mode = ResizeMode.Max,
-                    Size = size
-                }));
-
-        await using var outStream = new MemoryStream();
-        await image.SaveAsync(outStream, new JpegEncoder { Quality = 90 });
-
-        return outStream.ToArray();
     }
 
     public async Task<Either<BaseError, string>> SaveArtworkToCache(Stream stream, ArtworkKind artworkKind)
@@ -68,6 +39,7 @@ public class ImageCache : IImageCache
             {
                 await stream.CopyToAsync(fs);
             }
+
             byte[] hash = await ComputeFileHash(tempFileName);
             string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
             string subfolder = hex[..2];
@@ -97,23 +69,11 @@ public class ImageCache : IImageCache
         }
     }
 
-    private static async Task<byte[]> ComputeFileHash(string fileName)
-    {
-        using var md5 = MD5.Create();
-        // ReSharper disable once UseAwaitUsing
-        // ReSharper disable once ConvertToUsingDeclaration
-        using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-        {
-            fs.Position = 0;
-            return await md5.ComputeHashAsync(fs);
-        }
-    }
-
     public async Task<Either<BaseError, string>> CopyArtworkToCache(string path, ArtworkKind artworkKind)
     {
         try
         {
-            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            string filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
             byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
             string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
             string subfolder = hex[..2];
@@ -156,39 +116,18 @@ public class ImageCache : IImageCache
         return Path.Combine(baseFolder, fileName);
     }
 
-    public async Task<bool> IsAnimated(string fileName)
+    public string CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
     {
-        try
-        {
-            var cacheKey = $"image.animated.{Path.GetFileName(fileName)}";
-            if (_memoryCache.TryGetValue(cacheKey, out bool animated))
-            {
-                return animated;
-            }
-
-            using Image image = await Image.LoadAsync(fileName);
-            animated = image.Frames.Count > 1;
-            _memoryCache.Set(cacheKey, animated, TimeSpan.FromDays(1));
-
-            return animated;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unable to check image for animation");
-            return false;
-        }
-    }
-
-    public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
-    {
-        var encoder = new Blurhash.ImageSharp.Encoder();
+        var encoder = new Encoder();
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
-        await using var fs = new FileStream(targetFile, FileMode.Open, FileAccess.Read);
-        using var image = await Image.LoadAsync<Rgb24>(fs);
-        return encoder.Encode(image, x, y);
+        // ReSharper disable once ConvertToUsingDeclaration
+        using (var image = Image.FromFile(targetFile))
+        {
+            return encoder.Encode(image, x, y);
+        }
     }
 
-    public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
+    public string WriteBlurHash(string blurHash, IDisplaySize targetSize)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
         string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
@@ -197,12 +136,27 @@ public class ImageCache : IImageCache
         {
             string folder = Path.GetDirectoryName(targetFile);
             _localFileSystem.EnsureFolderExists(folder);
-                
-            var decoder = new Blurhash.ImageSharp.Decoder();
-            using Image<Rgb24> image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height);
-            await image.SaveAsPngAsync(targetFile);
+
+            var decoder = new Decoder();
+            // ReSharper disable once ConvertToUsingDeclaration
+            using (Image image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height))
+            {
+                image.Save(targetFile, ImageFormat.Png);
+            }
         }
 
         return targetFile;
+    }
+
+    private static async Task<byte[]> ComputeFileHash(string fileName)
+    {
+        using var md5 = MD5.Create();
+        // ReSharper disable once UseAwaitUsing
+        // ReSharper disable once ConvertToUsingDeclaration
+        using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+        {
+            fs.Position = 0;
+            return await md5.ComputeHashAsync(fs);
+        }
     }
 }

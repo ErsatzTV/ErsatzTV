@@ -58,7 +58,7 @@
     private record DummyModel;
 
     private readonly DummyModel _dummyModel = new();
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -71,7 +71,7 @@
     protected override async Task OnParametersSetAsync()
     {
         _newLibrary = new LocalLibraryViewModel(-1, "(New Library)", MediaKind);
-        
+
         _libraries = await _mediator.Send(new GetAllLocalLibraries(), _cts.Token)
             .Map(list => list.Filter(ll => ll.MediaKind == MediaKind && ll.Id != SourceLibraryId))
             .Map(list => new[] { _newLibrary }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());

@@ -3,6 +3,9 @@
 public class DecoderVc1Cuvid : DecoderBase
 {
     public override string Name => "vc1_cuvid";
+
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+
     public override IList<string> InputOptions(InputFile inputFile)
     {
         IList<string> result = base.InputOptions(inputFile);
@@ -12,6 +15,4 @@ public class DecoderVc1Cuvid : DecoderBase
 
         return result;
     }
-
-    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
 }

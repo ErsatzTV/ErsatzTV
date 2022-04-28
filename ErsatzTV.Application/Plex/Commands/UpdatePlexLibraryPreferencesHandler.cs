@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Search;
 namespace ErsatzTV.Application.Plex;
 
 public class
-    UpdatePlexLibraryPreferencesHandler : MediatR.IRequestHandler<UpdatePlexLibraryPreferences,
+    UpdatePlexLibraryPreferencesHandler : IRequestHandler<UpdatePlexLibraryPreferences,
         Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;

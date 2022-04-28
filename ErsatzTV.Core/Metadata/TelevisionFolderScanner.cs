@@ -1,6 +1,6 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -13,12 +13,13 @@ namespace ErsatzTV.Core.Metadata;
 
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
+    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IClient _client;
     private readonly IMetadataRepository _metadataRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -29,6 +30,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         ITelevisionRepository televisionRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         ISearchIndex searchIndex,
@@ -36,7 +38,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<TelevisionFolderScanner> logger) : base(
@@ -45,7 +47,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         metadataRepository,
         mediaItemRepository,
         imageCache,
-        ffmpegProcessServiceFactory,
+        ffmpegProcessService,
         tempFilePool,
         client,
         logger)
@@ -53,6 +55,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _localFileSystem = localFileSystem;
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _metadataRepository = metadataRepository;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
@@ -70,36 +73,57 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         decimal progressMax,
         CancellationToken cancellationToken)
     {
-        decimal progressSpread = progressMax - progressMin;
-
-        var allShowFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
-            .Filter(ShouldIncludeFolder)
-            .OrderBy(identity)
-            .ToList();
-
-        foreach (string showFolder in allShowFolders)
+        try
         {
-            decimal percentCompletion = (decimal) allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
-            await _mediator.Publish(
-                new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+            decimal progressSpread = progressMax - progressMin;
 
-            Either<BaseError, MediaItemScanResult<Show>> maybeShow =
-                await FindOrCreateShow(libraryPath.Id, showFolder)
-                    .BindT(show => UpdateMetadataForShow(show, showFolder))
-                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster, cancellationToken))
-                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt, cancellationToken))
-                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail, cancellationToken));
+            var allShowFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
+                .Filter(ShouldIncludeFolder)
+                .OrderBy(identity)
+                .ToList();
 
-            await maybeShow.Match(
-                async result =>
+            foreach (string showFolder in allShowFolders)
+            {
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    await ScanSeasons(
+                    return new ScanCanceled();
+                }
+
+                decimal percentCompletion = (decimal)allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
+                await _mediator.Publish(
+                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    cancellationToken);
+
+                Either<BaseError, MediaItemScanResult<Show>> maybeShow =
+                    await FindOrCreateShow(libraryPath.Id, showFolder)
+                        .BindT(show => UpdateMetadataForShow(show, showFolder))
+                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster, cancellationToken))
+                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt, cancellationToken))
+                        .BindT(
+                            show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail, cancellationToken));
+
+                foreach (BaseError error in maybeShow.LeftToSeq())
+                {
+                    _logger.LogWarning(
+                        "Error processing show in folder {Folder}: {Error}",
+                        showFolder,
+                        error.Value);
+                }
+
+                foreach (MediaItemScanResult<Show> result in maybeShow.RightToSeq())
+                {
+                    Either<BaseError, Unit> scanResult = await ScanSeasons(
                         libraryPath,
                         ffmpegPath,
                         ffprobePath,
                         result.Item,
                         showFolder,
                         cancellationToken);
+
+                    foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                    {
+                        return error;
+                    }
 
                     if (result.IsAdded)
                     {
@@ -109,40 +133,40 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     {
                         await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                     }
-                },
-                error =>
+                }
+            }
+
+            foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
+            {
+                if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogWarning(
-                        "Error processing show in folder {Folder}: {Error}",
-                        showFolder,
-                        error.Value);
-                    return Task.FromResult(Unit.Default);
-                });
-        }
+                    _logger.LogInformation("Flagging missing episode at {Path}", path);
+                    List<int> episodeIds = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, episodeIds);
+                }
+                else if (Path.GetFileName(path).StartsWith("._"))
+                {
+                    _logger.LogInformation("Removing dot underscore file at {Path}", path);
+                    await _televisionRepository.DeleteByPath(libraryPath, path);
+                }
+            }
 
-        foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
+
+            await _televisionRepository.DeleteEmptySeasons(libraryPath);
+            List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
+            await _searchIndex.RemoveItems(ids);
+
+            return Unit.Default;
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            if (!_localFileSystem.FileExists(path))
-            {
-                _logger.LogInformation("Flagging missing episode at {Path}", path);
-                List<int> episodeIds = await FlagFileNotFound(libraryPath, path);
-                await _searchIndex.RebuildItems(_searchRepository, episodeIds);
-            }
-            else if (Path.GetFileName(path).StartsWith("._"))
-            {
-                _logger.LogInformation("Removing dot underscore file at {Path}", path);
-                await _televisionRepository.DeleteByPath(libraryPath, path);
-            }
+            return new ScanCanceled();
         }
-            
-        await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
-
-        await _televisionRepository.DeleteEmptySeasons(libraryPath);
-        List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
-        await _searchIndex.RemoveItems(ids);
-
-        _searchIndex.Commit();
-        return Unit.Default;
+        finally
+        {
+            _searchIndex.Commit();
+        }
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<Show>>> FindOrCreateShow(
@@ -151,12 +175,16 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         ShowMetadata metadata = await _localMetadataProvider.GetMetadataForShow(showFolder);
         Option<Show> maybeShow = await _televisionRepository.GetShowByMetadata(libraryPathId, metadata);
-        return await maybeShow.Match(
-            show => Right<BaseError, MediaItemScanResult<Show>>(new MediaItemScanResult<Show>(show)).AsTask(),
-            async () => await _televisionRepository.AddShow(libraryPathId, showFolder, metadata));
+
+        foreach (Show show in maybeShow)
+        {
+            return new MediaItemScanResult<Show>(show);
+        }
+
+        return await _televisionRepository.AddShow(libraryPathId, showFolder, metadata);
     }
 
-    private async Task<Unit> ScanSeasons(
+    private async Task<Either<BaseError, Unit>> ScanSeasons(
         LibraryPath libraryPath,
         string ffmpegPath,
         string ffprobePath,
@@ -167,6 +195,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
                      .OrderBy(identity))
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
+
             string etag = FolderEtag.CalculateWithSubfolders(seasonFolder, _localFileSystem);
             Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
                 .Filter(f => f.Path == seasonFolder)
@@ -179,38 +212,48 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             }
 
             Option<int> maybeSeasonNumber = SeasonNumberForFolder(seasonFolder);
-            await maybeSeasonNumber.IfSomeAsync(
-                async seasonNumber =>
+            foreach (int seasonNumber in maybeSeasonNumber)
+            {
+                Either<BaseError, Season> maybeSeason = await _televisionRepository
+                    .GetOrAddSeason(show, libraryPath.Id, seasonNumber)
+                    .BindT(EnsureMetadataExists)
+                    .BindT(season => UpdatePoster(season, seasonFolder, cancellationToken));
+
+                foreach (BaseError error in maybeSeason.LeftToSeq())
                 {
-                    Either<BaseError, Season> maybeSeason = await _televisionRepository
-                        .GetOrAddSeason(show, libraryPath.Id, seasonNumber)
-                        .BindT(EnsureMetadataExists)
-                        .BindT(season => UpdatePoster(season, seasonFolder, cancellationToken));
+                    _logger.LogWarning(
+                        "Error processing season in folder {Folder}: {Error}",
+                        seasonFolder,
+                        error.Value);
+                }
 
-                    await maybeSeason.Match(
-                        async season =>
-                        {
-                            await ScanEpisodes(libraryPath, ffmpegPath, ffprobePath, season, seasonFolder, cancellationToken);
-                            await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
+                foreach (Season season in maybeSeason.RightToSeq())
+                {
+                    Either<BaseError, Unit> scanResult = await ScanEpisodes(
+                        libraryPath,
+                        ffmpegPath,
+                        ffprobePath,
+                        season,
+                        seasonFolder,
+                        cancellationToken);
 
-                            season.Show = show;
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { season });
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error processing season in folder {Folder}: {Error}",
-                                seasonFolder,
-                                error.Value);
-                            return Task.FromResult(Unit.Default);
-                        });
-                });
+                    foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                    {
+                        return error;
+                    }
+
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
+
+                    season.Show = show;
+                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { season });
+                }
+            }
         }
 
         return Unit.Default;
     }
 
-    private async Task<Unit> ScanEpisodes(
+    private async Task<Either<BaseError, Unit>> ScanEpisodes(
         LibraryPath libraryPath,
         string ffmpegPath,
         string ffprobePath,
@@ -237,19 +280,19 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         .MapT(_ => episode))
                 .BindT(UpdateMetadata)
                 .BindT(e => UpdateThumbnail(e, cancellationToken))
+                .BindT(UpdateSubtitles)
                 .BindT(e => FlagNormal(new MediaItemScanResult<Episode>(e)))
                 .MapT(r => r.Item);
 
-            await maybeEpisode.Match(
-                async episode =>
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
-                },
-                error =>
-                {
-                    _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value);
-                    return Task.CompletedTask;
-                });
+            foreach (BaseError error in maybeEpisode.LeftToSeq())
+            {
+                _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value);
+            }
+
+            foreach (Episode episode in maybeEpisode.RightToSeq())
+            {
+                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+            }
         }
 
         // TODO: remove missing episodes?
@@ -264,34 +307,36 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             Show show = result.Item;
-            await LocateNfoFileForShow(showFolder).Match(
-                async nfoFile =>
-                {
-                    bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
-                        m => m.MetadataKind == MetadataKind.Fallback ||
-                             m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                        true);
 
-                    if (shouldUpdate)
-                    {
-                        _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                        if (await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile))
-                        {
-                            result.IsUpdated = true;
-                        }
-                    }
-                },
-                async () =>
+            Option<string> maybeNfo = LocateNfoFileForShow(showFolder);
+            if (maybeNfo.IsNone)
+            {
+                if (!Optional(show.ShowMetadata).Flatten().Any())
                 {
-                    if (!Optional(show.ShowMetadata).Flatten().Any())
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
+                    if (await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder))
                     {
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
-                        if (await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder))
-                        {
-                            result.IsUpdated = true;
-                        }
+                        result.IsUpdated = true;
                     }
-                });
+                }
+            }
+
+            foreach (string nfoFile in maybeNfo)
+            {
+                bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    if (await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+            }
 
             return result;
         }
@@ -313,7 +358,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 SeasonId = season.Id,
                 Season = season,
                 DateAdded = DateTime.UtcNow,
-                Guids = new List<MetadataGuid>()
+                Guids = new List<MetadataGuid>(),
+                Tags = new List<Tag>()
             };
 
             season.SeasonMetadata.Add(metadata);
@@ -327,33 +373,34 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            await LocateNfoFile(episode).Match(
-                async nfoFile =>
-                {
-                    bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                        m => m.MetadataKind == MetadataKind.Fallback ||
-                             m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                        true);
+            Option<string> maybeNfo = LocateNfoFile(episode);
+            if (maybeNfo.IsNone)
+            {
+                bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                    m => m.DateUpdated == SystemTime.MinValueUtc,
+                    true);
 
-                    if (shouldUpdate)
-                    {
-                        _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                        await _localMetadataProvider.RefreshSidecarMetadata(episode, nfoFile);
-                    }
-                },
-                async () =>
+                if (shouldUpdate)
                 {
-                    bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                        m => m.DateUpdated == SystemTime.MinValueUtc,
-                        true);
+                    string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
+                    await _localMetadataProvider.RefreshFallbackMetadata(episode);
+                }
+            }
 
-                    if (shouldUpdate)
-                    {
-                        string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                        await _localMetadataProvider.RefreshFallbackMetadata(episode);
-                    }
-                });
+            foreach (string nfoFile in maybeNfo)
+            {
+                bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    await _localMetadataProvider.RefreshSidecarMetadata(episode, nfoFile);
+                }
+            }
 
             return episode;
         }
@@ -373,12 +420,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             Show show = result.Item;
-            await LocateArtworkForShow(showFolder, artworkKind).IfSomeAsync(
-                async artworkFile =>
-                {
-                    ShowMetadata metadata = show.ShowMetadata.Head();
-                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
-                });
+            Option<string> maybeArtwork = LocateArtworkForShow(showFolder, artworkKind);
+            foreach (string artworkFile in maybeArtwork)
+            {
+                ShowMetadata metadata = show.ShowMetadata.Head();
+                await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
+            }
 
             return result;
         }
@@ -389,16 +436,19 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
     }
 
-    private async Task<Either<BaseError, Season>> UpdatePoster(Season season, string seasonFolder, CancellationToken cancellationToken)
+    private async Task<Either<BaseError, Season>> UpdatePoster(
+        Season season,
+        string seasonFolder,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await LocatePoster(season, seasonFolder).IfSomeAsync(
-                async posterFile =>
-                {
-                    SeasonMetadata metadata = season.SeasonMetadata.Head();
-                    await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
-                });
+            Option<string> maybePoster = LocatePoster(season, seasonFolder);
+            foreach (string posterFile in maybePoster)
+            {
+                SeasonMetadata metadata = season.SeasonMetadata.Head();
+                await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
+            }
 
             return season;
         }
@@ -413,20 +463,20 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            await LocateThumbnail(episode).IfSomeAsync(
-                async posterFile =>
+            Option<string> maybeThumbnail = LocateThumbnail(episode);
+            foreach (string thumbnailFile in maybeThumbnail)
+            {
+                foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
                 {
-                    foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
-                    {
-                        await RefreshArtwork(
-                            posterFile,
-                            metadata,
-                            ArtworkKind.Thumbnail,
-                            None,
-                            None,
-                            cancellationToken);
-                    }
-                });
+                    await RefreshArtwork(
+                        thumbnailFile,
+                        metadata,
+                        ArtworkKind.Thumbnail,
+                        None,
+                        None,
+                        cancellationToken);
+                }
+            }
 
             return episode;
         }
@@ -437,15 +487,27 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
     }
 
+    private async Task<Either<BaseError, Episode>> UpdateSubtitles(Episode episode)
+    {
+        try
+        {
+            await _localSubtitlesProvider.UpdateSubtitles(episode, None, true);
+            return episode;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
     private Option<string> LocateNfoFileForShow(string showFolder) =>
-        Optional(Path.Combine(showFolder, "tvshow.nfo"))
-            .Filter(s => _localFileSystem.FileExists(s));
+        Optional(Path.Combine(showFolder, "tvshow.nfo")).Filter(s => _localFileSystem.FileExists(s));
 
     private Option<string> LocateNfoFile(Episode episode)
     {
         string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
-        return Optional(Path.ChangeExtension(path, "nfo"))
-            .Filter(s => _localFileSystem.FileExists(s));
+        return Optional(Path.ChangeExtension(path, "nfo")).Filter(s => _localFileSystem.FileExists(s));
     }
 
     private Option<string> LocateArtworkForShow(string showFolder, ArtworkKind artworkKind)

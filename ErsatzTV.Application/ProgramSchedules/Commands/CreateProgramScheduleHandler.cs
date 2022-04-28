@@ -35,8 +35,7 @@ public class CreateProgramScheduleHandler :
     private static Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
         CreateProgramSchedule request) =>
-        ValidationT_AsyncSync_Extensions.MapT(
-            ValidateName(dbContext, request),
+        ValidateName(dbContext, request).MapT(
             name =>
             {
                 bool keepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;

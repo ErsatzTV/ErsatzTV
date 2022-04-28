@@ -15,5 +15,11 @@ public class PlayoutItemConfiguration : IEntityTypeConfiguration<PlayoutItem>
             .WithMany()
             .HasForeignKey(pi => pi.MediaItemId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(i => i.Watermark)
+            .WithMany()
+            .HasForeignKey(i => i.WatermarkId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
     }
 }

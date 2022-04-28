@@ -29,7 +29,7 @@
         }
         else
         {
-            <div style="display: flex; flex-direction: row; align-items: center">
+            <div style="align-items: center; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4">@_data.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Link="@($"/media/collections/{Id}/edit")"/>
@@ -228,7 +228,7 @@
             }
         </MudContainer>
     }
-    
+
     @if (_data.OtherVideoCards.Any())
     {
         <MudText GutterBottom="true"
@@ -254,28 +254,28 @@
     }
 
     @if (_data.SongCards.Any())
-        {
-            <MudText GutterBottom="true"
-                     Typo="Typo.h4"
-                     Style="scroll-margin-top: 160px"
-                     UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
-                Songs
-            </MudText>
-    
-            <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-                @foreach (SongCardViewModel card in _data.SongCards.OrderBy(e => e.SortTitle))
-                {
-                    <MediaCard Data="@card"
-                               Link=""
-                               ArtworkKind="ArtworkKind.Thumbnail"
-                               DeleteClicked="@RemoveSongFromCollection"
-                               SelectColor="@Color.Error"
-                               SelectClicked="@(e => SelectClicked(card, e))"
-                               IsSelected="@IsSelected(card)"
-                               IsSelectMode="@IsSelectMode()"/>
-                }
-            </MudContainer>
-        }
+    {
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
+            Songs
+        </MudText>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (SongCardViewModel card in _data.SongCards.OrderBy(e => e.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@RemoveSongFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
@@ -326,9 +326,9 @@
         }
         catch (Exception)
         {
-            // ignored
+    // ignored
         }
-        
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -427,7 +427,7 @@
 
         await RemoveItemsWithConfirmation("episode", $"{episode.ShowTitle} - {episode.Title}", request);
     }
-    
+
     private async Task RemoveOtherVideoFromCollection(MediaCardViewModel vm)
     {
         if (vm is OtherVideoCardViewModel otherVideo)

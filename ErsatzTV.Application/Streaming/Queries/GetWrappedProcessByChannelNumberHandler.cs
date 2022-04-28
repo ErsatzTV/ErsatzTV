@@ -1,7 +1,6 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -11,35 +10,33 @@ namespace ErsatzTV.Application.Streaming;
 
 public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetWrappedProcessByChannelNumber>
 {
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
 
     public GetWrappedProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory)
-        : base(dbContextFactory)
-    {
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
-    }
+        IFFmpegProcessService ffmpegProcessService)
+        : base(dbContextFactory) =>
+        _ffmpegProcessService = ffmpegProcessService;
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
         TvContext dbContext,
         GetWrappedProcessByChannelNumber request,
         Channel channel,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken)
     {
         bool saveReports = await dbContext.ConfigElements
             .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
             .Map(result => result.IfNone(false));
 
-        IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
-        Process process = ffmpegProcessService.WrapSegmenter(
+        Command process = _ffmpegProcessService.WrapSegmenter(
             ffmpegPath,
             saveReports,
             channel,
             request.Scheme,
             request.Host);
 
-        return new PlayoutItemProcessModel(process, DateTimeOffset.MaxValue);
+        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue);
     }
 }

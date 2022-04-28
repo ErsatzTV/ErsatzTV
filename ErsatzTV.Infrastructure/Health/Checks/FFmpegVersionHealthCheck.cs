@@ -8,13 +8,13 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
-    private const string BundledVersion = "N-105324-g0f5fd44dc9";
+    private const string BundledVersion = "N-106635-g83e1a1de88";
     private readonly IConfigElementRepository _configElementRepository;
 
-    public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository)
-    {
+    public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
-    }
+
+    public override string Title => "FFmpeg Version";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
@@ -99,6 +99,4 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
         return None;
     }
-
-    protected override string Title => "FFmpeg Version";
 }

@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Configuration;
 
-public record SaveConfigElementByKey(ConfigElementKey Key, string Value) : MediatR.IRequest<Unit>;
+public record SaveConfigElementByKey(ConfigElementKey Key, string Value) : IRequest<Unit>;

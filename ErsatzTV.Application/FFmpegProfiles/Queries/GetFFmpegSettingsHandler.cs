@@ -20,7 +20,7 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId);
         Option<bool> saveReports =
             await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
-        Option<string> preferredLanguageCode =
+        Option<string> preferredAudioLanguageCode =
             await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
         Option<int> watermark =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
@@ -32,8 +32,6 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
         Option<int> initialSegmentCount =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount);
-        Option<bool> useLegacyTranscoder =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseLegacyTranscoder);
 
         var result = new FFmpegSettingsViewModel
         {
@@ -41,11 +39,10 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             FFprobePath = await ffprobePath.IfNoneAsync(string.Empty),
             DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
             SaveReports = await saveReports.IfNoneAsync(false),
-            PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng"),
+            PreferredAudioLanguageCode = await preferredAudioLanguageCode.IfNoneAsync("eng"),
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
-            InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
-            UseLegacyTranscoder = await useLegacyTranscoder.IfNoneAsync(false)
+            InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1)
         };
 
         foreach (int watermarkId in watermark)

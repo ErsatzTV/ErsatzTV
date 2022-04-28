@@ -40,7 +40,11 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 GuideGroup = playoutBuilderState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
-                    : FillerKind.None
+                    : FillerKind.None,
+                WatermarkId = scheduleItem.WatermarkId,
+                PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                SubtitleMode = scheduleItem.SubtitleMode
             };
 
             DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
@@ -57,11 +61,6 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 playoutItem,
                 itemChapters);
 
-            // only play one item from collection, so always advance to the next item
-            // _logger.LogDebug(
-            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
-            //     "One");
-
             PlayoutBuilderState nextState = playoutBuilderState with
             {
                 CurrentTime = itemEndTimeWithFiller
@@ -71,6 +70,11 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
             contentEnumerator.MoveNext();
 
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+
+            // only play one item from collection, so always advance to the next item
+            // _logger.LogDebug(
+            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+            //     "One");
 
             DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
 
@@ -98,7 +102,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
 
             return Tuple(nextState, playoutItems);
         }
-            
+
         return Tuple(playoutBuilderState, new List<PlayoutItem>());
     }
 }

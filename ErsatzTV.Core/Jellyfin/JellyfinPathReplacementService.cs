@@ -23,12 +23,12 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         _logger = logger;
     }
 
-    public async Task<string> GetReplacementJellyfinPath(int libraryPathId, string path)
+    public async Task<string> GetReplacementJellyfinPath(int libraryPathId, string path, bool log = true)
     {
         List<JellyfinPathReplacement> replacements =
             await _mediaSourceRepository.GetJellyfinPathReplacementsByLibraryId(libraryPathId);
 
-        return GetReplacementJellyfinPath(replacements, path);
+        return GetReplacementJellyfinPath(replacements, path, log);
     }
 
     public string GetReplacementJellyfinPath(

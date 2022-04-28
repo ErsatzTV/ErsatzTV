@@ -23,4 +23,9 @@ public record AddProgramScheduleItem(
     int? MidRollFillerId,
     int? PostRollFillerId,
     int? TailFillerId,
-    int? FallbackFillerId) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
+    int? FallbackFillerId,
+    int? WatermarkId,
+    string PreferredAudioLanguageCode,
+    string PreferredSubtitleLanguageCode,
+    ChannelSubtitleMode? SubtitleMode) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>,
+    IProgramScheduleItemRequest;

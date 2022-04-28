@@ -63,5 +63,11 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
             .HasForeignKey(i => i.FallbackFillerId)
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
+
+        builder.HasOne(i => i.Watermark)
+            .WithMany()
+            .HasForeignKey(i => i.WatermarkId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
     }
 }

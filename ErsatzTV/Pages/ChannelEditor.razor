@@ -1,6 +1,6 @@
 ﻿@page "/channels/{Id:int?}"
 @page "/channels/add"
-@using static LanguageExt.Prelude
+@using static Prelude
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Application.Images
@@ -44,15 +44,32 @@
                         }
                     </MudSelect>
                     <MudSelect Class="mt-3"
-                               Label="Preferred Language"
-                               @bind-Value="_model.PreferredLanguageCode"
-                               For="@(() => _model.PreferredLanguageCode)"
+                               Label="Preferred Audio Language"
+                               @bind-Value="_model.PreferredAudioLanguageCode"
+                               For="@(() => _model.PreferredAudioLanguageCode)"
                                Clearable="true">
-                        <MudSelectItem Value="@((string) null)">(none)</MudSelectItem>
+                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
                         @foreach (CultureInfo culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                               Label="Preferred Subtitle Language"
+                               @bind-Value="_model.PreferredSubtitleLanguageCode"
+                               For="@(() => _model.PreferredSubtitleLanguageCode)"
+                               Clearable="true">
+                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                        @foreach (CultureInfo culture in _availableCultures)
+                        {
+                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                        <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
@@ -75,7 +92,7 @@
                     <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
                                Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
@@ -86,7 +103,7 @@
                                @bind-Value="_model.FallbackFillerId"
                                For="@(() => _model.FallbackFillerId)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
                         {
                             <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
@@ -117,7 +134,7 @@
     private List<CultureInfo> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
     private List<FillerPresetViewModel> _fillerPresets;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -145,9 +162,11 @@
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
-                    _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
+                    _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
                     _model.WatermarkId = channelViewModel.WatermarkId;
                     _model.FallbackFillerId = channelViewModel.FallbackFillerId;
+                    _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
+                    _model.SubtitleMode = channelViewModel.SubtitleMode;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
@@ -209,7 +228,7 @@
         try
         {
             Either<BaseError, string> maybeCacheFileName =
-                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
+                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
@@ -235,5 +254,5 @@
             _logger.LogError("Unexpected error saving channel logo: {Error}", ex.Message);
         }
     }
-    
+
 }

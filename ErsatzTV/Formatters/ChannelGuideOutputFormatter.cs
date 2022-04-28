@@ -19,5 +19,5 @@ public class ChannelGuideOutputFormatter : TextOutputFormatter
 
     public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding) =>
         // ReSharper disable once PossibleNullReferenceException
-        context.HttpContext.Response.WriteAsync(((ChannelGuide) context.Object).ToXml());
+        context.HttpContext.Response.WriteAsync(((ChannelGuide)context.Object).ToXml());
 }

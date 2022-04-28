@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Serilog;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
@@ -223,7 +224,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
 
             PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-            List<PlayoutItem> playoutItems = PlayoutModeSchedulerBase<ProgramScheduleItem>
+            List<PlayoutItem> playoutItems = Scheduler()
                 .AddFiller(
                     startState,
                     CollectionEnumerators(scheduleItem, enumerator),
@@ -270,11 +271,11 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
                 scheduleItem,
                 enumerator);
-            
+
             // too lazy to make another enumerator for the filler that we don't want
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), enumerator);
 
-            List<PlayoutItem> playoutItems = PlayoutModeSchedulerBase<ProgramScheduleItem>
+            List<PlayoutItem> playoutItems = Scheduler()
                 .AddFiller(
                     startState,
                     enumerators,
@@ -283,6 +284,106 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     new List<MediaChapter> { new() });
 
             playoutItems.Count.Should().Be(1);
+        }
+
+        [Test]
+        public void Should_Schedule_Mid_Roll_Count_Filler_Correctly()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));
+            Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                TailFiller = null,
+                FallbackFiller = null,
+                MidRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.MidRoll,
+                    FillerMode = FillerMode.Count,
+                    PadToNearestMinute = 60, // this should be ignored
+                    Count = 1
+                }
+            };
+
+            var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+                new List<ProgramScheduleItem> { scheduleItem },
+                new CollectionEnumeratorState());
+
+            var enumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var fillerEnumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
+                scheduleItem,
+                enumerator);
+
+            enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), fillerEnumerator);
+
+            List<PlayoutItem> playoutItems = Scheduler()
+                .AddFiller(
+                    startState,
+                    enumerators,
+                    scheduleItem,
+                    new PlayoutItem
+                    {
+                        MediaItemId = 1,
+                        Start = startState.CurrentTime.UtcDateTime,
+                        Finish = startState.CurrentTime.AddHours(1).UtcDateTime
+                    },
+                    new List<MediaChapter>
+                    {
+                        new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
+                        new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(60) }
+                    });
+
+            playoutItems.Count.Should().Be(3);
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+            playoutItems[1].MediaItemId.Should().Be(3);
+            playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
+            playoutItems[2].MediaItemId.Should().Be(1);
+            playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
+        }
+    }
+
+    [TestFixture]
+    public class GetStartTimeAfter
+    {
+        [Test]
+        public void Should_Compare_Time_As_Local_Time()
+        {
+            var enumerator = new Mock<IScheduleItemsEnumerator>();
+
+            var state = new PlayoutBuilderState(
+                enumerator.Object,
+                None,
+                None,
+                false,
+                false,
+                0,
+                DateTime.Today.AddHours(6).ToUniversalTime());
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                StartTime = TimeSpan.FromHours(6)
+            };
+
+            DateTimeOffset result =
+                PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(state, scheduleItem);
+
+            result.Should().Be(DateTime.Today.AddHours(6));
         }
     }
 
@@ -296,4 +397,34 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                 new() { Duration = duration }
             }
         };
+
+    private static PlayoutModeSchedulerBase<ProgramScheduleItem> Scheduler() =>
+        new TestScheduler();
+
+    private class TestScheduler : PlayoutModeSchedulerBase<ProgramScheduleItem>
+    {
+        private static readonly ILoggerFactory LoggerFactory;
+
+        static TestScheduler()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .CreateLogger();
+
+            LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+        }
+
+        public TestScheduler() : base(LoggerFactory.CreateLogger<TestScheduler>())
+        {
+        }
+
+        public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
+            PlayoutBuilderState playoutBuilderState,
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
+            ProgramScheduleItem scheduleItem,
+            ProgramScheduleItem nextScheduleItem,
+            DateTimeOffset hardStop) =>
+            throw new NotSupportedException();
+    }
 }

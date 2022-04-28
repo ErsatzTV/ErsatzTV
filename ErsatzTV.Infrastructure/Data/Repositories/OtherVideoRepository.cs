@@ -11,10 +11,7 @@ public class OtherVideoRepository : IOtherVideoRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> GetOrAdd(
         LibraryPath libraryPath,
@@ -89,8 +86,8 @@ public class OtherVideoRepository : IOtherVideoRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
-            new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            "INSERT INTO Tag (Name, OtherVideoMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+            new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
     public async Task<List<OtherVideoMetadata>> GetOtherVideosForCards(List<int> ids)

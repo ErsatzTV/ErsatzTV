@@ -57,7 +57,13 @@ internal static class Mapper
                         : null,
                     duration.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
-                        : null),
+                        : null,
+                    duration.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(duration.Watermark)
+                        : null,
+                    duration.PreferredAudioLanguageCode,
+                    duration.PreferredSubtitleLanguageCode,
+                    duration.SubtitleMode),
             ProgramScheduleItemFlood flood =>
                 new ProgramScheduleItemFloodViewModel(
                     flood.Id,
@@ -98,7 +104,13 @@ internal static class Mapper
                         : null,
                     flood.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
-                        : null),
+                        : null,
+                    flood.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(flood.Watermark)
+                        : null,
+                    flood.PreferredAudioLanguageCode,
+                    flood.PreferredSubtitleLanguageCode,
+                    flood.SubtitleMode),
             ProgramScheduleItemMultiple multiple =>
                 new ProgramScheduleItemMultipleViewModel(
                     multiple.Id,
@@ -140,7 +152,13 @@ internal static class Mapper
                         : null,
                     multiple.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
-                        : null),
+                        : null,
+                    multiple.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(multiple.Watermark)
+                        : null,
+                    multiple.PreferredAudioLanguageCode,
+                    multiple.PreferredSubtitleLanguageCode,
+                    multiple.SubtitleMode),
             ProgramScheduleItemOne one =>
                 new ProgramScheduleItemOneViewModel(
                     one.Id,
@@ -181,7 +199,13 @@ internal static class Mapper
                         : null,
                     one.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
-                        : null),
+                        : null,
+                    one.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(one.Watermark)
+                        : null,
+                    one.PreferredAudioLanguageCode,
+                    one.PreferredSubtitleLanguageCode,
+                    one.SubtitleMode),
             _ => throw new NotSupportedException(
                 $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
         };

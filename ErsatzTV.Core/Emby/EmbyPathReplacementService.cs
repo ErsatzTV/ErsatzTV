@@ -23,18 +23,15 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         _logger = logger;
     }
 
-    public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path)
+    public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path, bool log = true)
     {
         List<EmbyPathReplacement> replacements =
             await _mediaSourceRepository.GetEmbyPathReplacementsByLibraryId(libraryPathId);
 
-        return GetReplacementEmbyPath(replacements, path);
+        return GetReplacementEmbyPath(replacements, path, log);
     }
 
-    public string GetReplacementEmbyPath(
-        List<EmbyPathReplacement> pathReplacements,
-        string path,
-        bool log = true)
+    public string GetReplacementEmbyPath(List<EmbyPathReplacement> pathReplacements, string path, bool log = true)
     {
         Option<EmbyPathReplacement> maybeReplacement = pathReplacements
             .SingleOrDefault(
@@ -46,9 +43,7 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
                     }
 
                     string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
-                    string prefix = r.EmbyPath.EndsWith(separatorChar)
-                        ? r.EmbyPath
-                        : r.EmbyPath + separatorChar;
+                    string prefix = r.EmbyPath.EndsWith(separatorChar) ? r.EmbyPath : r.EmbyPath + separatorChar;
                     return path.StartsWith(prefix);
                 });
 
@@ -59,8 +54,7 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
             {
                 finalPath = finalPath.Replace(@"\", @"/");
             }
-            else if (!IsWindows(replacement.EmbyMediaSource, path) &&
-                     _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            else if (!IsWindows(replacement.EmbyMediaSource, path) && _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
             {
                 finalPath = finalPath.Replace(@"/", @"\");
             }

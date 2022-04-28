@@ -13,7 +13,7 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
     public MovieMetadataHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    protected override string Title => "Movie Metadata";
+    public override string Title => "Movie Metadata";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
@@ -29,7 +29,7 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
         {
             var paths = movies.SelectMany(e => e.MediaVersions.Map(mv => mv.MediaFiles))
                 .Flatten()
-                .Bind(f => Optional<string>(Path.GetDirectoryName(f.Path)))
+                .Bind(f => Optional(Path.GetDirectoryName(f.Path)))
                 .Distinct()
                 .Take(5)
                 .ToList();

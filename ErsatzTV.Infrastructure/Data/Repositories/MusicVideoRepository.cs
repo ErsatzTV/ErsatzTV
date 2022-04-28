@@ -11,10 +11,7 @@ public class MusicVideoRepository : IMusicVideoRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MusicVideoRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MusicVideoRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
         Artist artist,
@@ -102,7 +99,7 @@ public class MusicVideoRepository : IMusicVideoRepository
 
         return ids;
     }
-        
+
     public async Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -115,8 +112,8 @@ public class MusicVideoRepository : IMusicVideoRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
-            new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            "INSERT INTO Tag (Name, MusicVideoMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+            new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
     public async Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio)

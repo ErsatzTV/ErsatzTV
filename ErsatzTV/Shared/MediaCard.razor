@@ -1,4 +1,4 @@
-﻿@using static LanguageExt.Prelude
+﻿@using static Prelude
 @using ErsatzTV.Application.MediaCards
 @inject IMediator _mediator
 
@@ -25,8 +25,14 @@
             }
             @if (Data.State == MediaItemState.FileNotFound)
             {
-                <div style="position: absolute; top: 12px; right: 12px">
+                <div style="position: absolute; right: 12px; top: 12px;">
                     <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error"/>
+                </div>
+            }
+            else if (Data.State == MediaItemState.Unavailable)
+            {
+                <div style="position: absolute; right: 12px; top: 12px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning"/>
                 </div>
             }
             <div class="media-card-overlay" style="">

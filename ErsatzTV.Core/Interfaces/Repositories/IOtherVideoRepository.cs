@@ -9,6 +9,7 @@ public interface IOtherVideoRepository
     Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
     Task<bool> AddTag(OtherVideoMetadata metadata, Tag tag);
+
     Task<List<OtherVideoMetadata>> GetOtherVideosForCards(List<int> ids);
     // Task<int> GetOtherVideoCount(int artistId);
     // Task<List<OtherVideoMetadata>> GetPagedOtherVideos(int artistId, int pageNumber, int pageSize);

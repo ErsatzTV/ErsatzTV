@@ -11,6 +11,7 @@ public record PtsAndDuration(long Pts, long Duration)
             // some durations are N/A, so we have to guess at something
             right = 10_000;
         }
+
         return new PtsAndDuration(left, right);
     }
 }

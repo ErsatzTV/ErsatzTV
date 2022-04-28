@@ -45,15 +45,19 @@ public class FakeLocalFileSystem : ILocalFileSystem
     public IEnumerable<string> ListFiles(string folder) =>
         _files.Map(f => f.Path).Filter(f => Path.GetDirectoryName(f) == folder);
 
+    // TODO: this isn't accurate, need to use search pattern
+    public IEnumerable<string> ListFiles(string folder, string searchPattern) =>
+        _files.Map(f => f.Path).Filter(f => Path.GetDirectoryName(f) == folder);
+
     public bool FileExists(string path) => _files.Any(f => f.Path == path);
     public bool FolderExists(string folder) => false;
-
-    public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
     public Task<Either<BaseError, Unit>> CopyFile(string source, string destination) =>
         Task.FromResult(Right<BaseError, Unit>(Unit.Default));
 
     public Unit EmptyFolder(string folder) => Unit.Default;
+
+    public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
     private static List<DirectoryInfo> Split(DirectoryInfo path)
     {

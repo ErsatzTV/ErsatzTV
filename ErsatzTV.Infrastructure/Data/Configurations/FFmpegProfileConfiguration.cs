@@ -12,5 +12,8 @@ public class FFmpegProfileConfiguration : IEntityTypeConfiguration<FFmpegProfile
 
         builder.Property(p => p.NormalizeFramerate)
             .HasDefaultValue(false);
+
+        builder.Property(p => p.DeinterlaceVideo)
+            .HasDefaultValue(true);
     }
 }

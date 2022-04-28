@@ -1,13 +1,14 @@
 ﻿using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Health;
 
 public class HealthCheckService : IHealthCheckService
 {
-    private readonly List<IHealthCheck> _checks;
+    private readonly List<IHealthCheck> _checks; // ReSharper disable SuggestBaseTypeForParameterInConstructor
+    private readonly ILogger<HealthCheckService> _logger;
 
-    // ReSharper disable SuggestBaseTypeForParameterInConstructor
     public HealthCheckService(
         IFFmpegVersionHealthCheck ffmpegVersionHealthCheck,
         IFFmpegReportsHealthCheck ffmpegReportsHealthCheck,
@@ -16,9 +17,12 @@ public class HealthCheckService : IHealthCheckService
         IEpisodeMetadataHealthCheck episodeMetadataHealthCheck,
         IZeroDurationHealthCheck zeroDurationHealthCheck,
         IFileNotFoundHealthCheck fileNotFoundHealthCheck,
+        IUnavailableHealthCheck unavailableHealthCheck,
         IVaapiDriverHealthCheck vaapiDriverHealthCheck,
-        IErrorReportsHealthCheck errorReportsHealthCheck)
+        IErrorReportsHealthCheck errorReportsHealthCheck,
+        ILogger<HealthCheckService> logger)
     {
+        _logger = logger;
         _checks = new List<IHealthCheck>
         {
             ffmpegVersionHealthCheck,
@@ -28,11 +32,29 @@ public class HealthCheckService : IHealthCheckService
             episodeMetadataHealthCheck,
             zeroDurationHealthCheck,
             fileNotFoundHealthCheck,
+            unavailableHealthCheck,
             vaapiDriverHealthCheck,
             errorReportsHealthCheck
         };
     }
 
     public Task<List<HealthCheckResult>> PerformHealthChecks(CancellationToken cancellationToken) =>
-        _checks.Map(c => c.Check(cancellationToken)).SequenceParallel().Map(results => results.ToList());
+        _checks.Map(
+                c =>
+                {
+                    var failedResult = new HealthCheckResult(
+                        c.Title,
+                        HealthCheckStatus.Fail,
+                        "Health check failure; see logs",
+                        None);
+                    return TryAsync(() => c.Check(cancellationToken)).IfFail(ex => LogAndReturn(ex, failedResult));
+                })
+            .SequenceParallel()
+            .Map(results => results.ToList());
+
+    private HealthCheckResult LogAndReturn(Exception ex, HealthCheckResult failedResult)
+    {
+        _logger.LogWarning(ex, "Failed to run health check {Title}", failedResult.Title);
+        return failedResult;
+    }
 }

@@ -37,18 +37,13 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.ThreadCount).GreaterThanOrEqualTo(0);
 
-        When(
-            x => x.Transcode,
-            () =>
-            {
-                RuleFor(x => x.VideoFormat).NotEqual(FFmpegProfileVideoFormat.None);
-                RuleFor(x => x.VideoBitrate).GreaterThan(0);
-                RuleFor(x => x.VideoBufferSize).GreaterThan(0);
+        RuleFor(x => x.VideoFormat).NotEqual(FFmpegProfileVideoFormat.None);
+        RuleFor(x => x.VideoBitrate).GreaterThan(0);
+        RuleFor(x => x.VideoBufferSize).GreaterThan(0);
 
-                RuleFor(x => x.AudioFormat).NotEqual(FFmpegProfileAudioFormat.None);
-                RuleFor(x => x.AudioBitrate).GreaterThan(0);
-                RuleFor(x => x.AudioChannels).GreaterThan(0);
-            });
+        RuleFor(x => x.AudioFormat).NotEqual(FFmpegProfileAudioFormat.None);
+        RuleFor(x => x.AudioBitrate).GreaterThan(0);
+        RuleFor(x => x.AudioChannels).GreaterThan(0);
 
         When(
             x => x.HardwareAcceleration == HardwareAccelerationKind.Qsv,

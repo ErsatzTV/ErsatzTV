@@ -6,13 +6,7 @@ public class HardwareDownloadFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
-    public HardwareDownloadFilter(FrameState currentState)
-    {
-        _currentState = currentState;
-    }
-
-    public override FrameState NextState(FrameState currentState) =>
-        currentState with { FrameDataLocation = FrameDataLocation.Software };
+    public HardwareDownloadFilter(FrameState currentState) => _currentState = currentState;
 
     public override string Filter
     {
@@ -34,4 +28,7 @@ public class HardwareDownloadFilter : BaseFilter
             return hwdownload;
         }
     }
+
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { FrameDataLocation = FrameDataLocation.Software };
 }

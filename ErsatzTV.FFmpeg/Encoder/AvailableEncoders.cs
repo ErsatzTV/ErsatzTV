@@ -15,27 +15,36 @@ public static class AvailableEncoders
         FrameState currentState,
         FrameState desiredState,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
+        Option<SubtitleInputFile> maybeSubtitleInputFile,
         ILogger logger) =>
         (ffmpegState.HardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
 
             (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(
                 currentState,
-                maybeWatermarkInputFile),
-            (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(currentState),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(
+                currentState,
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
             (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
 
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) => new EncoderH264VideoToolbox(),
@@ -49,7 +58,7 @@ public static class AvailableEncoders
 
             var (accel, videoFormat) => LogUnknownEncoder(accel, videoFormat, logger)
         };
-    
+
     private static Option<IEncoder> LogUnknownEncoder(
         HardwareAccelerationMode hardwareAccelerationMode,
         string videoFormat,
@@ -62,9 +71,8 @@ public static class AvailableEncoders
         return Option<IEncoder>.None;
     }
 
-    public static Option<IEncoder> ForAudioFormat(AudioState desiredState, ILogger logger)
-    {
-        return desiredState.AudioFormat.Match(
+    public static Option<IEncoder> ForAudioFormat(AudioState desiredState, ILogger logger) =>
+        desiredState.AudioFormat.Match(
             audioFormat =>
                 audioFormat switch
                 {
@@ -74,8 +82,7 @@ public static class AvailableEncoders
                     _ => LogUnknownEncoder(audioFormat, logger)
                 },
             () => LogUnknownEncoder(string.Empty, logger));
-    }
-    
+
     private static Option<IEncoder> LogUnknownEncoder(
         string audioFormat,
         ILogger logger)

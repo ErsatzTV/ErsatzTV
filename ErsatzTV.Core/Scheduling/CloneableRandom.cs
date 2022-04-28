@@ -2,10 +2,10 @@
 
 public class CloneableRandom
 {
-    private readonly int _seed;
     private readonly Random _random;
+    private readonly int _seed;
     private int _count;
-        
+
     public CloneableRandom(int seed)
     {
         _seed = seed;
@@ -15,7 +15,7 @@ public class CloneableRandom
     public CloneableRandom Clone()
     {
         var clone = new CloneableRandom(_seed);
-            
+
         for (var i = 0; i < _count; i++)
         {
             clone.Next();

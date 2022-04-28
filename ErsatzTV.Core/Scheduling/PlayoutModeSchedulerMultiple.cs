@@ -11,10 +11,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
     private readonly Map<CollectionKey, List<MediaItem>> _collectionMediaItems;
 
     public PlayoutModeSchedulerMultiple(Map<CollectionKey, List<MediaItem>> collectionMediaItems, ILogger logger)
-        : base(logger)
-    {
+        : base(logger) =>
         _collectionMediaItems = collectionMediaItems;
-    }
 
     public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
         PlayoutBuilderState playoutBuilderState,
@@ -24,7 +22,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
         DateTimeOffset hardStop)
     {
         var playoutItems = new List<PlayoutItem>();
-            
+
         PlayoutBuilderState nextState = playoutBuilderState with
         {
             MultipleRemaining = playoutBuilderState.MultipleRemaining.IfNone(scheduleItem.Count)
@@ -61,7 +59,11 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 GuideGroup = nextState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
-                    : FillerKind.None
+                    : FillerKind.None,
+                WatermarkId = scheduleItem.WatermarkId,
+                PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                SubtitleMode = scheduleItem.SubtitleMode
             };
 
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
@@ -74,7 +76,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
             playoutItems.AddRange(
                 AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
-                
+
             nextState = nextState with
             {
                 CurrentTime = itemEndTimeWithFiller,
@@ -99,7 +101,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
             nextState.ScheduleItemsEnumerator.MoveNext();
         }
-            
+
         DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
 
         if (scheduleItem.TailFiller != null)
@@ -121,7 +123,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 playoutItems,
                 nextItemStart);
         }
-            
+
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
         return Tuple(nextState, playoutItems);

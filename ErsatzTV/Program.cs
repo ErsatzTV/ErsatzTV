@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
 
@@ -9,7 +11,7 @@ public class Program
 
     static Program()
     {
-        string executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+        string executablePath = Process.GetCurrentProcess().MainModule.FileName;
         string executable = Path.GetFileNameWithoutExtension(executablePath);
 
         IConfigurationBuilder builder = new ConfigurationBuilder();
@@ -35,6 +37,7 @@ public class Program
     {
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
+            .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
             .WriteTo.SQLite(FileSystemLayout.LogDatabasePath, retentionPeriod: TimeSpan.FromDays(1))
             .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day)

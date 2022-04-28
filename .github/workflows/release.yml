@@ -16,7 +16,7 @@ jobs:
         run: |
           tag=$(git describe --tags --abbrev=0)
           echo "GIT_TAG=${tag:1}" >> $GITHUB_ENV
-          echo "DOCKER_TAG=${tag/-alpha/}" >> $GITHUB_ENV
+          echo "DOCKER_TAG=${tag/-beta/}" >> $GITHUB_ENV
       - name: Extract Artifacts Version
         shell: bash
         run: |

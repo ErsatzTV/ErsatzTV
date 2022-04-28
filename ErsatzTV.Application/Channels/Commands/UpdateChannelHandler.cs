@@ -1,20 +1,29 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Channels.Mapper;
+using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Channels;
 
 public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseError, ChannelViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
 
-    public UpdateChannelHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public UpdateChannelHandler(
+        ChannelWriter<ISubtitleWorkerRequest> ffmpegWorkerChannel,
+        IDbContextFactory<TvContext> dbContextFactory)
+    {
+        _ffmpegWorkerChannel = ffmpegWorkerChannel;
         _dbContextFactory = dbContextFactory;
+    }
 
     public async Task<Either<BaseError, ChannelViewModel>> Handle(
         UpdateChannel request,
@@ -32,7 +41,9 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         c.Group = update.Group;
         c.Categories = update.Categories;
         c.FFmpegProfileId = update.FFmpegProfileId;
-        c.PreferredLanguageCode = update.PreferredLanguageCode;
+        c.PreferredAudioLanguageCode = update.PreferredAudioLanguageCode;
+        c.PreferredSubtitleLanguageCode = update.PreferredSubtitleLanguageCode;
+        c.SubtitleMode = update.SubtitleMode;
         c.Artwork ??= new List<Artwork>();
 
         if (!string.IsNullOrWhiteSpace(update.Logo))
@@ -58,18 +69,30 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
                     c.Artwork.Add(artwork);
                 });
         }
-            
+
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
         await dbContext.SaveChangesAsync();
+
+        if (c.SubtitleMode != ChannelSubtitleMode.None)
+        {
+            Option<Playout> maybePlayout = await dbContext.Playouts
+                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == c.Id);
+
+            foreach (Playout playout in maybePlayout)
+            {
+                await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
+            }
+        }
+
         return ProjectToViewModel(c);
     }
 
     private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
         (await ChannelMustExist(dbContext, request), ValidateName(request),
             await ValidateNumber(dbContext, request),
-            ValidatePreferredLanguage(request))
+            ValidatePreferredAudioLanguage(request))
         .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
@@ -100,16 +123,16 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
                 return updateChannel.Number;
             }
 
-            return BaseError.New("Invalid channel number; one decimal is allowed for subchannels");
+            return BaseError.New("Invalid channel number; two decimals are allowed for subchannels");
         }
 
         return BaseError.New("Channel number must be unique");
     }
 
-    private static Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
-        Optional(updateChannel.PreferredLanguageCode ?? string.Empty)
+    private static Validation<BaseError, string> ValidatePreferredAudioLanguage(UpdateChannel updateChannel) =>
+        Optional(updateChannel.PreferredAudioLanguageCode ?? string.Empty)
             .Filter(
                 lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
-            .ToValidation<BaseError>("Preferred language code is invalid");
+            .ToValidation<BaseError>("Preferred audio language code is invalid");
 }

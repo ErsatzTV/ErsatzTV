@@ -26,7 +26,7 @@ public class PlatformSettingsService : IHostedService
 
         IRuntimeInfo runtimeInfo = scope.ServiceProvider.GetRequiredService<IRuntimeInfo>();
         if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux) &&
-            System.IO.Directory.Exists("/dev/dri"))
+            Directory.Exists("/dev/dri"))
         {
             ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
             IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();

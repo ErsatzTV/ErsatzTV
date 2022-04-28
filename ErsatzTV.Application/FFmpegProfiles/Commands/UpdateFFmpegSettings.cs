@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public record UpdateFFmpegSettings(FFmpegSettingsViewModel Settings) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record UpdateFFmpegSettings(FFmpegSettingsViewModel Settings) : IRequest<Either<BaseError, Unit>>;

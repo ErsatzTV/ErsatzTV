@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Emby;
 
-public record DisconnectEmby : MediatR.IRequest<Either<BaseError, Unit>>;
+public record DisconnectEmby : IRequest<Either<BaseError, Unit>>;

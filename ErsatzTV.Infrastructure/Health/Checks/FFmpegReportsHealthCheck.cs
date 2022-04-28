@@ -12,6 +12,8 @@ public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthChe
     public FFmpegReportsHealthCheck(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
+    public override string Title => "FFmpeg Reports";
+
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         Option<bool> saveReports =
@@ -29,6 +31,4 @@ public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthChe
 
         return OkResult();
     }
-
-    protected override string Title => "FFmpeg Reports";
 }

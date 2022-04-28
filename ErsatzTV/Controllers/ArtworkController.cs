@@ -109,7 +109,10 @@ public class ArtworkController : ControllerBase
         GetPlexArtwork(plexMediaSourceId, $"/{path}", cancellationToken);
 
     [HttpGet("/artwork/thumbnails/plex/{plexMediaSourceId}/{*path}")]
-    public Task<IActionResult> GetPlexThumbnail(int plexMediaSourceId, string path, CancellationToken cancellationToken) =>
+    public Task<IActionResult> GetPlexThumbnail(
+        int plexMediaSourceId,
+        string path,
+        CancellationToken cancellationToken) =>
         GetPlexArtwork(
             plexMediaSourceId,
             $"photo/:/transcode?url=/{path}&height=220&width=392&minSize=1&upscale=0",
@@ -129,7 +132,10 @@ public class ArtworkController : ControllerBase
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
 
-    private async Task<IActionResult> GetPlexArtwork(int plexMediaSourceId, string transcodePath, CancellationToken cancellationToken)
+    private async Task<IActionResult> GetPlexArtwork(
+        int plexMediaSourceId,
+        string transcodePath,
+        CancellationToken cancellationToken)
     {
         Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId), cancellationToken);

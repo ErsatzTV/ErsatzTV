@@ -7,7 +7,7 @@ using ErsatzTV.Core.Interfaces.Search;
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public class DisconnectJellyfinHandler : MediatR.IRequestHandler<DisconnectJellyfin, Either<BaseError, Unit>>
+public class DisconnectJellyfinHandler : IRequestHandler<DisconnectJellyfin, Either<BaseError, Unit>>
 {
     private readonly IEntityLocker _entityLocker;
     private readonly IJellyfinSecretStore _jellyfinSecretStore;

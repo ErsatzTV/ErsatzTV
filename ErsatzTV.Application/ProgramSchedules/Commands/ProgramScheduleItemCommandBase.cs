@@ -31,7 +31,7 @@ public abstract class ProgramScheduleItemCommandBase
         List<FillerPreset> allFiller = await dbContext.FillerPresets
             .Filter(fp => allFillerIds.Contains(fp.Id))
             .ToListAsync();
-            
+
         if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
         {
             return BaseError.New("Schedule may only contain one filler preset that is configured to pad");
@@ -70,7 +70,8 @@ public abstract class ProgramScheduleItemCommandBase
             case PlayoutMode.Multiple:
                 if (item.MultipleCount.GetValueOrDefault() < 0)
                 {
-                    return BaseError.New("[MultipleCount] must be greater than or equal to 0 for playout mode 'multiple'");
+                    return BaseError.New(
+                        "[MultipleCount] must be greater than or equal to 0 for playout mode 'multiple'");
                 }
 
                 break;
@@ -176,7 +177,11 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             PlayoutMode.One => new ProgramScheduleItemOne
             {
@@ -195,7 +200,11 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             PlayoutMode.Multiple => new ProgramScheduleItemMultiple
             {
@@ -215,7 +224,11 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             PlayoutMode.Duration => new ProgramScheduleItemDuration
             {
@@ -236,7 +249,11 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
         };

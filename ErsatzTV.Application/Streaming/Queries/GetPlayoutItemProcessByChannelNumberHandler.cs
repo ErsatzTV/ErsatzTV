@@ -1,10 +1,9 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -20,19 +19,19 @@ namespace ErsatzTV.Application.Streaming;
 
 public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
 {
-    private readonly IEmbyPathReplacementService _embyPathReplacementService;
-    private readonly IMediaCollectionRepository _mediaCollectionRepository;
-    private readonly ITelevisionRepository _televisionRepository;
     private readonly IArtistRepository _artistRepository;
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
+    private readonly ITelevisionRepository _televisionRepository;
 
     public GetPlayoutItemProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ILocalFileSystem localFileSystem,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
@@ -43,7 +42,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         ISongVideoGenerator songVideoGenerator)
         : base(dbContextFactory)
     {
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
+        _ffmpegProcessService = ffmpegProcessService;
         _localFileSystem = localFileSystem;
         _plexPathReplacementService = plexPathReplacementService;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
@@ -59,17 +58,24 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         GetPlayoutItemProcessByChannelNumber request,
         Channel channel,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken)
     {
         DateTimeOffset now = request.Now;
 
         Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
             .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Movie).MovieMetadata)
+            .ThenInclude(mm => mm.Subtitles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Movie).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
@@ -77,11 +83,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(mi => (mi as Movie).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as MusicVideo).MusicVideoMetadata)
+            .ThenInclude(mvm => mvm.Subtitles)
+            .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as OtherVideo).OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Subtitles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
             .ThenInclude(ov => ov.MediaFiles)
@@ -97,6 +109,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Song).SongMetadata)
             .ThenInclude(sm => sm.Artwork)
+            .Include(i => i.Watermark)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(ValidatePlayoutItemPath);
@@ -105,8 +118,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         {
             maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);
         }
-
-        IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
 
         foreach (PlayoutItemWithPath playoutItemWithPath in maybePlayoutItem.RightToSeq())
         {
@@ -129,8 +140,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
                     song,
                     channel,
+                    Optional(playoutItemWithPath.PlayoutItem.Watermark),
                     maybeGlobalWatermark,
                     ffmpegPath,
+                    ffprobePath,
                     cancellationToken);
             }
 
@@ -138,17 +151,25 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            Process process = await ffmpegProcessService.ForPlayoutItem(
+            List<Subtitle> subtitles = GetSubtitles(playoutItemWithPath);
+
+            Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
+                ffprobePath,
                 saveReports,
                 channel,
                 videoVersion,
                 audioVersion,
                 videoPath,
                 audioPath,
+                subtitles,
+                playoutItemWithPath.PlayoutItem.PreferredAudioLanguageCode ?? channel.PreferredAudioLanguageCode,
+                playoutItemWithPath.PlayoutItem.PreferredSubtitleLanguageCode ?? channel.PreferredSubtitleLanguageCode,
+                playoutItemWithPath.PlayoutItem.SubtitleMode ?? channel.SubtitleMode,
                 playoutItemWithPath.PlayoutItem.StartOffset,
                 playoutItemWithPath.PlayoutItem.FinishOffset,
                 request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
+                Optional(playoutItemWithPath.PlayoutItem.Watermark),
                 maybeGlobalWatermark,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
@@ -159,96 +180,116 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.PtsOffset,
                 request.TargetFramerate);
 
-            var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
+            var result = new PlayoutItemProcessModel(
+                process,
+                playoutItemWithPath.PlayoutItem.FinishOffset -
+                (request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now),
+                playoutItemWithPath.PlayoutItem.FinishOffset);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
 
         foreach (BaseError error in maybePlayoutItem.LeftToSeq())
         {
-            var offlineTranscodeMessage =
-                $"offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
-
-            Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                .Where(transcode => transcode)
-                .Match(
-                    _ => dbContext.PlayoutItems
-                        .Filter(pi => pi.Playout.ChannelId == channel.Id)
-                        .Filter(pi => pi.Start > now.UtcDateTime)
-                        .OrderBy(pi => pi.Start)
-                        .FirstOrDefaultAsync()
-                        .Map(Optional)
-                        .MapT(pi => pi.StartOffset - now),
-                    () => Option<TimeSpan>.None.AsTask());
+            Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
+                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                .Filter(pi => pi.Start > now.UtcDateTime)
+                .OrderBy(pi => pi.Start)
+                .FirstOrDefaultAsync(cancellationToken)
+                .Map(Optional)
+                .MapT(pi => pi.StartOffset - now);
 
             DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
 
             switch (error)
             {
                 case UnableToLocatePlayoutItem:
-                    if (channel.FFmpegProfile.Transcode)
-                    {
-                        Process errorProcess = await ffmpegProcessService.ForError(
-                            ffmpegPath,
-                            channel,
-                            maybeDuration,
-                            "Channel is Offline",
-                            request.HlsRealtime,
-                            request.PtsOffset);
+                    Command offlineProcess = await _ffmpegProcessService.ForError(
+                        ffmpegPath,
+                        channel,
+                        maybeDuration,
+                        "Channel is Offline",
+                        request.HlsRealtime,
+                        request.PtsOffset);
 
-                        return new PlayoutItemProcessModel(errorProcess, finish);
-                    }
-                    else
-                    {
-                        var message =
-                            $"Unable to locate playout item for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                        return BaseError.New(message);
-                    }
+                    return new PlayoutItemProcessModel(offlineProcess, maybeDuration, finish);
                 case PlayoutItemDoesNotExistOnDisk:
-                    if (channel.FFmpegProfile.Transcode)
-                    {
-                        Process errorProcess = await ffmpegProcessService.ForError(
-                            ffmpegPath,
-                            channel,
-                            maybeDuration,
-                            error.Value,
-                            request.HlsRealtime,
-                            request.PtsOffset);
+                    Command doesNotExistProcess = await _ffmpegProcessService.ForError(
+                        ffmpegPath,
+                        channel,
+                        maybeDuration,
+                        error.Value,
+                        request.HlsRealtime,
+                        request.PtsOffset);
 
-                        return new PlayoutItemProcessModel(errorProcess, finish);
-                    }
-                    else
-                    {
-                        var message =
-                            $"Playout item does not exist on disk for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                        return BaseError.New(message);
-                    }
+                    return new PlayoutItemProcessModel(doesNotExistProcess, maybeDuration, finish);
                 default:
-                    if (channel.FFmpegProfile.Transcode)
-                    {
-                        Process errorProcess = await ffmpegProcessService.ForError(
-                            ffmpegPath,
-                            channel,
-                            maybeDuration,
-                            "Channel is Offline",
-                            request.HlsRealtime,
-                            request.PtsOffset);
+                    Command errorProcess = await _ffmpegProcessService.ForError(
+                        ffmpegPath,
+                        channel,
+                        maybeDuration,
+                        "Channel is Offline",
+                        request.HlsRealtime,
+                        request.PtsOffset);
 
-                        return new PlayoutItemProcessModel(errorProcess, finish);
-                    }
-                    else
-                    {
-                        var message =
-                            $"Unexpected error locating playout item for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                        return BaseError.New(message);
-                    }
+                    return new PlayoutItemProcessModel(errorProcess, maybeDuration, finish);
             }
         }
 
         return BaseError.New($"Unexpected error locating playout item for channel {channel.Number}");
+    }
+
+    private static List<Subtitle> GetSubtitles(PlayoutItemWithPath playoutItemWithPath)
+    {
+        List<Subtitle> allSubtitles = playoutItemWithPath.PlayoutItem.MediaItem switch
+        {
+            Episode episode => Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles)
+                .IfNone(new List<Subtitle>()),
+            Movie movie => Optional(movie.MovieMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles)
+                .IfNone(new List<Subtitle>()),
+            MusicVideo musicVideo => Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles)
+                .IfNone(new List<Subtitle>()),
+            OtherVideo otherVideo => Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
+                .Map(mm => mm.Subtitles)
+                .IfNone(new List<Subtitle>()),
+            _ => new List<Subtitle>()
+        };
+
+        bool isMediaServer = playoutItemWithPath.PlayoutItem.MediaItem is PlexMovie or PlexEpisode or
+            JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
+
+        if (isMediaServer)
+        {
+            string mediaItemFolder = Path.GetDirectoryName(playoutItemWithPath.Path);
+
+            allSubtitles = allSubtitles.Map<Subtitle, Option<Subtitle>>(
+                    subtitle =>
+                    {
+                        if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
+                        {
+                            // need to prepend path with movie/episode folder
+                            if (!string.IsNullOrWhiteSpace(mediaItemFolder))
+                            {
+                                subtitle.Path = Path.Combine(mediaItemFolder, subtitle.Path);
+
+                                // skip subtitles that don't exist
+                                if (!File.Exists(subtitle.Path))
+                                {
+                                    return None;
+                                }
+                            }
+                        }
+
+                        return subtitle;
+                    })
+                .Somes()
+                .ToList();
+        }
+
+        return allSubtitles;
     }
 
     private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(
@@ -281,18 +322,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             // TODO: shuffle? does it really matter since we loop anyway
             MediaItem item = items[new Random().Next(items.Count)];
-                
-            Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                .Where(transcode => transcode)
-                .Match(
-                    _ => dbContext.PlayoutItems
-                        .Filter(pi => pi.Playout.ChannelId == channel.Id)
-                        .Filter(pi => pi.Start > now.UtcDateTime)
-                        .OrderBy(pi => pi.Start)
-                        .FirstOrDefaultAsync()
-                        .Map(Optional)
-                        .MapT(pi => pi.StartOffset - now),
-                    () => Option<TimeSpan>.None.AsTask());
+
+            Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
+                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                .Filter(pi => pi.Start > now.UtcDateTime)
+                .OrderBy(pi => pi.Start)
+                .FirstOrDefaultAsync()
+                .Map(Optional)
+                .MapT(pi => pi.StartOffset - now);
 
             MediaVersion version = item.GetHeadVersion();
 
@@ -326,7 +363,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 InPoint = TimeSpan.Zero,
                 OutPoint = version.Duration
             };
-                
+
             return await ValidatePlayoutItemPath(playoutItem);
         }
 

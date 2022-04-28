@@ -18,7 +18,8 @@ public record TelevisionEpisodeCardViewModel
     List<string> Directors,
     List<string> Writers,
     MediaItemState State,
-    string Path) : MediaCardViewModel(
+    string Path,
+    string LocalPath) : MediaCardViewModel(
     EpisodeId,
     Title,
     $"Episode {Episode}",

@@ -13,8 +13,6 @@ public class WatermarkPixelFormatFilter : BaseFilter
         _watermarkState = watermarkState;
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState;
-
     public override string Filter
     {
         get
@@ -33,4 +31,6 @@ public class WatermarkPixelFormatFilter : BaseFilter
             return maybeFormat.Match(f => $"format={f}", () => string.Empty);
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

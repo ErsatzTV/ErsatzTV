@@ -53,7 +53,6 @@ using FluentValidation.AspNetCore;
 using Ganss.XSS;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
-using Microsoft.AspNetCore.SpaServices;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -62,7 +61,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
 using Serilog;
-using VueCliMiddleware;
 
 namespace ErsatzTV;
 
@@ -92,9 +90,9 @@ public class Startup
                     ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown";
                 configuration.AutoNotify = false;
-                    
+
                 configuration.NotifyReleaseStages = new[] { "public", "develop" };
-                    
+
 #if DEBUG
                 configuration.ReleaseStage = "develop";
 #else
@@ -102,7 +100,7 @@ public class Startup
                     configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
 #endif
             });
-            
+
         services.AddCors(
             o => o.AddPolicy(
                 "AllowAll",
@@ -162,7 +160,7 @@ public class Startup
             Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "unknown");
 
-        Log.Logger.Warning("This is alpha software and is likely to be unstable");
+        Log.Logger.Warning("This is beta software and may be unstable");
         Log.Logger.Warning(
             "Give feedback at {GitHub} or {Discord}",
             "https://github.com/jasongdove/ErsatzTV",
@@ -181,6 +179,11 @@ public class Startup
         if (!Directory.Exists(FileSystemLayout.TempFilePoolFolder))
         {
             Directory.CreateDirectory(FileSystemLayout.TempFilePoolFolder);
+        }
+
+        if (!Directory.Exists(FileSystemLayout.FontsCacheFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.FontsCacheFolder);
         }
 
         Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
@@ -212,13 +215,13 @@ public class Startup
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     o.MigrationsAssembly("ErsatzTV.Infrastructure");
                 }));
-            
+
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
         SqlMapper.AddTypeHandler(new GuidHandler());
         SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
         var logConnectionString = $"Data Source={FileSystemLayout.LogDatabasePath}";
-            
+
         services.AddDbContext<LogContext>(
             options => options.UseSqlite(logConnectionString),
             ServiceLifetime.Scoped,
@@ -296,15 +299,15 @@ public class Startup
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
 
-                if (env.IsDevelopment())
-                {
-                    endpoints.MapToVueCliProxy(
-                        "/v2/{*path}",
-                        new SpaOptions { SourcePath = "client-app" },
-                        "serve",
-                        regex: "Compiled successfully",
-                        forceKill: true);
-                }
+                // if (env.IsDevelopment())
+                // {
+                //     endpoints.MapToVueCliProxy(
+                //         "/v2/{*path}",
+                //         new SpaOptions { SourcePath = "client-app" },
+                //         "serve",
+                //         regex: "Compiled successfully",
+                //         forceKill: true);
+                // }
             });
     }
 
@@ -324,7 +327,8 @@ public class Startup
         AddChannel<IJellyfinBackgroundServiceRequest>(services);
         AddChannel<IEmbyBackgroundServiceRequest>(services);
         AddChannel<IFFmpegWorkerRequest>(services);
-            
+        AddChannel<ISubtitleWorkerRequest>(services);
+
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
         services.AddScoped<IHardwareAccelerationHealthCheck, HardwareAccelerationHealthCheck>();
@@ -332,6 +336,7 @@ public class Startup
         services.AddScoped<IEpisodeMetadataHealthCheck, EpisodeMetadataHealthCheck>();
         services.AddScoped<IZeroDurationHealthCheck, ZeroDurationHealthCheck>();
         services.AddScoped<IFileNotFoundHealthCheck, FileNotFoundHealthCheck>();
+        services.AddScoped<IUnavailableHealthCheck, UnavailableHealthCheck>();
         services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
         services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();
@@ -356,6 +361,7 @@ public class Startup
         services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
         services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
         services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
+        services.AddScoped<ILocalSubtitlesProvider, LocalSubtitlesProvider>();
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();
@@ -367,25 +373,31 @@ public class Startup
         services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
         services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
+        services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
+        services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
         services.AddScoped<IJellyfinMovieLibraryScanner, JellyfinMovieLibraryScanner>();
         services.AddScoped<IJellyfinTelevisionLibraryScanner, JellyfinTelevisionLibraryScanner>();
+        services.AddScoped<IJellyfinCollectionScanner, JellyfinCollectionScanner>();
         services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
         services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
         services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
+        services.AddScoped<IJellyfinCollectionRepository, JellyfinCollectionRepository>();
+        services.AddScoped<IJellyfinMovieRepository, JellyfinMovieRepository>();
         services.AddScoped<IEmbyApiClient, EmbyApiClient>();
         services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
         services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
+        services.AddScoped<IEmbyCollectionScanner, EmbyCollectionScanner>();
         services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
         services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
+        services.AddScoped<IEmbyCollectionRepository, EmbyCollectionRepository>();
+        services.AddScoped<IEmbyMovieRepository, EmbyMovieRepository>();
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
-            
-        // services.AddScoped<IFFmpegProcessService, FFmpegProcessService>();
-        services.AddScoped<IFFmpegProcessServiceFactory, FFmpegProcessServiceFactory>();
-        services.AddScoped<FFmpegLibraryProcessService>();
+
+        services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<FFmpegProcessService>();
-            
+
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
         services.AddScoped<HlsSessionWorker>();
         services.AddScoped<IGitHubApiClient, GitHubApiClient>();
@@ -414,6 +426,7 @@ public class Startup
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
+        services.AddHostedService<SubtitleWorkerService>();
     }
 
     private void AddChannel<TMessageType>(IServiceCollection services)

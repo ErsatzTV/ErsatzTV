@@ -9,10 +9,8 @@ public class GetPagedSmartCollectionsHandler : IRequestHandler<GetPagedSmartColl
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<PagedSmartCollectionsViewModel> Handle(
         GetPagedSmartCollections request,

@@ -42,7 +42,7 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
             _entityLocker.UnlockTrakt();
         }
     }
-        
+
     private static Validation<BaseError, Parameters> ValidateUrl(AddTraktList request)
     {
         const string PATTERN = @"(?:https:\/\/trakt\.tv\/users\/)?([\w\-_]+)\/(?:lists\/)?([\w\-_]+)";
@@ -60,13 +60,13 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
     private async Task<Either<BaseError, Unit>> DoAdd(Parameters parameters)
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            
+
         return await TraktApiClient.GetUserList(parameters.User, parameters.List)
             .BindT(list => SaveList(dbContext, list))
             .BindT(list => SaveListItems(dbContext, list))
             .BindT(list => MatchListItems(dbContext, list))
             .MapT(_ => Unit.Default);
-            
+
         // match list items (and update in search index)
     }
 

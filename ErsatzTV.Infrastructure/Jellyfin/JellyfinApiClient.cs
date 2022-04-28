@@ -196,7 +196,102 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private static Option<JellyfinLibrary> Project(JellyfinLibraryResponse response) =>
+    public async Task<Either<BaseError, List<JellyfinCollection>>> GetCollectionLibraryItems(
+        string address,
+        string apiKey,
+        int mediaSourceId)
+    {
+        try
+        {
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+            {
+                // TODO: should we enumerate collection libraries here?
+
+                if (_memoryCache.TryGetValue("jellyfin_collections_library_item_id", out string itemId))
+                {
+                    IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                    JellyfinLibraryItemsResponse items =
+                        await service.GetCollectionLibraryItems(apiKey, userId, itemId);
+                    return items.Items
+                        .Map(ProjectToCollection)
+                        .Somes()
+                        .ToList();
+                }
+
+                return BaseError.New("Jellyfin collection item id is not available");
+            }
+
+            return BaseError.New("Jellyfin admin user id is not available");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting jellyfin collection library items");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    public async Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+        string address,
+        string apiKey,
+        int mediaSourceId,
+        string collectionId)
+    {
+        try
+        {
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+            {
+                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                JellyfinLibraryItemsResponse items = await service.GetCollectionItems(
+                    apiKey,
+                    userId,
+                    collectionId);
+                return items.Items
+                    .Map(ProjectToCollectionMediaItem)
+                    .Somes()
+                    .ToList();
+            }
+
+            return BaseError.New("Jellyfin admin user id is not available");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting jellyfin collection items");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    private Option<MediaItem> ProjectToCollectionMediaItem(JellyfinLibraryItemResponse item)
+    {
+        try
+        {
+            if (item.LocationType != "FileSystem")
+            {
+                return None;
+            }
+
+            if (Path.GetExtension(item.Path)?.ToLowerInvariant() == ".strm")
+            {
+                _logger.LogWarning("STRM files are not supported; skipping {Path}", item.Path);
+                return None;
+            }
+
+            return item.Type switch
+            {
+                "Movie" => new JellyfinMovie { ItemId = item.Id },
+                "Series" => new JellyfinShow { ItemId = item.Id },
+                "Season" => new JellyfinSeason { ItemId = item.Id },
+                "Episode" => new JellyfinEpisode { ItemId = item.Id },
+                _ => None
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Jellyfin collection media item");
+            return None;
+        }
+    }
+
+    private Option<JellyfinLibrary> Project(JellyfinLibraryResponse response) =>
         response.CollectionType?.ToLowerInvariant() switch
         {
             "tvshows" => new JellyfinLibrary
@@ -216,8 +311,15 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } }
             },
             // TODO: ??? for music libraries
+            "boxsets" => CacheCollectionLibraryId(response.ItemId),
             _ => None
         };
+
+    private Option<JellyfinLibrary> CacheCollectionLibraryId(string itemId)
+    {
+        _memoryCache.Set("jellyfin_collections_library_item_id", itemId);
+        return None;
+    }
 
     private Option<JellyfinMovie> ProjectToMovie(JellyfinLibraryItemResponse item)
     {
@@ -479,7 +581,8 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Year = item.ProductionYear,
                 DateAdded = dateAdded,
                 Artwork = new List<Artwork>(),
-                Guids = GuidsFromProviderIds(item.ProviderIds)
+                Guids = GuidsFromProviderIds(item.ProviderIds),
+                Tags = new List<Tag>()
             };
 
             if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
@@ -522,6 +625,24 @@ public class JellyfinApiClient : IJellyfinApiClient
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error projecting Jellyfin season");
+            return None;
+        }
+    }
+
+    private Option<JellyfinCollection> ProjectToCollection(JellyfinLibraryItemResponse item)
+    {
+        try
+        {
+            return new JellyfinCollection
+            {
+                ItemId = item.Id,
+                Etag = item.Etag,
+                Name = item.Name
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Jellyfin collection");
             return None;
         }
     }

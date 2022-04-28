@@ -61,6 +61,9 @@ public class PlexMetadataResponse
     [XmlElement("Genre")]
     public List<PlexGenreResponse> Genre { get; set; }
 
+    [XmlElement("Label")]
+    public List<PlexLabelResponse> Label { get; set; }
+
     [XmlElement("Role")]
     public List<PlexRoleResponse> Role { get; set; }
 
@@ -69,4 +72,7 @@ public class PlexMetadataResponse
 
     [XmlElement("Writer")]
     public List<PlexWriterResponse> Writer { get; set; }
+
+    [XmlElement("Collection")]
+    public List<PlexCollectionResponse> Collection { get; set; }
 }

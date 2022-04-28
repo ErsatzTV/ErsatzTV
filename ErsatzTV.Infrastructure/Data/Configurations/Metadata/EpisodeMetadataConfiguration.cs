@@ -29,5 +29,9 @@ public class EpisodeMetadataConfiguration : IEntityTypeConfiguration<EpisodeMeta
         builder.HasMany(mm => mm.Guids)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(em => em.Subtitles)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

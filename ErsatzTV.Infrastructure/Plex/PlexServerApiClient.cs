@@ -100,7 +100,9 @@ public class PlexServerApiClient : IPlexServerApiClient
             IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
             return await service.GetLibrarySectionContents(library.Key, token.AuthToken)
                 .Map(r => r.MediaContainer.Metadata)
-                .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)).ToList());
+                .Map(
+                    list => (list ?? new List<PlexMetadataResponse>())
+                        .Map(metadata => ProjectToShow(metadata, library.MediaSourceId)).ToList());
         }
         catch (Exception ex)
         {
@@ -118,7 +120,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             IPlexServerApi service = XmlServiceFor(connection.Uri);
             return await service.GetShowChildren(show.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
-                .Map(r => r.Metadata)
+                .Map(r => r.Metadata.Filter(m => !m.Key.Contains("allLeaves")))
                 .Map(list => list.Map(metadata => ProjectToSeason(metadata, library.MediaSourceId)).ToList());
         }
         catch (Exception ex)
@@ -158,9 +160,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             IPlexServerApi service = XmlServiceFor(connection.Uri);
             return await service.GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
-                        .HeadOrNone())
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0))
                 .MapT(response => ProjectToMovieMetadata(response.Metadata, library.MediaSourceId))
                 .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
         }
@@ -202,9 +202,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
-                        .HeadOrNone());
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0));
             return maybeResponse.Match(
                 response =>
                 {
@@ -233,9 +231,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
-                        .HeadOrNone());
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0));
             return maybeResponse.Match(
                 response =>
                 {
@@ -348,6 +344,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         var movie = new PlexMovie
         {
+            Etag = PlexEtag.ForMovie(response),
             Key = response.Key,
             MovieMetadata = new List<MovieMetadata> { metadata },
             MediaVersions = new List<MediaVersion> { version },
@@ -402,6 +399,16 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Guids = new List<MetadataGuid>();
         }
 
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+        }
+
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString() });
+        }
+
         if (!string.IsNullOrWhiteSpace(response.Studio))
         {
             metadata.Studios.Add(new Studio { Name = response.Studio });
@@ -414,7 +421,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Poster,
@@ -429,7 +436,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Art))
         {
-            var path = $"plex/{mediaSourceId}{response.Art}";
+            string path = $"plex/{mediaSourceId}{response.Art}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.FanArt,
@@ -523,6 +530,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var show = new PlexShow
         {
             Key = response.Key,
+            Etag = PlexEtag.ForShow(response),
             ShowMetadata = new List<ShowMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
         };
@@ -578,6 +586,16 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Studios.Add(new Studio { Name = response.Studio });
         }
 
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+        }
+
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString() });
+        }
+
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
         {
             metadata.ReleaseDate = releaseDate;
@@ -585,7 +603,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Poster,
@@ -600,7 +618,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Art))
         {
-            var path = $"plex/{mediaSourceId}{response.Art}";
+            string path = $"plex/{mediaSourceId}{response.Art}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.FanArt,
@@ -628,7 +646,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
             Year = response.Year,
             DateAdded = dateAdded,
-            DateUpdated = lastWriteTime
+            DateUpdated = lastWriteTime,
+            Tags = new List<Tag>()
         };
 
         metadata.Guids = Optional(response.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
@@ -644,9 +663,14 @@ public class PlexServerApiClient : IPlexServerApiClient
             }
         }
 
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+        }
+
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Poster,
@@ -661,7 +685,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Art))
         {
-            var path = $"plex/{mediaSourceId}{response.Art}";
+            string path = $"plex/{mediaSourceId}{response.Art}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.FanArt,
@@ -677,6 +701,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var season = new PlexSeason
         {
             Key = response.Key,
+            Etag = PlexEtag.ForSeason(response),
             SeasonNumber = response.Index,
             SeasonMetadata = new List<SeasonMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
@@ -717,6 +742,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var episode = new PlexEpisode
         {
             Key = response.Key,
+            Etag = PlexEtag.ForEpisode(response),
             EpisodeMetadata = new List<EpisodeMetadata> { metadata },
             MediaVersions = new List<MediaVersion> { version },
             TraktListItems = new List<TraktListItem>()
@@ -744,7 +770,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
                 .ToList(),
             Directors = Optional(response.Director).Flatten().Map(d => new Director { Name = d.Tag }).ToList(),
-            Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList()
+            Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList(),
+            Tags = new List<Tag>()
         };
 
         if (response is PlexXmlMetadataResponse xml)
@@ -772,9 +799,14 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.ReleaseDate = releaseDate;
         }
 
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+        }
+
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Thumbnail,
@@ -816,7 +848,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             return guid;
         }
-            
+
         if (guid.StartsWith("com.plexapp.agents.imdb"))
         {
             string strip1 = guid.Replace("com.plexapp.agents.imdb://", string.Empty);

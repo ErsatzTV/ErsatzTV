@@ -17,9 +17,9 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
     public async Task<Either<BaseError, PlayoutItemProcessModel>> Handle(T request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Tuple<Channel, string>> validation = await Validate(dbContext, request);
+        Validation<BaseError, Tuple<Channel, string, string>> validation = await Validate(dbContext, request);
         return await validation.Match(
-            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, cancellationToken),
+            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, cancellationToken),
             error => Task.FromResult<Either<BaseError, PlayoutItemProcessModel>>(error.Join()));
     }
 
@@ -28,13 +28,15 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
         T request,
         Channel channel,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken);
 
-    private static async Task<Validation<BaseError, Tuple<Channel, string>>> Validate(
+    private static async Task<Validation<BaseError, Tuple<Channel, string, string>>> Validate(
         TvContext dbContext,
         T request) =>
-        (await ChannelMustExist(dbContext, request), await FFmpegPathMustExist(dbContext))
-        .Apply((channel, ffmpegPath) => Tuple(channel, ffmpegPath));
+        (await ChannelMustExist(dbContext, request), await FFmpegPathMustExist(dbContext),
+            await FFprobePathMustExist(dbContext))
+        .Apply((channel, ffmpegPath, ffprobePath) => Tuple(channel, ffmpegPath, ffprobePath));
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(TvContext dbContext, T request) =>
         dbContext.Channels
@@ -63,4 +65,9 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
         dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFmpegPath)
             .FilterT(File.Exists)
             .Map(maybePath => maybePath.ToValidation<BaseError>("FFmpeg path does not exist on filesystem"));
+
+    private static Task<Validation<BaseError, string>> FFprobePathMustExist(TvContext dbContext) =>
+        dbContext.ConfigElements.GetValue<string>(ConfigElementKey.FFprobePath)
+            .FilterT(File.Exists)
+            .Map(maybePath => maybePath.ToValidation<BaseError>("FFprobe path does not exist on filesystem"));
 }

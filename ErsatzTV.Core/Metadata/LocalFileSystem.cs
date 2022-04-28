@@ -47,6 +47,10 @@ public class LocalFileSystem : ILocalFileSystem
             {
                 return Directory.EnumerateDirectories(folder);
             }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Unauthorized access exception listing subdirectories of folder {Folder}", folder);
+            }
             catch (Exception ex)
             {
                 // do nothing
@@ -64,6 +68,32 @@ public class LocalFileSystem : ILocalFileSystem
             try
             {
                 return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
+            }
+            catch (Exception ex)
+            {
+                // do nothing
+                _client.Notify(ex);
+            }
+        }
+
+        return new List<string>();
+    }
+
+    public IEnumerable<string> ListFiles(string folder, string searchPattern)
+    {
+        if (Directory.Exists(folder))
+        {
+            try
+            {
+                return Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Unauthorized access exception listing files in folder {Folder}", folder);
             }
             catch (Exception ex)
             {

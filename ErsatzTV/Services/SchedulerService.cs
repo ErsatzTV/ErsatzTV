@@ -9,6 +9,7 @@ using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Search;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,7 +40,7 @@ public class SchedulerService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         DateTime firstRun = DateTime.Now;
-            
+
         // run once immediately at startup
         if (!cancellationToken.IsCancellationRequested)
         {
@@ -66,9 +67,10 @@ public class SchedulerService : BackgroundService
                 var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
                 if (roundedMinute % 30 == 0)
                 {
-                    // check for playouts to rebuild every 30 minutes
-                    await RebuildPlayouts(cancellationToken);
+                    // check for playouts to reset every 30 minutes
+                    await ResetPlayouts(cancellationToken);
                 }
+
                 if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
                 {
                     // do other work every hour (on the hour)
@@ -112,7 +114,7 @@ public class SchedulerService : BackgroundService
         }
     }
 
-    private async Task RebuildPlayouts(CancellationToken cancellationToken)
+    private async Task ResetPlayouts(CancellationToken cancellationToken)
     {
         try
         {
@@ -129,14 +131,16 @@ public class SchedulerService : BackgroundService
                 if (DateTime.Now.Subtract(DateTime.Today.Add(playout.DailyRebuildTime ?? TimeSpan.FromDays(7))) <
                     TimeSpan.FromMinutes(5))
                 {
-                    await _workerChannel.WriteAsync(new BuildPlayout(playout.Id, true), cancellationToken);
+                    await _workerChannel.WriteAsync(
+                        new BuildPlayout(playout.Id, PlayoutBuildMode.Reset),
+                        cancellationToken);
                 }
             }
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error during scheduler run");
-            
+
             try
             {
                 using (IServiceScope scope = _serviceScopeFactory.CreateScope())
@@ -162,7 +166,9 @@ public class SchedulerService : BackgroundService
             .ToListAsync(cancellationToken);
         foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)).Map(p => p.Id))
         {
-            await _workerChannel.WriteAsync(new BuildPlayout(playoutId), cancellationToken);
+            await _workerChannel.WriteAsync(
+                new BuildPlayout(playoutId, PlayoutBuildMode.Continue),
+                cancellationToken);
         }
     }
 

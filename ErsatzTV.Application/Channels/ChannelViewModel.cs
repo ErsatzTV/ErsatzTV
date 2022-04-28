@@ -10,8 +10,10 @@ public record ChannelViewModel(
     string Categories,
     int FFmpegProfileId,
     string Logo,
-    string PreferredLanguageCode,
+    string PreferredAudioLanguageCode,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,
-    int PlayoutCount);
+    int PlayoutCount,
+    string PreferredSubtitleLanguageCode,
+    ChannelSubtitleMode SubtitleMode);

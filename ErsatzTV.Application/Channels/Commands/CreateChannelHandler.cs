@@ -34,11 +34,19 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
     private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
         (ValidateName(request), await ValidateNumber(dbContext, request),
             await FFmpegProfileMustExist(dbContext, request),
-            ValidatePreferredLanguage(request),
+            ValidatePreferredAudioLanguage(request),
+            ValidatePreferredSubtitleLanguage(request),
             await WatermarkMustExist(dbContext, request),
             await FillerPresetMustExist(dbContext, request))
         .Apply(
-            (name, number, ffmpegProfileId, preferredLanguageCode, watermarkId, fillerPresetId) =>
+            (
+                name,
+                number,
+                ffmpegProfileId,
+                preferredAudioLanguageCode,
+                preferredSubtitleLanguageCode,
+                watermarkId,
+                fillerPresetId) =>
             {
                 var artwork = new List<Artwork>();
                 if (!string.IsNullOrWhiteSpace(request.Logo))
@@ -62,7 +70,9 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                     FFmpegProfileId = ffmpegProfileId,
                     StreamingMode = request.StreamingMode,
                     Artwork = artwork,
-                    PreferredLanguageCode = preferredLanguageCode
+                    PreferredAudioLanguageCode = preferredAudioLanguageCode,
+                    PreferredSubtitleLanguageCode = preferredSubtitleLanguageCode,
+                    SubtitleMode = request.SubtitleMode
                 };
 
                 foreach (int id in watermarkId)
@@ -82,14 +92,23 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
         createChannel.NotEmpty(c => c.Name)
             .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
 
-    private static Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
-        Optional(createChannel.PreferredLanguageCode ?? string.Empty)
+    private static Validation<BaseError, string> ValidatePreferredAudioLanguage(CreateChannel createChannel) =>
+        Optional(createChannel.PreferredAudioLanguageCode ?? string.Empty)
             .Filter(
                 lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
-            .ToValidation<BaseError>("Preferred language code is invalid");
+            .ToValidation<BaseError>("Preferred audio language code is invalid");
 
-    private static async Task<Validation<BaseError, string>> ValidateNumber(TvContext dbContext, CreateChannel createChannel)
+    private static Validation<BaseError, string> ValidatePreferredSubtitleLanguage(CreateChannel createChannel) =>
+        Optional(createChannel.PreferredSubtitleLanguageCode ?? string.Empty)
+            .Filter(
+                lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
+                    ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
+            .ToValidation<BaseError>("Preferred subtitle language code is invalid");
+
+    private static async Task<Validation<BaseError, string>> ValidateNumber(
+        TvContext dbContext,
+        CreateChannel createChannel)
     {
         Option<Channel> maybeExistingChannel = await dbContext.Channels
             .SelectOneAsync(c => c.Number, c => c.Number == createChannel.Number);
@@ -102,7 +121,7 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                     return createChannel.Number;
                 }
 
-                return BaseError.New("Invalid channel number; one decimal is allowed for subchannels");
+                return BaseError.New("Invalid channel number; two decimals are allowed for subchannels");
             });
     }
 

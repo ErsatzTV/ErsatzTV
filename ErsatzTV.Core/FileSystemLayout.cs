@@ -40,4 +40,9 @@ public static class FileSystemLayout
     public static readonly string LogoCacheFolder = Path.Combine(ArtworkCacheFolder, "logos");
     public static readonly string FanArtCacheFolder = Path.Combine(ArtworkCacheFolder, "fanart");
     public static readonly string WatermarkCacheFolder = Path.Combine(ArtworkCacheFolder, "watermarks");
+
+    public static readonly string StreamsCacheFolder = Path.Combine(AppDataFolder, "cache", "streams");
+
+    public static readonly string SubtitleCacheFolder = Path.Combine(StreamsCacheFolder, "subtitles");
+    public static readonly string FontsCacheFolder = Path.Combine(StreamsCacheFolder, "fonts");
 }

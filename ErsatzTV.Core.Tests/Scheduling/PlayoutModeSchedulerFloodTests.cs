@@ -37,11 +37,11 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -81,7 +81,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[2].GuideGroup.Should().Be(3);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
     }
-        
+
     [Test]
     public void Should_Fill_Exactly_To_Next_Schedule_Item_Flood()
     {
@@ -109,14 +109,14 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             // this caused trouble with the peek logic and the IsFlood flag
             new ProgramScheduleItemFlood
             {
-                StartTime = TimeSpan.FromHours(3),
+                StartTime = TimeSpan.FromHours(3)
             }
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -156,7 +156,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[2].GuideGroup.Should().Be(3);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
     }
-        
+
     [Test]
     public void Should_Fill_Exactly_To_Next_Schedule_Item_With_Post_Roll_Multiple_One()
     {
@@ -200,7 +200,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -283,11 +283,11 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -364,11 +364,11 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -461,11 +461,11 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -511,7 +511,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[3].GuideGroup.Should().Be(3);
         playoutItems[3].FillerKind.Should().Be(FillerKind.Fallback);
     }
-        
+
     [Test]
     public void Should_Have_Gap_With_Tail_No_Fallback()
     {
@@ -548,11 +548,11 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
@@ -655,7 +655,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
@@ -774,7 +774,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
             scheduleItem,
             NextScheduleItem
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             sortedScheduleItems,
             new CollectionEnumeratorState());
@@ -829,6 +829,6 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
     protected override ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne
     {
-        StartTime = TimeSpan.FromHours(3),
+        StartTime = TimeSpan.FromHours(3)
     };
 }

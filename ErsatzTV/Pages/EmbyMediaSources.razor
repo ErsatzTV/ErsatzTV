@@ -1,13 +1,14 @@
 ﻿@page "/media/sources/emby"
 @using ErsatzTV.Core.Interfaces.Emby
 @using ErsatzTV.Application.Emby
+@using ErsatzTV.Core.Emby
 @implements IDisposable
 @inject IEmbySecretStore _embySecretStore
 @inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
 
 <RemoteMediaSources
-    TViewModel="ErsatzTV.Application.Emby.EmbyMediaSourceViewModel"
-    TSecrets="ErsatzTV.Core.Emby.EmbySecrets"
+    TViewModel="EmbyMediaSourceViewModel"
+    TSecrets="EmbySecrets"
     TMediaSource="EmbyMediaSource"
     Name="Emby"
     GetAllMediaSourcesCommand="@(new GetAllEmbyMediaSources())"

@@ -7,10 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Bugsnag" Version="3.0.0" />
-      <PackageReference Include="CliWrap" Version="3.4.1" />
-      <PackageReference Include="FluentAssertions" Version="6.5.1" />
+      <PackageReference Include="Bugsnag" Version="3.0.1" />
+      <PackageReference Include="CliWrap" Version="3.4.4" />
+      <PackageReference Include="FluentAssertions" Version="6.6.0" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
@@ -21,9 +22,9 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Moq" Version="4.17.2" />
-      <PackageReference Include="NUnit" Version="3.13.2" />
+      <PackageReference Include="NUnit" Version="3.13.3" />
       <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
-      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog" Version="2.11.0" />
       <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     </ItemGroup>
@@ -34,6 +35,12 @@
 
     <ItemGroup>
       <Content Include="Resources\ErsatzTV.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Resources\test.sup">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Resources\test.srt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>

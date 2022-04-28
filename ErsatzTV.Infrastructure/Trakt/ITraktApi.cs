@@ -12,7 +12,7 @@ public interface ITraktApi
         string clientId,
         string user,
         string list);
-        
+
     [Get("/users/{user}/lists/{list}/items")]
     Task<List<TraktListItemResponse>> GetUserListItems(
         [Header("trakt-api-key")]

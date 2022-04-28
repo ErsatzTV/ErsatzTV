@@ -10,7 +10,9 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -23,7 +25,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 public class TranscodingTests
 {
     private static readonly ILoggerFactory LoggerFactory;
-        
+
     static TranscodingTests()
     {
         Log.Logger = new LoggerConfiguration()
@@ -57,11 +59,21 @@ public class TranscodingTests
     public enum Watermark
     {
         None,
-        PermanentOpaque,
-        PermanentTransparent,
+        PermanentOpaqueScaled,
+        PermanentOpaqueActualSize,
+        PermanentTransparentScaled,
+        PermanentTransparentActualSize,
         IntermittentOpaque,
         IntermittentTransparent
+
         // TODO: animated vs static
+    }
+
+    public enum Subtitle
+    {
+        None,
+        Picture,
+        Text
     }
 
     private class TestData
@@ -69,10 +81,19 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            Watermark.PermanentOpaque,
-            Watermark.PermanentTransparent
+            Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueActualSize,
+            Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentActualSize
         };
-            
+
+        public static Subtitle[] Subtitles =
+        {
+            Subtitle.None,
+            Subtitle.Picture,
+            Subtitle.Text
+        };
+
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
@@ -111,7 +132,7 @@ public class TranscodingTests
 
             // wmv3    yuv420p    1
         };
-            
+
         public static Resolution[] Resolutions =
         {
             new() { Width = 1920, Height = 1080 },
@@ -150,16 +171,26 @@ public class TranscodingTests
         };
     }
 
-    [Test, Combinatorial]
+    [Test]
+    [Combinatorial]
     public async Task Transcode(
-        [ValueSource(typeof(TestData), nameof(TestData.InputFormats))] InputFormat inputFormat,
-        [ValueSource(typeof(TestData), nameof(TestData.Resolutions))] Resolution profileResolution,
-        [ValueSource(typeof(TestData), nameof(TestData.Paddings))] Padding padding,
-        [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))] VideoScanKind videoScanKind,
-        [ValueSource(typeof(TestData), nameof(TestData.Watermarks))] Watermark watermark,
-        [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))] FFmpegProfileVideoFormat profileVideoFormat,
-        // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
+            InputFormat inputFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
+            Resolution profileResolution,
+            [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
+            Padding padding,
+            [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
+            VideoScanKind videoScanKind,
+            [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
+            Watermark watermark,
+            [ValueSource(typeof(TestData), nameof(TestData.Subtitles))]
+            Subtitle subtitle,
+            [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
+            FFmpegProfileVideoFormat profileVideoFormat,
+            // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))]
+            HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -174,7 +205,7 @@ public class TranscodingTests
         }
 
         string name = GetStringSha256Hash(
-            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileVideoFormat}_{profileAcceleration}");
+            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{watermark}_{subtitle}_{profileResolution}_{profileVideoFormat}_{profileAcceleration}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -202,6 +233,49 @@ public class TranscodingTests
             // ReSharper disable once MethodHasAsyncOverload
             p1.WaitForExit();
             p1.ExitCode.Should().Be(0);
+
+            switch (subtitle)
+            {
+                case Subtitle.Text or Subtitle.Picture:
+                    string sourceFile = Path.GetTempFileName() + ".mkv";
+                    File.Move(file, sourceFile, true);
+
+                    string tempFileName = Path.GetTempFileName() + ".mkv";
+                    string subPath = Path.Combine(
+                        TestContext.CurrentContext.TestDirectory,
+                        "Resources",
+                        subtitle == Subtitle.Picture ? "test.sup" : "test.srt");
+                    var p2 = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = ExecutableName("mkvmerge"),
+                            Arguments = $"-o {tempFileName} {sourceFile} {subPath}"
+                        }
+                    };
+
+                    p2.Start();
+                    await p2.WaitForExitAsync();
+                    // ReSharper disable once MethodHasAsyncOverload
+                    p2.WaitForExit();
+                    if (p2.ExitCode != 0)
+                    {
+                        if (File.Exists(sourceFile))
+                        {
+                            File.Delete(sourceFile);
+                        }
+
+                        if (File.Exists(file))
+                        {
+                            File.Delete(file);
+                        }
+                    }
+
+                    p2.ExitCode.Should().Be(0);
+
+                    File.Move(tempFileName, file, true);
+                    break;
+            }
         }
 
         var imageCache = new Mock<IImageCache>();
@@ -220,6 +294,7 @@ public class TranscodingTests
             imageCache.Object,
             new Mock<ITempFilePool>().Object,
             new Mock<IClient>().Object,
+            new MemoryCache(new MemoryCacheOptions()),
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -233,7 +308,8 @@ public class TranscodingTests
             MediaFiles = new List<MediaFile>
             {
                 new() { Path = file }
-            }
+            },
+            Streams = new List<MediaStream>()
         };
 
         var metadataRepository = new Mock<IMetadataRepository>();
@@ -269,6 +345,31 @@ public class TranscodingTests
                 }
             });
 
+        var subtitleStreams = v.Streams
+            .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+            .ToList();
+
+        var subtitles = new List<Domain.Subtitle>();
+
+        foreach (MediaStream stream in subtitleStreams)
+        {
+            var s = new Domain.Subtitle
+            {
+                Codec = stream.Codec,
+                Default = stream.Default,
+                Forced = stream.Forced,
+                Language = stream.Language,
+                StreamIndex = stream.Index,
+                SubtitleKind = SubtitleKind.Embedded,
+                DateAdded = DateTime.UtcNow,
+                DateUpdated = DateTime.UtcNow,
+                Path = "test.srt",
+                IsExtracted = true
+            };
+
+            subtitles.Add(s);
+        }
+
         DateTimeOffset now = DateTimeOffset.Now;
 
         Option<ChannelWatermark> channelWatermark = Option<ChannelWatermark>.None;
@@ -298,26 +399,61 @@ public class TranscodingTests
                     Opacity = 80
                 };
                 break;
-            case Watermark.PermanentOpaque:
+            case Watermark.PermanentOpaqueScaled:
                 channelWatermark = new ChannelWatermark
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 100
+                    Opacity = 100,
+                    Size = WatermarkSize.Scaled
                 };
                 break;
-            case Watermark.PermanentTransparent:
+            case Watermark.PermanentOpaqueActualSize:
                 channelWatermark = new ChannelWatermark
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 80
+                    Opacity = 100,
+                    Size = WatermarkSize.ActualSize
+                };
+                break;
+            case Watermark.PermanentTransparentScaled:
+                channelWatermark = new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 80,
+                    Size = WatermarkSize.Scaled
+                };
+                break;
+            case Watermark.PermanentTransparentActualSize:
+                channelWatermark = new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 80,
+                    Size = WatermarkSize.ActualSize
                 };
                 break;
         }
 
-        using Process process = await service.ForPlayoutItem(
+        ChannelSubtitleMode subtitleMode = subtitle switch
+        {
+            Subtitle.Picture or Subtitle.Text => ChannelSubtitleMode.Any,
+            _ => ChannelSubtitleMode.None
+        };
+
+        string srtFile = Path.Combine(FileSystemLayout.SubtitleCacheFolder, "test.srt");
+        if (subtitle == Subtitle.Text && !File.Exists(srtFile))
+        {
+            string sourceFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "test.srt");
+            Directory.CreateDirectory(FileSystemLayout.SubtitleCacheFolder);
+            File.Copy(sourceFile, srtFile, true);
+        }
+
+        Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
+            ExecutableName("ffprobe"),
             false,
             new Channel(Guid.NewGuid())
             {
@@ -326,17 +462,24 @@ public class TranscodingTests
                 {
                     HardwareAcceleration = profileAcceleration,
                     VideoFormat = profileVideoFormat,
-                    AudioFormat = FFmpegProfileAudioFormat.Aac
+                    AudioFormat = FFmpegProfileAudioFormat.Aac,
+                    DeinterlaceVideo = true
                 },
-                StreamingMode = StreamingMode.TransportStream
+                StreamingMode = StreamingMode.TransportStream,
+                SubtitleMode = subtitleMode
             },
             v,
             v,
             file,
             file,
+            subtitles,
+            string.Empty,
+            string.Empty,
+            subtitleMode,
             now,
             now + TimeSpan.FromSeconds(5),
             now,
+            Option<ChannelWatermark>.None,
             channelWatermark,
             VaapiDriver.Default,
             "/dev/dri/renderD128",
@@ -353,7 +496,8 @@ public class TranscodingTests
         {
             "No support for codec",
             "No usable",
-            "Provided device doesn't support"
+            "Provided device doesn't support",
+            "Current pixel format is unsupported"
         };
 
         var sb = new StringBuilder();
@@ -361,40 +505,35 @@ public class TranscodingTests
         var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try
         {
-            result = await Cli.Wrap(process.StartInfo.FileName)
-                .WithArguments(process.StartInfo.ArgumentList)
-                .WithValidation(CommandResultValidation.None)
+            result = await process
+                .WithStandardOutputPipe(PipeTarget.ToStream(Stream.Null))
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
                 .ExecuteAsync(timeoutSignal.Token);
         }
         catch (OperationCanceledException)
         {
-            IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-            Assert.Fail($"Transcode failure (timeout): ffmpeg {string.Join(" ", quotedArgs)}");
+            Assert.Fail($"Transcode failure (timeout): ffmpeg {process.Arguments}");
             return;
         }
 
-        string error = sb.ToString();
+        var error = sb.ToString();
         bool isUnsupported = unsupportedMessages.Any(error.Contains);
 
         if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
         {
-            var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
-            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
-            Assert.Warn($"Unsupported on this hardware: ffmpeg {string.Join(" ", quotedArgs)}");
+            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
+            Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
         }
         else if (error.Contains("Impossible to convert between"))
         {
-            IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-            Assert.Fail($"Transcode failure: ffmpeg {string.Join(" ", quotedArgs)}");
+            Assert.Fail($"Transcode failure: ffmpeg {process.Arguments}");
         }
         else
         {
-            var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
-            result.ExitCode.Should().Be(0, error + Environment.NewLine + string.Join(" ", quotedArgs));
+            result.ExitCode.Should().Be(0, error + Environment.NewLine + process.Arguments);
             if (result.ExitCode == 0)
             {
-                Console.WriteLine(string.Join(" ", quotedArgs));
+                Console.WriteLine(process.Arguments);
             }
         }
     }
@@ -414,11 +553,24 @@ public class TranscodingTests
 
     private class FakeStreamSelector : IFFmpegStreamSelector
     {
-        public Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version) =>
+        public Task<MediaStream> SelectVideoStream(MediaVersion version) =>
             version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
 
-        public Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version) =>
+        public Task<Option<MediaStream>> SelectAudioStream(
+            MediaVersion version,
+            StreamingMode streamingMode,
+            string channelNumber,
+            string preferredAudioLanguage) =>
             Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
+
+        public Task<Option<Domain.Subtitle>> SelectSubtitleStream(
+            MediaVersion version,
+            List<Domain.Subtitle> subtitles,
+            StreamingMode streamingMode,
+            string channelNumber,
+            string preferredSubtitleLanguage,
+            ChannelSubtitleMode subtitleMode) =>
+            subtitles.HeadOrNone().AsTask();
     }
 
     private static string ExecutableName(string baseName) =>

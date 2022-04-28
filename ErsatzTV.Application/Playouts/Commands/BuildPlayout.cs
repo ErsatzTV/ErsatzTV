@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Application.Playouts;
 
-public record BuildPlayout(int PlayoutId, bool Rebuild = false) : MediatR.IRequest<Either<BaseError, Unit>>,
+public record BuildPlayout(int PlayoutId, PlayoutBuildMode Mode) : IRequest<Either<BaseError, Unit>>,
     IBackgroundServiceRequest;

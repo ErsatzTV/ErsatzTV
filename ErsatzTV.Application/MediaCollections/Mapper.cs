@@ -33,7 +33,8 @@ internal static class Mapper
             multiCollectionItem.ScheduleAsGroup,
             multiCollectionItem.PlaybackOrder);
 
-    private static MultiCollectionSmartItemViewModel ProjectToViewModel(MultiCollectionSmartItem multiCollectionSmartItem) =>
+    private static MultiCollectionSmartItemViewModel ProjectToViewModel(
+        MultiCollectionSmartItem multiCollectionSmartItem) =>
         new(
             multiCollectionSmartItem.MultiCollectionId,
             ProjectToViewModel(multiCollectionSmartItem.SmartCollection),

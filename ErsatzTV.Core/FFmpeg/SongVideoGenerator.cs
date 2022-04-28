@@ -11,26 +11,28 @@ public class SongVideoGenerator : ISongVideoGenerator
 {
     private static readonly Random Random = new();
     private static readonly object RandomLock = new();
-        
-    private readonly ITempFilePool _tempFilePool;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IImageCache _imageCache;
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
+
+    private readonly ITempFilePool _tempFilePool;
 
     public SongVideoGenerator(
         ITempFilePool tempFilePool,
         IImageCache imageCache,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory)
+        IFFmpegProcessService ffmpegProcessService)
     {
         _tempFilePool = tempFilePool;
         _imageCache = imageCache;
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
+        _ffmpegProcessService = ffmpegProcessService;
     }
 
     public async Task<Tuple<string, MediaVersion>> GenerateSongVideo(
         Song song,
         Channel channel,
+        Option<ChannelWatermark> maybePlayoutItemWatermark,
         Option<ChannelWatermark> maybeGlobalWatermark,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken)
     {
         Option<string> subtitleFile = None;
@@ -47,7 +49,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                 new() { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" }
             }
         };
-            
+
         string[] backgrounds =
         {
             "song_background_1.png",
@@ -63,20 +65,20 @@ public class SongVideoGenerator : ISongVideoGenerator
         Option<string> watermarkPath = None;
 
         var boxBlur = false;
-            
+
         const int HORIZONTAL_MARGIN_PERCENT = 3;
         const int VERTICAL_MARGIN_PERCENT = 5;
         const int WATERMARK_WIDTH_PERCENT = 25;
         WatermarkLocation watermarkLocation = NextRandom(2) == 0
             ? WatermarkLocation.BottomLeft
             : WatermarkLocation.BottomRight;
-            
+
         foreach (SongMetadata metadata in song.SongMetadata)
         {
             var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
             var largeFontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 10.0);
             bool detailsStyle = NextRandom(2) == 0;
-                
+
             var sb = new StringBuilder();
 
             if (detailsStyle)
@@ -85,7 +87,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                 {
                     sb.Append($"{{\\fs{largeFontSize}}}{metadata.Title}");
                 }
-                    
+
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
                     sb.Append($"\\N{{\\fs{fontSize}}}{metadata.Artist}");
@@ -136,7 +138,8 @@ public class SongVideoGenerator : ISongVideoGenerator
 
             var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
             var rightMargin = (int)Math.Round(rightMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
-            var verticalMargin = (int)Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * channel.FFmpegProfile.Resolution.Height);
+            var verticalMargin =
+                (int)Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * channel.FFmpegProfile.Resolution.Height);
 
             subtitleFile = await new SubtitleBuilder(_tempFilePool)
                 .WithResolution(channel.FFmpegProfile.Resolution)
@@ -152,7 +155,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                 .WithShadow(3)
                 .WithFormattedContent(sb.ToString())
                 .BuildFile();
-                
+
             // use thumbnail (cover art) if present
             foreach (Artwork artwork in Optional(
                          metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
@@ -175,7 +178,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                     artwork.Path,
                     ArtworkKind.Thumbnail,
                     Option<int>.None);
-                    
+
                 watermarkPath = customPath;
 
                 // randomize selected blur hash
@@ -189,10 +192,8 @@ public class SongVideoGenerator : ISongVideoGenerator
                 if (hashes.Any())
                 {
                     string hash = hashes[NextRandom(hashes.Count)];
-                        
-                    backgroundPath = await _imageCache.WriteBlurHash(
-                        hash,
-                        channel.FFmpegProfile.Resolution);
+
+                    backgroundPath = _imageCache.WriteBlurHash(hash, channel.FFmpegProfile.Resolution);
 
                     videoVersion.Height = channel.FFmpegProfile.Resolution.Height;
                     videoVersion.Width = channel.FFmpegProfile.Resolution.Width;
@@ -212,11 +213,12 @@ public class SongVideoGenerator : ISongVideoGenerator
             new() { Path = videoPath }
         };
 
-        IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
-        Either<BaseError, string> maybeSongImage = await ffmpegProcessService.GenerateSongImage(
+        Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
             ffmpegPath,
+            ffprobePath,
             subtitleFile,
             channel,
+            maybePlayoutItemWatermark,
             maybeGlobalWatermark,
             videoVersion,
             videoPath,
@@ -246,7 +248,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                         Index = 0,
                         Codec = VideoFormat.GeneratedImage,
                         PixelFormat = new PixelFormatUnknown().Name // the resulting pixel format is unknown
-                    },
+                    }
                 },
                 MediaFiles = new List<MediaFile>
                 {
@@ -257,7 +259,7 @@ public class SongVideoGenerator : ISongVideoGenerator
 
         return Tuple(videoPath, videoVersion);
     }
-        
+
     private static int NextRandom(int max)
     {
         lock (RandomLock)

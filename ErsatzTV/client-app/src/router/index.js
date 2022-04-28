@@ -9,7 +9,7 @@ Vue.use(VueRouter);
 const routes = [
     {
         path: '/',
-        name: 'Home',
+        name: 'home.title',
         component: HomePage,
         meta: {
             icon: 'mdi-home',
@@ -18,7 +18,7 @@ const routes = [
     },
     {
         path: '/channels',
-        name: 'Channels',
+        name: 'channels.title',
         component: ChannelsPage,
         meta: {
             icon: 'mdi-broadcast',
@@ -27,7 +27,7 @@ const routes = [
     },
     {
         path: '/ffmpeg-profiles',
-        name: 'FFmpeg Profiles',
+        name: 'ffmpeg-profiles.title',
         component: FFmpegProfilesPage,
         meta: {
             icon: 'mdi-video-input-component',
@@ -36,7 +36,7 @@ const routes = [
     },
     {
         path: '/watermarks',
-        name: 'Watermarks',
+        name: 'watermarks.title',
         meta: {
             icon: 'mdi-watermark',
             disabled: true
@@ -44,7 +44,7 @@ const routes = [
     },
     {
         path: '/sources',
-        name: 'Media Sources',
+        name: 'media-sources.title',
         meta: {
             icon: 'mdi-server-network',
             disabled: false
@@ -52,7 +52,7 @@ const routes = [
         children: [
             {
                 path: '/sources/local',
-                name: 'Local',
+                name: 'media-sources.local.title',
                 meta: {
                     icon: 'mdi-folder',
                     disabled: true
@@ -60,7 +60,7 @@ const routes = [
             },
             {
                 path: '/sources/emby',
-                name: 'Emby',
+                name: 'media-sources.emby.title',
                 meta: {
                     icon: 'mdi-emby',
                     disabled: true
@@ -68,7 +68,7 @@ const routes = [
             },
             {
                 path: '/sources/jellyfin',
-                name: 'Jellyfin',
+                name: 'media-sources.jellyfin.title',
                 meta: {
                     icon: 'mdi-jellyfish',
                     disabled: true
@@ -76,7 +76,7 @@ const routes = [
             },
             {
                 path: '/sources/plex',
-                name: 'Plex',
+                name: 'media-sources.plex.title',
                 meta: {
                     icon: 'mdi-plex',
                     disabled: true
@@ -86,7 +86,7 @@ const routes = [
     },
     {
         path: '/media',
-        name: 'Media',
+        name: 'media.title',
         meta: {
             icon: 'mdi-cog',
             disabled: false
@@ -94,7 +94,7 @@ const routes = [
         children: [
             {
                 path: '/media/libraries',
-                name: 'Libraries',
+                name: 'media.libraries.title',
                 meta: {
                     icon: 'mdi-library',
                     disabled: true
@@ -102,7 +102,7 @@ const routes = [
             },
             {
                 path: '/media/trash',
-                name: 'Trash',
+                name: 'media.trash.title',
                 meta: {
                     icon: 'mdi-trash-can',
                     disabled: true
@@ -110,7 +110,7 @@ const routes = [
             },
             {
                 path: '/media/tv-shows',
-                name: 'TV Shows',
+                name: 'media.tv-shows.title',
                 meta: {
                     icon: 'mdi-television-classic',
                     disabled: true
@@ -118,7 +118,7 @@ const routes = [
             },
             {
                 path: '/media/movies',
-                name: 'Movies',
+                name: 'media.movies.title',
                 meta: {
                     icon: 'mdi-movie',
                     disabled: true
@@ -126,7 +126,7 @@ const routes = [
             },
             {
                 path: '/media/music-videos',
-                name: 'Music Videos',
+                name: 'media.music-videos.title',
                 meta: {
                     icon: 'mdi-music-circle',
                     disabled: true
@@ -134,7 +134,7 @@ const routes = [
             },
             {
                 path: '/media/other-videos',
-                name: 'Other Videos',
+                name: 'media.other-videos.title',
                 meta: {
                     icon: 'mdi-video',
                     disabled: true
@@ -142,7 +142,7 @@ const routes = [
             },
             {
                 path: '/media/songs',
-                name: 'Songs',
+                name: 'media.songs.title',
                 meta: {
                     icon: 'mdi-album',
                     disabled: true
@@ -152,7 +152,7 @@ const routes = [
     },
     {
         path: '/lists',
-        name: 'Lists',
+        name: 'lists.title',
         meta: {
             icon: 'mdi-format-list-bulleted',
             disabled: false
@@ -160,7 +160,7 @@ const routes = [
         children: [
             {
                 path: '/lists/collections',
-                name: 'Collections',
+                name: 'lists.collections.title',
                 meta: {
                     icon: 'mdi-collage',
                     disabled: true
@@ -168,7 +168,7 @@ const routes = [
             },
             {
                 path: '/lists/trakt-lists',
-                name: 'Trakt Lists',
+                name: 'lists.trakt-lists.title',
                 meta: {
                     icon: 'mdi-hammer',
                     disabled: true
@@ -176,7 +176,7 @@ const routes = [
             },
             {
                 path: '/lists/filler-presets',
-                name: 'Filler Presets',
+                name: 'lists.filler-presets.title',
                 meta: {
                     icon: 'mdi-tune-vertical',
                     disabled: true
@@ -186,7 +186,7 @@ const routes = [
     },
     {
         path: '/schedules',
-        name: 'Schedules',
+        name: 'schedules.title',
         meta: {
             icon: 'mdi-calendar',
             disabled: true
@@ -194,7 +194,7 @@ const routes = [
     },
     {
         path: '/playouts',
-        name: 'Playouts',
+        name: 'playouts.title',
         meta: {
             icon: 'mdi-clipboard-play-multiple',
             disabled: true
@@ -202,7 +202,7 @@ const routes = [
     },
     {
         path: '/settings',
-        name: 'Settings',
+        name: 'settings.title',
         meta: {
             icon: 'mdi-cog',
             disabled: true
@@ -210,7 +210,7 @@ const routes = [
     },
     {
         path: '/Logs',
-        name: 'Logs',
+        name: 'logs.title',
         meta: {
             icon: 'mdi-card-text',
             disabled: true

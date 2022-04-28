@@ -21,12 +21,10 @@ public class FFmpegProfileEditViewModel
         NormalizeLoudness = viewModel.NormalizeLoudness;
         Id = viewModel.Id;
         Name = viewModel.Name;
-        NormalizeAudio = viewModel.NormalizeAudio;
-        NormalizeVideo = viewModel.NormalizeVideo;
         NormalizeFramerate = viewModel.NormalizeFramerate;
+        DeinterlaceVideo = viewModel.DeinterlaceVideo;
         Resolution = viewModel.Resolution;
         ThreadCount = viewModel.ThreadCount;
-        Transcode = viewModel.Transcode;
         HardwareAcceleration = viewModel.HardwareAcceleration;
         VaapiDriver = viewModel.VaapiDriver;
         VaapiDevice = viewModel.VaapiDevice;
@@ -43,12 +41,10 @@ public class FFmpegProfileEditViewModel
     public bool NormalizeLoudness { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
-    public bool NormalizeAudio { get; set; }
-    public bool NormalizeVideo { get; set; }
     public bool NormalizeFramerate { get; set; }
+    public bool DeinterlaceVideo { get; set; }
     public ResolutionViewModel Resolution { get; set; }
     public int ThreadCount { get; set; }
-    public bool Transcode { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
     public string VaapiDevice { get; set; }
@@ -60,12 +56,10 @@ public class FFmpegProfileEditViewModel
         new(
             Name,
             ThreadCount,
-            Transcode,
             HardwareAcceleration,
             VaapiDriver,
             VaapiDevice,
             Resolution.Id,
-            NormalizeVideo,
             VideoFormat,
             VideoBitrate,
             VideoBufferSize,
@@ -75,8 +69,8 @@ public class FFmpegProfileEditViewModel
             NormalizeLoudness,
             AudioChannels,
             AudioSampleRate,
-            NormalizeAudio,
-            NormalizeFramerate
+            NormalizeFramerate,
+            DeinterlaceVideo
         );
 
     public UpdateFFmpegProfile ToUpdate() =>
@@ -84,12 +78,10 @@ public class FFmpegProfileEditViewModel
             Id,
             Name,
             ThreadCount,
-            Transcode,
             HardwareAcceleration,
             VaapiDriver,
             VaapiDevice,
             Resolution.Id,
-            NormalizeVideo,
             VideoFormat,
             VideoBitrate,
             VideoBufferSize,
@@ -99,7 +91,7 @@ public class FFmpegProfileEditViewModel
             NormalizeLoudness,
             AudioChannels,
             AudioSampleRate,
-            NormalizeAudio,
-            NormalizeFramerate
+            NormalizeFramerate,
+            DeinterlaceVideo
         );
 }

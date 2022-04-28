@@ -1,6 +1,6 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -14,12 +14,13 @@ namespace ErsatzTV.Core.Metadata;
 
 public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
+    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IClient _client;
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -28,6 +29,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILocalFileSystem localFileSystem,
         IMovieRepository movieRepository,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
@@ -36,7 +38,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<MovieFolderScanner> logger)
@@ -46,13 +48,14 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             metadataRepository,
             mediaItemRepository,
             imageCache,
-            ffmpegProcessServiceFactory,
+            ffmpegProcessService,
             tempFilePool,
             client,
             logger)
     {
         _localFileSystem = localFileSystem;
         _movieRepository = movieRepository;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _localMetadataProvider = localMetadataProvider;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
@@ -70,77 +73,90 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         decimal progressMax,
         CancellationToken cancellationToken)
     {
-        decimal progressSpread = progressMax - progressMin;
-
-        var foldersCompleted = 0;
-
-        var folderQueue = new Queue<string>();
-        foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
-                     .Filter(ShouldIncludeFolder)
-                     .OrderBy(identity))
+        try
         {
-            folderQueue.Enqueue(folder);
-        }
+            decimal progressSpread = progressMax - progressMin;
 
-        while (folderQueue.Count > 0)
-        {
-            decimal percentCompletion = (decimal) foldersCompleted / (foldersCompleted + folderQueue.Count);
-            await _mediator.Publish(
-                new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+            var foldersCompleted = 0;
 
-            string movieFolder = folderQueue.Dequeue();
-            foldersCompleted++;
-
-            var filesForEtag = _localFileSystem.ListFiles(movieFolder).ToList();
-
-            var allFiles = filesForEtag
-                .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-                .Filter(f => !Path.GetFileName(f).StartsWith("._"))
-                .Filter(
-                    f => !ExtraFiles.Any(
-                        e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-
-            if (allFiles.Count == 0)
+            var folderQueue = new Queue<string>();
+            foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
+                         .Filter(ShouldIncludeFolder)
+                         .OrderBy(identity))
             {
-                foreach (string subdirectory in _localFileSystem.ListSubdirectories(movieFolder)
-                             .Filter(ShouldIncludeFolder)
-                             .OrderBy(identity))
+                folderQueue.Enqueue(folder);
+            }
+
+            while (folderQueue.Count > 0)
+            {
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    folderQueue.Enqueue(subdirectory);
+                    return new ScanCanceled();
                 }
 
-                continue;
-            }
+                decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
+                await _mediator.Publish(
+                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    cancellationToken);
 
-            string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
-            Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                .Filter(f => f.Path == movieFolder)
-                .HeadOrNone();
+                string movieFolder = folderQueue.Dequeue();
+                foldersCompleted++;
 
-            // skip folder if etag matches
-            if (await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag)
-            {
-                continue;
-            }
+                var filesForEtag = _localFileSystem.ListFiles(movieFolder).ToList();
 
-            _logger.LogDebug(
-                "UPDATE: Etag has changed for folder {Folder}",
-                movieFolder);
+                var allFiles = filesForEtag
+                    .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                    .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+                    .Filter(
+                        f => !ExtraFiles.Any(
+                            e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
 
-            foreach (string file in allFiles.OrderBy(identity))
-            {
-                // TODO: figure out how to rebuild playlists
-                Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
-                    .GetOrAdd(libraryPath, file)
-                    .BindT(movie => UpdateStatistics(movie, ffmpegPath, ffprobePath))
-                    .BindT(UpdateMetadata)
-                    .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
-                    .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
-                    .BindT(FlagNormal);
+                if (allFiles.Count == 0)
+                {
+                    foreach (string subdirectory in _localFileSystem.ListSubdirectories(movieFolder)
+                                 .Filter(ShouldIncludeFolder)
+                                 .OrderBy(identity))
+                    {
+                        folderQueue.Enqueue(subdirectory);
+                    }
 
-                await maybeMovie.Match(
-                    async result =>
+                    continue;
+                }
+
+                string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
+                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
+                    .Filter(f => f.Path == movieFolder)
+                    .HeadOrNone();
+
+                // skip folder if etag matches
+                if (await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag)
+                {
+                    continue;
+                }
+
+                _logger.LogDebug(
+                    "UPDATE: Etag has changed for folder {Folder}",
+                    movieFolder);
+
+                foreach (string file in allFiles.OrderBy(identity))
+                {
+                    // TODO: figure out how to rebuild playlists
+                    Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
+                        .GetOrAdd(libraryPath, file)
+                        .BindT(movie => UpdateStatistics(movie, ffmpegPath, ffprobePath))
+                        .BindT(UpdateMetadata)
+                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
+                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
+                        .BindT(UpdateSubtitles)
+                        .BindT(FlagNormal);
+
+                    foreach (BaseError error in maybeMovie.LeftToSeq())
+                    {
+                        _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value);
+                    }
+
+                    foreach (MediaItemScanResult<Movie> result in maybeMovie.RightToSeq())
                     {
                         if (result.IsAdded)
                         {
@@ -152,35 +168,37 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                         }
 
                         await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
-                    },
-                    error =>
-                    {
-                        _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value);
-                        return Task.CompletedTask;
-                    });
+                    }
+                }
             }
-        }
 
-        foreach (string path in await _movieRepository.FindMoviePaths(libraryPath))
+            foreach (string path in await _movieRepository.FindMoviePaths(libraryPath))
+            {
+                if (!_localFileSystem.FileExists(path))
+                {
+                    _logger.LogInformation("Flagging missing movie at {Path}", path);
+                    List<int> ids = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, ids);
+                }
+                else if (Path.GetFileName(path).StartsWith("._"))
+                {
+                    _logger.LogInformation("Removing dot underscore file at {Path}", path);
+                    List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
+                    await _searchIndex.RemoveItems(ids);
+                }
+            }
+
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
+            return Unit.Default;
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            if (!_localFileSystem.FileExists(path))
-            {
-                _logger.LogInformation("Flagging missing movie at {Path}", path);
-                List<int> ids = await FlagFileNotFound(libraryPath, path);
-                await _searchIndex.RebuildItems(_searchRepository, ids);
-            }
-            else if (Path.GetFileName(path).StartsWith("._"))
-            {
-                _logger.LogInformation("Removing dot underscore file at {Path}", path);
-                List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
-                await _searchIndex.RemoveItems(ids);
-            }
+            return new ScanCanceled();
         }
-
-        await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
-
-        _searchIndex.Commit();
-        return Unit.Default;
+        finally
+        {
+            _searchIndex.Commit();
+        }
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateMetadata(
@@ -189,35 +207,37 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             Movie movie = result.Item;
-            await LocateNfoFile(movie).Match(
-                async nfoFile =>
-                {
-                    bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
-                        m => m.MetadataKind == MetadataKind.Fallback ||
-                             m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                        true);
 
-                    if (shouldUpdate)
-                    {
-                        _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                        if (await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile))
-                        {
-                            result.IsUpdated = true;
-                        }
-                    }
-                },
-                async () =>
+            Option<string> maybeNfoFile = LocateNfoFile(movie);
+            if (maybeNfoFile.IsNone)
+            {
+                if (!Optional(movie.MovieMetadata).Flatten().Any())
                 {
-                    if (!Optional(movie.MovieMetadata).Flatten().Any())
+                    string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
+                    if (await _localMetadataProvider.RefreshFallbackMetadata(movie))
                     {
-                        string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                        if (await _localMetadataProvider.RefreshFallbackMetadata(movie))
-                        {
-                            result.IsUpdated = true;
-                        }
+                        result.IsUpdated = true;
                     }
-                });
+                }
+            }
+
+            foreach (string nfoFile in maybeNfoFile)
+            {
+                bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    if (await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+            }
 
             return result;
         }
@@ -236,13 +256,27 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             Movie movie = result.Item;
-            await LocateArtwork(movie, artworkKind).IfSomeAsync(
-                async posterFile =>
-                {
-                    MovieMetadata metadata = movie.MovieMetadata.Head();
-                    await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
-                });
+            Option<string> maybeArtwork = LocateArtwork(movie, artworkKind);
+            foreach (string posterFile in maybeArtwork)
+            {
+                MovieMetadata metadata = movie.MovieMetadata.Head();
+                await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
+            }
 
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(MediaItemScanResult<Movie> result)
+    {
+        try
+        {
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
             return result;
         }
         catch (Exception ex)

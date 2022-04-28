@@ -43,56 +43,75 @@ public class
 
     public Task<Either<BaseError, string>> Handle(
         ForceSynchronizePlexLibraryById request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
     public Task<Either<BaseError, string>> Handle(
         SynchronizePlexLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
-    private Task<Either<BaseError, string>>
-        Handle(ISynchronizePlexLibraryById request) =>
-        Validate(request)
-            .MapT(parameters => Synchronize(parameters).Map(_ => parameters.Library.Name))
-            .Bind(v => v.ToEitherAsync());
-
-    private async Task<Unit> Synchronize(RequestParameters parameters)
+    private async Task<Either<BaseError, string>>
+        HandleImpl(ISynchronizePlexLibraryById request, CancellationToken cancellationToken)
     {
-        var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        return await validation.Match(
+            parameters => Synchronize(parameters, cancellationToken),
+            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+    }
+
+    private async Task<Either<BaseError, string>> Synchronize(
+        RequestParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            switch (parameters.Library.MediaKind)
+            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+            if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                case LibraryMediaKind.Movies:
-                    await _plexMovieLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection,
-                        parameters.ConnectionParameters.PlexServerAuthToken,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
-                case LibraryMediaKind.Shows:
-                    await _plexTelevisionLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection,
-                        parameters.ConnectionParameters.PlexServerAuthToken,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
+                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
+                {
+                    LibraryMediaKind.Movies =>
+                        await _plexMovieLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection,
+                            parameters.ConnectionParameters.PlexServerAuthToken,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath,
+                            parameters.DeepScan,
+                            cancellationToken),
+                    LibraryMediaKind.Shows =>
+                        await _plexTelevisionLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection,
+                            parameters.ConnectionParameters.PlexServerAuthToken,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath,
+                            parameters.DeepScan,
+                            cancellationToken),
+                    _ => Unit.Default
+                };
+
+                if (result.IsRight)
+                {
+                    parameters.Library.LastScan = DateTime.UtcNow;
+                    await _libraryRepository.UpdateLastScan(parameters.Library);
+                }
+
+                return result.Map(_ => parameters.Library.Name);
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "Skipping unforced scan of plex media library {Name}",
+                    parameters.Library.Name);
             }
 
-            parameters.Library.LastScan = DateTime.UtcNow;
-            await _libraryRepository.UpdateLastScan(parameters.Library);
+            return parameters.Library.Name;
         }
-        else
+        finally
         {
-            _logger.LogDebug(
-                "Skipping unforced scan of plex media library {Name}",
-                parameters.Library.Name);
+            _entityLocker.UnlockLibrary(parameters.Library.Id);
         }
-
-        _entityLocker.UnlockLibrary(parameters.Library.Id);
-        return Unit.Default;
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
@@ -106,7 +125,8 @@ public class
                     request.ForceScan,
                     libraryRefreshInterval,
                     ffmpegPath,
-                    ffprobePath
+                    ffprobePath,
+                    request.DeepScan
                 ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -149,7 +169,7 @@ public class
         _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
             .FilterT(lri => lri > 0)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
-        
+
     private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
             .FilterT(File.Exists)
@@ -170,7 +190,8 @@ public class
         bool ForceScan,
         int LibraryRefreshInterval,
         string FFmpegPath,
-        string FFprobePath);
+        string FFprobePath,
+        bool DeepScan);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {

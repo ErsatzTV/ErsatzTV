@@ -43,5 +43,4 @@ public static class MediaItemsForCollection
                 return new List<MediaItem>();
         }
     }
-
 }

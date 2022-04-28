@@ -55,7 +55,7 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
             Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Date ?? string.Empty, () => string.Empty),
             _ => string.Empty
         };
-            
+
         if (songDate1 != songDate2)
         {
             return string.Compare(songDate1, songDate2, StringComparison.Ordinal);

@@ -19,5 +19,5 @@ public class ConcatPlaylistOutputFormatter : TextOutputFormatter
 
     public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding) =>
         // ReSharper disable once PossibleNullReferenceException
-        context.HttpContext.Response.WriteAsync(((ConcatPlaylist) context.Object).ToString());
+        context.HttpContext.Response.WriteAsync(((ConcatPlaylist)context.Object).ToString());
 }

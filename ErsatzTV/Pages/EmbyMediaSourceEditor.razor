@@ -14,7 +14,7 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    
+
     public void Dispose()
     {
         _cts.Cancel();

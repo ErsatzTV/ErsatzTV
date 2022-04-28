@@ -78,23 +78,17 @@
     private MudTable<TraktListViewModel> _traktListsTable;
 
     private int _traktListsRowsPerPage;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
         _cts.Dispose();
     }
 
-    protected override void OnInitialized()
-    {
-        _locker.OnTraktChanged += LockChanged;
-    }
+    protected override void OnInitialized() => _locker.OnTraktChanged += LockChanged;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-    }
+    protected override async Task OnParametersSetAsync() => _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
+        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(async () =>
@@ -137,7 +131,7 @@
         PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
         return new TableData<TraktListViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
-    
+
     private async Task AddTraktList()
     {
         if (_locker.LockTrakt())

@@ -19,7 +19,7 @@ internal static class Mapper
             showMetadata.SortTitle,
             GetPoster(showMetadata, maybeJellyfin, maybeEmby),
             showMetadata.Show.State);
-        
+
     internal static TelevisionSeasonCardViewModel ProjectToViewModel(
         Season season,
         Option<JellyfinMediaSource> maybeJellyfin,
@@ -61,7 +61,8 @@ internal static class Mapper
         EpisodeMetadata episodeMetadata,
         Option<JellyfinMediaSource> maybeJellyfin,
         Option<EmbyMediaSource> maybeEmby,
-        bool isSearchResult) =>
+        bool isSearchResult,
+        string localPath) =>
         new(
             episodeMetadata.EpisodeId,
             episodeMetadata.ReleaseDate ?? SystemTime.MinValueUtc,
@@ -83,7 +84,8 @@ internal static class Mapper
             episodeMetadata.Directors.Map(d => d.Name).ToList(),
             episodeMetadata.Writers.Map(w => w.Name).ToList(),
             episodeMetadata.Episode.State,
-            episodeMetadata.Episode.GetHeadVersion().MediaFiles.Head().Path);
+            episodeMetadata.Episode.GetHeadVersion().MediaFiles.Head().Path,
+            localPath);
 
     internal static MovieCardViewModel ProjectToViewModel(
         MovieMetadata movieMetadata,
@@ -97,7 +99,9 @@ internal static class Mapper
             GetPoster(movieMetadata, maybeJellyfin, maybeEmby),
             movieMetadata.Movie.State);
 
-    internal static MusicVideoCardViewModel ProjectToViewModel(MusicVideoMetadata musicVideoMetadata) =>
+    internal static MusicVideoCardViewModel ProjectToViewModel(
+        MusicVideoMetadata musicVideoMetadata,
+        string localPath) =>
         new(
             musicVideoMetadata.MusicVideoId,
             musicVideoMetadata.Title,
@@ -107,7 +111,8 @@ internal static class Mapper
             musicVideoMetadata.Album,
             GetThumbnail(musicVideoMetadata, None, None),
             musicVideoMetadata.MusicVideo.State,
-            musicVideoMetadata.MusicVideo.GetHeadVersion().MediaFiles.Head().Path);
+            musicVideoMetadata.MusicVideo.GetHeadVersion().MediaFiles.Head().Path,
+            localPath);
 
     internal static OtherVideoCardViewModel ProjectToViewModel(OtherVideoMetadata otherVideoMetadata) =>
         new(
@@ -143,7 +148,7 @@ internal static class Mapper
             Collection collection,
             Option<JellyfinMediaSource> maybeJellyfin,
             Option<EmbyMediaSource> maybeEmby) =>
-        new(
+        new CollectionCardResultsViewModel(
             collection.Name,
             collection.MediaItems.OfType<Movie>().Map(
                 m => ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin, maybeEmby) with
@@ -155,11 +160,14 @@ internal static class Mapper
                 .ToList(),
             collection.MediaItems.OfType<Season>().Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby))
                 .ToList(),
+            // collection view doesn't use local paths
             collection.MediaItems.OfType<Episode>()
-                .Map(e => ProjectToViewModel(e.EpisodeMetadata.Head(), maybeJellyfin, maybeEmby, false))
+                .Map(e => ProjectToViewModel(e.EpisodeMetadata.Head(), maybeJellyfin, maybeEmby, false, string.Empty))
                 .ToList(),
             collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
-            collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))
+            // collection view doesn't use local paths
+            collection.MediaItems.OfType<MusicVideo>()
+                .Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head(), string.Empty))
                 .ToList(),
             collection.MediaItems.OfType<OtherVideo>().Map(ov => ProjectToViewModel(ov.OtherVideoMetadata.Head()))
                 .ToList(),

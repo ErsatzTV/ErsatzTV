@@ -128,20 +128,32 @@
                         <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
                         @if (musicVideo.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
+                        else if (musicVideo.State == MediaItemState.Unavailable)
+                        {
+                            <div style="position: absolute; right: 10px; top: 8px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
                             </div>
                         }
                     </MudPaper>
                 }
                 else
                 {
-                    <div style="height: 220px; width: 293px; display: flex; position: relative">
+                    <div style="display: flex; height: 220px; position: relative; width: 293px;">
                         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
                         @if (musicVideo.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
+                        else if (musicVideo.State == MediaItemState.Unavailable)
+                        {
+                            <div style="position: absolute; right: 10px; top: 8px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
                             </div>
                         }
                     </div>
@@ -176,6 +188,14 @@
                     <MudText>@musicVideo.Path</MudText>
                 </div>
             }
+            else if (musicVideo.State == MediaItemState.Unavailable)
+            {
+                <div class="ml-3 mt-3 mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                    <MudText>Unavailable:&nbsp;</MudText>
+                    <MudText>@musicVideo.LocalPath</MudText>
+                </div>
+            }
         </MudCard>
     }
 </MudContainer>
@@ -192,7 +212,7 @@
     private List<string> _sortedStyles = new();
     private List<string> _sortedMoods = new();
     private MusicVideoCardResultsViewModel _musicVideos;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -238,7 +258,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null), _cts.Token);
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }

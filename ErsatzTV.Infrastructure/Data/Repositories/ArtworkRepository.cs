@@ -9,10 +9,7 @@ public class ArtworkRepository : IArtworkRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public ArtworkRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public ArtworkRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<List<Artwork>> GetOrphanedArtwork()
     {

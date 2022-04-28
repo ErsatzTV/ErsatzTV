@@ -30,6 +30,8 @@ RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contai
 
 # final stage/image
 FROM jasongdove/ffmpeg:5.0-nvidia2004 AS runtime-base
+ENV FONTCONFIG_PATH=/etc/fonts
+RUN fc-cache update
 WORKDIR /app
 EXPOSE 8409
 COPY --from=build /app ./

@@ -65,99 +65,105 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
         (LocalLibrary localLibrary, string ffprobePath, string ffmpegPath, bool forceScan,
             int libraryRefreshInterval) = parameters;
 
-        var sw = new Stopwatch();
-        sw.Start();
-
-        var scanned = false;
-
-        for (var i = 0; i < localLibrary.Paths.Count; i++)
+        try
         {
-            LibraryPath libraryPath = localLibrary.Paths[i];
+            var sw = new Stopwatch();
+            sw.Start();
 
-            decimal progressMin = (decimal) i / localLibrary.Paths.Count;
-            decimal progressMax = (decimal) (i + 1) / localLibrary.Paths.Count;
+            var scanned = false;
 
-            var lastScan = new DateTimeOffset(libraryPath.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-            if (forceScan || nextScan < DateTimeOffset.Now)
+            for (var i = 0; i < localLibrary.Paths.Count; i++)
             {
-                scanned = true;
+                LibraryPath libraryPath = localLibrary.Paths[i];
 
-                switch (localLibrary.MediaKind)
+                decimal progressMin = (decimal)i / localLibrary.Paths.Count;
+                decimal progressMax = (decimal)(i + 1) / localLibrary.Paths.Count;
+
+                var lastScan = new DateTimeOffset(libraryPath.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+                DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
+                if (forceScan || nextScan < DateTimeOffset.Now)
                 {
-                    case LibraryMediaKind.Movies:
-                        await _movieFolderScanner.ScanFolder(
-                            libraryPath,
-                            ffmpegPath,
-                            ffprobePath,
-                            progressMin,
-                            progressMax,
-                            cancellationToken);
-                        break;
-                    case LibraryMediaKind.Shows:
-                        await _televisionFolderScanner.ScanFolder(
-                            libraryPath,
-                            ffmpegPath,
-                            ffprobePath,
-                            progressMin,
-                            progressMax,
-                            cancellationToken);
-                        break;
-                    case LibraryMediaKind.MusicVideos:
-                        await _musicVideoFolderScanner.ScanFolder(
-                            libraryPath,
-                            ffmpegPath,
-                            ffprobePath,
-                            progressMin,
-                            progressMax,
-                            cancellationToken);
-                        break;
-                    case LibraryMediaKind.OtherVideos:
-                        await _otherVideoFolderScanner.ScanFolder(
-                            libraryPath,
-                            ffmpegPath,
-                            ffprobePath,
-                            progressMin,
-                            progressMax);
-                        break;
-                    case LibraryMediaKind.Songs:
-                        await _songFolderScanner.ScanFolder(
-                            libraryPath,
-                            ffprobePath,
-                            ffmpegPath,
-                            progressMin,
-                            progressMax,
-                            cancellationToken);
-                        break;
+                    scanned = true;
+
+                    Either<BaseError, Unit> result = localLibrary.MediaKind switch
+                    {
+                        LibraryMediaKind.Movies =>
+                            await _movieFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffmpegPath,
+                                ffprobePath,
+                                progressMin,
+                                progressMax,
+                                cancellationToken),
+                        LibraryMediaKind.Shows =>
+                            await _televisionFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffmpegPath,
+                                ffprobePath,
+                                progressMin,
+                                progressMax,
+                                cancellationToken),
+                        LibraryMediaKind.MusicVideos =>
+                            await _musicVideoFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffmpegPath,
+                                ffprobePath,
+                                progressMin,
+                                progressMax,
+                                cancellationToken),
+                        LibraryMediaKind.OtherVideos =>
+                            await _otherVideoFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffmpegPath,
+                                ffprobePath,
+                                progressMin,
+                                progressMax,
+                                cancellationToken),
+                        LibraryMediaKind.Songs =>
+                            await _songFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffprobePath,
+                                ffmpegPath,
+                                progressMin,
+                                progressMax,
+                                cancellationToken),
+                        _ => Unit.Default
+                    };
+
+                    if (result.IsRight)
+                    {
+                        libraryPath.LastScan = DateTime.UtcNow;
+                        await _libraryRepository.UpdateLastScan(libraryPath);
+                    }
                 }
 
-                libraryPath.LastScan = DateTime.UtcNow;
-                await _libraryRepository.UpdateLastScan(libraryPath);
+                await _mediator.Publish(new LibraryScanProgress(libraryPath.LibraryId, progressMax), cancellationToken);
             }
 
-            await _mediator.Publish(new LibraryScanProgress(libraryPath.LibraryId, progressMax));
+            sw.Stop();
+
+            if (scanned)
+            {
+                _logger.LogDebug(
+                    "Scan of library {Name} completed in {Duration}",
+                    localLibrary.Name,
+                    TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "Skipping unforced scan of local media library {Name}",
+                    localLibrary.Name);
+            }
+
+            await _mediator.Publish(new LibraryScanProgress(localLibrary.Id, 0), cancellationToken);
+
+            return Unit.Default;
         }
-
-        sw.Stop();
-
-        if (scanned)
+        finally
         {
-            _logger.LogDebug(
-                "Scan of library {Name} completed in {Duration}",
-                localLibrary.Name,
-                TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
+            _entityLocker.UnlockLibrary(localLibrary.Id);
         }
-        else
-        {
-            _logger.LogDebug(
-                "Skipping unforced scan of local media library {Name}",
-                localLibrary.Name);
-        }
-
-        await _mediator.Publish(new LibraryScanProgress(localLibrary.Id, 0));
-
-        _entityLocker.UnlockLibrary(localLibrary.Id);
-        return Unit.Default;
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request)

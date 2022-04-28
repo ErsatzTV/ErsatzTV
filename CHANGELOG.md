@@ -5,7 +5,117 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
+- Cleanly stop all library scans when service termination is requested
+- Fix health check crash when trash contains a show or a season
+- Fix ability of health check crash to crash home page
+- Remove and ignore Season 0/Specials from Plex shows that have no specials
+
+### Changed
+- Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
+  - This should help maintain feature parity going forward
+- Jellyfin and Emby movie and show library scanners now support the `unavailable` media state
+- Optimize search-index rebuilding to complete 100x faster
+
+### Added
+- Add `unavailable` state for Emby movie libraries
+- Add `height` and `width` to search index for all videos
+- Add `season_number` and `episode_number` to search index for all episodes
+
+## [0.5.3-beta] - 2022-04-24
+### Fixed
+- Cleanly stop Plex library scan when service termination is requested
+- Fix bug introduced with 0.5.2-beta that prevented some Plex content from being played
+- Fix spammy subtitle error message
+- Fix generating blur hashes for song backgrounds in Docker
+
+### Changed
+- No longer remove Plex movies and episodes from ErsatzTV when they do not exist on disk
+  - Instead, a new `unavailable` media state will be used to indicate this condition
+  - After updating mounts, path replacements, etc - a library scan can be used to resolve this state
+
+## [0.5.2-beta] - 2022-04-22
+### Fixed
+- Fix unlocking libraries when scanning fails for any reason
+- Fix software overlay of actual size watermark
+
+### Added
+- Add support for burning in embedded and external text subtitles
+  - **This requires a one-time full library scan, which may take a long time with large libraries.**
+- Sync Plex, Jellyfin and Emby collections as tags on movies, shows, seasons and episodes
+  - This allows smart collections that use queries like `tag:"Collection Name"`
+  - Note that Emby has an outstanding collections bug that prevents updates when removing items from a collection
+- Sync Plex labels as tags on movies and shows
+  - This allows smart collections that use queries like `tag:"Plex Label Name"`
+- Add `Deep Scan` button for Plex libraries
+  - This scanning mode is *slow* but is required to detect some changes like labels
+
+### Changed
+- Improve the speed and change detection of the Plex library scanners
+
+## [0.5.1-beta] - 2022-04-17
+### Fixed
+- Fix subtitles edge case with NVENC
+- Only select picture subtitles (text subtitles are not yet supported)
+  - Supported picture subtitles are `hdmv_pgs_subtitle` and `dvd_subtitle`
+- Fix subtitles using software encoders, videotoolbox, VAAPI
+- Fix setting VAAPI driver name
+- Fix ffmpeg troubleshooting reports
+- Fix bug where filler would behave as if it were configured to pad even though a different mode was selected
+- Fix bug where mid-roll count filler would skip scheduling the final chapter in an episode 
+
+### Added
+- Add `Empty Trash` button to `Trash` page
+
+## [0.5.0-beta] - 2022-04-13
+### Fixed
+- Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running
+- Ensure clients that use HDHomeRun emulation (like Plex) always get an `MPEG-TS` stream, regardless of the configured streaming mode
+- Fix scheduling bug that caused some days to be skipped when fixed start times were used with fallback filler
+
+### Added
+- Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings
+  - `Preferred Subtitle Language` will filter all subtitle streams based on language
+  - `Subtitle Mode` will further filter subtitle streams based on attributes (forced, default)
+  - If picture-based subtitles are found after filtering, they will be burned into the video stream
+- Detect non-zero ffmpeg exit code from `HLS Segmenter` and `MPEG-TS`, log error output and display error output on stream
+- Add `Watermark` setting to schedule items; this allows override the channel watermark. Watermark priority is:
+  - Schedule Item
+  - Channel
+  - Global
+
+### Changed
+- Remove legacy transcoder logic option; all channels will use the new transcoder logic
+- Renamed channel setting `Preferred Language` to `Preferred Audio Language`
+- Reworked playout build logic to maintain collection progress in some scenarios. There are now three build modes:
+  - `Continue` - add new items to the end of an existing playout
+    - This mode is used when playouts are automatically extended in the background
+  - `Refresh` - this mode will try to maintain collection progress while rebuilding the entire playout
+    - This mode is used when a schedule is updated, or when collection modifications trigger a playout rebuild
+  - `Reset` - this mode will rebuild the entire playout and will NOT maintain progress
+    - This mode is only used when the `Reset Playout` button is clicked on the Playouts page
+  - **This requires rebuilding all playouts, which will happen on startup after upgrading**
+- Use ffmpeg to resize images; this should help reduce ErsatzTV's memory use
+- Use ffprobe to check for animated logos and watermarks; this should help reduce ErsatzTV's memory use
+- Allow two decimals in channel numbers (e.g. `5.73`)
+
+## [0.4.5-alpha] - 2022-03-29
+### Fixed
 - Fix streaming mode inconsistencies when `mode` parameter is unspecified
+- Fix startup on Windows 7
+
+### Added
+- Add option to automatically deinterlace video when transcoding
+  - Previously, this was always enabled; the purpose of the option is to allow disabling any deinterlace filters
+  - Note that there is no performance gain to disabling the option with progressive content; filters are only ever applied to interlaced content
+
+### Changed
+- Change FFmpeg Profile video codec and audio codec text fields to select fields
+  - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
+- Remove FFmpeg Profile `Transcode`, `Normalize Video` and `Normalize Audio` settings
+  - All content will be transcoded and have audio and video normalized
+  - The only exception to this rule is `HLS Direct` streaming mode, which directly copies video and audio streams
+- Always try to connect to Plex at `http://localhost:32400` even if that address isn't advertised by the Plex API
+  - If Plex isn't on the localhost, all other addresses will be checked as with previous releases
 
 ## [0.4.4-alpha] - 2022-03-10
 ### Fixed
@@ -15,10 +125,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Perform additional duration analysis on files with missing duration metadata
 - Add `nouveau` VAAPI driver option
-
-### Changed
-- Change FFmpeg Profile video codec and audio codec text fields to select fields
-  - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
 
 ## [0.4.3-alpha] - 2022-03-05
 ### Fixed
@@ -1023,7 +1129,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.3-beta...HEAD
+[0.5.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...v0.5.3-beta
+[0.5.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.1-beta...v0.5.2-beta
+[0.5.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...v0.5.1-beta
+[0.5.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...v0.5.0-beta
+[0.4.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...v0.4.5-alpha
 [0.4.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...v0.4.4-alpha
 [0.4.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...v0.4.3-alpha
 [0.4.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...v0.4.2-alpha

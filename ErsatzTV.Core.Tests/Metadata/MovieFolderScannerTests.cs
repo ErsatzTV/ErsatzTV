@@ -65,7 +65,7 @@ public class MovieFolderScannerTests
                 .Returns(
                     (MediaItem mediaItem) =>
                     {
-                        ((Movie) mediaItem).MovieMetadata = new List<MovieMetadata> { new() };
+                        ((Movie)mediaItem).MovieMetadata = new List<MovieMetadata> { new() };
                         return Task.FromResult(true);
                     });
 
@@ -411,7 +411,7 @@ public class MovieFolderScannerTests
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
         }
-            
+
         [Test]
         public async Task Should_Ignore_Dot_Underscore_Files(
             [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
@@ -617,6 +617,7 @@ public class MovieFolderScannerTests
                 new FakeLocalFileSystem(new List<FakeFileEntry>(files)),
                 _movieRepository.Object,
                 _localStatisticsProvider.Object,
+                new Mock<ILocalSubtitlesProvider>().Object,
                 _localMetadataProvider.Object,
                 new Mock<IMetadataRepository>().Object,
                 _imageCache.Object,
@@ -630,12 +631,13 @@ public class MovieFolderScannerTests
                 new Mock<IClient>().Object,
                 new Mock<ILogger<MovieFolderScanner>>().Object
             );
-            
+
         private MovieFolderScanner GetService(params FakeFolderEntry[] folders) =>
             new(
                 new FakeLocalFileSystem(new List<FakeFileEntry>(), new List<FakeFolderEntry>(folders)),
                 _movieRepository.Object,
                 _localStatisticsProvider.Object,
+                new Mock<ILocalSubtitlesProvider>().Object,
                 _localMetadataProvider.Object,
                 new Mock<IMetadataRepository>().Object,
                 _imageCache.Object,

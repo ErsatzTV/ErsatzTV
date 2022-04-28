@@ -11,8 +11,8 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAccelerationHealthCheck
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
     public HardwareAccelerationHealthCheck(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -21,6 +21,8 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
         _dbContextFactory = dbContextFactory;
         _configElementRepository = configElementRepository;
     }
+
+    public override string Title => "Hardware Acceleration";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
@@ -34,7 +36,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             ?.InformationalVersion ?? "unknown";
 
         var accelerationKinds = new List<HardwareAccelerationKind>();
-            
+
         if (version.Contains("docker", StringComparison.OrdinalIgnoreCase))
         {
             if (version.Contains("nvidia", StringComparison.OrdinalIgnoreCase))
@@ -119,6 +121,4 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
 
         return result.ToList();
     }
-
-    protected override string Title => "Hardware Acceleration";
 }

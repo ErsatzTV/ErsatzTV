@@ -4,6 +4,7 @@ using ErsatzTV.Annotations;
 using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels;
@@ -63,6 +64,10 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public FillerPresetViewModel PostRollFiller { get; set; }
     public FillerPresetViewModel TailFiller { get; set; }
     public FillerPresetViewModel FallbackFiller { get; set; }
+    public WatermarkViewModel Watermark { get; set; }
+    public string PreferredAudioLanguageCode { get; set; }
+    public string PreferredSubtitleLanguageCode { get; set; }
+    public ChannelSubtitleMode? SubtitleMode { get; set; }
 
     public string CollectionName => CollectionType switch
     {
@@ -90,7 +95,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     }
 
     public TailMode TailMode { get; set; }
-        
+
     public string CustomTitle { get; set; }
 
     public GuideMode GuideMode { get; set; }

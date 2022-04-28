@@ -9,7 +9,8 @@ public static class AvailableDeinterlaceFilters
         HardwareAccelerationMode accelMode,
         FrameState currentState,
         FrameState desiredState,
-        Option<WatermarkInputFile> watermarkInputFile) =>
+        Option<WatermarkInputFile> watermarkInputFile,
+        Option<SubtitleInputFile> subtitleInputFile) =>
         accelMode switch
         {
             HardwareAccelerationMode.Nvenc => new YadifCudaFilter(currentState),
@@ -18,8 +19,8 @@ public static class AvailableDeinterlaceFilters
             // HardwareAccelerationMode.Qsv => new DeinterlaceQsvFilter(currentState),
 
             // fall back to software deinterlace with watermark and no scaling
-            HardwareAccelerationMode.Vaapi when watermarkInputFile.IsNone ||
-                                                (currentState.ScaledSize != desiredState.ScaledSize) =>
+            HardwareAccelerationMode.Vaapi when watermarkInputFile.IsNone && subtitleInputFile.IsNone ||
+                                                currentState.ScaledSize != desiredState.ScaledSize =>
                 new DeinterlaceVaapiFilter(currentState),
 
             _ => new YadifFilter(currentState)

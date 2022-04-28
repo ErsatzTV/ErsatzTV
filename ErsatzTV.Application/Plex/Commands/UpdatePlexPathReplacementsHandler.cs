@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 namespace ErsatzTV.Application.Plex;
 
 public class
-    UpdatePlexPathReplacementsHandler : MediatR.IRequestHandler<UpdatePlexPathReplacements, Either<BaseError, Unit>>
+    UpdatePlexPathReplacementsHandler : IRequestHandler<UpdatePlexPathReplacements, Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
 

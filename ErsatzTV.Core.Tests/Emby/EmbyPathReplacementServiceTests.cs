@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
-using ErsatzTV.Core.Emby;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -204,7 +204,7 @@ public class EmbyPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public async Task Should_Not_Throw_For_Null_EmbyPath()
     {
@@ -236,7 +236,7 @@ public class EmbyPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public async Task Should_Not_Throw_For_Null_LocalPath()
     {

@@ -133,7 +133,7 @@ public class ShuffledContentTests
 
     private static List<MediaItem> Episodes(int count) =>
         Range(1, count).Map(
-                i => (MediaItem) new Episode
+                i => (MediaItem)new Episode
                 {
                     Id = i,
                     EpisodeMetadata = new List<EpisodeMetadata>

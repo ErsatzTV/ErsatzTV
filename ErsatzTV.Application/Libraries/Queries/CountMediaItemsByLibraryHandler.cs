@@ -8,10 +8,8 @@ public class CountMediaItemsByLibraryHandler : IRequestHandler<CountMediaItemsBy
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public CountMediaItemsByLibraryHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public CountMediaItemsByLibraryHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken)
     {

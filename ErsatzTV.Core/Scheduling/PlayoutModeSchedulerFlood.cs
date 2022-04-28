@@ -38,7 +38,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
-                
+
             var playoutItem = new PlayoutItem
             {
                 MediaItemId = mediaItem.Id,
@@ -49,9 +49,13 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 GuideGroup = nextState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
-                    : FillerKind.None
+                    : FillerKind.None,
+                WatermarkId = scheduleItem.WatermarkId,
+                PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                SubtitleMode = scheduleItem.SubtitleMode
             };
-                
+
             DateTimeOffset peekScheduleItemStart =
                 peekScheduleItem.StartType == StartType.Fixed
                     ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
@@ -63,7 +67,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 itemStartTime,
                 itemDuration,
                 itemChapters);
-                
+
             // if the next schedule item is supposed to start during this item,
             // don't schedule this item and just move on
             willFinishInTime = peekScheduleItemStart < itemStartTime ||
@@ -73,7 +77,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             {
                 playoutItems.AddRange(
                     AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
-                LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                 DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
                 if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
@@ -97,9 +101,9 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             }
         }
 
-        _logger.LogDebug(
-            "Advancing to next schedule item after playout mode {PlayoutMode}",
-            "Flood");
+        // _logger.LogDebug(
+        //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+        //     "Flood");
 
         nextState = nextState with
         {

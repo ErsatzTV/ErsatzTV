@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Configuration;
 
-public record UpdatePlayoutDaysToBuild(int DaysToBuild) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record UpdatePlayoutDaysToBuild(int DaysToBuild) : IRequest<Either<BaseError, Unit>>;

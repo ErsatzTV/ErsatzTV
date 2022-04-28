@@ -11,10 +11,7 @@ public class TelevisionRepository : ITelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<bool> AllShowsExist(List<int> showIds)
     {
@@ -305,6 +302,8 @@ public class TelevisionRepository : ITelevisionRepository
             .ThenInclude(sm => sm.Artwork)
             .Include(s => s.SeasonMetadata)
             .ThenInclude(sm => sm.Guids)
+            .Include(s => s.SeasonMetadata)
+            .ThenInclude(sm => sm.Tags)
             .Include(s => s.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(s => s.TraktListItems)
@@ -439,131 +438,6 @@ public class TelevisionRepository : ITelevisionRepository
         return ids;
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAddPlexShow(
-        PlexLibrary library,
-        PlexShow item)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        Option<PlexShow> maybeExisting = await dbContext.PlexShows
-            .AsNoTracking()
-            .Include(i => i.ShowMetadata)
-            .ThenInclude(sm => sm.Genres)
-            .Include(i => i.ShowMetadata)
-            .ThenInclude(sm => sm.Tags)
-            .Include(i => i.ShowMetadata)
-            .ThenInclude(sm => sm.Studios)
-            .Include(i => i.ShowMetadata)
-            .ThenInclude(sm => sm.Actors)
-            .ThenInclude(a => a.Artwork)
-            .Include(i => i.ShowMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(i => i.ShowMetadata)
-            .ThenInclude(sm => sm.Guids)
-            .Include(i => i.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(i => i.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .OrderBy(i => i.Key)
-            .SingleOrDefaultAsync(i => i.Key == item.Key);
-
-        return await maybeExisting.Match(
-            plexShow => Right<BaseError, MediaItemScanResult<PlexShow>>(
-                new MediaItemScanResult<PlexShow>(plexShow) { IsAdded = false }).AsTask(),
-            async () => await AddPlexShow(dbContext, library, item));
-    }
-
-    public async Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
-            .AsNoTracking()
-            .Include(i => i.SeasonMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(i => i.SeasonMetadata)
-            .ThenInclude(sm => sm.Guids)
-            .Include(s => s.LibraryPath)
-            .ThenInclude(l => l.Library)
-            .Include(s => s.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .OrderBy(i => i.Key)
-            .SingleOrDefaultAsync(i => i.Key == item.Key);
-
-        return await maybeExisting.Match(
-            plexSeason => Right<BaseError, PlexSeason>(plexSeason).AsTask(),
-            async () => await AddPlexSeason(dbContext, library, item));
-    }
-
-    public async Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
-            .AsNoTracking()
-            .Include(i => i.EpisodeMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(i => i.EpisodeMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(i => i.EpisodeMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(i => i.EpisodeMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(i => i.EpisodeMetadata)
-            .ThenInclude(mm => mm.Directors)
-            .Include(i => i.EpisodeMetadata)
-            .ThenInclude(mm => mm.Writers)
-            .Include(i => i.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(i => i.MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(e => e.EpisodeMetadata)
-            .ThenInclude(em => em.Actors)
-            .ThenInclude(a => a.Artwork)
-            .Include(e => e.EpisodeMetadata)
-            .ThenInclude(em => em.Guids)
-            .Include(i => i.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(e => e.Season)
-            .Include(e => e.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .OrderBy(i => i.Key)
-            .SingleOrDefaultAsync(i => i.Key == item.Key);
-
-        return await maybeExisting.Match(
-            plexEpisode => Right<BaseError, PlexEpisode>(plexEpisode).AsTask(),
-            async () => await AddPlexEpisode(dbContext, library, item));
-    }
-
-    public async Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN Season s ON m.Id = s.Id
-                INNER JOIN PlexSeason ps ON ps.Id = m.Id
-                INNER JOIN PlexShow P on P.Id = s.ShowId
-                WHERE P.Key = @ShowKey AND ps.Key not in @Keys)",
-            new { ShowKey = showKey, Keys = seasonKeys }).ToUnit();
-    }
-
-    public async Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        List<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN Episode e ON m.Id = e.Id
-                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
-                INNER JOIN PlexSeason P on P.Id = e.SeasonId
-                WHERE P.Key = @SeasonKey AND pe.Key not in @Keys",
-            new { SeasonKey = seasonKey, Keys = episodeKeys }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            "DELETE FROM MediaItem WHERE Id IN @Ids",
-            new { Ids = ids });
-
-        return ids;
-    }
-
     public async Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -648,12 +522,27 @@ public class TelevisionRepository : ITelevisionRepository
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<bool> AddTag(ShowMetadata metadata, Tag tag)
+    public async Task<bool> AddTag(Metadata metadata, Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
-            new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        switch (metadata)
+        {
+            case ShowMetadata:
+                return await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO Tag (Name, ShowMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+                    new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
+            case SeasonMetadata:
+                return await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO Tag (Name, SeasonMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+                    new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
+            case EpisodeMetadata:
+                return await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO Tag (Name, EpisodeMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+                    new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
+            default:
+                return false;
+        }
     }
 
     public async Task<bool> AddStudio(ShowMetadata metadata, Studio studio)
@@ -678,7 +567,7 @@ public class TelevisionRepository : ITelevisionRepository
                       SELECT last_insert_rowid()",
                 new
                 {
-                    ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                    ArtworkKind = (int)actor.Artwork.ArtworkKind,
                     actor.Artwork.DateAdded,
                     actor.Artwork.DateUpdated,
                     actor.Artwork.Path
@@ -705,7 +594,7 @@ public class TelevisionRepository : ITelevisionRepository
                       SELECT last_insert_rowid()",
                 new
                 {
-                    ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                    ArtworkKind = (int)actor.Artwork.ArtworkKind,
                     actor.Artwork.DateAdded,
                     actor.Artwork.DateUpdated,
                     actor.Artwork.Path
@@ -716,24 +605,6 @@ public class TelevisionRepository : ITelevisionRepository
                 "INSERT INTO Actor (Name, Role, \"Order\", EpisodeMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
-    }
-
-    public async Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        List<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                WHERE lp.LibraryId = @LibraryId AND ps.Key not in @Keys",
-            new { LibraryId = library.Id, Keys = showKeys }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            "DELETE FROM MediaItem WHERE Id IN @Ids",
-            new { Ids = ids });
-
-        return ids;
     }
 
     private static async Task<Either<BaseError, Season>> AddSeason(
@@ -755,7 +626,8 @@ public class TelevisionRepository : ITelevisionRepository
                     new()
                     {
                         DateAdded = DateTime.UtcNow,
-                        Guids = new List<MetadataGuid>()
+                        Guids = new List<MetadataGuid>(),
+                        Tags = new List<Tag>()
                     }
                 },
                 TraktListItems = new List<TraktListItem>()
@@ -765,7 +637,7 @@ public class TelevisionRepository : ITelevisionRepository
 
             await dbContext.Entry(season).Reference(s => s.LibraryPath).LoadAsync();
             await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-                
+
             return season;
         }
         catch (Exception ex)
@@ -826,84 +698,6 @@ public class TelevisionRepository : ITelevisionRepository
             await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             await dbContext.Entry(episode).Reference(e => e.Season).LoadAsync();
             return episode;
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.Message);
-        }
-    }
-
-    private static async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> AddPlexShow(
-        TvContext dbContext,
-        PlexLibrary library,
-        PlexShow item)
-    {
-        try
-        {
-            item.LibraryPathId = library.Paths.Head().Id;
-
-            await dbContext.PlexShows.AddAsync(item);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            return new MediaItemScanResult<PlexShow>(item) { IsAdded = true };
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.Message);
-        }
-    }
-
-    private static async Task<Either<BaseError, PlexSeason>> AddPlexSeason(
-        TvContext dbContext,
-        PlexLibrary library,
-        PlexSeason item)
-    {
-        try
-        {
-            item.LibraryPathId = library.Paths.Head().Id;
-
-            await dbContext.PlexSeasons.AddAsync(item);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            return item;
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.Message);
-        }
-    }
-
-    private static async Task<Either<BaseError, PlexEpisode>> AddPlexEpisode(
-        TvContext dbContext,
-        PlexLibrary library,
-        PlexEpisode item)
-    {
-        try
-        {
-            if (dbContext.MediaFiles.Any(mf => mf.Path == item.MediaVersions.Head().MediaFiles.Head().Path))
-            {
-                return BaseError.New("Multi-episode files are not yet supported");
-            }
-
-            item.LibraryPathId = library.Paths.Head().Id;
-            foreach (EpisodeMetadata metadata in item.EpisodeMetadata)
-            {
-                metadata.Genres ??= new List<Genre>();
-                metadata.Tags ??= new List<Tag>();
-                metadata.Studios ??= new List<Studio>();
-                metadata.Actors ??= new List<Actor>();
-                metadata.Directors ??= new List<Director>();
-                metadata.Writers ??= new List<Writer>();
-            }
-
-            await dbContext.PlexEpisodes.AddAsync(item);
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            await dbContext.Entry(item).Reference(e => e.Season).LoadAsync();
-            return item;
         }
         catch (Exception ex)
         {

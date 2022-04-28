@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -23,7 +24,11 @@ public abstract record ProgramScheduleItemViewModel(
     FillerPresetViewModel MidRollFiller,
     FillerPresetViewModel PostRollFiller,
     FillerPresetViewModel TailFiller,
-    FillerPresetViewModel FallbackFiller)
+    FillerPresetViewModel FallbackFiller,
+    WatermarkViewModel Watermark,
+    string PreferredAudioLanguageCode,
+    string PreferredSubtitleLanguageCode,
+    ChannelSubtitleMode? SubtitleMode)
 {
     public string Name => CollectionType switch
     {

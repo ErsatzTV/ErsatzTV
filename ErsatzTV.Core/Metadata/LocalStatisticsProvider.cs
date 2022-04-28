@@ -14,8 +14,8 @@ namespace ErsatzTV.Core.Metadata;
 
 public class LocalStatisticsProvider : ILocalStatisticsProvider
 {
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly IClient _client;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<LocalStatisticsProvider> _logger;
     private readonly IMetadataRepository _metadataRepository;
 
@@ -31,7 +31,10 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, bool>> RefreshStatistics(string ffmpegPath, string ffprobePath, MediaItem mediaItem)
+    public async Task<Either<BaseError, bool>> RefreshStatistics(
+        string ffmpegPath,
+        string ffprobePath,
+        MediaItem mediaItem)
     {
         try
         {
@@ -89,7 +92,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 ffprobe =>
                 {
                     var result = new Dictionary<string, string>();
-                        
+
                     if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.album))
                     {
                         result.Add(MetadataFormatTag.Album, ffprobe.format.tags.album);
@@ -332,7 +335,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                             Index = videoStream.index,
                             Codec = videoStream.codec_name,
                             Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant(),
-                            PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant(),
+                            PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant()
                         };
 
                         if (int.TryParse(videoStream.bits_per_raw_sample, out int bitsPerRawSample))
@@ -369,6 +372,26 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         if (subtitleStream.tags is not null)
                         {
                             stream.Language = subtitleStream.tags.language;
+                            stream.Title = subtitleStream.tags.title;
+                        }
+
+                        version.Streams.Add(stream);
+                    }
+
+                    foreach (FFprobeStream attachmentStream in json.streams.Filter(s => s.codec_type == "attachment"))
+                    {
+                        var stream = new MediaStream
+                        {
+                            MediaVersionId = version.Id,
+                            MediaStreamKind = MediaStreamKind.Attachment,
+                            Index = attachmentStream.index,
+                            Codec = attachmentStream.codec_name
+                        };
+
+                        if (attachmentStream.tags is not null)
+                        {
+                            stream.FileName = attachmentStream.tags.filename;
+                            stream.MimeType = attachmentStream.tags.mimetype;
                         }
 
                         version.Streams.Add(stream);
@@ -414,7 +437,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                             last.EndTime = version.Duration;
                         }
                     }
-                        
+
                     return version;
                 },
                 _ => new MediaVersion
@@ -440,7 +463,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
     public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
-    public record FFprobeTags(string language, string title);
+    public record FFprobeTags(string language, string title, string filename, string mimetype);
 
     public record FFprobeFormatTags(
         string title,

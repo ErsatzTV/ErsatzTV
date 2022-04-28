@@ -9,5 +9,6 @@ public interface IEmbyTelevisionLibraryScanner
         string apiKey,
         EmbyLibrary library,
         string ffmpegPath,
-        string ffprobePath);
+        string ffprobePath,
+        CancellationToken cancellationToken);
 }

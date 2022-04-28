@@ -16,18 +16,22 @@ namespace ErsatzTV.FFmpeg;
 
 public class PipelineBuilder
 {
-    private readonly List<IPipelineStep> _pipelineSteps;
-    private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
-    private readonly Option<WatermarkInputFile> _watermarkInputFile;
-    private readonly string _reportsFolder;
+    private readonly string _fontsFolder;
     private readonly ILogger _logger;
+    private readonly List<IPipelineStep> _pipelineSteps;
+    private readonly string _reportsFolder;
+    private readonly Option<SubtitleInputFile> _subtitleInputFile;
+    private readonly Option<VideoInputFile> _videoInputFile;
+    private readonly Option<WatermarkInputFile> _watermarkInputFile;
 
     public PipelineBuilder(
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
+        Option<SubtitleInputFile> subtitleInputFile,
         string reportsFolder,
+        string fontsFolder,
         ILogger logger)
     {
         _pipelineSteps = new List<IPipelineStep>
@@ -40,14 +44,34 @@ public class PipelineBuilder
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
             new FastStartOutputOption(),
-            new ClosedGopOutputOption(),
+            new ClosedGopOutputOption()
         };
 
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
         _watermarkInputFile = watermarkInputFile;
+        _subtitleInputFile = subtitleInputFile;
         _reportsFolder = reportsFolder;
+        _fontsFolder = fontsFolder;
         _logger = logger;
+    }
+
+    public FFmpegPipeline Resize(string outputFile, FrameSize scaledSize)
+    {
+        _pipelineSteps.Clear();
+        _pipelineSteps.Add(new NoStandardInputOption());
+        _pipelineSteps.Add(new HideBannerOption());
+        _pipelineSteps.Add(new NoStatsOption());
+        _pipelineSteps.Add(new LoglevelErrorOption());
+
+        IPipelineFilterStep scaleStep = new ScaleImageFilter(scaledSize);
+        _videoInputFile.Iter(f => f.FilterSteps.Add(scaleStep));
+
+        _pipelineSteps.Add(new VideoFilter(new[] { scaleStep }));
+        _pipelineSteps.Add(scaleStep);
+        _pipelineSteps.Add(new FileNameOutputOption(outputFile));
+
+        return new FFmpegPipeline(_pipelineSteps);
     }
 
     public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
@@ -76,12 +100,12 @@ public class PipelineBuilder
 
         _pipelineSteps.Add(new OutputFormatMpegTs());
         _pipelineSteps.Add(new PipeProtocol());
-        
+
         if (ffmpegState.SaveReport)
         {
             _pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
         }
-        
+
         return new FFmpegPipeline(_pipelineSteps);
     }
 
@@ -91,7 +115,8 @@ public class PipelineBuilder
 
         // -sc_threshold 0 is unsupported with mpeg2video
         _pipelineSteps.Add(
-            allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video) && desiredState.VideoFormat != VideoFormat.Mpeg2Video
+            allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video) &&
+            desiredState.VideoFormat != VideoFormat.Mpeg2Video
                 ? new NoSceneDetectOutputOption(0)
                 : new NoSceneDetectOutputOption(1_000_000_000));
 
@@ -105,6 +130,12 @@ public class PipelineBuilder
             var option = new StreamSeekInputOption(desiredStart);
             _audioInputFile.Iter(f => f.AddOption(option));
             _videoInputFile.Iter(f => f.AddOption(option));
+
+            // need to seek text subtitle files
+            if (_subtitleInputFile.Map(s => !s.IsImageBased).IfNone(false))
+            {
+                _pipelineSteps.Add(new StreamSeekFilterOption(desiredStart));
+            }
         }
 
         foreach (TimeSpan desiredFinish in ffmpegState.Finish)
@@ -114,6 +145,9 @@ public class PipelineBuilder
 
         foreach (VideoStream videoStream in allVideoStreams)
         {
+            bool hasOverlay = _watermarkInputFile.IsSome ||
+                              _subtitleInputFile.Map(s => s.IsImageBased && !s.Copy).IfNone(false);
+
             Option<int> initialFrameRate = Option<int>.None;
             foreach (string frameRateString in videoStream.FrameRate)
             {
@@ -135,7 +169,7 @@ public class PipelineBuilder
                 Option<int>.None,
                 Option<int>.None,
                 false); // deinterlace
-            
+
             IEncoder encoder;
 
             if (IsDesiredVideoState(currentState, desiredState))
@@ -166,15 +200,13 @@ public class PipelineBuilder
                 }
 
                 // nvenc requires yuv420p background with yuva420p overlay
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
-                    _watermarkInputFile.IsSome)
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc && hasOverlay)
                 {
                     desiredState = desiredState with { PixelFormat = new PixelFormatYuv420P() };
                 }
 
                 // qsv should stay nv12
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Qsv &&
-                    _watermarkInputFile.IsSome)
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Qsv && hasOverlay)
                 {
                     IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P());
                     desiredState = desiredState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
@@ -192,6 +224,7 @@ public class PipelineBuilder
                              currentState,
                              desiredState,
                              _watermarkInputFile,
+                             _subtitleInputFile,
                              _logger))
                 {
                     foreach (VideoInputFile videoInputFile in _videoInputFile)
@@ -200,6 +233,11 @@ public class PipelineBuilder
                         currentState = decoder.NextState(currentState);
                     }
                 }
+            }
+
+            if (_subtitleInputFile.Map(s => s.Copy) == Some(true))
+            {
+                _pipelineSteps.Add(new EncoderCopySubtitle());
             }
 
             if (videoStream.StillImage)
@@ -263,14 +301,15 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-                
+
                 if (desiredState.Deinterlaced && !currentState.Deinterlaced)
                 {
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
                         ffmpegState.HardwareAccelerationMode,
                         currentState,
                         desiredState,
-                        _watermarkInputFile);
+                        _watermarkInputFile,
+                        _subtitleInputFile);
                     currentState = step.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(step));
                 }
@@ -315,7 +354,7 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-                    
+
                     IPipelineFilterStep sarStep = new SetSarFilter();
                     currentState = sarStep.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
@@ -342,7 +381,7 @@ public class PipelineBuilder
                     _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
 
-                if (_watermarkInputFile.IsSome && currentState.PixelFormat.Map(pf => pf.FFmpegName) !=
+                if (hasOverlay && currentState.PixelFormat.Map(pf => pf.FFmpegName) !=
                     desiredState.PixelFormat.Map(pf => pf.FFmpegName))
                 {
                     // this should only happen with nvenc?
@@ -383,7 +422,7 @@ public class PipelineBuilder
                         }
                     }
                 }
-                
+
                 // nvenc custom logic
                 if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc)
                 {
@@ -393,15 +432,14 @@ public class PipelineBuilder
                         bool onlyYadif = videoInputFile.FilterSteps.Count == 1 &&
                                          videoInputFile.FilterSteps.Any(fs => fs is YadifCudaFilter);
 
-                        // if we have no filters and a watermark, we need to set pixel format
-                        bool unfilteredWithWatermark = videoInputFile.FilterSteps.Count == 0
-                                                       && _watermarkInputFile.IsSome;
-                        
-                        if (onlyYadif || unfilteredWithWatermark)
+                        // if we have no filters and an overlay, we need to set pixel format
+                        bool unfilteredWithOverlay = videoInputFile.FilterSteps.Count == 0 && hasOverlay;
+
+                        if (onlyYadif || unfilteredWithOverlay)
                         {
                             // the filter re-applies the current pixel format, so we have to set it first
                             currentState = currentState with { PixelFormat = desiredState.PixelFormat };
-                
+
                             IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
                                 ffmpegState.HardwareAccelerationMode,
                                 currentState,
@@ -424,7 +462,7 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-                
+
                 foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
                 {
                     if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
@@ -438,25 +476,8 @@ public class PipelineBuilder
                         }
                     }
                 }
-
-                // after everything else is done, apply the encoder
-                if (!_pipelineSteps.OfType<IEncoder>().Any())
-                {
-                    foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
-                                 ffmpegState,
-                                 currentState,
-                                 desiredState,
-                                 _watermarkInputFile,
-                                 _logger))
-                    {
-                        encoder = e;
-                        _pipelineSteps.Add(encoder);
-                        _videoInputFile.Iter(f => f.FilterSteps.Add(encoder));
-                        currentState = encoder.NextState(currentState);
-                    }
-                }
             }
-            
+
             // TODO: if all video filters are software, use software pixel format for hwaccel output
             // might be able to skip scale_cuda=format=whatever,hwdownload,format=whatever
 
@@ -500,6 +521,48 @@ public class PipelineBuilder
                 }
             }
 
+            foreach (SubtitleInputFile subtitleInputFile in _subtitleInputFile)
+            {
+                if (subtitleInputFile.IsImageBased)
+                {
+                    // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
+                    // though videotoolbox uses software decoders, so no need to download for that
+                    if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    {
+                        var downloadFilter = new HardwareDownloadFilter(currentState);
+                        currentState = downloadFilter.NextState(currentState);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
+                    }
+
+                    subtitleInputFile.FilterSteps.Add(new SubtitlePixelFormatFilter(ffmpegState));
+
+                    subtitleInputFile.FilterSteps.Add(new SubtitleHardwareUploadFilter(currentState, ffmpegState));
+                }
+                else
+                {
+                    _videoInputFile.Iter(f => f.AddOption(new CopyTimestampInputOption()));
+
+                    // text-based subtitles are always added in software, so always try to download the background
+
+                    // nvidia needs some extra format help if the only filter will be the download filter
+                    if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
+                        _videoInputFile.Map(f => f.FilterSteps.Count).IfNone(1) == 0)
+                    {
+                        IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                            ffmpegState.HardwareAccelerationMode,
+                            currentState,
+                            desiredState.ScaledSize,
+                            desiredState.PaddedSize);
+                        currentState = scaleFilter.NextState(currentState);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
+                    }
+
+                    var downloadFilter = new HardwareDownloadFilter(currentState);
+                    currentState = downloadFilter.NextState(currentState);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
+                }
+            }
+
             foreach (WatermarkInputFile watermarkInputFile in _watermarkInputFile)
             {
                 // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
@@ -537,13 +600,31 @@ public class PipelineBuilder
                 {
                     watermarkInputFile.FilterSteps.Add(new WatermarkOpacityFilter(watermarkInputFile.DesiredState));
                 }
-                
+
                 foreach (List<WatermarkFadePoint> fadePoints in watermarkInputFile.DesiredState.MaybeFadePoints)
                 {
                     watermarkInputFile.FilterSteps.AddRange(fadePoints.Map(fp => new WatermarkFadeFilter(fp)));
                 }
 
                 watermarkInputFile.FilterSteps.Add(new WatermarkHardwareUploadFilter(currentState, ffmpegState));
+            }
+
+            // after everything else is done, apply the encoder
+            if (_pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
+            {
+                foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
+                             ffmpegState,
+                             currentState,
+                             desiredState,
+                             _watermarkInputFile,
+                             _subtitleInputFile,
+                             _logger))
+                {
+                    encoder = e;
+                    _pipelineSteps.Add(encoder);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(encoder));
+                    currentState = encoder.NextState(currentState);
+                }
             }
 
             if (ffmpegState.DoNotMapMetadata)
@@ -597,7 +678,9 @@ public class PipelineBuilder
                 _videoInputFile,
                 _audioInputFile,
                 _watermarkInputFile,
-                currentState.PaddedSize);
+                _subtitleInputFile,
+                currentState.PaddedSize,
+                _fontsFolder);
 
             _pipelineSteps.Add(complexFilter);
         }

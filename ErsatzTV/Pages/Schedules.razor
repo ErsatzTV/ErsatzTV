@@ -95,7 +95,7 @@
     private int _rowsPerPage;
     private int _detailRowsPerPage;
     private ProgramScheduleViewModel _selectedSchedule;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -133,7 +133,7 @@
             }
         }
     }
-    
+
     private async Task<TableData<ProgramScheduleViewModel>> ServerReload(TableState state)
     {
         await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()), _cts.Token);
@@ -141,7 +141,7 @@
         List<ProgramScheduleViewModel> schedules = await _mediator.Send(new GetAllProgramSchedules(), _cts.Token);
         IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase));
 
-        // TODO: properly page this data
+    // TODO: properly page this data
         return new TableData<ProgramScheduleViewModel>
         {
             TotalItems = schedules.Count,
@@ -156,7 +156,7 @@
         List<ProgramScheduleItemViewModel> scheduleItems = await _mediator.Send(new GetProgramScheduleItems(_selectedSchedule.Id), _cts.Token);
         IOrderedEnumerable<ProgramScheduleItemViewModel> sorted = scheduleItems.OrderBy(s => s.Index);
 
-        // TODO: properly page this data
+    // TODO: properly page this data
         return new TableData<ProgramScheduleItemViewModel>
         {
             TotalItems = scheduleItems.Count,

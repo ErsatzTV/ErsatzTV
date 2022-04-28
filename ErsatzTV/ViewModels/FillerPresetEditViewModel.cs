@@ -10,11 +10,12 @@ namespace ErsatzTV.ViewModels;
 
 public class FillerPresetEditViewModel
 {
-    private FillerKind _fillerKind;
-    private TimeSpan? _duration;
-    private FillerMode _fillerMode;
-    private int? _count;
     private ProgramScheduleItemCollectionType _collectionType;
+    private int? _count;
+    private TimeSpan? _duration;
+    private FillerKind _fillerKind;
+    private FillerMode _fillerMode;
+    private int? _padToNearestMinute;
 
     public int Id { get; set; }
     public string Name { get; set; }
@@ -50,7 +51,11 @@ public class FillerPresetEditViewModel
         set => _count = value;
     }
 
-    public int? PadToNearestMinute { get; set; }
+    public int? PadToNearestMinute
+    {
+        get => FillerMode == FillerMode.Pad ? _padToNearestMinute : null;
+        set => _padToNearestMinute = value;
+    }
 
     public ProgramScheduleItemCollectionType CollectionType
     {
@@ -102,7 +107,7 @@ public class FillerPresetEditViewModel
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
             SmartCollection?.Id);
-        
+
     private static TimeSpan FixDuration(TimeSpan duration) =>
         duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
 }

@@ -49,6 +49,7 @@ public class GetProgramScheduleItemsHandler :
             .Include(i => i.PostRollFiller)
             .Include(i => i.TailFiller)
             .Include(i => i.FallbackFiller)
+            .Include(i => i.Watermark)
             .ToListAsync(cancellationToken)
             .Map(
                 programScheduleItems => programScheduleItems.Map(ProjectToViewModel)

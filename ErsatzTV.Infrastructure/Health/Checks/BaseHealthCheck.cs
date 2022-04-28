@@ -1,4 +1,5 @@
-﻿using CliWrap;
+﻿using System.Text;
+using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core.Health;
 
@@ -6,14 +7,14 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public abstract class BaseHealthCheck
 {
-    protected abstract string Title { get; }
+    public abstract string Title { get; }
 
     protected HealthCheckResult Result(HealthCheckStatus status, string message) =>
         new(Title, status, message, None);
 
     protected HealthCheckResult NotApplicableResult() =>
         new(Title, HealthCheckStatus.NotApplicable, string.Empty, None);
-        
+
     protected HealthCheckResult OkResult() =>
         new(Title, HealthCheckStatus.Pass, string.Empty, None);
 
@@ -37,7 +38,7 @@ public abstract class BaseHealthCheck
         BufferedCommandResult result = await Cli.Wrap(path)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(cancellationToken);
+            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
         return result.StandardOutput;
     }

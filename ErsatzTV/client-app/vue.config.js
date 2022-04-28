@@ -9,5 +9,13 @@ module.exports = defineConfig({
     },
     publicPath: '/v2/',
     outputDir: '../wwwroot/v2',
-    filenameHashing: false
+    filenameHashing: false,
+    pluginOptions: {
+        i18n: {
+            locale: 'en',
+            fallbackLocale: 'en',
+            localeDir: 'locales',
+            enableInSFC: true
+        }
+    }
 });

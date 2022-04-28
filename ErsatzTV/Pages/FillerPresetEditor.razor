@@ -136,24 +136,24 @@
 
     [Parameter]
     public int Id { get; set; }
-    
+
     private readonly FillerPresetEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-    
+
     private List<MediaCollectionViewModel> _mediaCollections;
     private List<MultiCollectionViewModel> _multiCollections;
     private List<SmartCollectionViewModel> _smartCollections;
     private List<NamedMediaItemViewModel> _televisionShows;
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
         _cts.Dispose();
     }
-    
+
     protected override async Task OnParametersSetAsync()
     {
         _mediaCollections = await _mediator.Send(new GetAllCollections(), _cts.Token)
@@ -203,14 +203,15 @@
             _model.FillerMode = FillerMode.Duration;
         }
     }
+
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-    
+
     private bool IsEdit => Id != 0;
-    
+
     private async Task HandleSubmitAsync()
     {
         _messageStore.Clear();
@@ -230,4 +231,5 @@
                 () => _navigationManager.NavigateTo("/media/filler/presets"));
         }
     }
+
 }

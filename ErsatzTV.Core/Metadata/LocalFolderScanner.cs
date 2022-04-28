@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Bugsnag;
+﻿using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -45,16 +44,17 @@ public abstract class LocalFolderScanner
         .Map(s => $"{Path.DirectorySeparatorChar}{s}{Path.DirectorySeparatorChar}")
         .ToList();
 
-    private readonly IImageCache _imageCache;
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
-    private readonly ITempFilePool _tempFilePool;
     private readonly IClient _client;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
+
+    private readonly IImageCache _imageCache;
 
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger _logger;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMediaItemRepository _mediaItemRepository;
+    private readonly IMetadataRepository _metadataRepository;
+    private readonly ITempFilePool _tempFilePool;
 
     protected LocalFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -62,7 +62,7 @@ public abstract class LocalFolderScanner
         IMetadataRepository metadataRepository,
         IMediaItemRepository mediaItemRepository,
         IImageCache imageCache,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory, 
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger logger)
@@ -72,7 +72,7 @@ public abstract class LocalFolderScanner
         _metadataRepository = metadataRepository;
         _mediaItemRepository = mediaItemRepository;
         _imageCache = imageCache;
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
+        _ffmpegProcessService = ffmpegProcessService;
         _tempFilePool = tempFilePool;
         _client = client;
         _logger = logger;
@@ -158,23 +158,18 @@ public abstract class LocalFolderScanner
                 // if ffmpeg path is passed, we need pre-processing
                 foreach (string path in ffmpegPath)
                 {
-                    IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
-                        
                     artworkFile = await attachedPicIndex.Match(
                         async picIndex =>
                         {
                             // extract attached pic (and convert to png)
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            using Process process = ffmpegProcessService.ExtractAttachedPicAsPng(
+                            Command process = _ffmpegProcessService.ExtractAttachedPicAsPng(
                                 path,
                                 artworkFile,
                                 picIndex,
                                 tempName);
 
-                            await Cli.Wrap(process.StartInfo.FileName)
-                                .WithArguments(process.StartInfo.ArgumentList)
-                                .WithValidation(CommandResultValidation.None)
-                                .ExecuteAsync(cancellationToken);
+                            await process.ExecuteAsync(cancellationToken);
 
                             return tempName;
                         },
@@ -182,12 +177,9 @@ public abstract class LocalFolderScanner
                         {
                             // no attached pic index means convert to png
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            using Process process = ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                            Command process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
 
-                            await Cli.Wrap(process.StartInfo.FileName)
-                                .WithArguments(process.StartInfo.ArgumentList)
-                                .WithValidation(CommandResultValidation.None)
-                                .ExecuteAsync(cancellationToken);
+                            await process.ExecuteAsync(cancellationToken);
 
                             return tempName;
                         });
@@ -208,21 +200,9 @@ public abstract class LocalFolderScanner
 
                                 if (metadata is SongMetadata)
                                 {
-                                    artwork.BlurHash43 = await _imageCache.CalculateBlurHash(
-                                        cacheName,
-                                        artworkKind,
-                                        4,
-                                        3);
-                                    artwork.BlurHash54 = await _imageCache.CalculateBlurHash(
-                                        cacheName,
-                                        artworkKind,
-                                        5,
-                                        4);
-                                    artwork.BlurHash64 = await _imageCache.CalculateBlurHash(
-                                        cacheName,
-                                        artworkKind,
-                                        6,
-                                        4);
+                                    artwork.BlurHash43 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 4, 3);
+                                    artwork.BlurHash54 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 5, 4);
+                                    artwork.BlurHash64 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 6, 4);
                                 }
 
                                 await _metadataRepository.UpdateArtworkPath(artwork);
@@ -240,21 +220,9 @@ public abstract class LocalFolderScanner
 
                                 if (metadata is SongMetadata)
                                 {
-                                    artwork.BlurHash43 = await _imageCache.CalculateBlurHash(
-                                        cacheName,
-                                        artworkKind,
-                                        4,
-                                        3);
-                                    artwork.BlurHash54 = await _imageCache.CalculateBlurHash(
-                                        cacheName,
-                                        artworkKind,
-                                        5,
-                                        4);
-                                    artwork.BlurHash64 = await _imageCache.CalculateBlurHash(
-                                        cacheName,
-                                        artworkKind,
-                                        6,
-                                        4);
+                                    artwork.BlurHash43 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 4, 3);
+                                    artwork.BlurHash54 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 5, 4);
+                                    artwork.BlurHash64 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 6, 4);
                                 }
 
                                 metadata.Artwork.Add(artwork);

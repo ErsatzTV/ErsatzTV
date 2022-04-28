@@ -1,14 +1,13 @@
 ﻿using ErsatzTV.Core;
 using System.Diagnostics;
-using Asmichi.ProcessManagement;
-using System.Reflection;
+using CliWrap;
 
 namespace ErsatzTV_Windows;
 
 public class TrayApplicationContext : ApplicationContext
 {
     private readonly NotifyIcon _trayIcon;
-    private readonly IChildProcess? _childProcess;
+    private readonly CancellationTokenSource _tokenSource;
 
     public TrayApplicationContext()
     {
@@ -18,6 +17,8 @@ public class TrayApplicationContext : ApplicationContext
             ContextMenuStrip = new ContextMenuStrip(),
             Visible = true
         };
+
+        _tokenSource = new CancellationTokenSource();
 
         AddMenuItem("Launch Web UI", LaunchWebUI);
         AddMenuItem("Show Logs", ShowLogs);
@@ -29,8 +30,11 @@ public class TrayApplicationContext : ApplicationContext
 
         if (File.Exists(exe))
         {
-            var si = new ChildProcessStartInfo(exe);
-            _childProcess = ChildProcess.Start(si);
+
+            Cli.Wrap(exe)
+                .WithWorkingDirectory(folder)
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(_tokenSource.Token);
         }
     }
 
@@ -64,7 +68,7 @@ public class TrayApplicationContext : ApplicationContext
 
     protected override void Dispose(bool disposing)
     {
-        _childProcess?.Dispose();
+        _tokenSource?.Cancel();
         base.Dispose(disposing);
     }
 

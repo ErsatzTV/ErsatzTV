@@ -49,10 +49,14 @@ public sealed class SearchIndex : ISearchIndex
     private const string WriterField = "writer";
     private const string TraktListField = "trakt_list";
     private const string AlbumField = "album";
-    private const string MinutesField = "minutes";
+    internal const string MinutesField = "minutes";
     private const string ArtistField = "artist";
     private const string StateField = "state";
     private const string AlbumArtistField = "album_artist";
+    internal const string HeightField = "height";
+    internal const string WidthField = "width";
+    internal const string SeasonNumberField = "season_number";
+    internal const string EpisodeNumberField = "episode_number";
 
     public const string MovieType = "movie";
     public const string ShowType = "show";
@@ -77,7 +81,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 20;
+    public int Version => 21;
 
     public Task<bool> Initialize(ILocalFileSystem localFileSystem)
     {
@@ -197,11 +201,15 @@ public sealed class SearchIndex : ISearchIndex
         _directory?.Dispose();
     }
 
-    public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
+    public async Task<Unit> Rebuild(ISearchRepository searchRepository)
     {
         _writer.DeleteAll();
+        _writer.Commit();
 
-        await RebuildItems(searchRepository, itemIds);
+        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
+        {
+            await RebuildItem(searchRepository, mediaItem);
+        }
 
         _writer.Commit();
         return Unit.Default;
@@ -213,37 +221,42 @@ public sealed class SearchIndex : ISearchIndex
         {
             foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
             {
-                switch (mediaItem)
-                {
-                    case Movie movie:
-                        await UpdateMovie(searchRepository, movie);
-                        break;
-                    case Show show:
-                        await UpdateShow(searchRepository, show);
-                        break;
-                    case Season season:
-                        await UpdateSeason(searchRepository, season);
-                        break;
-                    case Artist artist:
-                        await UpdateArtist(searchRepository, artist);
-                        break;
-                    case MusicVideo musicVideo:
-                        await UpdateMusicVideo(searchRepository, musicVideo);
-                        break;
-                    case Episode episode:
-                        await UpdateEpisode(searchRepository, episode);
-                        break;
-                    case OtherVideo otherVideo:
-                        await UpdateOtherVideo(searchRepository, otherVideo);
-                        break;
-                    case Song song:
-                        await UpdateSong(searchRepository, song);
-                        break;
-                }
+                await RebuildItem(searchRepository, mediaItem);
             }
         }
 
         return Unit.Default;
+    }
+
+    private async Task RebuildItem(ISearchRepository searchRepository, MediaItem mediaItem)
+    {
+        switch (mediaItem)
+        {
+            case Movie movie:
+                await UpdateMovie(searchRepository, movie);
+                break;
+            case Show show:
+                await UpdateShow(searchRepository, show);
+                break;
+            case Season season:
+                await UpdateSeason(searchRepository, season);
+                break;
+            case Artist artist:
+                await UpdateArtist(searchRepository, artist);
+                break;
+            case MusicVideo musicVideo:
+                await UpdateMusicVideo(searchRepository, musicVideo);
+                break;
+            case Episode episode:
+                await UpdateEpisode(searchRepository, episode);
+                break;
+            case OtherVideo otherVideo:
+                await UpdateOtherVideo(searchRepository, otherVideo);
+                break;
+            case Song song:
+                await UpdateSong(searchRepository, song);
+                break;
+        }
     }
 
     private static Option<SearchPageMap> GetSearchPageMap(
@@ -315,10 +328,14 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, movie.MediaVersions);
-                    
+
                 foreach (MediaVersion version in movie.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
@@ -443,7 +460,8 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(LibraryIdField, show.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                    new StringField(StateField, show.State.ToString(), Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForShow(show);
@@ -493,7 +511,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
                 }
-                    
+
                 foreach (TraktListItem item in show.TraktListItems)
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
@@ -508,7 +526,7 @@ public sealed class SearchIndex : ISearchIndex
             }
         }
     }
-        
+
     private async Task UpdateSeason(ISearchRepository searchRepository, Season season)
     {
         Option<SeasonMetadata> maybeMetadata = season.SeasonMetadata.HeadOrNone();
@@ -520,7 +538,7 @@ public sealed class SearchIndex : ISearchIndex
 
             try
             {
-                var seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
+                string seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
                 string sortTitle = $"{showMetadata.SortTitle}_{season.SeasonNumber:0000}"
                     .ToLowerInvariant();
                 string titleAndYear = $"{showMetadata.Title}_{showMetadata.Year}_{season.SeasonNumber}"
@@ -535,7 +553,8 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(LibraryNameField, season.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(LibraryIdField, season.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, titleAndYear, Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES)
+                    new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES),
+                    new StringField(StateField, season.State.ToString(), Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);
@@ -558,12 +577,17 @@ public sealed class SearchIndex : ISearchIndex
                             metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                             Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 foreach (TraktListItem item in season.TraktListItems)
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                }
+
+                foreach (Tag tag in metadata.Tags)
+                {
+                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
                 }
 
                 _writer.UpdateDocument(new Term(IdField, season.Id.ToString()), doc);
@@ -599,7 +623,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
                 await AddLanguages(searchRepository, doc, languages);
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 foreach (Genre genre in metadata.Genres)
@@ -650,10 +674,14 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
-                    
+
                 foreach (MediaVersion version in musicVideo.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 if (metadata.ReleaseDate.HasValue)
@@ -664,7 +692,7 @@ public sealed class SearchIndex : ISearchIndex
                             metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                             Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
@@ -691,7 +719,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                 }
-                    
+
                 if (musicVideo.Artist != null)
                 {
                     foreach (ArtistMetadata artistMetadata in musicVideo.Artist.ArtistMetadata)
@@ -737,14 +765,20 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, episode.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, episode.State.ToString(), Field.Store.NO),
+                    new Int32Field(SeasonNumberField, episode.Season?.SeasonNumber ?? 0, Field.Store.NO),
+                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);
-                    
+
                 foreach (MediaVersion version in episode.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 if (metadata.ReleaseDate.HasValue)
@@ -755,7 +789,7 @@ public sealed class SearchIndex : ISearchIndex
                             metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                             Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Plot))
@@ -807,7 +841,7 @@ public sealed class SearchIndex : ISearchIndex
             }
         }
     }
-        
+
     private async Task UpdateOtherVideo(ISearchRepository searchRepository, OtherVideo otherVideo)
     {
         Option<OtherVideoMetadata> maybeMetadata = otherVideo.OtherVideoMetadata.HeadOrNone();
@@ -831,12 +865,16 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
-                    
+
                 foreach (MediaVersion version in otherVideo.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 foreach (Tag tag in metadata.Tags)
@@ -853,7 +891,7 @@ public sealed class SearchIndex : ISearchIndex
             }
         }
     }
-        
+
     private async Task UpdateSong(ISearchRepository searchRepository, Song song)
     {
         Option<SongMetadata> maybeMetadata = song.SongMetadata.HeadOrNone();
@@ -877,19 +915,20 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, song.MediaVersions);
-                    
+
                 foreach (MediaVersion version in song.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
                     doc.Add(new TextField(AlbumField, metadata.Album, Field.Store.NO));
                 }
-                    
+
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
                     doc.Add(new TextField(ArtistField, metadata.Artist, Field.Store.NO));
@@ -949,7 +988,7 @@ public sealed class SearchIndex : ISearchIndex
             SongMetadata sm => $"{sm.OriginalTitle}".ToLowerInvariant(),
             _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
         };
-        
+
     private static string GetJumpLetter(Metadata metadata)
     {
         char c = metadata.SortTitle.ToLowerInvariant().Head();

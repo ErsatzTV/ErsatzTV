@@ -42,8 +42,14 @@
                 }
                 @if (_movie.MediaItemState == MediaItemState.FileNotFound)
                 {
-                    <div style="position: absolute; top: 8px; right: 10px">
+                    <div style="position: absolute; right: 10px; top: 8px;">
                         <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                    </div>
+                }
+                else if (_movie.MediaItemState == MediaItemState.Unavailable)
+                {
+                    <div style="position: absolute; right: 10px; top: 8px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
                     </div>
                 }
             </div>
@@ -77,6 +83,18 @@
                     <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
                     <MudText>File Not Found:&nbsp;</MudText>
                     <MudText>@_movie.Path</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    }
+    else if (_movie.MediaItemState == MediaItemState.Unavailable)
+    {
+        <MudCard Class="mb-6">
+            <MudCardContent>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                    <MudText>Unavailable:&nbsp;</MudText>
+                    <MudText>@_movie.LocalPath</MudText>
                 </div>
             </MudCardContent>
         </MudCard>

@@ -4,7 +4,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Emby;
 
-public class UpdateEmbyPathReplacementsHandler : MediatR.IRequestHandler<UpdateEmbyPathReplacements,
+public class UpdateEmbyPathReplacementsHandler : IRequestHandler<UpdateEmbyPathReplacements,
     Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;

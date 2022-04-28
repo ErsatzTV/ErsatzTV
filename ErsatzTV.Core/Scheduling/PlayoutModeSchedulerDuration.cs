@@ -72,11 +72,15 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
                     : FillerKind.None,
-                CustomTitle = scheduleItem.CustomTitle
+                CustomTitle = scheduleItem.CustomTitle,
+                WatermarkId = scheduleItem.WatermarkId,
+                PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                SubtitleMode = scheduleItem.SubtitleMode
             };
-                
-            durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime); 
-                
+
+            durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
+
             DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
             DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
                 collectionEnumerators,
@@ -192,7 +196,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         }
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
-            
+
         return Tuple(nextState, playoutItems);
     }
 }

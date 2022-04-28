@@ -4,10 +4,7 @@ public class VideoBitrateOutputOption : OutputOption
 {
     private readonly int _bitrate;
 
-    public VideoBitrateOutputOption(int bitrate)
-    {
-        _bitrate = bitrate;
-    }
+    public VideoBitrateOutputOption(int bitrate) => _bitrate = bitrate;
 
     public override IList<string> OutputOptions => new List<string>
     {
