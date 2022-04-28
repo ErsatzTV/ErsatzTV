@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `unavailable` state for Emby movie libraries
 - Add `height` and `width` to search index for all videos
 - Add `season_number` and `episode_number` to search index for all episodes
+- Add `season_number` to search index for seasons
+- Add `show_title` to search index for seasons and episodes
 
 ## [0.5.3-beta] - 2022-04-24
 ### Fixed

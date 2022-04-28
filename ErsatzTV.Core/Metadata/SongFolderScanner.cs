@@ -150,13 +150,9 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
                     foreach (MediaItemScanResult<Song> result in maybeSong.RightToSeq())
                     {
-                        if (result.IsAdded)
+                        if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                        }
-                        else if (result.IsUpdated)
-                        {
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                            await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                         }
 
                         await _libraryRepository.SetEtag(libraryPath, knownFolder, songFolder, etag);
