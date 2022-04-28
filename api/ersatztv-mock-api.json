@@ -40,7 +40,7 @@
       "responses": [
         {
           "uuid": "2f42cd38-2591-475f-a4bf-e5fb3455a8b3",
-          "body": "[\n  {{#repeat (faker 'datatype.number' min=2 max=3)}}\n  { \n    \"id\": {{@index}},\n    \"name\": \"{{faker 'hacker.adjective'}} {{faker 'hacker.noun'}}\",\n    \"transcode\": {{faker 'datatype.boolean'}},\n    \"resolution\": \"{{oneOf (array '1920x1080' '1280x720' '720x480')}}\",\n    \"video\": \"{{oneOf (array 'hevc' 'h264')}}{{oneOf (array ' / nvenc' ' / qsv' ' / vaapi' '')}}\",\n    \"audio\": \"{{oneOf (array 'aac' 'ac3')}}\"\n  }\n  {{/repeat}}\n]",
+          "body": "[\n  {{#repeat (faker 'datatype.number' min=2 max=3)}}\n  { \n    \"id\": {{@index}},\n    \"name\": \"{{faker 'hacker.adjective'}} {{faker 'hacker.noun'}}\",\n    \"resolution\": \"{{oneOf (array '1920x1080' '1280x720' '720x480')}}\",\n    \"video\": \"{{oneOf (array 'hevc' 'h264')}}{{oneOf (array ' / nvenc' ' / qsv' ' / vaapi' '')}}\",\n    \"audio\": \"{{oneOf (array 'aac' 'ac3')}}\"\n  }\n  {{/repeat}}\n]",
           "latency": 0,
           "statusCode": 200,
           "label": "",

@@ -6,9 +6,6 @@
             :sort-by="['name']"
             class="elevation-1"
         >
-            <template v-slot:[`item.transcode`]="{ item }">
-                <span>{{ item.transcode ? 'Yes' : 'No' }}</span>
-            </template>
         </v-data-table>
     </div>
 </template>
@@ -23,11 +20,13 @@ export default class FFmpegProfiles extends Vue {
     private ffmpegProfiles: FFmpegProfile[] = [];
 
     private headers = [
-        { text: 'Name', value: 'name' },
-        { text: 'Transcode', value: 'transcode' },
-        { text: 'Resolution', value: 'resolution' },
-        { text: 'Video', value: 'video' },
-        { text: 'Audio', value: 'audio' }
+        { text: this.$t('ffmpeg-profiles.table.name'), value: 'name' },
+        {
+            text: this.$t('ffmpeg-profiles.table.resolution'),
+            value: 'resolution'
+        },
+        { text: this.$t('ffmpeg-profiles.table.video'), value: 'video' },
+        { text: this.$t('ffmpeg-profiles.table.audio'), value: 'audio' }
     ];
 
     title: string = 'FFMpeg Profiles';
