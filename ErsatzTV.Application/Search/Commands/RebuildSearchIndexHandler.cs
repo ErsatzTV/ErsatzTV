@@ -35,7 +35,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
     {
         bool indexFolderExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
 
-        await _searchIndex.Initialize(_localFileSystem);
+        await _searchIndex.Initialize(_localFileSystem, _configElementRepository);
 
         if (!indexFolderExists ||
             await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
