@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Application.Resolutions;
+using ErsatzTV.Core.Api.FFmpegProfiles;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
@@ -25,6 +26,14 @@ internal static class Mapper
             profile.AudioSampleRate,
             profile.NormalizeFramerate,
             profile.DeinterlaceVideo == true);
+
+    internal static FFmpegProfileResponseModel ProjectToResponseModel(FFmpegProfile ffmpegProfile) =>
+        new(
+            ffmpegProfile.Id,
+            ffmpegProfile.Name,
+            $"{ffmpegProfile.Resolution.Width}x{ffmpegProfile.Resolution.Height}",
+            ffmpegProfile.VideoFormat.ToString().ToLowerInvariant(),
+            ffmpegProfile.AudioFormat.ToString().ToLowerInvariant());
 
     private static ResolutionViewModel Project(Resolution resolution) =>
         new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);
