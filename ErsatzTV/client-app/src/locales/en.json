@@ -86,7 +86,13 @@
     "title": "Home"
   },
   "ffmpeg-profiles": {
-    "title": "FFmpeg Profiles"
+    "title": "FFmpeg Profiles",
+    "table": {
+      "name": "Name",
+      "resolution": "Resolution",
+      "video": "Video",
+      "audio": "Audio"
+    }
   },
   "watermarks": {
     "title": "Watermarks"

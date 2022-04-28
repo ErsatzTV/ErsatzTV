@@ -86,7 +86,10 @@
     "title": "Início"
   },
   "ffmpeg-profiles": {
-    "title": "Perfis FFmpeg"
+    "title": "Perfis FFmpeg",
+    "table": {
+      "name": "Nome"
+    }
   },
   "watermarks": {
     "title": "Marcas d'água"
