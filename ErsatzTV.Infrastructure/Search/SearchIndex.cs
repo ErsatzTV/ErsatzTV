@@ -18,6 +18,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Microsoft.Extensions.Logging;
+using Directory = System.IO.Directory;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
@@ -86,11 +87,21 @@ public sealed class SearchIndex : ISearchIndex
 
     public int Version => 22;
 
-    public Task<bool> Initialize(ILocalFileSystem localFileSystem)
+    public async Task<bool> Initialize(
+        ILocalFileSystem localFileSystem,
+        IConfigElementRepository configElementRepository)
     {
         if (!_initialized)
         {
             localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+
+            if (!ValidateDirectory(FileSystemLayout.SearchIndexFolder))
+            {
+                _logger.LogWarning("Search index failed to initialize; will delete and recreate");
+                await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0);
+                Directory.Delete(FileSystemLayout.SearchIndexFolder, true);
+                localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+            }
 
             _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
             var analyzer = new StandardAnalyzer(AppLuceneVersion);
@@ -100,7 +111,7 @@ public sealed class SearchIndex : ISearchIndex
             _initialized = true;
         }
 
-        return Task.FromResult(_initialized);
+        return _initialized;
     }
 
     public async Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items)
@@ -226,6 +237,24 @@ public sealed class SearchIndex : ISearchIndex
         }
 
         return Unit.Default;
+    }
+
+    private bool ValidateDirectory(string folder)
+    {
+        try
+        {
+            using var d = FSDirectory.Open(folder);
+            var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
+                { OpenMode = OpenMode.CREATE_OR_APPEND };
+            using var w = new IndexWriter(_directory, indexConfig);
+            using DirectoryReader r = w.GetReader(true);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private async Task RebuildItem(ISearchRepository searchRepository, MediaItem mediaItem)
