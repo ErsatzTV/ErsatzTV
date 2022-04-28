@@ -94,14 +94,15 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     {
         List<TEtag> existingMovies = await movieRepository.GetExistingMovies(library);
 
-        foreach (TMovie incoming in movieEntries)
+        var sortedMovies = movieEntries.OrderBy(m => m.MovieMetadata.Head().SortTitle).ToList();
+        foreach (TMovie incoming in sortedMovies)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return new ScanCanceled();
             }
 
-            decimal percentCompletion = (decimal)movieEntries.IndexOf(incoming) / movieEntries.Count;
+            decimal percentCompletion = (decimal)sortedMovies.IndexOf(incoming) / sortedMovies.Count;
             await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
 
             string localPath = getLocalPath(incoming);
@@ -167,7 +168,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             }
         }
 
-        // trash items that are no longer present on the media server
+        // trash movies that are no longer present on the media server
         var fileNotFoundItemIds = existingMovies.Map(m => m.MediaServerItemId)
             .Except(movieEntries.Map(MediaServerItemId)).ToList();
         List<int> ids = await movieRepository.FlagFileNotFound(library, fileNotFoundItemIds);

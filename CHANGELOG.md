@@ -8,9 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Cleanly stop all library scans when service termination is requested
 - Fix health check crash when trash contains a show or a season
 - Fix ability of health check crash to crash home page
+- Remove and ignore Season 0/Specials from Plex shows that have no specials
 
 ### Changed
-- Update Plex, Jellyfin and Emby movie library scanners to share a significant amount of code
+- Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
   - This should help maintain feature parity going forward
 - Optimize search-index rebuilding to complete 100x faster
 

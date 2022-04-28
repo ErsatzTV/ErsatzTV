@@ -34,12 +34,6 @@ public interface ITelevisionRepository
     Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);
     Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath);
     Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath);
-    Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAddPlexShow(PlexLibrary library, PlexShow item);
-    Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item);
-
-    Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>>
-        GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item);
-
     Task<bool> AddGenre(ShowMetadata metadata, Genre genre);
     Task<bool> AddTag(Domain.Metadata metadata, Tag tag);
     Task<bool> AddStudio(ShowMetadata metadata, Studio studio);
