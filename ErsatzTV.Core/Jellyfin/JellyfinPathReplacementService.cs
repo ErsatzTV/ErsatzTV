@@ -34,7 +34,36 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
     public string GetReplacementJellyfinPath(
         List<JellyfinPathReplacement> pathReplacements,
         string path,
-        bool log = true)
+        bool log = true) =>
+        GetReplacementJellyfinPath(pathReplacements, path, _runtimeInfo.IsOSPlatform(OSPlatform.Windows), log);
+
+    public string ReplaceNetworkPath(
+        JellyfinMediaSource jellyfinMediaSource,
+        string path,
+        string networkPath,
+        string replacement)
+    {
+        var replacements = new List<JellyfinPathReplacement>
+        {
+            new() { JellyfinPath = networkPath, LocalPath = replacement, JellyfinMediaSource = jellyfinMediaSource }
+        };
+
+        // we want to target the jellyfin platform with the network path replacement
+        bool isTargetPlatformWindows = jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        return GetReplacementJellyfinPath(replacements, path, isTargetPlatformWindows, false);
+    }
+
+    private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource, string path)
+    {
+        bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+        return isUnc || jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+    }
+    
+    private string GetReplacementJellyfinPath(
+        List<JellyfinPathReplacement> pathReplacements,
+        string path,
+        bool isTargetPlatformWindows,
+        bool log)
     {
         Option<JellyfinPathReplacement> maybeReplacement = pathReplacements
             .SingleOrDefault(
@@ -55,13 +84,11 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         foreach (JellyfinPathReplacement replacement in maybeReplacement)
         {
             string finalPath = path.Replace(replacement.JellyfinPath, replacement.LocalPath);
-            if (IsWindows(replacement.JellyfinMediaSource, path) &&
-                !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            if (IsWindows(replacement.JellyfinMediaSource, path) && !isTargetPlatformWindows)
             {
                 finalPath = finalPath.Replace(@"\", @"/");
             }
-            else if (!IsWindows(replacement.JellyfinMediaSource, path) &&
-                     _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            else if (!IsWindows(replacement.JellyfinMediaSource, path) && isTargetPlatformWindows)
             {
                 finalPath = finalPath.Replace(@"/", @"\");
             }
@@ -79,11 +106,5 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         }
 
         return path;
-    }
-
-    private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource, string path)
-    {
-        bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
-        return isUnc || jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
     }
 }

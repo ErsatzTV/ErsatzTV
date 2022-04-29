@@ -14,11 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
   - This should help maintain feature parity going forward
-- Jellyfin and Emby movie and show library scanners now support the `unavailable` media state
 - Optimize search-index rebuilding to complete 100x faster
 
 ### Added
-- Add `unavailable` state for Emby movie libraries
+- Add `unavailable` state for Jellyfin and Emby movie and show libraries
 - Add `height` and `width` to search index for all videos
 - Add `season_number` and `episode_number` to search index for all episodes
 - Add `season_number` to search index for seasons

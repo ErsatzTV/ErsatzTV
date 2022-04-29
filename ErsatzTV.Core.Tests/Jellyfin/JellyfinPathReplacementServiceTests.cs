@@ -76,6 +76,30 @@ public class JellyfinPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
+    
+    [Test]
+    public void JellyfinWindows_To_EtvLinux_NetworkPath()
+    {
+        var mediaSource = new JellyfinMediaSource { OperatingSystem = "Windows" };
+
+        var repo = new Mock<IMediaSourceRepository>();
+
+        var runtime = new Mock<IRuntimeInfo>();
+        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+
+        var service = new JellyfinPathReplacementService(
+            repo.Object,
+            runtime.Object,
+            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+
+        string result = service.ReplaceNetworkPath(
+            mediaSource,
+            @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            @"\\192.168.1.100\Something\Some Shared Folder",
+            @"C:\mnt\something else\Some Shared Folder");
+
+        result.Should().Be(@"C:\mnt\something else\Some Shared Folder\Some Movie\Some Movie.mkv");
+    }
 
     [Test]
     public async Task JellyfinWindows_To_EtvLinux_UncPath()

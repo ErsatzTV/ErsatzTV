@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Jellyfin;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -159,26 +161,50 @@ public class MediaSourceRepository : IMediaSourceRepository
     public async Task<List<int>> UpdateLibraries(
         int jellyfinMediaSourceId,
         List<JellyfinLibrary> toAdd,
-        List<JellyfinLibrary> toDelete)
+        List<JellyfinLibrary> toDelete,
+        List<JellyfinLibrary> toUpdate)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         foreach (JellyfinLibrary add in toAdd)
         {
             add.MediaSourceId = jellyfinMediaSourceId;
-            dbContext.Entry(add).State = EntityState.Added;
-            foreach (LibraryPath path in add.Paths)
-            {
-                dbContext.Entry(path).State = EntityState.Added;
-            }
+            dbContext.JellyfinLibraries.Add(add);
         }
 
-        foreach (JellyfinLibrary delete in toDelete)
-        {
-            dbContext.Entry(delete).State = EntityState.Deleted;
-        }
+        dbContext.JellyfinLibraries.RemoveRange(toDelete);
 
         List<int> ids = await DisableJellyfinLibrarySync(toDelete.Map(l => l.Id).ToList());
+
+        foreach (JellyfinLibrary incoming in toUpdate)
+        {
+            Option<JellyfinLibrary> maybeExisting = await dbContext.JellyfinLibraries
+                .Include(l => l.PathInfos)
+                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId);
+
+            foreach (JellyfinLibrary existing in maybeExisting)
+            {
+                // remove paths that are not on the incoming version
+                existing.PathInfos.RemoveAll(pi => incoming.PathInfos.All(upi => upi.Path != pi.Path));
+                
+                // update all remaining paths
+                foreach (JellyfinPathInfo existingPathInfo in existing.PathInfos)
+                {
+                    Option<JellyfinPathInfo> maybeIncoming = incoming.PathInfos
+                        .Find(pi => pi.Path == existingPathInfo.Path);
+                    foreach (JellyfinPathInfo incomingPathInfo in maybeIncoming)
+                    {
+                        existingPathInfo.NetworkPath = incomingPathInfo.NetworkPath;
+                    }
+                }
+
+                foreach (JellyfinPathInfo incomingPathInfo in incoming.PathInfos
+                             .Filter(pi => existing.PathInfos.All(epi => epi.Path != pi.Path)))
+                {
+                    existing.PathInfos.Add(incomingPathInfo);
+                }
+            }
+        }
 
         await dbContext.SaveChangesAsync();
 
@@ -447,6 +473,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         return await context.JellyfinMediaSources
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
+            .ThenInclude(l => (l as JellyfinLibrary).PathInfos)
             .Include(p => p.PathReplacements)
             .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
             .SingleOrDefaultAsync(p => p.Id == id)
@@ -557,6 +584,8 @@ public class MediaSourceRepository : IMediaSourceRepository
         await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
         return await context.JellyfinLibraries
             .Include(l => l.Paths)
+            .Include(l => l.PathInfos)
+            .Include(l => l.MediaSource)
             .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
             .SingleOrDefaultAsync(l => l.Id == jellyfinLibraryId)
             .Map(Optional);

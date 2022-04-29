@@ -111,7 +111,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         _jellyfinApiClient.GetEpisodeLibraryItems(
             connectionParameters.Address,
             connectionParameters.ApiKey,
-            library.MediaSourceId,
+            library,
             season.ItemId);
 
     protected override Task<Option<ShowMetadata>> GetFullMetadata(

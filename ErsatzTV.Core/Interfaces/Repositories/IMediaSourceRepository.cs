@@ -26,7 +26,8 @@ public interface IMediaSourceRepository
     Task<List<int>> UpdateLibraries(
         int jellyfinMediaSourceId,
         List<JellyfinLibrary> toAdd,
-        List<JellyfinLibrary> toDelete);
+        List<JellyfinLibrary> toDelete,
+        List<JellyfinLibrary> toUpdate);
 
     Task<List<int>> UpdateLibraries(
         int embyMediaSourceId,
