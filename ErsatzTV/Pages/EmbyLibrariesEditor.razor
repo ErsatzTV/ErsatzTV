@@ -45,9 +45,9 @@
         ShouldSyncItems = library.ShouldSyncItems
     };
 
-    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(libraryId), _cts.Token);
+        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

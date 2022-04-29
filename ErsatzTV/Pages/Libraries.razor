@@ -119,6 +119,7 @@
                     await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
+                    await _jellyfinWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
                     await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id), _cts.Token);
                     break;
                 case EmbyLibraryViewModel:

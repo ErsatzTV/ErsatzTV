@@ -61,10 +61,12 @@
     public Func<List<RemoteMediaSourceLibraryEditViewModel>, IRequest<Either<BaseError, Unit>>> GetUpdateLibraryRequest { get; set; }
 
     [Parameter]
-    public Func<int, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
+    public Func<SynchronizeParameters, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
 
     private RemoteMediaSourceViewModel _source;
     private List<RemoteMediaSourceLibraryEditViewModel> _libraries;
+
+    public record SynchronizeParameters(int LibraryId, int MediaSourceId);
 
     public void Dispose()
     {
@@ -104,11 +106,11 @@
             },
             async () =>
             {
-                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                foreach (int libraryId in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
                 {
-                    if (_locker.LockLibrary(id))
+                    if (_locker.LockLibrary(libraryId))
                     {
-                        await SynchronizeLibraryByIdIfNeeded(id);
+                        await SynchronizeLibraryByIdIfNeeded(new SynchronizeParameters(libraryId, Id));
                     }
                 }
 
