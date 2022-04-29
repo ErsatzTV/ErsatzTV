@@ -31,7 +31,39 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         return GetReplacementEmbyPath(replacements, path, log);
     }
 
-    public string GetReplacementEmbyPath(List<EmbyPathReplacement> pathReplacements, string path, bool log = true)
+    public string GetReplacementEmbyPath(
+        List<EmbyPathReplacement> pathReplacements,
+        string path,
+        bool log = true) =>
+        GetReplacementEmbyPath(pathReplacements, path, _runtimeInfo.IsOSPlatform(OSPlatform.Windows), log);
+
+    public string ReplaceNetworkPath(
+        EmbyMediaSource embyMediaSource,
+        string path,
+        string networkPath,
+        string replacement)
+    {
+        var replacements = new List<EmbyPathReplacement>
+        {
+            new() { EmbyPath = networkPath, LocalPath = replacement, EmbyMediaSource = embyMediaSource }
+        };
+
+        // we want to target the emby platform with the network path replacement
+        bool isTargetPlatformWindows = embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        return GetReplacementEmbyPath(replacements, path, isTargetPlatformWindows, false);
+    }
+
+    private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
+    {
+        bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+        return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+    }
+
+    private string GetReplacementEmbyPath(
+        List<EmbyPathReplacement> pathReplacements,
+        string path,
+        bool isTargetPlatformWindows,
+        bool log)
     {
         Option<EmbyPathReplacement> maybeReplacement = pathReplacements
             .SingleOrDefault(
@@ -50,11 +82,11 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         foreach (EmbyPathReplacement replacement in maybeReplacement)
         {
             string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
-            if (IsWindows(replacement.EmbyMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            if (IsWindows(replacement.EmbyMediaSource, path) && !isTargetPlatformWindows)
             {
                 finalPath = finalPath.Replace(@"\", @"/");
             }
-            else if (!IsWindows(replacement.EmbyMediaSource, path) && _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            else if (!IsWindows(replacement.EmbyMediaSource, path) && isTargetPlatformWindows)
             {
                 finalPath = finalPath.Replace(@"/", @"\");
             }
@@ -72,11 +104,5 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         }
 
         return path;
-    }
-
-    private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
-    {
-        bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
-        return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
     }
 }

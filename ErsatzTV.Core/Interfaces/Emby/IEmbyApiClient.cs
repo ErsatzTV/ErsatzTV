@@ -11,7 +11,7 @@ public interface IEmbyApiClient
     Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
         string address,
         string apiKey,
-        string libraryId);
+        EmbyLibrary library);
 
     Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
         string address,
@@ -26,6 +26,7 @@ public interface IEmbyApiClient
     Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
+        EmbyLibrary library,
         string seasonId);
 
     Task<Either<BaseError, List<EmbyCollection>>> GetCollectionLibraryItems(

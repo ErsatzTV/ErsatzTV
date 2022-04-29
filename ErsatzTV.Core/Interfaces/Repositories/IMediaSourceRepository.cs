@@ -32,7 +32,8 @@ public interface IMediaSourceRepository
     Task<List<int>> UpdateLibraries(
         int embyMediaSourceId,
         List<EmbyLibrary> toAdd,
-        List<EmbyLibrary> toDelete);
+        List<EmbyLibrary> toDelete,
+        List<EmbyLibrary> toUpdate);
 
     Task<Unit> UpdatePathReplacements(
         int plexMediaSourceId,

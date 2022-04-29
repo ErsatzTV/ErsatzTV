@@ -234,10 +234,6 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
             return false;
         }
-        else
-        {
-            _logger.LogDebug("Etag mismatch: {Existing} / {Incoming}", existingEtag, MediaServerEtag(incoming));
-        }
 
         if (maybeExisting.IsNone)
         {

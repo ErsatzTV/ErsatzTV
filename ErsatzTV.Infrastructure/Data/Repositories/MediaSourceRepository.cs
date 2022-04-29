@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Infrastructure.Extensions;
@@ -214,26 +215,50 @@ public class MediaSourceRepository : IMediaSourceRepository
     public async Task<List<int>> UpdateLibraries(
         int embyMediaSourceId,
         List<EmbyLibrary> toAdd,
-        List<EmbyLibrary> toDelete)
+        List<EmbyLibrary> toDelete,
+        List<EmbyLibrary> toUpdate)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         foreach (EmbyLibrary add in toAdd)
         {
             add.MediaSourceId = embyMediaSourceId;
-            dbContext.Entry(add).State = EntityState.Added;
-            foreach (LibraryPath path in add.Paths)
-            {
-                dbContext.Entry(path).State = EntityState.Added;
-            }
+            dbContext.EmbyLibraries.Add(add);
         }
 
-        foreach (EmbyLibrary delete in toDelete)
-        {
-            dbContext.Entry(delete).State = EntityState.Deleted;
-        }
+        dbContext.EmbyLibraries.RemoveRange(toDelete);
 
         List<int> ids = await DisableEmbyLibrarySync(toDelete.Map(l => l.Id).ToList());
+
+        foreach (EmbyLibrary incoming in toUpdate)
+        {
+            Option<EmbyLibrary> maybeExisting = await dbContext.EmbyLibraries
+                .Include(l => l.PathInfos)
+                .SelectOneAsync(l => l.ItemId, l => l.ItemId == incoming.ItemId);
+
+            foreach (EmbyLibrary existing in maybeExisting)
+            {
+                // remove paths that are not on the incoming version
+                existing.PathInfos.RemoveAll(pi => incoming.PathInfos.All(upi => upi.Path != pi.Path));
+
+                // update all remaining paths
+                foreach (EmbyPathInfo existingPathInfo in existing.PathInfos)
+                {
+                    Option<EmbyPathInfo> maybeIncoming = incoming.PathInfos
+                        .Find(pi => pi.Path == existingPathInfo.Path);
+                    foreach (EmbyPathInfo incomingPathInfo in maybeIncoming)
+                    {
+                        existingPathInfo.NetworkPath = incomingPathInfo.NetworkPath;
+                    }
+                }
+
+                foreach (EmbyPathInfo incomingPathInfo in incoming.PathInfos
+                             .Filter(pi => existing.PathInfos.All(epi => epi.Path != pi.Path)))
+                {
+                    existing.PathInfos.Add(incomingPathInfo);
+                }
+            }
+        }
 
         await dbContext.SaveChangesAsync();
 
@@ -771,10 +796,9 @@ public class MediaSourceRepository : IMediaSourceRepository
         return await context.EmbyMediaSources
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
+            .ThenInclude(l => (l as EmbyLibrary).PathInfos)
             .Include(p => p.PathReplacements)
-            .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
-            .SingleOrDefaultAsync(p => p.Id == id)
-            .Map(Optional);
+            .SelectOneAsync(s => s.Id, s => s.Id == id);
     }
 
     public async Task<Option<EmbyMediaSource>> GetEmbyByLibraryId(int embyLibraryId)
@@ -800,9 +824,9 @@ public class MediaSourceRepository : IMediaSourceRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.EmbyLibraries
             .Include(l => l.Paths)
-            .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
-            .SingleOrDefaultAsync(l => l.Id == embyLibraryId)
-            .Map(Optional);
+            .Include(l => l.PathInfos)
+            .Include(l => l.MediaSource)
+            .SelectOneAsync(l => l.Id, l => l.Id == embyLibraryId);
     }
 
     public async Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId)

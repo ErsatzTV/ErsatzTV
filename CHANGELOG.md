@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
   - This should help maintain feature parity going forward
 - Optimize search-index rebuilding to complete 100x faster
+- **No longer use network paths to source content from Jellyfin and Emby**
+  - **If you previously used path replacements to convert network paths to local paths, you should remove them**
 
 ### Added
 - Add `unavailable` state for Jellyfin and Emby movie and show libraries

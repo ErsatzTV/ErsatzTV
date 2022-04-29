@@ -661,12 +661,16 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         try
         {
             // blank out etag for initial save in case other updates fail
+            string etag = show.Etag;
             show.Etag = string.Empty;
 
             show.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.AddAsync(show);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            show.Etag = etag;
 
             await dbContext.Entry(show).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(show.LibraryPath).Reference(lp => lp.Library).LoadAsync();
@@ -686,12 +690,16 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         try
         {
             // blank out etag for initial save in case other updates fail
+            string etag = season.Etag;
             season.Etag = string.Empty;
 
             season.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.AddAsync(season);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            season.Etag = etag;
 
             await dbContext.Entry(season).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
@@ -711,12 +719,16 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         try
         {
             // blank out etag for initial save in case other updates fail
+            string etag = episode.Etag;
             episode.Etag = string.Empty;
 
             episode.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.AddAsync(episode);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            episode.Etag = etag;
 
             await dbContext.Entry(episode).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();

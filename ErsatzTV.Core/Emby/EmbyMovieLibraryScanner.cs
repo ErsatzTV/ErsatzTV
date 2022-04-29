@@ -85,7 +85,7 @@ public class EmbyMovieLibraryScanner :
         _embyApiClient.GetMovieLibraryItems(
             connectionParameters.Address,
             connectionParameters.ApiKey,
-            library.ItemId);
+            library);
 
     protected override Task<Option<MovieMetadata>> GetFullMetadata(
         EmbyConnectionParameters connectionParameters,

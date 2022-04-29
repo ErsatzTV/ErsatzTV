@@ -78,6 +78,30 @@ public class EmbyPathReplacementServiceTests
     }
 
     [Test]
+    public void EmbyWindows_To_EtvLinux_NetworkPath()
+    {
+        var mediaSource = new EmbyMediaSource { OperatingSystem = "Windows" };
+
+        var repo = new Mock<IMediaSourceRepository>();
+
+        var runtime = new Mock<IRuntimeInfo>();
+        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+
+        var service = new EmbyPathReplacementService(
+            repo.Object,
+            runtime.Object,
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+
+        string result = service.ReplaceNetworkPath(
+            mediaSource,
+            @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv",
+            @"\\192.168.1.100\Something\Some Shared Folder",
+            @"C:\mnt\something else\Some Shared Folder");
+
+        result.Should().Be(@"C:\mnt\something else\Some Shared Folder\Some Movie\Some Movie.mkv");
+    }
+
+    [Test]
     public async Task EmbyWindows_To_EtvLinux_UncPath()
     {
         var replacements = new List<EmbyPathReplacement>

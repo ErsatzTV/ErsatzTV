@@ -47,6 +47,7 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
+        await _channel.WriteAsync(new SynchronizeEmbyLibraries(parameters.MediaSourceId), _cts.Token);
         await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
