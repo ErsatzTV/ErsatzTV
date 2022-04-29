@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove and ignore Season 0/Specials from Plex shows that have no specials
 - Automatically delete and rebuild the search index on startup if it has become corrupt
 - Automatically scan Jellyfin and Emby libraries on startup and periodically
+- Properly remove un-synchronized Plex, Jellyfin and Emby items from the database and search index
+- Fix synchronizing movies within a collection from Jellyfin
 
 ### Changed
 - Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code

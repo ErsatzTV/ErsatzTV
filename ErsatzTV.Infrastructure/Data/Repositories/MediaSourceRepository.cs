@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -310,14 +311,16 @@ public class MediaSourceRepository : IMediaSourceRepository
 
         List<PlexLibrary> allPlexLibraries = await dbContext.PlexLibraries.ToListAsync();
         dbContext.PlexLibraries.RemoveRange(allPlexLibraries);
+        var libraryIds = allPlexLibraries.Map(l => l.Id).ToList();
 
-        List<int> movieIds = await dbContext.PlexMovies.Map(pm => pm.Id).ToListAsync();
-        List<int> showIds = await dbContext.PlexShows.Map(ps => ps.Id).ToListAsync();
-        List<int> episodeIds = await dbContext.PlexEpisodes.Map(pe => pe.Id).ToListAsync();
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
 
         await dbContext.SaveChangesAsync();
 
-        return movieIds.Append(showIds).Append(episodeIds).ToList();
+        return deletedMediaIds;
     }
 
     public async Task<List<int>> DeletePlex(PlexMediaSource plexMediaSource)
@@ -343,83 +346,30 @@ public class MediaSourceRepository : IMediaSourceRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
-            new { ids = libraryIds });
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE Library SET LastScan = null WHERE Id IN @ids",
-            new { ids = libraryIds });
+        List<PlexLibrary> libraries = await dbContext.PlexLibraries
+            .Include(l => l.Paths)
+            .Filter(l => libraryIds.Contains(l.Id))
+            .ToListAsync();
 
-        List<int> movieIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
+        dbContext.PlexLibraries.RemoveRange(libraries);
+        await dbContext.SaveChangesAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
+        foreach (PlexLibrary library in libraries)
+        {
+            library.Id = 0;
+            library.ShouldSyncItems = false;
+            library.LastScan = SystemTime.MinValueUtc;
+        }
 
-        List<int> episodeIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
+        await dbContext.PlexLibraries.AddRangeAsync(libraries);
+        await dbContext.SaveChangesAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> seasonIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexSeason ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexSeason ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> showIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
-
-        return movieIds.Append(showIds).Append(seasonIds).Append(episodeIds).ToList();
+        return deletedMediaIds;
     }
 
     public async Task EnablePlexLibrarySync(IEnumerable<int> libraryIds)
@@ -525,83 +475,31 @@ public class MediaSourceRepository : IMediaSourceRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE JellyfinLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
-            new { ids = libraryIds });
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE Library SET LastScan = null WHERE Id IN @ids",
-            new { ids = libraryIds });
+        List<JellyfinLibrary> libraries = await dbContext.JellyfinLibraries
+            .Include(l => l.Paths)
+            .Include(l => l.PathInfos)
+            .Filter(l => libraryIds.Contains(l.Id))
+            .ToListAsync();
 
-        List<int> movieIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
+        dbContext.JellyfinLibraries.RemoveRange(libraries);
+        await dbContext.SaveChangesAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
+        foreach (JellyfinLibrary library in libraries)
+        {
+            library.Id = 0;
+            library.ShouldSyncItems = false;
+            library.LastScan = SystemTime.MinValueUtc;
+        }
 
-        List<int> episodeIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
+        await dbContext.JellyfinLibraries.AddRangeAsync(libraries);
+        await dbContext.SaveChangesAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> seasonIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinSeason js ON js.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinSeason ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> showIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
-            new { ids = libraryIds });
-
-        return movieIds.Append(showIds).Append(seasonIds).Append(episodeIds).ToList();
+        return deletedMediaIds;
     }
 
     public async Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId)
@@ -708,24 +606,14 @@ public class MediaSourceRepository : IMediaSourceRepository
         var libraryIds = allJellyfinLibraries.Map(l => l.Id).ToList();
         dbContext.JellyfinLibraries.RemoveRange(allJellyfinLibraries);
 
-        List<int> movieIds = await dbContext.JellyfinMovies
-            .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
-            .Map(pm => pm.Id)
-            .ToListAsync();
-
-        List<int> showIds = await dbContext.JellyfinShows
-            .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
-            .Map(ps => ps.Id)
-            .ToListAsync();
-
-        List<int> episodeIds = await dbContext.JellyfinEpisodes
-            .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
-            .Map(ps => ps.Id)
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
             .ToListAsync();
 
         await dbContext.SaveChangesAsync();
 
-        return movieIds.Append(showIds).Append(episodeIds).ToList();
+        return deletedMediaIds;
     }
 
     public async Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem)
@@ -911,24 +799,14 @@ public class MediaSourceRepository : IMediaSourceRepository
         var libraryIds = allEmbyLibraries.Map(l => l.Id).ToList();
         dbContext.EmbyLibraries.RemoveRange(allEmbyLibraries);
 
-        List<int> movieIds = await dbContext.EmbyMovies
-            .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
-            .Map(pm => pm.Id)
-            .ToListAsync();
-
-        List<int> showIds = await dbContext.EmbyShows
-            .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
-            .Map(ps => ps.Id)
-            .ToListAsync();
-
-        List<int> episodeIds = await dbContext.EmbyEpisodes
-            .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
-            .Map(ps => ps.Id)
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
             .ToListAsync();
 
         await dbContext.SaveChangesAsync();
 
-        return movieIds.Append(showIds).Append(episodeIds).ToList();
+        return deletedMediaIds;
     }
 
     public async Task<Unit> EnableEmbyLibrarySync(IEnumerable<int> libraryIds)
@@ -943,122 +821,30 @@ public class MediaSourceRepository : IMediaSourceRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE EmbyLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
-            new { ids = libraryIds });
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE Library SET LastScan = null WHERE Id IN @ids",
-            new { ids = libraryIds });
+        List<EmbyLibrary> libraries = await dbContext.EmbyLibraries
+            .Include(l => l.Paths)
+            .Include(l => l.PathInfos)
+            .Filter(l => libraryIds.Contains(l.Id))
+            .ToListAsync();
 
-        List<int> movieIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
+        dbContext.EmbyLibraries.RemoveRange(libraries);
+        await dbContext.SaveChangesAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM EmbyMovie WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
+        foreach (EmbyLibrary library in libraries)
+        {
+            library.Id = 0;
+            library.ShouldSyncItems = false;
+            library.LastScan = SystemTime.MinValueUtc;
+        }
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM Movie WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
+        await dbContext.EmbyLibraries.AddRangeAsync(libraries);
+        await dbContext.SaveChangesAsync();
 
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> episodeIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM EmbyEpisode WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM Episode WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> seasonIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbySeason es ON es.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM EmbySeason WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbySeason es ON es.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM Season WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbySeason es ON es.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbySeason es ON es.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        List<int> showIds = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
-            new { ids = libraryIds }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM EmbyShow WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM Show WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
-            new { ids = libraryIds });
-
-        return movieIds.Append(showIds).Append(seasonIds).Append(episodeIds).ToList();
+        return deletedMediaIds;
     }
 }
