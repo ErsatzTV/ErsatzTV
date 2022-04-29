@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix ability of health check crash to crash home page
 - Remove and ignore Season 0/Specials from Plex shows that have no specials
 - Automatically delete and rebuild the search index on startup if it has become corrupt
+- Automatically scan Jellyfin and Emby libraries on startup and periodically
 
 ### Changed
 - Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
