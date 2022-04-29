@@ -377,7 +377,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 },
                 Streams = new List<MediaStream>()
             };
-            
+
             MovieMetadata metadata = ProjectToMovieMetadata(item);
 
             var movie = new JellyfinMovie
@@ -688,7 +688,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 _logger.LogWarning("STRM files are not supported; skipping {Path}", item.Path);
                 return None;
             }
-            
+
             string path = item.Path ?? string.Empty;
             foreach (JellyfinPathInfo pathInfo in library.PathInfos)
             {

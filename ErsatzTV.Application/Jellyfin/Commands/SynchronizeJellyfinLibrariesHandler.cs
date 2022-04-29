@@ -8,7 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public class SynchronizeJellyfinLibrariesHandler : IRequestHandler<SynchronizeJellyfinLibraries, Either<BaseError, Unit>>
+public class
+    SynchronizeJellyfinLibrariesHandler : IRequestHandler<SynchronizeJellyfinLibraries, Either<BaseError, Unit>>
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinSecretStore _jellyfinSecretStore;

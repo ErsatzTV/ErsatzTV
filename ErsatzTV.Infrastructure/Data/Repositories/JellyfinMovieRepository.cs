@@ -341,7 +341,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
 
             await dbContext.AddAsync(movie);
             await dbContext.SaveChangesAsync();
-            
+
             // restore etag
             movie.Etag = etag;
 

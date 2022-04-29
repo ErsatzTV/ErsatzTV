@@ -186,7 +186,7 @@ public class MediaSourceRepository : IMediaSourceRepository
             {
                 // remove paths that are not on the incoming version
                 existing.PathInfos.RemoveAll(pi => incoming.PathInfos.All(upi => upi.Path != pi.Path));
-                
+
                 // update all remaining paths
                 foreach (JellyfinPathInfo existingPathInfo in existing.PathInfos)
                 {

@@ -11,7 +11,12 @@ internal static class Mapper
         {
             LocalLibrary l => ProjectToViewModel(l),
             PlexLibrary p => new PlexLibraryViewModel(p.Id, p.Name, p.MediaKind, p.MediaSourceId),
-            JellyfinLibrary j => new JellyfinLibraryViewModel(j.Id, j.Name, j.MediaKind, j.ShouldSyncItems, j.MediaSourceId),
+            JellyfinLibrary j => new JellyfinLibraryViewModel(
+                j.Id,
+                j.Name,
+                j.MediaKind,
+                j.ShouldSyncItems,
+                j.MediaSourceId),
             EmbyLibrary e => new EmbyLibraryViewModel(e.Id, e.Name, e.MediaKind, e.ShouldSyncItems, e.MediaSourceId),
             _ => throw new ArgumentOutOfRangeException(nameof(library))
         };

@@ -76,7 +76,7 @@ public class JellyfinPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public void JellyfinWindows_To_EtvLinux_NetworkPath()
     {

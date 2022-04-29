@@ -9,7 +9,7 @@ public class JellyfinLibraryConfiguration : IEntityTypeConfiguration<JellyfinLib
     public void Configure(EntityTypeBuilder<JellyfinLibrary> builder)
     {
         builder.ToTable("JellyfinLibrary");
-        
+
         builder.HasMany(l => l.PathInfos)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

@@ -58,7 +58,7 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
         return isUnc || jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
     }
-    
+
     private string GetReplacementJellyfinPath(
         List<JellyfinPathReplacement> pathReplacements,
         string path,
