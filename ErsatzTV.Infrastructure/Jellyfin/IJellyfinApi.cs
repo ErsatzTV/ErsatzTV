@@ -36,7 +36,9 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Movie",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        string filters = "IsNotFolder");
 
     [Get("/Items")]
     public Task<JellyfinLibraryItemsResponse> GetShowLibraryItems(

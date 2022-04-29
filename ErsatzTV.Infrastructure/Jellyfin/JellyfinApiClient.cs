@@ -13,16 +13,19 @@ namespace ErsatzTV.Infrastructure.Jellyfin;
 public class JellyfinApiClient : IJellyfinApiClient
 {
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILogger<JellyfinApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
 
     public JellyfinApiClient(
         IMemoryCache memoryCache,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        IJellyfinPathReplacementService jellyfinPathReplacementService,
         ILogger<JellyfinApiClient> logger)
     {
         _memoryCache = memoryCache;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _jellyfinPathReplacementService = jellyfinPathReplacementService;
         _logger = logger;
     }
 
@@ -91,17 +94,16 @@ public class JellyfinApiClient : IJellyfinApiClient
     public async Task<Either<BaseError, List<JellyfinMovie>>> GetMovieLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
-        string libraryId)
+        JellyfinLibrary library)
     {
         try
         {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
             {
                 IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, userId, libraryId);
+                JellyfinLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, userId, library.ItemId);
                 return items.Items
-                    .Map(ProjectToMovie)
+                    .Map(i => ProjectToMovie(library, i))
                     .Somes()
                     .ToList();
             }
@@ -172,17 +174,17 @@ public class JellyfinApiClient : IJellyfinApiClient
     public async Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
+        JellyfinLibrary library,
         string seasonId)
     {
         try
         {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
             {
                 IJellyfinApi service = RestService.For<IJellyfinApi>(address);
                 JellyfinLibraryItemsResponse items = await service.GetEpisodeLibraryItems(apiKey, userId, seasonId);
                 return items.Items
-                    .Map(ProjectToEpisode)
+                    .Map(i => ProjectToEpisode(library, i))
                     .Somes()
                     .ToList();
             }
@@ -300,7 +302,13 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Name = response.Name,
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } }
+                Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } },
+                PathInfos = response.LibraryOptions.PathInfos.Map(
+                    pi => new JellyfinPathInfo
+                    {
+                        Path = pi.Path,
+                        NetworkPath = pi.NetworkPath
+                    }).ToList()
             },
             "movies" => new JellyfinLibrary
             {
@@ -308,7 +316,13 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Name = response.Name,
                 MediaKind = LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } }
+                Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } },
+                PathInfos = response.LibraryOptions.PathInfos.Map(
+                    pi => new JellyfinPathInfo
+                    {
+                        Path = pi.Path,
+                        NetworkPath = pi.NetworkPath
+                    }).ToList()
             },
             // TODO: ??? for music libraries
             "boxsets" => CacheCollectionLibraryId(response.ItemId),
@@ -321,7 +335,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         return None;
     }
 
-    private Option<JellyfinMovie> ProjectToMovie(JellyfinLibraryItemResponse item)
+    private Option<JellyfinMovie> ProjectToMovie(JellyfinLibrary library, JellyfinLibraryItemResponse item)
     {
         try
         {
@@ -336,6 +350,19 @@ public class JellyfinApiClient : IJellyfinApiClient
                 return None;
             }
 
+            string path = item.Path ?? string.Empty;
+            foreach (JellyfinPathInfo pathInfo in library.PathInfos)
+            {
+                if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
+                {
+                    path = _jellyfinPathReplacementService.ReplaceNetworkPath(
+                        (JellyfinMediaSource)library.MediaSource,
+                        path,
+                        pathInfo.NetworkPath,
+                        pathInfo.Path);
+                }
+            }
+
             var version = new MediaVersion
             {
                 Name = "Main",
@@ -345,7 +372,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 {
                     new()
                     {
-                        Path = item.Path
+                        Path = path
                     }
                 },
                 Streams = new List<MediaStream>()
@@ -647,7 +674,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private Option<JellyfinEpisode> ProjectToEpisode(JellyfinLibraryItemResponse item)
+    private Option<JellyfinEpisode> ProjectToEpisode(JellyfinLibrary library, JellyfinLibraryItemResponse item)
     {
         try
         {
@@ -662,6 +689,19 @@ public class JellyfinApiClient : IJellyfinApiClient
                 return None;
             }
 
+            string path = item.Path ?? string.Empty;
+            foreach (JellyfinPathInfo pathInfo in library.PathInfos)
+            {
+                if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
+                {
+                    path = _jellyfinPathReplacementService.ReplaceNetworkPath(
+                        (JellyfinMediaSource)library.MediaSource,
+                        path,
+                        pathInfo.NetworkPath,
+                        pathInfo.Path);
+                }
+            }
+
             var version = new MediaVersion
             {
                 Name = "Main",
@@ -671,7 +711,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 {
                     new()
                     {
-                        Path = item.Path
+                        Path = path
                     }
                 },
                 Streams = new List<MediaStream>()

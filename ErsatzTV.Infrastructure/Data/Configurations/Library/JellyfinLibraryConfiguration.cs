@@ -6,6 +6,12 @@ namespace ErsatzTV.Infrastructure.Data.Configurations;
 
 public class JellyfinLibraryConfiguration : IEntityTypeConfiguration<JellyfinLibrary>
 {
-    public void Configure(EntityTypeBuilder<JellyfinLibrary> builder) =>
+    public void Configure(EntityTypeBuilder<JellyfinLibrary> builder)
+    {
         builder.ToTable("JellyfinLibrary");
+
+        builder.HasMany(l => l.PathInfos)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+    }
 }

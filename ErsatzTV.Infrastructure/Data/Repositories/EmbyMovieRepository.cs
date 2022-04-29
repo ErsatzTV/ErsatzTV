@@ -152,12 +152,16 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         try
         {
             // blank out etag for initial save in case other updates fail
+            string etag = movie.Etag;
             movie.Etag = string.Empty;
 
             movie.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.AddAsync(movie);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            movie.Etag = etag;
 
             await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();

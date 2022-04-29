@@ -9,9 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Jellyfin;
 
 public class
-    SynchronizeJellyfinLibrariesHandler : IRequestHandler<SynchronizeJellyfinLibraries,
-        Either<BaseError, Unit>>
-
+    SynchronizeJellyfinLibrariesHandler : IRequestHandler<SynchronizeJellyfinLibraries, Either<BaseError, Unit>>
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
@@ -74,32 +72,34 @@ public class
             connectionParameters.ActiveConnection.Address,
             connectionParameters.ApiKey);
 
-        await maybeLibraries.Match(
-            async libraries =>
-            {
-                var existing = connectionParameters.JellyfinMediaSource.Libraries.OfType<JellyfinLibrary>()
-                    .ToList();
-                var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
-                var toRemove = existing.Filter(library => libraries.All(l => l.ItemId != library.ItemId)).ToList();
-                List<int> ids = await _mediaSourceRepository.UpdateLibraries(
-                    connectionParameters.JellyfinMediaSource.Id,
-                    toAdd,
-                    toRemove);
-                if (ids.Any())
-                {
-                    await _searchIndex.RemoveItems(ids);
-                    _searchIndex.Commit();
-                }
-            },
-            error =>
-            {
-                _logger.LogWarning(
-                    "Unable to synchronize libraries from jellyfin server {JellyfinServer}: {Error}",
-                    connectionParameters.JellyfinMediaSource.ServerName,
-                    error.Value);
+        foreach (BaseError error in maybeLibraries.LeftToSeq())
+        {
+            _logger.LogWarning(
+                "Unable to synchronize libraries from jellyfin server {JellyfinServer}: {Error}",
+                connectionParameters.JellyfinMediaSource.ServerName,
+                error.Value);
+        }
 
-                return Task.CompletedTask;
-            });
+        foreach (List<JellyfinLibrary> libraries in maybeLibraries.RightToSeq())
+        {
+            var existing = connectionParameters.JellyfinMediaSource.Libraries
+                .OfType<JellyfinLibrary>()
+                .ToList();
+            var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
+            var toRemove = existing.Filter(library => libraries.All(l => l.ItemId != library.ItemId)).ToList();
+            var toUpdate = libraries
+                .Filter(l => toAdd.All(a => a.ItemId != l.ItemId) && toRemove.All(r => r.ItemId != l.ItemId)).ToList();
+            List<int> ids = await _mediaSourceRepository.UpdateLibraries(
+                connectionParameters.JellyfinMediaSource.Id,
+                toAdd,
+                toRemove,
+                toUpdate);
+            if (ids.Any())
+            {
+                await _searchIndex.RemoveItems(ids);
+                _searchIndex.Commit();
+            }
+        }
 
         return Unit.Default;
     }

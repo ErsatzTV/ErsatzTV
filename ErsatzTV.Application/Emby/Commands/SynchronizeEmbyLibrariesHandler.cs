@@ -8,8 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Emby;
 
-public class
-    SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLibraries, Either<BaseError, Unit>>
+public class SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLibraries, Either<BaseError, Unit>>
 {
     private readonly IEmbyApiClient _embyApiClient;
     private readonly IEmbySecretStore _embySecretStore;
@@ -72,32 +71,33 @@ public class
             connectionParameters.ActiveConnection.Address,
             connectionParameters.ApiKey);
 
-        await maybeLibraries.Match(
-            async libraries =>
-            {
-                var existing = connectionParameters.EmbyMediaSource.Libraries.OfType<EmbyLibrary>()
-                    .ToList();
-                var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
-                var toRemove = existing.Filter(library => libraries.All(l => l.ItemId != library.ItemId)).ToList();
-                List<int> ids = await _mediaSourceRepository.UpdateLibraries(
-                    connectionParameters.EmbyMediaSource.Id,
-                    toAdd,
-                    toRemove);
-                if (ids.Any())
-                {
-                    await _searchIndex.RemoveItems(ids);
-                    _searchIndex.Commit();
-                }
-            },
-            error =>
-            {
-                _logger.LogWarning(
-                    "Unable to synchronize libraries from emby server {EmbyServer}: {Error}",
-                    connectionParameters.EmbyMediaSource.ServerName,
-                    error.Value);
+        foreach (BaseError error in maybeLibraries.LeftToSeq())
+        {
+            _logger.LogWarning(
+                "Unable to synchronize libraries from emby server {EmbyServer}: {Error}",
+                connectionParameters.EmbyMediaSource.ServerName,
+                error.Value);
+        }
 
-                return Task.CompletedTask;
-            });
+        foreach (List<EmbyLibrary> libraries in maybeLibraries.RightToSeq())
+        {
+            var existing = connectionParameters.EmbyMediaSource.Libraries.OfType<EmbyLibrary>()
+                .ToList();
+            var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
+            var toRemove = existing.Filter(library => libraries.All(l => l.ItemId != library.ItemId)).ToList();
+            var toUpdate = libraries
+                .Filter(l => toAdd.All(a => a.ItemId != l.ItemId) && toRemove.All(r => r.ItemId != l.ItemId)).ToList();
+            List<int> ids = await _mediaSourceRepository.UpdateLibraries(
+                connectionParameters.EmbyMediaSource.Id,
+                toAdd,
+                toRemove,
+                toUpdate);
+            if (ids.Any())
+            {
+                await _searchIndex.RemoveItems(ids);
+                _searchIndex.Commit();
+            }
+        }
 
         return Unit.Default;
     }

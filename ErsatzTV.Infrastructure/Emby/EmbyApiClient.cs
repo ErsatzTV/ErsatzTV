@@ -12,6 +12,7 @@ namespace ErsatzTV.Infrastructure.Emby;
 
 public class EmbyApiClient : IEmbyApiClient
 {
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<EmbyApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
@@ -19,10 +20,12 @@ public class EmbyApiClient : IEmbyApiClient
     public EmbyApiClient(
         IFallbackMetadataProvider fallbackMetadataProvider,
         IMemoryCache memoryCache,
+        IEmbyPathReplacementService embyPathReplacementService,
         ILogger<EmbyApiClient> logger)
     {
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _memoryCache = memoryCache;
+        _embyPathReplacementService = embyPathReplacementService;
         _logger = logger;
     }
 
@@ -71,14 +74,14 @@ public class EmbyApiClient : IEmbyApiClient
     public async Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
         string address,
         string apiKey,
-        string libraryId)
+        EmbyLibrary library)
     {
         try
         {
             IEmbyApi service = RestService.For<IEmbyApi>(address);
-            EmbyLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, libraryId);
+            EmbyLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, library.ItemId);
             return items.Items
-                .Map(ProjectToMovie)
+                .Map(i => ProjectToMovie(library, i))
                 .Somes()
                 .ToList();
         }
@@ -134,6 +137,7 @@ public class EmbyApiClient : IEmbyApiClient
     public async Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
+        EmbyLibrary library,
         string seasonId)
     {
         try
@@ -141,7 +145,7 @@ public class EmbyApiClient : IEmbyApiClient
             IEmbyApi service = RestService.For<IEmbyApi>(address);
             EmbyLibraryItemsResponse items = await service.GetEpisodeLibraryItems(apiKey, seasonId);
             return items.Items
-                .Map(ProjectToEpisode)
+                .Map(i => ProjectToEpisode(library, i))
                 .Somes()
                 .ToList();
         }
@@ -245,7 +249,13 @@ public class EmbyApiClient : IEmbyApiClient
                 Name = response.Name,
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
+                Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } },
+                PathInfos = response.LibraryOptions.PathInfos.Map(
+                    pi => new EmbyPathInfo
+                    {
+                        Path = pi.Path,
+                        NetworkPath = pi.NetworkPath
+                    }).ToList()
             },
             "movies" => new EmbyLibrary
             {
@@ -253,7 +263,13 @@ public class EmbyApiClient : IEmbyApiClient
                 Name = response.Name,
                 MediaKind = LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
+                Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } },
+                PathInfos = response.LibraryOptions.PathInfos.Map(
+                    pi => new EmbyPathInfo
+                    {
+                        Path = pi.Path,
+                        NetworkPath = pi.NetworkPath
+                    }).ToList()
             },
             // TODO: ??? for music libraries
             "boxsets" => CacheCollectionLibraryId(response.ItemId),
@@ -266,13 +282,26 @@ public class EmbyApiClient : IEmbyApiClient
         return None;
     }
 
-    private Option<EmbyMovie> ProjectToMovie(EmbyLibraryItemResponse item)
+    private Option<EmbyMovie> ProjectToMovie(EmbyLibrary library, EmbyLibraryItemResponse item)
     {
         try
         {
             if (item.MediaSources.Any(ms => ms.Protocol != "File"))
             {
                 return None;
+            }
+
+            string path = item.Path ?? string.Empty;
+            foreach (EmbyPathInfo pathInfo in library.PathInfos)
+            {
+                if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
+                {
+                    path = _embyPathReplacementService.ReplaceNetworkPath(
+                        (EmbyMediaSource)library.MediaSource,
+                        path,
+                        pathInfo.NetworkPath,
+                        pathInfo.Path);
+                }
             }
 
             var version = new MediaVersion
@@ -284,7 +313,7 @@ public class EmbyApiClient : IEmbyApiClient
                 {
                     new()
                     {
-                        Path = item.Path
+                        Path = path
                     }
                 },
                 Streams = new List<MediaStream>()
@@ -568,13 +597,26 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private Option<EmbyEpisode> ProjectToEpisode(EmbyLibraryItemResponse item)
+    private Option<EmbyEpisode> ProjectToEpisode(EmbyLibrary library, EmbyLibraryItemResponse item)
     {
         try
         {
             if (item.LocationType == "Virtual")
             {
                 return None;
+            }
+
+            string path = item.Path ?? string.Empty;
+            foreach (EmbyPathInfo pathInfo in library.PathInfos)
+            {
+                if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
+                {
+                    path = _embyPathReplacementService.ReplaceNetworkPath(
+                        (EmbyMediaSource)library.MediaSource,
+                        path,
+                        pathInfo.NetworkPath,
+                        pathInfo.Path);
+                }
             }
 
             var version = new MediaVersion
@@ -586,7 +628,7 @@ public class EmbyApiClient : IEmbyApiClient
                 {
                     new()
                     {
-                        Path = item.Path
+                        Path = path
                     }
                 },
                 Streams = new List<MediaStream>()

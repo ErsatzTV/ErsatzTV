@@ -60,6 +60,22 @@ public class FakeTelevisionRepository : ITelevisionRepository
 
     public Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
 
+    public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
+    public Task<bool> AddTag(Domain.Metadata metadata, Tag tag) => throw new NotSupportedException();
+
+    public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) => throw new NotSupportedException();
+    public Task<bool> AddActor(ShowMetadata metadata, Actor actor) => throw new NotSupportedException();
+
+    public Task<bool> AddActor(EpisodeMetadata metadata, Actor actor) => throw new NotSupportedException();
+
+    public Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata) =>
+        throw new NotSupportedException();
+
+    public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
+
+    public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
+    public Task<Unit> UpdatePath(int mediaFileId, string path) => throw new NotSupportedException();
+
     public Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAddPlexShow(
         PlexLibrary library,
         PlexShow item) =>
@@ -73,14 +89,6 @@ public class FakeTelevisionRepository : ITelevisionRepository
         PlexEpisode item) =>
         throw new NotSupportedException();
 
-    public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
-    public Task<bool> AddTag(Domain.Metadata metadata, Tag tag) => throw new NotSupportedException();
-
-    public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) => throw new NotSupportedException();
-    public Task<bool> AddActor(ShowMetadata metadata, Actor actor) => throw new NotSupportedException();
-
-    public Task<bool> AddActor(EpisodeMetadata metadata, Actor actor) => throw new NotSupportedException();
-
     public Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
         throw new NotSupportedException();
 
@@ -90,13 +98,6 @@ public class FakeTelevisionRepository : ITelevisionRepository
     public Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
         throw new NotSupportedException();
 
-    public Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata) =>
-        throw new NotSupportedException();
-
-    public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
-
-    public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
-    public Task<Unit> UpdatePath(int mediaFileId, string path) => throw new NotSupportedException();
     public Task<Unit> SetPlexEtag(PlexShow show, string etag) => throw new NotSupportedException();
 
     public Task<Unit> SetPlexEtag(PlexSeason season, string etag) => throw new NotSupportedException();

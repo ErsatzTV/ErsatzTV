@@ -86,8 +86,7 @@ public class JellyfinMovieLibraryScanner :
         _jellyfinApiClient.GetMovieLibraryItems(
             connectionParameters.Address,
             connectionParameters.ApiKey,
-            connectionParameters.MediaSourceId,
-            library.ItemId);
+            library);
 
     protected override Task<Option<MovieMetadata>> GetFullMetadata(
         JellyfinConnectionParameters connectionParameters,

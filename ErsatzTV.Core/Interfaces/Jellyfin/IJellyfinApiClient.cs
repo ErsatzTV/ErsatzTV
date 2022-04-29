@@ -12,8 +12,7 @@ public interface IJellyfinApiClient
     Task<Either<BaseError, List<JellyfinMovie>>> GetMovieLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
-        string libraryId);
+        JellyfinLibrary library);
 
     Task<Either<BaseError, List<JellyfinShow>>> GetShowLibraryItems(
         string address,
@@ -30,7 +29,7 @@ public interface IJellyfinApiClient
     Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
+        JellyfinLibrary library,
         string seasonId);
 
     Task<Either<BaseError, List<JellyfinCollection>>> GetCollectionLibraryItems(

@@ -10,15 +10,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix ability of health check crash to crash home page
 - Remove and ignore Season 0/Specials from Plex shows that have no specials
 - Automatically delete and rebuild the search index on startup if it has become corrupt
+- Automatically scan Jellyfin and Emby libraries on startup and periodically
+- Properly remove un-synchronized Plex, Jellyfin and Emby items from the database and search index
+- Fix synchronizing movies within a collection from Jellyfin
 
 ### Changed
 - Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
   - This should help maintain feature parity going forward
-- Jellyfin and Emby movie and show library scanners now support the `unavailable` media state
 - Optimize search-index rebuilding to complete 100x faster
+- **No longer use network paths to source content from Jellyfin and Emby**
+  - **If you previously used path replacements to convert network paths to local paths, you should remove them**
 
 ### Added
-- Add `unavailable` state for Emby movie libraries
+- Add `unavailable` state for Jellyfin and Emby movie and show libraries
 - Add `height` and `width` to search index for all videos
 - Add `season_number` and `episode_number` to search index for all episodes
 - Add `season_number` to search index for seasons

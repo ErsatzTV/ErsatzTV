@@ -209,18 +209,18 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
         Option<TEtag> maybeExisting =
             existingMovies.Find(m => m.MediaServerItemId == MediaServerItemId(incoming));
-        string existingItemId = await maybeExisting.Map(e => e.MediaServerItemId).IfNoneAsync(string.Empty);
+        string existingEtag = await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty);
         MediaItemState existingState = await maybeExisting.Map(e => e.State).IfNoneAsync(MediaItemState.Normal);
 
-        if (existingState == MediaItemState.Unavailable)
+        if (existingState == MediaItemState.Unavailable && existingEtag == MediaServerEtag(incoming))
         {
-            // skip scanning unavailable items that still don't exist locally
+            // skip scanning unavailable items that are unchanged and still don't exist locally
             if (!_localFileSystem.FileExists(localPath))
             {
                 return false;
             }
         }
-        else if (existingItemId == MediaServerItemId(incoming))
+        else if (existingEtag == MediaServerEtag(incoming))
         {
             // item is unchanged, but file does not exist
             // don't scan, but mark as unavailable
@@ -277,7 +277,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     {
         TMovie existing = result.Item;
 
-        if (result.IsAdded || MediaServerItemId(existing) != MediaServerItemId(incoming) ||
+        if (result.IsAdded || MediaServerEtag(existing) != MediaServerEtag(incoming) ||
             existing.MediaVersions.Head().Streams.Count == 0)
         {
             if (_localFileSystem.FileExists(result.LocalPath))

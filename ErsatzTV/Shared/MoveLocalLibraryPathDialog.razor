@@ -70,7 +70,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _newLibrary = new LocalLibraryViewModel(-1, "(New Library)", MediaKind);
+        _newLibrary = new LocalLibraryViewModel(-1, "(New Library)", MediaKind, -1);
 
         _libraries = await _mediator.Send(new GetAllLocalLibraries(), _cts.Token)
             .Map(list => list.Filter(ll => ll.MediaKind == MediaKind && ll.Id != SourceLibraryId))

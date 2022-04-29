@@ -50,9 +50,6 @@ public class EmbyService : BackgroundService
                         case SynchronizeEmbyMediaSources synchronizeEmbyMediaSources:
                             requestTask = SynchronizeSources(synchronizeEmbyMediaSources, cancellationToken);
                             break;
-                        // case SynchronizeEmbyAdminUserId synchronizeEmbyAdminUserId:
-                        //     requestTask = SynchronizeAdminUserId(synchronizeEmbyAdminUserId, cancellationToken);
-                        //     break;
                         case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
                             requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, cancellationToken);
                             break;
@@ -93,9 +90,7 @@ public class EmbyService : BackgroundService
         }
     }
 
-    private async Task SynchronizeSources(
-        SynchronizeEmbyMediaSources request,
-        CancellationToken cancellationToken)
+    private async Task SynchronizeSources(SynchronizeEmbyMediaSources request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -117,9 +112,7 @@ public class EmbyService : BackgroundService
             });
     }
 
-    private async Task SynchronizeLibraries(
-        SynchronizeEmbyLibraries request,
-        CancellationToken cancellationToken)
+    private async Task SynchronizeLibraries(SynchronizeEmbyLibraries request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -135,27 +128,7 @@ public class EmbyService : BackgroundService
                 error.Value));
     }
 
-    // private async Task SynchronizeAdminUserId(
-    //     SynchronizeEmbyAdminUserId request,
-    //     CancellationToken cancellationToken)
-    // {
-    //     using IServiceScope scope = _serviceScopeFactory.CreateScope();
-    //     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-    //
-    //     Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
-    //     result.BiIter(
-    //         _ => _logger.LogInformation(
-    //             "Successfully synchronized Emby admin user id for source {MediaSourceId}",
-    //             request.EmbyMediaSourceId),
-    //         error => _logger.LogWarning(
-    //             "Unable to synchronize Emby admin user id for source {MediaSourceId}: {Error}",
-    //             request.EmbyMediaSourceId,
-    //             error.Value));
-    // }
-
-    private async Task SynchronizeEmbyLibrary(
-        ISynchronizeEmbyLibraryById request,
-        CancellationToken cancellationToken)
+    private async Task SynchronizeEmbyLibrary(ISynchronizeEmbyLibraryById request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();

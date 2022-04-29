@@ -119,9 +119,7 @@ public class JellyfinService : BackgroundService
             });
     }
 
-    private async Task SynchronizeLibraries(
-        SynchronizeJellyfinLibraries request,
-        CancellationToken cancellationToken)
+    private async Task SynchronizeLibraries(SynchronizeJellyfinLibraries request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
