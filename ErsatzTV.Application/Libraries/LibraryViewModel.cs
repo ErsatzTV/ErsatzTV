@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Libraries;
 
-public record LibraryViewModel(string LibraryKind, int Id, string Name, LibraryMediaKind MediaKind);
+public record LibraryViewModel(string LibraryKind, int Id, string Name, LibraryMediaKind MediaKind, int MediaSourceId);

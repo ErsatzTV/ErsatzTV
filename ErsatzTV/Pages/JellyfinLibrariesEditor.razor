@@ -45,9 +45,10 @@
         ShouldSyncItems = library.ShouldSyncItems
     };
 
-    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(libraryId), _cts.Token);
+        await _channel.WriteAsync(new SynchronizeJellyfinLibraries(parameters.MediaSourceId), _cts.Token);
+        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

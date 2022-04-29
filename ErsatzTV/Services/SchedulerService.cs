@@ -1,6 +1,8 @@
 ﻿using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application;
+using ErsatzTV.Application.Emby;
+using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaSources;
@@ -17,7 +19,9 @@ namespace ErsatzTV.Services;
 
 public class SchedulerService : BackgroundService
 {
+    private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel;
     private readonly IEntityLocker _entityLocker;
+    private readonly ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel;
     private readonly ILogger<SchedulerService> _logger;
     private readonly ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -27,12 +31,16 @@ public class SchedulerService : BackgroundService
         IServiceScopeFactory serviceScopeFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ChannelWriter<IPlexBackgroundServiceRequest> plexWorkerChannel,
+        ChannelWriter<IJellyfinBackgroundServiceRequest> jellyfinWorkerChannel,
+        ChannelWriter<IEmbyBackgroundServiceRequest> embyWorkerChannel,
         IEntityLocker entityLocker,
         ILogger<SchedulerService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _workerChannel = workerChannel;
         _plexWorkerChannel = plexWorkerChannel;
+        _jellyfinWorkerChannel = jellyfinWorkerChannel;
+        _embyWorkerChannel = embyWorkerChannel;
         _entityLocker = entityLocker;
         _logger = logger;
     }
@@ -89,6 +97,8 @@ public class SchedulerService : BackgroundService
             await BuildPlayouts(cancellationToken);
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
+            await ScanJellyfinMediaSources(cancellationToken);
+            await ScanEmbyMediaSources(cancellationToken);
             await MatchTraktLists(cancellationToken);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
@@ -177,12 +187,7 @@ public class SchedulerService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
-        List<int> localLibraryIds = await dbContext.LocalMediaSources
-            .SelectMany(ms => ms.Libraries)
-            .Map(l => l.Id)
-            .ToListAsync(cancellationToken);
-
-        foreach (int libraryId in localLibraryIds)
+        foreach (int libraryId in dbContext.LocalMediaSources.SelectMany(ms => ms.Libraries).Map(l => l.Id))
         {
             if (_entityLocker.LockLibrary(libraryId))
             {
@@ -198,16 +203,44 @@ public class SchedulerService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
-        List<PlexLibrary> plexLibraries = await dbContext.PlexLibraries
-            .Filter(l => l.ShouldSyncItems)
-            .ToListAsync(cancellationToken);
-
-        foreach (PlexLibrary library in plexLibraries)
+        foreach (PlexLibrary library in dbContext.PlexLibraries.Filter(l => l.ShouldSyncItems))
         {
             if (_entityLocker.LockLibrary(library.Id))
             {
                 await _plexWorkerChannel.WriteAsync(
                     new SynchronizePlexLibraryByIdIfNeeded(library.Id),
+                    cancellationToken);
+            }
+        }
+    }
+
+    private async Task ScanJellyfinMediaSources(CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+        foreach (JellyfinLibrary library in dbContext.JellyfinLibraries.Filter(l => l.ShouldSyncItems))
+        {
+            if (_entityLocker.LockLibrary(library.Id))
+            {
+                await _jellyfinWorkerChannel.WriteAsync(
+                    new SynchronizeJellyfinLibraryByIdIfNeeded(library.Id),
+                    cancellationToken);
+            }
+        }
+    }
+
+    private async Task ScanEmbyMediaSources(CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+        foreach (EmbyLibrary library in dbContext.EmbyLibraries.Filter(l => l.ShouldSyncItems))
+        {
+            if (_entityLocker.LockLibrary(library.Id))
+            {
+                await _embyWorkerChannel.WriteAsync(
+                    new SynchronizeEmbyLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }
         }

@@ -108,6 +108,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         _embyApiClient.GetEpisodeLibraryItems(
             connectionParameters.Address,
             connectionParameters.ApiKey,
+            library,
             season.ItemId);
 
     protected override Task<Option<ShowMetadata>> GetFullMetadata(

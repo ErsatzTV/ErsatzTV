@@ -71,31 +71,29 @@ public class
             connectionParameters.ActiveConnection,
             connectionParameters.PlexServerAuthToken);
 
-        await maybeLibraries.Match(
-            async libraries =>
-            {
-                var existing = connectionParameters.PlexMediaSource.Libraries.OfType<PlexLibrary>().ToList();
-                var toAdd = libraries.Filter(library => existing.All(l => l.Key != library.Key)).ToList();
-                var toRemove = existing.Filter(library => libraries.All(l => l.Key != library.Key)).ToList();
-                List<int> ids = await _mediaSourceRepository.UpdateLibraries(
-                    connectionParameters.PlexMediaSource.Id,
-                    toAdd,
-                    toRemove);
-                if (ids.Any())
-                {
-                    await _searchIndex.RemoveItems(ids);
-                    _searchIndex.Commit();
-                }
-            },
-            error =>
-            {
-                _logger.LogWarning(
-                    "Unable to synchronize libraries from plex server {PlexServer}: {Error}",
-                    connectionParameters.PlexMediaSource.ServerName,
-                    error.Value);
+        foreach (BaseError error in maybeLibraries.LeftToSeq())
+        {
+            _logger.LogWarning(
+                "Unable to synchronize libraries from plex server {PlexServer}: {Error}",
+                connectionParameters.PlexMediaSource.ServerName,
+                error.Value);
+        }
 
-                return Task.CompletedTask;
-            });
+        foreach (List<PlexLibrary> libraries in maybeLibraries.RightToSeq())
+        {
+            var existing = connectionParameters.PlexMediaSource.Libraries.OfType<PlexLibrary>().ToList();
+            var toAdd = libraries.Filter(library => existing.All(l => l.Key != library.Key)).ToList();
+            var toRemove = existing.Filter(library => libraries.All(l => l.Key != library.Key)).ToList();
+            List<int> ids = await _mediaSourceRepository.UpdateLibraries(
+                connectionParameters.PlexMediaSource.Id,
+                toAdd,
+                toRemove);
+            if (ids.Any())
+            {
+                await _searchIndex.RemoveItems(ids);
+                _searchIndex.Commit();
+            }
+        }
 
         return Unit.Default;
     }

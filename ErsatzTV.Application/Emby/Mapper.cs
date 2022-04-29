@@ -11,7 +11,7 @@ internal static class Mapper
             embyMediaSource.Connections.HeadOrNone().Match(c => c.Address, string.Empty));
 
     internal static EmbyLibraryViewModel ProjectToViewModel(EmbyLibrary library) =>
-        new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
+        new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems, library.MediaSourceId);
 
     internal static EmbyPathReplacementViewModel ProjectToViewModel(EmbyPathReplacement pathReplacement) =>
         new(pathReplacement.Id, pathReplacement.EmbyPath, pathReplacement.LocalPath);

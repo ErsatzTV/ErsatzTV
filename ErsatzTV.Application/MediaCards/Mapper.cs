@@ -148,7 +148,7 @@ internal static class Mapper
             Collection collection,
             Option<JellyfinMediaSource> maybeJellyfin,
             Option<EmbyMediaSource> maybeEmby) =>
-        new CollectionCardResultsViewModel(
+        new(
             collection.Name,
             collection.MediaItems.OfType<Movie>().Map(
                 m => ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin, maybeEmby) with
