@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix adding episodes with no title to the search index
   - This behavior was preventing some items from being removed from the trash
+- Support combination NFO metadata for movies
+  - Note that ErsatzTV does not scrape any metadata; any URLs after the XML will be ignored
+
+### Added
+- Use `Sort Title` from Movie NFO metadata if available
 
 ## [0.5.3-beta] - 2022-04-29
 ### Fixed
