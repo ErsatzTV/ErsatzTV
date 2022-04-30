@@ -85,7 +85,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 22;
+    public int Version => 23;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -775,23 +775,10 @@ public sealed class SearchIndex : ISearchIndex
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(metadata.Title))
-                {
-                    _logger.LogWarning(
-                        "Unable to index episode without title {Show} s{Season}e{Episode}",
-                        metadata.Episode.Season?.Show?.ShowMetadata.Head().Title,
-                        metadata.Episode.Season?.SeasonNumber,
-                        metadata.EpisodeNumber);
-
-                    continue;
-                }
-
                 var doc = new Document
                 {
                     new StringField(IdField, episode.Id.ToString(), Field.Store.YES),
                     new StringField(TypeField, EpisodeType, Field.Store.YES),
-                    new TextField(TitleField, metadata.Title, Field.Store.NO),
-                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
@@ -801,6 +788,16 @@ public sealed class SearchIndex : ISearchIndex
                     new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO),
                     new TextField(ShowTitleField, episode.Season?.Show?.ShowMetadata.Head().Title, Field.Store.NO)
                 };
+
+                if (!string.IsNullOrWhiteSpace(metadata.Title))
+                {
+                    doc.Add(new TextField(TitleField, metadata.Title, Field.Store.NO));
+                }
+
+                if (!string.IsNullOrWhiteSpace(metadata.SortTitle))
+                {
+                    doc.Add(new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO));
+                }
 
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);
 
@@ -1023,7 +1020,7 @@ public sealed class SearchIndex : ISearchIndex
 
     private static string GetJumpLetter(Metadata metadata)
     {
-        char c = metadata.SortTitle.ToLowerInvariant().Head();
+        char c = (metadata.SortTitle ?? " ").ToLowerInvariant().Head();
         return c switch
         {
             (>= 'a' and <= 'z') => c.ToString(),
