@@ -351,7 +351,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             }
 
             string path = item.Path ?? string.Empty;
-            foreach (JellyfinPathInfo pathInfo in library.PathInfos)
+            foreach (JellyfinPathInfo pathInfo in library.PathInfos.Filter(
+                         pi => !string.IsNullOrWhiteSpace(pi.NetworkPath)))
             {
                 if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
                 {
@@ -690,7 +691,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             }
 
             string path = item.Path ?? string.Empty;
-            foreach (JellyfinPathInfo pathInfo in library.PathInfos)
+            foreach (JellyfinPathInfo pathInfo in library.PathInfos.Filter(
+                         pi => !string.IsNullOrWhiteSpace(pi.NetworkPath)))
             {
                 if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
                 {
