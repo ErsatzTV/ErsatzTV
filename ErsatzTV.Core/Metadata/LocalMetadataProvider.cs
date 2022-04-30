@@ -12,7 +12,6 @@ namespace ErsatzTV.Core.Metadata;
 
 public class LocalMetadataProvider : ILocalMetadataProvider
 {
-    private static readonly XmlSerializer MovieSerializer = new(typeof(MovieNfo));
     private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowNfo));
     private static readonly XmlSerializer ArtistSerializer = new(typeof(ArtistNfo));
     private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
@@ -25,6 +24,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly ILogger<LocalMetadataProvider> _logger;
 
     private readonly IMetadataRepository _metadataRepository;
+    private readonly IMovieNfoReader _movieNfoReader;
     private readonly IMovieRepository _movieRepository;
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly IOtherVideoRepository _otherVideoRepository;
@@ -41,6 +41,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         ISongRepository songRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILocalFileSystem localFileSystem,
+        IMovieNfoReader movieNfoReader,
         IEpisodeNfoReader episodeNfoReader,
         ILocalStatisticsProvider localStatisticsProvider,
         IClient client,
@@ -55,6 +56,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _songRepository = songRepository;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _localFileSystem = localFileSystem;
+        _movieNfoReader = movieNfoReader;
         _episodeNfoReader = episodeNfoReader;
         _localStatisticsProvider = localStatisticsProvider;
         _client = client;
@@ -936,11 +938,26 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         try
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
-            foreach (MovieNfo nfo in maybeNfo)
+            Either<BaseError, MovieNfo> maybeNfo = await _movieNfoReader.Read(fileStream);
+            foreach (BaseError error in maybeNfo.LeftToSeq())
+            {
+                _logger.LogInformation(
+                    "Failed to read Movie nfo metadata from {Path}: {Error}",
+                    nfoFileName,
+                    error.ToString());
+
+                return _fallbackMetadataProvider.GetFallbackMetadata(movie);
+            }
+
+            foreach (MovieNfo nfo in maybeNfo.RightToSeq())
             {
                 DateTime dateAdded = DateTime.UtcNow;
                 DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                int year = nfo.Year > 0 ? nfo.Year : nfo.Premiered.Year;
+                DateTime releaseDate = nfo.Premiered > SystemTime.MinValueUtc
+                    ? nfo.Premiered
+                    : new DateTimeOffset(year, 0, 0, 0, 0, 0, TimeSpan.Zero).UtcDateTime;
 
                 return new MovieMetadata
                 {
@@ -948,9 +965,10 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     DateAdded = dateAdded,
                     DateUpdated = dateUpdated,
                     Title = nfo.Title,
-                    Year = nfo.Year,
+                    SortTitle = nfo.SortTitle,
+                    Year = year,
                     ContentRating = nfo.ContentRating,
-                    ReleaseDate = nfo.Premiered,
+                    ReleaseDate = releaseDate,
                     Plot = nfo.Plot,
                     Outline = nfo.Outline,
                     Tagline = nfo.Tagline,

@@ -292,7 +292,8 @@ public class EmbyApiClient : IEmbyApiClient
             }
 
             string path = item.Path ?? string.Empty;
-            foreach (EmbyPathInfo pathInfo in library.PathInfos)
+            foreach (EmbyPathInfo pathInfo in
+                     library.PathInfos.Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath)))
             {
                 if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
                 {
@@ -607,7 +608,8 @@ public class EmbyApiClient : IEmbyApiClient
             }
 
             string path = item.Path ?? string.Empty;
-            foreach (EmbyPathInfo pathInfo in library.PathInfos)
+            foreach (EmbyPathInfo pathInfo in
+                     library.PathInfos.Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath)))
             {
                 if (path.StartsWith(pathInfo.NetworkPath, StringComparison.Ordinal))
                 {
