@@ -8,6 +8,9 @@ public class MovieNfo
     [XmlElement("title")]
     public string Title { get; set; }
 
+    [XmlElement("sorttitle")]
+    public string SortTitle { get; set; }
+
     [XmlElement("outline")]
     public string Outline { get; set; }
 

@@ -411,6 +411,7 @@ public class Startup
         services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
         services.AddScoped<IEmbySecretStore, EmbySecretStore>();
         services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
+        services.AddScoped<IMovieNfoReader, MovieNfoReader>();
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
