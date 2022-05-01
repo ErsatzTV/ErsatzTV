@@ -250,12 +250,7 @@ public class EmbyApiClient : IEmbyApiClient
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
                 Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } },
-                PathInfos = response.LibraryOptions.PathInfos.Map(
-                    pi => new EmbyPathInfo
-                    {
-                        Path = pi.Path,
-                        NetworkPath = pi.NetworkPath
-                    }).ToList()
+                PathInfos = GetPathInfos(response)
             },
             "movies" => new EmbyLibrary
             {
@@ -264,17 +259,22 @@ public class EmbyApiClient : IEmbyApiClient
                 MediaKind = LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
                 Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } },
-                PathInfos = response.LibraryOptions.PathInfos.Map(
-                    pi => new EmbyPathInfo
-                    {
-                        Path = pi.Path,
-                        NetworkPath = pi.NetworkPath
-                    }).ToList()
+                PathInfos = GetPathInfos(response)
             },
             // TODO: ??? for music libraries
             "boxsets" => CacheCollectionLibraryId(response.ItemId),
             _ => None
         };
+
+    private List<EmbyPathInfo> GetPathInfos(EmbyLibraryResponse response) =>
+        response.LibraryOptions.PathInfos
+            .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
+            .Map(
+                pi => new EmbyPathInfo
+                {
+                    Path = pi.Path,
+                    NetworkPath = pi.NetworkPath
+                }).ToList();
 
     private Option<EmbyLibrary> CacheCollectionLibraryId(string itemId)
     {

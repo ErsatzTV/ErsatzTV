@@ -303,12 +303,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
                 Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } },
-                PathInfos = response.LibraryOptions.PathInfos.Map(
-                    pi => new JellyfinPathInfo
-                    {
-                        Path = pi.Path,
-                        NetworkPath = pi.NetworkPath
-                    }).ToList()
+                PathInfos = GetPathInfos(response)
             },
             "movies" => new JellyfinLibrary
             {
@@ -317,17 +312,22 @@ public class JellyfinApiClient : IJellyfinApiClient
                 MediaKind = LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
                 Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } },
-                PathInfos = response.LibraryOptions.PathInfos.Map(
-                    pi => new JellyfinPathInfo
-                    {
-                        Path = pi.Path,
-                        NetworkPath = pi.NetworkPath
-                    }).ToList()
+                PathInfos = GetPathInfos(response)
             },
             // TODO: ??? for music libraries
             "boxsets" => CacheCollectionLibraryId(response.ItemId),
             _ => None
         };
+
+    private List<JellyfinPathInfo> GetPathInfos(JellyfinLibraryResponse response) =>
+        response.LibraryOptions.PathInfos
+            .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
+            .Map(
+                pi => new JellyfinPathInfo
+                {
+                    Path = pi.Path,
+                    NetworkPath = pi.NetworkPath
+                }).ToList();
 
     private Option<JellyfinLibrary> CacheCollectionLibraryId(string itemId)
     {
