@@ -41,7 +41,7 @@ public class MusicVideoNfoReaderTests
     {
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(
-                @"<musicVideo></musicVideo>
+                @"<musicvideo></musicvideo>
 https://www.themoviedb.org/movie/11-star-wars"));
 
         Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
