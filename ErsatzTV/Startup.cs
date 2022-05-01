@@ -412,6 +412,9 @@ public class Startup
         services.AddScoped<IEmbySecretStore, EmbySecretStore>();
         services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
         services.AddScoped<IMovieNfoReader, MovieNfoReader>();
+        services.AddScoped<IArtistNfoReader, ArtistNfoReader>();
+        services.AddScoped<IMusicVideoNfoReader, MusicVideoNfoReader>();
+        services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 

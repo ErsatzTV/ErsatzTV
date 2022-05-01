@@ -21,7 +21,7 @@ public class TvShowEpisodeNfo
     public string ContentRating { get; set; }
 
     [XmlElement("aired")]
-    public string Aired { get; set; }
+    public Option<DateTime> Aired { get; set; }
 
     [XmlElement("plot")]
     public string Plot { get; set; }

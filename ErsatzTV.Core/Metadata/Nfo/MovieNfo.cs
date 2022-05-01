@@ -21,7 +21,7 @@ public class MovieNfo
     public string ContentRating { get; set; }
 
     [XmlElement("premiered")]
-    public DateTime Premiered { get; set; }
+    public Option<DateTime> Premiered { get; set; }
 
     [XmlElement("plot")]
     public string Plot { get; set; }

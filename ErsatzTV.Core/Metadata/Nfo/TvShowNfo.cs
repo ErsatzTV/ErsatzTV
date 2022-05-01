@@ -31,7 +31,7 @@ public class TvShowNfo
     public string ContentRating { get; set; }
 
     [XmlElement("premiered")]
-    public string Premiered { get; set; }
+    public Option<DateTime> Premiered { get; set; }
 
     [XmlElement("genre")]
     public List<string> Genres { get; set; }

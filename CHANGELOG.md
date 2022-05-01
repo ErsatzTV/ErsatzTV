@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix adding episodes with no title to the search index
   - This behavior was preventing some items from being removed from the trash
-- Support combination NFO metadata for movies
+- Support combination NFO metadata for movies, shows, artists and music videos
   - Note that ErsatzTV does not scrape any metadata; any URLs after the XML will be ignored
 - Fix bug causing some Jellyfin and Emby content to incorrectly show as unavailable
 
