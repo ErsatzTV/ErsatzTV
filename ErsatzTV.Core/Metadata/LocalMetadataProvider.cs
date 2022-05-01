@@ -918,9 +918,17 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         try
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            List<TvShowEpisodeNfo> nfos = await _episodeNfoReader.Read(fileStream);
+            Either<BaseError, List<TvShowEpisodeNfo>> maybeNfo = await _episodeNfoReader.Read(fileStream);
+            foreach (BaseError error in maybeNfo.LeftToSeq())
+            {
+                _logger.LogInformation(
+                    "Failed to read Episode nfo metadata from {Path}: {Error}",
+                    nfoFileName,
+                    error.ToString());
+            }
+
             var result = new List<EpisodeMetadata>();
-            foreach (TvShowEpisodeNfo nfo in nfos)
+            foreach (TvShowEpisodeNfo nfo in maybeNfo.RightToSeq().Flatten())
             {
                 DateTime dateAdded = DateTime.UtcNow;
                 DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
@@ -982,10 +990,23 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 DateTime dateAdded = DateTime.UtcNow;
                 DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
 
-                int year = nfo.Year > 0 ? nfo.Year : nfo.Premiered.Year;
-                DateTime releaseDate = nfo.Premiered > SystemTime.MinValueUtc
-                    ? nfo.Premiered
-                    : new DateTimeOffset(year, 0, 0, 0, 0, 0, TimeSpan.Zero).UtcDateTime;
+                var year = 0;
+                if (nfo.Year > 1000)
+                {
+                    year = nfo.Year;
+                }
+
+                DateTime releaseDate = new DateTimeOffset(year, 0, 0, 0, 0, 0, TimeSpan.Zero).UtcDateTime;
+
+                foreach (DateTime premiered in nfo.Premiered)
+                {
+                    if (year == 0)
+                    {
+                        year = premiered.Year;
+                    }
+
+                    releaseDate = premiered;
+                }
 
                 return new MovieMetadata
                 {
