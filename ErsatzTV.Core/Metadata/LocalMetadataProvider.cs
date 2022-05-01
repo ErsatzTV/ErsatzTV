@@ -1042,6 +1042,21 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return null;
     }
 
+    private static int? GetYear(int? year, Option<DateTime> premiered)
+    {
+        if (year is > 1000)
+        {
+            return year;
+        }
+
+        foreach (DateTime p in premiered)
+        {
+            return p.Year;
+        }
+
+        return null;
+    }
+
     private static DateTime? GetAired(int? year, string aired)
     {
         DateTime? fallback = year is > 1000 ? new DateTime(year.Value, 1, 1) : null;
@@ -1052,6 +1067,18 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         return DateTime.TryParse(aired, out DateTime parsed) ? parsed : fallback;
+    }
+
+    private static DateTime? GetAired(int? year, Option<DateTime> aired)
+    {
+        DateTime? fallback = year is > 1000 ? new DateTime(year.Value, 1, 1) : null;
+
+        foreach (DateTime a in aired)
+        {
+            return a;
+        }
+
+        return fallback;
     }
 
     private async Task<bool> UpdateMetadataCollections<T>(

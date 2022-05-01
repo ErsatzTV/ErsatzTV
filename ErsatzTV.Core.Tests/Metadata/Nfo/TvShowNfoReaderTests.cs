@@ -209,5 +209,22 @@ https://www.themoviedb.org/movie/11-star-wars"));
         }
     }
 
-    // TODO: premiered as date
+    [Test]
+    public async Task MetadataNfo_With_Premiered_Should_Return_Nfo()
+    {
+        await using var stream =
+            new MemoryStream(Encoding.UTF8.GetBytes(@"<tvshow><premiered>2020-01-02</premiered></tvshow>"));
+
+        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+
+        result.IsRight.Should().BeTrue();
+        foreach (TvShowNfo nfo in result.RightToSeq())
+        {
+            nfo.Premiered.IsSome.Should().BeTrue();
+            foreach (DateTime premiered in nfo.Premiered)
+            {
+                premiered.Should().Be(new DateTime(2020, 01, 02));
+            }
+        }
+    }
 }
