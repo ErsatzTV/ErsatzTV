@@ -19,7 +19,7 @@ public class ArtistNfoReaderTests
     public async Task ParsingNfo_Should_Return_Error()
     {
         await using var stream =
-            new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/artist/11-star-wars"));
+            new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 
@@ -42,7 +42,7 @@ public class ArtistNfoReaderTests
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(
                 @"<artist></artist>
-https://www.theartistdb.org/artist/11-star-wars"));
+https://www.themoviedb.org/movie/11-star-wars"));
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 

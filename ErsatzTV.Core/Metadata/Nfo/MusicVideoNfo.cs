@@ -17,9 +17,6 @@ public class MusicVideoNfo
     [XmlElement("plot")]
     public string Plot { get; set; }
 
-    [XmlElement("premiered")]
-    public string Premiered { get; set; }
-
     [XmlElement("year")]
     public int Year { get; set; }
 

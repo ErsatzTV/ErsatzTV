@@ -191,8 +191,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Album = nfo.Album,
                     Title = nfo.Title,
                     Plot = nfo.Plot,
-                    Year = GetYear(nfo.Year, nfo.Premiered),
-                    ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
+                    Year = GetYear(nfo.Year, string.Empty),
+                    ReleaseDate = GetAired(nfo.Year, string.Empty),
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                     Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
