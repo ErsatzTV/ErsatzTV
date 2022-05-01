@@ -173,7 +173,13 @@ https://www.themoviedb.org/movie/11-star-wars"));
             nfo.Outline.Should().BeNullOrEmpty();
             nfo.Year.Should().Be(2021);
             nfo.ContentRating.Should().Be("Australia:M");
-            nfo.Premiered.Should().Be(new DateTime(2021, 03, 18));
+
+            nfo.Premiered.IsSome.Should().BeTrue();
+            foreach (DateTime premiered in nfo.Premiered)
+            {
+                premiered.Should().Be(new DateTime(2021, 03, 18));
+            }
+
             nfo.Plot.Should().Be(
                 "Determined to ensure Superman's ultimate sacrifice was not in vain, Bruce Wayne aligns forces with Diana Prince with plans to recruit a team of metahumans to protect the world from an approaching threat of catastrophic proportions.");
             nfo.Tagline.Should().BeNullOrEmpty();
