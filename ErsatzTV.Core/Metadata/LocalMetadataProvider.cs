@@ -1,5 +1,4 @@
-﻿using System.Xml.Serialization;
-using Bugsnag;
+﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -12,9 +11,7 @@ namespace ErsatzTV.Core.Metadata;
 
 public class LocalMetadataProvider : ILocalMetadataProvider
 {
-    private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowNfo));
-    private static readonly XmlSerializer ArtistSerializer = new(typeof(ArtistNfo));
-    private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
+    private readonly IArtistNfoReader _artistNfoReader;
     private readonly IArtistRepository _artistRepository;
     private readonly IClient _client;
     private readonly IEpisodeNfoReader _episodeNfoReader;
@@ -22,14 +19,15 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<LocalMetadataProvider> _logger;
-
     private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieNfoReader _movieNfoReader;
     private readonly IMovieRepository _movieRepository;
+    private readonly IMusicVideoNfoReader _musicVideoNfoReader;
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISongRepository _songRepository;
     private readonly ITelevisionRepository _televisionRepository;
+    private readonly ITvShowNfoReader _tvShowNfoReader;
 
     public LocalMetadataProvider(
         IMetadataRepository metadataRepository,
@@ -43,6 +41,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         ILocalFileSystem localFileSystem,
         IMovieNfoReader movieNfoReader,
         IEpisodeNfoReader episodeNfoReader,
+        IArtistNfoReader artistNfoReader,
+        IMusicVideoNfoReader musicVideoNfoReader,
+        ITvShowNfoReader tvShowNfoReader,
         ILocalStatisticsProvider localStatisticsProvider,
         IClient client,
         ILogger<LocalMetadataProvider> logger)
@@ -58,6 +59,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _localFileSystem = localFileSystem;
         _movieNfoReader = movieNfoReader;
         _episodeNfoReader = episodeNfoReader;
+        _artistNfoReader = artistNfoReader;
+        _musicVideoNfoReader = musicVideoNfoReader;
+        _tvShowNfoReader = tvShowNfoReader;
         _localStatisticsProvider = localStatisticsProvider;
         _client = client;
         _logger = logger;
@@ -168,8 +172,16 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         try
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Option<MusicVideoNfo> maybeNfo = MusicVideoSerializer.Deserialize(fileStream) as MusicVideoNfo;
-            foreach (MusicVideoNfo nfo in maybeNfo)
+            Either<BaseError, MusicVideoNfo> maybeNfo = await _musicVideoNfoReader.Read(fileStream);
+            foreach (BaseError error in maybeNfo.LeftToSeq())
+            {
+                _logger.LogInformation(
+                    "Failed to read MusicVideo nfo metadata from {Path}: {Error}",
+                    nfoFileName,
+                    error.ToString());
+            }
+
+            foreach (MusicVideoNfo nfo in maybeNfo.RightToSeq())
             {
                 return new MusicVideoMetadata
                 {
@@ -815,8 +827,16 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         try
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Option<TvShowNfo> maybeNfo = TvShowSerializer.Deserialize(fileStream) as TvShowNfo;
-            foreach (TvShowNfo nfo in maybeNfo)
+            Either<BaseError, TvShowNfo> maybeNfo = await _tvShowNfoReader.Read(fileStream);
+            foreach (BaseError error in maybeNfo.LeftToSeq())
+            {
+                _logger.LogInformation(
+                    "Failed to read TvShow nfo metadata from {Path}: {Error}",
+                    nfoFileName,
+                    error.ToString());
+            }
+
+            foreach (TvShowNfo nfo in maybeNfo.RightToSeq())
             {
                 DateTime dateAdded = DateTime.UtcNow;
                 DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
@@ -858,8 +878,16 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         try
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Option<ArtistNfo> maybeNfo = ArtistSerializer.Deserialize(fileStream) as ArtistNfo;
-            foreach (ArtistNfo nfo in maybeNfo)
+            Either<BaseError, ArtistNfo> maybeNfo = await _artistNfoReader.Read(fileStream);
+            foreach (BaseError error in maybeNfo.LeftToSeq())
+            {
+                _logger.LogInformation(
+                    "Failed to read Artist nfo metadata from {Path}: {Error}",
+                    nfoFileName,
+                    error.ToString());
+            }
+
+            foreach (ArtistNfo nfo in maybeNfo.RightToSeq())
             {
                 return new ArtistMetadata
                 {
