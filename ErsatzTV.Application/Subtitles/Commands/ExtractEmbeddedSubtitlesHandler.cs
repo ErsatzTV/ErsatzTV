@@ -68,7 +68,9 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             // only check the requested playout if subtitles are enabled
             Option<Playout> requestedPlayout = await dbContext.Playouts
-                .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None)
+                .Filter(
+                    p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
+                         p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != ChannelSubtitleMode.None))
                 .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1));
 
             playoutIdsToCheck.AddRange(requestedPlayout.Map(p => p.Id));
@@ -77,7 +79,9 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             if (request.PlayoutId.IsNone)
             {
                 playoutIdsToCheck = dbContext.Playouts
-                    .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None)
+                    .Filter(
+                        p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
+                             p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != ChannelSubtitleMode.None))
                     .Map(p => p.Id)
                     .ToList();
             }
@@ -285,7 +289,8 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                         File.Delete(fullOutputPath);
                     }
 
-                    args.Add("-map").Add($"0:{subtitle.Subtitle.StreamIndex}").Add("-c").Add("copy")
+                    args.Add("-map").Add($"0:{subtitle.Subtitle.StreamIndex}")
+                        .Add("-c:s").Add(subtitle.Subtitle.Codec == "mov_text" ? "text" : "copy")
                         .Add(fullOutputPath);
                 }
 
@@ -381,6 +386,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             "subrip" => $"{name}.srt",
             "ass" => $"{name}.ass",
             "webvtt" => $"{name}.vtt",
+            "mov_text" => $"{name}.srt",
             _ => string.Empty
         };
 
