@@ -55,7 +55,7 @@
     
     <ItemGroup>
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.0.1" />
-      <PackageReference Include="FluentValidation" Version="10.4.0" />
+      <PackageReference Include="FluentValidation" Version="11.0.0" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="10.4.0" />
       <PackageReference Include="HtmlSanitizer" Version="7.1.488" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
