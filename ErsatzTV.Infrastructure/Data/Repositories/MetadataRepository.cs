@@ -102,6 +102,14 @@ public class MetadataRepository : IMetadataRepository
             }
         }
 
+        if (metadata is MusicVideoMetadata musicVideoMetadata)
+        {
+            foreach (MusicVideoArtist artist in Optional(musicVideoMetadata.Artists).Flatten())
+            {
+                dbContext.Entry(artist).State = EntityState.Added;
+            }
+        }
+
         return await dbContext.SaveChangesAsync() > 0;
     }
 

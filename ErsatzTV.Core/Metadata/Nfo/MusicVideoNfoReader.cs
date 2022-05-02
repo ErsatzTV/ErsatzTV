@@ -30,6 +30,7 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                             case "musicvideo":
                                 nfo = new MusicVideoNfo
                                 {
+                                    Artists = new List<string>(),
                                     Genres = new List<string>(),
                                     Tags = new List<string>(),
                                     Studios = new List<string>()
@@ -39,7 +40,7 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (musicVideo, artist) => musicVideo.Artist = artist);
+                                    (musicVideo, artist) => musicVideo.Artists.Add(artist));
                                 break;
                             case "title":
                                 await ReadStringContent(reader, nfo, (musicVideo, title) => musicVideo.Title = title);

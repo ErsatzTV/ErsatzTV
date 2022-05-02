@@ -136,6 +136,8 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     "UPDATE: Etag has changed for folder {Folder}",
                     otherVideoFolder);
 
+                var hasErrors = false;
+
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
@@ -148,6 +150,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     foreach (BaseError error in maybeVideo.LeftToSeq())
                     {
                         _logger.LogWarning("Error processing other video at {Path}: {Error}", file, error.Value);
+                        hasErrors = true;
                     }
 
                     foreach (MediaItemScanResult<OtherVideo> result in maybeVideo.RightToSeq())
@@ -156,9 +159,13 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                         {
                             await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                         }
-
-                        await _libraryRepository.SetEtag(libraryPath, knownFolder, otherVideoFolder, etag);
                     }
+                }
+
+                // only do this once per folder and only if all files processed successfully
+                if (!hasErrors)
+                {
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, otherVideoFolder, etag);
                 }
             }
 

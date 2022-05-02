@@ -751,12 +751,24 @@ public sealed class SearchIndex : ISearchIndex
                     doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                 }
 
+                var artists = new System.Collections.Generic.HashSet<string>();
+
                 if (musicVideo.Artist != null)
                 {
                     foreach (ArtistMetadata artistMetadata in musicVideo.Artist.ArtistMetadata)
                     {
-                        doc.Add(new TextField(ArtistField, artistMetadata.Title, Field.Store.NO));
+                        artists.Add(artistMetadata.Title);
                     }
+                }
+
+                foreach (MusicVideoArtist artist in metadata.Artists)
+                {
+                    artists.Add(artist.Name);
+                }
+
+                foreach (string artist in artists)
+                {
+                    doc.Add(new TextField(ArtistField, artist, Field.Store.NO));
                 }
 
                 _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
