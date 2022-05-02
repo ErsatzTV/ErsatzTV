@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support combination NFO metadata for movies, shows, artists and music videos
   - Note that ErsatzTV does not scrape any metadata; any URLs after the XML will be ignored
 - Fix bug causing some Jellyfin and Emby content to incorrectly show as unavailable
+- Fix extracting embedded `mov_text` subtitles
 
 ### Added
 - Use `Sort Title` from Movie NFO metadata if available
