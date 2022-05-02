@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Note that ErsatzTV does not scrape any metadata; any URLs after the XML will be ignored
 - Fix bug causing some Jellyfin and Emby content to incorrectly show as unavailable
 - Fix extracting embedded `mov_text` subtitles
+- Properly extract embedded subtitles on playouts where subtitles are only enabled on schedule items (and not on the channel itself)
 
 ### Added
 - Use `Sort Title` from Movie NFO metadata if available
