@@ -193,6 +193,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Plot = nfo.Plot,
                     Year = GetYear(nfo.Year, string.Empty),
                     ReleaseDate = GetAired(nfo.Year, string.Empty),
+                    Artists = nfo.Artists.Map(a => new MusicVideoArtist { Name = a }).ToList(),
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                     Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
@@ -726,6 +727,28 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 _musicVideoRepository.AddTag,
                 _musicVideoRepository.AddStudio,
                 (_, _) => Task.FromResult(false));
+
+            foreach (MusicVideoArtist artist in existing.Artists
+                         .Filter(g => metadata.Artists.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existing.Artists.Remove(artist);
+                if (await _musicVideoRepository.RemoveArtist(artist))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (MusicVideoArtist artist in metadata.Artists
+                         .Filter(g => existing.Artists.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existing.Artists.Add(artist);
+                if (await _musicVideoRepository.AddArtist(existing, artist))
+                {
+                    updated = true;
+                }
+            }
 
             return await _metadataRepository.Update(existing) || updated;
         }

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Use `Sort Title` from Movie NFO metadata if available
+- Support multiple `Artist` entries in music video NFO metadata
 
 ## [0.5.3-beta] - 2022-04-29
 ### Fixed

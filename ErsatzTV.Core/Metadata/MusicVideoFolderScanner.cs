@@ -307,6 +307,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 continue;
             }
 
+            var hasErrors = false;
+
             foreach (string file in allFiles.OrderBy(identity))
             {
                 // TODO: figure out how to rebuild playouts
@@ -321,6 +323,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 foreach (BaseError error in maybeMusicVideo.LeftToSeq())
                 {
                     _logger.LogWarning("Error processing music video at {Path}: {Error}", file, error.Value);
+                    hasErrors = true;
                 }
 
                 foreach (MediaItemScanResult<MusicVideo> result in maybeMusicVideo.RightToSeq())
@@ -329,9 +332,13 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     {
                         await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                     }
-
-                    await _libraryRepository.SetEtag(libraryPath, knownFolder, musicVideoFolder, etag);
                 }
+            }
+
+            // only do this once per folder and only if all files processed successfully
+            if (!hasErrors)
+            {
+                await _libraryRepository.SetEtag(libraryPath, knownFolder, musicVideoFolder, etag);
             }
         }
 

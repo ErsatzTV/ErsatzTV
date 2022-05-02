@@ -6,7 +6,7 @@ namespace ErsatzTV.Core.Metadata.Nfo;
 public class MusicVideoNfo
 {
     [XmlElement("artist")]
-    public string Artist { get; set; }
+    public List<string> Artists { get; set; }
 
     [XmlElement("title")]
     public string Title { get; set; }
