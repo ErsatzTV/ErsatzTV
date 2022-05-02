@@ -82,41 +82,12 @@ public class LibraryRepository : ILibraryRepository
             .Match(l => l.Paths, () => new List<LibraryPath>());
     }
 
-    public async Task<Option<LibraryPath>> GetPath(int libraryPathId)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.LibraryPaths
-            .OrderBy(lp => lp.Id)
-            .SingleOrDefaultAsync(lp => lp.Id == libraryPathId)
-            .Map(Optional);
-    }
-
     public async Task<int> CountMediaItemsByPath(int libraryPathId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QuerySingleAsync<int>(
             @"SELECT COUNT(*) FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPathId });
-    }
-
-    public async Task<List<int>> GetMediaIdsByLocalPath(int libraryPathId)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<int>(
-                @"SELECT Id FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
-                new { LibraryPathId = libraryPathId })
-            .Map(result => result.ToList());
-    }
-
-    public async Task DeleteLocalPath(int libraryPathId)
-    {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
-        LibraryPath libraryPath = await context.LibraryPaths.FindAsync(libraryPathId);
-        if (libraryPath != null)
-        {
-            context.LibraryPaths.Remove(libraryPath);
-            await context.SaveChangesAsync();
-        }
     }
 
     public async Task<Unit> SetEtag(

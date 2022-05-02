@@ -26,6 +26,8 @@ public class MusicVideoRepository : IMusicVideoRepository
             .Include(mv => mv.MusicVideoMetadata)
             .ThenInclude(mvm => mvm.Artwork)
             .Include(mv => mv.MusicVideoMetadata)
+            .ThenInclude(mvm => mvm.Artists)
+            .Include(mv => mv.MusicVideoMetadata)
             .ThenInclude(mvm => mvm.Genres)
             .Include(mv => mv.MusicVideoMetadata)
             .ThenInclude(mvm => mvm.Tags)
@@ -100,6 +102,14 @@ public class MusicVideoRepository : IMusicVideoRepository
         return ids;
     }
 
+    public async Task<bool> AddArtist(MusicVideoMetadata metadata, MusicVideoArtist artist)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO MusicVideoArtist (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
+            new { artist.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
     public async Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -122,6 +132,15 @@ public class MusicVideoRepository : IMusicVideoRepository
         return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Studio (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
             new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
+    public async Task<bool> RemoveArtist(MusicVideoArtist artist)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM MusicVideoArtist WHERE Id = @Id",
+                new { artist.Id })
+            .Map(result => result > 0);
     }
 
     public async Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids)

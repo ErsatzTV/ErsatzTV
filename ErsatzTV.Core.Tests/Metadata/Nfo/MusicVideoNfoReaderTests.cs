@@ -113,7 +113,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
 
         foreach (MusicVideoNfo nfo in result.RightToSeq())
         {
-            nfo.Artist.Should().Be("ABBA");
+            nfo.Artists.Should().BeEquivalentTo(new List<string> { "ABBA" });
             nfo.Title.Should().Be("Dancing Queen");
             nfo.Album.Should().Be("Arrival");
             nfo.Plot.Should().Be(

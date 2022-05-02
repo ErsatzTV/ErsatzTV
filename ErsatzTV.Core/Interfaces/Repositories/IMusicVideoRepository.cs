@@ -12,9 +12,11 @@ public interface IMusicVideoRepository
 
     Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
+    Task<bool> AddArtist(MusicVideoMetadata metadata, MusicVideoArtist artist);
     Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre);
     Task<bool> AddTag(MusicVideoMetadata metadata, Tag tag);
     Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio);
+    Task<bool> RemoveArtist(MusicVideoArtist artist);
     Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids);
     Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath);
     Task<int> GetMusicVideoCount(int artistId);
