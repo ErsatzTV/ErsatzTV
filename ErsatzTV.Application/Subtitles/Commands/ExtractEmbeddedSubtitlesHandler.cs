@@ -289,11 +289,9 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                         File.Delete(fullOutputPath);
                     }
 
-                    args.Add("-map").Add($"0:{subtitle.Subtitle.StreamIndex}");
-
-                    args.Add("-c:s").Add(subtitle.Subtitle.Codec == "mov_text" ? "text" : "copy");
-
-                    args.Add(fullOutputPath);
+                    args.Add("-map").Add($"0:{subtitle.Subtitle.StreamIndex}")
+                        .Add("-c:s").Add(subtitle.Subtitle.Codec == "mov_text" ? "text" : "copy")
+                        .Add(fullOutputPath);
                 }
 
                 BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
