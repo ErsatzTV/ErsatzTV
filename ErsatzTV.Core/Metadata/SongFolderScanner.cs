@@ -134,6 +134,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     "UPDATE: Etag has changed for folder {Folder}",
                     songFolder);
 
+                var hasErrors = false;
+
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
@@ -146,6 +148,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     foreach (BaseError error in maybeSong.LeftToSeq())
                     {
                         _logger.LogWarning("Error processing song at {Path}: {Error}", file, error.Value);
+                        hasErrors = true;
                     }
 
                     foreach (MediaItemScanResult<Song> result in maybeSong.RightToSeq())
@@ -154,9 +157,13 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                         {
                             await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                         }
-
-                        await _libraryRepository.SetEtag(libraryPath, knownFolder, songFolder, etag);
                     }
+                }
+
+                // only do this once per folder and only if all files processed successfully
+                if (!hasErrors)
+                {
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, songFolder, etag);
                 }
             }
 
