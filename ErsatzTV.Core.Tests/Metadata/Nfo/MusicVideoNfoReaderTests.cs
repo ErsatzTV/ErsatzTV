@@ -54,7 +54,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     {
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(
-                NormalizeLineEndings(
+                NormalizeLineEndingsLF(
                     @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes"" ?>
 <musicvideo>
     <title>Dancing Queen</title>
@@ -117,7 +117,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
             nfo.Title.Should().Be("Dancing Queen");
             nfo.Album.Should().Be("Arrival");
             nfo.Plot.Should().Be(
-                NormalizeLineEndings(
+                NormalizeLineEndingsLF(
                     @"Dancing Queen est un des tubes emblématiques de l'ère disco produits par le groupe suédois ABBA en 1976. Ce tube connaît un regain de popularité en 1994 lors de la sortie de Priscilla, folle du désert, et fait « presque » partie de la distribution du film Muriel.
 Le groupe a également enregistré une version espagnole de ce titre, La reina del baile, pour le marché d'Amérique latine. On peut retrouver ces versions en espagnol des succès de ABBA sur l'abum Oro. Le 18 juin 1976, ABBA a interprété cette chanson lors d'un spectacle télévisé organisé en l'honneur du roi Charles XVI Gustave de Suède, qui venait de se marier. Le titre sera repris en 2011 par Glee dans la saison 2, épisode 20."));
 
@@ -156,9 +156,8 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
         }
     }
 
-    private static string NormalizeLineEndings(string str) =>
+    private static string NormalizeLineEndingsLF(string str) =>
         str
             .Replace("\r\n", "\n")
-            .Replace("\r", "\n")
-            .Replace("\n", Environment.NewLine);
+            .Replace("\r", "\n");
 }
