@@ -193,7 +193,7 @@ jobs:
         run: dotnet restore -r "${{ matrix.target }}"
 
       - uses: suisei-cn/actions-download-file@v1
-        if: ${{ matrix.kind }} == "windows"
+        if: ${{ matrix.kind == 'windows' }}
         id: downloadffmpeg
         name: Download ffmpeg
         with:
