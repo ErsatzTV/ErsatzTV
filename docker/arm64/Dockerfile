@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal:arm64v8 AS dotnet-runtime
+﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal-arm64v8 AS dotnet-runtime
 
 FROM linuxserver/ffmpeg:arm64v8-version-4.4-cli AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
