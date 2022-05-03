@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly extract embedded subtitles on playouts where subtitles are only enabled on schedule items (and not on the channel itself)
 
 ### Added
+- Add experimental `arm64` docker tags (`develop-arm64` and `latest-arm64`)
 - Use `Sort Title` from Movie NFO metadata if available
 - Support multiple `Artist` entries in music video NFO metadata
 
