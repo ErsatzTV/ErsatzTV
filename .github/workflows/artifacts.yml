@@ -190,7 +190,7 @@ jobs:
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
-        run: dotnet restore -r "${{ matrix.target}}"
+        run: dotnet restore -r "${{ matrix.target }}"
 
       - uses: suisei-cn/actions-download-file@v1
         if: ${{ matrix.kind }} == "windows"
