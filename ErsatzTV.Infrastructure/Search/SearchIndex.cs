@@ -54,6 +54,8 @@ public sealed class SearchIndex : ISearchIndex
     private const string StateField = "state";
     private const string AlbumArtistField = "album_artist";
     private const string ShowTitleField = "show_title";
+    private const string ShowGenreField = "show_genre";
+    private const string ShowTagField = "show_tag";
 
     internal const string MinutesField = "minutes";
     internal const string HeightField = "height";
@@ -85,7 +87,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 23;
+    public int Version => 24;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -585,8 +587,19 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES),
                     new StringField(StateField, season.State.ToString(), Field.Store.NO),
                     new Int32Field(SeasonNumberField, season.SeasonNumber, Field.Store.NO),
-                    new TextField(ShowTitleField, season.Show?.ShowMetadata.Head().Title, Field.Store.NO)
+                    new TextField(ShowTitleField, showMetadata.Title, Field.Store.NO)
                 };
+
+                // add some show fields to help filter shows within a particular show
+                foreach (Genre genre in showMetadata.Genres)
+                {
+                    doc.Add(new TextField(ShowGenreField, genre.Name, Field.Store.NO));
+                }
+
+                foreach (Tag tag in showMetadata.Tags)
+                {
+                    doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
+                }
 
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);
                 await AddLanguages(searchRepository, doc, languages);
@@ -797,9 +810,24 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, episode.State.ToString(), Field.Store.NO),
                     new Int32Field(SeasonNumberField, episode.Season?.SeasonNumber ?? 0, Field.Store.NO),
-                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO),
-                    new TextField(ShowTitleField, episode.Season?.Show?.ShowMetadata.Head().Title, Field.Store.NO)
+                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO)
                 };
+
+                // add some show fields to help filter episodes within a particular show
+                foreach (ShowMetadata showMetadata in Optional(episode.Season?.Show?.ShowMetadata).Flatten())
+                {
+                    doc.Add(new TextField(ShowTitleField, showMetadata.Title, Field.Store.NO));
+
+                    foreach (Genre genre in showMetadata.Genres)
+                    {
+                        doc.Add(new TextField(ShowGenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in showMetadata.Tags)
+                    {
+                        doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
+                    }
+                }
 
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                 {

@@ -1,15 +1,15 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
+using Blurhash.ImageSharp;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
-using Decoder = System.Drawing.Common.Blurhash.Decoder;
-using Encoder = System.Drawing.Common.Blurhash.Encoder;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Images;
 
@@ -116,18 +116,31 @@ public class ImageCache : IImageCache
         return Path.Combine(baseFolder, fileName);
     }
 
-    public string CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
+    public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
     {
-        var encoder = new Encoder();
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
+
         // ReSharper disable once ConvertToUsingDeclaration
-        using (var image = Image.FromFile(targetFile))
+        using (FileStream fs = File.OpenRead(targetFile))
         {
-            return encoder.Encode(image, x, y);
+            using (var image = await Image.LoadAsync<Rgba32>(fs))
+            {
+                // resize before calculating blur hash; it doesn't need giant images
+                if (image.Height > 200)
+                {
+                    image.Mutate(i => i.Resize(0, 200));
+                }
+                else if (image.Width > 200)
+                {
+                    image.Mutate(i => i.Resize(200, 0));
+                }
+
+                return Blurhasher.Encode(image, x, y);
+            }
         }
     }
 
-    public string WriteBlurHash(string blurHash, IDisplaySize targetSize)
+    public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
         string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
@@ -137,11 +150,13 @@ public class ImageCache : IImageCache
             string folder = Path.GetDirectoryName(targetFile);
             _localFileSystem.EnsureFolderExists(folder);
 
-            var decoder = new Decoder();
             // ReSharper disable once ConvertToUsingDeclaration
-            using (Image image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height))
+            using (FileStream fs = File.OpenWrite(targetFile))
             {
-                image.Save(targetFile, ImageFormat.Png);
+                using (Image<Rgb24> image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height))
+                {
+                    await image.SaveAsPngAsync(fs);
+                }
             }
         }
 

@@ -55,6 +55,8 @@ The following fields are available for searching seasons:
 - `library_name`: The name of the library that contains the season
 - `season_number`: The season number
 - `show_title`: The title of the show that contains the season
+- `show_genre`: The genre of the show that contains the season
+- `show_tag`: The tag of the show that contains the season
 - `type`: Always `season`
 
 ### Episodes
@@ -75,6 +77,8 @@ The following fields are available for searching episodes:
 - `season_number`: The episode season number
 - `episode_number`: The episode number
 - `show_title`: The title of the show that contains the episode
+- `show_genre`: The genre of the show that contains the episode
+- `show_tag`: The tag of the show that contains the episode
 - `type`: Always `episode`
 
 ### Artists
