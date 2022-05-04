@@ -191,8 +191,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Album = nfo.Album,
                     Title = nfo.Title,
                     Plot = nfo.Plot,
-                    Year = GetYear(nfo.Year, string.Empty),
-                    ReleaseDate = GetAired(nfo.Year, string.Empty),
+                    Year = GetYear(nfo.Year, nfo.Aired),
+                    ReleaseDate = GetAired(nfo.Year, nfo.Aired),
                     Artists = nfo.Artists.Map(a => new MusicVideoArtist { Name = a }).ToList(),
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
@@ -1068,26 +1068,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
     }
 
-    private static int? GetYear(int? year, string premiered)
-    {
-        if (year is > 1000)
-        {
-            return year;
-        }
-
-        if (string.IsNullOrWhiteSpace(premiered))
-        {
-            return null;
-        }
-
-        if (DateTime.TryParse(premiered, out DateTime parsed))
-        {
-            return parsed.Year;
-        }
-
-        return null;
-    }
-
     private static int? GetYear(int? year, Option<DateTime> premiered)
     {
         if (year is > 1000)
@@ -1101,18 +1081,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         return null;
-    }
-
-    private static DateTime? GetAired(int? year, string aired)
-    {
-        DateTime? fallback = year is > 1000 ? new DateTime(year.Value, 1, 1) : null;
-
-        if (string.IsNullOrWhiteSpace(aired))
-        {
-            return fallback;
-        }
-
-        return DateTime.TryParse(aired, out DateTime parsed) ? parsed : fallback;
     }
 
     private static DateTime? GetAired(int? year, Option<DateTime> aired)
