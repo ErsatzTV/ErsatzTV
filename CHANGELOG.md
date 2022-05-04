@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix processing local movie NFO metadata without a `year` value
+- Fix processing local movie fallback metadata
 
 ## [0.5.5-beta] - 2022-05-03
 ### Fixed

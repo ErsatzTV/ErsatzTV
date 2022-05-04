@@ -70,7 +70,8 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
             Studios = new List<Studio>(),
             Actors = new List<Actor>(),
             Directors = new List<Director>(),
-            Writers = new List<Writer>()
+            Writers = new List<Writer>(),
+            Guids = new List<MetadataGuid>()
         };
 
         return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
