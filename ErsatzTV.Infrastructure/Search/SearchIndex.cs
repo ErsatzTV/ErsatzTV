@@ -245,13 +245,21 @@ public sealed class SearchIndex : ISearchIndex
     {
         try
         {
-            using var d = FSDirectory.Open(folder);
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
-                { OpenMode = OpenMode.CREATE_OR_APPEND };
-            using var w = new IndexWriter(_directory, indexConfig);
-            using DirectoryReader r = w.GetReader(true);
-            return true;
+            using (var d = FSDirectory.Open(folder))
+            {
+                using (var analyzer = new StandardAnalyzer(AppLuceneVersion))
+                {
+                    var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
+                        { OpenMode = OpenMode.CREATE_OR_APPEND };
+                    using (var w = new IndexWriter(d, indexConfig))
+                    {
+                        using (DirectoryReader _ = w.GetReader(true))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
         }
         catch
         {
