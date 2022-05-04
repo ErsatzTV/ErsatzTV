@@ -95,20 +95,23 @@ public abstract class LocalFolderScanner
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
                 Either<BaseError, bool> refreshResult =
                     await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, mediaItem.Item);
-                refreshResult.Match(
-                    result =>
+
+                foreach (BaseError error in refreshResult.LeftToSeq())
+                {
+                    _logger.LogWarning(
+                        "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                        "Statistics",
+                        path,
+                        error.Value);
+                }
+
+                foreach (bool result in refreshResult.RightToSeq())
+                {
+                    if (result)
                     {
-                        if (result)
-                        {
-                            mediaItem.IsUpdated = true;
-                        }
-                    },
-                    error =>
-                        _logger.LogWarning(
-                            "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                            "Statistics",
-                            path,
-                            error.Value));
+                        mediaItem.IsUpdated = true;
+                    }
+                }
             }
 
             return mediaItem;
@@ -200,9 +203,21 @@ public abstract class LocalFolderScanner
 
                                 if (metadata is SongMetadata)
                                 {
-                                    artwork.BlurHash43 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 4, 3);
-                                    artwork.BlurHash54 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 5, 4);
-                                    artwork.BlurHash64 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 6, 4);
+                                    artwork.BlurHash43 = await _imageCache.CalculateBlurHash(
+                                        cacheName,
+                                        artworkKind,
+                                        4,
+                                        3);
+                                    artwork.BlurHash54 = await _imageCache.CalculateBlurHash(
+                                        cacheName,
+                                        artworkKind,
+                                        5,
+                                        4);
+                                    artwork.BlurHash64 = await _imageCache.CalculateBlurHash(
+                                        cacheName,
+                                        artworkKind,
+                                        6,
+                                        4);
                                 }
 
                                 await _metadataRepository.UpdateArtworkPath(artwork);
@@ -220,9 +235,21 @@ public abstract class LocalFolderScanner
 
                                 if (metadata is SongMetadata)
                                 {
-                                    artwork.BlurHash43 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 4, 3);
-                                    artwork.BlurHash54 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 5, 4);
-                                    artwork.BlurHash64 = _imageCache.CalculateBlurHash(cacheName, artworkKind, 6, 4);
+                                    artwork.BlurHash43 = await _imageCache.CalculateBlurHash(
+                                        cacheName,
+                                        artworkKind,
+                                        4,
+                                        3);
+                                    artwork.BlurHash54 = await _imageCache.CalculateBlurHash(
+                                        cacheName,
+                                        artworkKind,
+                                        5,
+                                        4);
+                                    artwork.BlurHash64 = await _imageCache.CalculateBlurHash(
+                                        cacheName,
+                                        artworkKind,
+                                        6,
+                                        4);
                                 }
 
                                 metadata.Artwork.Add(artwork);

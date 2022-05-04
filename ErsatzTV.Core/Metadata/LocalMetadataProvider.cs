@@ -1019,7 +1019,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     year = nfo.Year;
                 }
 
-                DateTime releaseDate = new DateTimeOffset(year, 0, 0, 0, 0, 0, TimeSpan.Zero).UtcDateTime;
+                DateTime releaseDate = year > 0
+                    ? new DateTimeOffset(year, 0, 0, 0, 0, 0, TimeSpan.Zero).UtcDateTime
+                    : SystemTime.MinValueUtc;
 
                 foreach (DateTime premiered in nfo.Premiered)
                 {

@@ -193,7 +193,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                 {
                     string hash = hashes[NextRandom(hashes.Count)];
 
-                    backgroundPath = _imageCache.WriteBlurHash(hash, channel.FFmpegProfile.Resolution);
+                    backgroundPath = await _imageCache.WriteBlurHash(hash, channel.FFmpegProfile.Resolution);
 
                     videoVersion.Height = channel.FFmpegProfile.Resolution.Height;
                     videoVersion.Width = channel.FFmpegProfile.Resolution.Width;

@@ -46,7 +46,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
     {
         if (field == "released_inthelast" && CustomQueryParser.ParseStart(queryText, out DateTime start))
         {
-            var todayString = DateTime.Today.ToString("yyyyMMdd");
+            var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = start.ToString("yyyyMMdd");
 
             return base.GetRangeQuery("release_date", dateString, todayString, true, true);
@@ -61,7 +61,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
 
         if (field == "added_inthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedStart))
         {
-            var todayString = DateTime.Today.ToString("yyyyMMdd");
+            var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = addedStart.ToString("yyyyMMdd");
 
             return base.GetRangeQuery("added_date", dateString, todayString, true, true);

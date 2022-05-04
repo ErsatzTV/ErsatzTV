@@ -53,7 +53,7 @@ public class CustomQueryParser : QueryParser
     {
         if (field == "released_inthelast" && ParseStart(queryText, out DateTime start))
         {
-            var todayString = DateTime.Today.ToString("yyyyMMdd");
+            var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = start.ToString("yyyyMMdd");
 
             return base.GetRangeQuery("release_date", dateString, todayString, true, true);
@@ -68,7 +68,7 @@ public class CustomQueryParser : QueryParser
 
         if (field == "added_inthelast" && ParseStart(queryText, out DateTime addedStart))
         {
-            var todayString = DateTime.Today.ToString("yyyyMMdd");
+            var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = addedStart.ToString("yyyyMMdd");
 
             return base.GetRangeQuery("added_date", dateString, todayString, true, true);
