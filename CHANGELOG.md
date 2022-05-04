@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix processing local movie fallback metadata
 - Fix search edge case where very recently added items (hours) would not be returned by relative date queries
 
+### Added
+- Add `show_genre` and `show_tag` to search index for seasons and episodes
+
 ## [0.5.5-beta] - 2022-05-03
 ### Fixed
 - Fix adding episodes with no title to the search index
