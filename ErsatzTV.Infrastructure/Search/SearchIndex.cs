@@ -38,8 +38,6 @@ public sealed class SearchIndex : ISearchIndex
     private const string LibraryIdField = "library_id";
     private const string TitleAndYearField = "title_and_year";
     private const string JumpLetterField = "jump_letter";
-    private const string ReleaseDateField = "release_date";
-    private const string AddedDateField = "added_date";
     private const string StudioField = "studio";
     private const string LanguageField = "language";
     private const string StyleField = "style";
@@ -62,6 +60,8 @@ public sealed class SearchIndex : ISearchIndex
     internal const string WidthField = "width";
     internal const string SeasonNumberField = "season_number";
     internal const string EpisodeNumberField = "episode_number";
+    internal const string AddedDateField = "added_date";
+    internal const string ReleaseDateField = "release_date";
 
     public const string MovieType = "movie";
     public const string ShowType = "show";
