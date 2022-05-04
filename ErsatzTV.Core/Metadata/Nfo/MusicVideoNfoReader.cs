@@ -54,6 +54,9 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                             case "year":
                                 await ReadIntContent(reader, nfo, (musicVideo, year) => musicVideo.Year = year);
                                 break;
+                            case "aired":
+                                await ReadDateTimeContent(reader, nfo, (show, aired) => show.Aired = aired);
+                                break;
                             case "genre":
                                 await ReadStringContent(
                                     reader,

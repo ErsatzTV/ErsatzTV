@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Add `show_genre` and `show_tag` to search index for seasons and episodes
+- Use `aired` value to source release date from music video nfo metadata
 
 ## [0.5.5-beta] - 2022-05-03
 ### Fixed

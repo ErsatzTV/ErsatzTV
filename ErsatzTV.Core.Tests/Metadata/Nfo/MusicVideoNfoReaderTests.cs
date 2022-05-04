@@ -122,6 +122,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
 Le groupe a également enregistré une version espagnole de ce titre, La reina del baile, pour le marché d'Amérique latine. On peut retrouver ces versions en espagnol des succès de ABBA sur l'abum Oro. Le 18 juin 1976, ABBA a interprété cette chanson lors d'un spectacle télévisé organisé en l'honneur du roi Charles XVI Gustave de Suède, qui venait de se marier. Le titre sera repris en 2011 par Glee dans la saison 2, épisode 20."));
 
             nfo.Year.Should().Be(1976);
+            nfo.Aired.IsNone.Should().BeTrue();
             nfo.Genres.Should().BeEquivalentTo(new List<string> { "Pop" });
         }
     }
@@ -138,6 +139,25 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
         foreach (MusicVideoNfo nfo in result.RightToSeq())
         {
             nfo.Tags.Should().BeEquivalentTo(new List<string> { "Test Tag" });
+        }
+    }
+
+    [Test]
+    public async Task MetadataNfo_With_Aired_Should_Return_Nfo()
+    {
+        await using var stream = new MemoryStream(
+            Encoding.UTF8.GetBytes(@"<musicvideo><aired>2022-02-03</aired></musicvideo>"));
+
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+
+        result.IsRight.Should().BeTrue();
+        foreach (MusicVideoNfo nfo in result.RightToSeq())
+        {
+            nfo.Aired.IsSome.Should().BeTrue();
+            foreach (DateTime aired in nfo.Aired)
+            {
+                aired.Should().Be(new DateTime(2022, 02, 03));
+            }
         }
     }
 

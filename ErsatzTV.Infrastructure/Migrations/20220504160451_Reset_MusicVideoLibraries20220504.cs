@@ -4,7 +4,7 @@
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
-    public partial class Reset_MusicVideoLibraries : Migration
+    public partial class Reset_MusicVideoLibraries20220504 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
