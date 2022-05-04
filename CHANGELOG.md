@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix processing local movie NFO metadata without a `year` value
 - Fix processing local movie fallback metadata
 - Fix search edge case where very recently added items (hours) would not be returned by relative date queries
+- Fix search index validation on startup; improper validation was causing a rebuild with every startup
 
 ### Added
 - Add `show_genre` and `show_tag` to search index for seasons and episodes
