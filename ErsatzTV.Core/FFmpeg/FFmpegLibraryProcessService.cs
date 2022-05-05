@@ -258,8 +258,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool hlsRealtime,
         long ptsOffset)
     {
-        FFmpegPlaybackSettings playbackSettings =
-            _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
+        FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateErrorSettings(
+            channel.StreamingMode,
+            channel.FFmpegProfile,
+            hlsRealtime);
 
         IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
 

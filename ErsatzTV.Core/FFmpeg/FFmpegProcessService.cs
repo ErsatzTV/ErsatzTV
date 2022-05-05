@@ -145,7 +145,10 @@ public class FFmpegProcessService
                     watermarkPath);
 
             FFmpegPlaybackSettings playbackSettings =
-                _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
+                _playbackSettingsCalculator.CalculateErrorSettings(
+                    StreamingMode.TransportStream,
+                    channel.FFmpegProfile,
+                    false);
 
             FFmpegPlaybackSettings scalePlaybackSettings = _playbackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
