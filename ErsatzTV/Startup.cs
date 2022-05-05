@@ -418,11 +418,15 @@ public class Startup
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
+        // run-once/blocking startup services
         services.AddHostedService<EndpointValidatorService>();
         services.AddHostedService<DatabaseMigratorService>();
         services.AddHostedService<CacheCleanerService>();
         services.AddHostedService<ResourceExtractorService>();
         services.AddHostedService<PlatformSettingsService>();
+        services.AddHostedService<RebuildSearchIndexService>();
+
+        // background services
         services.AddHostedService<EmbyService>();
         services.AddHostedService<JellyfinService>();
         services.AddHostedService<PlexService>();
