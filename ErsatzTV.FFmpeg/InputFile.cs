@@ -45,6 +45,17 @@ public record AudioInputFile(string Path, IList<AudioStream> AudioStreams, Audio
     }
 }
 
+public record NullAudioInputFile : AudioInputFile
+{
+    public NullAudioInputFile(AudioState DesiredState) : base(
+        "anullsrc",
+        new List<AudioStream> { new(0, "unknown", -1) },
+        DesiredState) =>
+        InputOptions.Add(new LavfiInputOption());
+
+    public void Deconstruct(out AudioState DesiredState) => DesiredState = this.DesiredState;
+}
+
 public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : InputFile(
     Path,
     VideoStreams.Cast<MediaStream>().ToList())

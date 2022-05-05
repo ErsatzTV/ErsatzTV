@@ -170,14 +170,22 @@ public class FFmpegPlaybackSettingsCalculator
         return result;
     }
 
-    public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile) =>
+    public FFmpegPlaybackSettings CalculateErrorSettings(
+        StreamingMode streamingMode,
+        FFmpegProfile ffmpegProfile,
+        bool hlsRealtime) =>
         new()
         {
             HardwareAcceleration = HardwareAccelerationKind.None,
-            ThreadCount = ffmpegProfile.ThreadCount,
+            ThreadCount = 1,
             FormatFlags = CommonFormatFlags,
             VideoFormat = ffmpegProfile.VideoFormat,
-            AudioFormat = ffmpegProfile.AudioFormat
+            AudioFormat = ffmpegProfile.AudioFormat,
+            RealtimeOutput = streamingMode switch
+            {
+                StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                _ => true
+            }
         };
 
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>

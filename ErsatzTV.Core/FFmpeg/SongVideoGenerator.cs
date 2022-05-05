@@ -2,7 +2,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -233,28 +232,7 @@ public class SongVideoGenerator : ISongVideoGenerator
         foreach (string si in maybeSongImage.RightToSeq())
         {
             videoPath = si;
-            videoVersion = new BackgroundImageMediaVersion
-            {
-                Chapters = new List<MediaChapter>(),
-                // song image has been pre-generated with correct size
-                Height = channel.FFmpegProfile.Resolution.Height,
-                Width = channel.FFmpegProfile.Resolution.Width,
-                SampleAspectRatio = "1:1",
-                Streams = new List<MediaStream>
-                {
-                    new()
-                    {
-                        MediaStreamKind = MediaStreamKind.Video,
-                        Index = 0,
-                        Codec = VideoFormat.GeneratedImage,
-                        PixelFormat = new PixelFormatUnknown().Name // the resulting pixel format is unknown
-                    }
-                },
-                MediaFiles = new List<MediaFile>
-                {
-                    new() { Path = si }
-                }
-            };
+            videoVersion = BackgroundImageMediaVersion.ForPath(si, channel.FFmpegProfile.Resolution);
         }
 
         return Tuple(videoPath, videoVersion);
