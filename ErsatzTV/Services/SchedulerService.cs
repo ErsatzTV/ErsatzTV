@@ -8,7 +8,6 @@ using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaSources;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Plex;
-using ErsatzTV.Application.Search;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Scheduling;
@@ -93,7 +92,6 @@ public class SchedulerService : BackgroundService
         try
         {
             await DeleteOrphanedArtwork(cancellationToken);
-            await RebuildSearchIndex(cancellationToken);
             await BuildPlayouts(cancellationToken);
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
@@ -265,9 +263,6 @@ public class SchedulerService : BackgroundService
             }
         }
     }
-
-    private ValueTask RebuildSearchIndex(CancellationToken cancellationToken) =>
-        _workerChannel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
 
     private ValueTask DeleteOrphanedArtwork(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);
