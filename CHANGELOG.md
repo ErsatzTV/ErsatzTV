@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix search index validation on startup; improper validation was causing a rebuild with every startup
 - Block library scanning until search index has been recreated/upgraded
 - Fix occasional erroneous log messages when HLS channel playback times out because all clients have left
+- Fix fallback filler playback
 
 ### Added
 - Add `show_genre` and `show_tag` to search index for seasons and episodes

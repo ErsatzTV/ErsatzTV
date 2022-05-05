@@ -254,16 +254,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         List<Subtitle> allSubtitles = playoutItemWithPath.PlayoutItem.MediaItem switch
         {
             Episode episode => Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles)
+                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
                 .IfNone(new List<Subtitle>()),
             Movie movie => Optional(movie.MovieMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles)
+                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
                 .IfNone(new List<Subtitle>()),
             MusicVideo musicVideo => Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles)
+                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
                 .IfNone(new List<Subtitle>()),
             OtherVideo otherVideo => Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles)
+                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
                 .IfNone(new List<Subtitle>()),
             _ => new List<Subtitle>()
         };
