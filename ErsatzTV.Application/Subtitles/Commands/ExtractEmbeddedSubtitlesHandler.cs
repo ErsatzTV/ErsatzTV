@@ -155,7 +155,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             return Unit.Default;
         }
-        catch (TaskCanceledException)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             return Unit.Default;
         }
@@ -210,7 +210,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .ToListAsync(cancellationToken);
             result.AddRange(otherVideoIds);
         }
-        catch (TaskCanceledException)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             // do nothing
         }

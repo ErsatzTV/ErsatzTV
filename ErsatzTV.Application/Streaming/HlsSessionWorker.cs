@@ -276,7 +276,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         return false;
                     }
                 }
-                catch (TaskCanceledException)
+                catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
                 {
                     _logger.LogInformation("Terminating HLS process for channel {Channel}", _channelNumber);
                     return false;

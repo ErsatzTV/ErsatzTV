@@ -121,22 +121,19 @@ public class ImageCache : IImageCache
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
 
         // ReSharper disable once ConvertToUsingDeclaration
-        using (FileStream fs = File.OpenRead(targetFile))
+        using (var image = await Image.LoadAsync<Rgba32>(targetFile))
         {
-            using (var image = await Image.LoadAsync<Rgba32>(fs))
+            // resize before calculating blur hash; it doesn't need giant images
+            if (image.Height > 200)
             {
-                // resize before calculating blur hash; it doesn't need giant images
-                if (image.Height > 200)
-                {
-                    image.Mutate(i => i.Resize(0, 200));
-                }
-                else if (image.Width > 200)
-                {
-                    image.Mutate(i => i.Resize(200, 0));
-                }
-
-                return Blurhasher.Encode(image, x, y);
+                image.Mutate(i => i.Resize(0, 200));
             }
+            else if (image.Width > 200)
+            {
+                image.Mutate(i => i.Resize(200, 0));
+            }
+
+            return Blurhasher.Encode(image, x, y);
         }
     }
 
@@ -151,6 +148,7 @@ public class ImageCache : IImageCache
             _localFileSystem.EnsureFolderExists(folder);
 
             // ReSharper disable once ConvertToUsingDeclaration
+            // ReSharper disable once UseAwaitUsing
             using (FileStream fs = File.OpenWrite(targetFile))
             {
                 using (Image<Rgb24> image = Blurhasher.Decode(blurHash, targetSize.Width, targetSize.Height))

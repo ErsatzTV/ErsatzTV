@@ -14,6 +14,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Streaming;
 
@@ -24,6 +25,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
@@ -39,7 +41,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         IMediaCollectionRepository mediaCollectionRepository,
         ITelevisionRepository televisionRepository,
         IArtistRepository artistRepository,
-        ISongVideoGenerator songVideoGenerator)
+        ISongVideoGenerator songVideoGenerator,
+        ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -51,6 +54,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _televisionRepository = televisionRepository;
         _artistRepository = artistRepository;
         _songVideoGenerator = songVideoGenerator;
+        _logger = logger;
     }
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -200,6 +204,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .MapT(pi => pi.StartOffset - now);
 
             DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
+
+            _logger.LogWarning(
+                "Error locating playout item {@Error}. Will display error from {Start} to {Finish}",
+                error,
+                now,
+                finish);
 
             switch (error)
             {
