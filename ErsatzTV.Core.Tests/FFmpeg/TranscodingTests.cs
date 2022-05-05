@@ -301,6 +301,7 @@ public class TranscodingTests
             oldService,
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
+            new Mock<ITempFilePool>().Object,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var v = new MediaVersion

@@ -258,21 +258,21 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(audioFilterComplex) || !string.IsNullOrWhiteSpace(videoFilterComplex))
-        {
-            var filterComplex = string.Join(
-                ";",
-                new[]
-                {
-                    audioFilterComplex,
-                    videoFilterComplex,
-                    watermarkFilterComplex,
-                    subtitleFilterComplex,
-                    watermarkOverlayFilterComplex,
-                    subtitleOverlayFilterComplex
-                }.Where(
-                    s => !string.IsNullOrWhiteSpace(s)));
+        var filterComplex = string.Join(
+            ";",
+            new[]
+            {
+                audioFilterComplex,
+                videoFilterComplex,
+                watermarkFilterComplex,
+                subtitleFilterComplex,
+                watermarkOverlayFilterComplex,
+                subtitleOverlayFilterComplex
+            }.Where(
+                s => !string.IsNullOrWhiteSpace(s)));
 
+        if (!string.IsNullOrWhiteSpace(filterComplex))
+        {
             result.AddRange(new[] { "-filter_complex", filterComplex });
         }
 
