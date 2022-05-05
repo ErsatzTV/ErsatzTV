@@ -18,16 +18,19 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
+    private readonly ITempFilePool _tempFilePool;
 
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
         FFmpegPlaybackSettingsCalculator playbackSettingsCalculator,
         IFFmpegStreamSelector ffmpegStreamSelector,
+        ITempFilePool tempFilePool,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
         _playbackSettingsCalculator = playbackSettingsCalculator;
         _ffmpegStreamSelector = ffmpegStreamSelector;
+        _tempFilePool = tempFilePool;
         _logger = logger;
     }
 
@@ -174,14 +177,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
 
-        string videoFormat = playbackSettings.VideoFormat switch
-        {
-            FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
-            FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
-            FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,
-            FFmpegProfileVideoFormat.Copy => VideoFormat.Copy,
-            _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
-        };
+        string videoFormat = GetVideoFormat(playbackSettings);
 
         HardwareAccelerationMode hwAccel = playbackSettings.HardwareAcceleration switch
         {
@@ -254,14 +250,126 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
     }
 
-    public Task<Command> ForError(
+    public async Task<Command> ForError(
         string ffmpegPath,
         Channel channel,
         Option<TimeSpan> duration,
         string errorMessage,
         bool hlsRealtime,
-        long ptsOffset) =>
-        _ffmpegProcessService.ForError(ffmpegPath, channel, duration, errorMessage, hlsRealtime, ptsOffset);
+        long ptsOffset)
+    {
+        FFmpegPlaybackSettings playbackSettings =
+            _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
+
+        IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
+
+        var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
+        var margin = (int)Math.Round(channel.FFmpegProfile.Resolution.Height * 0.05);
+
+        string subtitleFile = await new SubtitleBuilder(_tempFilePool)
+            .WithResolution(desiredResolution)
+            .WithFontName("Roboto")
+            .WithFontSize(fontSize)
+            .WithAlignment(2)
+            .WithMarginV(margin)
+            .WithPrimaryColor("&HFFFFFF")
+            .WithFormattedContent(errorMessage.Replace(Environment.NewLine, "\\N"))
+            .BuildFile();
+
+        string audioFormat = playbackSettings.AudioFormat switch
+        {
+            FFmpegProfileAudioFormat.Ac3 => AudioFormat.Ac3,
+            _ => AudioFormat.Aac
+        };
+
+        var audioState = new AudioState(
+            audioFormat,
+            playbackSettings.AudioChannels,
+            playbackSettings.AudioBitrate,
+            playbackSettings.AudioBufferSize,
+            playbackSettings.AudioSampleRate,
+            Option<TimeSpan>.None,
+            playbackSettings.NormalizeLoudness);
+
+        var desiredState = new FrameState(
+            playbackSettings.RealtimeOutput,
+            false,
+            GetVideoFormat(playbackSettings),
+            new PixelFormatYuv420P(),
+            new FrameSize(desiredResolution.Width, desiredResolution.Height),
+            new FrameSize(desiredResolution.Width, desiredResolution.Height),
+            playbackSettings.FrameRate,
+            playbackSettings.VideoBitrate,
+            playbackSettings.VideoBufferSize,
+            playbackSettings.VideoTrackTimeScale,
+            playbackSettings.Deinterlace);
+
+        OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
+            ? OutputFormatKind.Hls
+            : OutputFormatKind.MpegTs;
+
+        Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
+            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
+            : Option<string>.None;
+
+        Option<string> hlsSegmentTemplate = outputFormat == OutputFormatKind.Hls
+            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
+            : Option<string>.None;
+
+        string videoPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png");
+
+        var videoVersion = BackgroundImageMediaVersion.ForPath(videoPath, desiredResolution);
+
+        var ffmpegVideoStream = new VideoStream(
+            0,
+            VideoFormat.GeneratedImage,
+            new PixelFormatYuv420P(),
+            new FrameSize(videoVersion.Width, videoVersion.Height),
+            None,
+            true);
+
+        var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
+
+        var ffmpegState = new FFmpegState(
+            false,
+            HardwareAccelerationMode.None,
+            None,
+            None,
+            playbackSettings.StreamSeek,
+            duration,
+            channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
+            "ErsatzTV",
+            channel.Name,
+            None,
+            outputFormat,
+            hlsPlaylistPath,
+            hlsSegmentTemplate,
+            ptsOffset);
+
+        var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
+
+        var audioInputFile = new NullAudioInputFile(audioState);
+
+        var subtitleInputFile = new SubtitleInputFile(
+            subtitleFile,
+            new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
+            false);
+
+        _logger.LogDebug("FFmpeg desired error state {FrameState}", desiredState);
+
+        var pipelineBuilder = new PipelineBuilder(
+            videoInputFile,
+            audioInputFile,
+            None,
+            subtitleInputFile,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            _logger);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
+
+        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, pipeline);
+    }
 
     public Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
@@ -478,4 +586,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
     private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice) =>
         accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
+
+    private static string GetVideoFormat(FFmpegPlaybackSettings playbackSettings) =>
+        playbackSettings.VideoFormat switch
+        {
+            FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
+            FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
+            FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,
+            FFmpegProfileVideoFormat.Copy => VideoFormat.Copy,
+            _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
+        };
 }
