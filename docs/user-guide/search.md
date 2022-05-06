@@ -114,12 +114,22 @@ The following fields are available for searching music videos:
 
 The following fields are available for searching other videos:
 
-- `title`: The filename of the video (without extension)
-- `tag`: All of the video's parent folders
-- `minutes`: the rounded-up whole number duration of the video in minutes
-- `added_date`: The date the other video was added to ErsatzTV (YYYYMMDD)
-- `height`: The other video height
-- `width`: The other video width
+- `title`: The NFO title or the filename of the video (without extension)
+- `genre`: The video genre
+- `tag`: The video tag
+- `plot`: The video plot
+- `studio`: The video studio
+- `actor`: An actor from the video
+- `director`: A director from the video
+- `writer`: A writer from the video
+- `library_name`: The name of the library that contains the video
+- `content_rating`: The video content rating (case-sensitive)
+- `language`: The video audio stream language
+- `release_date`: The video release date (YYYYMMDD)
+- `added_date`: The date the video was added to ErsatzTV (YYYYMMDD)
+- `minutes`: The rounded-up whole number duration of the video in minutes
+- `height`: The video height
+- `width`: The video width
 - `type`: Always `other_video`
 
 ### Songs

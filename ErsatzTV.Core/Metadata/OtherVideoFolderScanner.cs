@@ -77,15 +77,17 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
             var foldersCompleted = 0;
 
+            var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
-            if (ShouldIncludeFolder(libraryPath.Path))
+            if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
                 folderQueue.Enqueue(libraryPath.Path);
             }
 
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
                          .Filter(ShouldIncludeFolder)
+                         .Filter(allFolders.Add)
                          .OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
@@ -115,6 +117,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
                 foreach (string subdirectory in _localFileSystem.ListSubdirectories(otherVideoFolder)
                              .Filter(ShouldIncludeFolder)
+                             .Filter(allFolders.Add)
                              .OrderBy(identity))
                 {
                     folderQueue.Enqueue(subdirectory);
@@ -205,15 +208,38 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         try
         {
             OtherVideo otherVideo = result.Item;
-            if (!Optional(otherVideo.OtherVideoMetadata).Flatten().Any())
-            {
-                otherVideo.OtherVideoMetadata ??= new List<OtherVideoMetadata>();
+            string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
 
-                string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
-                _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                if (await _localMetadataProvider.RefreshFallbackMetadata(otherVideo))
+            Option<string> maybeNfoFile = new List<string> { Path.ChangeExtension(path, "nfo") }
+                .Filter(_localFileSystem.FileExists)
+                .HeadOrNone();
+
+            if (maybeNfoFile.IsNone)
+            {
+                if (!Optional(otherVideo.OtherVideoMetadata).Flatten().Any())
                 {
-                    result.IsUpdated = true;
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
+                    if (await _localMetadataProvider.RefreshFallbackMetadata(otherVideo))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+            }
+
+            foreach (string nfoFile in maybeNfoFile)
+            {
+                bool shouldUpdate = Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    if (await _localMetadataProvider.RefreshSidecarMetadata(otherVideo, nfoFile))
+                    {
+                        result.IsUpdated = true;
+                    }
                 }
             }
 

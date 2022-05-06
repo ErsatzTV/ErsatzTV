@@ -465,6 +465,10 @@ public class MetadataRepository : IMetadataRepository
                 await dbContext.Connection.ExecuteAsync(
                     "INSERT INTO MetadataGuid (Guid, ArtistMetadataId) VALUES (@Guid, @MetadataId)",
                     new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
+            OtherVideoMetadata =>
+                await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO MetadataGuid (Guid, OtherVideoMetadataId) VALUES (@Guid, @MetadataId)",
+                    new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
             _ => throw new NotSupportedException()
         };
     }
