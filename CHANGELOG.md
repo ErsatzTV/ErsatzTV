@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.6-beta] - 2022-05-06
 ### Fixed
 - Fix processing local movie NFO metadata without a `year` value
 - Fix processing local movie fallback metadata
@@ -13,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix occasional erroneous log messages when HLS channel playback times out because all clients have left
 - Fix fallback filler playback
 - Fix stream continuity when error messages are displayed
-- Fix duplicate scanning within other video libraries (i.e. folders would be scanned multiple times) 
+- Fix duplicate scanning within `Other Video` libraries (i.e. folders would be scanned multiple times) 
 
 ### Added
 - Add `show_genre` and `show_tag` to search index for seasons and episodes
@@ -1169,7 +1171,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.5-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.6-beta...HEAD
+[0.5.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.5-beta...v0.5.6-beta
 [0.5.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.4-beta...v0.5.5-beta
 [0.5.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.3-beta...v0.5.4-beta
 [0.5.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...v0.5.3-beta
