@@ -98,7 +98,14 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
         {
             MetadataKind = MetadataKind.Fallback,
             Title = fileName ?? path,
-            OtherVideo = otherVideo
+            OtherVideo = otherVideo,
+            Genres = new List<Genre>(),
+            Tags = new List<Tag>(),
+            Studios = new List<Studio>(),
+            Actors = new List<Actor>(),
+            Directors = new List<Director>(),
+            Writers = new List<Writer>(),
+            Guids = new List<MetadataGuid>()
         };
 
         return GetOtherVideoMetadata(path, metadata);
