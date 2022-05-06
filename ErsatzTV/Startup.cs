@@ -415,6 +415,7 @@ public class Startup
         services.AddScoped<IArtistNfoReader, ArtistNfoReader>();
         services.AddScoped<IMusicVideoNfoReader, MusicVideoNfoReader>();
         services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
+        services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 

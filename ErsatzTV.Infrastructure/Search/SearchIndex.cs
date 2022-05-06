@@ -952,11 +952,59 @@ public sealed class SearchIndex : ISearchIndex
                     doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
+                if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
+                {
+                    foreach (string contentRating in (metadata.ContentRating ?? string.Empty).Split("/")
+                             .Map(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        doc.Add(new StringField(ContentRatingField, contentRating, Field.Store.NO));
+                    }
+                }
+
+                if (metadata.ReleaseDate.HasValue)
+                {
+                    doc.Add(
+                        new StringField(
+                            ReleaseDateField,
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            Field.Store.NO));
+                }
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+
+                if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                {
+                    doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                }
+
+                foreach (Genre genre in metadata.Genres)
+                {
+                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                }
 
                 foreach (Tag tag in metadata.Tags)
                 {
                     doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                }
+
+                foreach (Studio studio in metadata.Studios)
+                {
+                    doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
+                }
+
+                foreach (Actor actor in metadata.Actors)
+                {
+                    doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
+                }
+
+                foreach (Director director in metadata.Directors)
+                {
+                    doc.Add(new TextField(DirectorField, director.Name, Field.Store.NO));
+                }
+
+                foreach (Writer writer in metadata.Writers)
+                {
+                    doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
                 }
 
                 _writer.UpdateDocument(new Term(IdField, otherVideo.Id.ToString()), doc);

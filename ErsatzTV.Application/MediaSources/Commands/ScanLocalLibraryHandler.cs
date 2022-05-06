@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.MediaSources;
@@ -147,7 +148,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                 _logger.LogDebug(
                     "Scan of library {Name} completed in {Duration}",
                     localLibrary.Name,
-                    TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
+                    sw.Elapsed.Humanize());
             }
             else
             {
