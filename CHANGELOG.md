@@ -13,10 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix occasional erroneous log messages when HLS channel playback times out because all clients have left
 - Fix fallback filler playback
 - Fix stream continuity when error messages are displayed
+- Fix duplicate scanning within other video libraries (i.e. folders would be scanned multiple times) 
 
 ### Added
 - Add `show_genre` and `show_tag` to search index for seasons and episodes
 - Use `aired` value to source release date from music video nfo metadata
+- Add NFO metadata support to `Other Video` libraries
+  - `Other Video` NFO metadata must be in the movie NFO metadata format
 
 ## [0.5.5-beta] - 2022-05-03
 ### Fixed

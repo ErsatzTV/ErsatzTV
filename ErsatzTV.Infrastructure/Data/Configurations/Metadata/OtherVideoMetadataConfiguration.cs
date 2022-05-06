@@ -10,11 +10,35 @@ public class OtherVideoMetadataConfiguration : IEntityTypeConfiguration<OtherVid
     {
         builder.ToTable("OtherVideoMetadata");
 
-        builder.HasMany(mm => mm.Artwork)
+        builder.HasMany(ovm => ovm.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Tags)
+        builder.HasMany(ovm => ovm.Genres)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(ovm => ovm.Tags)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(ovm => ovm.Studios)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(ovm => ovm.Actors)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(ovm => ovm.Directors)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(ovm => ovm.Writers)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(ovm => ovm.Guids)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 

@@ -20,10 +20,23 @@ public class OtherVideoRepository : IOtherVideoRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<OtherVideo> maybeExisting = await dbContext.OtherVideos
             .AsNoTracking()
-            .Include(ov => ov.OtherVideoMetadata)
-            .ThenInclude(ovm => ovm.Artwork)
-            .Include(ov => ov.OtherVideoMetadata)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Genres)
+            .Include(i => i.OtherVideoMetadata)
             .ThenInclude(ovm => ovm.Tags)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Studios)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Guids)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Actors)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Actors)
+            .ThenInclude(a => a.Artwork)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Directors)
+            .Include(i => i.OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Writers)
             .Include(ov => ov.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(ov => ov.MediaVersions)
@@ -82,12 +95,71 @@ public class OtherVideoRepository : IOtherVideoRepository
         return ids;
     }
 
+    public async Task<bool> AddGenre(OtherVideoMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO Genre (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
+            new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
     public async Task<bool> AddTag(OtherVideoMetadata metadata, Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Tag (Name, OtherVideoMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
             new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
+    }
+
+    public async Task<bool> AddStudio(OtherVideoMetadata metadata, Studio studio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO Studio (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
+            new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
+    public async Task<bool> AddActor(OtherVideoMetadata metadata, Actor actor)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        int? artworkId = null;
+
+        if (actor.Artwork != null)
+        {
+            artworkId = await dbContext.Connection.QuerySingleAsync<int>(
+                @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                      SELECT last_insert_rowid()",
+                new
+                {
+                    ArtworkKind = (int)actor.Artwork.ArtworkKind,
+                    actor.Artwork.DateAdded,
+                    actor.Artwork.DateUpdated,
+                    actor.Artwork.Path
+                });
+        }
+
+        return await dbContext.Connection.ExecuteAsync(
+                "INSERT INTO Actor (Name, Role, \"Order\", OtherVideoMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
+            .Map(result => result > 0);
+    }
+
+    public async Task<bool> AddDirector(OtherVideoMetadata metadata, Director director)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO Director (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
+            new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
+    public async Task<bool> AddWriter(OtherVideoMetadata metadata, Writer writer)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO Writer (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
+            new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
     public async Task<List<OtherVideoMetadata>> GetOtherVideosForCards(List<int> ids)

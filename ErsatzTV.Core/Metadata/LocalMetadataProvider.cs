@@ -24,6 +24,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IMovieRepository _movieRepository;
     private readonly IMusicVideoNfoReader _musicVideoNfoReader;
     private readonly IMusicVideoRepository _musicVideoRepository;
+    private readonly IOtherVideoNfoReader _otherVideoNfoReader;
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISongRepository _songRepository;
     private readonly ITelevisionRepository _televisionRepository;
@@ -44,6 +45,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         IArtistNfoReader artistNfoReader,
         IMusicVideoNfoReader musicVideoNfoReader,
         ITvShowNfoReader tvShowNfoReader,
+        IOtherVideoNfoReader otherVideoNfoReader,
         ILocalStatisticsProvider localStatisticsProvider,
         IClient client,
         ILogger<LocalMetadataProvider> logger)
@@ -62,6 +64,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _artistNfoReader = artistNfoReader;
         _musicVideoNfoReader = musicVideoNfoReader;
         _tvShowNfoReader = tvShowNfoReader;
+        _otherVideoNfoReader = otherVideoNfoReader;
         _localStatisticsProvider = localStatisticsProvider;
         _client = client;
         _logger = logger;
@@ -107,38 +110,77 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return fallbackMetadata;
     }
 
-    public Task<bool> RefreshSidecarMetadata(Movie movie, string nfoFileName) =>
-        LoadMovieMetadata(movie, nfoFileName).Bind(
-            maybeMetadata => maybeMetadata.Match(
-                metadata => ApplyMetadataUpdate(movie, metadata),
-                () => Task.FromResult(false)));
+    public async Task<bool> RefreshSidecarMetadata(Movie movie, string nfoFileName)
+    {
+        Option<MovieMetadata> maybeMetadata = await LoadMovieMetadata(movie, nfoFileName);
+        foreach (MovieMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(movie, metadata);
+        }
 
-    public Task<bool> RefreshSidecarMetadata(Show televisionShow, string nfoFileName) =>
-        LoadTelevisionShowMetadata(nfoFileName).Bind(
-            maybeMetadata => maybeMetadata.Match(
-                metadata => ApplyMetadataUpdate(televisionShow, metadata),
-                () => Task.FromResult(false)));
+        return false;
+    }
 
-    public Task<bool> RefreshSidecarMetadata(Episode episode, string nfoFileName) =>
-        LoadEpisodeMetadata(episode, nfoFileName).Bind(metadata => ApplyMetadataUpdate(episode, metadata));
+    public async Task<bool> RefreshSidecarMetadata(Show televisionShow, string nfoFileName)
+    {
+        Option<ShowMetadata> maybeMetadata = await LoadTelevisionShowMetadata(nfoFileName);
+        foreach (ShowMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(televisionShow, metadata);
+        }
 
-    public Task<bool> RefreshSidecarMetadata(Artist artist, string nfoFileName) =>
-        LoadArtistMetadata(nfoFileName).Bind(
-            maybeMetadata => maybeMetadata.Match(
-                metadata => ApplyMetadataUpdate(artist, metadata),
-                () => Task.FromResult(false)));
+        return false;
+    }
 
-    public Task<bool> RefreshSidecarMetadata(MusicVideo musicVideo, string nfoFileName) =>
-        LoadMusicVideoMetadata(nfoFileName).Bind(
-            maybeMetadata => maybeMetadata.Match(
-                metadata => ApplyMetadataUpdate(musicVideo, metadata),
-                () => RefreshFallbackMetadata(musicVideo)));
+    public async Task<bool> RefreshSidecarMetadata(Episode episode, string nfoFileName)
+    {
+        List<EpisodeMetadata> metadata = await LoadEpisodeMetadata(episode, nfoFileName);
+        return await ApplyMetadataUpdate(episode, metadata);
+    }
 
-    public Task<bool> RefreshTagMetadata(Song song, string ffprobePath) =>
-        LoadSongMetadata(song, ffprobePath).Bind(
-            maybeMetadata => maybeMetadata.Match(
-                metadata => ApplyMetadataUpdate(song, metadata),
-                () => RefreshFallbackMetadata(song)));
+    public async Task<bool> RefreshSidecarMetadata(Artist artist, string nfoFileName)
+    {
+        Option<ArtistMetadata> maybeMetadata = await LoadArtistMetadata(nfoFileName);
+        foreach (ArtistMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(artist, metadata);
+        }
+
+        return false;
+    }
+
+    public async Task<bool> RefreshSidecarMetadata(MusicVideo musicVideo, string nfoFileName)
+    {
+        Option<MusicVideoMetadata> maybeMetadata = await LoadMusicVideoMetadata(nfoFileName);
+        foreach (MusicVideoMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(musicVideo, metadata);
+        }
+
+        return await RefreshFallbackMetadata(musicVideo);
+    }
+
+    public async Task<bool> RefreshSidecarMetadata(OtherVideo otherVideo, string nfoFileName)
+    {
+        Option<OtherVideoMetadata> maybeMetadata = await LoadOtherVideoMetadata(nfoFileName);
+        foreach (OtherVideoMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(otherVideo, metadata);
+        }
+
+        return await RefreshFallbackMetadata(otherVideo);
+    }
+
+    public async Task<bool> RefreshTagMetadata(Song song, string ffprobePath)
+    {
+        Option<SongMetadata> maybeMetadata = await LoadSongMetadata(song, ffprobePath);
+        foreach (SongMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(song, metadata);
+        }
+
+        return await RefreshFallbackMetadata(song);
+    }
 
     public Task<bool> RefreshFallbackMetadata(Movie movie) =>
         ApplyMetadataUpdate(movie, _fallbackMetadataProvider.GetFallbackMetadata(movie));
@@ -149,20 +191,38 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     public Task<bool> RefreshFallbackMetadata(Artist artist, string artistFolder) =>
         ApplyMetadataUpdate(artist, _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder));
 
-    public Task<bool> RefreshFallbackMetadata(OtherVideo otherVideo) =>
-        _fallbackMetadataProvider.GetFallbackMetadata(otherVideo).Match(
-            metadata => ApplyMetadataUpdate(otherVideo, metadata),
-            () => Task.FromResult(false));
+    public async Task<bool> RefreshFallbackMetadata(OtherVideo otherVideo)
+    {
+        Option<OtherVideoMetadata> maybeMetadata = _fallbackMetadataProvider.GetFallbackMetadata(otherVideo);
+        foreach (OtherVideoMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(otherVideo, metadata);
+        }
 
-    public Task<bool> RefreshFallbackMetadata(Song song) =>
-        _fallbackMetadataProvider.GetFallbackMetadata(song).Match(
-            metadata => ApplyMetadataUpdate(song, metadata),
-            () => Task.FromResult(false));
+        return false;
+    }
 
-    public Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo) =>
-        _fallbackMetadataProvider.GetFallbackMetadata(musicVideo).Match(
-            metadata => ApplyMetadataUpdate(musicVideo, metadata),
-            () => Task.FromResult(false));
+    public async Task<bool> RefreshFallbackMetadata(Song song)
+    {
+        Option<SongMetadata> maybeMetadata = _fallbackMetadataProvider.GetFallbackMetadata(song);
+        foreach (SongMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(song, metadata);
+        }
+
+        return false;
+    }
+
+    public async Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo)
+    {
+        Option<MusicVideoMetadata> maybeMetadata = _fallbackMetadataProvider.GetFallbackMetadata(musicVideo);
+        foreach (MusicVideoMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(musicVideo, metadata);
+        }
+
+        return false;
+    }
 
     public Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
         ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder));
@@ -767,6 +827,10 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         Option<OtherVideoMetadata> maybeMetadata = Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone();
         foreach (OtherVideoMetadata existing in maybeMetadata)
         {
+            existing.ContentRating = metadata.ContentRating;
+            existing.Outline = metadata.Outline;
+            existing.Plot = metadata.Plot;
+            existing.Tagline = metadata.Tagline;
             existing.Title = metadata.Title;
 
             if (existing.DateAdded == SystemTime.MinValueUtc)
@@ -776,6 +840,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
             existing.DateUpdated = metadata.DateUpdated;
             existing.MetadataKind = metadata.MetadataKind;
+            existing.OriginalTitle = metadata.OriginalTitle;
+            existing.ReleaseDate = metadata.ReleaseDate;
+            existing.Year = metadata.Year;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                 ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
@@ -784,10 +851,70 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             bool updated = await UpdateMetadataCollections(
                 existing,
                 metadata,
-                (_, _) => Task.FromResult(false),
+                _otherVideoRepository.AddGenre,
                 _otherVideoRepository.AddTag,
-                (_, _) => Task.FromResult(false),
-                (_, _) => Task.FromResult(false));
+                _otherVideoRepository.AddStudio,
+                _otherVideoRepository.AddActor);
+
+            foreach (Director director in existing.Directors
+                         .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
+            {
+                existing.Directors.Remove(director);
+                if (await _metadataRepository.RemoveDirector(director))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Director director in metadata.Directors
+                         .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
+            {
+                existing.Directors.Add(director);
+                if (await _otherVideoRepository.AddDirector(existing, director))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Writer writer in existing.Writers
+                         .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name)).ToList())
+            {
+                existing.Writers.Remove(writer);
+                if (await _metadataRepository.RemoveWriter(writer))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Writer writer in metadata.Writers
+                         .Filter(w => existing.Writers.All(w2 => w2.Name != w.Name)).ToList())
+            {
+                existing.Writers.Add(writer);
+                if (await _otherVideoRepository.AddWriter(existing, writer))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (MetadataGuid guid in existing.Guids
+                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+            {
+                existing.Guids.Remove(guid);
+                if (await _metadataRepository.RemoveGuid(guid))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (MetadataGuid guid in metadata.Guids
+                         .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+            {
+                existing.Guids.Add(guid);
+                if (await _metadataRepository.AddGuid(existing, guid))
+                {
+                    updated = true;
+                }
+            }
 
             return await _metadataRepository.Update(existing) || updated;
         }
@@ -1066,6 +1193,81 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             _client.Notify(ex);
             return _fallbackMetadataProvider.GetFallbackMetadata(movie);
         }
+    }
+
+    private async Task<Option<OtherVideoMetadata>> LoadOtherVideoMetadata(string nfoFileName)
+    {
+        try
+        {
+            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
+            Either<BaseError, OtherVideoNfo> maybeNfo = await _otherVideoNfoReader.Read(fileStream);
+            foreach (BaseError error in maybeNfo.LeftToSeq())
+            {
+                _logger.LogInformation(
+                    "Failed to read OtherVideo nfo metadata from {Path}: {Error}",
+                    nfoFileName,
+                    error.ToString());
+
+                return None;
+            }
+
+            foreach (OtherVideoNfo nfo in maybeNfo.RightToSeq())
+            {
+                DateTime dateAdded = DateTime.UtcNow;
+                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                var year = 0;
+                if (nfo.Year > 1000)
+                {
+                    year = nfo.Year;
+                }
+
+                DateTime releaseDate = year > 0
+                    ? new DateTimeOffset(year, 1, 1, 0, 0, 0, TimeSpan.Zero).UtcDateTime
+                    : SystemTime.MinValueUtc;
+
+                foreach (DateTime premiered in nfo.Premiered)
+                {
+                    if (year == 0)
+                    {
+                        year = premiered.Year;
+                    }
+
+                    releaseDate = premiered;
+                }
+
+                return new OtherVideoMetadata
+                {
+                    MetadataKind = MetadataKind.Sidecar,
+                    DateAdded = dateAdded,
+                    DateUpdated = dateUpdated,
+                    Title = nfo.Title,
+                    SortTitle = nfo.SortTitle,
+                    Year = year,
+                    ContentRating = nfo.ContentRating,
+                    ReleaseDate = releaseDate,
+                    Plot = nfo.Plot,
+                    Outline = nfo.Outline,
+                    Tagline = nfo.Tagline,
+                    Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                    Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                    Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                    Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
+                    Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
+                    Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
+                    Guids = nfo.UniqueIds
+                        .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                        .ToList()
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex, "Failed to read OtherVideo nfo metadata from {Path}", nfoFileName);
+            _client.Notify(ex);
+        }
+
+        return None;
     }
 
     private static int? GetYear(int? year, Option<DateTime> premiered)

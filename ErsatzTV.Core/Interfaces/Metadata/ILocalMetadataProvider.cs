@@ -11,6 +11,7 @@ public interface ILocalMetadataProvider
     Task<bool> RefreshSidecarMetadata(Episode episode, string nfoFileName);
     Task<bool> RefreshSidecarMetadata(Artist artist, string nfoFileName);
     Task<bool> RefreshSidecarMetadata(MusicVideo musicVideo, string nfoFileName);
+    Task<bool> RefreshSidecarMetadata(OtherVideo otherVideo, string nfoFileName);
     Task<bool> RefreshTagMetadata(Song song, string ffprobePath);
     Task<bool> RefreshFallbackMetadata(Movie movie);
     Task<bool> RefreshFallbackMetadata(Episode episode);

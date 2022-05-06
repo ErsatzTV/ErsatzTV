@@ -19,7 +19,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - [Emby](https://emby.media/) media and metadata
 - Song and music video libraries
 - Pre-roll, mid-roll, post-roll filler options
-- Picture-based subtitle burn-in
+- Subtitle burn-in
 
 ## License
 
