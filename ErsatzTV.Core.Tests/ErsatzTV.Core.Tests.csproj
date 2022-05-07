@@ -43,6 +43,9 @@
       <Content Include="Resources\test.srt">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <Content Include="Resources\Nfo\EpisodeInvalidCharacters.nfo">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

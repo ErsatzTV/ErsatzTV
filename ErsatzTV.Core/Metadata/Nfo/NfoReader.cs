@@ -5,6 +5,17 @@ namespace ErsatzTV.Core.Metadata.Nfo;
 
 public abstract class NfoReader<T>
 {
+    protected XmlReaderSettings Settings =>
+        new()
+        {
+            Async = true,
+            ConformanceLevel = ConformanceLevel.Fragment,
+            ValidationType = ValidationType.None,
+            CheckCharacters = false,
+            IgnoreProcessingInstructions = true,
+            IgnoreComments = true
+        };
+
     protected static async Task ReadStringContent(XmlReader reader, T nfo, Action<T, string> action)
     {
         if (nfo != null)

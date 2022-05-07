@@ -2,6 +2,7 @@
 using Bugsnag;
 using ErsatzTV.Core.Metadata.Nfo;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 
@@ -11,7 +12,9 @@ namespace ErsatzTV.Core.Tests.Metadata.Nfo;
 public class EpisodeNfoReaderTests
 {
     [SetUp]
-    public void SetUp() => _episodeNfoReader = new EpisodeNfoReader(new Mock<IClient>().Object);
+    public void SetUp() => _episodeNfoReader = new EpisodeNfoReader(
+        new Mock<IClient>().Object,
+        new NullLogger<EpisodeNfoReader>());
 
     private EpisodeNfoReader _episodeNfoReader;
 
@@ -402,6 +405,25 @@ public class EpisodeNfoReaderTests
                     new() { Type = "tmdb", Guid = "1830976", Default = true },
                     new() { Type = "tvdb", Guid = "8042515", Default = false }
                 });
+        }
+    }
+
+    [Test]
+    public async Task Invalid_Characters_Should_Abort_And_Return_Nfo()
+    {
+        string sourceFile = Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "Resources",
+            "Nfo",
+            "EpisodeInvalidCharacters.nfo");
+        await using FileStream fs = File.OpenRead(sourceFile);
+        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(fs);
+
+        result.IsRight.Should().BeTrue();
+        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        {
+            list.Count.Should().Be(1);
+            list[0].Title.Should().Be("Test Title");
         }
     }
 }
