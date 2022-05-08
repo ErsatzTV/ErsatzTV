@@ -1,83 +1,166 @@
-﻿using System.Xml;
+﻿using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace ErsatzTV.Core.Metadata.Nfo;
 
 public abstract class NfoReader<T>
 {
-    protected static async Task ReadStringContent(XmlReader reader, T nfo, Action<T, string> action)
-    {
-        if (nfo != null)
+    private static readonly byte[] Buffer = new byte[8 * 1024 * 1024];
+    private static readonly Regex Pattern = new(@"[\p{C}-[\r\n\t]]+");
+
+    protected static readonly XmlReaderSettings Settings =
+        new()
         {
-            string result = await reader.ReadElementContentAsStringAsync();
-            action(nfo, result);
+            Async = true,
+            ConformanceLevel = ConformanceLevel.Fragment,
+            ValidationType = ValidationType.None,
+            CheckCharacters = false,
+            IgnoreProcessingInstructions = true,
+            IgnoreComments = true
+        };
+
+    private readonly ILogger _logger;
+
+    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
+
+    protected NfoReader(RecyclableMemoryStreamManager recyclableMemoryStreamManager, ILogger logger)
+    {
+        _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
+        _logger = logger;
+    }
+
+    protected async Task<Stream> SanitizedStreamForFile(string fileName)
+    {
+        using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, Buffer.Length, true))
+        {
+            while (await fs.ReadAsync(Buffer) > 0)
+            {
+                // read the file
+            }
+
+            string text = Encoding.UTF8.GetString(Buffer);
+            // trim BOM and zero width space, replace controls with replacement character
+            string stripped = Pattern.Replace(text.Trim('\uFEFF', '\u200B'), "\ufffd");
+
+            MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
+            await ms.WriteAsync(Encoding.UTF8.GetBytes(stripped));
+            ms.Position = 0;
+            return ms;
         }
     }
 
-    protected static async Task ReadIntContent(XmlReader reader, T nfo, Action<T, int> action)
+    protected async Task ReadStringContent(XmlReader reader, T nfo, Action<T, string> action)
     {
-        if (nfo != null && int.TryParse(await reader.ReadElementContentAsStringAsync(), out int result))
+        try
         {
-            action(nfo, result);
+            if (nfo != null)
+            {
+                string result = await reader.ReadElementContentAsStringAsync();
+                action(nfo, result);
+            }
+        }
+        catch (XmlException ex)
+        {
+            _logger.LogWarning(ex, "Error reading string content from NFO {ElementName}", reader.Name);
         }
     }
 
-    protected static async Task ReadDateTimeContent(XmlReader reader, T nfo, Action<T, DateTime> action)
+    protected async Task ReadIntContent(XmlReader reader, T nfo, Action<T, int> action)
     {
-        if (nfo != null && DateTime.TryParse(await reader.ReadElementContentAsStringAsync(), out DateTime result))
+        try
         {
-            action(nfo, result);
+            if (nfo != null && int.TryParse(await reader.ReadElementContentAsStringAsync(), out int result))
+            {
+                action(nfo, result);
+            }
+        }
+        catch (XmlException ex)
+        {
+            _logger.LogWarning(ex, "Error reading int content from NFO {ElementName}", reader.Name);
         }
     }
 
-    protected static void ReadActor(XmlReader reader, T nfo, Action<T, ActorNfo> action)
+    protected async Task ReadDateTimeContent(XmlReader reader, T nfo, Action<T, DateTime> action)
     {
-        if (nfo != null)
+        try
         {
-            var actor = new ActorNfo();
-            var element = (XElement)XNode.ReadFrom(reader);
-
-            XElement name = element.Element("name");
-            if (name != null)
+            if (nfo != null && DateTime.TryParse(await reader.ReadElementContentAsStringAsync(), out DateTime result))
             {
-                actor.Name = name.Value;
+                action(nfo, result);
             }
-
-            XElement role = element.Element("role");
-            if (role != null)
-            {
-                actor.Role = role.Value;
-            }
-
-            XElement order = element.Element("order");
-            if (order != null && int.TryParse(order.Value, out int orderValue))
-            {
-                actor.Order = orderValue;
-            }
-
-            XElement thumb = element.Element("thumb");
-            if (thumb != null)
-            {
-                actor.Thumb = thumb.Value;
-            }
-
-            action(nfo, actor);
+        }
+        catch (XmlException ex)
+        {
+            _logger.LogWarning(ex, "Error reading date content from NFO {ElementName}", reader.Name);
         }
     }
 
-    protected static async Task ReadUniqueId(XmlReader reader, T nfo, Action<T, UniqueIdNfo> action)
+    protected void ReadActor(XmlReader reader, T nfo, Action<T, ActorNfo> action)
     {
-        if (nfo != null)
+        try
         {
-            var uniqueId = new UniqueIdNfo();
-            reader.MoveToAttribute("default");
-            uniqueId.Default = bool.TryParse(reader.Value, out bool def) && def;
-            reader.MoveToAttribute("type");
-            uniqueId.Type = reader.Value;
-            reader.MoveToElement();
-            uniqueId.Guid = await reader.ReadElementContentAsStringAsync();
+            if (nfo != null)
+            {
+                var actor = new ActorNfo();
+                var element = (XElement)XNode.ReadFrom(reader);
 
-            action(nfo, uniqueId);
+                XElement name = element.Element("name");
+                if (name != null)
+                {
+                    actor.Name = name.Value;
+                }
+
+                XElement role = element.Element("role");
+                if (role != null)
+                {
+                    actor.Role = role.Value;
+                }
+
+                XElement order = element.Element("order");
+                if (order != null && int.TryParse(order.Value, out int orderValue))
+                {
+                    actor.Order = orderValue;
+                }
+
+                XElement thumb = element.Element("thumb");
+                if (thumb != null)
+                {
+                    actor.Thumb = thumb.Value;
+                }
+
+                action(nfo, actor);
+            }
+        }
+        catch (XmlException ex)
+        {
+            _logger.LogWarning(ex, "Error reading actor content from NFO {ElementName}", reader.Name);
+        }
+    }
+
+    protected async Task ReadUniqueId(XmlReader reader, T nfo, Action<T, UniqueIdNfo> action)
+    {
+        try
+        {
+            if (nfo != null)
+            {
+                var uniqueId = new UniqueIdNfo();
+                reader.MoveToAttribute("default");
+                uniqueId.Default = bool.TryParse(reader.Value, out bool def) && def;
+                reader.MoveToAttribute("type");
+                uniqueId.Type = reader.Value;
+                reader.MoveToElement();
+                uniqueId.Guid = await reader.ReadElementContentAsStringAsync();
+
+                action(nfo, uniqueId);
+            }
+        }
+        catch (XmlException ex)
+        {
+            _logger.LogWarning(ex, "Error reading uniqueid content from NFO {ElementName}", reader.Name);
         }
     }
 }

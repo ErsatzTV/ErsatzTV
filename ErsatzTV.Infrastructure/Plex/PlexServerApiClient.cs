@@ -13,13 +13,16 @@ namespace ErsatzTV.Infrastructure.Plex;
 public class PlexServerApiClient : IPlexServerApiClient
 {
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly PlexEtag _plexEtag;
     private readonly ILogger<PlexServerApiClient> _logger;
 
     public PlexServerApiClient(
         IFallbackMetadataProvider fallbackMetadataProvider,
+        PlexEtag plexEtag,
         ILogger<PlexServerApiClient> logger)
     {
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _plexEtag = plexEtag;
         _logger = logger;
     }
 
@@ -344,7 +347,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         var movie = new PlexMovie
         {
-            Etag = PlexEtag.ForMovie(response),
+            Etag = _plexEtag.ForMovie(response),
             Key = response.Key,
             MovieMetadata = new List<MovieMetadata> { metadata },
             MediaVersions = new List<MediaVersion> { version },
@@ -530,7 +533,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var show = new PlexShow
         {
             Key = response.Key,
-            Etag = PlexEtag.ForShow(response),
+            Etag = _plexEtag.ForShow(response),
             ShowMetadata = new List<ShowMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
         };
@@ -701,7 +704,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var season = new PlexSeason
         {
             Key = response.Key,
-            Etag = PlexEtag.ForSeason(response),
+            Etag = _plexEtag.ForSeason(response),
             SeasonNumber = response.Index,
             SeasonMetadata = new List<SeasonMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
@@ -742,7 +745,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var episode = new PlexEpisode
         {
             Key = response.Key,
-            Etag = PlexEtag.ForEpisode(response),
+            Etag = _plexEtag.ForEpisode(response),
             EpisodeMetadata = new List<EpisodeMetadata> { metadata },
             MediaVersions = new List<MediaVersion> { version },
             TraktListItems = new List<TraktListItem>()

@@ -4,5 +4,5 @@ namespace ErsatzTV.Core.Interfaces.Metadata.Nfo;
 
 public interface IArtistNfoReader
 {
-    Task<Either<BaseError, ArtistNfo>> Read(Stream input);
+    Task<Either<BaseError, ArtistNfo>> ReadFromFile(string fileName);
 }

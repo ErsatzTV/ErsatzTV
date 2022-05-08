@@ -4,5 +4,5 @@ namespace ErsatzTV.Core.Interfaces.Metadata.Nfo;
 
 public interface IMovieNfoReader
 {
-    Task<Either<BaseError, MovieNfo>> Read(Stream input);
+    Task<Either<BaseError, MovieNfo>> ReadFromFile(string fileName);
 }
