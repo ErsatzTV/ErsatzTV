@@ -108,9 +108,7 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
 
             return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
         }
-        catch (XmlException ex) when (ex.Message.Contains(
-                                          "invalid character",
-                                          StringComparison.InvariantCultureIgnoreCase))
+        catch (XmlException)
         {
             _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
             return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
