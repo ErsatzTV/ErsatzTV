@@ -2,6 +2,8 @@
 using Bugsnag;
 using ErsatzTV.Core.Metadata.Nfo;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.IO;
 using Moq;
 using NUnit.Framework;
 
@@ -11,7 +13,10 @@ namespace ErsatzTV.Core.Tests.Metadata.Nfo;
 public class MusicVideoNfoReaderTests
 {
     [SetUp]
-    public void SetUp() => _musicVideoNfoReader = new MusicVideoNfoReader(new Mock<IClient>().Object);
+    public void SetUp() => _musicVideoNfoReader = new MusicVideoNfoReader(
+        new RecyclableMemoryStreamManager(),
+        new Mock<IClient>().Object,
+        new NullLogger<MusicVideoNfoReader>());
 
     private MusicVideoNfoReader _musicVideoNfoReader;
 

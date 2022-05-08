@@ -3,6 +3,7 @@ using Bugsnag;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace ErsatzTV.Core.Metadata.Nfo;
 
@@ -11,13 +12,26 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
     private readonly IClient _client;
     private readonly ILogger<EpisodeNfoReader> _logger;
 
-    public EpisodeNfoReader(IClient client, ILogger<EpisodeNfoReader> logger)
+    public EpisodeNfoReader(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IClient client,
+        ILogger<EpisodeNfoReader> logger)
+        : base(recyclableMemoryStreamManager, logger)
     {
         _client = client;
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, List<TvShowEpisodeNfo>>> Read(Stream input)
+    public async Task<Either<BaseError, List<TvShowEpisodeNfo>>> ReadFromFile(string fileName)
+    {
+        // ReSharper disable once ConvertToUsingDeclaration
+        await using (Stream s = await SanitizedStreamForFile(fileName))
+        {
+            return await Read(s);
+        }
+    }
+
+    internal async Task<Either<BaseError, List<TvShowEpisodeNfo>>> Read(Stream input)
     {
         var result = new List<TvShowEpisodeNfo>();
 

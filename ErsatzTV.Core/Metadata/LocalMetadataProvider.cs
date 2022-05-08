@@ -231,8 +231,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Either<BaseError, MusicVideoNfo> maybeNfo = await _musicVideoNfoReader.Read(fileStream);
+            Either<BaseError, MusicVideoNfo> maybeNfo = await _musicVideoNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -976,8 +975,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Either<BaseError, TvShowNfo> maybeNfo = await _tvShowNfoReader.Read(fileStream);
+            Either<BaseError, TvShowNfo> maybeNfo = await _tvShowNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -1027,8 +1025,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Either<BaseError, ArtistNfo> maybeNfo = await _artistNfoReader.Read(fileStream);
+            Either<BaseError, ArtistNfo> maybeNfo = await _artistNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -1067,8 +1064,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Either<BaseError, List<TvShowEpisodeNfo>> maybeNfo = await _episodeNfoReader.Read(fileStream);
+            Either<BaseError, List<TvShowEpisodeNfo>> maybeNfo = await _episodeNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -1123,8 +1119,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Either<BaseError, MovieNfo> maybeNfo = await _movieNfoReader.Read(fileStream);
+            Either<BaseError, MovieNfo> maybeNfo = await _movieNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -1199,8 +1194,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-            Either<BaseError, OtherVideoNfo> maybeNfo = await _otherVideoNfoReader.Read(fileStream);
+            Either<BaseError, OtherVideoNfo> maybeNfo = await _otherVideoNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(

@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Changed
+- Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing
 - Store partial (incomplete) NFO metadata results when invalid XML is encountered
   - Previously, no metadata would be stored if the XML within the NFO failed to validate
 

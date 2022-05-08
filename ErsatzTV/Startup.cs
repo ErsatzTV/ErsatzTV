@@ -56,6 +56,7 @@ using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IO;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -322,6 +323,7 @@ public class Startup
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();
+        services.AddSingleton<RecyclableMemoryStreamManager>();
         AddChannel<IBackgroundServiceRequest>(services);
         AddChannel<IPlexBackgroundServiceRequest>(services);
         AddChannel<IJellyfinBackgroundServiceRequest>(services);

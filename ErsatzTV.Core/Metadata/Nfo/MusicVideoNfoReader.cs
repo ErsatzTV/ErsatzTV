@@ -2,22 +2,43 @@
 using Bugsnag;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace ErsatzTV.Core.Metadata.Nfo;
 
 public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReader
 {
     private readonly IClient _client;
+    private readonly ILogger<MusicVideoNfoReader> _logger;
 
-    public MusicVideoNfoReader(IClient client) => _client = client;
-
-    public async Task<Either<BaseError, MusicVideoNfo>> Read(Stream input)
+    public MusicVideoNfoReader(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IClient client,
+        ILogger<MusicVideoNfoReader> logger)
+        : base(recyclableMemoryStreamManager, logger)
     {
+        _client = client;
+        _logger = logger;
+    }
+
+    public async Task<Either<BaseError, MusicVideoNfo>> ReadFromFile(string fileName)
+    {
+        // ReSharper disable once ConvertToUsingDeclaration
+        await using (Stream s = await SanitizedStreamForFile(fileName))
+        {
+            return await Read(s);
+        }
+    }
+
+    internal async Task<Either<BaseError, MusicVideoNfo>> Read(Stream input)
+    {
+        MusicVideoNfo nfo = null;
+
         try
         {
             var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
             using var reader = XmlReader.Create(input, settings);
-            MusicVideoNfo nfo = null;
             var done = false;
 
             while (!done && await reader.ReadAsync())
@@ -85,6 +106,13 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                 }
             }
 
+            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+        }
+        catch (XmlException ex) when (ex.Message.Contains(
+                                          "invalid character",
+                                          StringComparison.InvariantCultureIgnoreCase))
+        {
+            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
             return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
         }
         catch (Exception ex)

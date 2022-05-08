@@ -2,9 +2,11 @@
 using Bugsnag;
 using ErsatzTV.Core.Metadata.Nfo;
 using FluentAssertions;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 using Moq;
 using NUnit.Framework;
+using Serilog;
 
 namespace ErsatzTV.Core.Tests.Metadata.Nfo;
 
@@ -13,8 +15,23 @@ public class EpisodeNfoReaderTests
 {
     [SetUp]
     public void SetUp() => _episodeNfoReader = new EpisodeNfoReader(
+        new RecyclableMemoryStreamManager(),
         new Mock<IClient>().Object,
-        new NullLogger<EpisodeNfoReader>());
+        _logger);
+
+    private readonly ILogger<EpisodeNfoReader> _logger;
+
+    public EpisodeNfoReaderTests()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+
+        _logger = loggerFactory.CreateLogger<EpisodeNfoReader>();
+    }
 
     private EpisodeNfoReader _episodeNfoReader;
 
@@ -416,8 +433,7 @@ public class EpisodeNfoReaderTests
             "Resources",
             "Nfo",
             "EpisodeInvalidCharacters.nfo");
-        await using FileStream fs = File.OpenRead(sourceFile);
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(fs);
+        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.ReadFromFile(sourceFile);
 
         result.IsRight.Should().BeTrue();
         foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
