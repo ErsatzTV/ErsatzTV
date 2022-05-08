@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
+using Microsoft.IO;
 using Serilog;
 
 namespace ErsatzTV.Core.Iptv;
@@ -12,10 +13,16 @@ public class ChannelGuide
 {
     private readonly List<Channel> _channels;
     private readonly string _host;
+    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly string _scheme;
 
-    public ChannelGuide(string scheme, string host, List<Channel> channels)
+    public ChannelGuide(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        string scheme,
+        string host,
+        List<Channel> channels)
     {
+        _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _scheme = scheme;
         _host = host;
         _channels = channels;
@@ -23,7 +30,7 @@ public class ChannelGuide
 
     public string ToXml()
     {
-        using var ms = new MemoryStream();
+        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var xml = XmlWriter.Create(ms);
         xml.WriteStartDocument();
 

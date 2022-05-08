@@ -4,5 +4,5 @@ namespace ErsatzTV.Core.Interfaces.Metadata.Nfo;
 
 public interface ITvShowNfoReader
 {
-    Task<Either<BaseError, TvShowNfo>> Read(Stream input);
+    Task<Either<BaseError, TvShowNfo>> ReadFromFile(string fileName);
 }

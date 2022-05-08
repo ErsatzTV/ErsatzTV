@@ -2,22 +2,43 @@
 using Bugsnag;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace ErsatzTV.Core.Metadata.Nfo;
 
 public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
 {
     private readonly IClient _client;
+    private readonly ILogger<MovieNfoReader> _logger;
 
-    public MovieNfoReader(IClient client) => _client = client;
-
-    public async Task<Either<BaseError, MovieNfo>> Read(Stream input)
+    public MovieNfoReader(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IClient client,
+        ILogger<MovieNfoReader> logger)
+        : base(recyclableMemoryStreamManager, logger)
     {
+        _client = client;
+        _logger = logger;
+    }
+
+    public async Task<Either<BaseError, MovieNfo>> ReadFromFile(string fileName)
+    {
+        // ReSharper disable once ConvertToUsingDeclaration
+        await using (Stream s = await SanitizedStreamForFile(fileName))
+        {
+            return await Read(s);
+        }
+    }
+
+    internal async Task<Either<BaseError, MovieNfo>> Read(Stream input)
+    {
+        MovieNfo nfo = null;
+
         try
         {
             var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
             using var reader = XmlReader.Create(input, settings);
-            MovieNfo nfo = null;
             var done = false;
 
             while (!done && await reader.ReadAsync())
@@ -103,6 +124,13 @@ public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
                 }
             }
 
+            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+        }
+        catch (XmlException ex) when (ex.Message.Contains(
+                                          "invalid character",
+                                          StringComparison.InvariantCultureIgnoreCase))
+        {
+            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
             return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
         }
         catch (Exception ex)

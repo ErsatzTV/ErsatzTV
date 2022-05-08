@@ -2,23 +2,42 @@
 using Bugsnag;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace ErsatzTV.Core.Metadata.Nfo;
 
 public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
 {
     private readonly IClient _client;
+    private readonly ILogger<EpisodeNfoReader> _logger;
 
-    public EpisodeNfoReader(IClient client) => _client = client;
-
-    public async Task<Either<BaseError, List<TvShowEpisodeNfo>>> Read(Stream input)
+    public EpisodeNfoReader(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IClient client,
+        ILogger<EpisodeNfoReader> logger)
+        : base(recyclableMemoryStreamManager, logger)
     {
+        _client = client;
+        _logger = logger;
+    }
+
+    public async Task<Either<BaseError, List<TvShowEpisodeNfo>>> ReadFromFile(string fileName)
+    {
+        // ReSharper disable once ConvertToUsingDeclaration
+        await using (Stream s = await SanitizedStreamForFile(fileName))
+        {
+            return await Read(s);
+        }
+    }
+
+    internal async Task<Either<BaseError, List<TvShowEpisodeNfo>>> Read(Stream input)
+    {
+        var result = new List<TvShowEpisodeNfo>();
+
         try
         {
-            var result = new List<TvShowEpisodeNfo>();
-
-            var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
-            using var reader = XmlReader.Create(input, settings);
+            using var reader = XmlReader.Create(input, Settings);
             TvShowEpisodeNfo nfo = null;
 
             while (await reader.ReadAsync())
@@ -36,6 +55,8 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
                                     Writers = new List<string>(),
                                     Directors = new List<string>()
                                 };
+                                // immediately add so we have something to return if we encounter invalid characters
+                                result.Add(nfo);
                                 break;
                             case "title":
                                 await ReadStringContent(reader, nfo, (episode, title) => episode.Title = title);
@@ -88,22 +109,16 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
                         }
 
                         break;
-                    case XmlNodeType.EndElement:
-                        switch (reader.Name.ToLowerInvariant())
-                        {
-                            case "episodedetails":
-                                if (nfo != null)
-                                {
-                                    result.Add(nfo);
-                                }
-
-                                break;
-                        }
-
-                        break;
                 }
             }
 
+            return result;
+        }
+        catch (XmlException ex) when (ex.Message.Contains(
+                                          "invalid character",
+                                          StringComparison.InvariantCultureIgnoreCase))
+        {
+            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
             return result;
         }
         catch (Exception ex)

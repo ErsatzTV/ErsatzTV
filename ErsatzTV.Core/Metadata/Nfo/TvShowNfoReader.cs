@@ -2,22 +2,43 @@
 using Bugsnag;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
 namespace ErsatzTV.Core.Metadata.Nfo;
 
 public class TvShowNfoReader : NfoReader<TvShowNfo>, ITvShowNfoReader
 {
     private readonly IClient _client;
+    private readonly ILogger<TvShowNfoReader> _logger;
 
-    public TvShowNfoReader(IClient client) => _client = client;
-
-    public async Task<Either<BaseError, TvShowNfo>> Read(Stream input)
+    public TvShowNfoReader(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IClient client,
+        ILogger<TvShowNfoReader> logger)
+        : base(recyclableMemoryStreamManager, logger)
     {
+        _client = client;
+        _logger = logger;
+    }
+
+    public async Task<Either<BaseError, TvShowNfo>> ReadFromFile(string fileName)
+    {
+        // ReSharper disable once ConvertToUsingDeclaration
+        await using (Stream s = await SanitizedStreamForFile(fileName))
+        {
+            return await Read(s);
+        }
+    }
+
+    internal async Task<Either<BaseError, TvShowNfo>> Read(Stream input)
+    {
+        TvShowNfo nfo = null;
+
         try
         {
             var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
             using var reader = XmlReader.Create(input, settings);
-            TvShowNfo nfo = null;
             var done = false;
 
             while (!done && await reader.ReadAsync())
@@ -89,6 +110,13 @@ public class TvShowNfoReader : NfoReader<TvShowNfo>, ITvShowNfoReader
                 }
             }
 
+            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+        }
+        catch (XmlException ex) when (ex.Message.Contains(
+                                          "invalid character",
+                                          StringComparison.InvariantCultureIgnoreCase))
+        {
+            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
             return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
         }
         catch (Exception ex)

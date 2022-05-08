@@ -2,8 +2,11 @@
 using Bugsnag;
 using ErsatzTV.Core.Metadata.Nfo;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 using Moq;
 using NUnit.Framework;
+using Serilog;
 
 namespace ErsatzTV.Core.Tests.Metadata.Nfo;
 
@@ -11,7 +14,24 @@ namespace ErsatzTV.Core.Tests.Metadata.Nfo;
 public class ArtistNfoReaderTests
 {
     [SetUp]
-    public void SetUp() => _artistNfoReader = new ArtistNfoReader(new Mock<IClient>().Object);
+    public void SetUp() => _artistNfoReader = new ArtistNfoReader(
+        new RecyclableMemoryStreamManager(),
+        new Mock<IClient>().Object,
+        _logger);
+
+    private readonly ILogger<ArtistNfoReader> _logger;
+
+    public ArtistNfoReaderTests()
+    {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+
+        _logger = loggerFactory.CreateLogger<ArtistNfoReader>();
+    }
 
     private ArtistNfoReader _artistNfoReader;
 
@@ -150,6 +170,42 @@ Joel attended Hicksville High School in 1967, but he did not graduate with his c
         foreach (ArtistNfo nfo in result.RightToSeq())
         {
             nfo.Disambiguation.Should().Be("Test Disambiguation");
+        }
+    }
+
+    [Test]
+    public async Task Invalid_Characters_End_Should_Abort_And_Return_Nfo()
+    {
+        string sourceFile = Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "Resources",
+            "Nfo",
+            "ArtistInvalidCharacters1.nfo");
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.ReadFromFile(sourceFile);
+
+        result.IsRight.Should().BeTrue();
+        foreach (ArtistNfo nfo in result.RightToSeq())
+        {
+            nfo.Name.Should().Be("Test Name");
+        }
+    }
+
+    [Test]
+    public async Task Invalid_Characters_Middle_Should_Continue_And_Return_Nfo()
+    {
+        string sourceFile = Path.Combine(
+            TestContext.CurrentContext.TestDirectory,
+            "Resources",
+            "Nfo",
+            "ArtistInvalidCharacters2.nfo");
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.ReadFromFile(sourceFile);
+
+        result.IsRight.Should().BeTrue();
+        foreach (ArtistNfo nfo in result.RightToSeq())
+        {
+            nfo.Name.Should().Be("Test Name");
+            nfo.Moods.Should().BeEquivalentTo(new List<string> { "Test Mood" });
+            nfo.Styles.Count.Should().Be(1);
         }
     }
 
