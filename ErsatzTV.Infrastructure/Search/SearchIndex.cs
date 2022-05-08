@@ -54,6 +54,7 @@ public sealed class SearchIndex : ISearchIndex
     private const string ShowTitleField = "show_title";
     private const string ShowGenreField = "show_genre";
     private const string ShowTagField = "show_tag";
+    private const string MetadataKindField = "metadata_kind";
 
     internal const string MinutesField = "minutes";
     internal const string HeightField = "height";
@@ -87,7 +88,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 24;
+    public int Version => 25;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -363,7 +364,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, movie.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, movie.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, movie.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, movie.MediaVersions);
@@ -500,7 +502,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, show.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, show.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, show.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForShow(show);
@@ -670,7 +673,8 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(LibraryNameField, artist.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(LibraryIdField, artist.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
@@ -722,7 +726,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, musicVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, musicVideo.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, musicVideo.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
@@ -818,7 +823,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, episode.State.ToString(), Field.Store.NO),
                     new Int32Field(SeasonNumberField, episode.Season?.SeasonNumber ?? 0, Field.Store.NO),
-                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO)
+                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 // add some show fields to help filter episodes within a particular show
@@ -938,7 +944,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, otherVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, otherVideo.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, otherVideo.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
@@ -1036,7 +1043,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, song.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, song.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, song.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, song.MediaVersions);

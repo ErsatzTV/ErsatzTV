@@ -114,9 +114,7 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
 
             return result;
         }
-        catch (XmlException ex) when (ex.Message.Contains(
-                                          "invalid character",
-                                          StringComparison.InvariantCultureIgnoreCase))
+        catch (XmlException)
         {
             _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
             return result;
