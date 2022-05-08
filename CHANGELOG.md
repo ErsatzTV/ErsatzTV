@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Reduce memory use due to library scan operations
+
 ### Changed
 - Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing
 - Store partial (incomplete) NFO metadata results when invalid XML is encountered

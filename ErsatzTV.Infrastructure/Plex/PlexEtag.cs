@@ -1,13 +1,21 @@
 ﻿using System.Security.Cryptography;
 using ErsatzTV.Infrastructure.Plex.Models;
+using Microsoft.IO;
 
 namespace ErsatzTV.Infrastructure.Plex;
 
-public static class PlexEtag
+public class PlexEtag
 {
-    public static string ForMovie(PlexMetadataResponse response)
+    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
+
+    public PlexEtag(RecyclableMemoryStreamManager recyclableMemoryStreamManager)
     {
-        using var ms = new MemoryStream();
+        _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
+    }
+
+    public string ForMovie(PlexMetadataResponse response)
+    {
+        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var bw = new BinaryWriter(ms);
 
         // video key
@@ -80,9 +88,9 @@ public static class PlexEtag
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
 
-    public static string ForShow(PlexMetadataResponse response)
+    public string ForShow(PlexMetadataResponse response)
     {
-        using var ms = new MemoryStream();
+        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var bw = new BinaryWriter(ms);
 
         // video key
@@ -127,9 +135,9 @@ public static class PlexEtag
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
 
-    public static string ForSeason(PlexXmlMetadataResponse response)
+    public string ForSeason(PlexXmlMetadataResponse response)
     {
-        using var ms = new MemoryStream();
+        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var bw = new BinaryWriter(ms);
 
         // video key
@@ -165,9 +173,9 @@ public static class PlexEtag
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
 
-    public static string ForEpisode(PlexXmlMetadataResponse response)
+    public string ForEpisode(PlexXmlMetadataResponse response)
     {
-        using var ms = new MemoryStream();
+        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var bw = new BinaryWriter(ms);
 
         // video key

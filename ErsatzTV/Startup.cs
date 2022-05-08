@@ -419,6 +419,8 @@ public class Startup
         services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
         services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
 
+        services.AddScoped<PlexEtag>();
+
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
         // run-once/blocking startup services
