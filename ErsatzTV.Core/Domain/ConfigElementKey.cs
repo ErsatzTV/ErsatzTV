@@ -33,4 +33,5 @@ public class ConfigElementKey
     public static ConfigElementKey FillerPresetsPageSize => new("pages.filler_presets.page_size");
     public static ConfigElementKey LibraryRefreshInterval => new("scanner.library_refresh_interval");
     public static ConfigElementKey PlayoutDaysToBuild => new("playout.days_to_build");
+    public static ConfigElementKey PlayoutSkipMissingItems => new("playout.skip_missing_items");
 }

@@ -5,8 +5,8 @@
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Watermarks
 @using System.Globalization
-@using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Core.Domain.Filler
 @implements IDisposable
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
@@ -147,12 +147,19 @@
                 <MudForm @bind-IsValid="@_playoutSuccess">
                     <MudTextField T="int"
                                   Label="Days To Build"
-                                  @bind-Value="_playoutDaysToBuild"
+                                  @bind-Value="_playoutSettings.DaysToBuild"
                                   Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
                                   Required="true"
                                   RequiredError="Days to build is required!"
                                   Adornment="Adornment.End"
                                   AdornmentText="Days"/>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
+                            <MudCheckBox Label="Skip Missing Items"
+                                         @bind-Checked="_playoutSettings.SkipMissingItems"
+                                         For="@(() => _playoutSettings.SkipMissingItems)"/>
+                        </MudTooltip>
+                    </MudElement>
                 </MudForm>
             </MudCardContent>
             <MudCardActions>
@@ -176,7 +183,7 @@
     private List<FillerPresetViewModel> _fillerPresets;
     private int _tunerCount;
     private int _libraryRefreshInterval;
-    private int _playoutDaysToBuild;
+    private PlayoutSettingsViewModel _playoutSettings;
 
     public void Dispose()
     {
@@ -198,8 +205,8 @@
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
         _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
         _scannerSuccess = _libraryRefreshInterval > 0;
-        _playoutDaysToBuild = await _mediator.Send(new GetPlayoutDaysToBuild(), _cts.Token);
-        _playoutSuccess = _playoutDaysToBuild > 0;
+        _playoutSettings = await _mediator.Send(new GetPlayoutSettings(), _cts.Token);
+        _playoutSuccess = _playoutSettings.DaysToBuild > 0;
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
@@ -257,7 +264,7 @@
 
     private async Task SavePlayoutSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutDaysToBuild(_playoutDaysToBuild), _cts.Token);
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
         result.Match(
             Left: error =>
             {
