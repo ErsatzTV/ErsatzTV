@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add `metadata_kind` field to search index to allow searching for items with a particular metdata source
   - Valid metadata kinds are `fallback`, `sidecar` (NFO), `external` (from a media server) and `embedded` (songs)
+- Add autocomplete functionality to search bar to quickly navigate to channels, ffmpeg profiles, collections and schedules by name
 
 ### Changed
 - Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing

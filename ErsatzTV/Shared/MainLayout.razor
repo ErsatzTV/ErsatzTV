@@ -1,13 +1,16 @@
-﻿@using System.Reflection
+﻿@inherits LayoutComponentBase
+@using System.Reflection
 @using ErsatzTV.Extensions
-@inherits LayoutComponentBase
+@using ErsatzTV.Application.Search
+@implements IDisposable
 @inject NavigationManager _navigationManager
+@inject IMediator _mediator
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
 <MudSnackbarProvider/>
 
-<MudLayout>
+<MudLayout @onclick="@(() => _isOpen = false)">
     <MudAppBar Elevation="1" Class="app-bar">
         <div style="min-width: 240px">
             <a href="/">
@@ -16,12 +19,46 @@
         </div>
         <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
             <MudTextField T="string"
-                          @bind-Value="@_query"
+                          @bind-Value="@Query"
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           Adornment="Adornment.Start"
                           Variant="Variant.Outlined"
-                          Class="search-bar">
+                          Immediate="true"
+                          Class="search-bar"
+                          @onclick="@(() => _isOpen = true)"
+                          OnKeyUp="OnKeyUp">
             </MudTextField>
+            <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="true">
+                @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
+                {
+                    var matches = _searchTargets.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                    if (matches.Any())
+                    {
+                        <MudList Clickable="true" Dense="true">
+                            @foreach (SearchTargetViewModel searchTarget in matches)
+                            {
+                                <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
+                                    <MudText Typo="Typo.body1">@searchTarget.Name</MudText>
+                                    <MudText Typo="Typo.subtitle1" Class="mud-text-disabled">
+                                        @(searchTarget.Kind switch
+                                        {
+                                            SearchTargetKind.Channel => "Channel",
+                                            SearchTargetKind.FFmpegProfile => "FFmpeg Profile",
+                                            SearchTargetKind.ChannelWatermark => "Channel Watermark",
+                                            SearchTargetKind.Collection => "Collection",
+                                            SearchTargetKind.MultiCollection => "Multi Collection",
+                                            SearchTargetKind.SmartCollection => "Smart Collection",
+                                            SearchTargetKind.Schedule => "Schedule",
+                                            SearchTargetKind.ScheduleItems => "Schedule Items",
+                                            _ => string.Empty
+                                            })
+                                    </MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
+                }
+            </MudPopover>
         </EditForm>
         <MudSpacer/>
         <MudLink Color="Color.Info" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
@@ -81,11 +118,21 @@
 @code {
     private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
 
+    private readonly CancellationTokenSource _cts = new();
+
     private string _query;
 
     private record SearchModel;
 
     private readonly SearchModel _dummyModel = new();
+    private bool _isOpen;
+    private List<SearchTargetViewModel> _searchTargets;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private MudTheme _ersatzTvTheme => new()
     {
@@ -110,10 +157,31 @@
         }
     };
 
+    private string Query
+    {
+        get => _query;
+        set
+        {
+            if (_query == value)
+            {
+                return;
+            }
+
+            _query = value;
+            _isOpen = true;
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
         _query = _navigationManager.Uri.GetSearchQuery();
+
+        if (_searchTargets is null)
+        {
+            _searchTargets = await _mediator.Send(new QuerySearchTargets(), _cts.Token);
+        }
     }
 
     private void PerformSearch()
@@ -121,5 +189,38 @@
         _navigationManager.NavigateTo(_query.GetRelativeSearchQuery(), true);
         StateHasChanged();
     }
+
+    private void OnKeyUp(KeyboardEventArgs args)
+    {
+        switch (args.Key)
+        {
+            case "Enter":
+            case "NumpadEnter":
+                _isOpen = false;
+                break;
+            case "Escape":
+                _isOpen = false;
+                break;
+        }
+    }
+
+    private void NavigateTo(SearchTargetViewModel searchTarget) =>
+    // need to force smart collections to navigate since the query string is all that differs
+        _navigationManager.NavigateTo(UrlFor(searchTarget), searchTarget.Kind is SearchTargetKind.SmartCollection);
+
+    private string UrlFor(SearchTargetViewModel searchTarget) =>
+        searchTarget.Kind switch
+        {
+            SearchTargetKind.Channel => $"channels/{searchTarget.Id}",
+            SearchTargetKind.FFmpegProfile => $"ffmpeg/{searchTarget.Id}",
+            SearchTargetKind.ChannelWatermark => $"watermarks/{searchTarget.Id}",
+            SearchTargetKind.Collection => $"media/collections/{searchTarget.Id}",
+            SearchTargetKind.MultiCollection => $"media/multi-collections/{searchTarget.Id}/edit",
+            SearchTargetKind.SmartCollection when searchTarget is SmartCollectionSearchTargetViewModel sc =>
+                sc.Query.GetRelativeSearchQuery(),
+            SearchTargetKind.Schedule => $"schedules/{searchTarget.Id}",
+            SearchTargetKind.ScheduleItems => $"schedules/{searchTarget.Id}/items",
+            _ => null
+            };
 
 }
