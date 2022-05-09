@@ -71,6 +71,180 @@ public class PlayoutBuilderTests
         }
 
         [Test]
+        [Timeout(2000)]
+        public async Task OnlyFileNotFoundItem_Should_Abort()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(1), DateTime.Today)
+            };
+
+            mediaItems[0].State = MediaItemState.FileNotFound;
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            configRepo.Setup(
+                    repo => repo.GetValue<bool>(
+                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
+                .ReturnsAsync(Some(true));
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset);
+
+            configRepo.Verify();
+
+            result.Items.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task FileNotFoundItem_Should_BeSkipped()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
+                TestMovie(2, TimeSpan.FromHours(6), DateTime.Today)
+            };
+
+            mediaItems[0].State = MediaItemState.FileNotFound;
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            configRepo.Setup(
+                    repo => repo.GetValue<bool>(
+                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
+                .ReturnsAsync(Some(true));
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            configRepo.Verify();
+
+            result.Items.Count.Should().Be(1);
+            result.Items.Head().MediaItemId.Should().Be(2);
+            result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+        }
+
+        [Test]
+        [Timeout(2000)]
+        public async Task OnlyUnavailableItem_Should_Abort()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(1), DateTime.Today)
+            };
+
+            mediaItems[0].State = MediaItemState.Unavailable;
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            configRepo.Setup(
+                    repo => repo.GetValue<bool>(
+                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
+                .ReturnsAsync(Some(true));
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset);
+
+            configRepo.Verify();
+
+            result.Items.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task UnavailableItem_Should_BeSkipped()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
+                TestMovie(2, TimeSpan.FromHours(6), DateTime.Today)
+            };
+
+            mediaItems[0].State = MediaItemState.Unavailable;
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            configRepo.Setup(
+                    repo => repo.GetValue<bool>(
+                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
+                .ReturnsAsync(Some(true));
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            configRepo.Verify();
+
+            result.Items.Count.Should().Be(1);
+            result.Items.Head().MediaItemId.Should().Be(2);
+            result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+        }
+
+        [Test]
+        public async Task FileNotFound_Should_NotBeSkippedIfConfigured()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(6), DateTime.Today)
+            };
+
+            mediaItems[0].State = MediaItemState.FileNotFound;
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            configRepo.Setup(
+                    repo => repo.GetValue<bool>(
+                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
+                .ReturnsAsync(Some(false));
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(1);
+            result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+        }
+
+        [Test]
+        public async Task Unavailable_Should_NotBeSkippedIfConfigured()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(6), DateTime.Today)
+            };
+
+            mediaItems[0].State = MediaItemState.Unavailable;
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            configRepo.Setup(
+                    repo => repo.GetValue<bool>(
+                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
+                .ReturnsAsync(Some(false));
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(1);
+            result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+        }
+
+        [Test]
         public async Task InitialFlood_Should_StartAtMidnight()
         {
             var mediaItems = new List<MediaItem>
@@ -2142,11 +2316,20 @@ public class PlayoutBuilderTests
             MovieMetadata = new List<MovieMetadata> { new() { ReleaseDate = aired } },
             MediaVersions = new List<MediaVersion>
             {
-                new() { Duration = duration }
+                new()
+                {
+                    Duration = duration, MediaFiles = new List<MediaFile>
+                    {
+                        new() { Path = $"/fake/path/{id}" }
+                    }
+                }
             }
         };
 
-    private TestData TestDataFloodForItems(List<MediaItem> mediaItems, PlaybackOrder playbackOrder)
+    private TestData TestDataFloodForItems(
+        List<MediaItem> mediaItems,
+        PlaybackOrder playbackOrder,
+        Mock<IConfigElementRepository> configMock = null)
     {
         var mediaCollection = new Collection
         {
@@ -2154,7 +2337,8 @@ public class PlayoutBuilderTests
             MediaItems = mediaItems
         };
 
-        var configRepo = new Mock<IConfigElementRepository>();
+        Mock<IConfigElementRepository> configRepo = configMock ?? new Mock<IConfigElementRepository>();
+
         var collectionRepo = new FakeMediaCollectionRepository(Map((mediaCollection.Id, mediaItems)));
         var televisionRepo = new FakeTelevisionRepository();
         var artistRepo = new Mock<IArtistRepository>();
