@@ -31,6 +31,7 @@ public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Eit
                 Duration = request.Duration,
                 Count = request.Count,
                 PadToNearestMinute = request.PadToNearestMinute,
+                AllowWatermarks = request.AllowWatermarks,
                 CollectionType = request.CollectionType,
                 CollectionId = request.CollectionId,
                 MediaItemId = request.MediaItemId,

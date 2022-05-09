@@ -22,6 +22,7 @@ public class PlayoutItem
     public string ChapterTitle { get; set; }
     public ChannelWatermark Watermark { get; set; }
     public int? WatermarkId { get; set; }
+    public bool DisableWatermarks { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
     public ChannelSubtitleMode? SubtitleMode { get; set; }

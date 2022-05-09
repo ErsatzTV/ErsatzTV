@@ -93,7 +93,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
                     FillerKind = FillerKind.Tail,
-                    GuideGroup = nextState.NextGuideGroup
+                    GuideGroup = nextState.NextGuideGroup,
+                    DisableWatermarks = !scheduleItem.TailFiller.AllowWatermarks
                 };
 
                 newItems.Add(playoutItem);
@@ -135,7 +136,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     InPoint = TimeSpan.Zero,
                     OutPoint = TimeSpan.Zero,
                     GuideGroup = nextState.NextGuideGroup,
-                    FillerKind = FillerKind.Fallback
+                    FillerKind = FillerKind.Fallback,
+                    DisableWatermarks = !scheduleItem.FallbackFiller.AllowWatermarks
                 };
 
                 newItems.Add(playoutItem);
@@ -341,12 +343,22 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 case FillerMode.Duration when filler.Duration.HasValue:
                     IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
                     result.AddRange(
-                        AddDurationFiller(playoutBuilderState, e1, filler.Duration.Value, FillerKind.PreRoll));
+                        AddDurationFiller(
+                            playoutBuilderState,
+                            e1,
+                            filler.Duration.Value,
+                            FillerKind.PreRoll,
+                            filler.AllowWatermarks));
                     break;
                 case FillerMode.Count when filler.Count.HasValue:
                     IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
                     result.AddRange(
-                        AddCountFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PreRoll));
+                        AddCountFiller(
+                            playoutBuilderState,
+                            e2,
+                            filler.Count.Value,
+                            FillerKind.PreRoll,
+                            filler.AllowWatermarks));
                     break;
             }
         }
@@ -374,7 +386,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         e1,
                                         filler.Duration.Value,
-                                        FillerKind.MidRoll));
+                                        FillerKind.MidRoll,
+                                        filler.AllowWatermarks));
                             }
                         }
 
@@ -391,7 +404,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         e2,
                                         filler.Count.Value,
-                                        FillerKind.MidRoll));
+                                        FillerKind.MidRoll,
+                                        filler.AllowWatermarks));
                             }
                         }
 
@@ -408,12 +422,22 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 case FillerMode.Duration when filler.Duration.HasValue:
                     IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
                     result.AddRange(
-                        AddDurationFiller(playoutBuilderState, e1, filler.Duration.Value, FillerKind.PostRoll));
+                        AddDurationFiller(
+                            playoutBuilderState,
+                            e1,
+                            filler.Duration.Value,
+                            FillerKind.PostRoll,
+                            filler.AllowWatermarks));
                     break;
                 case FillerMode.Count when filler.Count.HasValue:
                     IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
                     result.AddRange(
-                        AddCountFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PostRoll));
+                        AddCountFiller(
+                            playoutBuilderState,
+                            e2,
+                            filler.Count.Value,
+                            FillerKind.PostRoll,
+                            filler.AllowWatermarks));
                     break;
             }
         }
@@ -464,7 +488,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             pre1,
                             remainingToFill,
-                            FillerKind.PreRoll));
+                            FillerKind.PreRoll,
+                            padFiller.AllowWatermarks));
                     totalDuration =
                         TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
                     remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
@@ -487,7 +512,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             mid1,
                             remainingToFill,
-                            FillerKind.MidRoll));
+                            FillerKind.MidRoll,
+                            padFiller.AllowWatermarks));
                     TimeSpan average = effectiveChapters.Count == 0
                         ? remainingToFill
                         : remainingToFill / (effectiveChapters.Count - 1);
@@ -540,7 +566,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             post1,
                             remainingToFill,
-                            FillerKind.PostRoll));
+                            FillerKind.PostRoll,
+                            padFiller.AllowWatermarks));
                     totalDuration =
                         TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
                     remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
@@ -576,7 +603,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         PlayoutBuilderState playoutBuilderState,
         IMediaCollectionEnumerator enumerator,
         int count,
-        FillerKind fillerKind)
+        FillerKind fillerKind,
+        bool allowWatermarks)
     {
         var result = new List<PlayoutItem>();
 
@@ -594,7 +622,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
                     GuideGroup = playoutBuilderState.NextGuideGroup,
-                    FillerKind = fillerKind
+                    FillerKind = fillerKind,
+                    DisableWatermarks = !allowWatermarks
                 };
 
                 result.Add(playoutItem);
@@ -609,7 +638,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         PlayoutBuilderState playoutBuilderState,
         IMediaCollectionEnumerator enumerator,
         TimeSpan duration,
-        FillerKind fillerKind)
+        FillerKind fillerKind,
+        bool allowWatermarks)
     {
         var result = new List<PlayoutItem>();
 
@@ -632,7 +662,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         InPoint = TimeSpan.Zero,
                         OutPoint = itemDuration,
                         GuideGroup = playoutBuilderState.NextGuideGroup,
-                        FillerKind = fillerKind
+                        FillerKind = fillerKind,
+                        DisableWatermarks = !allowWatermarks
                     };
 
                     result.Add(playoutItem);
@@ -670,7 +701,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     InPoint = TimeSpan.Zero,
                     OutPoint = TimeSpan.Zero,
                     GuideGroup = playoutBuilderState.NextGuideGroup,
-                    FillerKind = FillerKind.Fallback
+                    FillerKind = FillerKind.Fallback,
+                    DisableWatermarks = !scheduleItem.FallbackFiller.AllowWatermarks
                 };
 
                 enumerator.MoveNext();

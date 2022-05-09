@@ -489,7 +489,8 @@ public class TranscodingTests
             TimeSpan.Zero,
             TimeSpan.FromSeconds(5),
             0,
-            None);
+            None,
+            false);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 

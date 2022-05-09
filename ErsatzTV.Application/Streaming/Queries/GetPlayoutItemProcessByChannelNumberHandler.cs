@@ -182,7 +182,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.InPoint,
                 playoutItemWithPath.PlayoutItem.OutPoint,
                 request.PtsOffset,
-                request.TargetFramerate);
+                request.TargetFramerate,
+                playoutItemWithPath.PlayoutItem.DisableWatermarks);
 
             var result = new PlayoutItemProcessModel(
                 process,
@@ -371,7 +372,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 Finish = finish.UtcDateTime,
                 FillerKind = FillerKind.Fallback,
                 InPoint = TimeSpan.Zero,
-                OutPoint = version.Duration
+                OutPoint = version.Duration,
+                DisableWatermarks = !fallbackPreset.AllowWatermarks
             };
 
             return await ValidatePlayoutItemPath(playoutItem);

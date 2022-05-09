@@ -15,8 +15,7 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
 
     public async Task<Either<BaseError, Unit>> Handle(UpdateFillerPreset request, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request);
         return await LanguageExtensions.Apply(validation, ps => ApplyUpdateRequest(dbContext, ps, request));
     }
@@ -32,6 +31,7 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
         existing.Duration = request.Duration;
         existing.Count = request.Count;
         existing.PadToNearestMinute = request.PadToNearestMinute;
+        existing.AllowWatermarks = request.AllowWatermarks;
         existing.CollectionType = request.CollectionType;
         existing.CollectionId = request.CollectionId;
         existing.MediaItemId = request.MediaItemId;
