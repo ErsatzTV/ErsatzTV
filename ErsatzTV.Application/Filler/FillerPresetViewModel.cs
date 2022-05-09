@@ -11,6 +11,7 @@ public record FillerPresetViewModel(
     TimeSpan? Duration,
     int? Count,
     int? PadToNearestMinute,
+    bool AllowWatermarks,
     ProgramScheduleItemCollectionType CollectionType,
     int? CollectionId,
     int? MediaItemId,

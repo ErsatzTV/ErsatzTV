@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Valid metadata kinds are `fallback`, `sidecar` (NFO), `external` (from a media server) and `embedded` (songs)
 - Add autocomplete functionality to search bar to quickly navigate to channels, ffmpeg profiles, collections and schedules by name
 - Add global setting to skip missing (file-not-found or unavailable) items when building playouts
+- Add filler preset option to allow watermarks to overlay on top of filler (disabled by default)
+  - This option is applied when new items are added to a playout; rebuilding is needed if you want the change to take effect immediately
 
 ### Changed
 - Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing

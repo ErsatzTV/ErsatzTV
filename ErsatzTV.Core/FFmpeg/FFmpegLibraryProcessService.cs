@@ -59,7 +59,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         TimeSpan inPoint,
         TimeSpan outPoint,
         long ptsOffset,
-        Option<int> targetFramerate)
+        Option<int> targetFramerate,
+        bool disableWatermarks)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
         Option<MediaStream> maybeAudioStream =
@@ -90,8 +91,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsRealtime,
             targetFramerate);
 
-        Option<WatermarkOptions> watermarkOptions =
-            await _ffmpegProcessService.GetWatermarkOptions(
+        Option<WatermarkOptions> watermarkOptions = disableWatermarks
+            ? None
+            : await _ffmpegProcessService.GetWatermarkOptions(
                 ffprobePath,
                 channel,
                 playoutItemWatermark,

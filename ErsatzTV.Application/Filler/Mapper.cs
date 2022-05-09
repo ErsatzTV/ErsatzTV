@@ -13,6 +13,7 @@ internal static class Mapper
             fillerPreset.Duration,
             fillerPreset.Count,
             fillerPreset.PadToNearestMinute,
+            fillerPreset.AllowWatermarks,
             fillerPreset.CollectionType,
             fillerPreset.CollectionId,
             fillerPreset.MediaItemId,
