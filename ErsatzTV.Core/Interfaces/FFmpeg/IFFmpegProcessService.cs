@@ -33,7 +33,8 @@ public interface IFFmpegProcessService
         TimeSpan inPoint,
         TimeSpan outPoint,
         long ptsOffset,
-        Option<int> targetFramerate);
+        Option<int> targetFramerate,
+        bool disableWatermarks);
 
     Task<Command> ForError(
         string ffmpegPath,

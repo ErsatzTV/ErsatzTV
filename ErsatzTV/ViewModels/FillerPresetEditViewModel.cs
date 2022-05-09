@@ -57,6 +57,8 @@ public class FillerPresetEditViewModel
         set => _padToNearestMinute = value;
     }
 
+    public bool AllowWatermarks { get; set; }
+
     public ProgramScheduleItemCollectionType CollectionType
     {
         get => _collectionType;
@@ -88,6 +90,7 @@ public class FillerPresetEditViewModel
             Duration.Map(FixDuration),
             Count,
             PadToNearestMinute,
+            AllowWatermarks,
             CollectionType,
             Collection?.Id,
             MediaItem?.MediaItemId,
@@ -102,6 +105,7 @@ public class FillerPresetEditViewModel
             Duration.Map(FixDuration),
             Count,
             PadToNearestMinute,
+            AllowWatermarks,
             CollectionType,
             Collection?.Id,
             MediaItem?.MediaItemId,
