@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
@@ -234,7 +235,13 @@ public class PlayoutBuilder : IPlayoutBuilder
             return None;
         }
 
-        Option<CollectionKey> maybeEmptyCollection = await CheckForEmptyCollections(collectionMediaItems);
+        Option<bool> skipMissingItems =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.PlayoutSkipMissingItems);
+
+        Option<CollectionKey> maybeEmptyCollection = await CheckForEmptyCollections(
+            collectionMediaItems,
+            await skipMissingItems.IfNoneAsync(false));
+
         foreach (CollectionKey emptyCollection in maybeEmptyCollection)
         {
             Option<string> maybeName = await _mediaCollectionRepository.GetNameFromKey(emptyCollection);
@@ -496,12 +503,13 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     private async Task<Option<CollectionKey>> CheckForEmptyCollections(
-        Map<CollectionKey, List<MediaItem>> collectionMediaItems)
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems,
+        bool skipMissingItems)
     {
         foreach ((CollectionKey _, List<MediaItem> items) in collectionMediaItems)
         {
             var zeroItems = new List<MediaItem>();
-            // var missingItems = new List<MediaItem>();
+            var missingItems = new List<MediaItem>();
 
             foreach (MediaItem item in items)
             {
@@ -520,18 +528,17 @@ public class PlayoutBuilder : IPlayoutBuilder
                     _ => true
                 };
 
-                // if (item.State == MediaItemState.FileNotFound)
-                // {
-                //     _logger.LogWarning(
-                //         "Skipping media item that does not exist on disk  {MediaItem} - {MediaItemTitle} - {Path}",
-                //         item.Id,
-                //         DisplayTitle(item),
-                //         item.GetHeadVersion().MediaFiles.Head().Path);
-                //
-                //     missingItems.Add(item);
-                // }
-                // else
-                if (isZero)
+                if (skipMissingItems && item.State is MediaItemState.FileNotFound or MediaItemState.Unavailable)
+                {
+                    _logger.LogWarning(
+                        "Skipping media item that does not exist on disk  {MediaItem} - {MediaItemTitle} - {Path}",
+                        item.Id,
+                        DisplayTitle(item),
+                        item.GetHeadVersion().MediaFiles.Head().Path);
+
+                    missingItems.Add(item);
+                }
+                else if (isZero)
                 {
                     _logger.LogWarning(
                         "Skipping media item with zero duration {MediaItem} - {MediaItemTitle}",
@@ -542,7 +549,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 }
             }
 
-            // items.RemoveAll(missingItems.Contains);
+            items.RemoveAll(missingItems.Contains);
             items.RemoveAll(zeroItems.Contains);
         }
 

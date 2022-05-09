@@ -9,13 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Configuration;
 
-public class UpdatePlayoutDaysToBuildHandler : IRequestHandler<UpdatePlayoutDaysToBuild, Either<BaseError, Unit>>
+public class UpdatePlayoutSettingsHandler : IRequestHandler<UpdatePlayoutSettings, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
-    public UpdatePlayoutDaysToBuildHandler(
+    public UpdatePlayoutSettingsHandler(
         IConfigElementRepository configElementRepository,
         IDbContextFactory<TvContext> dbContextFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
@@ -26,17 +26,20 @@ public class UpdatePlayoutDaysToBuildHandler : IRequestHandler<UpdatePlayoutDays
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
-        UpdatePlayoutDaysToBuild request,
+        UpdatePlayoutSettings request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Unit> validation = await Validate(request);
-        return await validation.Apply<Unit, Unit>(_ => ApplyUpdate(dbContext, request.DaysToBuild));
+        return await validation.Apply<Unit, Unit>(_ => ApplyUpdate(dbContext, request.PlayoutSettings));
     }
 
-    private async Task<Unit> ApplyUpdate(TvContext dbContext, int daysToBuild)
+    private async Task<Unit> ApplyUpdate(TvContext dbContext, PlayoutSettingsViewModel playoutSettings)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.PlayoutDaysToBuild, daysToBuild);
+        await _configElementRepository.Upsert(ConfigElementKey.PlayoutDaysToBuild, playoutSettings.DaysToBuild);
+        await _configElementRepository.Upsert(
+            ConfigElementKey.PlayoutSkipMissingItems,
+            playoutSettings.SkipMissingItems);
 
         // continue all playouts to proper number of days
         List<Playout> playouts = await dbContext.Playouts
@@ -50,8 +53,8 @@ public class UpdatePlayoutDaysToBuildHandler : IRequestHandler<UpdatePlayoutDays
         return Unit.Default;
     }
 
-    private static Task<Validation<BaseError, Unit>> Validate(UpdatePlayoutDaysToBuild request) =>
-        Optional(request.DaysToBuild)
+    private static Task<Validation<BaseError, Unit>> Validate(UpdatePlayoutSettings request) =>
+        Optional(request.PlayoutSettings.DaysToBuild)
             .Where(days => days > 0)
             .Map(_ => Unit.Default)
             .ToValidation<BaseError>("Days to build must be greater than zero")
