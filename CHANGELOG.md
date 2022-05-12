@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Reduce memory use due to library scan operations
+- Fix some instances of filler getting "stuck" when a filler item is encountered that's too long for the gap
 
 ### Added
 - Add `metadata_kind` field to search index to allow searching for items with a particular metdata source

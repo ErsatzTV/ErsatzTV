@@ -634,7 +634,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         return result;
     }
 
-    private static List<PlayoutItem> AddDurationFiller(
+    private List<PlayoutItem> AddDurationFiller(
         PlayoutBuilderState playoutBuilderState,
         IMediaCollectionEnumerator enumerator,
         TimeSpan duration,
@@ -643,16 +643,15 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     {
         var result = new List<PlayoutItem>();
 
-        while (enumerator.Current.IsSome)
+        TimeSpan remainingToFill = duration;
+        var skipped = false;
+        while (enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
-                // TODO: retry up to x times when item doesn't fit?
-
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
-                duration -= itemDuration;
 
-                if (duration >= TimeSpan.Zero)
+                if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
                     var playoutItem = new PlayoutItem
                     {
@@ -666,14 +665,33 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         DisableWatermarks = !allowWatermarks
                     };
 
+                    remainingToFill -= itemDuration;
                     result.Add(playoutItem);
                     enumerator.MoveNext();
                 }
-            }
+                else if (skipped)
+                {
+                    // set to zero so it breaks out of the while loop
+                    remainingToFill = TimeSpan.Zero;
+                }
+                else
+                {
+                    if (itemDuration >= duration * 2)
+                    {
+                        _logger.LogWarning(
+                            "Filler item is too long {FillerDuration} to fill {GapDuration}; skipping to next filler item",
+                            itemDuration,
+                            duration);
 
-            if (duration < TimeSpan.Zero)
-            {
-                break;
+                        skipped = true;
+                        enumerator.MoveNext();
+                    }
+                    else
+                    {
+                        // set to zero so it breaks out of the while loop
+                        remainingToFill = TimeSpan.Zero;
+                    }
+                }
             }
         }
 
