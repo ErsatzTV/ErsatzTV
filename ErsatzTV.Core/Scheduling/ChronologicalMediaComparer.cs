@@ -119,12 +119,18 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
         string track1 = x switch
         {
             Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Track ?? string.Empty, () => string.Empty),
+            MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone()
+                .Match(mvm => mvm.Track ?? int.MaxValue, () => int.MaxValue)
+                .ToString("D10"),
             _ => string.Empty
         };
 
         string track2 = y switch
         {
             Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Track ?? string.Empty, () => string.Empty),
+            MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone()
+                .Match(mvm => mvm.Track ?? int.MaxValue, () => int.MaxValue)
+                .ToString("D10"),
             _ => string.Empty
         };
 

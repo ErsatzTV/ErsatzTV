@@ -72,6 +72,9 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                             case "plot":
                                 await ReadStringContent(reader, nfo, (musicVideo, plot) => musicVideo.Plot = plot);
                                 break;
+                            case "track":
+                                await ReadIntContent(reader, nfo, (musicVideo, track) => musicVideo.Track = track);
+                                break;
                             case "year":
                                 await ReadIntContent(reader, nfo, (musicVideo, year) => musicVideo.Year = year);
                                 break;

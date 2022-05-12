@@ -129,6 +129,7 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
             nfo.Year.Should().Be(1976);
             nfo.Aired.IsNone.Should().BeTrue();
             nfo.Genres.Should().BeEquivalentTo(new List<string> { "Pop" });
+            nfo.Track.Should().Be(-1);
         }
     }
 

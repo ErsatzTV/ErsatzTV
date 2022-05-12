@@ -250,6 +250,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Album = nfo.Album,
                     Title = nfo.Title,
                     Plot = nfo.Plot,
+                    Track = nfo.Track,
                     Year = GetYear(nfo.Year, nfo.Aired),
                     ReleaseDate = GetAired(nfo.Year, nfo.Aired),
                     Artists = nfo.Artists.Map(a => new MusicVideoArtist { Name = a }).ToList(),
@@ -764,6 +765,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.Title = metadata.Title;
             existing.Year = metadata.Year;
             existing.Plot = metadata.Plot;
+            existing.Track = metadata.Track;
             existing.Album = metadata.Album;
 
             if (existing.DateAdded == SystemTime.MinValueUtc)
