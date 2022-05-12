@@ -17,6 +17,9 @@ public class MusicVideoNfo
     [XmlElement("plot")]
     public string Plot { get; set; }
 
+    [XmlElement("track")]
+    public int Track { get; set; }
+
     [XmlElement("aired")]
     public Option<DateTime> Aired { get; set; }
 
