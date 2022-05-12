@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add global setting to skip missing (file-not-found or unavailable) items when building playouts
 - Add filler preset option to allow watermarks to overlay on top of filler (disabled by default)
   - This option is applied when new items are added to a playout; rebuilding is needed if you want the change to take effect immediately
+- Read `track` field from music video NFO metadata and use it for chronological sorting (after release date)
 
 ### Changed
 - Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing
