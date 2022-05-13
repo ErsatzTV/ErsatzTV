@@ -111,7 +111,11 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             NextGuideGroup = nextState.DecrementGuideGroup
         };
 
-        nextState.ScheduleItemsEnumerator.MoveNext();
+        // only advance to the next schedule item if we aren't still in a flood
+        if (!nextState.InFlood)
+        {
+            nextState.ScheduleItemsEnumerator.MoveNext();
+        }
 
         ProgramScheduleItem peekItem = nextScheduleItem;
         DateTimeOffset peekItemStart = GetStartTimeAfter(nextState, peekItem);
