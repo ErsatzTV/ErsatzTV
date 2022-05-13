@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix some instances of filler getting "stuck" when a filler item is encountered that's too long for the gap
 - Properly ignore Plex `Other Videos` libraries (`movie` libraries where agent is `com.plexapp.agents.none`)
 - Fix `Custom Title` for schedule items with `One`, `Multiple` and `Flood` playout modes 
+- Fix scheduling bug where flood items would sometimes fail to continue after midnight
 
 ### Added
 - Add `metadata_kind` field to search index to allow searching for items with a particular metdata source
