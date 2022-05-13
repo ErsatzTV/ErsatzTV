@@ -13,8 +13,8 @@ namespace ErsatzTV.Infrastructure.Plex;
 public class PlexServerApiClient : IPlexServerApiClient
 {
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
-    private readonly PlexEtag _plexEtag;
     private readonly ILogger<PlexServerApiClient> _logger;
+    private readonly PlexEtag _plexEtag;
 
     public PlexServerApiClient(
         IFallbackMetadataProvider fallbackMetadataProvider,
@@ -64,6 +64,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                 await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
             return directory
                 // .Filter(l => l.Hidden == 0)
+                .Filter(l => (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
                 .Filter(l => l.Type.ToLowerInvariant() is "movie" or "show")
                 .Map(Project)
                 .Somes()

@@ -148,16 +148,20 @@ public class MediaSourceRepository : IMediaSourceRepository
             }
         }
 
+        var libraryIds = toDelete.Map(l => l.Id).ToList();
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
+
         foreach (PlexLibrary delete in toDelete)
         {
-            dbContext.Entry(delete).State = EntityState.Deleted;
+            dbContext.PlexLibraries.Remove(delete);
         }
-
-        List<int> ids = await DisablePlexLibrarySync(toDelete.Map(l => l.Id).ToList());
 
         await dbContext.SaveChangesAsync();
 
-        return ids;
+        return deletedMediaIds;
     }
 
     public async Task<List<int>> UpdateLibraries(
