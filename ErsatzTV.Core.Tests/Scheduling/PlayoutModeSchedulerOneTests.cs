@@ -25,7 +25,8 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             StartTime = null,
             PlaybackOrder = PlaybackOrder.Chronological,
             TailFiller = null,
-            FallbackFiller = null
+            FallbackFiller = null,
+            CustomTitle = "CustomTitle"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -64,6 +65,7 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
         playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
         playoutItems[0].GuideGroup.Should().Be(1);
         playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].CustomTitle.Should().Be("CustomTitle");
     }
 
     [Test]
