@@ -60,6 +60,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
                     : FillerKind.None,
+                CustomTitle = scheduleItem.CustomTitle,
                 WatermarkId = scheduleItem.WatermarkId,
                 PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
@@ -81,7 +82,11 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
             {
                 CurrentTime = itemEndTimeWithFiller,
                 MultipleRemaining = nextState.MultipleRemaining.Map(i => i - 1),
-                NextGuideGroup = nextState.IncrementGuideGroup
+
+                // only bump guide group if we don't have a custom title
+                NextGuideGroup = string.IsNullOrWhiteSpace(scheduleItem.CustomTitle)
+                    ? nextState.IncrementGuideGroup
+                    : nextState.NextGuideGroup
             };
 
             contentEnumerator.MoveNext();
@@ -96,7 +101,11 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
             nextState = nextState with
             {
                 MultipleRemaining = None,
-                NextGuideGroup = nextState.DecrementGuideGroup
+
+                // only decrement guide group if it was bumped
+                NextGuideGroup = playoutItems.Select(pi => pi.GuideGroup).Distinct().Count() != 1
+                    ? nextState.DecrementGuideGroup
+                    : nextState.NextGuideGroup
             };
 
             nextState.ScheduleItemsEnumerator.MoveNext();

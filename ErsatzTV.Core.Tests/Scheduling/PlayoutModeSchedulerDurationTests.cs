@@ -25,7 +25,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             StartTime = null,
             PlayoutDuration = TimeSpan.FromHours(3),
             TailMode = TailMode.None,
-            PlaybackOrder = PlaybackOrder.Chronological
+            PlaybackOrder = PlaybackOrder.Chronological,
+            CustomTitle = "CustomTitle"
         };
 
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
@@ -49,7 +50,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(4);
+        playoutBuilderState.NextGuideGroup.Should().Be(2); // one guide group here because of custom title
         playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
         playoutBuilderState.InFlood.Should().BeFalse();
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -65,18 +66,21 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[0].GuideGroup.Should().Be(1);
         playoutItems[0].FillerKind.Should().Be(FillerKind.None);
         playoutItems[0].GuideFinish.HasValue.Should().BeFalse();
+        playoutItems[0].CustomTitle.Should().Be("CustomTitle");
 
         playoutItems[1].MediaItemId.Should().Be(2);
         playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddHours(1));
-        playoutItems[1].GuideGroup.Should().Be(2);
+        playoutItems[1].GuideGroup.Should().Be(1);
         playoutItems[1].FillerKind.Should().Be(FillerKind.None);
         playoutItems[1].GuideFinish.HasValue.Should().BeFalse();
+        playoutItems[1].CustomTitle.Should().Be("CustomTitle");
 
         playoutItems[2].MediaItemId.Should().Be(1);
         playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.AddHours(2));
-        playoutItems[2].GuideGroup.Should().Be(3);
+        playoutItems[2].GuideGroup.Should().Be(1);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
+        playoutItems[2].CustomTitle.Should().Be("CustomTitle");
     }
 
     [Test]
