@@ -41,6 +41,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
                     : FillerKind.None,
+                CustomTitle = scheduleItem.CustomTitle,
                 WatermarkId = scheduleItem.WatermarkId,
                 PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
