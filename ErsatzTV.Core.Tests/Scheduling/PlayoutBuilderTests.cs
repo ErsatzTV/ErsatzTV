@@ -551,6 +551,140 @@ public class PlayoutBuilderTests
         }
 
         [Test]
+        public async Task FloodContent_Should_FloodAroundFixedContent_One_Multiple_Days()
+        {
+            var floodCollection = new Collection
+            {
+                Id = 1,
+                Name = "Flood Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
+                }
+            };
+
+            var fixedCollection = new Collection
+            {
+                Id = 2,
+                Name = "Fixed Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (floodCollection.Id, floodCollection.MediaItems.ToList()),
+                    (fixedCollection.Id, fixedCollection.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemFlood
+                {
+                    Index = 1,
+                    Collection = floodCollection,
+                    CollectionId = floodCollection.Id,
+                    StartTime = null,
+                    PlaybackOrder = PlaybackOrder.Chronological
+                },
+                new ProgramScheduleItemOne
+                {
+                    Index = 2,
+                    Collection = fixedCollection,
+                    CollectionId = fixedCollection.Id,
+                    StartTime = TimeSpan.FromHours(3),
+                    PlaybackOrder = PlaybackOrder.Chronological
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
+                Items = new List<PlayoutItem>()
+            };
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            var televisionRepo = new FakeTelevisionRepository();
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(30);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(28);
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].MediaItemId.Should().Be(2);
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].MediaItemId.Should().Be(1);
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[3].MediaItemId.Should().Be(3);
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
+            result.Items[4].MediaItemId.Should().Be(2);
+            result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+            result.Items[5].MediaItemId.Should().Be(1);
+            result.Items[6].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(7));
+            result.Items[6].MediaItemId.Should().Be(2);
+            result.Items[7].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(8));
+            result.Items[7].MediaItemId.Should().Be(1);
+            result.Items[8].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(9));
+            result.Items[8].MediaItemId.Should().Be(2);
+            result.Items[9].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(10));
+            result.Items[9].MediaItemId.Should().Be(1);
+            result.Items[10].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(11));
+            result.Items[10].MediaItemId.Should().Be(2);
+            result.Items[11].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+            result.Items[11].MediaItemId.Should().Be(1);
+            result.Items[12].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(13));
+            result.Items[12].MediaItemId.Should().Be(2);
+            result.Items[13].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(14));
+            result.Items[13].MediaItemId.Should().Be(1);
+            result.Items[14].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(15));
+            result.Items[14].MediaItemId.Should().Be(2);
+            result.Items[15].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(16));
+            result.Items[15].MediaItemId.Should().Be(1);
+            result.Items[16].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(17));
+            result.Items[16].MediaItemId.Should().Be(2);
+            result.Items[17].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(18));
+            result.Items[17].MediaItemId.Should().Be(1);
+            result.Items[18].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(19));
+            result.Items[18].MediaItemId.Should().Be(2);
+            result.Items[19].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(20));
+            result.Items[19].MediaItemId.Should().Be(1);
+            result.Items[20].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(21));
+            result.Items[20].MediaItemId.Should().Be(2);
+            result.Items[21].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(22));
+            result.Items[21].MediaItemId.Should().Be(1);
+            result.Items[22].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(23));
+            result.Items[22].MediaItemId.Should().Be(2);
+            result.Items[23].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[23].MediaItemId.Should().Be(1);
+            result.Items[24].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[24].MediaItemId.Should().Be(2);
+            result.Items[25].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[25].MediaItemId.Should().Be(1);
+            result.Items[26].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[26].MediaItemId.Should().Be(3);
+            result.Items[27].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
+            result.Items[27].MediaItemId.Should().Be(2);
+        }
+
+        [Test]
         public async Task FloodContent_Should_FloodAroundFixedContent_Multiple()
         {
             var floodCollection = new Collection
