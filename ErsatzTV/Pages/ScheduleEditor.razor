@@ -38,6 +38,11 @@
                                          For="@(() => _model.ShuffleScheduleItems)"/>
                         </MudTooltip>
                     </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudCheckBox Label="Random Start Point"
+                                     @bind-Checked="@_model.RandomStartPoint"
+                                     For="@(() => _model.RandomStartPoint)"/>
+                    </MudElement>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -78,6 +83,7 @@
                     _model.ShuffleScheduleItems = viewModel.ShuffleScheduleItems;
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                     _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
+                    _model.RandomStartPoint = viewModel.RandomStartPoint;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }

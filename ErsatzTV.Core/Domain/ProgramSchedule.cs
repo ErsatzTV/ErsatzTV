@@ -7,6 +7,7 @@ public class ProgramSchedule
     public bool KeepMultiPartEpisodesTogether { get; set; }
     public bool TreatCollectionsAsShows { get; set; }
     public bool ShuffleScheduleItems { get; set; }
+    public bool RandomStartPoint { get; set; }
     public List<ProgramScheduleItem> Items { get; set; }
     public List<Playout> Playouts { get; set; }
 }

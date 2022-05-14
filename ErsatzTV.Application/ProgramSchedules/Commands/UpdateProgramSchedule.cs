@@ -8,4 +8,5 @@ public record UpdateProgramSchedule
     string Name,
     bool KeepMultiPartEpisodesTogether,
     bool TreatCollectionsAsShows,
-    bool ShuffleScheduleItems) : IRequest<Either<BaseError, UpdateProgramScheduleResult>>;
+    bool ShuffleScheduleItems,
+    bool RandomStartPoint) : IRequest<Either<BaseError, UpdateProgramScheduleResult>>;

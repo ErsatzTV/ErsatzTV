@@ -44,7 +44,8 @@ public class CreateProgramScheduleHandler :
                     Name = name,
                     KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
                     TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows,
-                    ShuffleScheduleItems = request.ShuffleScheduleItems
+                    ShuffleScheduleItems = request.ShuffleScheduleItems,
+                    RandomStartPoint = request.RandomStartPoint
                 };
             });
 

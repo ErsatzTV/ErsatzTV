@@ -22,7 +22,8 @@ public class GetAllProgramSchedulesHandler : IRequestHandler<GetAllProgramSchedu
                     ps.Name,
                     ps.KeepMultiPartEpisodesTogether,
                     ps.TreatCollectionsAsShows,
-                    ps.ShuffleScheduleItems))
+                    ps.ShuffleScheduleItems,
+                    ps.RandomStartPoint))
             .ToListAsync(cancellationToken);
     }
 }

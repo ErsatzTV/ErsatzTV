@@ -10,7 +10,8 @@ internal static class Mapper
             programSchedule.Name,
             programSchedule.KeepMultiPartEpisodesTogether,
             programSchedule.TreatCollectionsAsShows,
-            programSchedule.ShuffleScheduleItems);
+            programSchedule.ShuffleScheduleItems,
+            programSchedule.RandomStartPoint);
 
     internal static ProgramScheduleItemViewModel ProjectToViewModel(ProgramScheduleItem programScheduleItem) =>
         programScheduleItem switch

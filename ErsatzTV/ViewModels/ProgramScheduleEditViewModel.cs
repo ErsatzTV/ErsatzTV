@@ -9,10 +9,11 @@ public class ProgramScheduleEditViewModel
     public bool KeepMultiPartEpisodesTogether { get; set; }
     public bool TreatCollectionsAsShows { get; set; }
     public bool ShuffleScheduleItems { get; set; }
+    public bool RandomStartPoint { get; set; }
 
     public UpdateProgramSchedule ToUpdate() =>
-        new(Id, Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems);
+        new(Id, Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems, RandomStartPoint);
 
     public CreateProgramSchedule ToCreate() =>
-        new(Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems);
+        new(Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems, RandomStartPoint);
 }
