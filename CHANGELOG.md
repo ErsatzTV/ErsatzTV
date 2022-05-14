@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.7-beta] - 2022-05-14
 ### Fixed
 - Reduce memory use due to library scan operations
 - Fix some instances of filler getting "stuck" when a filler item is encountered that's too long for the gap
@@ -1194,8 +1196,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.6-beta...HEAD
-[0.5.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.5-beta...v0.5.6-beta
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.7-beta...HEAD
+[0.5.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.6-beta...v0.5.7-beta
+[0.5.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.5-beta...v0.5.6-beta
 [0.5.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.4-beta...v0.5.5-beta
 [0.5.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.3-beta...v0.5.4-beta
 [0.5.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...v0.5.3-beta
