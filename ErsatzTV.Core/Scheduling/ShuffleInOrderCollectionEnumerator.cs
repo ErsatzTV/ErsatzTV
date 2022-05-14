@@ -7,14 +7,17 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly IList<CollectionWithItems> _collections;
     private readonly int _mediaItemCount;
+    private readonly bool _randomStartPoint;
     private Random _random;
     private IList<MediaItem> _shuffled;
 
     public ShuffleInOrderCollectionEnumerator(
         IList<CollectionWithItems> collections,
-        CollectionEnumeratorState state)
+        CollectionEnumeratorState state,
+        bool randomStartPoint)
     {
         _collections = collections;
+        _randomStartPoint = randomStartPoint;
         _mediaItemCount = collections.Sum(c => c.MediaItems.Count);
 
         if (state.Index >= _mediaItemCount)
@@ -87,7 +90,14 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         var result = new List<MediaItem>();
         for (var i = 0; i < filled[0].Items.Count; i++)
         {
-            var batch = filled.Select(collection => collection.Items[i]).ToList();
+            var batch = new List<Option<MediaItem>>();
+
+            foreach (OrderedCollection collection in filled)
+            {
+                int index = (collection.Index + i) % collection.Items.Count;
+                batch.Add(collection.Items[index]);
+            }
+
             foreach (Option<MediaItem> maybeItem in Shuffle(batch, random))
             {
                 result.AddRange(maybeItem);
@@ -144,7 +154,13 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
                 ordered.AddRange(larger);
             }
 
-            result.Add(new OrderedCollection { Index = 0, Items = ordered });
+            var index = 0;
+            if (_randomStartPoint)
+            {
+                index = random.Next(0, ordered.Count - 1);
+            }
+
+            result.Add(new OrderedCollection { Index = index, Items = ordered });
         }
 
         return result;

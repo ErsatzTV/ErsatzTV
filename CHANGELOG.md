@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add filler preset option to allow watermarks to overlay on top of filler (disabled by default)
   - This option is applied when new items are added to a playout; rebuilding is needed if you want the change to take effect immediately
 - Read `track` field from music video NFO metadata and use it for chronological sorting (after release date)
+- Add `Random Start Point` option to schedules
+  - When this option is enabled, all `Chronological` or `Shuffle In Order` content groups will have their start points randomized
+  - When this option is disabled, all `Chronological` or `Shuffle In Order` content groups will start with the chronologically earliest item
 
 ### Changed
 - Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing

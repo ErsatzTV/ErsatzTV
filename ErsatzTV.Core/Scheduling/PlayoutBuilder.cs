@@ -175,7 +175,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout,
             parameters.Start,
             parameters.Finish,
-            parameters.CollectionMediaItems);
+            parameters.CollectionMediaItems,
+            false);
     }
 
     private async Task<Playout> ResetPlayout(Playout playout, PlayoutParameters parameters)
@@ -194,7 +195,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout,
             parameters.Start,
             parameters.Finish,
-            parameters.CollectionMediaItems);
+            parameters.CollectionMediaItems,
+            playout.ProgramSchedule.RandomStartPoint);
 
         return playout;
     }
@@ -217,7 +219,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout,
             parameters.Start,
             parameters.Finish,
-            parameters.CollectionMediaItems);
+            parameters.CollectionMediaItems,
+            false);
 
         return playout;
     }
@@ -282,7 +285,8 @@ public class PlayoutBuilder : IPlayoutBuilder
         Playout playout,
         DateTimeOffset playoutStart,
         DateTimeOffset playoutFinish,
-        Map<CollectionKey, List<MediaItem>> collectionMediaItems)
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems,
+        bool randomStartPoint)
     {
         DateTimeOffset trimBefore = playoutStart.AddHours(-4);
         DateTimeOffset trimAfter = playoutFinish;
@@ -301,7 +305,10 @@ public class PlayoutBuilder : IPlayoutBuilder
         while (finish < playoutFinish)
         {
             _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
-            playout = await BuildPlayoutItems(playout, start, finish, collectionMediaItems, true);
+            playout = await BuildPlayoutItems(playout, start, finish, collectionMediaItems, true, randomStartPoint);
+
+            // only randomize once (at the start of the playout)
+            randomStartPoint = false;
 
             start = playout.Anchor.NextStartOffset;
             finish = finish.AddDays(1);
@@ -316,7 +323,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                 start,
                 playoutFinish,
                 collectionMediaItems,
-                false);
+                false,
+                randomStartPoint);
         }
 
         // remove any items outside the desired range
@@ -330,7 +338,8 @@ public class PlayoutBuilder : IPlayoutBuilder
         DateTimeOffset playoutStart,
         DateTimeOffset playoutFinish,
         Map<CollectionKey, List<MediaItem>> collectionMediaItems,
-        bool saveAnchorDate)
+        bool saveAnchorDate,
+        bool randomStartPoint)
     {
         var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
         CollectionEnumeratorState scheduleItemsEnumeratorState =
@@ -348,7 +357,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             PlaybackOrder playbackOrder = maybeScheduleItem
                 .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
             IMediaCollectionEnumerator enumerator =
-                await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder);
+                await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder, randomStartPoint);
             collectionEnumerators.Add(collectionKey, enumerator);
         }
 
@@ -643,7 +652,8 @@ public class PlayoutBuilder : IPlayoutBuilder
         Playout playout,
         CollectionKey collectionKey,
         List<MediaItem> mediaItems,
-        PlaybackOrder playbackOrder)
+        PlaybackOrder playbackOrder,
+        bool randomStartPoint)
     {
         Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
             .OrderByDescending(a => a.AnchorDate is null)
@@ -681,9 +691,21 @@ public class PlayoutBuilder : IPlayoutBuilder
             }
         }
 
+        // index shouldn't ever be greater than zero with randomStartPoint since anchors shouldn't exist, but
+        randomStartPoint = randomStartPoint && state.Index == 0;
+
         switch (playbackOrder)
         {
             case PlaybackOrder.Chronological:
+                if (randomStartPoint)
+                {
+                    state = new CollectionEnumeratorState
+                    {
+                        Seed = state.Seed,
+                        Index = Random.Next(0, mediaItems.Count - 1)
+                    };
+                }
+
                 return new ChronologicalMediaCollectionEnumerator(mediaItems, state);
             case PlaybackOrder.Random:
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
@@ -694,7 +716,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             case PlaybackOrder.ShuffleInOrder:
                 return new ShuffleInOrderCollectionEnumerator(
                     await GetCollectionItemsForShuffleInOrder(collectionKey),
-                    state);
+                    state,
+                    playout.ProgramSchedule.RandomStartPoint);
             default:
                 // TODO: handle this error case differently?
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
