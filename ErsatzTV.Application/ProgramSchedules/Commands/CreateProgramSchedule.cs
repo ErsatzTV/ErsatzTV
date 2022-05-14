@@ -6,4 +6,5 @@ public record CreateProgramSchedule(
     string Name,
     bool KeepMultiPartEpisodesTogether,
     bool TreatCollectionsAsShows,
-    bool ShuffleScheduleItems) : IRequest<Either<BaseError, CreateProgramScheduleResult>>;
+    bool ShuffleScheduleItems,
+    bool RandomStartPoint) : IRequest<Either<BaseError, CreateProgramScheduleResult>>;

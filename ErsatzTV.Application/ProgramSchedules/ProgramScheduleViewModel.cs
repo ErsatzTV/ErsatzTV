@@ -5,4 +5,5 @@ public record ProgramScheduleViewModel(
     string Name,
     bool KeepMultiPartEpisodesTogether,
     bool TreatCollectionsAsShows,
-    bool ShuffleScheduleItems);
+    bool ShuffleScheduleItems,
+    bool RandomStartPoint);

@@ -41,13 +41,15 @@ public class UpdateProgramScheduleHandler :
         bool needToRefreshPlayout =
             programSchedule.KeepMultiPartEpisodesTogether != request.KeepMultiPartEpisodesTogether ||
             programSchedule.TreatCollectionsAsShows != request.TreatCollectionsAsShows ||
-            programSchedule.ShuffleScheduleItems != request.ShuffleScheduleItems;
+            programSchedule.ShuffleScheduleItems != request.ShuffleScheduleItems ||
+            programSchedule.RandomStartPoint != request.RandomStartPoint;
 
         programSchedule.Name = request.Name;
         programSchedule.KeepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;
         programSchedule.TreatCollectionsAsShows = programSchedule.KeepMultiPartEpisodesTogether &&
                                                   request.TreatCollectionsAsShows;
         programSchedule.ShuffleScheduleItems = request.ShuffleScheduleItems;
+        programSchedule.RandomStartPoint = request.RandomStartPoint;
 
         await dbContext.SaveChangesAsync();
 
