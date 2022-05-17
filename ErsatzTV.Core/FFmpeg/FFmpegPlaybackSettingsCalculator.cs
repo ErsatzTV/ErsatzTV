@@ -185,7 +185,8 @@ public class FFmpegPlaybackSettingsCalculator
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
                 _ => true
-            }
+            },
+            VideoTrackTimeScale = 90000
         };
 
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
