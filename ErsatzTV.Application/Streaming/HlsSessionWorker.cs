@@ -143,8 +143,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                     Math.Max(0, _transcodedUntil.Subtract(DateTimeOffset.Now).TotalSeconds));
                 if (transcodedBuffer <= TimeSpan.FromMinutes(1))
                 {
-                    // only use realtime encoding when we're at least 5 minutes ahead
-                    bool realtime = transcodedBuffer >= TimeSpan.FromMinutes(5);
+                    // only use realtime encoding when we're at least 30 seconds ahead
+                    bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
                     bool subsequentWorkAhead =
                         !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
                     if (!await Transcode(!subsequentWorkAhead, cancellationToken))
