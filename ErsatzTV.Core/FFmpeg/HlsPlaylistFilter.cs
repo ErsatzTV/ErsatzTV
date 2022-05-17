@@ -25,6 +25,13 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
     {
         try
         {
+            _logger.LogDebug(
+                "TrimPlaylist - Start {PlaylistStart}, FilterBefore {FilterBefore}, MaxSegments {MaxSegments}, EndWithDiscontinuity {EndWithDiscontinuity}",
+                playlistStart,
+                filterBefore,
+                maxSegments,
+                endWithDiscontinuity);
+            
             DateTimeOffset currentTime = playlistStart;
             DateTimeOffset nextPlaylistStart = DateTimeOffset.MaxValue;
 
@@ -113,6 +120,7 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 playlist += "#EXT-X-DISCONTINUITY" + Environment.NewLine;
             }
 
+            // if (playlist.Trim().Split(Environment.NewLine).All(l => string.IsNullOrWhiteSpace(l) || l.StartsWith('#')))
             if (playlist.Trim().Split(Environment.NewLine).All(l => l.StartsWith('#')))
             {
                 throw new Exception("Trimming playlist to nothing");
