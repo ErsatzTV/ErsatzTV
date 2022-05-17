@@ -180,7 +180,13 @@ public class FFmpegPlaybackSettingsCalculator
             ThreadCount = 1,
             FormatFlags = CommonFormatFlags,
             VideoFormat = ffmpegProfile.VideoFormat,
+            VideoBitrate = ffmpegProfile.VideoBitrate,
+            VideoBufferSize = ffmpegProfile.VideoBufferSize,
             AudioFormat = ffmpegProfile.AudioFormat,
+            AudioBitrate = ffmpegProfile.AudioBitrate,
+            AudioBufferSize = ffmpegProfile.AudioBufferSize,
+            AudioChannels = ffmpegProfile.AudioChannels,
+            AudioSampleRate = ffmpegProfile.AudioSampleRate,
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,

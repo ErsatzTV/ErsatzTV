@@ -293,7 +293,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
             Option<TimeSpan>.None,
-            playbackSettings.NormalizeLoudness);
+            false);
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
