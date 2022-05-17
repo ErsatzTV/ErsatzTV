@@ -31,6 +31,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private DateTimeOffset _playlistStart;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -44,7 +45,15 @@ public class HlsSessionWorker : IHlsSessionWorker
         _logger = logger;
     }
 
-    public DateTimeOffset PlaylistStart { get; private set; }
+    public DateTimeOffset PlaylistStart
+    {
+        get => _playlistStart;
+        private set
+        {
+            _logger.LogDebug("Setting PlaylistStart to {PlaylistStart}", value);
+            _playlistStart = value;
+        }
+    }
 
     public void Touch()
     {
@@ -348,14 +357,14 @@ public class HlsSessionWorker : IHlsSessionWorker
                     .ToList();
 
                 var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
-                // if (toDelete.Count > 0)
-                // {
-                // _logger.LogInformation(
-                //     "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
-                //     toDelete.Map(s => s.SequenceNumber).Min(),
-                //     toDelete.Map(s => s.SequenceNumber).Max(),
-                //     trimResult.Sequence);
-                // }
+                if (toDelete.Count > 0)
+                {
+                    _logger.LogDebug(
+                        "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+                        toDelete.Map(s => s.SequenceNumber).Min(),
+                        toDelete.Map(s => s.SequenceNumber).Max(),
+                        trimResult.Sequence);
+                }
 
                 foreach (Segment segment in toDelete)
                 {
