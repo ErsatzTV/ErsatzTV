@@ -371,7 +371,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private static async Task<long> GetPtsOffset(
+    private async Task<long> GetPtsOffset(
         IMediator mediator,
         string channelNumber,
         CancellationToken cancellationToken)
@@ -384,6 +384,11 @@ public class HlsSessionWorker : IHlsSessionWorker
             Either<BaseError, PtsAndDuration> queryResult = await mediator.Send(
                 new GetLastPtsDuration(channelNumber),
                 cancellationToken);
+
+            foreach (BaseError error in queryResult.LeftToSeq())
+            {
+                _logger.LogWarning("Unable to determine last pts offset - {@Error}", error);
+            }
 
             foreach ((long pts, long duration) in queryResult.RightToSeq())
             {
