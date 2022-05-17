@@ -299,6 +299,7 @@ public abstract class LocalFolderScanner
     }
 
     protected bool ShouldIncludeFolder(string folder) =>
+        !string.IsNullOrWhiteSpace(folder) &&
         !Path.GetFileName(folder).StartsWith('.') &&
         !_localFileSystem.FileExists(Path.Combine(folder, ".etvignore"));
 }

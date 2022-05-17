@@ -82,7 +82,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             "Unable to find audio stream with preferred audio language code(s) {Code}; selecting stream with most channels",
             allCodes);
 
-        return audioStreams.OrderByDescending(s => s.Channels).Head();
+        return audioStreams.OrderByDescending(s => s.Channels).HeadOrNone();
     }
 
     public async Task<Option<Subtitle>> SelectSubtitleStream(
