@@ -21,6 +21,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<HlsSessionWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly object _sync = new();
@@ -34,10 +35,12 @@ public class HlsSessionWorker : IHlsSessionWorker
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
         IServiceScopeFactory serviceScopeFactory,
+        ILocalFileSystem localFileSystem,
         ILogger<HlsSessionWorker> logger)
     {
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _serviceScopeFactory = serviceScopeFactory;
+        _localFileSystem = localFileSystem;
         _logger = logger;
     }
 
@@ -152,6 +155,15 @@ public class HlsSessionWorker : IHlsSessionWorker
             lock (_sync)
             {
                 _timer.Elapsed -= Cancel;
+            }
+
+            try
+            {
+                _localFileSystem.EmptyFolder(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber));
+            }
+            catch
+            {
+                // do nothing
             }
         }
     }
