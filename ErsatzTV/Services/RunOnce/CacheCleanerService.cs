@@ -23,8 +23,9 @@ public class CacheCleanerService : IHostedService
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+        ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
 
-        if (Directory.Exists(FileSystemLayout.LegacyImageCacheFolder))
+        if (localFileSystem.FolderExists(FileSystemLayout.LegacyImageCacheFolder))
         {
             _logger.LogInformation("Migrating channel logos from legacy image cache folder");
 
@@ -34,13 +35,12 @@ public class CacheCleanerService : IHostedService
                 .Map(a => a.Path)
                 .ToListAsync(cancellationToken);
 
-            ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
             foreach (string logo in logos)
             {
                 string legacyPath = Path.Combine(FileSystemLayout.LegacyImageCacheFolder, logo);
-                if (File.Exists(legacyPath))
+                if (localFileSystem.FileExists(legacyPath))
                 {
-                    string subfolder = logo.Substring(0, 2);
+                    string subfolder = logo[..2];
                     string newPath = Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder, logo);
                     await localFileSystem.CopyFile(legacyPath, newPath);
                 }
@@ -48,6 +48,12 @@ public class CacheCleanerService : IHostedService
 
             _logger.LogInformation("Deleting legacy image cache folder");
             Directory.Delete(FileSystemLayout.LegacyImageCacheFolder, true);
+        }
+
+        if (localFileSystem.FolderExists(FileSystemLayout.TranscodeFolder))
+        {
+            _logger.LogInformation("Emptying transcode cache folder");
+            localFileSystem.EmptyFolder(FileSystemLayout.TranscodeFolder);
         }
     }
 
