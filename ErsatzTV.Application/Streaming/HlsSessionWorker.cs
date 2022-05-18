@@ -396,7 +396,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach (BaseError error in queryResult.LeftToSeq())
             {
-                _logger.LogWarning("Unable to determine last pts offset - {@Error}", error);
+                _logger.LogWarning("Unable to determine last pts offset - {Error}", error.ToString());
             }
 
             foreach ((long pts, long duration) in queryResult.RightToSeq())

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix error display with `HLS Segmenter` and `MPEG-TS` streaming modes
+- Remove erroneous log messages about normalizing framerate on channels where framerate normalization is disabled
 
 ### Added
 - Clean transcode cache folder on startup and after `HLS Segmenter` session terminates for any reason

@@ -21,10 +21,21 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
 
     public async Task<Option<int>> Handle(GetChannelFramerate request, CancellationToken cancellationToken)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        FFmpegProfile ffmpegProfile = await dbContext.Channels
+            .Filter(c => c.Number == request.ChannelNumber)
+            .Include(c => c.FFmpegProfile)
+            .Map(c => c.FFmpegProfile)
+            .SingleAsync(cancellationToken);
+
+        if (!ffmpegProfile.NormalizeFramerate)
+        {
+            return Option<int>.None;
+        }
+
         // TODO: expand to check everything in collection rather than what's scheduled?
         _logger.LogDebug("Checking frame rates for channel {ChannelNumber}", request.ChannelNumber);
-
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Playout> playouts = await dbContext.Playouts
             .Include(p => p.Items)
