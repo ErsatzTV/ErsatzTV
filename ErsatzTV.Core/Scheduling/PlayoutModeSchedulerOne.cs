@@ -27,6 +27,12 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 playoutBuilderState,
                 scheduleItem);
 
+            if (itemStartTime >= hardStop)
+            {
+                playoutBuilderState = playoutBuilderState with { CurrentTime = hardStop };
+                break;
+            }
+
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 

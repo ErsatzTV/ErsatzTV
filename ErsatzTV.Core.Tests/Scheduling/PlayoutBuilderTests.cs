@@ -68,6 +68,8 @@ public class PlayoutBuilderTests
             result.Items.Head().MediaItemId.Should().Be(2);
             result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -127,6 +129,8 @@ public class PlayoutBuilderTests
             result.Items.Head().MediaItemId.Should().Be(2);
             result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -186,6 +190,8 @@ public class PlayoutBuilderTests
             result.Items.Head().MediaItemId.Should().Be(2);
             result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -214,6 +220,8 @@ public class PlayoutBuilderTests
             result.Items.Count.Should().Be(1);
             result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -242,6 +250,8 @@ public class PlayoutBuilderTests
             result.Items.Count.Should().Be(1);
             result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -261,6 +271,8 @@ public class PlayoutBuilderTests
             result.Items.Count.Should().Be(1);
             result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -281,6 +293,8 @@ public class PlayoutBuilderTests
             result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
             result.Items[1].FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(12));
         }
 
         [Test]
@@ -308,6 +322,8 @@ public class PlayoutBuilderTests
             result.Items[2].MediaItemId.Should().Be(1);
             result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
             result.Items[3].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(4));
         }
 
         [Test]
@@ -329,7 +345,7 @@ public class PlayoutBuilderTests
             result.Items.Count.Should().Be(1);
             result.Items.Head().MediaItemId.Should().Be(1);
 
-            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6));
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
 
             result.ProgramScheduleAnchors.Count.Should().Be(1);
             result.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
@@ -343,7 +359,7 @@ public class PlayoutBuilderTests
             result2.Items.Last().StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
             result2.Items.Last().MediaItemId.Should().Be(2);
 
-            result2.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(12));
+            result2.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(12));
             result2.ProgramScheduleAnchors.Count.Should().Be(1);
             result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
         }
@@ -452,6 +468,8 @@ public class PlayoutBuilderTests
 
             int firstSeedValue = result.ProgramScheduleAnchors.Head().EnumeratorState.Seed;
 
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
+
             DateTimeOffset start2 = HoursAfterMidnight(0);
             DateTimeOffset finish2 = start2 + TimeSpan.FromHours(6);
 
@@ -460,6 +478,8 @@ public class PlayoutBuilderTests
             int secondSeedValue = result2.ProgramScheduleAnchors.Head().EnumeratorState.Seed;
 
             firstSeedValue.Should().Be(secondSeedValue);
+
+            result2.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -548,6 +568,8 @@ public class PlayoutBuilderTests
             result.Items[3].MediaItemId.Should().Be(3);
             result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
             result.Items[4].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -682,6 +704,8 @@ public class PlayoutBuilderTests
             result.Items[26].MediaItemId.Should().Be(3);
             result.Items[27].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
             result.Items[27].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(30));
         }
 
         [Test]
@@ -777,6 +801,8 @@ public class PlayoutBuilderTests
 
             result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
             result.Items[5].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(7));
         }
 
         [Test]
@@ -870,6 +896,8 @@ public class PlayoutBuilderTests
 
             result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
             result.Items[5].MediaItemId.Should().Be(3);
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(31));
         }
 
         [Test]
@@ -974,6 +1002,8 @@ public class PlayoutBuilderTests
             result.Items[4].MediaItemId.Should().Be(2);
 
             result.Anchor.InFlood.Should().BeTrue();
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(32));
         }
 
         [Test]
@@ -1073,6 +1103,8 @@ public class PlayoutBuilderTests
             result.Items[5].MediaItemId.Should().Be(1);
             result.Items[6].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5.75));
             result.Items[6].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6.75));
         }
 
         [Test]
@@ -1171,6 +1203,8 @@ public class PlayoutBuilderTests
 
             result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
             result.Items[5].MediaItemId.Should().Be(4);
+
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6.25));
         }
 
         [Test]
@@ -1275,6 +1309,7 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(1);
             result.Anchor.MultipleRemaining.Should().Be(1);
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(5));
         }
 
         [Test]
@@ -1374,6 +1409,7 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
             result.Anchor.MultipleRemaining.Should().BeNull();
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(5));
         }
 
         [Test]
@@ -1480,6 +1516,7 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(1);
             result.Anchor.DurationFinish.Should().Be(HoursAfterMidnight(6).UtcDateTime);
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(5));
         }
 
         [Test]
@@ -1617,6 +1654,96 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
             result.Anchor.DurationFinish.Should().BeNull();
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
+        }
+
+        [Test]
+        public async Task Multiple_With_Filler_Should_Keep_Filler_After_End_Of_Playout()
+        {
+            var collectionOne = new Collection
+            {
+                Id = 1,
+                Name = "Duration Items 1",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromMinutes(61), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var collectionTwo = new Collection
+            {
+                Id = 2,
+                Name = "Filler Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(2, TimeSpan.FromMinutes(4), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (collectionOne.Id, collectionOne.MediaItems.ToList()),
+                    (collectionTwo.Id, collectionTwo.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemMultiple
+                {
+                    Id = 1,
+                    Index = 1,
+                    Collection = collectionOne,
+                    CollectionId = collectionOne.Id,
+                    StartTime = null,
+                    Count = 1,
+                    PlaybackOrder = PlaybackOrder.Chronological,
+                    PostRollFiller = new FillerPreset
+                    {
+                        FillerKind = FillerKind.PostRoll,
+                        Collection = collectionTwo,
+                        CollectionId = collectionTwo.Id,
+                        FillerMode = FillerMode.Count,
+                        Count = 1
+                    }
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
+                Items = new List<PlayoutItem>()
+            };
+
+            var configRepo = new Mock<IConfigElementRepository>();
+            var televisionRepo = new FakeTelevisionRepository();
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(1);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(2);
+
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromMinutes(0));
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromMinutes(61));
+            result.Items[1].MediaItemId.Should().Be(2);
+
+            result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
+            result.Anchor.DurationFinish.Should().BeNull();
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddMinutes(65));
         }
 
         [Test]
@@ -1696,6 +1823,7 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
             result.Anchor.DurationFinish.Should().BeNull();
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(6));
         }
 
         [Test]
@@ -1746,6 +1874,8 @@ public class PlayoutBuilderTests
 
             int seed = result.ProgramScheduleAnchors[0].EnumeratorState.Seed;
             result.ProgramScheduleAnchors.All(a => a.EnumeratorState.Seed == seed).Should().BeTrue();
+
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddDays(2));
         }
     }
 
@@ -1898,6 +2028,8 @@ public class PlayoutBuilderTests
             result.Items[3].MediaItemId.Should().Be(2);
             result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(18));
             result.Items[3].FinishOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(48));
         }
     }
 
@@ -2214,6 +2346,7 @@ public class PlayoutBuilderTests
             result.Items[4].MediaItemId.Should().Be(2);
 
             result.Anchor.InFlood.Should().BeTrue();
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(32));
         }
 
         [Test]
@@ -2318,6 +2451,7 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(1);
             result.Anchor.MultipleRemaining.Should().Be(1);
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(5));
         }
 
         [Test]
@@ -2424,6 +2558,7 @@ public class PlayoutBuilderTests
 
             result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(1);
             result.Anchor.DurationFinish.Should().Be(HoursAfterMidnight(6).UtcDateTime);
+            result.Anchor.NextStartOffset.Should().Be(HoursAfterMidnight(5));
         }
     }
 

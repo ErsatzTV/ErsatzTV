@@ -664,6 +664,67 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
     }
 
+    [Test]
+    public void Should_Not_Schedule_At_HardStop()
+    {
+        Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(55));
+
+        var scheduleItem = new ProgramScheduleItemMultiple
+        {
+            Id = 1,
+            Index = 1,
+            Collection = collectionOne,
+            CollectionId = collectionOne.Id,
+            StartTime = TimeSpan.FromHours(6),
+            PlaybackOrder = PlaybackOrder.Chronological,
+            TailFiller = null,
+            FallbackFiller = null,
+            Count = 2
+        };
+
+        var enumerator = new ChronologicalMediaCollectionEnumerator(
+            collectionOne.MediaItems,
+            new CollectionEnumeratorState());
+
+        var sortedScheduleItems = new List<ProgramScheduleItem>
+        {
+            scheduleItem,
+            NextScheduleItem
+        };
+
+        var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+            sortedScheduleItems,
+            new CollectionEnumeratorState());
+
+        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        {
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems }
+        }.ToMap();
+
+        PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+            startState,
+            CollectionEnumerators(scheduleItem, enumerator),
+            scheduleItem,
+            NextScheduleItem,
+            HardStop(scheduleItemsEnumerator));
+
+        playoutItems.Should().BeEmpty();
+
+        playoutBuilderState.CurrentTime.Should().Be(HardStop(scheduleItemsEnumerator));
+
+        playoutBuilderState.NextGuideGroup.Should().Be(1);
+        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+        playoutBuilderState.InFlood.Should().BeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+        playoutBuilderState.InDurationFiller.Should().BeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+
+        enumerator.State.Index.Should().Be(0);
+    }
+
     protected override ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne
     {
         StartTime = TimeSpan.FromHours(3)
