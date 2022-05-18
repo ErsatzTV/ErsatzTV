@@ -221,7 +221,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         maybeDuration,
                         "Channel is Offline",
                         request.HlsRealtime,
-                        request.PtsOffset);
+                        request.PtsOffset,
+                        channel.FFmpegProfile.VaapiDriver,
+                        channel.FFmpegProfile.VaapiDevice);
 
                     return new PlayoutItemProcessModel(offlineProcess, maybeDuration, finish);
                 case PlayoutItemDoesNotExistOnDisk:
@@ -231,7 +233,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         maybeDuration,
                         error.Value,
                         request.HlsRealtime,
-                        request.PtsOffset);
+                        request.PtsOffset,
+                        channel.FFmpegProfile.VaapiDriver,
+                        channel.FFmpegProfile.VaapiDevice);
 
                     return new PlayoutItemProcessModel(doesNotExistProcess, maybeDuration, finish);
                 default:
@@ -241,7 +245,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         maybeDuration,
                         "Channel is Offline",
                         request.HlsRealtime,
-                        request.PtsOffset);
+                        request.PtsOffset,
+                        channel.FFmpegProfile.VaapiDriver,
+                        channel.FFmpegProfile.VaapiDevice);
 
                     return new PlayoutItemProcessModel(errorProcess, maybeDuration, finish);
             }

@@ -566,6 +566,7 @@ public class PipelineBuilder
 
                     // nvidia needs some extra format help if the only filter will be the download filter
                     if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
+                        currentState.FrameDataLocation == FrameDataLocation.Hardware &&
                         _videoInputFile.Map(f => f.FilterSteps.Count).IfNone(1) == 0)
                     {
                         IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(

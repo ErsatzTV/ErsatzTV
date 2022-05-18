@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix error display with `HLS Segmenter` and `MPEG-TS` streaming modes
+- Remove erroneous log messages about normalizing framerate on channels where framerate normalization is disabled
 
 ### Added
 - Clean transcode cache folder on startup and after `HLS Segmenter` session terminates for any reason
@@ -13,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Remove thread limitation for scenarios where it is not required
   - This should give a performance boost to installations that don't use hardware acceleration
+- Use hardware acceleration to display error messages where configured
 
 ## [0.5.7-beta] - 2022-05-14
 ### Fixed
