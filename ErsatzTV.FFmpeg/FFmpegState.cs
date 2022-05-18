@@ -16,7 +16,8 @@ public record FFmpegState(
     OutputFormatKind OutputFormat,
     Option<string> HlsPlaylistPath,
     Option<string> HlsSegmentTemplate,
-    long PtsOffset)
+    long PtsOffset,
+    Option<int> ThreadCount)
 {
     public static FFmpegState Concat(bool saveReport, string channelName) =>
         new(
@@ -33,5 +34,6 @@ public record FFmpegState(
             OutputFormatKind.MpegTs,
             Option<string>.None,
             Option<string>.None,
-            0);
+            0,
+            Option<int>.None);
 }

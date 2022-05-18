@@ -56,7 +56,7 @@ public class PipelineGeneratorTests
             HardwareAccelerationMode.None,
             Option<string>.None,
             Option<string>.None,
-            Option<TimeSpan>.None,
+            TimeSpan.FromSeconds(1),
             Option<TimeSpan>.None,
             false,
             Option<string>.None,
@@ -65,7 +65,8 @@ public class PipelineGeneratorTests
             OutputFormatKind.MpegTs,
             Option<string>.None,
             Option<string>.None,
-            0);
+            0,
+            Option<int>.None);
 
         var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", "", _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
@@ -73,7 +74,8 @@ public class PipelineGeneratorTests
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
         result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);
 
-        PrintCommand(videoInputFile, audioInputFile, None, None, result);
+        string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
+        command.Should().Be("-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:a aac -ac 2 -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
@@ -90,7 +92,7 @@ public class PipelineGeneratorTests
         string command = PrintCommand(None, None, None, concatInputFile, result);
 
         command.Should().Be(
-            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
@@ -140,7 +142,8 @@ public class PipelineGeneratorTests
             OutputFormatKind.MpegTs,
             Option<string>.None,
             Option<string>.None,
-            0);
+            0,
+            Option<int>.None);
 
         var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", "", _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
@@ -152,7 +155,7 @@ public class PipelineGeneratorTests
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
 
         command.Should().Be(
-            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
