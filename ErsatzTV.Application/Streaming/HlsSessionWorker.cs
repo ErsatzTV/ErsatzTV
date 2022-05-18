@@ -28,10 +28,10 @@ public class HlsSessionWorker : IHlsSessionWorker
     private string _channelNumber;
     private bool _firstProcess;
     private DateTimeOffset _lastAccess;
+    private DateTimeOffset _playlistStart;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private DateTimeOffset _playlistStart;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -357,14 +357,14 @@ public class HlsSessionWorker : IHlsSessionWorker
                     .ToList();
 
                 var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
-                if (toDelete.Count > 0)
-                {
-                    _logger.LogDebug(
-                        "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
-                        toDelete.Map(s => s.SequenceNumber).Min(),
-                        toDelete.Map(s => s.SequenceNumber).Max(),
-                        trimResult.Sequence);
-                }
+                // if (toDelete.Count > 0)
+                // {
+                //     _logger.LogDebug(
+                //         "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+                //         toDelete.Map(s => s.SequenceNumber).Min(),
+                //         toDelete.Map(s => s.SequenceNumber).Max(),
+                //         trimResult.Sequence);
+                // }
 
                 foreach (Segment segment in toDelete)
                 {

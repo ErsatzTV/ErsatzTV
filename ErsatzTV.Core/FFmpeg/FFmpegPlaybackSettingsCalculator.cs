@@ -177,7 +177,6 @@ public class FFmpegPlaybackSettingsCalculator
         new()
         {
             HardwareAcceleration = HardwareAccelerationKind.None,
-            ThreadCount = 1,
             FormatFlags = CommonFormatFlags,
             VideoFormat = ffmpegProfile.VideoFormat,
             VideoBitrate = ffmpegProfile.VideoBitrate,
@@ -192,7 +191,8 @@ public class FFmpegPlaybackSettingsCalculator
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
                 _ => true
             },
-            VideoTrackTimeScale = 90000
+            VideoTrackTimeScale = 90000,
+            FrameRate = 24
         };
 
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>

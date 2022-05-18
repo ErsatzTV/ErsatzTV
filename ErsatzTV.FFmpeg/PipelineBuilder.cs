@@ -36,7 +36,6 @@ public class PipelineBuilder
     {
         _pipelineSteps = new List<IPipelineStep>
         {
-            new ThreadCountOption(1), // try everything single-threaded
             new NoStandardInputOption(),
             new HideBannerOption(),
             new NoStatsOption(),
@@ -80,6 +79,11 @@ public class PipelineBuilder
         concatInputFile.AddOption(new RealtimeInputOption());
         concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
 
+        foreach (int threadCount in ffmpegState.ThreadCount)
+        {
+            _pipelineSteps.Insert(0, new ThreadCountOption(threadCount));
+        }
+
         _pipelineSteps.Add(new NoSceneDetectOutputOption(0));
         _pipelineSteps.Add(new EncoderCopyAll());
 
@@ -111,6 +115,22 @@ public class PipelineBuilder
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
+        if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
+        {
+            _logger.LogInformation(
+                "Forcing {Threads} ffmpeg thread due to buggy combination of stream seek and realtime output",
+                1);
+
+            _pipelineSteps.Insert(0, new ThreadCountOption(1));
+        }
+        else
+        {
+            foreach (int threadCount in ffmpegState.ThreadCount)
+            {
+                _pipelineSteps.Insert(0, new ThreadCountOption(threadCount));
+            }
+        }
+
         var allVideoStreams = _videoInputFile.SelectMany(f => f.VideoStreams).ToList();
 
         // -sc_threshold 0 is unsupported with mpeg2video
