@@ -23,6 +23,13 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
     {
         var playoutItems = new List<PlayoutItem>();
 
+        DateTimeOffset firstStart = GetStartTimeAfter(playoutBuilderState, scheduleItem);
+        if (firstStart >= hardStop)
+        {
+            playoutBuilderState = playoutBuilderState with { CurrentTime = hardStop };
+            return Tuple(playoutBuilderState, playoutItems);
+        }
+
         PlayoutBuilderState nextState = playoutBuilderState with
         {
             MultipleRemaining = playoutBuilderState.MultipleRemaining.IfNone(scheduleItem.Count)

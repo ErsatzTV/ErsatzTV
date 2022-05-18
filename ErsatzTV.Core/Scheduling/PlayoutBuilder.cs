@@ -327,8 +327,25 @@ public class PlayoutBuilder : IPlayoutBuilder
                 randomStartPoint);
         }
 
-        // remove any items outside the desired range
-        playout.Items.RemoveAll(old => old.FinishOffset < trimBefore || old.StartOffset > trimAfter);
+        // remove old items
+        playout.Items.RemoveAll(old => old.FinishOffset < trimBefore);
+
+        // check for future items that aren't grouped inside range
+        var futureItems = playout.Items.Filter(i => i.StartOffset > trimAfter).ToList();
+        foreach (PlayoutItem futureItem in futureItems)
+        {
+            if (playout.Items.All(i => i == futureItem || i.GuideGroup != futureItem.GuideGroup))
+            {
+                _logger.LogError(
+                    "Playout item scheduled for {Time} after hard stop of {HardStop}",
+                    futureItem.StartOffset,
+                    trimAfter);
+
+                // it feels hacky to have to clean up a playlist like this,
+                // so only log the error, and leave the bad data to fail tests
+                // playout.Items.Remove(futureItem);
+            }
+        }
 
         return playout;
     }
@@ -409,6 +426,8 @@ public class PlayoutBuilder : IPlayoutBuilder
         // loop until we're done filling the desired amount of time
         while (playoutBuilderState.CurrentTime < playoutFinish)
         {
+            _logger.LogDebug("Playout time is {CurrentTime}", playoutBuilderState.CurrentTime);
+
             // get the schedule item out of the sorted list
             ProgramScheduleItem scheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
 

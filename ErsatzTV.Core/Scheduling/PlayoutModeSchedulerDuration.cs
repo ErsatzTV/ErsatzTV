@@ -35,6 +35,12 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
             // find when we should start this item, based on the current time
             DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
 
+            if (itemStartTime >= hardStop)
+            {
+                nextState = nextState with { CurrentTime = hardStop };
+                break;
+            }
+
             // remember when we need to finish this duration item
             if (nextState.DurationFinish.IsNone)
             {
