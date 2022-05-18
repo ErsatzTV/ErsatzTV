@@ -28,7 +28,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     private string _channelNumber;
     private bool _firstProcess;
     private DateTimeOffset _lastAccess;
-    private DateTimeOffset _playlistStart;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
@@ -45,15 +44,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         _logger = logger;
     }
 
-    public DateTimeOffset PlaylistStart
-    {
-        get => _playlistStart;
-        private set
-        {
-            _logger.LogDebug("Setting PlaylistStart to {PlaylistStart}", value);
-            _playlistStart = value;
-        }
-    }
+    public DateTimeOffset PlaylistStart { get; private set; }
 
     public void Touch()
     {

@@ -31,7 +31,9 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
             request.MaybeDuration,
             request.ErrorMessage,
             request.HlsRealtime,
-            request.PtsOffset);
+            request.PtsOffset,
+            channel.FFmpegProfile.VaapiDriver,
+            channel.FFmpegProfile.VaapiDevice);
 
         return new PlayoutItemProcessModel(process, request.MaybeDuration, request.Until);
     }
