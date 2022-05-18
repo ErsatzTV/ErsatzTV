@@ -42,7 +42,9 @@ public interface IFFmpegProcessService
         Option<TimeSpan> duration,
         string errorMessage,
         bool hlsRealtime,
-        long ptsOffset);
+        long ptsOffset,
+        VaapiDriver vaapiDriver,
+        string vaapiDevice);
 
     Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 

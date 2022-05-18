@@ -181,14 +181,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         string videoFormat = GetVideoFormat(playbackSettings);
 
-        HardwareAccelerationMode hwAccel = playbackSettings.HardwareAcceleration switch
-        {
-            HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
-            HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
-            HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
-            HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
-            _ => HardwareAccelerationMode.None
-        };
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
 
         OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
             ? OutputFormatKind.Hls
@@ -259,7 +252,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<TimeSpan> duration,
         string errorMessage,
         bool hlsRealtime,
-        long ptsOffset)
+        long ptsOffset,
+        VaapiDriver vaapiDriver,
+        string vaapiDevice)
     {
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateErrorSettings(
             channel.StreamingMode,
@@ -335,11 +330,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
+
         var ffmpegState = new FFmpegState(
             false,
-            HardwareAccelerationMode.None,
-            None,
-            None,
+            hwAccel,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.StreamSeek,
             duration,
             channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
@@ -601,5 +598,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,
             FFmpegProfileVideoFormat.Copy => VideoFormat.Copy,
             _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
+        };
+
+    private static HardwareAccelerationMode GetHardwareAccelerationMode(FFmpegPlaybackSettings playbackSettings) =>
+        playbackSettings.HardwareAcceleration switch
+        {
+            HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
+            HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
+            HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
+            HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
+            _ => HardwareAccelerationMode.None
         };
 }
