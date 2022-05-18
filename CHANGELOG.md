@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Clean transcode cache folder on startup and after `HLS Segmenter` session terminates for any reason
 
+### Changed
+- Remove thread limitation for scenarios where it is not required
+  - This should give a performance boost to installations that don't use hardware acceleration
+
 ## [0.5.7-beta] - 2022-05-14
 ### Fixed
 - Reduce memory use due to library scan operations

@@ -234,7 +234,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outputFormat,
             hlsPlaylistPath,
             hlsSegmentTemplate,
-            ptsOffset);
+            ptsOffset,
+            playbackSettings.ThreadCount);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -327,7 +328,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var ffmpegVideoStream = new VideoStream(
             0,
             VideoFormat.GeneratedImage,
-            new PixelFormatYuv420P(),
+            new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
             new FrameSize(videoVersion.Width, videoVersion.Height),
             None,
             true);
@@ -348,7 +349,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outputFormat,
             hlsPlaylistPath,
             hlsSegmentTemplate,
-            ptsOffset);
+            ptsOffset,
+            Option<int>.None);
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 
