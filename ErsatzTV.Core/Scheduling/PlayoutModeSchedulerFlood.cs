@@ -30,12 +30,21 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
 
         ProgramScheduleItem peekScheduleItem = nextScheduleItem;
 
+        var scheduledNone = false;
+
         while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
         {
             MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();
 
             // find when we should start this item, based on the current time
             DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
+            if (itemStartTime >= hardStop)
+            {
+                scheduledNone = playoutItems.Count == 0;
+                nextState = nextState with { CurrentTime = hardStop };
+                break;
+            }
+
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
@@ -112,7 +121,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
 
         nextState = nextState with
         {
-            InFlood = nextState.CurrentTime >= hardStop,
+            InFlood = playoutItems.Any() && nextState.CurrentTime >= hardStop,
 
             // only decrement guide group if it was bumped
             NextGuideGroup = playoutItems.Select(pi => pi.GuideGroup).Distinct().Count() != 1
@@ -121,7 +130,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
         };
 
         // only advance to the next schedule item if we aren't still in a flood
-        if (!nextState.InFlood)
+        if (!nextState.InFlood && !scheduledNone)
         {
             nextState.ScheduleItemsEnumerator.MoveNext();
         }
