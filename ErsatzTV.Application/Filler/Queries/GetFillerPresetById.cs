@@ -1,7 +1,3 @@
-﻿using LanguageExt;
-using MediatR;
+﻿namespace ErsatzTV.Application.Filler;
 
-namespace ErsatzTV.Application.Filler.Queries
-{
-    public record GetFillerPresetById(int Id) : IRequest<Option<FillerPresetViewModel>>;
-}
+public record GetFillerPresetById(int Id) : IRequest<Option<FillerPresetViewModel>>;

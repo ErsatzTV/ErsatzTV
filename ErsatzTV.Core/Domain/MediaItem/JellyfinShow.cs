@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class JellyfinShow : Show
 {
-    public class JellyfinShow : Show
-    {
-        public string ItemId { get; set; }
-        public string Etag { get; set; }
-    }
+    public string ItemId { get; set; }
+    public string Etag { get; set; }
 }

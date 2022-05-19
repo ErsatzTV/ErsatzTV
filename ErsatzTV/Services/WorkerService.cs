@@ -1,48 +1,49 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
+using Bugsnag;
 using ErsatzTV.Application;
-using ErsatzTV.Application.Maintenance.Commands;
-using ErsatzTV.Application.MediaCollections.Commands;
-using ErsatzTV.Application.MediaSources.Commands;
-using ErsatzTV.Application.Playouts.Commands;
-using ErsatzTV.Application.Search.Commands;
+using ErsatzTV.Application.Maintenance;
+using ErsatzTV.Application.MediaCollections;
+using ErsatzTV.Application.MediaSources;
+using ErsatzTV.Application.Playouts;
+using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
-using LanguageExt;
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
 
-namespace ErsatzTV.Services
+namespace ErsatzTV.Services;
+
+public class WorkerService : BackgroundService
 {
-    public class WorkerService : BackgroundService
+    private readonly ChannelReader<IBackgroundServiceRequest> _channel;
+    private readonly ILogger<WorkerService> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    public WorkerService(
+        ChannelReader<IBackgroundServiceRequest> channel,
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<WorkerService> logger)
     {
-        private readonly ChannelReader<IBackgroundServiceRequest> _channel;
-        private readonly ILogger<WorkerService> _logger;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+        _channel = channel;
+        _serviceScopeFactory = serviceScopeFactory;
+        _logger = logger;
+    }
 
-        public WorkerService(
-            ChannelReader<IBackgroundServiceRequest> channel,
-            IServiceScopeFactory serviceScopeFactory,
-            ILogger<WorkerService> logger)
-        {
-            _channel = channel;
-            _serviceScopeFactory = serviceScopeFactory;
-            _logger = logger;
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        try
         {
             _logger.LogInformation("Worker service started");
 
             await foreach (IBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
                 try
                 {
-                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
                     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                     switch (request)
@@ -89,11 +90,29 @@ namespace ErsatzTV.Services
                             break;
                     }
                 }
+                catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // this can happen when we're shutting down
+                }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Failed to process background service request");
+
+                    try
+                    {
+                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                        client.Notify(ex);
+                    }
+                    catch (Exception)
+                    {
+                        // do nothing
+                    }
                 }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Worker service shutting down");
         }
     }
 }

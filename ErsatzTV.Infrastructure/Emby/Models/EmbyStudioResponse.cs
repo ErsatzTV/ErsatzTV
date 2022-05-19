@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Infrastructure.Emby.Models
+﻿namespace ErsatzTV.Infrastructure.Emby.Models;
+
+public class EmbyStudioResponse
 {
-    public class EmbyStudioResponse
-    {
-        public string Name { get; set; }
-    }
+    public string Name { get; set; }
 }

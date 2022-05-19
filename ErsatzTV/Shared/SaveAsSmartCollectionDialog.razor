@@ -1,7 +1,6 @@
 ﻿@using Microsoft.Extensions.Caching.Memory
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.MediaCollections.Queries
+@implements IDisposable
 @inject IMediator _mediator
 @inject IMemoryCache _memoryCache
 @inject ISnackbar _snackbar
@@ -12,8 +11,8 @@
         <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
             <MudContainer Class="mb-6">
                 <MudText Class="mud-primary-text"
-                                Style="background-color: transparent; font-weight: bold"
-                                Text="Select the desired smart collection"/>
+                         Style="background-color: transparent; font-weight: bold"
+                         Text="Select the desired smart collection"/>
             </MudContainer>
             <MudSelect Label="Collection" @bind-Value="_selectedCollection" Class="mb-6 mx-4">
                 @foreach (SmartCollectionViewModel collection in _collections)
@@ -38,6 +37,7 @@
 
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
@@ -53,12 +53,18 @@
 
     private readonly DummyModel _dummyModel = new();
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     private bool CanSubmit() =>
         _selectedCollection != null && (_selectedCollection != _newCollection || !string.IsNullOrWhiteSpace(_newCollectionName));
 
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await _mediator.Send(new GetAllSmartCollections())
+        _collections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => new[] { _newCollection }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
 
         if (_memoryCache.TryGetValue("SaveAsSmartCollectionDialog.SelectedCollectionId", out int id))
@@ -81,7 +87,7 @@
         if (_selectedCollection == _newCollection)
         {
             Either<BaseError, SmartCollectionViewModel> maybeResult =
-                await _mediator.Send(new CreateSmartCollection(string.Empty, _newCollectionName));
+                await _mediator.Send(new CreateSmartCollection(string.Empty, _newCollectionName), _cts.Token);
 
             maybeResult.Match(
                 collection =>

@@ -1,9 +1,7 @@
 ﻿@page "/media/sources/emby/{Id:int}/libraries"
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Emby.Commands
-@using ErsatzTV.Application.Emby.Queries
-@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Emby
+@using ErsatzTV.Application.MediaSources
+@implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
 
@@ -16,9 +14,16 @@
     SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
         new UpdateEmbyLibraryPreferences(
@@ -40,9 +45,10 @@
         ShouldSyncItems = library.ShouldSyncItems
     };
 
-    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(libraryId));
+        await _channel.WriteAsync(new SynchronizeEmbyLibraries(parameters.MediaSourceId), _cts.Token);
+        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

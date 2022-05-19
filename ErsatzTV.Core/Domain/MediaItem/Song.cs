@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
+﻿namespace ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Domain
+public class Song : MediaItem
 {
-    public class Song : MediaItem
-    {
-        public List<SongMetadata> SongMetadata { get; set; }
-        public List<MediaVersion> MediaVersions { get; set; }
-    }
+    public List<SongMetadata> SongMetadata { get; set; }
+    public List<MediaVersion> MediaVersions { get; set; }
 }

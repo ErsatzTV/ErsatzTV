@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models
+﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models;
+
+public class JellyfinUserResponse
 {
-    public class JellyfinUserResponse
-    {
-        public string Name { get; set; }
-        public string Id { get; set; }
-        public JellyfinUserPolicyResponse Policy { get; set; }
-    }
+    public string Name { get; set; }
+    public string Id { get; set; }
+    public JellyfinUserPolicyResponse Policy { get; set; }
 }

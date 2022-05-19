@@ -2,10 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class MultiCollectionItemConfiguration : IEntityTypeConfiguration<MultiCollectionItem>
 {
-    public class MultiCollectionItemConfiguration : IEntityTypeConfiguration<MultiCollectionItem>
-    {
-        public void Configure(EntityTypeBuilder<MultiCollectionItem> builder) => builder.ToTable("MultiCollectionItem");
-    }
+    public void Configure(EntityTypeBuilder<MultiCollectionItem> builder) => builder.ToTable("MultiCollectionItem");
 }

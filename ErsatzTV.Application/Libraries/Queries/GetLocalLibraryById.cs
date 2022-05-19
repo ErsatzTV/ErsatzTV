@@ -1,7 +1,3 @@
-﻿using LanguageExt;
-using MediatR;
+﻿namespace ErsatzTV.Application.Libraries;
 
-namespace ErsatzTV.Application.Libraries.Queries
-{
-    public record GetLocalLibraryById(int LibraryId) : IRequest<Option<LocalLibraryViewModel>>;
-}
+public record GetLocalLibraryById(int LibraryId) : IRequest<Option<LocalLibraryViewModel>>;

@@ -1,7 +1,6 @@
 ﻿@page "/watermarks"
 @using ErsatzTV.Application.Watermarks
-@using ErsatzTV.Application.Watermarks.Commands
-@using ErsatzTV.Application.Watermarks.Queries
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 @inject ILogger<Watermarks> _logger
@@ -72,12 +71,20 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private List<WatermarkViewModel> _watermarks;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnParametersSetAsync() => await LoadWatermarksAsync();
 
     private async Task LoadWatermarksAsync() =>
-        _watermarks = await _mediator.Send(new GetAllWatermarks());
+        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token);
 
     private async Task DeleteWatermarkAsync(WatermarkViewModel watermark)
     {
@@ -88,7 +95,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteWatermark(watermark.Id));
+            await _mediator.Send(new DeleteWatermark(watermark.Id), _cts.Token);
             await LoadWatermarksAsync();
         }
     }

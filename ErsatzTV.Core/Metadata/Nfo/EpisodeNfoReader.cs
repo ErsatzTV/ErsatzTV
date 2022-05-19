@@ -1,20 +1,43 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
+﻿using System.Xml;
+using Bugsnag;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using Microsoft.Extensions.Logging;
+using Microsoft.IO;
 
-namespace ErsatzTV.Core.Metadata.Nfo
+namespace ErsatzTV.Core.Metadata.Nfo;
+
+public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
 {
-    public class EpisodeNfoReader : IEpisodeNfoReader
-    {
-        public async Task<List<TvShowEpisodeNfo>> Read(Stream input)
-        {
-            var result = new List<TvShowEpisodeNfo>();
+    private readonly IClient _client;
+    private readonly ILogger<EpisodeNfoReader> _logger;
 
-            var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
-            using var reader = XmlReader.Create(input, settings);
+    public EpisodeNfoReader(
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager,
+        IClient client,
+        ILogger<EpisodeNfoReader> logger)
+        : base(recyclableMemoryStreamManager, logger)
+    {
+        _client = client;
+        _logger = logger;
+    }
+
+    public async Task<Either<BaseError, List<TvShowEpisodeNfo>>> ReadFromFile(string fileName)
+    {
+        // ReSharper disable once ConvertToUsingDeclaration
+        await using (Stream s = await SanitizedStreamForFile(fileName))
+        {
+            return await Read(s);
+        }
+    }
+
+    internal async Task<Either<BaseError, List<TvShowEpisodeNfo>>> Read(Stream input)
+    {
+        var result = new List<TvShowEpisodeNfo>();
+
+        try
+        {
+            using var reader = XmlReader.Create(input, Settings);
             TvShowEpisodeNfo nfo = null;
 
             while (await reader.ReadAsync())
@@ -32,53 +55,56 @@ namespace ErsatzTV.Core.Metadata.Nfo
                                     Writers = new List<string>(),
                                     Directors = new List<string>()
                                 };
+                                // immediately add so we have something to return if we encounter invalid characters
+                                result.Add(nfo);
                                 break;
                             case "title":
-                                await ReadTitle(reader, nfo);
+                                await ReadStringContent(reader, nfo, (episode, title) => episode.Title = title);
                                 break;
                             case "showtitle":
-                                await ReadShowTitle(reader, nfo);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (episode, showTitle) => episode.ShowTitle = showTitle);
                                 break;
                             case "episode":
-                                await ReadEpisode(reader, nfo);
+                                await ReadIntContent(
+                                    reader,
+                                    nfo,
+                                    (episode, episodeNumber) => episode.Episode = episodeNumber);
                                 break;
                             case "season":
-                                await ReadSeason(reader, nfo);
+                                await ReadIntContent(
+                                    reader,
+                                    nfo,
+                                    (episode, seasonNumber) => episode.Season = seasonNumber);
                                 break;
                             case "uniqueid":
-                                await ReadUniqueId(reader, nfo);
+                                await ReadUniqueId(reader, nfo, (episode, uniqueId) => episode.UniqueIds.Add(uniqueId));
                                 break;
                             case "mpaa":
-                                await ReadContentRating(reader, nfo);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (episode, contentRating) => episode.ContentRating = contentRating);
                                 break;
                             case "aired":
-                                // TODO: parse the date here
-                                await ReadAired(reader, nfo);
+                                await ReadDateTimeContent(reader, nfo, (episode, aired) => episode.Aired = aired);
                                 break;
                             case "plot":
-                                await ReadPlot(reader, nfo);
+                                await ReadStringContent(reader, nfo, (episode, plot) => episode.Plot = plot);
                                 break;
                             case "actor":
-                                ReadActor(reader, nfo);
+                                ReadActor(reader, nfo, (episode, actor) => episode.Actors.Add(actor));
                                 break;
                             case "credits":
-                                await ReadWriter(reader, nfo);
+                                await ReadStringContent(reader, nfo, (episode, writer) => episode.Writers.Add(writer));
                                 break;
                             case "director":
-                                await ReadDirector(reader, nfo);
-                                break;
-                        }
-
-                        break;
-                    case XmlNodeType.EndElement:
-                        switch (reader.Name.ToLowerInvariant())
-                        {
-                            case "episodedetails":
-                                if (nfo != null)
-                                {
-                                    result.Add(nfo);
-                                }
-
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (episode, director) => episode.Directors.Add(director));
                                 break;
                         }
 
@@ -88,114 +114,15 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
             return result;
         }
-
-        private static async Task ReadTitle(XmlReader reader, TvShowEpisodeNfo nfo)
+        catch (XmlException)
         {
-            if (nfo != null)
-            {
-                nfo.Title = await reader.ReadElementContentAsStringAsync();
-            }
+            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
+            return result;
         }
-
-        private static async Task ReadShowTitle(XmlReader reader, TvShowEpisodeNfo nfo)
+        catch (Exception ex)
         {
-            if (nfo != null)
-            {
-                nfo.ShowTitle = await reader.ReadElementContentAsStringAsync();
-            }
+            _client.Notify(ex);
+            return new FailedToReadNfo(ex.ToString());
         }
-
-        private static async Task ReadEpisode(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                bool _ = int.TryParse(await reader.ReadElementContentAsStringAsync(), out int episode);
-                nfo.Episode = episode;
-            }
-        }
-
-        private static async Task ReadSeason(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                bool _ = int.TryParse(await reader.ReadElementContentAsStringAsync(), out int season);
-                nfo.Season = season;
-            }
-        }
-
-        private static async Task ReadUniqueId(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                var uniqueId = new UniqueIdNfo();
-                reader.MoveToAttribute("default");
-                uniqueId.Default = bool.TryParse(reader.Value, out bool def) && def;
-                reader.MoveToAttribute("type");
-                uniqueId.Type = reader.Value;
-                reader.MoveToElement();
-                uniqueId.Guid = await reader.ReadElementContentAsStringAsync();
-
-                nfo.UniqueIds.Add(uniqueId);
-            }
-        }
-
-        private static async Task ReadContentRating(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                nfo.ContentRating = await reader.ReadElementContentAsStringAsync();
-            }
-        }
-
-        private static async Task ReadAired(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                nfo.Aired = await reader.ReadElementContentAsStringAsync();
-            }
-        }
-
-        private static async Task ReadPlot(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                nfo.Plot = await reader.ReadElementContentAsStringAsync();
-            }
-        }
-
-        private static void ReadActor(XmlReader reader, TvShowEpisodeNfo nfo)
-        {
-            if (nfo != null)
-            {
-                var actor = new ActorNfo();
-                var element = (XElement) XNode.ReadFrom(reader);
-
-                XElement name = element.Element("name");
-                if (name != null)
-                {
-                    actor.Name = name.Value;
-                }
-
-                XElement role = element.Element("role");
-                if (role != null)
-                {
-                    actor.Role = role.Value;
-                }
-
-                XElement thumb = element.Element("thumb");
-                if (thumb != null)
-                {
-                    actor.Thumb = thumb.Value;
-                }
-
-                nfo.Actors.Add(actor);
-            }
-        }
-
-        private static async Task ReadWriter(XmlReader reader, TvShowEpisodeNfo nfo) =>
-            nfo?.Writers.Add(await reader.ReadElementContentAsStringAsync());
-
-        private static async Task ReadDirector(XmlReader reader, TvShowEpisodeNfo nfo) =>
-            nfo?.Directors.Add(await reader.ReadElementContentAsStringAsync());
     }
 }

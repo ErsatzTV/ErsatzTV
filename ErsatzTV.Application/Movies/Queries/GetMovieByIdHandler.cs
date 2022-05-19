@@ -1,61 +1,77 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Movies.Mapper;
 
-namespace ErsatzTV.Application.Movies.Queries
+namespace ErsatzTV.Application.Movies;
+
+public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieViewModel>>
 {
-    public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieViewModel>>
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMovieRepository _movieRepository;
+    private readonly IPlexPathReplacementService _plexPathReplacementService;
+
+    public GetMovieByIdHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        IMovieRepository movieRepository,
+        IMediaSourceRepository mediaSourceRepository,
+        IPlexPathReplacementService plexPathReplacementService,
+        IJellyfinPathReplacementService jellyfinPathReplacementService,
+        IEmbyPathReplacementService embyPathReplacementService)
     {
-        private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly IDbContextFactory<TvContext> _dbContextFactory;
-        private readonly IMovieRepository _movieRepository;
+        _dbContextFactory = dbContextFactory;
+        _movieRepository = movieRepository;
+        _mediaSourceRepository = mediaSourceRepository;
+        _plexPathReplacementService = plexPathReplacementService;
+        _jellyfinPathReplacementService = jellyfinPathReplacementService;
+        _embyPathReplacementService = embyPathReplacementService;
+    }
 
-        public GetMovieByIdHandler(
-            IDbContextFactory<TvContext> dbContextFactory,
-            IMovieRepository movieRepository,
-            IMediaSourceRepository mediaSourceRepository)
+    public async Task<Option<MovieViewModel>> Handle(
+        GetMovieById request,
+        CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+            .Map(list => list.HeadOrNone());
+
+        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+            .Map(list => list.HeadOrNone());
+
+        Option<Movie> maybeMovie = await _movieRepository.GetMovie(request.Id);
+
+        Option<MediaVersion> maybeVersion = maybeMovie.Map(m => m.MediaVersions.HeadOrNone()).Flatten();
+        var languageCodes = new List<string>();
+        foreach (MediaVersion version in maybeVersion)
         {
-            _dbContextFactory = dbContextFactory;
-            _movieRepository = movieRepository;
-            _mediaSourceRepository = mediaSourceRepository;
+            var mediaCodes = version.Streams
+                .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio)
+                .Map(ms => ms.Language)
+                .ToList();
+
+            languageCodes.AddRange(await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes));
         }
 
-        public async Task<Option<MovieViewModel>> Handle(
-            GetMovieById request,
-            CancellationToken cancellationToken)
+        foreach (Movie movie in maybeMovie)
         {
-            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            
-            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
-                .Map(list => list.HeadOrNone());
-
-            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
-                .Map(list => list.HeadOrNone());
-
-            Option<Movie> movie = await _movieRepository.GetMovie(request.Id);
-
-            Option<MediaVersion> maybeVersion = movie.Map(m => m.MediaVersions.HeadOrNone()).Flatten();
-            var languageCodes = new List<string>();
-            foreach (MediaVersion version in maybeVersion)
-            {
-                var mediaCodes = version.Streams
-                    .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio)
-                    .Map(ms => ms.Language)
-                    .ToList();
-
-                languageCodes.AddRange(await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes));
-            }
-
-            return movie.Map(m => ProjectToViewModel(m, languageCodes, maybeJellyfin, maybeEmby));
+            string localPath = await movie.GetLocalPath(
+                _plexPathReplacementService,
+                _jellyfinPathReplacementService,
+                _embyPathReplacementService,
+                false);
+            return ProjectToViewModel(movie, localPath, languageCodes, maybeJellyfin, maybeEmby);
         }
+
+        return None;
     }
 }

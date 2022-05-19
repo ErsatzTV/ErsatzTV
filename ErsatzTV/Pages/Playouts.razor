@@ -1,9 +1,8 @@
 ﻿@page "/playouts"
 @using ErsatzTV.Application.Playouts
-@using ErsatzTV.Application.Playouts.Commands
-@using ErsatzTV.Application.Playouts.Queries
-@using ErsatzTV.Application.Configuration.Commands
-@using ErsatzTV.Application.Configuration.Queries
+@using ErsatzTV.Application.Configuration
+@using ErsatzTV.Core.Scheduling
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -46,14 +45,14 @@
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
                 <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Rebuild Playout">
+                    <MudTooltip Text="Reset Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       OnClick="@(_ => RebuildPlayout(context))">
+                                       OnClick="@(_ => ResetPlayout(context))">
                         </MudIconButton>
                     </MudTooltip>
-                    <MudTooltip Text="Schedule Rebuild">
+                    <MudTooltip Text="Schedule Reset">
                         <MudIconButton Icon="@Icons.Material.Filled.Update"
-                                       OnClick="@(_ => ScheduleRebuild(context))">
+                                       OnClick="@(_ => ScheduleReset(context))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Playout">
@@ -99,6 +98,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private MudTable<PlayoutNameViewModel> _table;
     private MudTable<PlayoutItemViewModel> _detailTable;
     private int _rowsPerPage;
@@ -114,18 +115,27 @@
             if (_showFiller != value)
             {
                 _showFiller = value;
-                _detailTable.ReloadServerData();
+                if (_selectedPlayoutId != null)
+                {
+                    _detailTable.ReloadServerData();
+                }
             }
         }
     }
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize))
+        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _detailRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize))
+        _detailRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _showFiller = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller))
+        _showFiller = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller), _cts.Token)
             .Map(maybeShow => maybeShow.Match(ce => bool.TryParse(ce.Value, out bool show) && show, () => false));
     }
 
@@ -133,14 +143,6 @@
     {
         _selectedPlayoutId = playout.PlayoutId;
         await _detailTable.ReloadServerData();
-    }
-
-    private async Task ShowFillerChanged()
-    {
-        if (_selectedPlayoutId != null)
-        {
-            await _detailTable.ReloadServerData();
-        }
     }
 
     private async Task DeletePlayout(PlayoutNameViewModel playout)
@@ -152,7 +154,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeletePlayout(playout.PlayoutId));
+            await _mediator.Send(new DeletePlayout(playout.PlayoutId), _cts.Token);
             await _table.ReloadServerData();
             if (_selectedPlayoutId == playout.PlayoutId)
             {
@@ -161,9 +163,9 @@
         }
     }
 
-    private async Task RebuildPlayout(PlayoutNameViewModel playout)
+    private async Task ResetPlayout(PlayoutNameViewModel playout)
     {
-        await _mediator.Send(new BuildPlayout(playout.PlayoutId, true));
+        await _mediator.Send(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
         await _table.ReloadServerData();
         if (_selectedPlayoutId == playout.PlayoutId)
         {
@@ -171,29 +173,31 @@
         }
     }
 
-    private async Task ScheduleRebuild(PlayoutNameViewModel playout)
+    private async Task ScheduleReset(PlayoutNameViewModel playout)
     {
         var parameters = new DialogParameters
         {
             { "PlayoutId", playout.PlayoutId },
             { "ChannelName", playout.ChannelName },
             { "ScheduleName", playout.ScheduleName },
-            { "DailyRebuildTime", playout.DailyRebuildTime }
+            { "DailyResetTime", playout.DailyRebuildTime }
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<SchedulePlayoutRebuild>("Schedule Playout Rebuild", parameters, options);
+        IDialogReference dialog = _dialog.Show<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
         await dialog.Result;
+
+        await _table.ReloadServerData();
     }
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        List<PlayoutNameViewModel> playouts = await _mediator.Send(new GetAllPlayouts());
+        List<PlayoutNameViewModel> playouts = await _mediator.Send(new GetAllPlayouts(), _cts.Token);
         IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber));
 
-        // TODO: properly page this data
+    // TODO: properly page this data
         return new TableData<PlayoutNameViewModel>
         {
             TotalItems = playouts.Count,
@@ -203,13 +207,13 @@
 
     private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()));
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()), _cts.Token);
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()), _cts.Token);
 
         if (_selectedPlayoutId.HasValue)
         {
             PagedPlayoutItemsViewModel data =
-                await _mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize));
+                await _mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), _cts.Token);
             return new TableData<PlayoutItemViewModel>
             {
                 TotalItems = data.TotalCount,

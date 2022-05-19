@@ -1,14 +1,12 @@
 ﻿@page "/media/filler/presets/{Id:int}/edit"
 @page "/media/filler/presets/add"
-@using ErsatzTV.Application.Filler
-@using ErsatzTV.Application.Filler.Queries
-@using ErsatzTV.Application.Television.Queries
-@using ErsatzTV.Application.Artists.Queries
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Television
 @using ErsatzTV.Core.Domain.Filler
-@using Microsoft.AspNetCore.Components
+@using ErsatzTV.Application.Artists
+@using ErsatzTV.Application.Filler
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FillerPresetEditor> _logger
 @inject ISnackbar _snackbar
@@ -44,6 +42,7 @@
                         <MudSelectItem T="int?" Value="15">15 (:00, :15, :30, :45)</MudSelectItem>
                         <MudSelectItem T="int?" Value="30">30 (:00, :30)</MudSelectItem>
                     </MudSelect>
+                    <MudCheckBox Class="mt-3" Label="Allow Watermarks" @bind-Checked="@_model.AllowWatermarks" For="@(() => _model.AllowWatermarks)"/>
                     <MudSelect Class="mt-3" Label="Filler Collection Type" @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
                         @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
                         {
@@ -134,38 +133,46 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     [Parameter]
     public int Id { get; set; }
-    
+
     private readonly FillerPresetEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-    
+
     private List<MediaCollectionViewModel> _mediaCollections;
     private List<MultiCollectionViewModel> _multiCollections;
     private List<SmartCollectionViewModel> _smartCollections;
     private List<NamedMediaItemViewModel> _televisionShows;
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
-    
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _mediaCollections = await _mediator.Send(new GetAllCollections())
+        _mediaCollections = await _mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _multiCollections = await _mediator.Send(new GetAllMultiCollections())
+        _multiCollections = await _mediator.Send(new GetAllMultiCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
+        _televisionShows = await _mediator.Send(new GetAllTelevisionShows(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons())
+        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _artists = await _mediator.Send(new GetAllArtists())
+        _artists = await _mediator.Send(new GetAllArtists(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         if (IsEdit)
         {
-            Option<FillerPresetViewModel> maybeFillerPreset = await _mediator.Send(new GetFillerPresetById(Id));
+            Option<FillerPresetViewModel> maybeFillerPreset = await _mediator.Send(new GetFillerPresetById(Id), _cts.Token);
             maybeFillerPreset.IfSome(fillerPreset =>
             {
                 _model.Id = fillerPreset.Id;
@@ -175,6 +182,7 @@
                 _model.Duration = fillerPreset.Duration;
                 _model.Count = fillerPreset.Count;
                 _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
+                _model.AllowWatermarks = fillerPreset.AllowWatermarks;
                 _model.CollectionType = fillerPreset.CollectionType;
                 _model.Collection = fillerPreset.CollectionId.HasValue
                     ? _mediaCollections.Find(c => c.Id == fillerPreset.CollectionId.Value)
@@ -197,22 +205,23 @@
             _model.FillerMode = FillerMode.Duration;
         }
     }
+
     protected override void OnInitialized()
     {
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-    
+
     private bool IsEdit => Id != 0;
-    
+
     private async Task HandleSubmitAsync()
     {
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            IRequest<Either<BaseError, LanguageExt.Unit>> request = IsEdit ? _model.ToEdit() : _model.ToUpdate();
+            IRequest<Either<BaseError, Unit>> request = IsEdit ? _model.ToEdit() : _model.ToUpdate();
 
-            Seq<BaseError> errorMessage = await _mediator.Send(request)
+            Seq<BaseError> errorMessage = await _mediator.Send(request, _cts.Token)
                 .Map(result => result.LeftToSeq());
 
             errorMessage.HeadOrNone().Match(
@@ -224,4 +233,5 @@
                 () => _navigationManager.NavigateTo("/media/filler/presets"));
         }
     }
+
 }

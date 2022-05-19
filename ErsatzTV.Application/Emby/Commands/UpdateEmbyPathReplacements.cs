@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core;
-using LanguageExt;
+﻿using ErsatzTV.Core;
 
-namespace ErsatzTV.Application.Emby.Commands
-{
-    public record UpdateEmbyPathReplacements(
-        int EmbyMediaSourceId,
-        List<EmbyPathReplacementItem> PathReplacements) : MediatR.IRequest<Either<BaseError, Unit>>;
+namespace ErsatzTV.Application.Emby;
 
-    public record EmbyPathReplacementItem(int Id, string EmbyPath, string LocalPath);
-}
+public record UpdateEmbyPathReplacements(
+    int EmbyMediaSourceId,
+    List<EmbyPathReplacementItem> PathReplacements) : IRequest<Either<BaseError, Unit>>;
+
+public record EmbyPathReplacementItem(int Id, string EmbyPath, string LocalPath);

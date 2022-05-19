@@ -1,55 +1,53 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Unit = LanguageExt.Unit;
 
-namespace ErsatzTV.Application.Filler.Commands
+namespace ErsatzTV.Application.Filler;
+
+public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Either<BaseError, Unit>>
 {
-    public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Either<BaseError, Unit>>
+    private readonly IClient _client;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+
+    public CreateFillerPresetHandler(IClient client, IDbContextFactory<TvContext> dbContextFactory)
     {
-        private readonly IDbContextFactory<TvContext> _dbContextFactory;
+        _client = client;
+        _dbContextFactory = dbContextFactory;
+    }
 
-        public CreateFillerPresetHandler(IDbContextFactory<TvContext> dbContextFactory)
+    public async Task<Either<BaseError, Unit>> Handle(CreateFillerPreset request, CancellationToken cancellationToken)
+    {
+        try
         {
-            _dbContextFactory = dbContextFactory;
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var fillerPreset = new FillerPreset
+            {
+                Name = request.Name,
+                FillerKind = request.FillerKind,
+                FillerMode = request.FillerMode,
+                Duration = request.Duration,
+                Count = request.Count,
+                PadToNearestMinute = request.PadToNearestMinute,
+                AllowWatermarks = request.AllowWatermarks,
+                CollectionType = request.CollectionType,
+                CollectionId = request.CollectionId,
+                MediaItemId = request.MediaItemId,
+                MultiCollectionId = request.MultiCollectionId,
+                SmartCollectionId = request.SmartCollectionId
+            };
+
+            await dbContext.FillerPresets.AddAsync(fillerPreset, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return Unit.Default;
         }
-
-        public async Task<Either<BaseError, Unit>> Handle(CreateFillerPreset request, CancellationToken cancellationToken)
+        catch (Exception ex)
         {
-            try
-            {
-                await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-
-                var fillerPreset = new FillerPreset
-                {
-                    Name = request.Name,
-                    FillerKind = request.FillerKind,
-                    FillerMode = request.FillerMode,
-                    Duration = request.Duration,
-                    Count = request.Count,
-                    PadToNearestMinute = request.PadToNearestMinute,
-                    CollectionType = request.CollectionType,
-                    CollectionId = request.CollectionId,
-                    MediaItemId = request.MediaItemId,
-                    MultiCollectionId = request.MultiCollectionId,
-                    SmartCollectionId = request.SmartCollectionId
-                };
-
-                await dbContext.FillerPresets.AddAsync(fillerPreset, cancellationToken);
-                await dbContext.SaveChangesAsync(cancellationToken);
-
-                return Unit.Default;
-            }
-            catch (Exception ex)
-            {
-                return BaseError.New(ex.Message);
-            }
+            _client.Notify(ex);
+            return BaseError.New(ex.Message);
         }
     }
 }

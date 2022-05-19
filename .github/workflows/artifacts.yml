@@ -51,6 +51,16 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Cache NPM dependencies
+        uses: bahmutov/npm-install@v1.4.5
+        with:
+          working-directory: ErsatzTV/client-app
+
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
@@ -104,9 +114,9 @@ jobs:
       - name: Notarize
         shell: bash
         run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
-          gon -log-level=debug -log-json ./gon.json
+          curl -o gon.zip -L -s "https://github.com/mitchellh/gon/releases/latest/download/gon_macos.zip"
+          unzip -o -q gon.zip
+          ./gon -log-level=debug -log-json ./gon.json
         env:
           AC_USERNAME: ${{ secrets.ac_username }}
           AC_PASSWORD: ${{ secrets.ac_password }}
@@ -166,11 +176,29 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Cache NPM dependencies
+        uses: bahmutov/npm-install@v1.4.5
+        with:
+          working-directory: ErsatzTV/client-app
+
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
-        run: dotnet restore -r "${{ matrix.target}}"
+        run: dotnet restore -r "${{ matrix.target }}"
+
+      - uses: suisei-cn/actions-download-file@v1
+        if: ${{ matrix.kind == 'windows' }}
+        id: downloadffmpeg
+        name: Download ffmpeg
+        with:
+          url: "https://github.com/GyanD/codexffmpeg/releases/download/5.0/ffmpeg-5.0-full_build.7z"
+          target: ffmpeg/
 
       - name: Build
         shell: bash
@@ -185,6 +213,12 @@ jobs:
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
             dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net6.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          fi
+
+          # Download ffmpeg
+          if [ "${{ matrix.kind }}" == "windows" ]; then
+            7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
+            rm -f "$release_name/ffplay.exe"
           fi
 
           # Pack files

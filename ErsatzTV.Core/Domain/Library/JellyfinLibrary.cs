@@ -1,8 +1,10 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿using ErsatzTV.Core.Jellyfin;
+
+namespace ErsatzTV.Core.Domain;
+
+public class JellyfinLibrary : Library
 {
-    public class JellyfinLibrary : Library
-    {
-        public string ItemId { get; set; }
-        public bool ShouldSyncItems { get; set; }
-    }
+    public string ItemId { get; set; }
+    public bool ShouldSyncItems { get; set; }
+    public List<JellyfinPathInfo> PathInfos { get; set; }
 }

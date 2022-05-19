@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Search;
-using LanguageExt;
+﻿using ErsatzTV.Core.Search;
 
-namespace ErsatzTV.Application.MediaCards
-{
-    public record ArtistCardResultsViewModel(
-        int Count,
-        List<ArtistCardViewModel> Cards,
-        Option<SearchPageMap> PageMap);
-}
+namespace ErsatzTV.Application.MediaCards;
+
+public record ArtistCardResultsViewModel(
+    int Count,
+    List<ArtistCardViewModel> Cards,
+    Option<SearchPageMap> PageMap);

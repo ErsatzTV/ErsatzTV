@@ -1,13 +1,10 @@
 ﻿@page "/media/music/artists"
 @page "/media/music/artists/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
-@using Microsoft.AspNetCore.WebUtilities
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.Search.Queries
-@using ErsatzTV.Extensions
-@using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.Search
 @inherits MultiSelectBase<MusicVideoList>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel
@@ -97,12 +94,12 @@
     protected override async Task RefreshData()
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:artist" : $"type:artist AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexArtists(searchQuery, PageNumber, PageSize));
+        _data = await Mediator.Send(new QuerySearchIndexArtists(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
     {
-        var uri = $"/media/music/artists/page/{PageNumber - 1}";
+        string uri = $"/media/music/artists/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -113,7 +110,7 @@
 
     private void NextPage()
     {
-        var uri = $"/media/music/artists/page/{PageNumber + 1}";
+        string uri = $"/media/music/artists/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -144,7 +141,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {

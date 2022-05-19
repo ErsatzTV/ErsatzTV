@@ -1,25 +1,23 @@
-﻿using System.Data;
-using System.Threading;
-using System.Threading.Tasks;
-using Dapper;
-using MediatR;
+﻿using Dapper;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
-namespace ErsatzTV.Application.Libraries.Queries
+namespace ErsatzTV.Application.Libraries;
+
+public class CountMediaItemsByLibraryHandler : IRequestHandler<CountMediaItemsByLibrary, int>
 {
-    public class CountMediaItemsByLibraryHandler : IRequestHandler<CountMediaItemsByLibrary, int>
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+
+    public CountMediaItemsByLibraryHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+        _dbContextFactory = dbContextFactory;
+
+    public async Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken)
     {
-        private readonly IDbConnection _dbConnection;
-
-        public CountMediaItemsByLibraryHandler(IDbConnection dbConnection)
-        {
-            _dbConnection = dbConnection;
-        }
-
-        public Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken) =>
-            _dbConnection.QuerySingleAsync<int>(
-                @"SELECT COUNT(*) FROM MediaItem
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await dbContext.Connection.QuerySingleAsync<int>(
+            @"SELECT COUNT(*) FROM MediaItem
                   INNER JOIN LibraryPath LP on MediaItem.LibraryPathId = LP.Id
                   WHERE LP.LibraryId = @LibraryId",
-                new { request.LibraryId });
+            new { request.LibraryId });
     }
 }

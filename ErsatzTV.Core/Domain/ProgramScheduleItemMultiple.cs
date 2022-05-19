@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class ProgramScheduleItemMultiple : ProgramScheduleItem
 {
-    public class ProgramScheduleItemMultiple : ProgramScheduleItem
-    {
-        public int Count { get; set; }
-    }
+    public int Count { get; set; }
 }

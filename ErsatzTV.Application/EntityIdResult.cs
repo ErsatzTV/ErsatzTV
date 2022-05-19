@@ -1,4 +1,3 @@
-﻿namespace ErsatzTV.Application
-{
-    public record EntityIdResult(int Id);
-}
+﻿namespace ErsatzTV.Application;
+
+public record EntityIdResult(int Id);

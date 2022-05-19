@@ -1,7 +1,3 @@
-﻿using LanguageExt;
-using MediatR;
+﻿namespace ErsatzTV.Application.Emby;
 
-namespace ErsatzTV.Application.Emby.Queries
-{
-    public record GetEmbyMediaSourceById(int EmbyMediaSourceId) : IRequest<Option<EmbyMediaSourceViewModel>>;
-}
+public record GetEmbyMediaSourceById(int EmbyMediaSourceId) : IRequest<Option<EmbyMediaSourceViewModel>>;

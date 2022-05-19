@@ -1,37 +1,34 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
 
-namespace ErsatzTV.Infrastructure.Health.Checks
+namespace ErsatzTV.Infrastructure.Health.Checks;
+
+public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthCheck
 {
-    public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthCheck
+    private readonly IConfigElementRepository _configElementRepository;
+
+    public FFmpegReportsHealthCheck(IConfigElementRepository configElementRepository) =>
+        _configElementRepository = configElementRepository;
+
+    public override string Title => "FFmpeg Reports";
+
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        private readonly IConfigElementRepository _configElementRepository;
+        Option<bool> saveReports =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
 
-        public FFmpegReportsHealthCheck(IConfigElementRepository configElementRepository) =>
-            _configElementRepository = configElementRepository;
-
-        public async Task<HealthCheckResult> Check()
+        foreach (bool value in saveReports)
         {
-            Option<bool> saveReports =
-                await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
-
-            foreach (bool value in saveReports)
+            if (value)
             {
-                if (value)
-                {
-                    return Result(
-                        HealthCheckStatus.Warning,
-                        "FFmpeg troubleshooting reports are enabled and may use a lot of disk space");
-                }
+                return Result(
+                    HealthCheckStatus.Warning,
+                    "FFmpeg troubleshooting reports are enabled and may use a lot of disk space");
             }
-
-            return OkResult();
         }
 
-        protected override string Title => "FFmpeg Reports";
+        return OkResult();
     }
 }

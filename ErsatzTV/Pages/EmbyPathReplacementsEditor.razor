@@ -1,9 +1,7 @@
 ﻿@page "/media/sources/emby/{Id:int}/paths"
 @using ErsatzTV.Application.MediaSources
-@using ErsatzTV.Application.Emby.Queries
 @using ErsatzTV.Application.Emby
-@using ErsatzTV.Application.Emby.Commands
-@using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
 @inject ISnackbar _snackbar
@@ -17,16 +15,23 @@
     GetPathReplacementsBySourceId="GetPathReplacementsBySourceId"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
-        _mediator.Send(new GetEmbyMediaSourceById(Id))
+        _mediator.Send(new GetEmbyMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetEmbyPathReplacementsBySourceId(Id))
+        _mediator.Send(new GetEmbyPathReplacementsBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).ToList());
 
     private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(EmbyPathReplacementViewModel item) =>

@@ -2,10 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class EmbyMovieConfiguration : IEntityTypeConfiguration<EmbyMovie>
 {
-    public class EmbyMovieConfiguration : IEntityTypeConfiguration<EmbyMovie>
-    {
-        public void Configure(EntityTypeBuilder<EmbyMovie> builder) => builder.ToTable("EmbyMovie");
-    }
+    public void Configure(EntityTypeBuilder<EmbyMovie> builder) => builder.ToTable("EmbyMovie");
 }

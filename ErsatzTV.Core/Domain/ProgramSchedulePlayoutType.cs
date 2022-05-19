@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum ProgramSchedulePlayoutType
 {
-    public enum ProgramSchedulePlayoutType
-    {
-        None = 0,
-        Flood,
-        Daily
-    }
+    None = 0,
+    Flood,
+    Daily
 }

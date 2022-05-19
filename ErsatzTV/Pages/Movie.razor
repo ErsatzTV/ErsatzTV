@@ -1,11 +1,10 @@
 ﻿@page "/media/movies/{MovieId:int}"
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.Movies
-@using ErsatzTV.Application.Movies.Queries
 @using System.Globalization
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Extensions
+@implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog
 @inject NavigationManager _navigationManager
@@ -43,8 +42,14 @@
                 }
                 @if (_movie.MediaItemState == MediaItemState.FileNotFound)
                 {
-                    <div style="position: absolute; top: 8px; right: 10px">
+                    <div style="position: absolute; right: 10px; top: 8px;">
                         <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                    </div>
+                }
+                else if (_movie.MediaItemState == MediaItemState.Unavailable)
+                {
+                    <div style="position: absolute; right: 10px; top: 8px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
                     </div>
                 }
             </div>
@@ -78,6 +83,18 @@
                     <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
                     <MudText>File Not Found:&nbsp;</MudText>
                     <MudText>@_movie.Path</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    }
+    else if (_movie.MediaItemState == MediaItemState.Unavailable)
+    {
+        <MudCard Class="mb-6">
+            <MudCardContent>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                    <MudText>Unavailable:&nbsp;</MudText>
+                    <MudText>@_movie.LocalPath</MudText>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -187,6 +204,7 @@
 }
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int MovieId { get; set; }
@@ -200,10 +218,16 @@
     private List<string> _sortedGenres = new();
     private List<string> _sortedTags = new();
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override Task OnParametersSetAsync() => RefreshData();
 
-    private Task RefreshData() =>
-        _mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm =>
+    private async Task RefreshData() =>
+        await _mediator.Send(new GetMovieById(MovieId), _cts.Token).IfSomeAsync(vm =>
         {
             _movie = vm;
             _sortedContentRatings = _movie.ContentRatings.OrderBy(cr => cr).ToList();
@@ -224,7 +248,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await _mediator.Send(new AddMovieToCollection(collection.Id, MovieId));
+            await _mediator.Send(new AddMovieToCollection(collection.Id, MovieId), _cts.Token);
             _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }

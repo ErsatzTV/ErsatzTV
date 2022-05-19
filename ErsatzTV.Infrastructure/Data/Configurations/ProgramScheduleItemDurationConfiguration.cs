@@ -2,11 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class ProgramScheduleItemDurationConfiguration : IEntityTypeConfiguration<ProgramScheduleItemDuration>
 {
-    public class ProgramScheduleItemDurationConfiguration : IEntityTypeConfiguration<ProgramScheduleItemDuration>
-    {
-        public void Configure(EntityTypeBuilder<ProgramScheduleItemDuration> builder) =>
-            builder.ToTable("ProgramScheduleDurationItem");
-    }
+    public void Configure(EntityTypeBuilder<ProgramScheduleItemDuration> builder) =>
+        builder.ToTable("ProgramScheduleDurationItem");
 }

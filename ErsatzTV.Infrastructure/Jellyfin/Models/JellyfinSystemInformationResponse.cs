@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models
+﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models;
+
+public class JellyfinSystemInformationResponse
 {
-    public class JellyfinSystemInformationResponse
-    {
-        public string ServerName { get; set; }
-        public string OperatingSystem { get; set; }
-    }
+    public string ServerName { get; set; }
+    public string OperatingSystem { get; set; }
 }

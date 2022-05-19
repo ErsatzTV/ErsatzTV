@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class LocalMediaSource : MediaSource
 {
-    public class LocalMediaSource : MediaSource
-    {
-    }
 }

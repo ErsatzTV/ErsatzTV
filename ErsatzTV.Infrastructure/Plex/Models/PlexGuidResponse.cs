@@ -1,10 +1,9 @@
 ﻿using System.Xml.Serialization;
 
-namespace ErsatzTV.Infrastructure.Plex.Models
+namespace ErsatzTV.Infrastructure.Plex.Models;
+
+public class PlexGuidResponse
 {
-    public class PlexGuidResponse
-    {
-        [XmlAttribute("id")]
-        public string Id { get; set; }
-    }
+    [XmlAttribute("id")]
+    public string Id { get; set; }
 }

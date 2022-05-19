@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.MediaSources
+﻿namespace ErsatzTV.Core.MediaSources;
+
+public class RemoteMediaSourceSecrets
 {
-    public class RemoteMediaSourceSecrets
-    {
-        public string Address { get; set; }
-        public string ApiKey { get; set; }
-    }
+    public string Address { get; set; }
+    public string ApiKey { get; set; }
 }

@@ -25,7 +25,9 @@ The following fields are available for searching movies:
 - `language`: The movie audio stream language
 - `release_date`: The movie release date (YYYYMMDD)
 - `added_date`: The date the movie was added to ErsatzTV (YYYYMMDD)
-- `minutes`: the rounded-up whole number duration of the movie in minutes
+- `minutes`: The rounded-up whole number duration of the movie in minutes
+- `height`: The movie height
+- `width`: The movie width
 - `type`: Always `movie`
 
 ### Shows
@@ -45,6 +47,18 @@ The following fields are available for searching shows:
 - `added_date`: The date the show was added to ErsatzTV (YYYYMMDD)
 - `type`: Always `show`
 
+### Seasons
+
+The following fields are available for searching seasons:
+
+- `title`: The season title
+- `library_name`: The name of the library that contains the season
+- `season_number`: The season number
+- `show_title`: The title of the show that contains the season
+- `show_genre`: The genre of the show that contains the season
+- `show_tag`: The tag of the show that contains the season
+- `type`: Always `season`
+
 ### Episodes
 
 The following fields are available for searching episodes:
@@ -57,7 +71,14 @@ The following fields are available for searching episodes:
 - `language`: The episode audio stream language
 - `release_date`: The episode release date (YYYYMMDD)
 - `added_date`: The date the episode was added to ErsatzTV (YYYYMMDD)
-- `minutes`: the rounded-up whole number duration of the episode in minutes
+- `minutes`: The rounded-up whole number duration of the episode in minutes
+- `height`: The episode height
+- `width`: The episode width
+- `season_number`: The episode season number
+- `episode_number`: The episode number
+- `show_title`: The title of the show that contains the episode
+- `show_genre`: The genre of the show that contains the episode
+- `show_tag`: The tag of the show that contains the episode
 - `type`: Always `episode`
 
 ### Artists
@@ -84,17 +105,31 @@ The following fields are available for searching music videos:
 - `language`: The music video audio stream language
 - `release_date`: The music video release date (YYYYMMDD)
 - `added_date`: The date the music video was added to ErsatzTV (YYYYMMDD)
-- `minutes`: the rounded-up whole number duration of the music video in minutes
+- `minutes`: The rounded-up whole number duration of the music video in minutes
+- `height`: The music video height
+- `width`: The music video width
 - `type`: Always `music_video`
 
 ### Other Videos
 
 The following fields are available for searching other videos:
 
-- `title`: The filename of the video (without extension)
-- `tag`: All of the video's parent folders
-- `minutes`: the rounded-up whole number duration of the video in minutes
-- `added_date`: The date the other video was added to ErsatzTV (YYYYMMDD)
+- `title`: The NFO title or the filename of the video (without extension)
+- `genre`: The video genre
+- `tag`: The video tag
+- `plot`: The video plot
+- `studio`: The video studio
+- `actor`: An actor from the video
+- `director`: A director from the video
+- `writer`: A writer from the video
+- `library_name`: The name of the library that contains the video
+- `content_rating`: The video content rating (case-sensitive)
+- `language`: The video audio stream language
+- `release_date`: The video release date (YYYYMMDD)
+- `added_date`: The date the video was added to ErsatzTV (YYYYMMDD)
+- `minutes`: The rounded-up whole number duration of the video in minutes
+- `height`: The video height
+- `width`: The video width
 - `type`: Always `other_video`
 
 ### Songs
@@ -103,7 +138,8 @@ The following fields are available for searching songs:
 
 - `title`: The song title, or the filename of the song (without extension)
 - `album`: The song album
-- `artist`: The song artist
+- `artist`: The song/track artist
+- `album_artist`: The album artist
 - `genre`: The song genre
 - `tag`: All of the song's parent folders
 - `minutes`: the rounded-up whole number duration of the song in minutes

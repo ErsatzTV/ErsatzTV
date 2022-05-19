@@ -1,5 +1,5 @@
 ﻿@using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Commands
+@implements IDisposable
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<CopyFFmpegProfileDialog> _logger
@@ -27,6 +27,7 @@
 </MudDialog>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
@@ -40,6 +41,12 @@
 
     private string _newFFmpegProfileName;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newFFmpegProfileName);
 
     private async Task Submit()
@@ -50,7 +57,7 @@
         }
 
         Either<BaseError, FFmpegProfileViewModel> maybeResult =
-            await _mediator.Send(new CopyFFmpegProfile(FFmpegProfileId, _newFFmpegProfileName));
+            await _mediator.Send(new CopyFFmpegProfile(FFmpegProfileId, _newFFmpegProfileName), _cts.Token);
 
         maybeResult.Match(
             ffmpegProfile => { MudDialog.Close(DialogResult.Ok(ffmpegProfile)); },

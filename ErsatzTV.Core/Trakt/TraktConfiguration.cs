@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Core.Trakt
+﻿namespace ErsatzTV.Core.Trakt;
+
+public class TraktConfiguration
 {
-    public class TraktConfiguration
-    {
-        public string ClientId { get; set; }
-    }
+    public string ClientId { get; set; }
 }

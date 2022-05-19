@@ -1,8 +1,6 @@
 ﻿@page "/media/sources/plex"
 @using ErsatzTV.Core.Interfaces.Plex
 @using ErsatzTV.Application.Plex
-@using ErsatzTV.Application.Plex.Commands
-@using ErsatzTV.Application.Plex.Queries
 @implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
@@ -99,7 +97,7 @@
 
     private async Task LoadMediaSources()
     {
-        _isAuthorized = await _plexSecretStore.GetUserAuthTokens().Map(list => Prelude.Optional(list).Flatten().Any());
+        _isAuthorized = await _plexSecretStore.GetUserAuthTokens().Map(list => Optional(list).Flatten().Any());
         _mediaSources = await _mediator.Send(new GetAllPlexMediaSources());
     }
 
@@ -124,7 +122,17 @@
         {
             Either<BaseError, string> maybeUrl = await _mediator.Send(new StartPlexPinFlow());
             await maybeUrl.Match(
-                async url => await _jsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
+                async url =>
+                {
+                    try
+                    {
+                        await _jsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" });
+                    }
+                    catch (Exception)
+                    {
+    // ignored
+                    }
+                },
                 error =>
                 {
                     _locker.UnlockPlex();

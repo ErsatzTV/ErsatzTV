@@ -1,18 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Application.Channels.Queries;
+namespace ErsatzTV.Application.Channels;
 
 public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, Option<int>>
 {
@@ -29,10 +21,21 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
 
     public async Task<Option<int>> Handle(GetChannelFramerate request, CancellationToken cancellationToken)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        FFmpegProfile ffmpegProfile = await dbContext.Channels
+            .Filter(c => c.Number == request.ChannelNumber)
+            .Include(c => c.FFmpegProfile)
+            .Map(c => c.FFmpegProfile)
+            .SingleAsync(cancellationToken);
+
+        if (!ffmpegProfile.NormalizeFramerate)
+        {
+            return Option<int>.None;
+        }
+
         // TODO: expand to check everything in collection rather than what's scheduled?
         _logger.LogDebug("Checking frame rates for channel {ChannelNumber}", request.ChannelNumber);
-        
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Playout> playouts = await dbContext.Playouts
             .Include(p => p.Items)
@@ -58,12 +61,23 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
             .Map(mv => mv.RFrameRate)
             .ToList();
 
-
         var distinct = frameRates.Distinct().ToList();
         if (distinct.Count > 1)
         {
             // TODO: something more intelligent than minimum framerate?
             int result = frameRates.Map(ParseFrameRate).Min();
+            if (result < 24)
+            {
+                _logger.LogInformation(
+                    "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate} instead of min value {MinFrameRate}",
+                    request.ChannelNumber,
+                    distinct,
+                    24,
+                    result);
+
+                return 24;
+            }
+
             _logger.LogInformation(
                 "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate}",
                 request.ChannelNumber,

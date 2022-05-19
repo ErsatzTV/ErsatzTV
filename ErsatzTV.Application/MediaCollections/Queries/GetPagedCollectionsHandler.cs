@@ -1,46 +1,33 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
 
-namespace ErsatzTV.Application.MediaCollections.Queries
+namespace ErsatzTV.Application.MediaCollections;
+
+public class GetPagedCollectionsHandler : IRequestHandler<GetPagedCollections, PagedMediaCollectionsViewModel>
 {
-    public class GetPagedCollectionsHandler : IRequestHandler<GetPagedCollections, PagedMediaCollectionsViewModel>
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+
+    public GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+        _dbContextFactory = dbContextFactory;
+
+    public async Task<PagedMediaCollectionsViewModel> Handle(
+        GetPagedCollections request,
+        CancellationToken cancellationToken)
     {
-        private readonly IDbConnection _dbConnection;
-        private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-        public GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
-        {
-            _dbContextFactory = dbContextFactory;
-            _dbConnection = dbConnection;
-        }
-
-        public async Task<PagedMediaCollectionsViewModel> Handle(
-            GetPagedCollections request,
-            CancellationToken cancellationToken)
-        {
-            int count = await _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM Collection");
-
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            List<MediaCollectionViewModel> page = await dbContext.Collections.FromSqlRaw(
-                    @"SELECT * FROM Collection
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        int count = await dbContext.Connection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM Collection");
+        List<MediaCollectionViewModel> page = await dbContext.Collections.FromSqlRaw(
+                @"SELECT * FROM Collection
                     ORDER BY Name
                     COLLATE NOCASE
                     LIMIT {0} OFFSET {1}",
-                    request.PageSize,
-                    request.PageNum * request.PageSize)
-                .ToListAsync(cancellationToken)
-                .Map(list => list.Map(ProjectToViewModel).ToList());
+                request.PageSize,
+                request.PageNum * request.PageSize)
+            .ToListAsync(cancellationToken)
+            .Map(list => list.Map(ProjectToViewModel).ToList());
 
-            return new PagedMediaCollectionsViewModel(count, page);
-        }
+        return new PagedMediaCollectionsViewModel(count, page);
     }
 }

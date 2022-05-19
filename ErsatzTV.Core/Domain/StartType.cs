@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum StartType
 {
-    public enum StartType
-    {
-        Dynamic = 1,
-        Fixed = 2
-    }
+    Dynamic = 1,
+    Fixed = 2
 }

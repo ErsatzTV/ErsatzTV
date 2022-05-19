@@ -1,4 +1,3 @@
-﻿namespace ErsatzTV.Application.Channels.Commands
-{
-    public record CreateChannelResult(int ChannelId) : EntityIdResult(ChannelId);
-}
+﻿namespace ErsatzTV.Application.Channels;
+
+public record CreateChannelResult(int ChannelId) : EntityIdResult(ChannelId);

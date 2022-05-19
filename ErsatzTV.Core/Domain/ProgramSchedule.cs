@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
+﻿namespace ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Domain
+public class ProgramSchedule
 {
-    public class ProgramSchedule
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public bool KeepMultiPartEpisodesTogether { get; set; }
-        public bool TreatCollectionsAsShows { get; set; }
-        public List<ProgramScheduleItem> Items { get; set; }
-        public List<Playout> Playouts { get; set; }
-    }
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public bool KeepMultiPartEpisodesTogether { get; set; }
+    public bool TreatCollectionsAsShows { get; set; }
+    public bool ShuffleScheduleItems { get; set; }
+    public bool RandomStartPoint { get; set; }
+    public List<ProgramScheduleItem> Items { get; set; }
+    public List<Playout> Playouts { get; set; }
 }

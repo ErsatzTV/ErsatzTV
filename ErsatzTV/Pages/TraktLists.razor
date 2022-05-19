@@ -1,9 +1,7 @@
 ﻿@page "/media/trakt/lists"
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Queries
-@using ErsatzTV.Application.Configuration.Queries
-@using ErsatzTV.Application.Configuration.Commands
-@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Configuration
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
@@ -75,20 +73,22 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private MudTable<TraktListViewModel> _traktListsTable;
 
     private int _traktListsRowsPerPage;
 
-    protected override void OnInitialized()
+    public void Dispose()
     {
-        _locker.OnTraktChanged += LockChanged;
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize))
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-    }
+    protected override void OnInitialized() => _locker.OnTraktChanged += LockChanged;
+
+    protected override async Task OnParametersSetAsync() => _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
+        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(async () =>
@@ -104,7 +104,7 @@
     {
         if (_locker.LockTrakt())
         {
-            await _workerChannel.WriteAsync(new MatchTraktListItems(traktList.Id));
+            await _workerChannel.WriteAsync(new MatchTraktListItems(traktList.Id), _cts.Token);
         }
     }
 
@@ -119,19 +119,19 @@
             DialogResult result = await dialog.Result;
             if (!result.Cancelled)
             {
-                await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id));
+                await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
             }
         }
     }
 
     private async Task<TableData<TraktListViewModel>> ServerReloadTraktLists(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize));
+        PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
         return new TableData<TraktListViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
-    
+
     private async Task AddTraktList()
     {
         if (_locker.LockTrakt())
@@ -141,7 +141,7 @@
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is string url)
             {
-                await _workerChannel.WriteAsync(new AddTraktList(url));
+                await _workerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
             }
         }
     }

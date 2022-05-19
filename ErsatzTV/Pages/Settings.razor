@@ -1,21 +1,13 @@
 ﻿@page "/settings"
 @using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Commands
-@using ErsatzTV.Application.FFmpegProfiles.Queries
-@using ErsatzTV.Application.HDHR.Commands
-@using ErsatzTV.Application.HDHR.Queries
-@using ErsatzTV.Application.MediaItems.Queries
-@using System.Globalization
-@using ErsatzTV.Application.Configuration.Queries
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Configuration.Commands
 @using ErsatzTV.Application.Filler
-@using ErsatzTV.Application.Filler.Queries
+@using ErsatzTV.Application.HDHR
+@using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Watermarks
-@using ErsatzTV.Application.Watermarks.Queries
+@using System.Globalization
+@using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Domain.Filler
-@using ErsatzTV.Core.FFmpeg
-@using Microsoft.AspNetCore.Components
+@implements IDisposable
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<Settings> _logger
@@ -42,7 +34,7 @@
                             }
                         </MudSelect>
                     </MudElement>
-                    <MudSelect Class="mt-3" Label="Preferred Language" @bind-Value="_ffmpegSettings.PreferredLanguageCode" For="@(() => _ffmpegSettings.PreferredLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
+                    <MudSelect Class="mt-3" Label="Preferred Audio Language" @bind-Value="_ffmpegSettings.PreferredAudioLanguageCode" For="@(() => _ffmpegSettings.PreferredAudioLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
                         @foreach (CultureInfo culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
@@ -59,7 +51,7 @@
                                @bind-Value="_ffmpegSettings.GlobalWatermarkId"
                                For="@(() => _ffmpegSettings.GlobalWatermarkId)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
@@ -70,7 +62,7 @@
                                @bind-Value="_ffmpegSettings.GlobalFallbackFillerId"
                                For="@(() => _ffmpegSettings.GlobalFallbackFillerId)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
                         {
                             <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
@@ -93,6 +85,14 @@
                                       Validation="@(new Func<int, string>(ValidateWorkAheadSegmenterLimit))"
                                       Required="true"
                                       RequiredError="Work-ahead HLS Segmenter limit is required!"/>
+                    </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTextField T="int"
+                                      Label="HLS Segmenter Initial Segment Count"
+                                      @bind-Value="_ffmpegSettings.InitialSegmentCount"
+                                      Validation="@(new Func<int, string>(ValidateInitialSegmentCount))"
+                                      Required="true"
+                                      RequiredError="HLS Segmenter initial segment count is required!"/>
                     </MudElement>
                 </MudForm>
             </MudCardContent>
@@ -147,12 +147,19 @@
                 <MudForm @bind-IsValid="@_playoutSuccess">
                     <MudTextField T="int"
                                   Label="Days To Build"
-                                  @bind-Value="_playoutDaysToBuild"
+                                  @bind-Value="_playoutSettings.DaysToBuild"
                                   Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
                                   Required="true"
                                   RequiredError="Days to build is required!"
                                   Adornment="Adornment.End"
                                   AdornmentText="Days"/>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
+                            <MudCheckBox Label="Skip Missing Items"
+                                         @bind-Checked="_playoutSettings.SkipMissingItems"
+                                         For="@(() => _playoutSettings.SkipMissingItems)"/>
+                        </MudTooltip>
+                    </MudElement>
                 </MudForm>
             </MudCardContent>
             <MudCardActions>
@@ -163,6 +170,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private bool _success;
     private bool _hdhrSuccess;
     private bool _scannerSuccess;
@@ -174,24 +183,30 @@
     private List<FillerPresetViewModel> _fillerPresets;
     private int _tunerCount;
     private int _libraryRefreshInterval;
-    private int _playoutDaysToBuild;
+    private PlayoutSettingsViewModel _playoutSettings;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfilesAsync();
 
-        _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
+        _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings(), _cts.Token);
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
-        _watermarks = await _mediator.Send(new GetAllWatermarks());
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token);
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), _cts.Token)
             .Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
-        _tunerCount = await _mediator.Send(new GetHDHRTunerCount());
+        _tunerCount = await _mediator.Send(new GetHDHRTunerCount(), _cts.Token);
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
-        _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval());
+        _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
         _scannerSuccess = _libraryRefreshInterval > 0;
-        _playoutDaysToBuild = await _mediator.Send(new GetPlayoutDaysToBuild());
-        _playoutSuccess = _playoutDaysToBuild > 0;
+        _playoutSettings = await _mediator.Send(new GetPlayoutSettings(), _cts.Token);
+        _playoutSuccess = _playoutSettings.DaysToBuild > 0;
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
@@ -199,19 +214,21 @@
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
 
     private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval <= 0 ? "Library refresh interval must be greater than zero" : null;
-    
+
     private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Days to build must be greater than zero" : null;
 
     private static string ValidateHlsSegmenterIdleTimeout(int idleTimeout) => idleTimeout < 30 ? "HLS Segmenter idle timeout must be greater than or equal to 30" : null;
 
     private static string ValidateWorkAheadSegmenterLimit(int limit) => limit < 0 ? "Work-Ahead HLS Segmenter limit must be greater than or equal to 0" : null;
 
+    private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
+
     private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
 
     private async Task SaveFFmpegSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings), _cts.Token);
         result.Match(
             Left: error =>
             {
@@ -223,7 +240,7 @@
 
     private async Task SaveHDHRSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateHDHRTunerCount(_tunerCount));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
         result.Match(
             Left: error =>
             {
@@ -235,7 +252,7 @@
 
     private async Task SaveScannerSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval), _cts.Token);
         result.Match(
             Left: error =>
             {
@@ -247,7 +264,7 @@
 
     private async Task SavePlayoutSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutDaysToBuild(_playoutDaysToBuild));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
         result.Match(
             Left: error =>
             {

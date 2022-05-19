@@ -1,7 +1,6 @@
 ﻿@page "/ffmpeg"
 @using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Commands
-@using ErsatzTV.Application.FFmpegProfiles.Queries
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 @inject ILogger<FFmpeg> _logger
@@ -12,11 +11,8 @@
     <MudTable Hover="true" Items="_ffmpegProfiles">
         <ToolBarContent>
             <MudText Typo="Typo.h6">FFmpeg Profiles</MudText>
-            <MudSpacer/>
-            <MudText Color="Color.Tertiary">Colored settings will be normalized</MudText>
         </ToolBarContent>
         <ColGroup>
-            <col/>
             <col/>
             <col/>
             <col/>
@@ -25,32 +21,25 @@
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
-            <MudTh>Transcode</MudTh>
             <MudTh>Resolution</MudTh>
-            <MudTh>Video Codec</MudTh>
-            <MudTh>Audio Codec</MudTh>
+            <MudTh>Video Format</MudTh>
+            <MudTh>Audio Format</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Transcode">
-                @(context.Transcode ? "Yes" : "No")
+            <MudTd DataLabel="Resolution">@context.Resolution.Name</MudTd>
+            <MudTd DataLabel="Video Format">
+                @if (context.HardwareAcceleration != HardwareAccelerationKind.None)
+                {
+                    @($"{context.VideoFormat.ToString().ToLowerInvariant()} / {context.HardwareAcceleration.ToString().ToLowerInvariant()}")
+                }
+                else
+                {
+                    @context.VideoFormat.ToString().ToLowerInvariant()
+                }
             </MudTd>
-            <MudTd DataLabel="Resolution">
-                <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
-                    @context.Resolution.Name
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Video Codec">
-                <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
-                    @context.VideoCodec
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Audio Codec">
-                <MudText Color="@(context.Transcode && context.NormalizeAudio ? Color.Tertiary : Color.Inherit)">
-                    @context.AudioCodec
-                </MudText>
-            </MudTd>
+            <MudTd DataLabel="Audio Format">@context.AudioFormat.ToString().ToLowerInvariant()</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Profile">
@@ -78,12 +67,20 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
 
-    protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync();
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
-    private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
+    protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync(_cts.Token);
+
+    private async Task LoadFFmpegProfilesAsync(CancellationToken cancellationToken) =>
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
 
     private async Task DeleteProfileAsync(FFmpegProfileViewModel ffmpegProfile)
     {
@@ -94,8 +91,8 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id));
-            await LoadFFmpegProfilesAsync();
+            await _mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id), _cts.Token);
+            await LoadFFmpegProfilesAsync(_cts.Token);
         }
     }
 

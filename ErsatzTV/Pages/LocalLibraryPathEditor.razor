@@ -1,8 +1,7 @@
 ﻿@page "/media/libraries/local/{Id:int}/add"
 @using ErsatzTV.Application.Libraries
-@using ErsatzTV.Application.Libraries.Commands
-@using ErsatzTV.Application.Libraries.Queries
-@using ErsatzTV.Application.MediaSources.Commands
+@using ErsatzTV.Application.MediaSources
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<LocalLibraryPathEditor> _logger
 @inject ISnackbar _snackbar
@@ -32,6 +31,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -42,9 +42,15 @@
 
     private LocalLibraryViewModel _library;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id));
+        Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id), _cts.Token);
         maybeLibrary.Match(
             library => _library = library,
             () => _navigationManager.NavigateTo("404"));
@@ -62,7 +68,7 @@
         if (_editContext.Validate())
         {
             var command = new CreateLocalLibraryPath(_library.Id, _model.Path);
-            Either<BaseError, LocalLibraryPathViewModel> result = await _mediator.Send(command);
+            Either<BaseError, LocalLibraryPathViewModel> result = await _mediator.Send(command, _cts.Token);
             await result.Match(
                 Left: error =>
                 {
@@ -74,7 +80,7 @@
                 {
                     if (_locker.LockLibrary(_library.Id))
                     {
-                        await _channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id));
+                        await _channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id), _cts.Token);
                         _navigationManager.NavigateTo("/media/libraries");
                     }
                 });

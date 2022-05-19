@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Infrastructure.Emby.Models
+﻿namespace ErsatzTV.Infrastructure.Emby.Models;
+
+public class EmbyImageTagsResponse
 {
-    public class EmbyImageTagsResponse
-    {
-        public string Primary { get; set; }
-        public string Thumb { get; set; }
-    }
+    public string Primary { get; set; }
+    public string Thumb { get; set; }
 }

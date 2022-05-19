@@ -1,7 +1,4 @@
-﻿using MediatR;
+﻿namespace ErsatzTV.Application.MediaCards;
 
-namespace ErsatzTV.Application.MediaCards.Queries
-{
-    public record GetTelevisionEpisodeCards
-        (int TelevisionSeasonId, int PageNumber, int PageSize) : IRequest<TelevisionEpisodeCardResultsViewModel>;
-}
+public record GetTelevisionEpisodeCards
+    (int TelevisionSeasonId, int PageNumber, int PageSize) : IRequest<TelevisionEpisodeCardResultsViewModel>;

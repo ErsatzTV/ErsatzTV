@@ -1,6 +1,3 @@
-﻿using MediatR;
+﻿namespace ErsatzTV.Application.MediaCollections;
 
-namespace ErsatzTV.Application.MediaCollections.Queries
-{
-    public record GetPagedCollections(int PageNum, int PageSize) : IRequest<PagedMediaCollectionsViewModel>;
-}
+public record GetPagedCollections(int PageNum, int PageSize) : IRequest<PagedMediaCollectionsViewModel>;

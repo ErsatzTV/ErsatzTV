@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Infrastructure.Trakt.Models
+﻿namespace ErsatzTV.Infrastructure.Trakt.Models;
+
+public class TraktListIds
 {
-    public class TraktListIds
-    {
-        public int Trakt { get; set; }
-        public string Slug { get; set; }
-    }
+    public int Trakt { get; set; }
+    public string Slug { get; set; }
 }

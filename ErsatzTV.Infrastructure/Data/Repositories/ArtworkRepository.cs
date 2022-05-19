@@ -1,61 +1,60 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
-namespace ErsatzTV.Infrastructure.Data.Repositories
+namespace ErsatzTV.Infrastructure.Data.Repositories;
+
+public class ArtworkRepository : IArtworkRepository
 {
-    public class ArtworkRepository : IArtworkRepository
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+
+    public ArtworkRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+
+    public async Task<List<Artwork>> GetOrphanedArtwork()
     {
-        private readonly IDbConnection _dbConnection;
-
-        public ArtworkRepository(IDbConnection dbConnection) => _dbConnection = dbConnection;
-
-        public Task<List<Artwork>> GetOrphanedArtwork() =>
-            _dbConnection.QueryAsync<Artwork>(
-                    @"SELECT A.Id, A.Path FROM Artwork A
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<Artwork>(
+                @"SELECT A.Id, A.Path FROM Artwork A
                       WHERE A.ArtistMetadataId IS NULL AND A.EpisodeMetadataId IS NULL
                       AND A.SeasonMetadataId IS NULL AND A.ShowMetadataId IS NULL
                       AND A.MovieMetadataId IS NULL AND A.MusicVideoMetadataId IS NULL
                       AND A.SongMetadataId IS NULL AND A.ChannelId IS NULL
                       AND NOT EXISTS (SELECT * FROM Actor WHERE Actor.ArtworkId = A.Id)")
-                .Map(result => result.ToList());
+            .Map(result => result.ToList());
+    }
 
-        public async Task<Unit> Delete(List<Artwork> artwork)
+    public async Task<Unit> Delete(List<Artwork> artwork)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        IEnumerable<List<int>> chunks = Chunk(artwork.Map(a => a.Id), 100);
+        foreach (List<int> chunk in chunks)
         {
-            IEnumerable<List<int>> chunks = Chunk(artwork.Map(a => a.Id), 100);
-            foreach (List<int> chunk in chunks)
-            {
-                await _dbConnection.ExecuteAsync(
-                    "DELETE FROM Artwork WHERE Id IN @Ids",
-                    new { Ids = chunk });
-            }
-
-            return Unit.Default;
+            await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Artwork WHERE Id IN @Ids",
+                new { Ids = chunk });
         }
 
-        private static IEnumerable<List<T>> Chunk<T>(IEnumerable<T> collection, int size)
+        return Unit.Default;
+    }
+
+    private static IEnumerable<List<T>> Chunk<T>(IEnumerable<T> collection, int size)
+    {
+        var count = 0;
+        var chunk = new List<T>(size);
+
+        foreach (T element in collection)
         {
-            var count = 0;
-            var chunk = new List<T>(size);
-
-            foreach (T element in collection)
+            if (count++ == size)
             {
-                if (count++ == size)
-                {
-                    yield return chunk;
-                    chunk = new List<T>(size);
-                    count = 1;
-                }
-
-                chunk.Add(element);
+                yield return chunk;
+                chunk = new List<T>(size);
+                count = 1;
             }
 
-            yield return chunk;
+            chunk.Add(element);
         }
+
+        yield return chunk;
     }
 }

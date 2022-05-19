@@ -1,9 +1,9 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum MediaStreamKind
 {
-    public enum MediaStreamKind
-    {
-        Video = 1,
-        Audio = 2,
-        Subtitle = 3
-    }
+    Video = 1,
+    Audio = 2,
+    Subtitle = 3,
+    Attachment = 4
 }

@@ -1,21 +1,40 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
+using ErsatzTV.Core.Interfaces.FFmpeg;
+using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.FFmpeg
+namespace ErsatzTV.Core.FFmpeg;
+
+public class HlsPlaylistFilter : IHlsPlaylistFilter
 {
-    public class HlsPlaylistFilter
+    private readonly ILogger<HlsPlaylistFilter> _logger;
+    private readonly ITempFilePool _tempFilePool;
+
+    public HlsPlaylistFilter(ITempFilePool tempFilePool, ILogger<HlsPlaylistFilter> logger)
     {
-        public static TrimPlaylistResult TrimPlaylist(
-            DateTimeOffset playlistStart,
-            DateTimeOffset filterBefore,
-            string[] lines,
-            int maxSegments = 10,
-            bool endWithDiscontinuity = false)
+        _tempFilePool = tempFilePool;
+        _logger = logger;
+    }
+
+    public TrimPlaylistResult TrimPlaylist(
+        DateTimeOffset playlistStart,
+        DateTimeOffset filterBefore,
+        string[] lines,
+        int maxSegments = 10,
+        bool endWithDiscontinuity = false)
+    {
+        try
         {
+            // _logger.LogDebug(
+            //     "TrimPlaylist - Start {PlaylistStart}, FilterBefore {FilterBefore}, MaxSegments {MaxSegments}, EndWithDiscontinuity {EndWithDiscontinuity}",
+            //     playlistStart,
+            //     filterBefore,
+            //     maxSegments,
+            //     endWithDiscontinuity);
+
             DateTimeOffset currentTime = playlistStart;
             DateTimeOffset nextPlaylistStart = DateTimeOffset.MaxValue;
-            
+
             var discontinuitySequence = 0;
             var startSequence = 0;
             var output = new StringBuilder();
@@ -67,7 +86,7 @@ namespace ErsatzTV.Core.FFmpeg
                     i += 3;
                     continue;
                 }
-    
+
                 nextPlaylistStart = currentTime < nextPlaylistStart ? currentTime : nextPlaylistStart;
 
                 if (!started)
@@ -95,22 +114,45 @@ namespace ErsatzTV.Core.FFmpeg
                 i += 3;
             }
 
-            if (endWithDiscontinuity)
+            var playlist = output.ToString();
+            if (endWithDiscontinuity && !playlist.EndsWith($"#EXT-X-DISCONTINUITY{Environment.NewLine}"))
             {
-                output.AppendLine("#EXT-X-DISCONTINUITY");
+                playlist += "#EXT-X-DISCONTINUITY" + Environment.NewLine;
             }
 
-            return new TrimPlaylistResult(nextPlaylistStart, startSequence, output.ToString());
-        }
+            if (playlist.Trim().Split(Environment.NewLine).All(l => string.IsNullOrWhiteSpace(l) || l.StartsWith('#')))
+            {
+                throw new Exception("Trimming playlist to nothing");
+            }
 
-        public static TrimPlaylistResult TrimPlaylistWithDiscontinuity(
-            DateTimeOffset playlistStart,
-            DateTimeOffset filterBefore,
-            string[] lines)
+            return new TrimPlaylistResult(nextPlaylistStart, startSequence, playlist, segments);
+        }
+        catch (Exception ex)
         {
-            return TrimPlaylist(playlistStart, filterBefore, lines, int.MaxValue, true);
+            try
+            {
+                string file = _tempFilePool.GetNextTempFile(TempFileCategory.BadPlaylist);
+                File.WriteAllLines(file, lines);
+
+                _logger.LogError(ex, "Error filtering playlist. Bad playlist saved to {BadPlaylistFile}", file);
+
+                // TODO: better error result?
+                return new TrimPlaylistResult(playlistStart, 0, string.Empty, 0);
+            }
+            catch
+            {
+                // do nothing
+            }
+
+            throw;
         }
     }
 
-    public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist);
+    public TrimPlaylistResult TrimPlaylistWithDiscontinuity(
+        DateTimeOffset playlistStart,
+        DateTimeOffset filterBefore,
+        string[] lines) =>
+        TrimPlaylist(playlistStart, filterBefore, lines, int.MaxValue, true);
 }
+
+public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist, int SegmentCount);

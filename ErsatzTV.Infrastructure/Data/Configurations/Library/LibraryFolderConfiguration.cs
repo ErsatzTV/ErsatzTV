@@ -2,10 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class LibraryFolderConfiguration : IEntityTypeConfiguration<LibraryFolder>
 {
-    public class LibraryFolderConfiguration : IEntityTypeConfiguration<LibraryFolder>
-    {
-        public void Configure(EntityTypeBuilder<LibraryFolder> builder) => builder.ToTable("LibraryFolder");
-    }
+    public void Configure(EntityTypeBuilder<LibraryFolder> builder) => builder.ToTable("LibraryFolder");
 }

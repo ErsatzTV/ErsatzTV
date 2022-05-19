@@ -1,7 +1,3 @@
-﻿using System.Collections.Generic;
-using MediatR;
+﻿namespace ErsatzTV.Application.Jellyfin;
 
-namespace ErsatzTV.Application.Jellyfin.Queries
-{
-    public record GetAllJellyfinMediaSources : IRequest<List<JellyfinMediaSourceViewModel>>;
-}
+public record GetAllJellyfinMediaSources : IRequest<List<JellyfinMediaSourceViewModel>>;

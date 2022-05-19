@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -10,83 +6,88 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
-using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
-using Unit = LanguageExt.Unit;
 
-namespace ErsatzTV.Core.Metadata
+namespace ErsatzTV.Core.Metadata;
+
+public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
 {
-    public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
+    private readonly IClient _client;
+    private readonly ILibraryRepository _libraryRepository;
+    private readonly ILocalFileSystem _localFileSystem;
+    private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
+    private readonly ILogger<OtherVideoFolderScanner> _logger;
+    private readonly IMediator _mediator;
+    private readonly IOtherVideoRepository _otherVideoRepository;
+    private readonly ISearchIndex _searchIndex;
+    private readonly ISearchRepository _searchRepository;
+
+    public OtherVideoFolderScanner(
+        ILocalFileSystem localFileSystem,
+        ILocalStatisticsProvider localStatisticsProvider,
+        ILocalMetadataProvider localMetadataProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
+        IMetadataRepository metadataRepository,
+        IImageCache imageCache,
+        IMediator mediator,
+        ISearchIndex searchIndex,
+        ISearchRepository searchRepository,
+        IOtherVideoRepository otherVideoRepository,
+        ILibraryRepository libraryRepository,
+        IMediaItemRepository mediaItemRepository,
+        IFFmpegProcessService ffmpegProcessService,
+        ITempFilePool tempFilePool,
+        IClient client,
+        ILogger<OtherVideoFolderScanner> logger) : base(
+        localFileSystem,
+        localStatisticsProvider,
+        metadataRepository,
+        mediaItemRepository,
+        imageCache,
+        ffmpegProcessService,
+        tempFilePool,
+        client,
+        logger)
     {
-        private readonly ILocalFileSystem _localFileSystem;
-        private readonly ILocalMetadataProvider _localMetadataProvider;
-        private readonly IMediator _mediator;
-        private readonly ISearchIndex _searchIndex;
-        private readonly ISearchRepository _searchRepository;
-        private readonly IOtherVideoRepository _otherVideoRepository;
-        private readonly ILibraryRepository _libraryRepository;
-        private readonly ILogger<OtherVideoFolderScanner> _logger;
+        _localFileSystem = localFileSystem;
+        _localMetadataProvider = localMetadataProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
+        _mediator = mediator;
+        _searchIndex = searchIndex;
+        _searchRepository = searchRepository;
+        _otherVideoRepository = otherVideoRepository;
+        _libraryRepository = libraryRepository;
+        _client = client;
+        _logger = logger;
+    }
 
-        public OtherVideoFolderScanner(
-            ILocalFileSystem localFileSystem,
-            ILocalStatisticsProvider localStatisticsProvider,
-            ILocalMetadataProvider localMetadataProvider,
-            IMetadataRepository metadataRepository,
-            IImageCache imageCache,
-            IMediator mediator,
-            ISearchIndex searchIndex,
-            ISearchRepository searchRepository,
-            IOtherVideoRepository otherVideoRepository,
-            ILibraryRepository libraryRepository,
-            IMediaItemRepository mediaItemRepository,
-            IFFmpegProcessService ffmpegProcessService,
-            ITempFilePool tempFilePool,
-            ILogger<OtherVideoFolderScanner> logger) : base(
-            localFileSystem,
-            localStatisticsProvider,
-            metadataRepository,
-            mediaItemRepository,
-            imageCache,
-            ffmpegProcessService,
-            tempFilePool,
-            logger)
-        {
-            _localFileSystem = localFileSystem;
-            _localMetadataProvider = localMetadataProvider;
-            _mediator = mediator;
-            _searchIndex = searchIndex;
-            _searchRepository = searchRepository;
-            _otherVideoRepository = otherVideoRepository;
-            _libraryRepository = libraryRepository;
-            _logger = logger;
-        }
-
-        public async Task<Either<BaseError, Unit>> ScanFolder(
-            LibraryPath libraryPath,
-            string ffprobePath,
-            decimal progressMin,
-            decimal progressMax)
+    public async Task<Either<BaseError, Unit>> ScanFolder(
+        LibraryPath libraryPath,
+        string ffmpegPath,
+        string ffprobePath,
+        decimal progressMin,
+        decimal progressMax,
+        CancellationToken cancellationToken)
+    {
+        try
         {
             decimal progressSpread = progressMax - progressMin;
 
-            if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
-            {
-                return new MediaSourceInaccessible();
-            }
-
             var foldersCompleted = 0;
 
+            var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
-            if (ShouldIncludeFolder(libraryPath.Path))
+            if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
                 folderQueue.Enqueue(libraryPath.Path);
             }
 
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
                          .Filter(ShouldIncludeFolder)
+                         .Filter(allFolders.Add)
                          .OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
@@ -94,9 +95,15 @@ namespace ErsatzTV.Core.Metadata
 
             while (folderQueue.Count > 0)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return new ScanCanceled();
+                }
+
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
                 await _mediator.Publish(
-                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    cancellationToken);
 
                 string otherVideoFolder = folderQueue.Dequeue();
                 foldersCompleted++;
@@ -109,8 +116,9 @@ namespace ErsatzTV.Core.Metadata
                     .ToList();
 
                 foreach (string subdirectory in _localFileSystem.ListSubdirectories(otherVideoFolder)
-                    .Filter(ShouldIncludeFolder)
-                    .OrderBy(identity))
+                             .Filter(ShouldIncludeFolder)
+                             .Filter(allFolders.Add)
+                             .OrderBy(identity))
                 {
                     folderQueue.Enqueue(subdirectory);
                 }
@@ -121,7 +129,8 @@ namespace ErsatzTV.Core.Metadata
                     .HeadOrNone();
 
                 // skip folder if etag matches
-                if (!allFiles.Any() || await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag)
+                if (!allFiles.Any() || await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                    etag)
                 {
                     continue;
                 }
@@ -130,33 +139,36 @@ namespace ErsatzTV.Core.Metadata
                     "UPDATE: Etag has changed for folder {Folder}",
                     otherVideoFolder);
 
+                var hasErrors = false;
+
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
                         .GetOrAdd(libraryPath, file)
-                        .BindT(video => UpdateStatistics(video, ffprobePath))
+                        .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(UpdateMetadata)
+                        .BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
 
-                    await maybeVideo.Match(
-                        async result =>
-                        {
-                            if (result.IsAdded)
-                            {
-                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                            }
-                            else if (result.IsUpdated)
-                            {
-                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
-                            }
+                    foreach (BaseError error in maybeVideo.LeftToSeq())
+                    {
+                        _logger.LogWarning("Error processing other video at {Path}: {Error}", file, error.Value);
+                        hasErrors = true;
+                    }
 
-                            await _libraryRepository.SetEtag(libraryPath, knownFolder, otherVideoFolder, etag);
-                        },
-                        error =>
+                    foreach (MediaItemScanResult<OtherVideo> result in maybeVideo.RightToSeq())
+                    {
+                        if (result.IsAdded || result.IsUpdated)
                         {
-                            _logger.LogWarning("Error processing other video at {Path}: {Error}", file, error.Value);
-                            return Task.CompletedTask;
-                        });
+                            await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                        }
+                    }
+                }
+
+                // only do this once per folder and only if all files processed successfully
+                if (!hasErrors)
+                {
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, otherVideoFolder, etag);
                 }
             }
 
@@ -175,37 +187,83 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(otherVideoIds);
                 }
             }
-            
+
             await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
-            _searchIndex.Commit();
             return Unit.Default;
         }
-
-        private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateMetadata(
-            MediaItemScanResult<OtherVideo> result)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            try
+            return new ScanCanceled();
+        }
+        finally
+        {
+            _searchIndex.Commit();
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateMetadata(
+        MediaItemScanResult<OtherVideo> result)
+    {
+        try
+        {
+            OtherVideo otherVideo = result.Item;
+            string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
+
+            Option<string> maybeNfoFile = new List<string> { Path.ChangeExtension(path, "nfo") }
+                .Filter(_localFileSystem.FileExists)
+                .HeadOrNone();
+
+            if (maybeNfoFile.IsNone)
             {
-                OtherVideo otherVideo = result.Item;
                 if (!Optional(otherVideo.OtherVideoMetadata).Flatten().Any())
                 {
-                    otherVideo.OtherVideoMetadata ??= new List<OtherVideoMetadata>();
-
-                    string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                     if (await _localMetadataProvider.RefreshFallbackMetadata(otherVideo))
                     {
                         result.IsUpdated = true;
                     }
                 }
+            }
 
-                return result;
-            }
-            catch (Exception ex)
+            foreach (string nfoFile in maybeNfoFile)
             {
-                return BaseError.New(ex.ToString());
+                bool shouldUpdate = Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    if (await _localMetadataProvider.RefreshSidecarMetadata(otherVideo, nfoFile))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
             }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateSubtitles(
+        MediaItemScanResult<OtherVideo> result)
+    {
+        try
+        {
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class PlexMediaFile : MediaFile
 {
-    public class PlexMediaFile : MediaFile
-    {
-        public int PlexId { get; set; }
-        public string Key { get; set; }
-    }
+    public int PlexId { get; set; }
+    public string Key { get; set; }
 }

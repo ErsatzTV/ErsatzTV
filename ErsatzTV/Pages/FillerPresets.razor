@@ -1,10 +1,8 @@
 ﻿@page "/media/filler/presets"
 @using ErsatzTV.Application.Filler
-@using ErsatzTV.Application.Configuration.Queries
-@using ErsatzTV.Application.Configuration.Commands
-@using ErsatzTV.Application.Filler.Commands
-@using ErsatzTV.Application.Filler.Queries
+@using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Domain.Filler
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -37,15 +35,15 @@
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Filler Kind">
                 @(
-                    context.FillerKind switch {
-                        FillerKind.PreRoll => "Pre-Roll",
-                        FillerKind.MidRoll => "Mid-Roll",
-                        FillerKind.PostRoll => "Post-Roll",
-                        FillerKind.Fallback => "Fallback",
-                        FillerKind.Tail => "Tail",
-                        _ => "None"
-                    }
-                )
+                                context.FillerKind switch {
+                                    FillerKind.PreRoll => "Pre-Roll",
+                                    FillerKind.MidRoll => "Mid-Roll",
+                                    FillerKind.PostRoll => "Post-Roll",
+                                    FillerKind.Fallback => "Fallback",
+                                    FillerKind.Tail => "Tail",
+                                    _ => "None"
+                                    }
+                    )
             </MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
@@ -69,35 +67,41 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private MudTable<FillerPresetViewModel> _fillerPresetsTable;
 
     private int _fillerPresetsRowsPerPage;
-    
-    protected override async Task OnParametersSetAsync()
+
+    public void Dispose()
     {
-        _fillerPresetsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize))
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        _cts.Cancel();
+        _cts.Dispose();
     }
-    
+
+    protected override async Task OnParametersSetAsync() => _fillerPresetsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize), _cts.Token)
+        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+
     private async Task DeleteFillerPreset(FillerPresetViewModel fillerPreset)
     {
         var parameters = new DialogParameters { { "EntityType", "filler preset" }, { "EntityName", fillerPreset.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        
+
         IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Filler Preset", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id));
+            await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id), _cts.Token);
             await _fillerPresetsTable.ReloadServerData();
         }
     }
 
     private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedFillerPresetsViewModel data = await _mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize));
+        PagedFillerPresetsViewModel data = await _mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize), _cts.Token);
         return new TableData<FillerPresetViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
+
 }

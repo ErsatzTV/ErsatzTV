@@ -1,18 +1,15 @@
 ﻿@page "/channels/{Id:int?}"
 @page "/channels/add"
-@using static LanguageExt.Prelude
+@using static Prelude
 @using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Queries
-@using ErsatzTV.Application.Images.Commands
-@using ErsatzTV.Application.MediaItems.Queries
-@using System.Globalization
-@using ErsatzTV.Application.Channels
-@using ErsatzTV.Application.Channels.Queries
 @using ErsatzTV.Application.Filler
-@using ErsatzTV.Application.Filler.Queries
+@using ErsatzTV.Application.Images
+@using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Watermarks
-@using ErsatzTV.Application.Watermarks.Queries
+@using System.Globalization
 @using ErsatzTV.Core.Domain.Filler
+@using ErsatzTV.Application.Channels
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ChannelEditor> _logger
 @inject ISnackbar _snackbar
@@ -31,6 +28,8 @@
                 <MudCardContent>
                     <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudTextField Class="mt-3" Label="Group" @bind-Value="_model.Group" For="@(() => _model.Group)"/>
+                    <MudTextField Class="mt-3" Label="Categories" @bind-Value="_model.Categories" For="@(() => _model.Categories)" Placeholder="Comma-separated list of categories"/>
                     <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
                         <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
@@ -45,15 +44,32 @@
                         }
                     </MudSelect>
                     <MudSelect Class="mt-3"
-                               Label="Preferred Language"
-                               @bind-Value="_model.PreferredLanguageCode"
-                               For="@(() => _model.PreferredLanguageCode)"
+                               Label="Preferred Audio Language"
+                               @bind-Value="_model.PreferredAudioLanguageCode"
+                               For="@(() => _model.PreferredAudioLanguageCode)"
                                Clearable="true">
-                        <MudSelectItem Value="@((string) null)">(none)</MudSelectItem>
+                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
                         @foreach (CultureInfo culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                               Label="Preferred Subtitle Language"
+                               @bind-Value="_model.PreferredSubtitleLanguageCode"
+                               For="@(() => _model.PreferredSubtitleLanguageCode)"
+                               Clearable="true">
+                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                        @foreach (CultureInfo culture in _availableCultures)
+                        {
+                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                        <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
@@ -76,7 +92,7 @@
                     <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
                                Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
@@ -87,7 +103,7 @@
                                @bind-Value="_model.FallbackFillerId"
                                For="@(() => _model.FallbackFillerId)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
                         {
                             <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
@@ -105,6 +121,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int? Id { get; set; }
@@ -118,41 +135,52 @@
     private List<WatermarkViewModel> _watermarks;
     private List<FillerPresetViewModel> _fillerPresets;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        await LoadFFmpegProfiles();
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
-        await LoadWatermarks();
-        await LoadFillerPresets();
+        await LoadFFmpegProfiles(_cts.Token);
+        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        await LoadWatermarks(_cts.Token);
+        await LoadFillerPresets(_cts.Token);
 
         if (Id.HasValue)
         {
-            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelById(Id.Value));
+            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelById(Id.Value), _cts.Token);
             maybeChannel.Match(
                 channelViewModel =>
                 {
                     _model.Id = channelViewModel.Id;
                     _model.Name = channelViewModel.Name;
+                    _model.Group = channelViewModel.Group;
+                    _model.Categories = channelViewModel.Categories;
                     _model.Number = channelViewModel.Number;
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
-                    _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
+                    _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
                     _model.WatermarkId = channelViewModel.WatermarkId;
                     _model.FallbackFillerId = channelViewModel.FallbackFillerId;
+                    _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
+                    _model.SubtitleMode = channelViewModel.SubtitleMode;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
         else
         {
-            FFmpegSettingsViewModel ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
+            FFmpegSettingsViewModel ffmpegSettings = await _mediator.Send(new GetFFmpegSettings(), _cts.Token);
 
     // TODO: command for new channel
-            IEnumerable<int> channelNumbers = await _mediator.Send(new GetAllChannels())
+            IEnumerable<int> channelNumbers = await _mediator.Send(new GetAllChannels(), _cts.Token)
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
             _model.Name = "New Channel";
+            _model.Group = "ErsatzTV";
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStreamHybrid;
         }
@@ -166,14 +194,14 @@
 
     private bool IsEdit => Id.HasValue;
 
-    private async Task LoadFFmpegProfiles() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
+    private async Task LoadFFmpegProfiles(CancellationToken cancellationToken) =>
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
 
-    private async Task LoadWatermarks() =>
-        _watermarks = await _mediator.Send(new GetAllWatermarks());
+    private async Task LoadWatermarks(CancellationToken cancellationToken) =>
+        _watermarks = await _mediator.Send(new GetAllWatermarks(), cancellationToken);
 
-    private async Task LoadFillerPresets() =>
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+    private async Task LoadFillerPresets(CancellationToken cancellationToken) =>
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), cancellationToken)
             .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList());
 
     private async Task HandleSubmitAsync()
@@ -182,8 +210,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
@@ -200,7 +228,7 @@
         try
         {
             Either<BaseError, string> maybeCacheFileName =
-                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Logo));
+                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
@@ -226,5 +254,5 @@
             _logger.LogError("Unexpected error saving channel logo: {Error}", ex.Message);
         }
     }
-    
+
 }

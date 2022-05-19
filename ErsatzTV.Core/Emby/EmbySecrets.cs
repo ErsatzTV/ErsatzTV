@@ -1,8 +1,7 @@
 ﻿using ErsatzTV.Core.MediaSources;
 
-namespace ErsatzTV.Core.Emby
+namespace ErsatzTV.Core.Emby;
+
+public class EmbySecrets : RemoteMediaSourceSecrets
 {
-    public class EmbySecrets : RemoteMediaSourceSecrets
-    {
-    }
 }

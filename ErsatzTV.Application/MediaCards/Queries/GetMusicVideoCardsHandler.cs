@@ -1,33 +1,54 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using MediatR;
 using static ErsatzTV.Application.MediaCards.Mapper;
-using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Application.MediaCards.Queries
+namespace ErsatzTV.Application.MediaCards;
+
+public class GetMusicVideoCardsHandler : IRequestHandler<GetMusicVideoCards, MusicVideoCardResultsViewModel>
 {
-    public class GetMusicVideoCardsHandler : IRequestHandler<GetMusicVideoCards, MusicVideoCardResultsViewModel>
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+    private readonly IMusicVideoRepository _musicVideoRepository;
+    private readonly IPlexPathReplacementService _plexPathReplacementService;
+
+    public GetMusicVideoCardsHandler(
+        IMusicVideoRepository musicVideoRepository,
+        IPlexPathReplacementService plexPathReplacementService,
+        IJellyfinPathReplacementService jellyfinPathReplacementService,
+        IEmbyPathReplacementService embyPathReplacementService)
     {
-        private readonly IMusicVideoRepository _musicVideoRepository;
+        _musicVideoRepository = musicVideoRepository;
+        _plexPathReplacementService = plexPathReplacementService;
+        _jellyfinPathReplacementService = jellyfinPathReplacementService;
+        _embyPathReplacementService = embyPathReplacementService;
+    }
 
-        public GetMusicVideoCardsHandler(IMusicVideoRepository musicVideoRepository) =>
-            _musicVideoRepository = musicVideoRepository;
+    public async Task<MusicVideoCardResultsViewModel> Handle(
+        GetMusicVideoCards request,
+        CancellationToken cancellationToken)
+    {
+        int count = await _musicVideoRepository.GetMusicVideoCount(request.ArtistId);
 
-        public async Task<MusicVideoCardResultsViewModel> Handle(
-            GetMusicVideoCards request,
-            CancellationToken cancellationToken)
+        List<MusicVideoMetadata> musicVideos = await _musicVideoRepository
+            .GetPagedMusicVideos(request.ArtistId, request.PageNumber, request.PageSize);
+
+        var results = new List<MusicVideoCardViewModel>();
+
+        foreach (MusicVideoMetadata musicVideoMetadata in musicVideos)
         {
-            int count = await _musicVideoRepository.GetMusicVideoCount(request.ArtistId);
+            string localPath = await musicVideoMetadata.MusicVideo.GetLocalPath(
+                _plexPathReplacementService,
+                _jellyfinPathReplacementService,
+                _embyPathReplacementService,
+                false);
 
-            List<MusicVideoCardViewModel> results = await _musicVideoRepository
-                .GetPagedMusicVideos(request.ArtistId, request.PageNumber, request.PageSize)
-                .Map(list => list.Map(ProjectToViewModel).ToList());
-
-            return new MusicVideoCardResultsViewModel(count, results, None);
+            results.Add(ProjectToViewModel(musicVideoMetadata, localPath));
         }
+
+        return new MusicVideoCardResultsViewModel(count, results, None);
     }
 }

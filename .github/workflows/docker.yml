@@ -24,23 +24,38 @@ jobs:
     name: Build & Publish
     runs-on: ubuntu-latest
     if: contains(github.event.head_commit.message, '[no build]') == false
+    strategy:
+      matrix:
+        include:
+          - name: base
+            path: ''
+            suffix: ''
+            qemu: false
+          - name: nvidia
+            path: 'nvidia/'
+            suffix: '-nvidia'
+            qemu: false
+          - name: vaapi
+            path: 'vaapi/'
+            suffix: '-vaapi'
+            qemu: false
+          - name: arm64
+            path: 'arm64/'
+            suffix: '-arm64'
+            qemu: true
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Set up Docker Buildx Base
-        uses: docker/setup-buildx-action@v1
-        id: builder-base
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        if: ${{ matrix.qemu == true }}
 
-      - name: Set up Docker Buildx NVIDIA
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-        id: builder-nvidia
-
-      - name: Set up Docker Buildx VAAPI
-        uses: docker/setup-buildx-action@v1
-        id: builder-vaapi
+        id: docker-buildx
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -48,41 +63,31 @@ jobs:
           username: ${{ secrets.docker_hub_username }}
           password: ${{ secrets.docker_hub_access_token }}
 
-      - name: Build and push base
+      - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.builder-base.outputs.name }}
+          builder: ${{ steps.docker-buildx.outputs.name }}
           context: .
-          file: ./docker/Dockerfile
+          file: ./docker/${{ matrix.path }}Dockerfile
           push: true
           build-args: |
-            INFO_VERSION=${{ inputs.info_version }}-docker
+            INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
           tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}
-            jasongdove/ersatztv:${{ inputs.tag_version }}
+            jasongdove/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
+            jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
+        if: ${{ matrix.name != 'arm64' }}
 
-      - name: Build and push nvidia
+      - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          builder: ${{ steps.builder-nvidia.outputs.name }}
+          builder: ${{ steps.docker-buildx.outputs.name }}
           context: .
-          file: ./docker/nvidia/Dockerfile
+          file: ./docker/${{ matrix.path }}Dockerfile
           push: true
+          platforms: 'linux/arm64'
           build-args: |
-            INFO_VERSION=${{ inputs.info_version }}-docker-nvidia
+            INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
           tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}-nvidia
-            jasongdove/ersatztv:${{ inputs.tag_version }}-nvidia
-
-      - name: Build and push vaapi
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.builder-vaapi.outputs.name }}
-          context: .
-          file: ./docker/vaapi/Dockerfile
-          push: true
-          build-args: |
-            INFO_VERSION=${{ inputs.info_version }}-docker-vaapi
-          tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}-vaapi
-            jasongdove/ersatztv:${{ inputs.tag_version }}-vaapi
+            jasongdove/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
+            jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
+        if: ${{ matrix.name == 'arm64' }}

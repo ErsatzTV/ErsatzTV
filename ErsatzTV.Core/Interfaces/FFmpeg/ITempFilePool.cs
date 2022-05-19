@@ -1,9 +1,8 @@
 ﻿using ErsatzTV.Core.FFmpeg;
 
-namespace ErsatzTV.Core.Interfaces.FFmpeg
+namespace ErsatzTV.Core.Interfaces.FFmpeg;
+
+public interface ITempFilePool
 {
-    public interface ITempFilePool
-    {
-        string GetNextTempFile(TempFileCategory category);
-    }
+    string GetNextTempFile(TempFileCategory category);
 }

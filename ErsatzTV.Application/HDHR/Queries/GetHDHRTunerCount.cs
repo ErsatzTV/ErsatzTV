@@ -1,6 +1,3 @@
-﻿using MediatR;
+﻿namespace ErsatzTV.Application.HDHR;
 
-namespace ErsatzTV.Application.HDHR.Queries
-{
-    public record GetHDHRTunerCount : IRequest<int>;
-}
+public record GetHDHRTunerCount : IRequest<int>;

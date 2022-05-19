@@ -1,47 +1,41 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace ErsatzTV.Infrastructure.Health.Checks
+namespace ErsatzTV.Infrastructure.Health.Checks;
+
+public class VaapiDriverHealthCheck : BaseHealthCheck, IVaapiDriverHealthCheck
 {
-    public class VaapiDriverHealthCheck : BaseHealthCheck, IVaapiDriverHealthCheck
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+
+    public VaapiDriverHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
+        _dbContextFactory = dbContextFactory;
+
+    public override string Title => "VAAPI Driver";
+
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        private readonly IDbContextFactory<TvContext> _dbContextFactory;
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        List<FFmpegProfile> profiles = await dbContext.FFmpegProfiles
+            .Filter(p => p.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
+            .ToListAsync(cancellationToken);
 
-        public VaapiDriverHealthCheck(IDbContextFactory<TvContext> dbContextFactory)
+        if (profiles.Count == 0)
         {
-            _dbContextFactory = dbContextFactory;
+            return NotApplicableResult();
         }
 
-        protected override string Title => "VAAPI Driver";
 
-        public async Task<HealthCheckResult> Check()
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            List<FFmpegProfile> profiles = await dbContext.FFmpegProfiles
-                .Filter(p => p.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
-                .ToListAsync();
-            
-            if (profiles.Count == 0)
-            {
-                return NotApplicableResult();
-            }
+        var defaultProfiles = profiles
+            .Filter(p => p.VaapiDriver == VaapiDriver.Default)
+            .ToList();
 
-
-            var defaultProfiles = profiles
-                .Filter(p => p.VaapiDriver == VaapiDriver.Default)
-                .ToList();
-
-            return defaultProfiles.Any()
-                ? InfoResult(
-                    $"{defaultProfiles.Count} FFmpeg Profile{(defaultProfiles.Count > 1 ? "s are" : " is")} set to use Default VAAPI Driver; selecting iHD (Gen 8+) or i965 (up to Gen 9) may offer better performance with Intel iGPU")
-                : OkResult();
-        }
+        return defaultProfiles.Any()
+            ? InfoResult(
+                $"{defaultProfiles.Count} FFmpeg Profile{(defaultProfiles.Count > 1 ? "s are" : " is")} set to use Default VAAPI Driver; selecting iHD (Gen 8+) or i965 (up to Gen 9) may offer better performance with Intel iGPU")
+            : OkResult();
     }
 }

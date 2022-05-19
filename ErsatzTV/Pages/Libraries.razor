@@ -1,15 +1,12 @@
 ﻿@page "/media/libraries"
 @using MediatR.Courier
 @using ErsatzTV.Application.Libraries
-@using ErsatzTV.Application.Libraries.Queries
-@using ErsatzTV.Application.MediaSources.Commands
-@using ErsatzTV.Application.Plex.Commands
+@using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Application.Plex
 @using ErsatzTV.Core.Metadata
-@using System.Threading
+@using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
 @using ErsatzTV.Application.Jellyfin
-@using ErsatzTV.Application.Jellyfin.Commands
 @using ErsatzTV.Application.Emby
-@using ErsatzTV.Application.Emby.Commands
 @implements IDisposable
 @inject IMediator _mediator
 @inject IEntityLocker _locker
@@ -58,7 +55,19 @@
                     }
                     else
                     {
-                        <div style="width: 48px"></div>
+                        if (context is PlexLibraryViewModel)
+                        {
+                            <MudTooltip Text="Deep Scan Library">
+                                <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
+                                               Disabled="@_locker.IsLibraryLocked(context.Id)"
+                                               OnClick="@(_ => ScanLibrary(context, true))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <div style="width: 48px"></div>
+                        }
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Disabled="@_locker.IsLibraryLocked(context.Id)"
@@ -78,6 +87,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private IList<LibraryViewModel> _libraries;
     private Dictionary<int, int> _progressByLibrary;
 
@@ -87,31 +98,33 @@
         _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadLibraries();
+    protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
 
-    private async Task LoadLibraries()
+    private async Task LoadLibraries(CancellationToken cancellationToken)
     {
-        _libraries = await _mediator.Send(new GetAllLibraries());
+        _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
-    private async Task ScanLibrary(LibraryViewModel library)
+    private async Task ScanLibrary(LibraryViewModel library, bool deepScan = false)
     {
         if (_locker.LockLibrary(library.Id))
         {
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id));
+                    await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
                     break;
                 case PlexLibraryViewModel:
-                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
+                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
-                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id));
+                    await _jellyfinWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
+                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id), _cts.Token);
                     break;
                 case EmbyLibraryViewModel:
-                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id));
+                    await _embyWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
+                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id), _cts.Token);
                     break;
             }
 
@@ -128,7 +141,7 @@
         {
             if (_progressByLibrary != null && _progressByLibrary.ContainsKey(libraryScanProgress.LibraryId))
             {
-                _progressByLibrary[libraryScanProgress.LibraryId] = (int) (libraryScanProgress.Progress * 100);
+                _progressByLibrary[libraryScanProgress.LibraryId] = (int)(libraryScanProgress.Progress * 100);
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -142,6 +155,9 @@
     {
         _locker.OnLibraryChanged -= LockChanged;
         _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
+
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
 }

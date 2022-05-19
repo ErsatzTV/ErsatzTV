@@ -1,10 +1,7 @@
-﻿using System;
+﻿namespace ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Domain
+public class ProgramScheduleItemDuration : ProgramScheduleItem
 {
-    public class ProgramScheduleItemDuration : ProgramScheduleItem
-    {
-        public TimeSpan PlayoutDuration { get; set; }
-        public TailMode TailMode { get; set; }
-    }
+    public TimeSpan PlayoutDuration { get; set; }
+    public TailMode TailMode { get; set; }
 }

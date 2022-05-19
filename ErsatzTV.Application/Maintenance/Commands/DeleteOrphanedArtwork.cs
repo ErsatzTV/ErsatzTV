@@ -1,7 +1,5 @@
 ﻿using ErsatzTV.Core;
-using LanguageExt;
 
-namespace ErsatzTV.Application.Maintenance.Commands
-{
-    public record DeleteOrphanedArtwork : MediatR.IRequest<Either<BaseError, Unit>>, IBackgroundServiceRequest;
-}
+namespace ErsatzTV.Application.Maintenance;
+
+public record DeleteOrphanedArtwork : IRequest<Either<BaseError, Unit>>, IBackgroundServiceRequest;

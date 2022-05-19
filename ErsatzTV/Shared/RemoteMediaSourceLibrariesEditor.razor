@@ -1,5 +1,5 @@
 ﻿@using ErsatzTV.Application.MediaSources
-@using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ILogger<RemoteMediaSourceLibrariesEditor> _logger
@@ -43,6 +43,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -60,10 +61,18 @@
     public Func<List<RemoteMediaSourceLibraryEditViewModel>, IRequest<Either<BaseError, Unit>>> GetUpdateLibraryRequest { get; set; }
 
     [Parameter]
-    public Func<int, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
+    public Func<SynchronizeParameters, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
 
     private RemoteMediaSourceViewModel _source;
     private List<RemoteMediaSourceLibraryEditViewModel> _libraries;
+
+    public record SynchronizeParameters(int LibraryId, int MediaSourceId);
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override Task OnParametersSetAsync() => LoadData();
 
@@ -86,7 +95,7 @@
     private async Task SaveChanges()
     {
         IRequest<Either<BaseError, Unit>> request = GetUpdateLibraryRequest(_libraries);
-        Seq<BaseError> errorMessages = await _mediator.Send(request).Map(e => e.LeftToSeq());
+        Seq<BaseError> errorMessages = await _mediator.Send(request, _cts.Token).Map(e => e.LeftToSeq());
 
         await errorMessages.HeadOrNone().Match(
             error =>
@@ -97,11 +106,11 @@
             },
             async () =>
             {
-                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                foreach (int libraryId in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
                 {
-                    if (_locker.LockLibrary(id))
+                    if (_locker.LockLibrary(libraryId))
                     {
-                        await SynchronizeLibraryByIdIfNeeded(id);
+                        await SynchronizeLibraryByIdIfNeeded(new SynchronizeParameters(libraryId, Id));
                     }
                 }
 

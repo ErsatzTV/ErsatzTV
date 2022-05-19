@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Core.Health.Checks
+﻿namespace ErsatzTV.Core.Health.Checks;
+
+public interface IVaapiDriverHealthCheck : IHealthCheck
 {
-    public interface IVaapiDriverHealthCheck : IHealthCheck
-    {
-    }
 }

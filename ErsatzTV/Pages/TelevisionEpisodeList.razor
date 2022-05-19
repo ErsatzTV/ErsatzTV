@@ -1,14 +1,10 @@
 ﻿@page "/media/tv/seasons/{SeasonId:int}"
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.Television
-@using ErsatzTV.Application.Television.Queries
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
-@using ErsatzTV.Application.ProgramSchedules.Commands
-@using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject IMediator _mediator
 @inject ILogger<TelevisionEpisodeList> _logger
 @inject ISnackbar _snackbar
@@ -89,8 +85,14 @@
                         }
                         @if (episode.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
+                        else if (episode.State == MediaItemState.Unavailable)
+                        {
+                            <div style="position: absolute; right: 10px; top: 8px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
                             </div>
                         }
                     </MudPaper>
@@ -117,6 +119,14 @@
                         <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
                         <MudText>File Not Found:&nbsp;</MudText>
                         <MudText>@episode.Path</MudText>
+                    </div>
+                }
+                else if (episode.State == MediaItemState.Unavailable)
+                {
+                    <div class="mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                        <MudText>Unavailable:&nbsp;</MudText>
+                        <MudText>@episode.LocalPath</MudText>
                     </div>
                 }
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -156,6 +166,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int SeasonId { get; set; }
@@ -167,11 +178,24 @@
 
     private TelevisionEpisodeCardResultsViewModel _data;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await _navigationManager.NavigateToFragmentAsync(_jsRuntime);
+            try
+            {
+                await _navigationManager.NavigateToFragmentAsync(_jsRuntime);
+            }
+            catch (Exception)
+            {
+    // ignored
+            }
         }
     }
 
@@ -179,10 +203,10 @@
 
     private async Task RefreshData()
     {
-        await _mediator.Send(new GetTelevisionSeasonById(SeasonId))
+        await _mediator.Send(new GetTelevisionSeasonById(SeasonId), _cts.Token)
             .IfSomeAsync(vm => _season = vm);
 
-        _data = await _mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
+        _data = await _mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize), _cts.Token);
     }
 
     private async Task AddToCollection()
@@ -194,7 +218,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await _mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId));
+            await _mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId), _cts.Token);
             _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
@@ -209,7 +233,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null));
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }
@@ -224,7 +248,7 @@
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
             var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-            Either<BaseError, Unit> addResult = await _mediator.Send(request);
+            Either<BaseError, Unit> addResult = await _mediator.Send(request, _cts.Token);
             addResult.Match(
                 Left: error =>
                 {

@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Jellyfin
+namespace ErsatzTV.Core.Interfaces.Jellyfin;
+
+public interface IJellyfinPathReplacementService
 {
-    public interface IJellyfinPathReplacementService
-    {
-        Task<string> GetReplacementJellyfinPath(int libraryPathId, string path);
-        string GetReplacementJellyfinPath(List<JellyfinPathReplacement> pathReplacements, string path, bool log = true);
-    }
+    Task<string> GetReplacementJellyfinPath(int libraryPathId, string path, bool log = true);
+    string GetReplacementJellyfinPath(List<JellyfinPathReplacement> pathReplacements, string path, bool log = true);
+    string ReplaceNetworkPath(JellyfinMediaSource mediaSource, string path, string networkPath, string replacement);
 }

@@ -5,16 +5,268 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
+- Fix error display with `HLS Segmenter` and `MPEG-TS` streaming modes
+- Remove erroneous log messages about normalizing framerate on channels where framerate normalization is disabled
+- Fix unscheduled filler gaps that sometimes happen as playouts are automatically extended each hour
+
+### Added
+- Clean transcode cache folder on startup and after `HLS Segmenter` session terminates for any reason
+
+### Changed
+- Remove thread limitation for scenarios where it is not required
+  - This should give a performance boost to installations that don't use hardware acceleration
+- Use hardware acceleration to display error messages where configured
+
+## [0.5.7-beta] - 2022-05-14
+### Fixed
+- Reduce memory use due to library scan operations
+- Fix some instances of filler getting "stuck" when a filler item is encountered that's too long for the gap
+- Properly ignore Plex `Other Videos` libraries (`movie` libraries where agent is `com.plexapp.agents.none`)
+- Fix `Custom Title` for schedule items with `One`, `Multiple` and `Flood` playout modes 
+- Fix scheduling bug where flood items would sometimes fail to continue after midnight
+
+### Added
+- Add `metadata_kind` field to search index to allow searching for items with a particular metdata source
+  - Valid metadata kinds are `fallback`, `sidecar` (NFO), `external` (from a media server) and `embedded` (songs)
+- Add autocomplete functionality to search bar to quickly navigate to channels, ffmpeg profiles, collections and schedules by name
+- Add global setting to skip missing (file-not-found or unavailable) items when building playouts
+- Add filler preset option to allow watermarks to overlay on top of filler (disabled by default)
+  - This option is applied when new items are added to a playout; rebuilding is needed if you want the change to take effect immediately
+- Read `track` field from music video NFO metadata and use it for chronological sorting (after release date)
+- Add `Random Start Point` option to schedules
+  - When this option is enabled, all `Chronological` or `Shuffle In Order` content groups will have their start points randomized
+  - When this option is disabled, all `Chronological` or `Shuffle In Order` content groups will start with the chronologically earliest item
+
+### Changed
+- Replace invalid (control) characters in NFO metadata with replacement character `�` before parsing
+- Store partial (incomplete) NFO metadata results when invalid XML is encountered
+  - Previously, no metadata would be stored if the XML within the NFO failed to validate
+
+## [0.5.6-beta] - 2022-05-06
+### Fixed
+- Fix processing local movie NFO metadata without a `year` value
+- Fix processing local movie fallback metadata
+- Fix search edge case where very recently added items (hours) would not be returned by relative date queries
+- Fix search index validation on startup; improper validation was causing a rebuild with every startup
+- Block library scanning until search index has been recreated/upgraded
+- Fix occasional erroneous log messages when HLS channel playback times out because all clients have left
+- Fix fallback filler playback
+- Fix stream continuity when error messages are displayed
+- Fix duplicate scanning within `Other Video` libraries (i.e. folders would be scanned multiple times) 
+
+### Added
+- Add `show_genre` and `show_tag` to search index for seasons and episodes
+- Use `aired` value to source release date from music video nfo metadata
+- Add NFO metadata support to `Other Video` libraries
+  - `Other Video` NFO metadata must be in the movie NFO metadata format
+
+## [0.5.5-beta] - 2022-05-03
+### Fixed
+- Fix adding episodes with no title to the search index
+  - This behavior was preventing some items from being removed from the trash
+- Support combination NFO metadata for movies, shows, artists and music videos
+  - Note that ErsatzTV does not scrape any metadata; any URLs after the XML will be ignored
+- Fix bug causing some Jellyfin and Emby content to incorrectly show as unavailable
+- Fix extracting embedded `mov_text` subtitles
+- Properly extract embedded subtitles on playouts where subtitles are only enabled on schedule items (and not on the channel itself)
+
+### Added
+- Add experimental `arm64` docker tags (`develop-arm64` and `latest-arm64`)
+- Use `Sort Title` from Movie NFO metadata if available
+- Support multiple `Artist` entries in music video NFO metadata
+
+## [0.5.4-beta] - 2022-04-29
+### Fixed
+- Cleanly stop all library scans when service termination is requested
+- Fix health check crash when trash contains a show or a season
+- Fix ability of health check crash to crash home page
+- Remove and ignore Season 0/Specials from Plex shows that have no specials
+- Automatically delete and rebuild the search index on startup if it has become corrupt
+- Automatically scan Jellyfin and Emby libraries on startup and periodically
+- Properly remove un-synchronized Plex, Jellyfin and Emby items from the database and search index
+- Fix synchronizing movies within a collection from Jellyfin
+
+### Changed
+- Update Plex, Jellyfin and Emby movie and show library scanners to share a significant amount of code
+  - This should help maintain feature parity going forward
+- Optimize search-index rebuilding to complete 100x faster
+- **No longer use network paths to source content from Jellyfin and Emby**
+  - **If you previously used path replacements to convert network paths to local paths, you should remove them**
+
+### Added
+- Add `unavailable` state for Jellyfin and Emby movie and show libraries
+- Add `height` and `width` to search index for all videos
+- Add `season_number` and `episode_number` to search index for all episodes
+- Add `season_number` to search index for seasons
+- Add `show_title` to search index for seasons and episodes
+
+## [0.5.3-beta] - 2022-04-24
+### Fixed
+- Cleanly stop Plex library scan when service termination is requested
+- Fix bug introduced with 0.5.2-beta that prevented some Plex content from being played
+- Fix spammy subtitle error message
+- Fix generating blur hashes for song backgrounds in Docker
+
+### Changed
+- No longer remove Plex movies and episodes from ErsatzTV when they do not exist on disk
+  - Instead, a new `unavailable` media state will be used to indicate this condition
+  - After updating mounts, path replacements, etc - a library scan can be used to resolve this state
+
+## [0.5.2-beta] - 2022-04-22
+### Fixed
+- Fix unlocking libraries when scanning fails for any reason
+- Fix software overlay of actual size watermark
+
+### Added
+- Add support for burning in embedded and external text subtitles
+  - **This requires a one-time full library scan, which may take a long time with large libraries.**
+- Sync Plex, Jellyfin and Emby collections as tags on movies, shows, seasons and episodes
+  - This allows smart collections that use queries like `tag:"Collection Name"`
+  - Note that Emby has an outstanding collections bug that prevents updates when removing items from a collection
+- Sync Plex labels as tags on movies and shows
+  - This allows smart collections that use queries like `tag:"Plex Label Name"`
+- Add `Deep Scan` button for Plex libraries
+  - This scanning mode is *slow* but is required to detect some changes like labels
+
+### Changed
+- Improve the speed and change detection of the Plex library scanners
+
+## [0.5.1-beta] - 2022-04-17
+### Fixed
+- Fix subtitles edge case with NVENC
+- Only select picture subtitles (text subtitles are not yet supported)
+  - Supported picture subtitles are `hdmv_pgs_subtitle` and `dvd_subtitle`
+- Fix subtitles using software encoders, videotoolbox, VAAPI
+- Fix setting VAAPI driver name
+- Fix ffmpeg troubleshooting reports
+- Fix bug where filler would behave as if it were configured to pad even though a different mode was selected
+- Fix bug where mid-roll count filler would skip scheduling the final chapter in an episode 
+
+### Added
+- Add `Empty Trash` button to `Trash` page
+
+## [0.5.0-beta] - 2022-04-13
+### Fixed
+- Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running
+- Ensure clients that use HDHomeRun emulation (like Plex) always get an `MPEG-TS` stream, regardless of the configured streaming mode
+- Fix scheduling bug that caused some days to be skipped when fixed start times were used with fallback filler
+
+### Added
+- Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings
+  - `Preferred Subtitle Language` will filter all subtitle streams based on language
+  - `Subtitle Mode` will further filter subtitle streams based on attributes (forced, default)
+  - If picture-based subtitles are found after filtering, they will be burned into the video stream
+- Detect non-zero ffmpeg exit code from `HLS Segmenter` and `MPEG-TS`, log error output and display error output on stream
+- Add `Watermark` setting to schedule items; this allows override the channel watermark. Watermark priority is:
+  - Schedule Item
+  - Channel
+  - Global
+
+### Changed
+- Remove legacy transcoder logic option; all channels will use the new transcoder logic
+- Renamed channel setting `Preferred Language` to `Preferred Audio Language`
+- Reworked playout build logic to maintain collection progress in some scenarios. There are now three build modes:
+  - `Continue` - add new items to the end of an existing playout
+    - This mode is used when playouts are automatically extended in the background
+  - `Refresh` - this mode will try to maintain collection progress while rebuilding the entire playout
+    - This mode is used when a schedule is updated, or when collection modifications trigger a playout rebuild
+  - `Reset` - this mode will rebuild the entire playout and will NOT maintain progress
+    - This mode is only used when the `Reset Playout` button is clicked on the Playouts page
+  - **This requires rebuilding all playouts, which will happen on startup after upgrading**
+- Use ffmpeg to resize images; this should help reduce ErsatzTV's memory use
+- Use ffprobe to check for animated logos and watermarks; this should help reduce ErsatzTV's memory use
+- Allow two decimals in channel numbers (e.g. `5.73`)
+
+## [0.4.5-alpha] - 2022-03-29
+### Fixed
+- Fix streaming mode inconsistencies when `mode` parameter is unspecified
+- Fix startup on Windows 7
+
+### Added
+- Add option to automatically deinterlace video when transcoding
+  - Previously, this was always enabled; the purpose of the option is to allow disabling any deinterlace filters
+  - Note that there is no performance gain to disabling the option with progressive content; filters are only ever applied to interlaced content
+
+### Changed
+- Change FFmpeg Profile video codec and audio codec text fields to select fields
+  - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
+- Remove FFmpeg Profile `Transcode`, `Normalize Video` and `Normalize Audio` settings
+  - All content will be transcoded and have audio and video normalized
+  - The only exception to this rule is `HLS Direct` streaming mode, which directly copies video and audio streams
+- Always try to connect to Plex at `http://localhost:32400` even if that address isn't advertised by the Plex API
+  - If Plex isn't on the localhost, all other addresses will be checked as with previous releases
+
+## [0.4.4-alpha] - 2022-03-10
+### Fixed
+- Fix `HLS Direct` streaming mode
+- Fix bug with `HLS Segmenter` (and `MPEG-TS`) on Windows that caused errors at program boundaries
+
+### Added
+- Perform additional duration analysis on files with missing duration metadata
+- Add `nouveau` VAAPI driver option
+
+## [0.4.3-alpha] - 2022-03-05
+### Fixed
+- Fix song sorting with `Chronological` and `Shuffle In Order` playback orders
+- Fix watermark on scaled and/or padded video with NVIDIA acceleration
+- Fix playback of interlaced mpeg2video content with NVIDIA acceleration
+- Fix playback of all interlaced content with QSV acceleration
+- Fix adding songs to collections from search results page
+- Fix bug scheduling mid-roll filler with content that contains one chapter
+  - No mid-roll filler will be inserted for content with zero or one chapters
+- Fix thread sync bug with `HLS Segmenter` (and `MPEG-TS`) streaming modes
+- Fix path replacement bug when media server path is left blank
+
+### Added
+- Add automated error reporting via Bugsnag
+  - This can be disabled by editing the `appsettings.json` file or by setting the `Bugsnag:Enable` environment variable to `false`
+- Add `album_artist` to song metadata and to search index
+- Display `album_artist` on some song videos when it's different than the `artist`
+
+### Changed
+- Framerate normalization will never normalize framerate below 24fps
+  - Instead, content with a lower framerate will be normalized up to 24fps
+- `Shuffle In Order` will group songs by album artist instead of by track artist
+
+## [0.4.2-alpha] - 2022-02-26
+### Fixed
+- Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
+- Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
+- Fix green line at the bottom of some content scaled using QSV acceleration
+
+### Added
+- Add configurable channel group (M3U) and categories (XMLTV)
+- Add `Shuffle Schedule Items` option to schedule configuration
+  - When this is enabled, schedule items will be shuffled rather than looped in order
+  - **To support this, all playouts will be rebuilt (one time) after upgrading to this version**
+
+### Changed
+- Disable framerate normalization by default and on all ffmpeg profiles
+  - If framerate normalization is desired (not typically needed), it can be re-enabled manually
+- Show watermarks over songs
+- Hide unused local libraries
+
+## [0.4.1-alpha] - 2022-02-10
+### Fixed
 - Normalize smart quotes in search queries as they are unsupported by the search library
 - Fix incorrect watermark time calculations caused by working ahead in `HLS Segmenter`
+- Fix ui crash adding empty path to local library
+- Fix ui crash loading collection editor
+- Properly flag items as `File Not Found` when local library path (folder) is missing from disk
+- Fix playback bug with unknown pixel format
+- Fix playback of interlaced mpeg2video on NVIDIA, VAAPI
 
 ### Added
 - Include `Series` category tag for all episodes in XMLTV
 - Include movie, episode (show), music video (artist) genres as `category` tags in XMLTV
 - Add framerate normalization to `HLS Segmenter` and `MPEG-TS` streaming modes
+- Add `HLS Segmenter Initial Segment Count` setting to allow segmenter to work ahead before allowing client playback
 
 ### Changed
 - Intermittent watermarks will now fade in and out
+- Show collection name in some playout build error messages
+- Use hardware-accelerated filter for watermarks on NVIDIA
+- Use hardware-accelerated deinterlace for some content on NVIDIA
 
 ## [0.4.0-alpha] - 2022-01-29
 ### Fixed
@@ -956,7 +1208,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.7-beta...HEAD
+[0.5.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.6-beta...v0.5.7-beta
+[0.5.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.5-beta...v0.5.6-beta
+[0.5.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.4-beta...v0.5.5-beta
+[0.5.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.3-beta...v0.5.4-beta
+[0.5.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...v0.5.3-beta
+[0.5.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.1-beta...v0.5.2-beta
+[0.5.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...v0.5.1-beta
+[0.5.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...v0.5.0-beta
+[0.4.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...v0.4.5-alpha
+[0.4.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...v0.4.4-alpha
+[0.4.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...v0.4.3-alpha
+[0.4.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...v0.4.2-alpha
+[0.4.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...v0.4.1-alpha
 [0.4.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.8-alpha...v0.4.0-alpha
 [0.3.8-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.7-alpha...v0.3.8-alpha
 [0.3.7-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.6-alpha...v0.3.7-alpha

@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using MediatR;
+﻿namespace ErsatzTV.Application.Jellyfin;
 
-namespace ErsatzTV.Application.Jellyfin.Queries
-{
-    public record GetJellyfinPathReplacementsBySourceId
-        (int JellyfinMediaSourceId) : IRequest<List<JellyfinPathReplacementViewModel>>;
-}
+public record GetJellyfinPathReplacementsBySourceId
+    (int JellyfinMediaSourceId) : IRequest<List<JellyfinPathReplacementViewModel>>;

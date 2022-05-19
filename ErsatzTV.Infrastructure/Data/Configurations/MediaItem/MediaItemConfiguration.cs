@@ -2,10 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class MediaItemConfiguration : IEntityTypeConfiguration<MediaItem>
 {
-    public class MediaItemConfiguration : IEntityTypeConfiguration<MediaItem>
-    {
-        public void Configure(EntityTypeBuilder<MediaItem> builder) => builder.ToTable("MediaItem");
-    }
+    public void Configure(EntityTypeBuilder<MediaItem> builder) => builder.ToTable("MediaItem");
 }

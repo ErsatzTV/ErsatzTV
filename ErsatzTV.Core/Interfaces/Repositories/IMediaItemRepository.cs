@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
 
-namespace ErsatzTV.Core.Interfaces.Repositories
+namespace ErsatzTV.Core.Interfaces.Repositories;
+
+public interface IMediaItemRepository
 {
-    public interface IMediaItemRepository
-    {
-        Task<List<string>> GetAllLanguageCodes();
-        Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path);
-        Task<Unit> FlagNormal(MediaItem mediaItem);
-        Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds);
-    }
+    Task<List<CultureInfo>> GetAllKnownCultures();
+    Task<List<CultureInfo>> GetAllLanguageCodeCultures();
+    Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path);
+    Task<Unit> FlagNormal(MediaItem mediaItem);
+    Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds);
 }

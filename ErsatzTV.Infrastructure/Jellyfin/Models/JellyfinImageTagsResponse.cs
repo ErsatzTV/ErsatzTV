@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models
+﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models;
+
+public class JellyfinImageTagsResponse
 {
-    public class JellyfinImageTagsResponse
-    {
-        public string Primary { get; set; }
-        public string Thumb { get; set; }
-    }
+    public string Primary { get; set; }
+    public string Thumb { get; set; }
 }

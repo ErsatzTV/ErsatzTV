@@ -1,7 +1,3 @@
-﻿using LanguageExt;
-using MediatR;
+﻿namespace ErsatzTV.Application.Channels;
 
-namespace ErsatzTV.Application.Channels.Queries
-{
-    public record GetChannelById(int Id) : IRequest<Option<ChannelViewModel>>;
-}
+public record GetChannelById(int Id) : IRequest<Option<ChannelViewModel>>;

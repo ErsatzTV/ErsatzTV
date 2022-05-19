@@ -1,64 +1,75 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
-using LanguageExt;
+using ErsatzTV.FFmpeg.State;
 
-namespace ErsatzTV.Core.Interfaces.FFmpeg
+namespace ErsatzTV.Core.Interfaces.FFmpeg;
+
+public interface IFFmpegProcessService
 {
-    public interface IFFmpegProcessService
-    {
-        Task<Process> ForPlayoutItem(
-            string ffmpegPath,
-            bool saveReports,
-            Channel channel,
-            MediaVersion videoVersion,
-            MediaVersion audioVersion,
-            string videoPath,
-            string audioPath,
-            DateTimeOffset start,
-            DateTimeOffset finish,
-            DateTimeOffset now,
-            Option<ChannelWatermark> globalWatermark,
-            VaapiDriver vaapiDriver,
-            string vaapiDevice,
-            bool hlsRealtime,
-            FillerKind fillerKind,
-            TimeSpan inPoint,
-            TimeSpan outPoint,
-            long ptsOffset,
-            Option<int> targetFramerate);
+    Task<Command> ForPlayoutItem(
+        string ffmpegPath,
+        string ffprobePath,
+        bool saveReports,
+        Channel channel,
+        MediaVersion videoVersion,
+        MediaVersion audioVersion,
+        string videoPath,
+        string audioPath,
+        List<Subtitle> subtitles,
+        string preferredAudioLanguage,
+        string preferredSubtitleLanguage,
+        ChannelSubtitleMode subtitleMode,
+        DateTimeOffset start,
+        DateTimeOffset finish,
+        DateTimeOffset now,
+        Option<ChannelWatermark> playoutItemWatermark,
+        Option<ChannelWatermark> globalWatermark,
+        VaapiDriver vaapiDriver,
+        string vaapiDevice,
+        bool hlsRealtime,
+        FillerKind fillerKind,
+        TimeSpan inPoint,
+        TimeSpan outPoint,
+        long ptsOffset,
+        Option<int> targetFramerate,
+        bool disableWatermarks);
 
-        Task<Process> ForError(
-            string ffmpegPath,
-            Channel channel,
-            Option<TimeSpan> duration,
-            string errorMessage,
-            bool hlsRealtime,
-            long ptsOffset);
+    Task<Command> ForError(
+        string ffmpegPath,
+        Channel channel,
+        Option<TimeSpan> duration,
+        string errorMessage,
+        bool hlsRealtime,
+        long ptsOffset,
+        VaapiDriver vaapiDriver,
+        string vaapiDevice);
 
-        Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
-        Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
-        Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
+    Command ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
 
-        Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
+    Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 
-        Task<Either<BaseError, string>> GenerateSongImage(
-            string ffmpegPath,
-            Option<string> subtitleFile,
-            Channel channel,
-            Option<ChannelWatermark> globalWatermark,
-            MediaVersion videoVersion,
-            string videoPath,
-            bool boxBlur,
-            Option<string> watermarkPath,
-            ChannelWatermarkLocation watermarkLocation,
-            int horizontalMarginPercent,
-            int verticalMarginPercent,
-            int watermarkWidthPercent);
-    }
+    Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
+
+    Task<Either<BaseError, string>> GenerateSongImage(
+        string ffmpegPath,
+        string ffprobePath,
+        Option<string> subtitleFile,
+        Channel channel,
+        Option<ChannelWatermark> playoutItemWatermark,
+        Option<ChannelWatermark> globalWatermark,
+        MediaVersion videoVersion,
+        string videoPath,
+        bool boxBlur,
+        Option<string> watermarkPath,
+        WatermarkLocation watermarkLocation,
+        int horizontalMarginPercent,
+        int verticalMarginPercent,
+        int watermarkWidthPercent,
+        CancellationToken cancellationToken);
 }

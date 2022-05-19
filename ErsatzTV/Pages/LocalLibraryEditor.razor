@@ -1,9 +1,6 @@
 ﻿@page "/media/sources/local/{Id:int}/edit"
 @page "/media/sources/local/add"
 @using ErsatzTV.Application.Libraries
-@using ErsatzTV.Application.Libraries.Commands
-@using ErsatzTV.Application.Libraries.Queries
-@using Unit = LanguageExt.Unit
 @implements IDisposable
 @inject IDialogService _dialog
 @inject IEntityLocker _locker
@@ -76,12 +73,13 @@
 
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
 
     private readonly LocalLibraryEditViewModel _model = new();
-    private LocalLibraryPathEditViewModel _newPath = new();
+    private readonly LocalLibraryPathEditViewModel _newPath = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
@@ -91,7 +89,7 @@
     {
         if (IsEdit)
         {
-            Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id));
+            Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id), _cts.Token);
             await maybeLibrary.Match(
                 async library =>
                 {
@@ -123,14 +121,14 @@
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-    
+
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
 
     private async Task LoadLibraryPaths()
     {
         _model.HasChanges = false;
-        _model.Paths = await _mediator.Send(new GetLocalLibraryPaths(Id))
+        _model.Paths = await _mediator.Send(new GetLocalLibraryPaths(Id), _cts.Token)
             .Map(list => list.Map(vm => new LocalLibraryPathEditViewModel
             {
                 Id = vm.Id,
@@ -148,7 +146,7 @@
         if (!result.Cancelled && result.Data is LocalLibraryViewModel library)
         {
             var request = new MoveLocalLibraryPath(libraryPath.Id, library.Id);
-            Either<BaseError, Unit> moveResult = await _mediator.Send(request);
+            Either<BaseError, Unit> moveResult = await _mediator.Send(request, _cts.Token);
             moveResult.Match(
                 _ => _navigationManager.NavigateTo($"/media/sources/local/{library.Id}/edit"),
                 error =>
@@ -166,8 +164,8 @@
             _model.HasChanges = true;
             _model.Paths.Remove(libraryPath);
         }
-        
-        int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id));
+
+        int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id), _cts.Token);
         var parameters = new DialogParameters
         {
             { "EntityType", "library path" },
@@ -176,7 +174,7 @@
             { "DetailHighlight", count.ToString() }
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        
+
         IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
@@ -188,7 +186,7 @@
 
     private void AddLibraryPath()
     {
-        if (_model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
+        if (!string.IsNullOrWhiteSpace(_newPath.Path) && _model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
         {
             _model.HasChanges = true;
             _model.Paths.Add(new LocalLibraryPathEditViewModel
@@ -199,7 +197,7 @@
 
         _newPath.Path = null;
     }
-    
+
     private async Task SaveChangesAsync()
     {
         _messageStore.Clear();
@@ -209,11 +207,11 @@
                 ? await _mediator.Send(new UpdateLocalLibrary(
                     _model.Id,
                     _model.Name,
-                    _model.Paths.Map(p => new UpdateLocalLibraryPath(p.Id, p.Path)).ToList()))
+                    _model.Paths.Map(p => new UpdateLocalLibraryPath(p.Id, p.Path)).ToList()), _cts.Token)
                 : await _mediator.Send(new CreateLocalLibrary(
                     _model.Name,
                     _model.MediaKind,
-                    _model.Paths.Map(p => p.Path).ToList()));
+                    _model.Paths.Map(p => p.Path).ToList()), _cts.Token);
 
             result.Match(
                 _ => _navigationManager.NavigateTo("/media/sources/local"),
@@ -225,16 +223,16 @@
         }
     }
 
-    private string NormalizePath(string path)
-    {
-        return Path.GetFullPath(new Uri(path).LocalPath)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .ToUpperInvariant();
-    }
+    private string NormalizePath(string path) => Path.GetFullPath(new Uri(path).LocalPath)
+        .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+        .ToUpperInvariant();
 
     void IDisposable.Dispose()
     {
         _locker.OnLibraryChanged -= LockChanged;
+
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
 }

@@ -1,13 +1,10 @@
 ﻿@page "/ffmpeg/{Id:int}"
 @page "/ffmpeg/add"
-@using ErsatzTV.Application.Resolutions
-@using ErsatzTV.Application.Resolutions.Queries
-@using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Commands
-@using ErsatzTV.Application.FFmpegProfiles.Queries
-@using ErsatzTV.Core.FFmpeg
-@using Microsoft.AspNetCore.Components
 @using Microsoft.Extensions.Caching.Memory
+@using ErsatzTV.Application.Resolutions
+@using ErsatzTV.Core.FFmpeg
+@using ErsatzTV.Application.FFmpegProfiles
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FFmpegEditor> _logger
 @inject ISnackbar _snackbar
@@ -34,28 +31,29 @@
                                     <MudTextField Label="Thread Count" @bind-Value="@_model.ThreadCount" For="@(() => _model.ThreadCount)"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudSelect Disabled="@(!_model.Transcode)" Label="Preferred Resolution" @bind-Value="_model.Resolution" For="@(() => _model.Resolution)">
+                                    <MudSelect Label="Preferred Resolution" @bind-Value="_model.Resolution" For="@(() => _model.Resolution)">
                                         @foreach (ResolutionViewModel resolution in _resolutions)
                                         {
                                             <MudSelectItem Value="@resolution">@resolution.Name</MudSelectItem>
                                         }
                                     </MudSelect>
                                 </MudElement>
-                                <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudCheckBox Label="Transcode" @bind-Checked="@_model.Transcode" For="@(() => _model.Transcode)"/>
-                                </MudElement>
                             </MudItem>
                             <MudItem>
                                 <MudText Typo="Typo.h6">Video</MudText>
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.VideoCodec" For="@(() => _model.VideoCodec)"/>
+                                <MudSelect Label="Format" @bind-Value="_model.VideoFormat" For="@(() => _model.VideoFormat)">
+                                    <MudSelectItem Value="@FFmpegProfileVideoFormat.H264">h264</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileVideoFormat.Hevc">hevc</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileVideoFormat.Mpeg2Video">mpeg-2</MudSelectItem>
+                                </MudSelect>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
+                                    <MudTextField Label="Bitrate" @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.VideoBufferSize" For="@(() => _model.VideoBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
+                                    <MudTextField Label="Buffer Size" @bind-Value="_model.VideoBufferSize" For="@(() => _model.VideoBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudSelect Disabled="@(!_model.Transcode)" Label="Hardware Acceleration" @bind-Value="_model.HardwareAcceleration" For="@(() => _model.HardwareAcceleration)">
+                                    <MudSelect Label="Hardware Acceleration" @bind-Value="_model.HardwareAcceleration" For="@(() => _model.HardwareAcceleration)">
                                         @foreach (HardwareAccelerationKind hwAccel in Enum.GetValues<HardwareAccelerationKind>())
                                         {
                                             <MudSelectItem Value="@hwAccel">@hwAccel</MudSelectItem>
@@ -79,32 +77,32 @@
                                     </MudSelect>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Video" @bind-Checked="@_model.NormalizeVideo" For="@(() => _model.NormalizeVideo)"/>
+                                    <MudCheckBox Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
+                                    <MudCheckBox Label="Auto Deinterlace Video" @bind-Checked="@_model.DeinterlaceVideo" For="@(() => _model.DeinterlaceVideo)"/>
                                 </MudElement>
                             </MudItem>
                             <MudItem>
                                 <MudText Typo="Typo.h6">Audio</MudText>
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.AudioCodec" For="@(() => _model.AudioCodec)"/>
+                                <MudSelect Label="Format" @bind-Value="_model.AudioFormat" For="@(() => _model.AudioFormat)">
+                                    <MudSelectItem Value="@FFmpegProfileAudioFormat.Aac">aac</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileAudioFormat.Ac3">ac3</MudSelectItem>
+                                </MudSelect>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.AudioBitrate" For="@(() => _model.AudioBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
+                                    <MudTextField Label="Bitrate" @bind-Value="_model.AudioBitrate" For="@(() => _model.AudioBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.AudioBufferSize" For="@(() => _model.AudioBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
+                                    <MudTextField Label="Buffer Size" @bind-Value="_model.AudioBufferSize" For="@(() => _model.AudioBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Channels" @bind-Value="_model.AudioChannels" For="@(() => _model.AudioChannels)"/>
+                                    <MudTextField Label="Channels" @bind-Value="_model.AudioChannels" For="@(() => _model.AudioChannels)"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Sample Rate" @bind-Value="_model.AudioSampleRate" For="@(() => _model.AudioSampleRate)" Adornment="Adornment.End" AdornmentText="kHz"/>
+                                    <MudTextField Label="Sample Rate" @bind-Value="_model.AudioSampleRate" For="@(() => _model.AudioSampleRate)" Adornment="Adornment.End" AdornmentText="kHz"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio" @bind-Checked="@_model.NormalizeAudio" For="@(() => _model.NormalizeAudio)"/>
-                                </MudElement>
-                                <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Loudness" @bind-Checked="@_model.NormalizeLoudness" For="@(() => _model.NormalizeLoudness)"/>
+                                    <MudCheckBox Label="Normalize Loudness" @bind-Checked="@_model.NormalizeLoudness" For="@(() => _model.NormalizeLoudness)"/>
                                 </MudElement>
                             </MudItem>
                         </MudGrid>
@@ -121,6 +119,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -132,20 +131,26 @@
     private List<ResolutionViewModel> _resolutions;
     private List<string> _vaapiDevices;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _resolutions = await _mediator.Send(new GetAllResolutions());
+        _resolutions = await _mediator.Send(new GetAllResolutions(), _cts.Token);
 
         if (IsEdit)
         {
-            Option<FFmpegProfileViewModel> profile = await _mediator.Send(new GetFFmpegProfileById(Id));
+            Option<FFmpegProfileViewModel> profile = await _mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
             profile.Match(
                 ffmpegProfileViewModel => _model = new FFmpegProfileEditViewModel(ffmpegProfileViewModel),
                 () => _navigationManager.NavigateTo("404"));
         }
         else
         {
-            _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile()));
+            _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile(), _cts.Token));
         }
 
         _editContext = new EditContext(_model);
@@ -167,8 +172,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

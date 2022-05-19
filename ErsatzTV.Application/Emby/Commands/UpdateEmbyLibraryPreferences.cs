@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core;
-using LanguageExt;
+﻿using ErsatzTV.Core;
 
-namespace ErsatzTV.Application.Emby.Commands
-{
-    public record UpdateEmbyLibraryPreferences
-        (List<EmbyLibraryPreference> Preferences) : MediatR.IRequest<Either<BaseError, Unit>>;
+namespace ErsatzTV.Application.Emby;
 
-    public record EmbyLibraryPreference(int Id, bool ShouldSyncItems);
-}
+public record UpdateEmbyLibraryPreferences
+    (List<EmbyLibraryPreference> Preferences) : IRequest<Either<BaseError, Unit>>;
+
+public record EmbyLibraryPreference(int Id, bool ShouldSyncItems);

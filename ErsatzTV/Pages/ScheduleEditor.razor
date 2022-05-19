@@ -1,7 +1,7 @@
 ﻿@page "/schedules/{Id:int}"
 @page "/schedules/add"
 @using ErsatzTV.Application.ProgramSchedules
-@using ErsatzTV.Application.ProgramSchedules.Queries
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleEditor> _logger
 @inject ISnackbar _snackbar
@@ -31,6 +31,18 @@
                                          For="@(() => _model.TreatCollectionsAsShows)"/>
                         </MudTooltip>
                     </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTooltip Text="Note: this disables fixed start times and flood mode">
+                            <MudCheckBox Label="Shuffle Schedule Items"
+                                         @bind-Checked="@_model.ShuffleScheduleItems"
+                                         For="@(() => _model.ShuffleScheduleItems)"/>
+                        </MudTooltip>
+                    </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudCheckBox Label="Random Start Point"
+                                     @bind-Checked="@_model.RandomStartPoint"
+                                     For="@(() => _model.RandomStartPoint)"/>
+                    </MudElement>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -43,6 +55,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -51,18 +64,26 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (IsEdit)
         {
-            Option<ProgramScheduleViewModel> maybeProgramSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
+            Option<ProgramScheduleViewModel> maybeProgramSchedule = await _mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
             maybeProgramSchedule.Match(
                 viewModel =>
                 {
                     _model.Id = viewModel.Id;
                     _model.Name = viewModel.Name;
+                    _model.ShuffleScheduleItems = viewModel.ShuffleScheduleItems;
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                     _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
+                    _model.RandomStartPoint = viewModel.RandomStartPoint;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
@@ -85,9 +106,9 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Either<BaseError, EntityIdResult> result = IsEdit ?
-                await _mediator.Send(_model.ToUpdate()).MapT(r => r as EntityIdResult) :
-                await _mediator.Send(_model.ToCreate()).MapT(r => r as EntityIdResult);
+            Either<BaseError, EntityIdResult> result = IsEdit
+                ? await _mediator.Send(_model.ToUpdate(), _cts.Token).MapT(r => r as EntityIdResult)
+                : await _mediator.Send(_model.ToCreate(), _cts.Token).MapT(r => r as EntityIdResult);
 
             result.Match(
                 programSchedule =>

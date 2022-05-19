@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Infrastructure.Plex.Models
+﻿namespace ErsatzTV.Infrastructure.Plex.Models;
+
+public class PlexPinResponse
 {
-    public class PlexPinResponse
-    {
-        public int Id { get; set; }
-        public string Code { get; set; }
-    }
+    public int Id { get; set; }
+    public string Code { get; set; }
 }

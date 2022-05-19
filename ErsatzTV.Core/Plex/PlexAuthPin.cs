@@ -1,16 +1,15 @@
-﻿namespace ErsatzTV.Core.Plex
+﻿namespace ErsatzTV.Core.Plex;
+
+public record PlexAuthPin(int Id, string Code, string ClientIdentifier)
 {
-    public record PlexAuthPin(int Id, string Code, string ClientIdentifier)
+    public string Url
     {
-        public string Url
+        get
         {
-            get
-            {
-                var clientId = $"clientID={ClientIdentifier}";
-                var code = $"code={Code}";
-                var cdp = "context%5Bdevice%5D%5Bproduct%5D=ErsatzTV";
-                return $"https://app.plex.tv/auth#?{clientId}&{code}&{cdp}";
-            }
+            var clientId = $"clientID={ClientIdentifier}";
+            var code = $"code={Code}";
+            var cdp = "context%5Bdevice%5D%5Bproduct%5D=ErsatzTV";
+            return $"https://app.plex.tv/auth#?{clientId}&{code}&{cdp}";
         }
     }
 }

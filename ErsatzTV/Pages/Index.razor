@@ -1,9 +1,10 @@
 ﻿@page "/"
 @using Microsoft.Extensions.Caching.Memory
 @using System.Reflection
-@using ErsatzTV.Application.Health.Queries
-@using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.GitHub
+@using ErsatzTV.Core.Health
+@using ErsatzTV.Application.Health
+@implements IDisposable
 @inject IGitHubApiClient _gitHubApiClient
 @inject IMemoryCache _memoryCache
 @inject IMediator _mediator
@@ -20,60 +21,67 @@
               Dense="true"
               ServerData="@(new Func<TableState, Task<TableData<HealthCheckResult>>>(ServerReload))"
               @ref="_table">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Health Checks</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Check</MudTh>
-                <MudTh>Message</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Check">
-                    <div style="display: flex; flex-direction: row; align-items: center">
-                        @if (context.Status == HealthCheckStatus.Fail)
-                        {
-                            <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
-                        }
-                        else if (context.Status == HealthCheckStatus.Warning)
-                        {
-                            <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
-                        }
-                        else if (context.Status == HealthCheckStatus.Info)
-                        {
-                            <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
-                        }
-                        else
-                        {
-                            <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
-                        }
-                        <div class="ml-2">@context.Title</div>
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Message">
-                    @if (context.Link.IsSome)
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Health Checks</MudText>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Check</MudTh>
+            <MudTh>Message</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Check">
+                <div style="align-items: center; display: flex; flex-direction: row;">
+                    @if (context.Status == HealthCheckStatus.Fail)
                     {
-                        foreach (string link in context.Link)
-                        {
-                            <MudLink Href="@link">
-                                @context.Message
-                            </MudLink>
-                        }
+                        <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
+                    }
+                    else if (context.Status == HealthCheckStatus.Warning)
+                    {
+                        <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
+                    }
+                    else if (context.Status == HealthCheckStatus.Info)
+                    {
+                        <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
                     }
                     else
                     {
-                        <MudText>
-                            @context.Message
-                        </MudText>
+                        <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
                     }
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
+                    <div class="ml-2">@context.Title</div>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Message">
+                @if (context.Link.IsSome)
+                {
+                    foreach (string link in context.Link)
+                    {
+                        <MudLink Href="@link">
+                            @context.Message
+                        </MudLink>
+                    }
+                }
+                else
+                {
+                    <MudText>
+                        @context.Message
+                    </MudText>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     private string _releaseNotes;
     private MudTable<HealthCheckResult> _table;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -95,18 +103,18 @@
 
                         if (version != "develop")
                         {
-                            string gitHubVersion = version.Split("-").Head() + "-alpha";
+                            string gitHubVersion = version.Split("-").Head() + "-beta";
                             if (!gitHubVersion.StartsWith("v"))
                             {
                                 gitHubVersion = $"v{gitHubVersion}";
                             }
 
-                            maybeNotes = await _gitHubApiClient.GetReleaseNotes(gitHubVersion);
+                            maybeNotes = await _gitHubApiClient.GetReleaseNotes(gitHubVersion, _cts.Token);
                             maybeNotes.IfRight(notes => _releaseNotes = notes);
                         }
                         else
                         {
-                            maybeNotes = await _gitHubApiClient.GetLatestReleaseNotes();
+                            maybeNotes = await _gitHubApiClient.GetLatestReleaseNotes(_cts.Token);
                             maybeNotes.IfRight(notes => _releaseNotes = notes);
                         }
                     }
@@ -123,10 +131,10 @@
     // ignore
         }
     }
-    
+
     private async Task<TableData<HealthCheckResult>> ServerReload(TableState state)
     {
-        List<HealthCheckResult> healthCheckResults = await _mediator.Send(new GetAllHealthCheckResults());
+        List<HealthCheckResult> healthCheckResults = await _mediator.Send(new GetAllHealthCheckResults(), _cts.Token);
 
         return new TableData<HealthCheckResult>
         {

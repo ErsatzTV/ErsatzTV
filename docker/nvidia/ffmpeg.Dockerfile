@@ -3,5 +3,5 @@
 FROM jasongdove/ffmpeg-base:5.0-nvidia2004 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev tzdata \
-    && rm -rf /var/lib/apt/lists/* 
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev tzdata fontconfig fonts-dejavu libgdiplus \
+    && rm -rf /var/lib/apt/lists/*

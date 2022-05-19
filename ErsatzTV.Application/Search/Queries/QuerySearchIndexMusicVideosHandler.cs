@@ -1,44 +1,64 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Application.MediaCards;
+﻿using ErsatzTV.Application.MediaCards;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
-using LanguageExt;
-using MediatR;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
-namespace ErsatzTV.Application.Search.Queries
+namespace ErsatzTV.Application.Search;
+
+public class
+    QuerySearchIndexMusicVideosHandler : IRequestHandler<QuerySearchIndexMusicVideos, MusicVideoCardResultsViewModel>
 {
-    public class
-        QuerySearchIndexMusicVideosHandler : IRequestHandler<QuerySearchIndexMusicVideos, MusicVideoCardResultsViewModel
-        >
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+    private readonly IMusicVideoRepository _musicVideoRepository;
+    private readonly IPlexPathReplacementService _plexPathReplacementService;
+    private readonly ISearchIndex _searchIndex;
+
+    public QuerySearchIndexMusicVideosHandler(
+        ISearchIndex searchIndex,
+        IMusicVideoRepository musicVideoRepository,
+        IPlexPathReplacementService plexPathReplacementService,
+        IJellyfinPathReplacementService jellyfinPathReplacementService,
+        IEmbyPathReplacementService embyPathReplacementService)
     {
-        private readonly IMusicVideoRepository _musicVideoRepository;
-        private readonly ISearchIndex _searchIndex;
+        _searchIndex = searchIndex;
+        _musicVideoRepository = musicVideoRepository;
+        _plexPathReplacementService = plexPathReplacementService;
+        _jellyfinPathReplacementService = jellyfinPathReplacementService;
+        _embyPathReplacementService = embyPathReplacementService;
+    }
 
-        public QuerySearchIndexMusicVideosHandler(ISearchIndex searchIndex, IMusicVideoRepository musicVideoRepository)
+    public async Task<MusicVideoCardResultsViewModel> Handle(
+        QuerySearchIndexMusicVideos request,
+        CancellationToken cancellationToken)
+    {
+        SearchResult searchResult = await _searchIndex.Search(
+            request.Query,
+            (request.PageNumber - 1) * request.PageSize,
+            request.PageSize);
+
+        List<MusicVideoMetadata> musicVideos = await _musicVideoRepository
+            .GetMusicVideosForCards(searchResult.Items.Map(i => i.Id).ToList());
+
+        var items = new List<MusicVideoCardViewModel>();
+
+        foreach (MusicVideoMetadata musicVideoMetadata in musicVideos)
         {
-            _searchIndex = searchIndex;
-            _musicVideoRepository = musicVideoRepository;
+            string localPath = await musicVideoMetadata.MusicVideo.GetLocalPath(
+                _plexPathReplacementService,
+                _jellyfinPathReplacementService,
+                _embyPathReplacementService,
+                false);
+
+            items.Add(ProjectToViewModel(musicVideoMetadata, localPath));
         }
 
-        public async Task<MusicVideoCardResultsViewModel> Handle(
-            QuerySearchIndexMusicVideos request,
-            CancellationToken cancellationToken)
-        {
-            SearchResult searchResult = await _searchIndex.Search(
-                request.Query,
-                (request.PageNumber - 1) * request.PageSize,
-                request.PageSize);
-
-            List<MusicVideoCardViewModel> items = await _musicVideoRepository
-                .GetMusicVideosForCards(searchResult.Items.Map(i => i.Id).ToList())
-                .Map(list => list.Map(ProjectToViewModel).ToList());
-
-            return new MusicVideoCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
-        }
+        return new MusicVideoCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
     }
 }

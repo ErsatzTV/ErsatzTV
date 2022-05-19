@@ -1,26 +1,24 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
 
-namespace ErsatzTV.Core.Tests.Fakes
+namespace ErsatzTV.Core.Tests.Fakes;
+
+public class FakeMovieWithPath : MediaItemScanResult<Movie>
 {
-    public class FakeMovieWithPath : MediaItemScanResult<Movie>
-    {
-        public FakeMovieWithPath(string path)
-            : base(
-                new Movie
+    public FakeMovieWithPath(string path)
+        : base(
+            new Movie
+            {
+                MediaVersions = new List<MediaVersion>
                 {
-                    MediaVersions = new List<MediaVersion>
+                    new()
                     {
-                        new()
+                        MediaFiles = new List<MediaFile>
                         {
-                            MediaFiles = new List<MediaFile>
-                            {
-                                new() { Path = path }
-                            }
+                            new() { Path = path }
                         }
                     }
-                }) =>
-            IsAdded = true;
-    }
+                }
+            }) =>
+        IsAdded = true;
 }

@@ -1,24 +1,21 @@
 ﻿using ErsatzTV.Core;
-using LanguageExt;
-using MediatR;
 
-namespace ErsatzTV.Application.Plex.Commands
+namespace ErsatzTV.Application.Plex;
+
+public interface ISynchronizePlexLibraryById : IRequest<Either<BaseError, string>>, IPlexBackgroundServiceRequest
 {
-    public interface ISynchronizePlexLibraryById : IRequest<Either<BaseError, string>>, IPlexBackgroundServiceRequest
-    {
-        int PlexLibraryId { get; }
-        bool ForceScan { get; }
-    }
+    int PlexLibraryId { get; }
+    bool ForceScan { get; }
+    bool DeepScan { get; }
+}
 
-    public record SynchronizePlexLibraryByIdIfNeeded
-        (int PlexLibraryId) : ISynchronizePlexLibraryById
-    {
-        public bool ForceScan => false;
-    }
+public record SynchronizePlexLibraryByIdIfNeeded(int PlexLibraryId) : ISynchronizePlexLibraryById
+{
+    public bool ForceScan => false;
+    public bool DeepScan => false;
+}
 
-    public record ForceSynchronizePlexLibraryById
-        (int PlexLibraryId) : ISynchronizePlexLibraryById
-    {
-        public bool ForceScan => true;
-    }
+public record ForceSynchronizePlexLibraryById(int PlexLibraryId, bool DeepScan) : ISynchronizePlexLibraryById
+{
+    public bool ForceScan => true;
 }

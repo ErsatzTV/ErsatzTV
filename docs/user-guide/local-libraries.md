@@ -13,12 +13,19 @@ Each movie folder may contain a `movie.nfo` file, or an NFO file with exactly th
 ErsatzTV will read the following fields from the movie NFO:
 
 - Title
+- Sort Title
+- Outline
 - Year
+- MPAA
 - Premiered
 - Plot
 - Genre(s)
 - Tag(s)
 - Studio(s)
+- Actor(s)
+- Credit(s)
+- Director(s)
+- Unique Id(s)
 
 ### Movie Fallback Metadata
 
@@ -114,6 +121,26 @@ When no artist NFO is found, the artist metadata will only contain a name, which
 ### Folder Layout
 
 The `Other Videos` library has no folder requirements, but folders can be a useful source of metadata.
+
+### NFO Metadata
+
+Each other video may have a corresponding NFO file with exactly the same name, except for the `.nfo` extension. The NFO must use the movie format. See [Kodi Wiki](https://kodi.wiki/view/NFO_files/Movies) for more information.
+ErsatzTV will read the following fields from the other video NFO:
+
+- Title
+- Sort Title
+- Outline
+- Year
+- MPAA
+- Premiered
+- Plot
+- Genre(s)
+- Tag(s)
+- Studio(s)
+- Actor(s)
+- Credit(s)
+- Director(s)
+- Unique Id(s)
 
 ### Other Video Fallback Metadata
 

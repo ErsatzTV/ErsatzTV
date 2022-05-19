@@ -1,9 +1,7 @@
 ﻿@page "/media/sources/plex/{Id:int}/paths"
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
-@using ErsatzTV.Application.Plex.Commands
-@using ErsatzTV.Application.Plex.Queries
-@using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
 @inject ISnackbar _snackbar
@@ -17,16 +15,23 @@
     GetPathReplacementsBySourceId="GetPathReplacementsBySourceId"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
 
-    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
-        _mediator.Send(new GetPlexMediaSourceById(Id))
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
+        await _mediator.Send(new GetPlexMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
-    private Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetPlexPathReplacementsBySourceId(Id))
+    private async Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
+        await _mediator.Send(new GetPlexPathReplacementsBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).ToList());
 
     private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(PlexPathReplacementViewModel item) =>

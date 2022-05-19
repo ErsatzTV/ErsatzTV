@@ -2,11 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class EmbyPathReplacementConfiguration : IEntityTypeConfiguration<EmbyPathReplacement>
 {
-    public class EmbyPathReplacementConfiguration : IEntityTypeConfiguration<EmbyPathReplacement>
-    {
-        public void Configure(EntityTypeBuilder<EmbyPathReplacement> builder) =>
-            builder.ToTable("EmbyPathReplacement");
-    }
+    public void Configure(EntityTypeBuilder<EmbyPathReplacement> builder) =>
+        builder.ToTable("EmbyPathReplacement");
 }

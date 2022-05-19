@@ -4,27 +4,29 @@
         <TargetFramework>net6.0</TargetFramework>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
         <NoWarn>VSTHRD200</NoWarn>
+        <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blurhash.ImageSharp" Version="1.1.1" />
+      <PackageReference Include="Blurhash.ImageSharp" Version="3.0.0" />
+      <PackageReference Include="CliWrap" Version="3.4.4" />
       <PackageReference Include="Dapper" Version="2.0.123" />
-      <PackageReference Include="Lucene.Net" Version="4.8.0-beta00015" />
-      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00015" />
-      <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00015" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1">
+      <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
+      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
+      <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00016" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.5">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.64">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.5" />
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.2.32">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Refit" Version="6.2.16" />
-      <PackageReference Include="Refit.Newtonsoft.Json" Version="6.2.16" />
-      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+      <PackageReference Include="Refit" Version="6.3.2" />
+      <PackageReference Include="Refit.Newtonsoft.Json" Version="6.3.2" />
+      <PackageReference Include="Refit.Xml" Version="6.3.2" />
     </ItemGroup>
 
     <ItemGroup>

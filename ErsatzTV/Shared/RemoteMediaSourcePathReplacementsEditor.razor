@@ -1,5 +1,5 @@
 ﻿@using ErsatzTV.Application.MediaSources
-@using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<RemoteMediaSourcePathReplacementsEditor> _logger
 @inject ISnackbar _snackbar
@@ -69,6 +69,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -89,6 +90,12 @@
     private List<RemoteMediaSourcePathReplacementEditViewModel> _pathReplacements;
 
     private RemoteMediaSourcePathReplacementEditViewModel _selectedItem;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override Task OnParametersSetAsync() => LoadData();
 
@@ -123,7 +130,7 @@
 
     private async Task SaveChanges()
     {
-        Seq<BaseError> errorMessages = await _mediator.Send(GetUpdatePathReplacementsRequest(_pathReplacements))
+        Seq<BaseError> errorMessages = await _mediator.Send(GetUpdatePathReplacementsRequest(_pathReplacements), _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(

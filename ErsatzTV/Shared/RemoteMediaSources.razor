@@ -1,6 +1,6 @@
 ﻿@typeparam TViewModel
 @typeparam TSecrets
-@using Unit = LanguageExt.Unit
+@implements IDisposable
 @using ErsatzTV.Core.Interfaces.MediaSources
 @typeparam TMediaSource
 @inject IMediator _mediator
@@ -79,6 +79,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public string Name { get; set; }
@@ -99,13 +100,19 @@
 
     private bool _isAuthorized;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
 
     private async Task LoadMediaSources()
     {
         _isAuthorized = await SecretStore.ReadSecrets()
             .Map(secrets => !string.IsNullOrWhiteSpace(secrets.Address) && !string.IsNullOrWhiteSpace(secrets.ApiKey));
-        _mediaSources = await _mediator.Send(GetAllMediaSourcesCommand);
+        _mediaSources = await _mediator.Send(GetAllMediaSourcesCommand, _cts.Token);
     }
 
     private async Task Disconnect()
@@ -118,7 +125,7 @@
         {
             if (_locker.LockRemoteMediaSource<TMediaSource>())
             {
-                await _mediator.Send(DisconnectCommand);
+                await _mediator.Send(DisconnectCommand, _cts.Token);
                 await LoadMediaSources();
             }
         }

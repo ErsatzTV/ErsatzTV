@@ -1,18 +1,16 @@
-﻿using System;
-using LanguageExt;
+﻿using ErsatzTV.Core.Interfaces.Scheduling;
 
-namespace ErsatzTV.Core.Scheduling
+namespace ErsatzTV.Core.Scheduling;
+
+public record PlayoutBuilderState(
+    IScheduleItemsEnumerator ScheduleItemsEnumerator,
+    Option<int> MultipleRemaining,
+    Option<DateTimeOffset> DurationFinish,
+    bool InFlood,
+    bool InDurationFiller,
+    int NextGuideGroup,
+    DateTimeOffset CurrentTime)
 {
-    public record PlayoutBuilderState(
-        int ScheduleItemIndex,
-        Option<int> MultipleRemaining,
-        Option<DateTimeOffset> DurationFinish,
-        bool InFlood,
-        bool InDurationFiller,
-        int NextGuideGroup,
-        DateTimeOffset CurrentTime)
-    {
-        public int IncrementGuideGroup => (NextGuideGroup + 1) % 10000;
-        public int DecrementGuideGroup => (NextGuideGroup - 1) % 10000;
-    }
+    public int IncrementGuideGroup => (NextGuideGroup + 1) % 10000;
+    public int DecrementGuideGroup => (NextGuideGroup - 1) % 10000;
 }

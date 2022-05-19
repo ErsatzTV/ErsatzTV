@@ -1,7 +1,7 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class PlexShow : Show
 {
-    public class PlexShow : Show
-    {
-        public string Key { get; set; }
-    }
+    public string Key { get; set; }
+    public string Etag { get; set; }
 }

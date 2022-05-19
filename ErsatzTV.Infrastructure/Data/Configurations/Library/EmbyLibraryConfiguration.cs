@@ -2,11 +2,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class EmbyLibraryConfiguration : IEntityTypeConfiguration<EmbyLibrary>
 {
-    public class EmbyLibraryConfiguration : IEntityTypeConfiguration<EmbyLibrary>
+    public void Configure(EntityTypeBuilder<EmbyLibrary> builder)
     {
-        public void Configure(EntityTypeBuilder<EmbyLibrary> builder) =>
-            builder.ToTable("EmbyLibrary");
+        builder.ToTable("EmbyLibrary");
+
+        builder.HasMany(l => l.PathInfos)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

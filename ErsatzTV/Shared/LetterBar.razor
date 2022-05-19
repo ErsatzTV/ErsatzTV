@@ -1,6 +1,5 @@
-﻿@using ErsatzTV.Core.Search
-@using ErsatzTV.Extensions
-@using Microsoft.AspNetCore.WebUtilities
+﻿@using ErsatzTV.Extensions
+@using ErsatzTV.Core.Search
 <div class="letter-bar-container">
     <div class="letter-bar">
         <MudLink Href="@GetLinkForLetter('#')">#</MudLink>
@@ -46,7 +45,7 @@
 
     private string GetLinkForLetter(char letter)
     {
-        var uri = $"{BaseUri}/page/{PageMap.PageMap[letter]}";
+        string uri = $"{BaseUri}/page/{PageMap.PageMap[letter]}";
         if (!string.IsNullOrWhiteSpace(Query))
         {
             (string key, string value) = Query.EncodeQuery();

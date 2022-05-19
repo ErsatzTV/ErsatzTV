@@ -1,9 +1,5 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core;
-using LanguageExt;
-using MediatR;
+﻿using ErsatzTV.Core;
 
-namespace ErsatzTV.Application.Channels.Commands
-{
-    public record DeleteChannel(int ChannelId) : IRequest<Either<BaseError, Task>>;
-}
+namespace ErsatzTV.Application.Channels;
+
+public record DeleteChannel(int ChannelId) : IRequest<Either<BaseError, Task>>;

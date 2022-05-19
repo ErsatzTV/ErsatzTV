@@ -1,9 +1,7 @@
 ﻿@page "/media/sources/plex/{Id:int}/libraries"
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Plex.Commands
-@using ErsatzTV.Application.Plex.Queries
-@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
+@using ErsatzTV.Application.MediaSources
+@implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IPlexBackgroundServiceRequest> _channel
 
@@ -16,6 +14,7 @@
     SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -24,13 +23,19 @@
         new UpdatePlexLibraryPreferences(
             libraries.Map(l => new PlexLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
-    private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetPlexLibrariesBySourceId(Id))
+    private async Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
+        await _mediator.Send(new GetPlexLibrariesBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
-    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
-        _mediator.Send(new GetPlexMediaSourceById(Id))
+    private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
+        await _mediator.Send(new GetPlexMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(PlexLibraryViewModel library) => new()
     {
@@ -40,9 +45,9 @@
         ShouldSyncItems = library.ShouldSyncItems
     };
 
-    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(libraryId));
+        await _channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

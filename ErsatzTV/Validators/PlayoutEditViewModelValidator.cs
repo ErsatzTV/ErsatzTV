@@ -1,14 +1,13 @@
 ﻿using ErsatzTV.ViewModels;
 using FluentValidation;
 
-namespace ErsatzTV.Validators
+namespace ErsatzTV.Validators;
+
+public class PlayoutEditViewModelValidator : AbstractValidator<PlayoutEditViewModel>
 {
-    public class PlayoutEditViewModelValidator : AbstractValidator<PlayoutEditViewModel>
+    public PlayoutEditViewModelValidator()
     {
-        public PlayoutEditViewModelValidator()
-        {
-            RuleFor(p => p.Channel).NotNull();
-            RuleFor(p => p.ProgramSchedule).NotNull();
-        }
+        RuleFor(p => p.Channel).NotNull();
+        RuleFor(p => p.ProgramSchedule).NotNull();
     }
 }

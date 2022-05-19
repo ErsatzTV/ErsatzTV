@@ -1,52 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
-namespace ErsatzTV.Core.Metadata.Nfo
+namespace ErsatzTV.Core.Metadata.Nfo;
+
+[XmlRoot("movie")]
+public class MovieNfo
 {
-    [XmlRoot("movie")]
-    public class MovieNfo
-    {
-        [XmlElement("title")]
-        public string Title { get; set; }
+    [XmlElement("title")]
+    public string Title { get; set; }
 
-        [XmlElement("outline")]
-        public string Outline { get; set; }
+    [XmlElement("sorttitle")]
+    public string SortTitle { get; set; }
 
-        [XmlElement("year")]
-        public int Year { get; set; }
+    [XmlElement("outline")]
+    public string Outline { get; set; }
 
-        [XmlElement("mpaa")]
-        public string ContentRating { get; set; }
+    [XmlElement("year")]
+    public int Year { get; set; }
 
-        [XmlElement("premiered")]
-        public DateTime Premiered { get; set; }
+    [XmlElement("mpaa")]
+    public string ContentRating { get; set; }
 
-        [XmlElement("plot")]
-        public string Plot { get; set; }
+    [XmlElement("premiered")]
+    public Option<DateTime> Premiered { get; set; }
 
-        [XmlElement("tagline")]
-        public string Tagline { get; set; }
+    [XmlElement("plot")]
+    public string Plot { get; set; }
 
-        [XmlElement("genre")]
-        public List<string> Genres { get; set; }
+    [XmlElement("tagline")]
+    public string Tagline { get; set; }
 
-        [XmlElement("tag")]
-        public List<string> Tags { get; set; }
+    [XmlElement("genre")]
+    public List<string> Genres { get; set; }
 
-        [XmlElement("studio")]
-        public List<string> Studios { get; set; }
+    [XmlElement("tag")]
+    public List<string> Tags { get; set; }
 
-        [XmlElement("actor")]
-        public List<ActorNfo> Actors { get; set; }
+    [XmlElement("studio")]
+    public List<string> Studios { get; set; }
 
-        [XmlElement("credits")]
-        public List<string> Writers { get; set; }
+    [XmlElement("actor")]
+    public List<ActorNfo> Actors { get; set; }
 
-        [XmlElement("director")]
-        public List<string> Directors { get; set; }
+    [XmlElement("credits")]
+    public List<string> Writers { get; set; }
 
-        [XmlElement("uniqueid")]
-        public List<UniqueIdNfo> UniqueIds { get; set; }
-    }
+    [XmlElement("director")]
+    public List<string> Directors { get; set; }
+
+    [XmlElement("uniqueid")]
+    public List<UniqueIdNfo> UniqueIds { get; set; }
 }
