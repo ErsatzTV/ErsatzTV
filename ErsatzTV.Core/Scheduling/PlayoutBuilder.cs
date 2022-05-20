@@ -426,7 +426,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         // loop until we're done filling the desired amount of time
         while (playoutBuilderState.CurrentTime < playoutFinish)
         {
-            _logger.LogDebug("Playout time is {CurrentTime}", playoutBuilderState.CurrentTime);
+            // _logger.LogDebug("Playout time is {CurrentTime}", playoutBuilderState.CurrentTime);
 
             // get the schedule item out of the sorted list
             ProgramScheduleItem scheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
