@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.8-beta] - 2022-05-20
 ### Fixed
 - Fix error display with `HLS Segmenter` and `MPEG-TS` streaming modes
 - Remove erroneous log messages about normalizing framerate on channels where framerate normalization is disabled
@@ -1208,7 +1210,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.7-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.8-beta...HEAD
+[0.5.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.7-beta...v0.5.8-beta
 [0.5.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.6-beta...v0.5.7-beta
 [0.5.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.5-beta...v0.5.6-beta
 [0.5.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.4-beta...v0.5.5-beta
