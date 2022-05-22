@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Additional fix for duplicate `Other Videos` entries; trash may need to be emptied one last time after upgrading
 
 ## [0.5.8-beta] - 2022-05-20
 ### Fixed
