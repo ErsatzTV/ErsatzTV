@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Additional fix for duplicate `Other Videos` entries; trash may need to be emptied one last time after upgrading
 
+### Added
+- Enable QSV hardware acceleration for vaapi docker images
+
 ## [0.5.8-beta] - 2022-05-20
 ### Fixed
 - Fix error display with `HLS Segmenter` and `MPEG-TS` streaming modes
