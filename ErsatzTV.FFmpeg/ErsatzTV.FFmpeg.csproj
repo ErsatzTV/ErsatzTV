@@ -8,7 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="CliWrap" Version="3.4.4" />
-      <PackageReference Include="LanguageExt.Core" Version="4.1.0" />
+      <PackageReference Include="LanguageExt.Core" Version="4.1.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
     </ItemGroup>
 
