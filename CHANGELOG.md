@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Additional fix for duplicate `Other Videos` entries; trash may need to be emptied one last time after upgrading
+- Fix watermark opacity in cultures where `,` is a decimal separator
 
 ### Added
 - Enable QSV hardware acceleration for vaapi docker images
