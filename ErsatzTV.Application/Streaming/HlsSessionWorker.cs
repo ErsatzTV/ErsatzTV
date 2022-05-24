@@ -190,7 +190,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            long ptsOffset = await GetPtsOffset(mediator, _channelNumber, cancellationToken);
+            long ptsOffset = await GetPtsOffset(mediator, _channelNumber, _firstProcess, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             var request = new GetPlayoutItemProcessByChannelNumber(
@@ -374,12 +374,19 @@ public class HlsSessionWorker : IHlsSessionWorker
     private async Task<long> GetPtsOffset(
         IMediator mediator,
         string channelNumber,
+        bool firstProcess,
         CancellationToken cancellationToken)
     {
         await Slim.WaitAsync(cancellationToken);
         try
         {
             long result = 0;
+            
+            // the first process always starts at zero
+            if (firstProcess)
+            {
+                return result;
+            }
 
             Either<BaseError, PtsAndDuration> queryResult = await mediator.Send(
                 new GetLastPtsDuration(channelNumber),
