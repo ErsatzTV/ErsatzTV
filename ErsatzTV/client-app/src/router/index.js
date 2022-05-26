@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import HomePage from '../views/HomePage.vue';
 import ChannelsPage from '../views/ChannelsPage.vue';
 import FFmpegProfilesPage from '../views/FFmpegProfilesPage.vue';
+import AddEditFFmpegProfilePage from '../views/AddEditFFmpegProfilePage.vue';
 
 Vue.use(VueRouter);
 
@@ -32,7 +33,8 @@ const routes = [
         meta: {
             icon: 'mdi-video-input-component',
             disabled: false
-        }
+        },
+        showchildren: false
     },
     {
         path: '/watermarks',
@@ -49,6 +51,7 @@ const routes = [
             icon: 'mdi-server-network',
             disabled: false
         },
+        showchildren: true,
         children: [
             {
                 path: '/sources/local',
@@ -91,6 +94,7 @@ const routes = [
             icon: 'mdi-cog',
             disabled: false
         },
+        showchildren: true,
         children: [
             {
                 path: '/media/libraries',
@@ -157,6 +161,7 @@ const routes = [
             icon: 'mdi-format-list-bulleted',
             disabled: false
         },
+        showchildren: true,
         children: [
             {
                 path: '/lists/collections',
@@ -215,6 +220,26 @@ const routes = [
             icon: 'mdi-card-text',
             disabled: true
         }
+    },
+    //hidden routes - used for non-menu routes
+    {
+        path: '/add-ffmpeg-profile',
+        name: 'add-ffmpeg-profile',
+        component: AddEditFFmpegProfilePage,
+        meta: {
+            disabled: false,
+            hidden: true
+        }
+    },
+    {
+        path: '/edit-ffmpeg-profile',
+        name: 'edit-ffmpeg',
+        component: AddEditFFmpegProfilePage,
+        meta: {
+            disabled: false,
+            hidden: true
+        },
+        props: (route) => ({ query: route.query.id })
     }
 ];
 

@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
 using Bugsnag.AspNet.Core;
@@ -53,6 +53,7 @@ using FluentValidation.AspNetCore;
 using Ganss.XSS;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
+using Microsoft.AspNetCore.SpaServices;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -62,6 +63,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
 using Serilog;
+using VueCliMiddleware;
 
 namespace ErsatzTV;
 
@@ -300,15 +302,15 @@ public class Startup
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
 
-                // if (env.IsDevelopment())
-                // {
-                //     endpoints.MapToVueCliProxy(
-                //         "/v2/{*path}",
-                //         new SpaOptions { SourcePath = "client-app" },
-                //         "serve",
-                //         regex: "Compiled successfully",
-                //         forceKill: true);
-                // }
+                if (env.IsDevelopment())
+                {
+                    endpoints.MapToVueCliProxy(
+                        "/v2/{*path}",
+                        new SpaOptions { SourcePath = "client-app" },
+                        "serve",
+                        regex: "Compiled successfully",
+                        forceKill: true);
+                }
             });
     }
 

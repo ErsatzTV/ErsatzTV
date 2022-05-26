@@ -2,14 +2,14 @@
     <v-list nav dense>
         <span v-for="(nav, i) in navigation" :key="i">
             <SideBarMenuItem
-                v-if="!nav.children"
+                v-if="(!nav.children || !nav.showchildren) && !nav.meta.hidden"
                 :name="nav.name"
                 :path="nav.path"
                 :icon="nav.meta.icon"
                 :disabled="nav.meta.disabled"
             />
             <SideBarMenuItemExpandable
-                v-else
+                v-else-if="nav.children"
                 @click.native="disableMiniNavigation()"
                 :name="nav.name"
                 :icon="nav.meta.icon"

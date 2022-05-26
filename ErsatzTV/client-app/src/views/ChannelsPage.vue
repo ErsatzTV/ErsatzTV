@@ -1,11 +1,19 @@
 ﻿<template>
     <div>
+        <v-btn color="success" class="ma-4">Add Channel</v-btn>
         <v-data-table
             :headers="headers"
             :items="channels"
             :sort-by="['number']"
             class="elevation-1"
-        ></v-data-table>
+        >
+            <template v-slot:[`item.actions`]="{ item }">
+                <v-icon small class="mr-2" @click="editRow(item.id)">
+                    mdi-lead-pencil
+                </v-icon>
+                <v-icon small @click="deleteRow(item.id)">mdi-delete</v-icon>
+            </template>
+        </v-data-table>
     </div>
 </template>
 
@@ -28,8 +36,19 @@ export default class Channels extends Vue {
             {
                 text: this.$t('channels.table.ffmpeg-profile'),
                 value: 'ffmpegProfile'
-            }
+            },
+            { text: 'Actions', value: 'actions', sortable: false }
         ];
+    }
+
+    deleteRow(item: any) {
+        let index = this.channels.findIndex((it) => it.id === item.id);
+        this.channels.splice(index, 1);
+    }
+
+    editRow(item: any) {
+        let index = this.channels.findIndex((it) => it.id === item.id);
+        this.channels.splice(index, 1);
     }
 
     title: string = 'Channels';
