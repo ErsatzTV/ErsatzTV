@@ -1,0 +1,10 @@
+﻿body {
+    .swal2-container.swal2-center > .swal2-popup {
+        background-color: #cc0000 !important;
+    }
+
+    .swal2-html-container,
+    .swal2-title {
+        color: white !important;
+    }
+}
