@@ -17,11 +17,30 @@ public interface IPlexServerApi
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 
+    [Get("/library/sections/{key}/all?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
+    [Headers("Accept: text/xml")]
+    public Task<PlexXmlMediaContainerStatsResponse> GetLibrarySection(
+        string key,
+        [Query] [AliasAs("X-Plex-Token")]
+        string token);
+
     [Get("/library/sections/{key}/all")]
     [Headers("Accept: application/json")]
     public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
         GetLibrarySectionContents(
             string key,
+            [Query] [AliasAs("X-Plex-Token")]
+            string token);
+
+    [Get("/library/sections/{key}/all")]
+    [Headers("Accept: application/json")]
+    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
+        GetLibrarySectionContents(
+            string key,
+            [Query] [AliasAs("X-Plex-Container-Start")]
+            int skip,
+            [Query] [AliasAs("X-Plex-Container-Size")]
+            int take,
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 

@@ -79,7 +79,16 @@ public class EmbyMovieLibraryScanner :
     protected override string MediaServerItemId(EmbyMovie movie) => movie.ItemId;
     protected override string MediaServerEtag(EmbyMovie movie) => movie.Etag;
 
-    protected override Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
+    protected override Task<Either<BaseError, int>> CountMovieLibraryItems(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library) =>
+        _embyApiClient.GetLibraryItemCount(
+            connectionParameters.Address,
+            connectionParameters.ApiKey,
+            library,
+            EmbyItemType.Movie);
+
+    protected override IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(
         EmbyConnectionParameters connectionParameters,
         EmbyLibrary library) =>
         _embyApiClient.GetMovieLibraryItems(

@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Enable QSV hardware acceleration for vaapi docker images
 
+### Changed
+- Use paging to synchronize movies from Plex, Jellyfin and Emby
+  - This will reduce memory use and improve reliability of synchronizing large libraries
+
 ## [0.5.8-beta] - 2022-05-20
 ### Fixed
 - Fix error display with `HLS Segmenter` and `MPEG-TS` streaming modes
