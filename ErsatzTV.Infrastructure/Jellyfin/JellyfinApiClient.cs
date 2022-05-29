@@ -91,29 +91,35 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    public async Task<Either<BaseError, List<JellyfinMovie>>> GetMovieLibraryItems(
+    public async IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library)
     {
-        try
+        if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
         {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
-            {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, userId, library.ItemId);
-                return items.Items
-                    .Map(i => ProjectToMovie(library, i))
-                    .Somes()
-                    .ToList();
-            }
+            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            int size = await service
+                .GetLibraryStats(apiKey, userId, library.ItemId, JellyfinItemType.Movie)
+                .Map(r => r.TotalRecordCount);
 
-            return BaseError.New("Jellyfin admin user id is not available");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting jellyfin movie library items");
-            return BaseError.New(ex.Message);
+            const int PAGE_SIZE = 10;
+
+            int pages = (size - 1) / PAGE_SIZE + 1;
+
+            for (var i = 0; i < pages; i++)
+            {
+                int skip = i * PAGE_SIZE;
+
+                Task<IEnumerable<JellyfinMovie>> result = service
+                    .GetMovieLibraryItems(apiKey, userId, library.ItemId, startIndex: skip, limit: PAGE_SIZE)
+                    .Map(items => items.Items.Map(item => ProjectToMovie(library, item)).Somes());
+
+                foreach (JellyfinMovie movie in await result)
+                {
+                    yield return movie;
+                }
+            }
         }
     }
 
@@ -258,6 +264,34 @@ public class JellyfinApiClient : IJellyfinApiClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting jellyfin collection items");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    public async Task<Either<BaseError, int>> GetLibraryItemCount(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string includeItemTypes)
+    {
+        try
+        {
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
+            {
+                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                JellyfinLibraryItemsResponse items = await service.GetLibraryStats(
+                    apiKey,
+                    userId,
+                    library.ItemId,
+                    includeItemTypes);
+                return items.TotalRecordCount;
+            }
+
+            return BaseError.New("Jellyfin admin user id is not available");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting jellyfin library item count");
             return BaseError.New(ex.Message);
         }
     }

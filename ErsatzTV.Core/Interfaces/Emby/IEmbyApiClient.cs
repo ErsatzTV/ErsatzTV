@@ -8,7 +8,7 @@ public interface IEmbyApiClient
     Task<Either<BaseError, EmbyServerInformation>> GetServerInformation(string address, string apiKey);
     Task<Either<BaseError, List<EmbyLibrary>>> GetLibraries(string address, string apiKey);
 
-    Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
+    IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(
         string address,
         string apiKey,
         EmbyLibrary library);
@@ -37,4 +37,10 @@ public interface IEmbyApiClient
         string address,
         string apiKey,
         string collectionId);
+
+    Task<Either<BaseError, int>> GetLibraryItemCount(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string includeItemTypes);
 }

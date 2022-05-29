@@ -71,24 +71,29 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    public async Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
-        string address,
-        string apiKey,
-        EmbyLibrary library)
+    public async IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(string address, string apiKey, EmbyLibrary library)
     {
-        try
+        IEmbyApi service = RestService.For<IEmbyApi>(address);
+        int size = await service
+            .GetLibraryStats(apiKey, library.ItemId, EmbyItemType.Movie)
+            .Map(r => r.TotalRecordCount);
+
+        const int PAGE_SIZE = 10;
+
+        int pages = (size - 1) / PAGE_SIZE + 1;
+
+        for (var i = 0; i < pages; i++)
         {
-            IEmbyApi service = RestService.For<IEmbyApi>(address);
-            EmbyLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, library.ItemId);
-            return items.Items
-                .Map(i => ProjectToMovie(library, i))
-                .Somes()
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting emby movie library items");
-            return BaseError.New(ex.Message);
+            int skip = i * PAGE_SIZE;
+
+            Task<IEnumerable<EmbyMovie>> result = service
+                .GetMovieLibraryItems(apiKey, library.ItemId, startIndex: skip, limit: PAGE_SIZE)
+                .Map(items => items.Items.Map(item => ProjectToMovie(library, item)).Somes());
+
+            foreach (EmbyMovie movie in await result)
+            {
+                yield return movie;
+            }
         }
     }
 
@@ -198,6 +203,25 @@ public class EmbyApiClient : IEmbyApiClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting Emby collection items");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    public async Task<Either<BaseError, int>> GetLibraryItemCount(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string includeItemTypes)
+    {
+        try
+        {
+            IEmbyApi service = RestService.For<IEmbyApi>(address);
+            EmbyLibraryItemsResponse items = await service.GetLibraryStats(apiKey, library.ItemId, includeItemTypes);
+            return items.TotalRecordCount;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting Emby library item count");
             return BaseError.New(ex.Message);
         }
     }

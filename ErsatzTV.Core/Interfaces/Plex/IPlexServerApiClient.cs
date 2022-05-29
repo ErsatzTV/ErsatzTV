@@ -13,7 +13,7 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, List<PlexMovie>>> GetMovieLibraryContents(
+    IAsyncEnumerable<PlexMovie> GetMovieLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
@@ -56,6 +56,11 @@ public interface IPlexServerApiClient
     Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
         PlexLibrary library,
         string key,
+        PlexConnection connection,
+        PlexServerAuthToken token);
+
+    Task<Either<BaseError, int>> GetLibraryItemCount(
+        PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
 }

@@ -18,6 +18,21 @@ public interface IEmbyApi
         string apiKey);
 
     [Get("/Items")]
+    public Task<EmbyLibraryItemsResponse> GetLibraryStats(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string parentId,
+        [Query]
+        string includeItemTypes,
+        [Query]
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
+
+    [Get("/Items")]
     public Task<EmbyLibraryItemsResponse> GetMovieLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -29,7 +44,11 @@ public interface IEmbyApi
         [Query]
         string includeItemTypes = "Movie",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
     [Get("/Items")]
     public Task<EmbyLibraryItemsResponse> GetShowLibraryItems(

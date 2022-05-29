@@ -80,7 +80,16 @@ public class JellyfinMovieLibraryScanner :
 
     protected override string MediaServerEtag(JellyfinMovie movie) => movie.Etag;
 
-    protected override Task<Either<BaseError, List<JellyfinMovie>>> GetMovieLibraryItems(
+    protected override Task<Either<BaseError, int>> CountMovieLibraryItems(
+        JellyfinConnectionParameters connectionParameters,
+        JellyfinLibrary library) =>
+        _jellyfinApiClient.GetLibraryItemCount(
+            connectionParameters.Address,
+            connectionParameters.ApiKey,
+            library,
+            JellyfinItemType.Movie);
+
+    protected override IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library) =>
         _jellyfinApiClient.GetMovieLibraryItems(
