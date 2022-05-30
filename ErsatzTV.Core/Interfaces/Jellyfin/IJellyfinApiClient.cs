@@ -9,16 +9,9 @@ public interface IJellyfinApiClient
     Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string apiKey);
     Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey);
 
-    IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(
-        string address,
-        string apiKey,
-        JellyfinLibrary library);
+    IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(string address, string apiKey, JellyfinLibrary library);
 
-    Task<Either<BaseError, List<JellyfinShow>>> GetShowLibraryItems(
-        string address,
-        string apiKey,
-        int mediaSourceId,
-        string libraryId);
+    IAsyncEnumerable<JellyfinShow> GetShowLibraryItems(string address, string apiKey, JellyfinLibrary library);
 
     Task<Either<BaseError, List<JellyfinSeason>>> GetSeasonLibraryItems(
         string address,

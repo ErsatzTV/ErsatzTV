@@ -63,7 +63,7 @@ public interface IJellyfinApi
         [Query]
         int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetShowLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -77,7 +77,11 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Series",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
     [Get("/Items")]
     public Task<JellyfinLibraryItemsResponse> GetSeasonLibraryItems(

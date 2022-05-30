@@ -77,14 +77,19 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
             cancellationToken);
     }
 
-    protected override Task<Either<BaseError, List<JellyfinShow>>> GetShowLibraryItems(
+    protected override Task<Either<BaseError, int>> CountShowLibraryItems(
         JellyfinConnectionParameters connectionParameters,
-        JellyfinLibrary library) =>
-        _jellyfinApiClient.GetShowLibraryItems(
+        JellyfinLibrary library)
+        => _jellyfinApiClient.GetLibraryItemCount(
             connectionParameters.Address,
             connectionParameters.ApiKey,
-            library.MediaSourceId,
-            library.ItemId);
+            library,
+            JellyfinItemType.Show);
+
+    protected override IAsyncEnumerable<JellyfinShow> GetShowLibraryItems(
+        JellyfinConnectionParameters connectionParameters,
+        JellyfinLibrary library) =>
+        _jellyfinApiClient.GetShowLibraryItems(connectionParameters.Address, connectionParameters.ApiKey, library);
 
     protected override string MediaServerItemId(JellyfinShow show) => show.ItemId;
     protected override string MediaServerItemId(JellyfinSeason season) => season.ItemId;

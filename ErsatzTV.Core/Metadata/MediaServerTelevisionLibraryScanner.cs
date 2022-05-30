@@ -56,23 +56,29 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     {
         try
         {
-            Either<BaseError, List<TShow>> entries = await GetShowLibraryItems(connectionParameters, library);
-
-            foreach (BaseError error in entries.LeftToSeq())
+            Either<BaseError, int> maybeCount = await CountShowLibraryItems(connectionParameters, library);
+            foreach (BaseError error in maybeCount.LeftToSeq())
             {
                 return error;
             }
 
-            return await ScanLibrary(
-                televisionRepository,
-                connectionParameters,
-                library,
-                getLocalPath,
-                ffmpegPath,
-                ffprobePath,
-                entries.RightToSeq().Flatten().ToList(),
-                deepScan,
-                cancellationToken);
+            foreach (int count in maybeCount.RightToSeq())
+            {
+                return await ScanLibrary(
+                    televisionRepository,
+                    connectionParameters,
+                    library,
+                    getLocalPath,
+                    ffmpegPath,
+                    ffprobePath,
+                    GetShowLibraryItems(connectionParameters, library),
+                    count,
+                    deepScan,
+                    cancellationToken);
+            }
+
+            // this won't happen
+            return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -84,7 +90,11 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         }
     }
 
-    protected abstract Task<Either<BaseError, List<TShow>>> GetShowLibraryItems(
+    protected abstract Task<Either<BaseError, int>> CountShowLibraryItems(
+        TConnectionParameters connectionParameters,
+        TLibrary library);
+
+    protected abstract IAsyncEnumerable<TShow> GetShowLibraryItems(
         TConnectionParameters connectionParameters,
         TLibrary library);
 
@@ -102,21 +112,24 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         Func<TEpisode, string> getLocalPath,
         string ffmpegPath,
         string ffprobePath,
-        List<TShow> showEntries,
+        IAsyncEnumerable<TShow> showEntries,
+        int totalShowCount,
         bool deepScan,
         CancellationToken cancellationToken)
     {
+        var incomingItemIds = new List<string>();
         List<TEtag> existingShows = await televisionRepository.GetExistingShows(library);
 
-        var sortedShows = showEntries.OrderBy(s => s.ShowMetadata.Head().SortTitle).ToList();
-        foreach (TShow incoming in showEntries)
+        await foreach (TShow incoming in showEntries.WithCancellation(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return new ScanCanceled();
             }
 
-            decimal percentCompletion = (decimal)sortedShows.IndexOf(incoming) / sortedShows.Count;
+            incomingItemIds.Add(MediaServerItemId(incoming));
+
+            decimal percentCompletion = Math.Clamp((decimal)incomingItemIds.Count / totalShowCount, 0, 1);
             await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
 
             Either<BaseError, MediaItemScanResult<TShow>> maybeShow = await televisionRepository
@@ -175,8 +188,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         }
 
         // trash shows that are no longer present on the media server
-        var fileNotFoundItemIds = existingShows.Map(s => s.MediaServerItemId)
-            .Except(showEntries.Map(MediaServerItemId)).ToList();
+        var fileNotFoundItemIds = existingShows.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundShows(library, fileNotFoundItemIds);
         await _searchIndex.RebuildItems(_searchRepository, ids);
 

@@ -18,7 +18,7 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, List<PlexShow>>> GetShowLibraryContents(
+    IAsyncEnumerable<PlexShow> GetShowLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);

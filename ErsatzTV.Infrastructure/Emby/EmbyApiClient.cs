@@ -71,52 +71,31 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    public async IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(string address, string apiKey, EmbyLibrary library)
-    {
-        IEmbyApi service = RestService.For<IEmbyApi>(address);
-        int size = await service
-            .GetLibraryStats(apiKey, library.ItemId, EmbyItemType.Movie)
-            .Map(r => r.TotalRecordCount);
+    public IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(string address, string apiKey, EmbyLibrary library)
+        => GetPagedLibraryContents(
+            address,
+            apiKey,
+            library,
+            EmbyItemType.Movie,
+            (service, itemId, skip, pageSize) => service.GetMovieLibraryItems(
+                apiKey,
+                itemId,
+                startIndex: skip,
+                limit: pageSize),
+            ProjectToMovie);
 
-        const int PAGE_SIZE = 10;
-
-        int pages = (size - 1) / PAGE_SIZE + 1;
-
-        for (var i = 0; i < pages; i++)
-        {
-            int skip = i * PAGE_SIZE;
-
-            Task<IEnumerable<EmbyMovie>> result = service
-                .GetMovieLibraryItems(apiKey, library.ItemId, startIndex: skip, limit: PAGE_SIZE)
-                .Map(items => items.Items.Map(item => ProjectToMovie(library, item)).Somes());
-
-            foreach (EmbyMovie movie in await result)
-            {
-                yield return movie;
-            }
-        }
-    }
-
-    public async Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
-        string address,
-        string apiKey,
-        string libraryId)
-    {
-        try
-        {
-            IEmbyApi service = RestService.For<IEmbyApi>(address);
-            EmbyLibraryItemsResponse items = await service.GetShowLibraryItems(apiKey, libraryId);
-            return items.Items
-                .Map(ProjectToShow)
-                .Somes()
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting emby show library items");
-            return BaseError.New(ex.Message);
-        }
-    }
+    public IAsyncEnumerable<EmbyShow> GetShowLibraryItems(string address, string apiKey, EmbyLibrary library)
+        => GetPagedLibraryContents(
+            address,
+            apiKey,
+            library,
+            EmbyItemType.Show,
+            (service, itemId, skip, pageSize) => service.GetShowLibraryItems(
+                apiKey,
+                itemId,
+                startIndex: skip,
+                limit: pageSize),
+            ProjectToShow);
 
     public async Task<Either<BaseError, List<EmbySeason>>> GetSeasonLibraryItems(
         string address,
@@ -223,6 +202,39 @@ public class EmbyApiClient : IEmbyApiClient
         {
             _logger.LogError(ex, "Error getting Emby library item count");
             return BaseError.New(ex.Message);
+        }
+    }
+
+    private async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string itemType,
+        Func<IEmbyApi, string, int, int, Task<EmbyLibraryItemsResponse>> getItems,
+        Func<EmbyLibrary, EmbyLibraryItemResponse, Option<TItem>> mapper)
+    {
+        IEmbyApi service = RestService.For<IEmbyApi>(address);
+        int size = await service
+            .GetLibraryStats(apiKey, library.ItemId, itemType)
+            .Map(r => r.TotalRecordCount);
+
+        const int PAGE_SIZE = 10;
+
+        int pages = (size - 1) / PAGE_SIZE + 1;
+
+        for (var i = 0; i < pages; i++)
+        {
+            int skip = i * PAGE_SIZE;
+
+            Task<IEnumerable<TItem>> result = getItems(service, library.ItemId, skip, PAGE_SIZE)
+                .Map(items => items.Items.Map(item => mapper(library, item)).Somes());
+
+#pragma warning disable VSTHRD003
+            foreach (TItem item in await result)
+#pragma warning restore VSTHRD003
+            {
+                yield return item;
+            }
         }
     }
 
@@ -466,7 +478,7 @@ public class EmbyApiClient : IEmbyApiClient
         return new Writer { Name = person.Name };
     }
 
-    private Option<EmbyShow> ProjectToShow(EmbyLibraryItemResponse item)
+    private Option<EmbyShow> ProjectToShow(EmbyLibrary _, EmbyLibraryItemResponse item)
     {
         try
         {

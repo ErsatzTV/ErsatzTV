@@ -137,7 +137,15 @@ public class PlexTelevisionLibraryScanner :
     //     }
     // }
 
-    protected override Task<Either<BaseError, List<PlexShow>>> GetShowLibraryItems(
+    protected override Task<Either<BaseError, int>> CountShowLibraryItems(
+        PlexConnectionParameters connectionParameters,
+        PlexLibrary library) =>
+        _plexServerApiClient.GetLibraryItemCount(
+            library,
+            connectionParameters.Connection,
+            connectionParameters.Token);
+
+    protected override IAsyncEnumerable<PlexShow> GetShowLibraryItems(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library) =>
         _plexServerApiClient.GetShowLibraryContents(

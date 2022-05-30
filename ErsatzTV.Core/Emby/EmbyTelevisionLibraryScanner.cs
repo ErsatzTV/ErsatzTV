@@ -76,13 +76,19 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             cancellationToken);
     }
 
-    protected override Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
+    protected override Task<Either<BaseError, int>> CountShowLibraryItems(
         EmbyConnectionParameters connectionParameters,
-        EmbyLibrary library) =>
-        _embyApiClient.GetShowLibraryItems(
+        EmbyLibrary library)
+        => _embyApiClient.GetLibraryItemCount(
             connectionParameters.Address,
             connectionParameters.ApiKey,
-            library.ItemId);
+            library,
+            EmbyItemType.Show);
+
+    protected override IAsyncEnumerable<EmbyShow> GetShowLibraryItems(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library) =>
+        _embyApiClient.GetShowLibraryItems(connectionParameters.Address, connectionParameters.ApiKey, library);
 
     protected override string MediaServerItemId(EmbyShow show) => show.ItemId;
     protected override string MediaServerItemId(EmbySeason season) => season.ItemId;

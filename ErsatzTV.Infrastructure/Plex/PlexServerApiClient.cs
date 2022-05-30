@@ -74,54 +74,16 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    public async IAsyncEnumerable<PlexMovie> GetMovieLibraryContents(
+    public IAsyncEnumerable<PlexMovie> GetMovieLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
-        PlexServerAuthToken token)
-    {
-        IPlexServerApi xmlService = XmlServiceFor(connection.Uri);
-        int size = await xmlService.GetLibrarySection(library.Key, token.AuthToken).Map(r => r.TotalSize);
+        PlexServerAuthToken token) =>
+        GetPagedLibraryContents(library, connection, token, ProjectToMovie);
 
-        const int PAGE_SIZE = 10;
-
-        IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-        int pages = (size - 1) / PAGE_SIZE + 1;
-
-        for (var i = 0; i < pages; i++)
-        {
-            int skip = i * PAGE_SIZE;
-
-            Task<IEnumerable<PlexMovie>> result = service
-                .GetLibrarySectionContents(library.Key, skip, PAGE_SIZE, token.AuthToken)
-                .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
-                .Map(list => list.Map(metadata => ProjectToMovie(metadata, library.MediaSourceId)));
-
-            foreach (PlexMovie movie in await result)
-            {
-                yield return movie;
-            }
-        }
-    }
-
-    public async Task<Either<BaseError, List<PlexShow>>> GetShowLibraryContents(
+    public IAsyncEnumerable<PlexShow> GetShowLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
-        PlexServerAuthToken token)
-    {
-        try
-        {
-            IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-            return await service.GetLibrarySectionContents(library.Key, token.AuthToken)
-                .Map(r => r.MediaContainer.Metadata)
-                .Map(
-                    list => (list ?? new List<PlexMetadataResponse>())
-                        .Map(metadata => ProjectToShow(metadata, library.MediaSourceId)).ToList());
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
-    }
+        PlexServerAuthToken token) => GetPagedLibraryContents(library, connection, token, ProjectToShow);
 
     public async Task<Either<BaseError, List<PlexSeason>>> GetShowSeasons(
         PlexLibrary library,
@@ -276,6 +238,36 @@ public class PlexServerApiClient : IPlexServerApiClient
         catch (Exception ex)
         {
             return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
+        PlexLibrary library,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        Func<PlexMetadataResponse, int, TItem> mapper)
+    {
+        IPlexServerApi xmlService = XmlServiceFor(connection.Uri);
+        int size = await xmlService.GetLibrarySection(library.Key, token.AuthToken).Map(r => r.TotalSize);
+
+        const int PAGE_SIZE = 10;
+
+        IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+        int pages = (size - 1) / PAGE_SIZE + 1;
+
+        for (var i = 0; i < pages; i++)
+        {
+            int skip = i * PAGE_SIZE;
+
+            Task<IEnumerable<TItem>> result = service
+                .GetLibrarySectionContents(library.Key, skip, PAGE_SIZE, token.AuthToken)
+                .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
+                .Map(list => list.Map(metadata => mapper(metadata, library.MediaSourceId)));
+
+            foreach (TItem item in await result)
+            {
+                yield return item;
+            }
         }
     }
 
