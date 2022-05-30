@@ -20,6 +20,7 @@ public class EncoderH264Qsv : EncoderBase
 
     public override string Name => "h264_qsv";
     public override StreamKind Kind => StreamKind.Video;
+    public override IList<string> OutputOptions => new[] { "-low_power", "0" };
 
     // need to upload if we're still in software and a watermark is used
     public override string Filter
