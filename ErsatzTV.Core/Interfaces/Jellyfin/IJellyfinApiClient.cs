@@ -13,13 +13,13 @@ public interface IJellyfinApiClient
 
     IAsyncEnumerable<JellyfinShow> GetShowLibraryItems(string address, string apiKey, JellyfinLibrary library);
 
-    Task<Either<BaseError, List<JellyfinSeason>>> GetSeasonLibraryItems(
+    IAsyncEnumerable<JellyfinSeason> GetSeasonLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
+        JellyfinLibrary library,
         string showId);
 
-    Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
+    IAsyncEnumerable<JellyfinEpisode> GetEpisodeLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library,
@@ -40,5 +40,7 @@ public interface IJellyfinApiClient
         string address,
         string apiKey,
         JellyfinLibrary library,
-        string includeItemTypes);
+        string parentId,
+        string includeItemTypes,
+        bool excludeFolders);
 }

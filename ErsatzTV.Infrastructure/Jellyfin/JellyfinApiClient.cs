@@ -99,6 +99,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             address,
             apiKey,
             library,
+            library.ItemId,
             JellyfinItemType.Movie,
             (service, userId, itemId, skip, pageSize) => service.GetMovieLibraryItems(
                 apiKey,
@@ -116,6 +117,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             address,
             apiKey,
             library,
+            library.ItemId,
             JellyfinItemType.Show,
             (service, userId, itemId, skip, pageSize) => service.GetShowLibraryItems(
                 apiKey,
@@ -125,59 +127,43 @@ public class JellyfinApiClient : IJellyfinApiClient
                 limit: pageSize),
             ProjectToShow);
 
-    public async Task<Either<BaseError, List<JellyfinSeason>>> GetSeasonLibraryItems(
-        string address,
-        string apiKey,
-        int mediaSourceId,
-        string showId)
-    {
-        try
-        {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
-            {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinLibraryItemsResponse items = await service.GetSeasonLibraryItems(apiKey, userId, showId);
-                return items.Items
-                    .Map(ProjectToSeason)
-                    .Somes()
-                    .ToList();
-            }
-
-            return BaseError.New("Jellyfin admin user id is not available");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting jellyfin show library items");
-            return BaseError.New(ex.Message);
-        }
-    }
-
-    public async Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
+    public IAsyncEnumerable<JellyfinSeason> GetSeasonLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library,
-        string seasonId)
-    {
-        try
-        {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
-            {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinLibraryItemsResponse items = await service.GetEpisodeLibraryItems(apiKey, userId, seasonId);
-                return items.Items
-                    .Map(i => ProjectToEpisode(library, i))
-                    .Somes()
-                    .ToList();
-            }
+        string showId) =>
+        GetPagedLibraryItems(
+            address,
+            apiKey,
+            library,
+            showId,
+            JellyfinItemType.Season,
+            (service, userId, _, skip, pageSize) => service.GetSeasonLibraryItems(
+                apiKey,
+                userId,
+                showId,
+                startIndex: skip,
+                limit: pageSize),
+            ProjectToSeason);
 
-            return BaseError.New("Jellyfin admin user id is not available");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting jellyfin episode library items");
-            return BaseError.New(ex.Message);
-        }
-    }
+    public IAsyncEnumerable<JellyfinEpisode> GetEpisodeLibraryItems(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string seasonId) =>
+        GetPagedLibraryItems(
+            address,
+            apiKey,
+            library,
+            seasonId,
+            JellyfinItemType.Episode,
+            (service, userId, _, skip, pageSize) => service.GetEpisodeLibraryItems(
+                apiKey,
+                userId,
+                seasonId,
+                startIndex: skip,
+                limit: pageSize),
+            ProjectToEpisode);
 
     public async Task<Either<BaseError, List<JellyfinCollection>>> GetCollectionLibraryItems(
         string address,
@@ -247,7 +233,9 @@ public class JellyfinApiClient : IJellyfinApiClient
         string address,
         string apiKey,
         JellyfinLibrary library,
-        string includeItemTypes)
+        string parentId,
+        string includeItemTypes,
+        bool excludeFolders)
     {
         try
         {
@@ -257,8 +245,9 @@ public class JellyfinApiClient : IJellyfinApiClient
                 JellyfinLibraryItemsResponse items = await service.GetLibraryStats(
                     apiKey,
                     userId,
-                    library.ItemId,
-                    includeItemTypes);
+                    parentId,
+                    includeItemTypes,
+                    filters: excludeFolders ? "IsNotFolder" : null);
                 return items.TotalRecordCount;
             }
 
@@ -275,6 +264,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string parentId,
         string itemType,
         Func<IJellyfinApi, string, string, int, int, Task<JellyfinLibraryItemsResponse>> getItems,
         Func<JellyfinLibrary, JellyfinLibraryItemResponse, Option<TItem>> mapper)
@@ -283,7 +273,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             IJellyfinApi service = RestService.For<IJellyfinApi>(address);
             int size = await service
-                .GetLibraryStats(apiKey, userId, library.ItemId, itemType)
+                .GetLibraryStats(apiKey, userId, parentId, itemType)
                 .Map(r => r.TotalRecordCount);
 
             const int PAGE_SIZE = 10;
@@ -294,7 +284,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             {
                 int skip = i * PAGE_SIZE;
 
-                Task<IEnumerable<TItem>> result = getItems(service, userId, library.ItemId, skip, PAGE_SIZE)
+                Task<IEnumerable<TItem>> result = getItems(service, userId, parentId, skip, PAGE_SIZE)
                     .Map(items => items.Items.Map(item => mapper(library, item)).Somes());
 
                 foreach (TItem item in await result)
@@ -637,7 +627,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         return metadata;
     }
 
-    private Option<JellyfinSeason> ProjectToSeason(JellyfinLibraryItemResponse item)
+    private Option<JellyfinSeason> ProjectToSeason(JellyfinLibrary _, JellyfinLibraryItemResponse item)
     {
         try
         {

@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Enable QSV hardware acceleration for vaapi docker images
 
 ### Changed
-- Use paging to synchronize movies from Plex, Jellyfin and Emby
+- Use paging to synchronize movie and show libraries from Plex, Jellyfin and Emby
   - This will reduce memory use and improve reliability of synchronizing large libraries
 - Disable low power mode for `h264_qsv` and `hevc_qsv` encoders
 

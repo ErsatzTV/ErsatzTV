@@ -68,36 +68,32 @@ public interface IEmbyApi
         [Query]
         int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Shows/{parentId}/Seasons?sortOrder=Ascending&sortBy=SortName")]
     public Task<EmbyLibraryItemsResponse> GetSeasonLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
-        [Query]
         string parentId,
         [Query]
         string fields = "Path,DateCreated,Etag,Taglines,ProviderIds",
         [Query]
-        string includeItemTypes = "Season",
+        int startIndex = 0,
         [Query]
-        string excludeLocationTypes = "Virtual",
-        [Query]
-        bool recursive = true);
+        int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Shows/{showId}/Episodes?sortOrder=Ascending&sortBy=SortName")]
     public Task<EmbyLibraryItemsResponse> GetEpisodeLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
+        string showId,
         [Query]
-        string parentId,
+        string seasonId,
         [Query]
         string fields =
             "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
         [Query]
-        string includeItemTypes = "Episode",
+        int startIndex = 0,
         [Query]
-        string excludeLocationTypes = "Virtual",
-        [Query]
-        bool recursive = true);
+        int limit = 0);
 
     [Get("/Items")]
     public Task<EmbyLibraryItemsResponse> GetCollectionLibraryItems(

@@ -12,12 +12,17 @@ public interface IEmbyApiClient
 
     IAsyncEnumerable<EmbyShow> GetShowLibraryItems(string address, string apiKey, EmbyLibrary library);
 
-    Task<Either<BaseError, List<EmbySeason>>> GetSeasonLibraryItems(string address, string apiKey, string showId);
-
-    Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
+    IAsyncEnumerable<EmbySeason> GetSeasonLibraryItems(
         string address,
         string apiKey,
         EmbyLibrary library,
+        string showId);
+
+    IAsyncEnumerable<EmbyEpisode> GetEpisodeLibraryItems(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string showId,
         string seasonId);
 
     Task<Either<BaseError, List<EmbyCollection>>> GetCollectionLibraryItems(string address, string apiKey);
@@ -27,6 +32,6 @@ public interface IEmbyApiClient
     Task<Either<BaseError, int>> GetLibraryItemCount(
         string address,
         string apiKey,
-        EmbyLibrary library,
+        string parentId,
         string includeItemTypes);
 }
