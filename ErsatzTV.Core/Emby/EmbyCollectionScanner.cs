@@ -30,28 +30,22 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
 
     public async Task<Either<BaseError, Unit>> ScanCollections(string address, string apiKey)
     {
-        // get all collections from db (item id, etag)
-        List<EmbyCollection> existingCollections = await _embyCollectionRepository.GetCollections();
-
-        // get all collections from emby
-        Either<BaseError, List<EmbyCollection>> maybeIncomingCollections =
-            await _embyApiClient.GetCollectionLibraryItems(address, apiKey);
-
-        foreach (BaseError error in maybeIncomingCollections.LeftToSeq())
+        try
         {
-            _logger.LogWarning("Failed to get collections from Emby: {Error}", error.ToString());
-            return error;
-        }
+            var incomingItemIds = new List<string>();
 
-        foreach (List<EmbyCollection> incomingCollections in maybeIncomingCollections.RightToSeq())
-        {
-            // loop over collections
-            foreach (EmbyCollection collection in incomingCollections)
+            // get all collections from db (item id, etag)
+            List<EmbyCollection> existingCollections = await _embyCollectionRepository.GetCollections();
+
+            await foreach (EmbyCollection collection in _embyApiClient.GetCollectionLibraryItems(address, apiKey))
             {
+                incomingItemIds.Add(collection.ItemId);
+
                 Option<EmbyCollection> maybeExisting = existingCollections.Find(c => c.ItemId == collection.ItemId);
 
                 // skip if unchanged (etag)
-                if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) == collection.Etag)
+                if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                    collection.Etag)
                 {
                     _logger.LogDebug("Emby collection {Name} is unchanged", collection.Name);
                     continue;
@@ -75,11 +69,15 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
-            foreach (EmbyCollection collection in existingCollections
-                         .Filter(e => incomingCollections.All(i => i.ItemId != e.ItemId)))
+            foreach (EmbyCollection collection in existingCollections.Filter(e => !incomingItemIds.Contains(e.ItemId)))
             {
                 await _embyCollectionRepository.RemoveCollection(collection);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get collections from Emby");
+            return BaseError.New(ex.Message);
         }
 
         return Unit.Default;

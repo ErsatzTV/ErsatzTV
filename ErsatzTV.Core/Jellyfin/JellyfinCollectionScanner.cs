@@ -30,24 +30,21 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
     public async Task<Either<BaseError, Unit>> ScanCollections(string address, string apiKey, int mediaSourceId)
     {
-        // get all collections from db (item id, etag)
-        List<JellyfinCollection> existingCollections = await _jellyfinCollectionRepository.GetCollections();
-
-        // get all collections from jellyfin
-        Either<BaseError, List<JellyfinCollection>> maybeIncomingCollections =
-            await _jellyfinApiClient.GetCollectionLibraryItems(address, apiKey, mediaSourceId);
-
-        foreach (BaseError error in maybeIncomingCollections.LeftToSeq())
+        try
         {
-            _logger.LogWarning("Failed to get collections from Jellyfin: {Error}", error.ToString());
-            return error;
-        }
+            var incomingItemIds = new List<string>();
 
-        foreach (List<JellyfinCollection> incomingCollections in maybeIncomingCollections.RightToSeq())
-        {
+            // get all collections from db (item id, etag)
+            List<JellyfinCollection> existingCollections = await _jellyfinCollectionRepository.GetCollections();
+
             // loop over collections
-            foreach (JellyfinCollection collection in incomingCollections)
+            await foreach (JellyfinCollection collection in _jellyfinApiClient.GetCollectionLibraryItems(
+                               address,
+                               apiKey,
+                               mediaSourceId))
             {
+                incomingItemIds.Add(collection.ItemId);
+
                 Option<JellyfinCollection> maybeExisting = existingCollections.Find(c => c.ItemId == collection.ItemId);
 
                 // skip if unchanged (etag)
@@ -75,11 +72,16 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
-            foreach (JellyfinCollection collection in existingCollections
-                         .Filter(e => incomingCollections.All(i => i.ItemId != e.ItemId)))
+            foreach (JellyfinCollection collection in existingCollections.Filter(
+                         e => !incomingItemIds.Contains(e.ItemId)))
             {
                 await _jellyfinCollectionRepository.RemoveCollection(collection);
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get collections from Jellyfin");
+            return BaseError.New(ex.Message);
         }
 
         return Unit.Default;

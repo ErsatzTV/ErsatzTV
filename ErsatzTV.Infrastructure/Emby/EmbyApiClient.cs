@@ -135,29 +135,27 @@ public class EmbyApiClient : IEmbyApiClient
             limit: pageSize),
         ProjectToEpisode);
 
-    public async Task<Either<BaseError, List<EmbyCollection>>> GetCollectionLibraryItems(string address, string apiKey)
+    public IAsyncEnumerable<EmbyCollection> GetCollectionLibraryItems(string address, string apiKey)
     {
-        try
-        {
-            // TODO: should we enumerate collection libraries here?
+        // TODO: should we enumerate collection libraries here?
 
-            if (_memoryCache.TryGetValue("emby_collections_library_item_id", out string itemId))
-            {
-                IEmbyApi service = RestService.For<IEmbyApi>(address);
-                EmbyLibraryItemsResponse items = await service.GetCollectionLibraryItems(apiKey, itemId);
-                return items.Items
-                    .Map(ProjectToCollection)
-                    .Somes()
-                    .ToList();
-            }
-
-            return BaseError.New("Emby collection item id is not available");
-        }
-        catch (Exception ex)
+        if (_memoryCache.TryGetValue("emby_collections_library_item_id", out string itemId))
         {
-            _logger.LogError(ex, "Error getting Emby collection library items");
-            return BaseError.New(ex.Message);
+            return GetPagedLibraryContents(
+                address,
+                apiKey,
+                null,
+                itemId,
+                EmbyItemType.Collection,
+                (service, _, skip, pageSize) => service.GetCollectionLibraryItems(
+                    apiKey,
+                    itemId,
+                    startIndex: skip,
+                    limit: pageSize),
+                ProjectToCollection);
         }
+
+        return AsyncEnumerable.Empty<EmbyCollection>();
     }
 
     public async Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
@@ -234,7 +232,7 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private Option<EmbyCollection> ProjectToCollection(EmbyLibraryItemResponse item)
+    private Option<EmbyCollection> ProjectToCollection(EmbyLibrary _, EmbyLibraryItemResponse item)
     {
         try
         {
