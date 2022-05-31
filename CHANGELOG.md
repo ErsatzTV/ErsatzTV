@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Additional fix for duplicate `Other Videos` entries; trash may need to be emptied one last time after upgrading
 - Fix watermark opacity in cultures where `,` is a decimal separator
 - Rework playlist filtering to avoid empty playlist responses
+- Fix some QSV/VAAPI memory errors by always requesting 64 extra hardware frames
 
 ### Added
 - Enable QSV hardware acceleration for vaapi docker images
