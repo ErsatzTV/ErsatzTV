@@ -381,7 +381,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         try
         {
             long result = 0;
-            
+
             // the first process always starts at zero
             if (firstProcess)
             {

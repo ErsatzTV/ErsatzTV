@@ -85,7 +85,7 @@ public class EmbyMovieLibraryScanner :
         _embyApiClient.GetLibraryItemCount(
             connectionParameters.Address,
             connectionParameters.ApiKey,
-            library,
+            library.ItemId,
             EmbyItemType.Movie);
 
     protected override IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(
