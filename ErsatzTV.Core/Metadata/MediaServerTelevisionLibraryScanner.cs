@@ -65,7 +65,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             foreach (int count in maybeCount.RightToSeq())
             {
                 _logger.LogDebug("Library {Library} contains {Count} shows", library.Name, count);
-                
+
                 return await ScanLibrary(
                     televisionRepository,
                     connectionParameters,
@@ -220,7 +220,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TConnectionParameters connectionParameters,
         TLibrary library,
         TSeason season);
-    
+
     protected abstract IAsyncEnumerable<TEpisode> GetEpisodeLibraryItems(
         TLibrary library,
         TConnectionParameters connectionParameters,
@@ -283,7 +283,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             {
                 return new ScanCanceled();
             }
-            
+
             incomingItemIds.Add(MediaServerItemId(incoming));
 
             Either<BaseError, MediaItemScanResult<TSeason>> maybeSeason = await televisionRepository
@@ -314,7 +314,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                 {
                     return error;
                 }
-                
+
                 foreach (int count in maybeCount.RightToSeq())
                 {
                     _logger.LogDebug(
@@ -383,7 +383,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             {
                 return new ScanCanceled();
             }
-            
+
             incomingItemIds.Add(MediaServerItemId(incoming));
 
             string localPath = getLocalPath(incoming);

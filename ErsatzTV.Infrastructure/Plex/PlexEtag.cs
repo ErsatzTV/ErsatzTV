@@ -8,10 +8,8 @@ public class PlexEtag
 {
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
-    public PlexEtag(RecyclableMemoryStreamManager recyclableMemoryStreamManager)
-    {
+    public PlexEtag(RecyclableMemoryStreamManager recyclableMemoryStreamManager) =>
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
-    }
 
     public string ForMovie(PlexMetadataResponse response)
     {

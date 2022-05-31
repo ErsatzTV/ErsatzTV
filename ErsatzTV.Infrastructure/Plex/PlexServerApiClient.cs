@@ -79,14 +79,18 @@ public class PlexServerApiClient : IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token)
     {
-        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service) =>
-            service.GetLibrarySection(library.Key, token.AuthToken);
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetLibrarySection(library.Key, token.AuthToken);
+        }
 
-        Task<IEnumerable<PlexMovie>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize) =>
-            jsonService
+        Task<IEnumerable<PlexMovie>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
                 .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
                 .Map(list => list.Map(metadata => ProjectToMovie(metadata, library.MediaSourceId)));
+        }
 
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
@@ -96,14 +100,18 @@ public class PlexServerApiClient : IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token)
     {
-        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service) =>
-            service.GetLibrarySection(library.Key, token.AuthToken);
-        
-        Task<IEnumerable<PlexShow>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize) =>
-            jsonService
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetLibrarySection(library.Key, token.AuthToken);
+        }
+
+        Task<IEnumerable<PlexShow>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
                 .Map(r => r.MediaContainer.Metadata)
                 .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)));
+        }
 
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
@@ -132,18 +140,22 @@ public class PlexServerApiClient : IPlexServerApiClient
         PlexServerAuthToken token)
     {
         string showMetadataKey = show.Key.Split("/").Reverse().Skip(1).Head();
-        
-        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service) =>
-            service.CountShowChildren(showMetadataKey, token.AuthToken);
 
-        Task<IEnumerable<PlexSeason>> GetItems(IPlexServerApi xmlService, IPlexServerApi _, int skip, int pageSize) =>
-            xmlService.GetShowChildren(showMetadataKey, skip, pageSize, token.AuthToken)
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.CountShowChildren(showMetadataKey, token.AuthToken);
+        }
+
+        Task<IEnumerable<PlexSeason>> GetItems(IPlexServerApi xmlService, IPlexServerApi _, int skip, int pageSize)
+        {
+            return xmlService.GetShowChildren(showMetadataKey, skip, pageSize, token.AuthToken)
                 .Map(r => r.Metadata.Filter(m => !m.Key.Contains("allLeaves")))
                 .Map(list => list.Map(metadata => ProjectToSeason(metadata, library.MediaSourceId)));
-        
+        }
+
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
-    
+
     public async Task<Either<BaseError, int>> CountSeasonEpisodes(
         PlexSeason season,
         PlexConnection connection,
@@ -169,13 +181,17 @@ public class PlexServerApiClient : IPlexServerApiClient
     {
         string seasonMetadataKey = season.Key.Split("/").Reverse().Skip(1).Head();
 
-        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service) =>
-            service.CountSeasonChildren(seasonMetadataKey, token.AuthToken);
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.CountSeasonChildren(seasonMetadataKey, token.AuthToken);
+        }
 
-        Task<IEnumerable<PlexEpisode>> GetItems(IPlexServerApi xmlService, IPlexServerApi _, int skip, int pageSize) =>
-            xmlService.GetSeasonChildren(seasonMetadataKey, skip, pageSize, token.AuthToken)
+        Task<IEnumerable<PlexEpisode>> GetItems(IPlexServerApi xmlService, IPlexServerApi _, int skip, int pageSize)
+        {
+            return xmlService.GetSeasonChildren(seasonMetadataKey, skip, pageSize, token.AuthToken)
                 .Map(r => r.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
                 .Map(list => list.Map(metadata => ProjectToEpisode(metadata, library.MediaSourceId)));
+        }
 
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
@@ -303,7 +319,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         Func<IPlexServerApi, IPlexServerApi, int, int, Task<IEnumerable<TItem>>> getItems)
     {
         IPlexServerApi xmlService = XmlServiceFor(connection.Uri);
-        
+
         int size = await countItems(xmlService).Map(r => r.TotalSize);
 
         const int PAGE_SIZE = 10;
@@ -323,7 +339,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             }
         }
     }
-    
+
     // TODO: fix this with the addition of paging
     private List<PlexEpisode> ProcessMultiEpisodeFiles(IEnumerable<PlexEpisode> episodes)
     {

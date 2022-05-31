@@ -152,7 +152,7 @@ public class PlexTelevisionLibraryScanner :
             library,
             connectionParameters.Connection,
             connectionParameters.Token);
-    
+
     protected override Task<Either<BaseError, int>> CountSeasonLibraryItems(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library,
