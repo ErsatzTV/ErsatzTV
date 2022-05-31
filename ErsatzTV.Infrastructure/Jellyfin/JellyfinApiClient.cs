@@ -197,35 +197,25 @@ public class JellyfinApiClient : IJellyfinApiClient
         return AsyncEnumerable.Empty<JellyfinCollection>();
     }
 
-    public async Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+    public IAsyncEnumerable<MediaItem> GetCollectionItems(
         string address,
         string apiKey,
         int mediaSourceId,
-        string collectionId)
-    {
-        try
-        {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
-            {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinLibraryItemsResponse items = await service.GetCollectionItems(
-                    apiKey,
-                    userId,
-                    collectionId);
-                return items.Items
-                    .Map(ProjectToCollectionMediaItem)
-                    .Somes()
-                    .ToList();
-            }
-
-            return BaseError.New("Jellyfin admin user id is not available");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting jellyfin collection items");
-            return BaseError.New(ex.Message);
-        }
-    }
+        string collectionId) =>
+        GetPagedLibraryItems(
+            address,
+            apiKey,
+            None,
+            mediaSourceId,
+            collectionId,
+            JellyfinItemType.CollectionItems,
+            (service, userId, _, skip, pageSize) => service.GetCollectionItems(
+                apiKey,
+                userId,
+                collectionId,
+                startIndex: skip,
+                limit: pageSize),
+            (_, item) => ProjectToCollectionMediaItem(item));
 
     public async Task<Either<BaseError, int>> GetLibraryItemCount(
         string address,

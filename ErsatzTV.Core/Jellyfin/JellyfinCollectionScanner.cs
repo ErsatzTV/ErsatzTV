@@ -93,32 +93,35 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
         int mediaSourceId,
         JellyfinCollection collection)
     {
-        // get collection items from JF
-        Either<BaseError, List<MediaItem>> maybeItems =
-            await _jellyfinApiClient.GetCollectionItems(address, apiKey, mediaSourceId, collection.ItemId);
-
-        foreach (BaseError error in maybeItems.LeftToSeq())
+        try
         {
-            _logger.LogWarning("Failed to get collection items from Jellyfin: {Error}", error.ToString());
-            return;
+            // get collection items from JF
+            IAsyncEnumerable<MediaItem> items = _jellyfinApiClient.GetCollectionItems(
+                address,
+                apiKey,
+                mediaSourceId,
+                collection.ItemId);
+
+            List<int> removedIds = await _jellyfinCollectionRepository.RemoveAllTags(collection);
+
+            // sync tags on items
+            var addedIds = new List<int>();
+            await foreach (MediaItem item in items)
+            {
+                addedIds.Add(await _jellyfinCollectionRepository.AddTag(item, collection));
+            }
+
+            _logger.LogDebug("Jellyfin collection {Name} contains {Count} items", collection.Name, addedIds.Count);
+
+            var changedIds = removedIds.Except(addedIds).ToList();
+            changedIds.AddRange(addedIds.Except(removedIds));
+
+            await _searchIndex.RebuildItems(_searchRepository, changedIds);
+            _searchIndex.Commit();
         }
-
-        List<int> removedIds = await _jellyfinCollectionRepository.RemoveAllTags(collection);
-
-        var jellyfinItems = maybeItems.RightToSeq().Flatten().ToList();
-        _logger.LogDebug("Jellyfin collection {Name} contains {Count} items", collection.Name, jellyfinItems.Count);
-
-        // sync tags on items
-        var addedIds = new List<int>();
-        foreach (MediaItem item in jellyfinItems)
+        catch (Exception ex)
         {
-            addedIds.Add(await _jellyfinCollectionRepository.AddTag(item, collection));
+            _logger.LogWarning(ex, "Failed to synchronize Jellyfin collection {Name}", collection.Name);
         }
-
-        var changedIds = removedIds.Except(addedIds).ToList();
-        changedIds.AddRange(addedIds.Except(removedIds));
-
-        await _searchIndex.RebuildItems(_searchRepository, changedIds);
-        _searchIndex.Commit();
     }
 }

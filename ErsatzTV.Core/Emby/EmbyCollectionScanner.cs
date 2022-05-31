@@ -88,32 +88,31 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         string apiKey,
         EmbyCollection collection)
     {
-        // get collection items from JF
-        Either<BaseError, List<MediaItem>> maybeItems =
-            await _embyApiClient.GetCollectionItems(address, apiKey, collection.ItemId);
-
-        foreach (BaseError error in maybeItems.LeftToSeq())
+        try
         {
-            _logger.LogWarning("Failed to get collection items from Emby: {Error}", error.ToString());
-            return;
+            // get collection items from Emby
+            IAsyncEnumerable<MediaItem> items = _embyApiClient.GetCollectionItems(address, apiKey, collection.ItemId);
+
+            List<int> removedIds = await _embyCollectionRepository.RemoveAllTags(collection);
+
+            // sync tags on items
+            var addedIds = new List<int>();
+            await foreach (MediaItem item in items)
+            {
+                addedIds.Add(await _embyCollectionRepository.AddTag(item, collection));
+            }
+
+            _logger.LogDebug("Emby collection {Name} contains {Count} items", collection.Name, addedIds.Count);
+
+            var changedIds = removedIds.Except(addedIds).ToList();
+            changedIds.AddRange(addedIds.Except(removedIds));
+
+            await _searchIndex.RebuildItems(_searchRepository, changedIds);
+            _searchIndex.Commit();
         }
-
-        List<int> removedIds = await _embyCollectionRepository.RemoveAllTags(collection);
-
-        var embyItems = maybeItems.RightToSeq().Flatten().ToList();
-        _logger.LogDebug("Emby collection {Name} contains {Count} items", collection.Name, embyItems.Count);
-
-        // sync tags on items
-        var addedIds = new List<int>();
-        foreach (MediaItem item in embyItems)
+        catch (Exception ex)
         {
-            addedIds.Add(await _embyCollectionRepository.AddTag(item, collection));
+            _logger.LogWarning(ex, "Failed to synchronize Emby collection {Name}", collection.Name);
         }
-
-        var changedIds = removedIds.Except(addedIds).ToList();
-        changedIds.AddRange(addedIds.Except(removedIds));
-
-        await _searchIndex.RebuildItems(_searchRepository, changedIds);
-        _searchIndex.Commit();
     }
 }

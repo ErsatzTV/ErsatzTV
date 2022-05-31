@@ -112,7 +112,7 @@ public interface IEmbyApi
         [Query]
         int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<EmbyLibraryItemsResponse> GetCollectionItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -125,5 +125,9 @@ public interface IEmbyApi
         [Query]
         string excludeLocationTypes = "Virtual",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 }

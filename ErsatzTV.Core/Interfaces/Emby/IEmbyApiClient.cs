@@ -27,7 +27,7 @@ public interface IEmbyApiClient
 
     IAsyncEnumerable<EmbyCollection> GetCollectionLibraryItems(string address, string apiKey);
 
-    Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(string address, string apiKey, string collectionId);
+    IAsyncEnumerable<MediaItem> GetCollectionItems(string address, string apiKey, string collectionId);
 
     Task<Either<BaseError, int>> GetLibraryItemCount(
         string address,

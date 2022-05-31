@@ -27,7 +27,7 @@ public interface IJellyfinApiClient
 
     IAsyncEnumerable<JellyfinCollection> GetCollectionLibraryItems(string address, string apiKey, int mediaSourceId);
 
-    Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+    IAsyncEnumerable<MediaItem> GetCollectionItems(
         string address,
         string apiKey,
         int mediaSourceId,

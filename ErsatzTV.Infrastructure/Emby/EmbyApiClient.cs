@@ -83,7 +83,7 @@ public class EmbyApiClient : IEmbyApiClient
                 itemId,
                 startIndex: skip,
                 limit: pageSize),
-            ProjectToMovie);
+            (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToMovie(lib, item)).Flatten());
 
     public IAsyncEnumerable<EmbyShow> GetShowLibraryItems(string address, string apiKey, EmbyLibrary library)
         => GetPagedLibraryContents(
@@ -97,7 +97,7 @@ public class EmbyApiClient : IEmbyApiClient
                 itemId,
                 startIndex: skip,
                 limit: pageSize),
-            ProjectToShow);
+            (_, item) => ProjectToShow(item));
 
     public IAsyncEnumerable<EmbySeason> GetSeasonLibraryItems(
         string address,
@@ -114,7 +114,7 @@ public class EmbyApiClient : IEmbyApiClient
             itemId,
             startIndex: skip,
             limit: pageSize),
-        ProjectToSeason);
+        (_, item) => ProjectToSeason(item));
 
     public IAsyncEnumerable<EmbyEpisode> GetEpisodeLibraryItems(
         string address,
@@ -133,7 +133,7 @@ public class EmbyApiClient : IEmbyApiClient
             seasonId,
             startIndex: skip,
             limit: pageSize),
-        ProjectToEpisode);
+        (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToEpisode(lib, item)).Flatten());
 
     public IAsyncEnumerable<EmbyCollection> GetCollectionLibraryItems(string address, string apiKey)
     {
@@ -144,7 +144,7 @@ public class EmbyApiClient : IEmbyApiClient
             return GetPagedLibraryContents(
                 address,
                 apiKey,
-                null,
+                None,
                 itemId,
                 EmbyItemType.Collection,
                 (service, _, skip, pageSize) => service.GetCollectionLibraryItems(
@@ -152,32 +152,28 @@ public class EmbyApiClient : IEmbyApiClient
                     itemId,
                     startIndex: skip,
                     limit: pageSize),
-                ProjectToCollection);
+                (_, item) => ProjectToCollection(item));
         }
 
         return AsyncEnumerable.Empty<EmbyCollection>();
     }
 
-    public async Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+    public IAsyncEnumerable<MediaItem> GetCollectionItems(
         string address,
         string apiKey,
-        string collectionId)
-    {
-        try
-        {
-            IEmbyApi service = RestService.For<IEmbyApi>(address);
-            EmbyLibraryItemsResponse items = await service.GetCollectionItems(apiKey, collectionId);
-            return items.Items
-                .Map(ProjectToCollectionMediaItem)
-                .Somes()
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting Emby collection items");
-            return BaseError.New(ex.Message);
-        }
-    }
+        string collectionId) =>
+        GetPagedLibraryContents(
+            address,
+            apiKey,
+            None,
+            collectionId,
+            EmbyItemType.CollectionItems,
+            (service, _, skip, pageSize) => service.GetCollectionItems(
+                apiKey,
+                collectionId,
+                startIndex: skip,
+                limit: pageSize),
+            (_, item) => ProjectToCollectionMediaItem(item));
 
     public async Task<Either<BaseError, int>> GetLibraryItemCount(
         string address,
@@ -198,14 +194,14 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
+    private static async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
         string address,
         string apiKey,
-        EmbyLibrary library,
+        Option<EmbyLibrary> maybeLibrary,
         string parentId,
         string itemType,
         Func<IEmbyApi, string, int, int, Task<EmbyLibraryItemsResponse>> getItems,
-        Func<EmbyLibrary, EmbyLibraryItemResponse, Option<TItem>> mapper)
+        Func<Option<EmbyLibrary>, EmbyLibraryItemResponse, Option<TItem>> mapper)
     {
         IEmbyApi service = RestService.For<IEmbyApi>(address);
         int size = await service
@@ -221,7 +217,7 @@ public class EmbyApiClient : IEmbyApiClient
             int skip = i * PAGE_SIZE;
 
             Task<IEnumerable<TItem>> result = getItems(service, parentId, skip, PAGE_SIZE)
-                .Map(items => items.Items.Map(item => mapper(library, item)).Somes());
+                .Map(items => items.Items.Map(item => mapper(maybeLibrary, item)).Somes());
 
 #pragma warning disable VSTHRD003
             foreach (TItem item in await result)
@@ -232,7 +228,7 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private Option<EmbyCollection> ProjectToCollection(EmbyLibrary _, EmbyLibraryItemResponse item)
+    private Option<EmbyCollection> ProjectToCollection(EmbyLibraryItemResponse item)
     {
         try
         {
@@ -472,7 +468,7 @@ public class EmbyApiClient : IEmbyApiClient
         return new Writer { Name = person.Name };
     }
 
-    private Option<EmbyShow> ProjectToShow(EmbyLibrary _, EmbyLibraryItemResponse item)
+    private Option<EmbyShow> ProjectToShow(EmbyLibraryItemResponse item)
     {
         try
         {
@@ -565,7 +561,7 @@ public class EmbyApiClient : IEmbyApiClient
         return metadata;
     }
 
-    private Option<EmbySeason> ProjectToSeason(EmbyLibrary _, EmbyLibraryItemResponse item)
+    private Option<EmbySeason> ProjectToSeason(EmbyLibraryItemResponse item)
     {
         try
         {

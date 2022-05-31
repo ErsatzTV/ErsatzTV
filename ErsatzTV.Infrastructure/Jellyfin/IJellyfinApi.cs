@@ -140,7 +140,7 @@ public interface IJellyfinApi
         [Query]
         int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetCollectionItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -153,5 +153,9 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Movie,Series,Season,Episode",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 }
