@@ -59,19 +59,23 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                 return error;
             }
 
-            int count = await maybeCount.RightToSeq().HeadOrNone().IfNoneAsync(1);
+            foreach (int count in maybeCount.RightToSeq())
+            {
+                return await ScanLibrary(
+                    movieRepository,
+                    connectionParameters,
+                    library,
+                    getLocalPath,
+                    ffmpegPath,
+                    ffprobePath,
+                    GetMovieLibraryItems(connectionParameters, library),
+                    count,
+                    deepScan,
+                    cancellationToken);
+            }
 
-            return await ScanLibrary(
-                movieRepository,
-                connectionParameters,
-                library,
-                getLocalPath,
-                ffmpegPath,
-                ffprobePath,
-                GetMovieLibraryItems(connectionParameters, library),
-                count,
-                deepScan,
-                cancellationToken);
+            // this won't happen
+            return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {

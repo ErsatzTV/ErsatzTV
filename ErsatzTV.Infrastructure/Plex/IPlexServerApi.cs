@@ -29,14 +29,6 @@ public interface IPlexServerApi
     public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
         GetLibrarySectionContents(
             string key,
-            [Query] [AliasAs("X-Plex-Token")]
-            string token);
-
-    [Get("/library/sections/{key}/all")]
-    [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
-        GetLibrarySectionContents(
-            string key,
             [Query] [AliasAs("X-Plex-Container-Start")]
             int skip,
             [Query] [AliasAs("X-Plex-Container-Size")]
@@ -60,19 +52,41 @@ public interface IPlexServerApi
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 
+    [Get("/library/metadata/{key}/children?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
+    [Headers("Accept: text/xml")]
+    public Task<PlexXmlMediaContainerStatsResponse> CountShowChildren(
+        string key,
+        [Query] [AliasAs("X-Plex-Token")]
+        string token);
+
     [Get("/library/metadata/{key}/children")]
     [Headers("Accept: text/xml")]
     public Task<PlexXmlSeasonsMetadataResponseContainer>
         GetShowChildren(
             string key,
+            [Query] [AliasAs("X-Plex-Container-Start")]
+            int skip,
+            [Query] [AliasAs("X-Plex-Container-Size")]
+            int take,
             [Query] [AliasAs("X-Plex-Token")]
             string token);
+
+    [Get("/library/metadata/{key}/children?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
+    [Headers("Accept: text/xml")]
+    public Task<PlexXmlMediaContainerStatsResponse> CountSeasonChildren(
+        string key,
+        [Query] [AliasAs("X-Plex-Token")]
+        string token);
 
     [Get("/library/metadata/{key}/children")]
     [Headers("Accept: text/xml")]
     public Task<PlexXmlEpisodesMetadataResponseContainer>
         GetSeasonChildren(
             string key,
+            [Query] [AliasAs("X-Plex-Container-Start")]
+            int skip,
+            [Query] [AliasAs("X-Plex-Container-Size")]
+            int take,
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 }

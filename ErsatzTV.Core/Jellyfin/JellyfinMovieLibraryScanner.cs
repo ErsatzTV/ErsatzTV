@@ -87,7 +87,9 @@ public class JellyfinMovieLibraryScanner :
             connectionParameters.Address,
             connectionParameters.ApiKey,
             library,
-            JellyfinItemType.Movie);
+            library.ItemId,
+            JellyfinItemType.Movie,
+            true);
 
     protected override IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(
         JellyfinConnectionParameters connectionParameters,

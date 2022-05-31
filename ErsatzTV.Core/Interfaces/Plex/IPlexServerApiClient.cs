@@ -18,18 +18,28 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, List<PlexShow>>> GetShowLibraryContents(
+    IAsyncEnumerable<PlexShow> GetShowLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, List<PlexSeason>>> GetShowSeasons(
+    Task<Either<BaseError, int>> CountShowSeasons(
+        PlexShow show,
+        PlexConnection connection,
+        PlexServerAuthToken token);
+
+    IAsyncEnumerable<PlexSeason> GetShowSeasons(
         PlexLibrary library,
         PlexShow show,
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, List<PlexEpisode>>> GetSeasonEpisodes(
+    Task<Either<BaseError, int>> CountSeasonEpisodes(
+        PlexSeason season,
+        PlexConnection connection,
+        PlexServerAuthToken token);
+
+    IAsyncEnumerable<PlexEpisode> GetSeasonEpisodes(
         PlexLibrary library,
         PlexSeason season,
         PlexConnection connection,
