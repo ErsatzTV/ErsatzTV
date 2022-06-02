@@ -36,10 +36,4 @@
       <ProjectReference Include="..\ErsatzTV.FFmpeg\ErsatzTV.FFmpeg.csproj" />
     </ItemGroup>
     
-    <ItemGroup>
-      <Compile Update="Api\FFmpegProfiles\FFmpegProfileSettingsResponseModel.cs">
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      </Compile>
-    </ItemGroup>
-
 </Project>
