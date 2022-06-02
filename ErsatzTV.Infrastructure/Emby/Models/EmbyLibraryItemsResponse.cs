@@ -3,4 +3,5 @@
 public class EmbyLibraryItemsResponse
 {
     public List<EmbyLibraryItemResponse> Items { get; set; }
+    public int TotalRecordCount { get; set; }
 }

@@ -23,6 +23,25 @@ public interface IJellyfinApi
         string apiKey);
 
     [Get("/Items")]
+    public Task<JellyfinLibraryItemsResponse> GetLibraryStats(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string userId,
+        [Query]
+        string parentId,
+        [Query]
+        string includeItemTypes,
+        [Query]
+        bool recursive = true,
+        [Query]
+        string filters = "IsNotFolder",
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
+
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetMovieLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -38,9 +57,13 @@ public interface IJellyfinApi
         [Query]
         bool recursive = true,
         [Query]
-        string filters = "IsNotFolder");
+        string filters = "IsNotFolder",
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetShowLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -54,9 +77,13 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Series",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetSeasonLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -69,9 +96,13 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Season",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -84,9 +115,13 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Episode",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetCollectionLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -99,9 +134,13 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "BoxSet",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 
-    [Get("/Items")]
+    [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetCollectionItems(
         [Header("X-Emby-Token")]
         string apiKey,
@@ -114,5 +153,9 @@ public interface IJellyfinApi
         [Query]
         string includeItemTypes = "Movie,Series,Season,Episode",
         [Query]
-        bool recursive = true);
+        bool recursive = true,
+        [Query]
+        int startIndex = 0,
+        [Query]
+        int limit = 0);
 }

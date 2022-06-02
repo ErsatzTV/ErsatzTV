@@ -53,23 +53,29 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     {
         try
         {
-            Either<BaseError, List<TMovie>> entries = await GetMovieLibraryItems(connectionParameters, library);
-
-            foreach (BaseError error in entries.LeftToSeq())
+            Either<BaseError, int> maybeCount = await CountMovieLibraryItems(connectionParameters, library);
+            foreach (BaseError error in maybeCount.LeftToSeq())
             {
                 return error;
             }
 
-            return await ScanLibrary(
-                movieRepository,
-                connectionParameters,
-                library,
-                getLocalPath,
-                ffmpegPath,
-                ffprobePath,
-                entries.RightToSeq().Flatten().ToList(),
-                deepScan,
-                cancellationToken);
+            foreach (int count in maybeCount.RightToSeq())
+            {
+                return await ScanLibrary(
+                    movieRepository,
+                    connectionParameters,
+                    library,
+                    getLocalPath,
+                    ffmpegPath,
+                    ffprobePath,
+                    GetMovieLibraryItems(connectionParameters, library),
+                    count,
+                    deepScan,
+                    cancellationToken);
+            }
+
+            // this won't happen
+            return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -88,21 +94,24 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         Func<TMovie, string> getLocalPath,
         string ffmpegPath,
         string ffprobePath,
-        List<TMovie> movieEntries,
+        IAsyncEnumerable<TMovie> movieEntries,
+        int totalMovieCount,
         bool deepScan,
         CancellationToken cancellationToken)
     {
+        var incomingItemIds = new List<string>();
         List<TEtag> existingMovies = await movieRepository.GetExistingMovies(library);
 
-        var sortedMovies = movieEntries.OrderBy(m => m.MovieMetadata.Head().SortTitle).ToList();
-        foreach (TMovie incoming in sortedMovies)
+        await foreach (TMovie incoming in movieEntries.WithCancellation(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return new ScanCanceled();
             }
 
-            decimal percentCompletion = (decimal)sortedMovies.IndexOf(incoming) / sortedMovies.Count;
+            incomingItemIds.Add(MediaServerItemId(incoming));
+
+            decimal percentCompletion = Math.Clamp((decimal)incomingItemIds.Count / totalMovieCount, 0, 1);
             await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
 
             string localPath = getLocalPath(incoming);
@@ -165,8 +174,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         }
 
         // trash movies that are no longer present on the media server
-        var fileNotFoundItemIds = existingMovies.Map(m => m.MediaServerItemId)
-            .Except(movieEntries.Map(MediaServerItemId)).ToList();
+        var fileNotFoundItemIds = existingMovies.Map(m => m.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await movieRepository.FlagFileNotFound(library, fileNotFoundItemIds);
         await _searchIndex.RebuildItems(_searchRepository, ids);
 
@@ -178,7 +186,11 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     protected abstract string MediaServerItemId(TMovie movie);
     protected abstract string MediaServerEtag(TMovie movie);
 
-    protected abstract Task<Either<BaseError, List<TMovie>>> GetMovieLibraryItems(
+    protected abstract Task<Either<BaseError, int>> CountMovieLibraryItems(
+        TConnectionParameters connectionParameters,
+        TLibrary library);
+
+    protected abstract IAsyncEnumerable<TMovie> GetMovieLibraryItems(
         TConnectionParameters connectionParameters,
         TLibrary library);
 

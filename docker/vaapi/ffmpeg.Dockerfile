@@ -10,6 +10,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     autoconf \
     libtool \
     libdrm-dev \
+    libmfx-dev \
     git \
     pkg-config \
     build-essential \

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.State;
+﻿using System.Globalization;
+using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
@@ -13,7 +14,7 @@ public class WatermarkOpacityFilter : BaseFilter
         get
         {
             double opacity = _desiredState.Opacity / 100.0;
-            return $"colorchannelmixer=aa={opacity:F2}";
+            return $"colorchannelmixer=aa={opacity.ToString("F2", NumberFormatInfo.InvariantInfo)}";
         }
     }
 

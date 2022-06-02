@@ -10,7 +10,7 @@ public class DeinterlaceQsvFilter : BaseFilter
 
     // deinterlace_qsv seems to only support nv12, not p010le
     public override string Filter => _currentState.FrameDataLocation == FrameDataLocation.Software
-        ? "format=nv12,hwupload=extra_hw_frames=128,deinterlace_qsv"
+        ? "format=nv12,hwupload=extra_hw_frames=64,deinterlace_qsv"
         : "deinterlace_qsv";
 
     public override FrameState NextState(FrameState currentState)

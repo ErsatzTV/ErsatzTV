@@ -9,8 +9,8 @@
     <ItemGroup>
       <PackageReference Include="Bugsnag" Version="3.0.1" />
       <PackageReference Include="Destructurama.Attributed" Version="3.0.0" />
-      <PackageReference Include="Flurl" Version="3.0.5" />
-      <PackageReference Include="LanguageExt.Core" Version="4.1.0" />
+      <PackageReference Include="Flurl" Version="3.0.6" />
+      <PackageReference Include="LanguageExt.Core" Version="4.1.1" />
       <PackageReference Include="MediatR" Version="10.0.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />

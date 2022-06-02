@@ -9,37 +9,35 @@ public interface IJellyfinApiClient
     Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string apiKey);
     Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey);
 
-    Task<Either<BaseError, List<JellyfinMovie>>> GetMovieLibraryItems(
-        string address,
-        string apiKey,
-        JellyfinLibrary library);
+    IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(string address, string apiKey, JellyfinLibrary library);
 
-    Task<Either<BaseError, List<JellyfinShow>>> GetShowLibraryItems(
-        string address,
-        string apiKey,
-        int mediaSourceId,
-        string libraryId);
+    IAsyncEnumerable<JellyfinShow> GetShowLibraryItems(string address, string apiKey, JellyfinLibrary library);
 
-    Task<Either<BaseError, List<JellyfinSeason>>> GetSeasonLibraryItems(
+    IAsyncEnumerable<JellyfinSeason> GetSeasonLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
+        JellyfinLibrary library,
         string showId);
 
-    Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
+    IAsyncEnumerable<JellyfinEpisode> GetEpisodeLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library,
         string seasonId);
 
-    Task<Either<BaseError, List<JellyfinCollection>>> GetCollectionLibraryItems(
-        string address,
-        string apiKey,
-        int mediaSourceId);
+    IAsyncEnumerable<JellyfinCollection> GetCollectionLibraryItems(string address, string apiKey, int mediaSourceId);
 
-    Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+    IAsyncEnumerable<MediaItem> GetCollectionItems(
         string address,
         string apiKey,
         int mediaSourceId,
         string collectionId);
+
+    Task<Either<BaseError, int>> GetLibraryItemCount(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string parentId,
+        string includeItemTypes,
+        bool excludeFolders);
 }
