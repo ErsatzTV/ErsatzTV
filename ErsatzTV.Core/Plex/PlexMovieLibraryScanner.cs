@@ -89,7 +89,15 @@ public class PlexMovieLibraryScanner :
 
     protected override string MediaServerEtag(PlexMovie movie) => movie.Etag;
 
-    protected override Task<Either<BaseError, List<PlexMovie>>> GetMovieLibraryItems(
+    protected override Task<Either<BaseError, int>> CountMovieLibraryItems(
+        PlexConnectionParameters connectionParameters,
+        PlexLibrary library)
+        => _plexServerApiClient.GetLibraryItemCount(
+            library,
+            connectionParameters.Connection,
+            connectionParameters.Token);
+
+    protected override IAsyncEnumerable<PlexMovie> GetMovieLibraryItems(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library) =>
         _plexServerApiClient.GetMovieLibraryContents(

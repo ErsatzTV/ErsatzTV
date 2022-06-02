@@ -6,7 +6,9 @@ using static ErsatzTV.Application.FFmpegProfiles.Mapper;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public class GetFFmpegProfileByIdForApiHandler : IRequestHandler<GetFFmpegFullProfileByIdForApi, Option<FFmpegFullProfileResponseModel>>
+public class
+    GetFFmpegProfileByIdForApiHandler : IRequestHandler<GetFFmpegFullProfileByIdForApi,
+        Option<FFmpegFullProfileResponseModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 

@@ -20,7 +20,7 @@ public class CreateFFmpegProfileHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, profile => PersistFFmpegProfile(dbContext, profile));
+        return await validation.Apply(profile => PersistFFmpegProfile(dbContext, profile));
     }
 
     private static async Task<CreateFFmpegProfileResult> PersistFFmpegProfile(

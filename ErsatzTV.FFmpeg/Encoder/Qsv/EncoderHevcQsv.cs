@@ -20,6 +20,7 @@ public class EncoderHevcQsv : EncoderBase
 
     public override string Name => "hevc_qsv";
     public override StreamKind Kind => StreamKind.Video;
+    public override IList<string> OutputOptions => new[] { "-c:v", "hevc_qsv", "-low_power", "0" };
 
     // need to upload if we're still in software and a watermark is used
     public override string Filter
@@ -36,11 +37,11 @@ public class EncoderHevcQsv : EncoderBase
                     // pixel format should already be converted to a supported format by QsvHardwareAccelerationOption
                     foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                     {
-                        return $"format={pixelFormat.FFmpegName},hwupload=extra_hw_frames=128";
+                        return $"format={pixelFormat.FFmpegName},hwupload=extra_hw_frames=64";
                     }
 
                     // default to nv12
-                    return "format=nv12,hwupload=extra_hw_frames=128";
+                    return "format=nv12,hwupload=extra_hw_frames=64";
                 }
             }
 

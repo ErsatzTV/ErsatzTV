@@ -1,6 +1,6 @@
 // zlib License
 //
-// Copyright (c) 2021 Dan Ferguson, Victor Hugo Soliz Kuncar, Jason Dove
+// Copyright (c) 2022 Dan Ferguson, Victor Hugo Soliz Kuncar, Jason Dove
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages

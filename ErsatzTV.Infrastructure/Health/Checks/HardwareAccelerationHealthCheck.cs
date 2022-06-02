@@ -46,6 +46,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             else if (version.Contains("vaapi", StringComparison.OrdinalIgnoreCase))
             {
                 accelerationKinds.Add(HardwareAccelerationKind.Vaapi);
+                accelerationKinds.Add(HardwareAccelerationKind.Qsv);
             }
         }
 

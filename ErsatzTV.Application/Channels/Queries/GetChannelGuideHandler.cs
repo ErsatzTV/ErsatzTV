@@ -9,7 +9,9 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, ChannelGu
     private readonly IChannelRepository _channelRepository;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
-    public GetChannelGuideHandler(IChannelRepository channelRepository, RecyclableMemoryStreamManager recyclableMemoryStreamManager)
+    public GetChannelGuideHandler(
+        IChannelRepository channelRepository,
+        RecyclableMemoryStreamManager recyclableMemoryStreamManager)
     {
         _channelRepository = channelRepository;
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
