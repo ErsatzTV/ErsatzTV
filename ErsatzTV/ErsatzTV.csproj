@@ -50,7 +50,6 @@
     </Target>
 
     <ItemGroup>
-      <Folder Include="client-app\src\assets\NewFolder\" />
       <Folder Include="Resources" />
     </ItemGroup>
     
