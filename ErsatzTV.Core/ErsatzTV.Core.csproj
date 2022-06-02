@@ -35,5 +35,5 @@
     <ItemGroup>
       <ProjectReference Include="..\ErsatzTV.FFmpeg\ErsatzTV.FFmpeg.csproj" />
     </ItemGroup>
-    
+
 </Project>
