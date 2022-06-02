@@ -18,7 +18,7 @@ class FFmpegProfileApiService extends AbstractApiService {
         return this.http
             .get('/api/ffmpeg/profiles/' + id)
             .then(this.handleResponse.bind(this))
-            .catch(this.handleResponse.bind(this));
+            .catch(this.handleError.bind(this));
     }
 
     public newFFmpegProfile(

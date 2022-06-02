@@ -1,14 +1,5 @@
 ﻿{
     "semi": true,
     "singleQuote": true,
-    "trailingComma": "none",
-    "endOfLine": "auto",
-    "overrides": [
-        {
-            "files": "*.vue",
-            "options": {
-                "unusedVars": false
-            }
-        }
-    ]
+    "trailingComma": "none"
 }
