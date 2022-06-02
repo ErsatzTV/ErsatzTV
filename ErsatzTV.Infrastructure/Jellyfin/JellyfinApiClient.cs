@@ -261,8 +261,11 @@ public class JellyfinApiClient : IJellyfinApiClient
         if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
         {
             IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            string filters = itemType == JellyfinItemType.Movie || itemType == JellyfinItemType.Episode
+                ? "IsNotFolder"
+                : null;
             int size = await service
-                .GetLibraryStats(apiKey, userId, parentId, itemType)
+                .GetLibraryStats(apiKey, userId, parentId, itemType, filters: filters)
                 .Map(r => r.TotalRecordCount);
 
             const int PAGE_SIZE = 10;
