@@ -68,15 +68,28 @@ export default class FFmpegProfiles extends Vue {
                     );
                     this.ffmpegProfiles.splice(index, 1);
                     ffmpegProfileApiService.deleteRecord(String(record));
-                    this.$swal.fire({
-                        html: '"' + recordName + '" FFmpeg Profile deleted.',
-                        timer: 2200
+                    const Toast = this.$swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener(
+                                'mouseenter',
+                                this.$swal.stopTimer
+                            );
+                            toast.addEventListener(
+                                'mouseleave',
+                                this.$swal.resumeTimer
+                            );
+                        }
                     });
-                    this.$swal.fire(
-                        'Deleted!',
-                        '"' + recordName + '" FFmpeg Profile deleted.',
-                        'success'
-                    );
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'FFmpeg Profile deleted!'
+                    });
                 }
             });
     }
