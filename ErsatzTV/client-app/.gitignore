@@ -24,4 +24,5 @@ pnpm-debug.log*
 
 # generated files
 src/assets/css/*.css
-
+src/models/*.js
+src/models/*.js.map
