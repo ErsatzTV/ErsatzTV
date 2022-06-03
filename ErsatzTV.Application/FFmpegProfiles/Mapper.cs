@@ -35,6 +35,27 @@ internal static class Mapper
             ffmpegProfile.VideoFormat.ToString().ToLowerInvariant(),
             ffmpegProfile.AudioFormat.ToString().ToLowerInvariant());
 
+    internal static FFmpegFullProfileResponseModel ProjectToFullResponseModel(FFmpegProfile ffmpegProfile) =>
+        new(
+            ffmpegProfile.Id,
+            ffmpegProfile.Name,
+            ffmpegProfile.ThreadCount,
+            (int)ffmpegProfile.HardwareAcceleration,
+            (int)ffmpegProfile.VaapiDriver,
+            ffmpegProfile.VaapiDevice,
+            ffmpegProfile.ResolutionId,
+            (int)ffmpegProfile.VideoFormat,
+            ffmpegProfile.VideoBitrate,
+            ffmpegProfile.VideoBufferSize,
+            (int)ffmpegProfile.AudioFormat,
+            ffmpegProfile.AudioBitrate,
+            ffmpegProfile.AudioBufferSize,
+            ffmpegProfile.NormalizeLoudness,
+            ffmpegProfile.AudioChannels,
+            ffmpegProfile.AudioSampleRate,
+            ffmpegProfile.NormalizeFramerate,
+            ffmpegProfile.DeinterlaceVideo);
+
     private static ResolutionViewModel Project(Resolution resolution) =>
         new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);
 }
