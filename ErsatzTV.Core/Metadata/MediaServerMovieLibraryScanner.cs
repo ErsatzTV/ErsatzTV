@@ -224,9 +224,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         string existingEtag = await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty);
         MediaItemState existingState = await maybeExisting.Map(e => e.State).IfNoneAsync(MediaItemState.Normal);
 
-        if (existingState == MediaItemState.Unavailable && existingEtag == MediaServerEtag(incoming))
+        if (existingState is MediaItemState.Unavailable or MediaItemState.FileNotFound &&
+            existingEtag == MediaServerEtag(incoming))
         {
-            // skip scanning unavailable items that are unchanged and still don't exist locally
+            // skip scanning unavailable/file not found items that are unchanged and still don't exist locally
             if (!_localFileSystem.FileExists(localPath))
             {
                 return false;

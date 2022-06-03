@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix Jellyfin show library paging
 - Properly locate and identify multiple Plex servers
+- Properly restore `Unavailable`/`File Not Found` items when they are located on disk
 
 ### Added
 - Add basic music video credits subtitle generation

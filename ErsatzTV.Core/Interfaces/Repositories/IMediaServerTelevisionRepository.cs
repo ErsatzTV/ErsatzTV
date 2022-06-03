@@ -19,6 +19,8 @@ public interface IMediaServerTelevisionRepository<in TLibrary, TShow, TSeason, T
     Task<Unit> SetEtag(TSeason season, string etag);
     Task<Unit> SetEtag(TEpisode episode, string etag);
     Task<bool> FlagNormal(TLibrary library, TEpisode episode);
+    Task<bool> FlagNormal(TLibrary library, TSeason season);
+    Task<bool> FlagNormal(TLibrary library, TShow show);
     Task<List<int>> FlagFileNotFoundShows(TLibrary library, List<string> showItemIds);
     Task<List<int>> FlagFileNotFoundSeasons(TLibrary library, List<string> seasonItemIds);
     Task<List<int>> FlagFileNotFoundEpisodes(TLibrary library, List<string> episodeItemIds);

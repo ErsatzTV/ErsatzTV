@@ -189,6 +189,11 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 await televisionRepository.SetEtag(result.Item, MediaServerEtag(incoming));
 
+                if (await televisionRepository.FlagNormal(library, result.Item))
+                {
+                    result.IsUpdated = true;
+                }
+
                 if (result.IsAdded || result.IsUpdated)
                 {
                     await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
@@ -344,6 +349,11 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 await televisionRepository.SetEtag(result.Item, MediaServerEtag(incoming));
 
+                if (await televisionRepository.FlagNormal(library, result.Item))
+                {
+                    result.IsUpdated = true;
+                }
+
                 result.Item.Show = show;
 
                 if (result.IsAdded || result.IsUpdated)
@@ -484,9 +494,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         string existingEtag = await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty);
         MediaItemState existingState = await maybeExisting.Map(e => e.State).IfNoneAsync(MediaItemState.Normal);
 
-        if (existingState == MediaItemState.Unavailable && existingEtag == MediaServerEtag(incoming))
+        if (existingState is MediaItemState.Unavailable or MediaItemState.FileNotFound &&
+            existingEtag == MediaServerEtag(incoming))
         {
-            // skip scanning unavailable items that are unchanged and still don't exist locally
+            // skip scanning unavailable/file not found items that are unchanged and still don't exist locally
             if (!_localFileSystem.FileExists(localPath))
             {
                 return false;
