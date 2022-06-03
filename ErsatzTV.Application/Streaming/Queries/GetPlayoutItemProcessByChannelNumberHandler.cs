@@ -27,6 +27,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
     private readonly ITelevisionRepository _televisionRepository;
@@ -42,6 +43,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         ITelevisionRepository televisionRepository,
         IArtistRepository artistRepository,
         ISongVideoGenerator songVideoGenerator,
+        IMusicVideoCreditsGenerator musicVideoCreditsGenerator,
         ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
     {
@@ -54,6 +56,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _televisionRepository = televisionRepository;
         _artistRepository = artistRepository;
         _songVideoGenerator = songVideoGenerator;
+        _musicVideoCreditsGenerator = musicVideoCreditsGenerator;
         _logger = logger;
     }
 
@@ -95,6 +98,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as MusicVideo).Artist)
+            .ThenInclude(mv => mv.ArtistMetadata)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as OtherVideo).OtherVideoMetadata)
             .ThenInclude(ovm => ovm.Subtitles)
@@ -155,7 +161,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            List<Subtitle> subtitles = GetSubtitles(playoutItemWithPath);
+            List<Subtitle> subtitles = await GetSubtitles(playoutItemWithPath, channel);
 
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
@@ -256,22 +262,22 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return BaseError.New($"Unexpected error locating playout item for channel {channel.Number}");
     }
 
-    private static List<Subtitle> GetSubtitles(PlayoutItemWithPath playoutItemWithPath)
+    private async Task<List<Subtitle>> GetSubtitles(
+        PlayoutItemWithPath playoutItemWithPath,
+        Channel channel)
     {
         List<Subtitle> allSubtitles = playoutItemWithPath.PlayoutItem.MediaItem switch
         {
-            Episode episode => Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
+            Episode episode => await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
                 .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNone(new List<Subtitle>()),
-            Movie movie => Optional(movie.MovieMetadata).Flatten().HeadOrNone()
+                .IfNoneAsync(new List<Subtitle>()),
+            Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
                 .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNone(new List<Subtitle>()),
-            MusicVideo musicVideo => Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
+                .IfNoneAsync(new List<Subtitle>()),
+            MusicVideo musicVideo => await GetMusicVideoSubtitles(musicVideo, channel),
+            OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
                 .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNone(new List<Subtitle>()),
-            OtherVideo otherVideo => Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNone(new List<Subtitle>()),
+                .IfNoneAsync(new List<Subtitle>()),
             _ => new List<Subtitle>()
         };
 
@@ -307,6 +313,27 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         }
 
         return allSubtitles;
+    }
+
+    private async Task<List<Subtitle>> GetMusicVideoSubtitles(MusicVideo musicVideo, Channel channel)
+    {
+        var subtitles = new List<Subtitle>();
+
+        bool musicVideoCredits = channel.MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.GenerateSubtitles;
+        if (musicVideoCredits)
+        {
+            subtitles.AddRange(
+                await _musicVideoCreditsGenerator.GenerateCreditsSubtitle(musicVideo, channel.FFmpegProfile));
+        }
+        else
+        {
+            subtitles.AddRange(
+                await Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
+                    .Map(mm => mm.Subtitles)
+                    .IfNoneAsync(new List<Subtitle>()));
+        }
+
+        return subtitles;
     }
 
     private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(

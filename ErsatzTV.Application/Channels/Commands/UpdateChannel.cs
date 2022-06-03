@@ -17,4 +17,5 @@ public record UpdateChannel
     int? WatermarkId,
     int? FallbackFillerId,
     string PreferredSubtitleLanguageCode,
-    ChannelSubtitleMode SubtitleMode) : IRequest<Either<BaseError, ChannelViewModel>>;
+    ChannelSubtitleMode SubtitleMode,
+    ChannelMusicVideoCreditsMode MusicVideoCreditsMode) : IRequest<Either<BaseError, ChannelViewModel>>;

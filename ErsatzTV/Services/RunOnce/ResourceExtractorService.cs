@@ -19,13 +19,14 @@ public class ResourceExtractorService : IHostedService
         await ExtractResource(assembly, "song_background_2.png", cancellationToken);
         await ExtractResource(assembly, "song_background_3.png", cancellationToken);
         await ExtractResource(assembly, "ErsatzTV.png", cancellationToken);
-        await ExtractResource(assembly, "Roboto-Regular.ttf", cancellationToken);
-        await ExtractResource(assembly, "OPTIKabel-Heavy.otf", cancellationToken);
+
+        await ExtractFontResource(assembly, "Roboto-Regular.ttf", cancellationToken);
+        await ExtractFontResource(assembly, "OPTIKabel-Heavy.otf", cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private async Task ExtractResource(Assembly assembly, string name, CancellationToken cancellationToken)
+    private static async Task ExtractResource(Assembly assembly, string name, CancellationToken cancellationToken)
     {
         await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.{name}");
         if (resource != null)
@@ -33,6 +34,23 @@ public class ResourceExtractorService : IHostedService
             await using FileStream fs = File.Create(
                 Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
             await resource.CopyToAsync(fs, cancellationToken);
+        }
+    }
+
+    private static async Task ExtractFontResource(Assembly assembly, string name, CancellationToken cancellationToken)
+    {
+        await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.{name}");
+        if (resource != null)
+        {
+            await using FileStream fs = File.Create(
+                Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
+            await resource.CopyToAsync(fs, cancellationToken);
+
+            resource.Position = 0;
+
+            await using FileStream fontCacheFileStream = File.Create(
+                Path.Combine(FileSystemLayout.FontsCacheFolder, name));
+            await resource.CopyToAsync(fontCacheFileStream, cancellationToken);
         }
     }
 }

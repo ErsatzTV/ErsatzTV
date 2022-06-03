@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix Jellyfin show library paging
 
+### Added
+- Add basic music video credits subtitle generation
+  - This can be enabled in channel settings
+
 ## [0.6.0-beta] - 2022-06-01
 ### Fixed
 - Additional fix for duplicate `Other Videos` entries; trash may need to be emptied one last time after upgrading
