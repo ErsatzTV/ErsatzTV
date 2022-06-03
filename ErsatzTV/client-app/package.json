@@ -10,16 +10,19 @@
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
+    "@sweetalert2/theme-dark": "^5.0.11",
     "axios": "^0.26.1",
     "core-js": "^3.8.3",
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^1.5.1",
     "roboto-fontface": "*",
+    "sweetalert2": "^11.4.17",
     "vue": "^2.6.14",
     "vue-class-component": "^7.2.6",
     "vue-i18n": "^8.26.3",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.2.0",
+    "vue-sweetalert2": "^5.0.5",
     "vuetify": "^2.6.0"
   },
   "devDependencies": {

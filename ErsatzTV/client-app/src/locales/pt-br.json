@@ -2,6 +2,7 @@
   "$vuetify": {
     "badge": "Distintivo",
     "close": "Fechar",
+    "Actions": "Ações",
     "dataIterator": {
       "noResultsText": "Nenhum dado encontrado",
       "loadingText": "Carregando itens..."
@@ -87,9 +88,44 @@
   },
   "ffmpeg-profiles": {
     "title": "Perfis FFmpeg",
+    "add-profile": "Adicionar perfil FFmpeg",
+    "actions": "Ações",
+    "delete-dialog-title": "Tem certeza?",
+    "delete-dialog-text": "Excluir perfil {profileName} do FFmpeg?",
+    "no": "Não",
+    "yes": "Sim",
+    "profile-deleted": "Perfil do FFmpeg excluído!",
     "table": {
-      "name": "Nome"
+      "name": "Nome",
+      "resolution": "Resolução",
+      "video": "Vídeo",
+      "audio": "Áudio"
     }
+  },
+  "edit-ffmpeg-profile": {
+    "General": "Em geral",
+    "Video": "Vídeo",
+    "Audio": "Áudio",
+    "Name": "Nome",
+    "thread-count": "Contagem de fios",
+    "preferred-resolution": "Resolução preferencial",
+    "format": "Formato",
+    "bitrate": "Taxa de bits",
+    "buffer-size": "Tamanho do buffer",
+    "hardware-acceleration": "Aceleraçao do hardware",
+    "vaapi-driver": "Driver VAAPI",
+    "vaapi-device": "Dispositivo VAAPI",
+    "normalize-framerate": "Normalizar taxa de quadros",
+    "auto-deinterlace-video": "Vídeo de desentrelaçamento automático",
+    "channels": "Canais",
+    "sample-rate": "Taxa de amostragem",
+    "normalize-loudness": "Normalizar volume",
+    "save-profile": "Salvar perfil",
+    "cancel": "Cancelar",
+    "help": "Ajuda",
+    "add-profile": "Adicionar perfil FFmpeg",
+    "edit-profile": "Editar perfil do FFmpeg",
+    "profile-saved": "Perfil do FFmpeg salvo!"
   },
   "watermarks": {
     "title": "Marcas d'água"

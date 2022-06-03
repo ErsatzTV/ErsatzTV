@@ -116,4 +116,6 @@
       </Content>
     </ItemGroup>
 
+    <ProjectExtensions><VisualStudio><UserProperties client-app_4package_1json__JsonSchema="https://json.schemastore.org/phraseapp.json" /></VisualStudio></ProjectExtensions>
+
 </Project>

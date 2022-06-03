@@ -50,6 +50,10 @@ export default {
         children: {
             type: Array,
             required: true
+        },
+        nonmenuchildren: {
+            type: Array,
+            required: false
         }
     },
     data: () => ({
