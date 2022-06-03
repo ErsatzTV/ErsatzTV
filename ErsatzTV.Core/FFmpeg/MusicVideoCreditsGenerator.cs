@@ -69,8 +69,13 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
 
             return new Subtitle
             {
-                Codec = "ass", Default = true, Forced = true, IsExtracted = false, SubtitleKind = SubtitleKind.Sidecar,
-                Path = subtitles, SDH = false
+                Codec = "ass",
+                Default = true,
+                Forced = true,
+                IsExtracted = false,
+                SubtitleKind = SubtitleKind.Generated,
+                Path = subtitles,
+                SDH = false
             };
         }
 

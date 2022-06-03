@@ -144,7 +144,7 @@ public class SubtitleBuilder
             end = $"{(int)endTime.TotalHours:00}:{endTime.ToString(@"mm\:ss\.ff")}";
         }
 
-        string fade = _fade ? @"{fad(1200, 1200)}" : string.Empty;
+        string fade = _fade ? @"{\fad(1200, 1200)}" : string.Empty;
 
         sb.AppendLine("[Events]");
         sb.AppendLine("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text");
