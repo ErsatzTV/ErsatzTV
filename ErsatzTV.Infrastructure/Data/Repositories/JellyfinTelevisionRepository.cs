@@ -213,6 +213,36 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             new { LibraryId = library.Id, episode.ItemId }).Map(count => count > 0);
     }
 
+    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinSeason season)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        season.State = MediaItemState.Normal;
+
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaItem SET State = 0 WHERE Id IN
+            (SELECT JellyfinSeason.Id FROM JellyfinSeason
+            INNER JOIN MediaItem MI ON MI.Id = JellyfinSeason.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+            WHERE JellyfinSeason.ItemId = @ItemId)",
+            new { LibraryId = library.Id, season.ItemId }).Map(count => count > 0);
+    }
+
+    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinShow show)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        show.State = MediaItemState.Normal;
+
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaItem SET State = 0 WHERE Id IN
+            (SELECT JellyfinShow.Id FROM JellyfinShow
+            INNER JOIN MediaItem MI ON MI.Id = JellyfinShow.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+            WHERE JellyfinShow.ItemId = @ItemId)",
+            new { LibraryId = library.Id, show.ItemId }).Map(count => count > 0);
+    }
+
     public async Task<List<int>> FlagFileNotFoundShows(JellyfinLibrary library, List<string> showItemIds)
     {
         if (showItemIds.Count == 0)

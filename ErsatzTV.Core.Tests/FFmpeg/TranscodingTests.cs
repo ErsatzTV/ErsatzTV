@@ -566,10 +566,8 @@ public class TranscodingTests
             Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
 
         public Task<Option<Domain.Subtitle>> SelectSubtitleStream(
-            MediaVersion version,
             List<Domain.Subtitle> subtitles,
-            StreamingMode streamingMode,
-            string channelNumber,
+            Channel channel,
             string preferredSubtitleLanguage,
             ChannelSubtitleMode subtitleMode) =>
             subtitles.HeadOrNone().AsTask();

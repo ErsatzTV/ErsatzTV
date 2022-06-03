@@ -93,9 +93,8 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
     private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
         (await ChannelMustExist(dbContext, request), ValidateName(request),
             await ValidateNumber(dbContext, request),
-            ValidatePreferredAudioLanguage(request),
-            ValidateSubtitleAndMusicCredits(request))
-        .Apply((channelToUpdate, _, _, _, _) => channelToUpdate);
+            ValidatePreferredAudioLanguage(request))
+        .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
@@ -137,15 +136,4 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
                 lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
             .ToValidation<BaseError>("Preferred audio language code is invalid");
-
-    private static Validation<BaseError, string> ValidateSubtitleAndMusicCredits(UpdateChannel updateChannel)
-    {
-        if (updateChannel.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.None &&
-            updateChannel.SubtitleMode == ChannelSubtitleMode.None)
-        {
-            return BaseError.New("Subtitles are required for music video credits");
-        }
-
-        return string.Empty;
-    }
 }

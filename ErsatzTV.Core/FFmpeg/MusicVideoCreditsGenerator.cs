@@ -64,12 +64,18 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                 .WithShadow(3)
                 .WithFormattedContent(sb.ToString())
                 .WithStartEnd(TimeSpan.FromSeconds(9), TimeSpan.FromSeconds(16))
+                .WithFade(true)
                 .BuildFile();
 
             return new Subtitle
             {
-                Codec = "ass", Default = true, Forced = true, IsExtracted = false, SubtitleKind = SubtitleKind.Sidecar,
-                Path = subtitles, SDH = false
+                Codec = "ass",
+                Default = true,
+                Forced = true,
+                IsExtracted = false,
+                SubtitleKind = SubtitleKind.Generated,
+                Path = subtitles,
+                SDH = false
             };
         }
 

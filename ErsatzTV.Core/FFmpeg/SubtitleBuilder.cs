@@ -10,6 +10,7 @@ public class SubtitleBuilder
     private Option<int> _borderStyle;
     private string _content;
     private Option<TimeSpan> _end;
+    private bool _fade;
     private Option<string> _fontName;
     private Option<int> _fontSize;
     private int _marginLeft;
@@ -102,6 +103,12 @@ public class SubtitleBuilder
         return this;
     }
 
+    public SubtitleBuilder WithFade(bool fade)
+    {
+        _fade = fade;
+        return this;
+    }
+
     public async Task<string> BuildFile()
     {
         string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
@@ -137,10 +144,12 @@ public class SubtitleBuilder
             end = $"{(int)endTime.TotalHours:00}:{endTime.ToString(@"mm\:ss\.ff")}";
         }
 
+        string fade = _fade ? @"{\fad(1200, 1200)}" : string.Empty;
+
         sb.AppendLine("[Events]");
         sb.AppendLine("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text");
         sb.AppendLine(
-            @$"Dialogue: 0,{start},{end},Default,,{_marginLeft},{_marginRight},{_marginV},,{{\fad(1200,1200)}}{_content}");
+            @$"Dialogue: 0,{start},{end},Default,,{_marginLeft},{_marginRight},{_marginV},,{fade}{_content}");
 
         await File.WriteAllTextAsync(fileName, sb.ToString());
 

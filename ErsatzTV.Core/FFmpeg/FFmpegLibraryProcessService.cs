@@ -71,10 +71,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 preferredAudioLanguage);
         Option<Subtitle> maybeSubtitle =
             await _ffmpegStreamSelector.SelectSubtitleStream(
-                videoVersion,
                 subtitles,
-                channel.StreamingMode,
-                channel.Number,
+                channel,
                 preferredSubtitleLanguage,
                 subtitleMode);
 
