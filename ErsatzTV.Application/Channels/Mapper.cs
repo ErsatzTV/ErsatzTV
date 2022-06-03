@@ -20,7 +20,8 @@ internal static class Mapper
             channel.FallbackFillerId,
             channel.Playouts?.Count ?? 0,
             channel.PreferredSubtitleLanguageCode,
-            channel.SubtitleMode);
+            channel.SubtitleMode,
+            channel.MusicVideoCreditsMode);
 
     internal static ChannelResponseModel ProjectToResponseModel(Channel channel) =>
         new(
