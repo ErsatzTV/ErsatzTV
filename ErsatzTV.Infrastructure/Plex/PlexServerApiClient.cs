@@ -30,15 +30,9 @@ public class PlexServerApiClient : IPlexServerApiClient
     {
         try
         {
-            IPlexServerApi service = RestService.For<IPlexServerApi>(
-                new HttpClient
-                {
-                    BaseAddress = new Uri(connection.Uri),
-                    Timeout = TimeSpan.FromSeconds(5)
-                });
-
-            await service.Ping(token.AuthToken);
-            return true;
+            IPlexServerApi service = XmlServiceFor(connection.Uri, TimeSpan.FromSeconds(5));
+            PlexXmlMediaContainerPingResponse pingResult = await service.Ping(token.AuthToken);
+            return token.ClientIdentifier == pingResult.MachineIdentifier;
         }
         catch (Exception)
         {
@@ -362,14 +356,20 @@ public class PlexServerApiClient : IPlexServerApiClient
         return result.Values.ToList();
     }
 
-    private static IPlexServerApi XmlServiceFor(string uri)
+    private static IPlexServerApi XmlServiceFor(string uri, TimeSpan? timeout = null)
     {
         var overrides = new XmlAttributeOverrides();
         var attrs = new XmlAttributes { XmlIgnore = true };
         overrides.Add(typeof(PlexMetadataResponse), "Media", attrs);
 
+        TimeSpan httpClientTimeout = timeout ?? TimeSpan.FromSeconds(30);
+
         return RestService.For<IPlexServerApi>(
-            uri,
+            new HttpClient
+            {
+                BaseAddress = new Uri(uri),
+                Timeout = httpClientTimeout
+            },
             new RefitSettings
             {
                 ContentSerializer = new XmlContentSerializer(

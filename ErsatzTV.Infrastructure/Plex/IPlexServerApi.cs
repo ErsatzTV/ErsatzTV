@@ -6,8 +6,8 @@ namespace ErsatzTV.Infrastructure.Plex;
 public interface IPlexServerApi
 {
     [Get("/")]
-    [Headers("Accept: application/json")]
-    public Task Ping(
+    [Headers("Accept: text/xml")]
+    public Task<PlexXmlMediaContainerPingResponse> Ping(
         [Query] [AliasAs("X-Plex-Token")]
         string token);
 

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix Jellyfin show library paging
+- Properly locate and identify multiple Plex servers
 
 ### Added
 - Add basic music video credits subtitle generation

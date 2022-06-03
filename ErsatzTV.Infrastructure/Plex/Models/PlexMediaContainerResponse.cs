@@ -25,6 +25,13 @@ public class PlexXmlMediaContainerStatsResponse
 }
 
 [XmlRoot("MediaContainer", Namespace = null)]
+public class PlexXmlMediaContainerPingResponse
+{
+    [XmlAttribute("machineIdentifier")]
+    public string MachineIdentifier { get; set; }
+}
+
+[XmlRoot("MediaContainer", Namespace = null)]
 public class PlexXmlVideoMetadataResponseContainer
 {
     [XmlElement("Video")]
