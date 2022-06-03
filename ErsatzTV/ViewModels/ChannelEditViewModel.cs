@@ -18,6 +18,7 @@ public class ChannelEditViewModel
     public int? FallbackFillerId { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
     public ChannelSubtitleMode SubtitleMode { get; set; }
+    public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
 
     public UpdateChannel ToUpdate() =>
         new(
@@ -33,7 +34,8 @@ public class ChannelEditViewModel
             WatermarkId,
             FallbackFillerId,
             PreferredSubtitleLanguageCode,
-            SubtitleMode);
+            SubtitleMode,
+            MusicVideoCreditsMode);
 
     public CreateChannel ToCreate() =>
         new(
@@ -48,5 +50,6 @@ public class ChannelEditViewModel
             WatermarkId,
             FallbackFillerId,
             PreferredSubtitleLanguageCode,
-            SubtitleMode);
+            SubtitleMode,
+            MusicVideoCreditsMode);
 }

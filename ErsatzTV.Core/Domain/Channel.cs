@@ -25,4 +25,5 @@ public class Channel
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
     public ChannelSubtitleMode SubtitleMode { get; set; }
+    public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
 }

@@ -16,4 +16,5 @@ public record CreateChannel
     int? WatermarkId,
     int? FallbackFillerId,
     string PreferredSubtitleLanguageCode,
-    ChannelSubtitleMode SubtitleMode) : IRequest<Either<BaseError, CreateChannelResult>>;
+    ChannelSubtitleMode SubtitleMode,
+    ChannelMusicVideoCreditsMode MusicVideoCreditsMode) : IRequest<Either<BaseError, CreateChannelResult>>;

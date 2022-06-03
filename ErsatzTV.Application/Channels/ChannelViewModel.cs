@@ -16,4 +16,5 @@ public record ChannelViewModel(
     int? FallbackFillerId,
     int PlayoutCount,
     string PreferredSubtitleLanguageCode,
-    ChannelSubtitleMode SubtitleMode);
+    ChannelSubtitleMode SubtitleMode,
+    ChannelMusicVideoCreditsMode MusicVideoCreditsMode);

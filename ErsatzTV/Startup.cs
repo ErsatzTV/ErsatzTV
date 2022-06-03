@@ -401,6 +401,7 @@ public class Startup
         services.AddScoped<FFmpegProcessService>();
 
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
+        services.AddScoped<IMusicVideoCreditsGenerator, MusicVideoCreditsGenerator>();
         services.AddScoped<HlsSessionWorker>();
         services.AddScoped<IGitHubApiClient, GitHubApiClient>();
         services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(

@@ -10,10 +10,10 @@
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Channels
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<ChannelEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<ChannelEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -70,6 +70,10 @@
                         <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
                         <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
                         <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Music Video Credits Mode" @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
+                        <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
@@ -144,13 +148,13 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfiles(_cts.Token);
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
         await LoadWatermarks(_cts.Token);
         await LoadFillerPresets(_cts.Token);
 
         if (Id.HasValue)
         {
-            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelById(Id.Value), _cts.Token);
+            Option<ChannelViewModel> maybeChannel = await Mediator.Send(new GetChannelById(Id.Value), _cts.Token);
             maybeChannel.Match(
                 channelViewModel =>
                 {
@@ -167,15 +171,16 @@
                     _model.FallbackFillerId = channelViewModel.FallbackFillerId;
                     _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
                     _model.SubtitleMode = channelViewModel.SubtitleMode;
+                    _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
                 },
-                () => _navigationManager.NavigateTo("404"));
+                () => NavigationManager.NavigateTo("404"));
         }
         else
         {
-            FFmpegSettingsViewModel ffmpegSettings = await _mediator.Send(new GetFFmpegSettings(), _cts.Token);
+            FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), _cts.Token);
 
     // TODO: command for new channel
-            IEnumerable<int> channelNumbers = await _mediator.Send(new GetAllChannels(), _cts.Token)
+            IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels(), _cts.Token)
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
@@ -195,13 +200,13 @@
     private bool IsEdit => Id.HasValue;
 
     private async Task LoadFFmpegProfiles(CancellationToken cancellationToken) =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
+        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
 
     private async Task LoadWatermarks(CancellationToken cancellationToken) =>
-        _watermarks = await _mediator.Send(new GetAllWatermarks(), cancellationToken);
+        _watermarks = await Mediator.Send(new GetAllWatermarks(), cancellationToken);
 
     private async Task LoadFillerPresets(CancellationToken cancellationToken) =>
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), cancellationToken)
+        _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), cancellationToken)
             .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList());
 
     private async Task HandleSubmitAsync()
@@ -210,16 +215,16 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+                (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Unexpected error saving channel: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving channel: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo("/channels"));
+                () => NavigationManager.NavigateTo("/channels"));
         }
     }
 
@@ -228,7 +233,7 @@
         try
         {
             Either<BaseError, string> maybeCacheFileName =
-                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
+                await Mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
@@ -237,21 +242,19 @@
                 },
                 error =>
                 {
-                    Console.WriteLine($"error saving {error}");
-                    _snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
-                    _logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
+                    Snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
+                    Logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
                 });
         }
-        catch (IOException ex)
+        catch (IOException)
         {
-            Console.WriteLine(ex);
-            _snackbar.Add("Channel logo exceeds maximum allowed file size of 10 MB", Severity.Error);
-            _logger.LogError("Channel logo exceeds maximum allowed file size of 10 MB");
+            Snackbar.Add("Channel logo exceeds maximum allowed file size of 10 MB", Severity.Error);
+            Logger.LogError("Channel logo exceeds maximum allowed file size of 10 MB");
         }
         catch (Exception ex)
         {
-            _snackbar.Add($"Unexpected error saving channel logo: {ex.Message}", Severity.Error);
-            _logger.LogError("Unexpected error saving channel logo: {Error}", ex.Message);
+            Snackbar.Add($"Unexpected error saving channel logo: {ex.Message}", Severity.Error);
+            Logger.LogError("Unexpected error saving channel logo: {Error}", ex.Message);
         }
     }
 
