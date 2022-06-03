@@ -31,6 +31,36 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             new { LibraryId = library.Id, episode.Key }).Map(count => count > 0);
     }
 
+    public async Task<bool> FlagNormal(PlexLibrary library, PlexSeason season)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        season.State = MediaItemState.Normal;
+
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaItem SET State = 0 WHERE Id IN
+            (SELECT PlexSeason.Id FROM PlexSeason
+            INNER JOIN MediaItem MI ON MI.Id = PlexSeason.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+            WHERE PlexSeason.Key = @Key)",
+            new { LibraryId = library.Id, season.Key }).Map(count => count > 0);
+    }
+
+    public async Task<bool> FlagNormal(PlexLibrary library, PlexShow show)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        show.State = MediaItemState.Normal;
+
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaItem SET State = 0 WHERE Id IN
+            (SELECT PlexShow.Id FROM PlexShow
+            INNER JOIN MediaItem MI ON MI.Id = PlexShow.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+            WHERE PlexShow.Key = @Key)",
+            new { LibraryId = library.Id, show.Key }).Map(count => count > 0);
+    }
+
     public async Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexEpisode episode)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

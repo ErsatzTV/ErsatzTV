@@ -36,7 +36,6 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
             await FFmpegProfileMustExist(dbContext, request),
             ValidatePreferredAudioLanguage(request),
             ValidatePreferredSubtitleLanguage(request),
-            ValidateSubtitleAndMusicCredits(request),
             await WatermarkMustExist(dbContext, request),
             await FillerPresetMustExist(dbContext, request))
         .Apply(
@@ -46,7 +45,6 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                 ffmpegProfileId,
                 preferredAudioLanguageCode,
                 preferredSubtitleLanguageCode,
-                _,
                 watermarkId,
                 fillerPresetId) =>
             {
@@ -108,17 +106,6 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                 lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
             .ToValidation<BaseError>("Preferred subtitle language code is invalid");
-
-    private static Validation<BaseError, string> ValidateSubtitleAndMusicCredits(CreateChannel createChannel)
-    {
-        if (createChannel.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.None &&
-            createChannel.SubtitleMode == ChannelSubtitleMode.None)
-        {
-            return BaseError.New("Subtitles are required for music video credits");
-        }
-
-        return string.Empty;
-    }
 
     private static async Task<Validation<BaseError, string>> ValidateNumber(
         TvContext dbContext,

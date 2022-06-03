@@ -86,19 +86,24 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     }
 
     public async Task<Option<Subtitle>> SelectSubtitleStream(
-        MediaVersion version,
         List<Subtitle> subtitles,
-        StreamingMode streamingMode,
-        string channelNumber,
+        Channel channel,
         string preferredSubtitleLanguage,
         ChannelSubtitleMode subtitleMode)
     {
+        if (channel.MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.GenerateSubtitles &&
+            subtitles.FirstOrDefault(s => s.SubtitleKind == SubtitleKind.Generated) is { } generatedSubtitle)
+        {
+            _logger.LogDebug("Selecting generated subtitle for channel {Number}", channel.Number);
+            return Optional(generatedSubtitle);
+        }
+
         if (subtitleMode == ChannelSubtitleMode.None)
         {
             return None;
         }
 
-        if (streamingMode == StreamingMode.HttpLiveStreamingDirect &&
+        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
             string.IsNullOrWhiteSpace(preferredSubtitleLanguage))
         {
             // _logger.LogDebug(
@@ -110,7 +115,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         string language = (preferredSubtitleLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
-            _logger.LogDebug("Channel {Number} has no preferred subtitle language code", channelNumber);
+            _logger.LogDebug("Channel {Number} has no preferred subtitle language code", channel.Number);
         }
         else
         {
@@ -152,7 +157,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         _logger.LogDebug(
             "Found no subtitles for channel {ChannelNumber} with mode {Mode} matching language {Language}",
-            channelNumber,
+            channel.Number,
             subtitleMode,
             preferredSubtitleLanguage);
 

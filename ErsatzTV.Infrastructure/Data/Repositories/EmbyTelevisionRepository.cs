@@ -209,6 +209,36 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             new { LibraryId = library.Id, episode.ItemId }).Map(count => count > 0);
     }
 
+    public async Task<bool> FlagNormal(EmbyLibrary library, EmbySeason season)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        season.State = MediaItemState.Normal;
+
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaItem SET State = 0 WHERE Id IN
+            (SELECT EmbySeason.Id FROM EmbySeason
+            INNER JOIN MediaItem MI ON MI.Id = EmbySeason.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+            WHERE EmbySeason.ItemId = @ItemId)",
+            new { LibraryId = library.Id, season.ItemId }).Map(count => count > 0);
+    }
+
+    public async Task<bool> FlagNormal(EmbyLibrary library, EmbyShow show)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        show.State = MediaItemState.Normal;
+
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaItem SET State = 0 WHERE Id IN
+            (SELECT EmbyShow.Id FROM EmbyShow
+            INNER JOIN MediaItem MI ON MI.Id = EmbyShow.Id
+            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+            WHERE EmbyShow.ItemId = @ItemId)",
+            new { LibraryId = library.Id, show.ItemId }).Map(count => count > 0);
+    }
+
     public async Task<List<int>> FlagFileNotFoundShows(EmbyLibrary library, List<string> showItemIds)
     {
         if (showItemIds.Count == 0)
