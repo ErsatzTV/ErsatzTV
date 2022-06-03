@@ -14,14 +14,16 @@
                         <v-flex shrink class="pb-10">
                             <v-container style="max-height: 80px">
                                 <v-row justify="center">
-                                    <h2 class="mx">General</h2>
+                                    <h2 class="mx">
+                                        {{ $t('edit-ffmpeg-profile.General') }}
+                                    </h2>
                                 </v-row>
                             </v-container>
                             <v-container style="max-height: 80px">
                                 <v-text-field
                                     v-model="newProfile.name"
                                     :rules="textRules"
-                                    label="Name"
+                                    :label="$t('edit-ffmpeg-profile.Name')"
                                     required
                                 ></v-text-field>
                             </v-container>
@@ -32,12 +34,10 @@
                                 <v-text-field
                                     ref="myThreadCount"
                                     v-model="threadCount"
-                                    label="Thread Count"
-                                    :rules="[
-                                        (v) =>
-                                            /^[0-9]+$/.test(v) ||
-                                            'Must be a valid number.'
-                                    ]"
+                                    :label="
+                                        $t('edit-ffmpeg-profile.thread-count')
+                                    "
+                                    :rules="validInt"
                                     number
                                     required
                                 ></v-text-field>
@@ -64,7 +64,11 @@
                                     :items="preferredResolutions"
                                     item-value="id"
                                     item-text="name"
-                                    label="Preferred Resolution"
+                                    :label="
+                                        $t(
+                                            'edit-ffmpeg-profile.preferred-resolution'
+                                        )
+                                    "
                                     required
                                 ></v-select>
                             </v-container>
@@ -77,7 +81,9 @@
                         <v-flex shrink class="pb-10">
                             <v-container style="max-height: 80px">
                                 <v-row justify="center">
-                                    <h2 class="mx">Video</h2>
+                                    <h2 class="mx">
+                                        {{ $t('edit-ffmpeg-profile.Video') }}
+                                    </h2>
                                 </v-row>
                             </v-container>
                             <v-container
@@ -91,7 +97,7 @@
                                     item-value="id"
                                     item-text="name"
                                     id="videoFormatSelector"
-                                    label="Format"
+                                    :label="$t('edit-ffmpeg-profile.format')"
                                     required
                                 ></v-select>
                                 <v-tooltip v-model="videoFormatShow" top>
@@ -116,7 +122,7 @@
                             >
                                 <v-text-field
                                     v-model="newProfile.videoBitRate"
-                                    label="Bitrate"
+                                    :label="$t('edit-ffmpeg-profile.bitrate')"
                                     :rules="validIntNonZero"
                                     required
                                 ></v-text-field>
@@ -142,7 +148,9 @@
                             >
                                 <v-text-field
                                     v-model="newProfile.videoBufferSize"
-                                    label="Buffer Size"
+                                    :label="
+                                        $t('edit-ffmpeg-profile.buffer-size')
+                                    "
                                     :rules="validIntNonZero"
                                     required
                                 ></v-text-field>
@@ -172,7 +180,11 @@
                                     :items="hardwareAccelerations"
                                     item-value="id"
                                     item-text="name"
-                                    label="Hardware Acceleration"
+                                    :label="
+                                        $t(
+                                            'edit-ffmpeg-profile.hardware-acceleration'
+                                        )
+                                    "
                                     required
                                 ></v-select>
                                 <v-tooltip
@@ -205,7 +217,9 @@
                                     :disabled="vaapiDriverDisabled"
                                     item-value="id"
                                     item-text="name"
-                                    label="VAAPI Driver"
+                                    :label="
+                                        $t('edit-ffmpeg-profile.vaapi-driver')
+                                    "
                                     required
                                 ></v-select>
                                 <v-tooltip v-model="vaapiDriverShow" top>
@@ -233,7 +247,9 @@
                                     @change="vaapiDeviceChanged"
                                     :items="vaapiDevices"
                                     :disabled="vaapiDriverDisabled"
-                                    label="VAAPI Device"
+                                    :label="
+                                        $t('edit-ffmpeg-profile.vaapi-device')
+                                    "
                                     required
                                 ></v-select>
                                 <v-tooltip v-model="vaapiDeviceShow" top>
@@ -259,7 +275,11 @@
                                 <v-checkbox
                                     class="mr-2"
                                     v-model="normalizeFrameRate"
-                                    label="Normalize Frame Rate"
+                                    :label="
+                                        $t(
+                                            'edit-ffmpeg-profile.normalize-framerate'
+                                        )
+                                    "
                                     color="green lighten-1"
                                     required
                                 ></v-checkbox>
@@ -286,7 +306,11 @@
                                 <v-checkbox
                                     class="mr-2"
                                     v-model="autoDeinterlaceVideo"
-                                    label="Auto Deinterlace Video"
+                                    :label="
+                                        $t(
+                                            'edit-ffmpeg-profile.auto-deinterlace-video'
+                                        )
+                                    "
                                     color="green lighten-1"
                                     required
                                 ></v-checkbox>
@@ -318,7 +342,9 @@
                         <v-flex shrink class="pb-10">
                             <v-container style="max-height: 80px">
                                 <v-row justify="center">
-                                    <h2 class="mx">Audio</h2>
+                                    <h2 class="mx">
+                                        {{ $t('edit-ffmpeg-profile.Audio') }}
+                                    </h2>
                                 </v-row>
                             </v-container>
                             <v-container
@@ -331,7 +357,7 @@
                                     :items="audioFormats"
                                     item-value="id"
                                     item-text="name"
-                                    label="Format"
+                                    :label="$t('edit-ffmpeg-profile.format')"
                                     ref="audioFormat"
                                     required
                                 ></v-select>
@@ -357,7 +383,7 @@
                             >
                                 <v-text-field
                                     v-model="newProfile.audioBitRate"
-                                    label="Bitrate"
+                                    :label="$t('edit-ffmpeg-profile.bitrate')"
                                     :rules="validIntNonZero"
                                     required
                                 ></v-text-field>
@@ -383,7 +409,9 @@
                             >
                                 <v-text-field
                                     v-model="newProfile.audioBufferSize"
-                                    label="Buffer Size"
+                                    :label="
+                                        $t('edit-ffmpeg-profile.buffer-size')
+                                    "
                                     :rules="validIntNonZero"
                                     required
                                 ></v-text-field>
@@ -409,7 +437,7 @@
                             >
                                 <v-text-field
                                     v-model="newProfile.channels"
-                                    label="Channels"
+                                    :label="$t('edit-ffmpeg-profile.channels')"
                                     :rules="validIntNonZero"
                                     required
                                 ></v-text-field>
@@ -435,7 +463,9 @@
                             >
                                 <v-text-field
                                     v-model="newProfile.audioSampleRate"
-                                    label="Sample Rate"
+                                    :label="
+                                        $t('edit-ffmpeg-profile.sample-rate')
+                                    "
                                     :rules="validIntNonZero"
                                     required
                                 ></v-text-field>
@@ -461,7 +491,11 @@
                             >
                                 <v-checkbox
                                     v-model="normalizeLoudness"
-                                    label="Normalize Loudness"
+                                    :label="
+                                        $t(
+                                            'edit-ffmpeg-profile.normalize-loudness'
+                                        )
+                                    "
                                     color="green lighten-1"
                                     required
                                 ></v-checkbox>
@@ -489,21 +523,21 @@
                                     :disabled="!isFormValid"
                                     @click="saveFFmpegProfile()"
                                 >
-                                    Save Profile
+                                    {{ $t('edit-ffmpeg-profile.save-profile') }}
                                 </v-btn>
                                 <v-btn
                                     color="cancel"
                                     class="ma-2"
                                     @click="cancelAdd()"
                                 >
-                                    Cancel
+                                    {{ $t('edit-ffmpeg-profile.cancel') }}
                                 </v-btn>
                                 <v-btn
                                     color="indigo accent-1"
                                     class="ma-2"
                                     @click="cancelAdd()"
                                 >
-                                    Help
+                                    {{ $t('edit-ffmpeg-profile.help') }}
                                 </v-btn>
                             </v-container>
                         </v-flex>
@@ -522,30 +556,30 @@ import { ffmpegProfileApiService } from '@/services/FFmpegProfileService';
 export default class AddEditFFmpegProfile extends Vue {
     //@Name({ default: 'AddEditFFmpegProfile' }) AddEditFFmpegProfile!: string;
     //@Prop({ default: -1 }) private id!: number;
-    private newProfile: any = {};
+    public newProfile: any = {};
     private refForm: any = this.$refs.form;
-    private isFormValid = false;
-    private threadCountShow = false;
-    private videoFormatShow = false;
-    private videoBitRateShow = false;
-    private videoBufferSizeShow = false;
-    private hardwareAccelerationShow = false;
-    private vaapiDriverShow = false;
-    private vaapiDeviceShow = false;
-    private normalizeFrameRateShow = false;
-    private autoDeinterlaceVideoShow = false;
-    private audioFormatShow = false;
-    private audioBitRateShow = false;
-    private audioBufferSizeShow = false;
-    private audioChannelsShow = false;
-    private audioSampleRateShow = false;
-    private normalizeLoudnessShow = false;
+    public isFormValid = false;
+    public threadCountShow = false;
+    public videoFormatShow = false;
+    public videoBitRateShow = false;
+    public videoBufferSizeShow = false;
+    public hardwareAccelerationShow = false;
+    public vaapiDriverShow = false;
+    public vaapiDeviceShow = false;
+    public normalizeFrameRateShow = false;
+    public autoDeinterlaceVideoShow = false;
+    public audioFormatShow = false;
+    public audioBitRateShow = false;
+    public audioBufferSizeShow = false;
+    public audioChannelsShow = false;
+    public audioSampleRateShow = false;
+    public normalizeLoudnessShow = false;
 
     public AddEditFFmpegProfile() {
         console.log('test');
     }
 
-    private audioFormats: [
+    public audioFormats: [
         { id: number; name: string },
         { id: number; name: string }
     ] = [
@@ -554,12 +588,12 @@ export default class AddEditFFmpegProfile extends Vue {
     ];
 
     private _selectedAudioFormat: number = 2;
-    private selectedAudioFormat: { id: number; name: string } = {
+    public selectedAudioFormat: { id: number; name: string } = {
         id: 2,
         name: 'ac3'
     };
 
-    private preferredResolutions: [
+    public preferredResolutions: [
         { id: number; name: string },
         { id: number; name: string },
         { id: number; name: string },
@@ -572,12 +606,12 @@ export default class AddEditFFmpegProfile extends Vue {
     ];
 
     private _selectedResolution: number = 2;
-    private selectedResolution: { id: number; name: string } = {
+    public selectedResolution: { id: number; name: string } = {
         id: 2,
         name: '1920x1080'
     };
 
-    private videoFormats: [
+    public videoFormats: [
         { id: number; name: string },
         { id: number; name: string },
         { id: number; name: string }
@@ -588,12 +622,12 @@ export default class AddEditFFmpegProfile extends Vue {
     ];
 
     private _selectedVideoFormat: number = 1;
-    private selectedVideoFormat: { id: number; name: string } = {
+    public selectedVideoFormat: { id: number; name: string } = {
         id: 1,
         name: 'h264'
     };
 
-    private hardwareAccelerations: [
+    public hardwareAccelerations: [
         { id: number; name: string },
         { id: number; name: string },
         { id: number; name: string },
@@ -608,12 +642,12 @@ export default class AddEditFFmpegProfile extends Vue {
     ];
 
     private _selectedHardwareAcceleration: number = 0;
-    private selectedHardwareAcceleration: { id: number; name: string } = {
+    public selectedHardwareAcceleration: { id: number; name: string } = {
         id: 0,
         name: 'None'
     };
 
-    private vaapiDrivers: [
+    public vaapiDrivers: [
         { id: number; name: string },
         { id: number; name: string },
         { id: number; name: string },
@@ -627,19 +661,19 @@ export default class AddEditFFmpegProfile extends Vue {
         { id: 4, name: 'Nouveau' }
     ];
 
-    private vaapiDriverDisabled = true;
+    public vaapiDriverDisabled = true;
     private _selectedVaapiDriver: number = 0;
-    private selectedVaapiDriver: { id: number; name: string } = {
+    public selectedVaapiDriver: { id: number; name: string } = {
         id: 0,
         name: 'Default'
     };
 
-    private selectedVaapiDevice: string = '';
-    private vaapiDevices: [string, string] = ['', '/dev/dri/renderD128'];
+    public selectedVaapiDevice: string = '';
+    public vaapiDevices: [string, string] = ['', '/dev/dri/renderD128'];
 
-    private normalizeFrameRate: boolean = false;
-    private autoDeinterlaceVideo: boolean = true;
-    private normalizeLoudness: boolean = true;
+    public normalizeFrameRate: boolean = false;
+    public autoDeinterlaceVideo: boolean = true;
+    public normalizeLoudness: boolean = true;
 
     saveFFmpegProfile() {
         //this means we're adding
@@ -700,14 +734,8 @@ export default class AddEditFFmpegProfile extends Vue {
 
         Toast.fire({
             icon: 'success',
-            title: 'FFmpeg Profile saved!'
+            title: this.$t('edit-ffmpeg-profile.profile-saved').toString()
         });
-        // this.$swal.fire({
-        //     icon: 'success',
-        //     title: 'FFmpeg Profile saved!',
-        //     showConfirmButton: false,
-        //     timer: 1500
-        // });
         this.$router.push({
             name: 'ffmpeg-profiles.title'
         });
@@ -720,24 +748,24 @@ export default class AddEditFFmpegProfile extends Vue {
     }
 
     //~change events~//
-    private audioFormatChanged(selectObj: number) {
+    public audioFormatChanged(selectObj: number) {
         this._selectedAudioFormat = selectObj;
     }
 
-    private preferredResolutionChange(selectObj: number) {
+    public preferredResolutionChange(selectObj: number) {
         this._selectedResolution = selectObj + 1;
     }
 
-    private videoFormatChanged(selectObj: number) {
+    public videoFormatChanged(selectObj: number) {
         this._selectedVideoFormat = selectObj;
     }
 
-    private hardwareAccelerationChanged(selectObj: number) {
+    public hardwareAccelerationChanged(selectObj: number) {
         this._selectedHardwareAcceleration = selectObj;
         this.applyVaapiValidation();
     }
 
-    private applyVaapiValidation() {
+    public applyVaapiValidation() {
         //If they pick VAAPI as the hardware acceleration,
         //they can now choose a vaapi driver and device.
         //If not, they cannot change the default options.
@@ -751,22 +779,30 @@ export default class AddEditFFmpegProfile extends Vue {
         }
     }
 
-    private vaapiDriverChanged(selectObj: number) {
+    public vaapiDriverChanged(selectObj: number) {
         this._selectedVaapiDriver = selectObj;
     }
 
-    private vaapiDeviceChanged(selectObj: string) {
+    public vaapiDeviceChanged(selectObj: string) {
         this.selectedVaapiDevice = selectObj;
     }
 
     //~ end change events~//
 
-    private threadCount = 0;
+    public threadCount = 0;
 
     get validIntNonZero() {
         return [
-            (v: any) => (v && /^[0-9]+$/.test(v)) || 'Must be a valid number.',
+            (v: any) =>
+                (v && /^[0-9]+$/.test(v)) || this.$t('Must be a valid number.'),
             (v: any) => (v && v > 0) || 'Must be greater than 0.'
+        ];
+    }
+
+    get validInt() {
+        return [
+            (v: any) =>
+                (v && /^[0-9]+$/.test(v)) || this.$t('Must be a valid number.')
         ];
     }
 
@@ -784,6 +820,8 @@ export default class AddEditFFmpegProfile extends Vue {
     private loaded = false;
     private id = -1;
 
+    title: string = 'Modify FFmpeg Profile';
+
     async loadPage(): Promise<void> {
         if (this.loaded) {
             return;
@@ -795,7 +833,9 @@ export default class AddEditFFmpegProfile extends Vue {
             return;
         }
         if (!isNaN(this.id)) {
-            title.innerHTML = 'Edit FFmpeg Profile';
+            title.innerHTML = this.$t(
+                'edit-ffmpeg-profile.edit-profile'
+            ).toString();
             var ffmpegFullProfile = await ffmpegProfileApiService.getOne(
                 this.id.toString()
             );
@@ -844,7 +884,9 @@ export default class AddEditFFmpegProfile extends Vue {
             }
         } else {
             //new profile!
-            title.innerHTML = 'Add FFmpeg Profile';
+            title.innerHTML = this.$t(
+                'edit-ffmpeg-profile.add-profile'
+            ).toString();
             this._selectedAudioFormat = 2;
             this._selectedResolution = 3;
             this._selectedVideoFormat = 1;

@@ -87,12 +87,44 @@
   },
   "ffmpeg-profiles": {
     "title": "FFmpeg Profiles",
+    "add-profile": "Add FFmpeg Profile",
+    "actions": "Actions",
+    "delete-dialog-title": "Are you sure?",
+    "delete-dialog-text": "Delete {profileName} FFmpeg Profile?",
+    "no": "No",
+    "yes": "Yes",
+    "profile-deleted":  "FFmpeg Profile deleted!",
     "table": {
       "name": "Name",
       "resolution": "Resolution",
       "video": "Video",
       "audio": "Audio"
     }
+  },
+  "edit-ffmpeg-profile": {
+    "General": "General",
+    "Video": "Video",
+    "Audio": "Audio",
+    "Name": "Name",
+    "thread-count": "Thread Count",
+    "preferred-resolution": "Preferred Resolution",
+    "format": "Format",
+    "bitrate": "Bitrate",
+    "buffer-size": "Buffer Size",
+    "hardware-acceleration": "Hardware Acceleration",
+    "vaapi-driver": "VAAPI Driver",
+    "vaapi-device": "VAAPI Device",
+    "normalize-framerate": "Normalize Framerate",
+    "auto-deinterlace-video": "Auto Deinterlace Video",
+    "channels": "Channels",
+    "sample-rate": "Sample Rate",
+    "normalize-loudness": "Normalize Loudness",
+    "save-profile": "Save Profile",
+    "cancel": "Cancel",
+    "help": "Help",
+    "add-profile": "Add FFmpeg Profile",
+    "edit-profile": "Edit FFmpeg Profile",
+    "profile-saved": "FFmpeg Profile Saved!"
   },
   "watermarks": {
     "title": "Watermarks"
