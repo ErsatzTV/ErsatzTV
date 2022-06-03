@@ -99,7 +99,9 @@ export default class FFmpegProfiles extends Vue {
 
                     Toast.fire({
                         icon: 'success',
-                        title: this.$t('ffmpeg-profiles.profile-deleted').toString()
+                        title: this.$t(
+                            'ffmpeg-profiles.profile-deleted'
+                        ).toString()
                     });
                 }
             });
