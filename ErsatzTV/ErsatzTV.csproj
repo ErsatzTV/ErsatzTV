@@ -57,7 +57,7 @@
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.0.1" />
       <PackageReference Include="FluentValidation" Version="11.0.2" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.0.2" />
-      <PackageReference Include="HtmlSanitizer" Version="7.1.509" />
+      <PackageReference Include="HtmlSanitizer" Version="7.1.512" />
       <PackageReference Include="LanguageExt.Core" Version="4.1.1" />
       <PackageReference Include="Markdig" Version="0.30.2" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
