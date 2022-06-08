@@ -5,6 +5,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, playout => ApplyUpdateRequest(dbContext, request, playout));
+        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, BuildPlayout request, Playout playout)
@@ -45,7 +46,11 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         try
         {
             await _playoutBuilder.Build(playout, request.Mode);
-            if (await dbContext.SaveChangesAsync() > 0)
+
+            // let any active segmenter processes know that the playout has been modified
+            // and therefore the segmenter may need to seek into the next item instead of
+            // starting at the beginning (if already working ahead)
+            if (request.Mode != PlayoutBuildMode.Continue && await dbContext.SaveChangesAsync() > 0)
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
             }

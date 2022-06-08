@@ -2,12 +2,18 @@
 
 public enum PlayoutBuildMode
 {
-    // this continues building playout into the future
+    /// <summary>
+    ///     Continue building the playout into the future, without changing any existing playout items
+    /// </summary>
     Continue = 1,
 
-    // this rebuilds a playout but will maintain collection progress
+    /// <summary>
+    ///     Rebuild the playout while attempting to maintain collection progress
+    /// </summary>
     Refresh = 2,
 
-    // this rebuilds a playout and clears all state
+    /// <summary>
+    ///     Rebuild the playout from scratch (clearing all state)
+    /// </summary>
     Reset = 3
 }
