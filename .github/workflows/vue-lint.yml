@@ -7,10 +7,10 @@ jobs:
     steps:
       # Checkout the current repo
       - name: Checkout current repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       # Setup NodeJS version 14  
       - name: Setup NodeJS V14.x.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '14'
       # CD into the current client directory and lint and build the client
