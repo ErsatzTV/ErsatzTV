@@ -50,7 +50,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             // let any active segmenter processes know that the playout has been modified
             // and therefore the segmenter may need to seek into the next item instead of
             // starting at the beginning (if already working ahead)
-            if (request.Mode != PlayoutBuildMode.Continue && await dbContext.SaveChangesAsync() > 0)
+            bool hasChanges = await dbContext.SaveChangesAsync() > 0;
+            if (request.Mode != PlayoutBuildMode.Continue && hasChanges)
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
             }
