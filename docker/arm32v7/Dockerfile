@@ -9,7 +9,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     libgdiplus
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:6.0-focal-arm32v7 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0-focal-amd64 AS build
 RUN apt-get update && apt-get install -y ca-certificates
 RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
