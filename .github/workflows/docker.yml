@@ -79,7 +79,7 @@ jobs:
           tags: |
             jasongdove/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
             jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
-        if: ${{ matrix.name != 'arm64' }}
+        if: ${{ matrix.name != 'arm64' && matrix.name != 'arm32v7' }}
 
       - name: Build and push
         uses: docker/build-push-action@v3
