@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.Decoder.Cuvid;
+﻿using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Decoder.Cuvid;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Format;
 using Microsoft.Extensions.Logging;
@@ -8,16 +9,18 @@ namespace ErsatzTV.FFmpeg.Decoder;
 public static class AvailableDecoders
 {
     public static Option<IDecoder> ForVideoFormat(
+        IHardwareCapabilities hardwareCapabilities,
         FFmpegState ffmpegState,
         FrameState currentState,
         FrameState desiredState,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         ILogger logger) =>
-        (ffmpegState.HardwareAccelerationMode, currentState.VideoFormat,
+        (ffmpegState.DecoderHardwareAccelerationMode, currentState.VideoFormat,
                 currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty)) switch
             {
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc, _) => new DecoderHevcCuvid(),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc, _)
+                    when hardwareCapabilities.CanDecode(VideoFormat.Hevc) => new DecoderHevcCuvid(ffmpegState),
 
                 // nvenc doesn't support hardware decoding of 10-bit content
                 (HardwareAccelerationMode.Nvenc, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE)
@@ -27,12 +30,15 @@ public static class AvailableDecoders
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) when desiredState.Deinterlaced =>
                     new DecoderMpeg2Video(),
 
-                (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _) => new DecoderH264Cuvid(),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _)
+                    when hardwareCapabilities.CanDecode(VideoFormat.H264) => new DecoderH264Cuvid(ffmpegState),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(
+                    ffmpegState,
                     desiredState.Deinterlaced),
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(),
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9, _) => new DecoderVp9Cuvid(),
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4, _) => new DecoderMpeg4Cuvid(),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(ffmpegState),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9, _)
+                    when hardwareCapabilities.CanDecode(VideoFormat.Vp9) => new DecoderVp9Cuvid(ffmpegState),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4, _) => new DecoderMpeg4Cuvid(ffmpegState),
 
                 // hevc_qsv decoder sometimes causes green lines with 10-bit content
                 (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, PixelFormat.YUV420P10LE) => new DecoderHevc(),

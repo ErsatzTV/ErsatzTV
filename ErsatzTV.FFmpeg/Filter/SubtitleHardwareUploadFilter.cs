@@ -12,7 +12,7 @@ public class SubtitleHardwareUploadFilter : BaseFilter
     }
 
     public override string Filter =>
-        _ffmpegState.HardwareAccelerationMode switch
+        _ffmpegState.EncoderHardwareAccelerationMode switch
         {
             HardwareAccelerationMode.None => string.Empty,
             HardwareAccelerationMode.Nvenc => "hwupload_cuda",

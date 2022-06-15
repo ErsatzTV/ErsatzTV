@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.Encoder.Nvenc;
+﻿using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Encoder.Nvenc;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder.Vaapi;
 using ErsatzTV.FFmpeg.Encoder.VideoToolbox;
@@ -11,45 +12,54 @@ namespace ErsatzTV.FFmpeg.Encoder;
 public static class AvailableEncoders
 {
     public static Option<IEncoder> ForVideoFormat(
+        IHardwareCapabilities hardwareCapabilities,
         FFmpegState ffmpegState,
         FrameState currentState,
         FrameState desiredState,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<SubtitleInputFile> maybeSubtitleInputFile,
         ILogger logger) =>
-        (ffmpegState.HardwareAccelerationMode, desiredState.VideoFormat) switch
+        (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
         {
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(
-                currentState,
-                maybeWatermarkInputFile,
-                maybeSubtitleInputFile),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(
-                currentState,
-                maybeWatermarkInputFile,
-                maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(VideoFormat.Hevc) =>
+                new EncoderHevcNvenc(
+                    currentState,
+                    maybeWatermarkInputFile,
+                    maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) when hardwareCapabilities.CanEncode(VideoFormat.H264) =>
+                new EncoderH264Nvenc(
+                    currentState,
+                    maybeWatermarkInputFile,
+                    maybeSubtitleInputFile),
 
-            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(
-                currentState,
-                maybeWatermarkInputFile,
-                maybeSubtitleInputFile),
-            (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(
-                currentState,
-                maybeWatermarkInputFile,
-                maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(VideoFormat.Hevc) =>
+                new EncoderHevcQsv(
+                    currentState,
+                    maybeWatermarkInputFile,
+                    maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Qsv, VideoFormat.H264) when hardwareCapabilities.CanEncode(VideoFormat.H264) =>
+                new EncoderH264Qsv(
+                    currentState,
+                    maybeWatermarkInputFile,
+                    maybeSubtitleInputFile),
 
-            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(
-                currentState,
-                maybeWatermarkInputFile,
-                maybeSubtitleInputFile),
-            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(
-                currentState,
-                maybeWatermarkInputFile,
-                maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(VideoFormat.Hevc) =>
+                new EncoderHevcVaapi(
+                    currentState,
+                    maybeWatermarkInputFile,
+                    maybeSubtitleInputFile),
+            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) when hardwareCapabilities.CanEncode(VideoFormat.H264) =>
+                new EncoderH264Vaapi(
+                    currentState,
+                    maybeWatermarkInputFile,
+                    maybeSubtitleInputFile),
 
-            (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
-            (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) => new EncoderH264VideoToolbox(),
+            (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
+                VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
+            (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) when hardwareCapabilities.CanEncode(
+                VideoFormat.H264) => new EncoderH264VideoToolbox(),
 
-            (_, VideoFormat.Hevc) => new EncoderLibx265(),
+            (_, VideoFormat.Hevc) => new EncoderLibx265(currentState),
             (_, VideoFormat.H264) => new EncoderLibx264(),
             (_, VideoFormat.Mpeg2Video) => new EncoderMpeg2Video(),
 

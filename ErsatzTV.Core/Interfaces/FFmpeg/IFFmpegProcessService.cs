@@ -46,11 +46,11 @@ public interface IFFmpegProcessService
         VaapiDriver vaapiDriver,
         string vaapiDevice);
 
-    Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Task<Command> ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
     Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
-    Command ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
+    Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
 
     Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 

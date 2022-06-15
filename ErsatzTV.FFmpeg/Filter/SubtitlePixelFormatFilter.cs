@@ -10,7 +10,7 @@ public class SubtitlePixelFormatFilter : BaseFilter
     {
         get
         {
-            Option<string> maybeFormat = _ffmpegState.HardwareAccelerationMode switch
+            Option<string> maybeFormat = _ffmpegState.EncoderHardwareAccelerationMode switch
             {
                 HardwareAccelerationMode.Nvenc => "yuva420p",
                 HardwareAccelerationMode.Qsv => "yuva420p",
