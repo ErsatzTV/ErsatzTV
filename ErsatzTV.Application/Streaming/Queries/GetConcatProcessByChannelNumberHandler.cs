@@ -30,7 +30,7 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
             .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
             .Map(result => result.IfNone(false));
 
-        Command process = _ffmpegProcessService.ConcatChannel(
+        Command process = await _ffmpegProcessService.ConcatChannel(
             ffmpegPath,
             saveReports,
             channel,

@@ -148,7 +148,7 @@ public class ComplexFilter : IPipelineStep
                 }
 
                 IPipelineFilterStep overlayFilter = AvailableWatermarkOverlayFilters.ForAcceleration(
-                    _ffmpegState.HardwareAccelerationMode,
+                    _ffmpegState.EncoderHardwareAccelerationMode,
                     _currentState,
                     watermarkInputFile.DesiredState,
                     _resolution);
@@ -164,16 +164,16 @@ public class ComplexFilter : IPipelineStep
                     // also wait to upload if a subtitle overlay is coming
                     string uploadDownloadFilter = string.Empty;
                     if (_maybeSubtitleInputFile.IsNone &&
-                        (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi ||
-                         _ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
+                        (_ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi ||
+                         _ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
                          _currentState.VideoFormat == VideoFormat.Hevc))
                     {
                         uploadDownloadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
                     }
 
                     if (_maybeSubtitleInputFile.Map(s => !s.IsImageBased).IfNone(false) &&
-                        _ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.Vaapi &&
-                        _ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.VideoToolbox)
+                        _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Vaapi &&
+                        _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.VideoToolbox)
                     {
                         uploadDownloadFilter = new HardwareDownloadFilter(_currentState).Filter;
                     }
@@ -217,7 +217,7 @@ public class ComplexFilter : IPipelineStep
                 {
                     IPipelineFilterStep overlayFilter =
                         AvailableSubtitleOverlayFilters.ForAcceleration(
-                            _ffmpegState.HardwareAccelerationMode,
+                            _ffmpegState.EncoderHardwareAccelerationMode,
                             _currentState);
                     filter = overlayFilter.Filter;
                 }
@@ -238,8 +238,8 @@ public class ComplexFilter : IPipelineStep
                     // vaapi uses software overlay and needs to upload
                     // videotoolbox seems to require a hwupload for hevc
                     string uploadFilter = string.Empty;
-                    if (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi
-                        || _ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
+                    if (_ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi
+                        || _ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
                         _currentState.VideoFormat == VideoFormat.Hevc)
                     {
                         uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;

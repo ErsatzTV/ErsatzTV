@@ -11,7 +11,7 @@ public class WatermarkHardwareUploadFilter : BaseFilter
         _ffmpegState = ffmpegState;
     }
 
-    public override string Filter => _ffmpegState.HardwareAccelerationMode switch
+    public override string Filter => _ffmpegState.EncoderHardwareAccelerationMode switch
     {
         HardwareAccelerationMode.None => string.Empty,
         HardwareAccelerationMode.Nvenc => "hwupload_cuda",

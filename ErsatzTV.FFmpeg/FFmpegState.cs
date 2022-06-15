@@ -4,7 +4,8 @@ namespace ErsatzTV.FFmpeg;
 
 public record FFmpegState(
     bool SaveReport,
-    HardwareAccelerationMode HardwareAccelerationMode,
+    HardwareAccelerationMode DecoderHardwareAccelerationMode,
+    HardwareAccelerationMode EncoderHardwareAccelerationMode,
     Option<string> VaapiDriver,
     Option<string> VaapiDevice,
     Option<TimeSpan> Start,
@@ -22,6 +23,7 @@ public record FFmpegState(
     public static FFmpegState Concat(bool saveReport, string channelName) =>
         new(
             saveReport,
+            HardwareAccelerationMode.None,
             HardwareAccelerationMode.None,
             Option<string>.None,
             Option<string>.None,

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.Decoder;
+﻿using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
@@ -18,6 +19,7 @@ public class PipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly string _fontsFolder;
+    private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
     private readonly List<IPipelineStep> _pipelineSteps;
     private readonly string _reportsFolder;
@@ -26,6 +28,7 @@ public class PipelineBuilder
     private readonly Option<WatermarkInputFile> _watermarkInputFile;
 
     public PipelineBuilder(
+        IHardwareCapabilities hardwareCapabilities,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
@@ -46,6 +49,7 @@ public class PipelineBuilder
             new ClosedGopOutputOption()
         };
 
+        _hardwareCapabilities = hardwareCapabilities;
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
         _watermarkInputFile = watermarkInputFile;
@@ -200,7 +204,7 @@ public class PipelineBuilder
             else
             {
                 Option<IPipelineStep> maybeAccel = AvailableHardwareAccelerationOptions.ForMode(
-                    ffmpegState.HardwareAccelerationMode,
+                    ffmpegState.EncoderHardwareAccelerationMode,
                     ffmpegState.VaapiDevice,
                     _logger);
 
@@ -209,24 +213,45 @@ public class PipelineBuilder
                     ffmpegState = ffmpegState with
                     {
                         // disable hw accel if we don't match anything
-                        HardwareAccelerationMode = HardwareAccelerationMode.None
+                        DecoderHardwareAccelerationMode = HardwareAccelerationMode.None,
+                        EncoderHardwareAccelerationMode = HardwareAccelerationMode.None
                     };
                 }
 
                 foreach (IPipelineStep accel in maybeAccel)
                 {
-                    currentState = accel.NextState(currentState);
-                    _pipelineSteps.Add(accel);
+                    bool canDecode = _hardwareCapabilities.CanDecode(currentState.VideoFormat);
+                    bool canEncode = _hardwareCapabilities.CanEncode(desiredState.VideoFormat);
+
+                    // disable hw accel if decoder/encoder isn't supported
+                    if (!canDecode || !canEncode)
+                    {
+                        ffmpegState = ffmpegState with
+                        {
+                            DecoderHardwareAccelerationMode = canDecode
+                                ? ffmpegState.DecoderHardwareAccelerationMode
+                                : HardwareAccelerationMode.None,
+                            EncoderHardwareAccelerationMode = canEncode
+                                ? ffmpegState.EncoderHardwareAccelerationMode
+                                : HardwareAccelerationMode.None
+                        };
+                    }
+
+                    if (canDecode || canEncode)
+                    {
+                        currentState = accel.NextState(currentState);
+                        _pipelineSteps.Add(accel);
+                    }
                 }
 
                 // nvenc requires yuv420p background with yuva420p overlay
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc && hasOverlay)
+                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc && hasOverlay)
                 {
                     desiredState = desiredState with { PixelFormat = new PixelFormatYuv420P() };
                 }
 
                 // qsv should stay nv12
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Qsv && hasOverlay)
+                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv && hasOverlay)
                 {
                     IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P());
                     desiredState = desiredState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
@@ -240,6 +265,7 @@ public class PipelineBuilder
                 }
 
                 foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(
+                             _hardwareCapabilities,
                              ffmpegState,
                              currentState,
                              desiredState,
@@ -262,7 +288,7 @@ public class PipelineBuilder
 
             if (videoStream.StillImage)
             {
-                var option = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
+                var option = new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode);
                 _videoInputFile.Iter(f => f.AddOption(option));
             }
 
@@ -277,7 +303,7 @@ public class PipelineBuilder
 
                 if (desiredState.InfiniteLoop)
                 {
-                    var option = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
+                    var option = new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode);
                     _audioInputFile.Iter(f => f.AddOption(option));
                     _videoInputFile.Iter(f => f.AddOption(option));
                 }
@@ -325,7 +351,7 @@ public class PipelineBuilder
                 if (desiredState.Deinterlaced && !currentState.Deinterlaced)
                 {
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
-                        ffmpegState.HardwareAccelerationMode,
+                        ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState,
                         _watermarkInputFile,
@@ -335,7 +361,7 @@ public class PipelineBuilder
                 }
 
                 // TODO: this is a software-only flow, will need to be different for hardware accel
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.None)
+                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
                 {
                     if (currentState.ScaledSize != desiredState.ScaledSize ||
                         currentState.PaddedSize != desiredState.PaddedSize)
@@ -360,7 +386,7 @@ public class PipelineBuilder
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                        ffmpegState.HardwareAccelerationMode,
+                        ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
                         desiredState.PaddedSize);
@@ -382,7 +408,7 @@ public class PipelineBuilder
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                        ffmpegState.HardwareAccelerationMode,
+                        ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
                         desiredState.PaddedSize);
@@ -415,7 +441,7 @@ public class PipelineBuilder
                             currentState = formatFilter.NextState(currentState);
                             _videoInputFile.Iter(f => f.FilterSteps.Add(formatFilter));
 
-                            switch (ffmpegState.HardwareAccelerationMode)
+                            switch (ffmpegState.EncoderHardwareAccelerationMode)
                             {
                                 case HardwareAccelerationMode.Nvenc:
                                     var uploadFilter = new HardwareUploadFilter(ffmpegState);
@@ -426,13 +452,13 @@ public class PipelineBuilder
                         }
                         else
                         {
-                            if (ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.Qsv)
+                            if (ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Qsv)
                             {
                                 // the filter re-applies the current pixel format, so we have to set it first
                                 currentState = currentState with { PixelFormat = desiredState.PixelFormat };
 
                                 IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                                    ffmpegState.HardwareAccelerationMode,
+                                    ffmpegState.EncoderHardwareAccelerationMode,
                                     currentState,
                                     desiredState.ScaledSize,
                                     desiredState.PaddedSize);
@@ -444,7 +470,7 @@ public class PipelineBuilder
                 }
 
                 // nvenc custom logic
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc)
+                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc)
                 {
                     foreach (VideoInputFile videoInputFile in _videoInputFile)
                     {
@@ -461,7 +487,7 @@ public class PipelineBuilder
                             currentState = currentState with { PixelFormat = desiredState.PixelFormat };
 
                             IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                                ffmpegState.HardwareAccelerationMode,
+                                ffmpegState.EncoderHardwareAccelerationMode,
                                 currentState,
                                 desiredState.ScaledSize,
                                 desiredState.PaddedSize);
@@ -488,7 +514,7 @@ public class PipelineBuilder
                     if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
                     {
                         // qsv doesn't seem to like this
-                        if (ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.Qsv)
+                        if (ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Qsv)
                         {
                             IPipelineStep step = new PixelFormatOutputOption(desiredPixelFormat);
                             currentState = step.NextState(currentState);
@@ -547,7 +573,7 @@ public class PipelineBuilder
                 {
                     // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
                     // though videotoolbox uses software decoders, so no need to download for that
-                    if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
                     {
                         var downloadFilter = new HardwareDownloadFilter(currentState);
                         currentState = downloadFilter.NextState(currentState);
@@ -565,12 +591,12 @@ public class PipelineBuilder
                     // text-based subtitles are always added in software, so always try to download the background
 
                     // nvidia needs some extra format help if the only filter will be the download filter
-                    if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
+                    if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
                         currentState.FrameDataLocation == FrameDataLocation.Hardware &&
                         _videoInputFile.Map(f => f.FilterSteps.Count).IfNone(1) == 0)
                     {
                         IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                            ffmpegState.HardwareAccelerationMode,
+                            ffmpegState.EncoderHardwareAccelerationMode,
                             currentState,
                             desiredState.ScaledSize,
                             desiredState.PaddedSize);
@@ -588,7 +614,7 @@ public class PipelineBuilder
             {
                 // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
                 // though videotoolbox uses software decoders, so no need to download for that
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
                 {
                     var downloadFilter = new HardwareDownloadFilter(currentState);
                     currentState = downloadFilter.NextState(currentState);
@@ -607,7 +633,8 @@ public class PipelineBuilder
                     else if (watermarkInputFile.DesiredState.MaybeFadePoints.Map(fp => fp.Count > 0).IfNone(false))
                     {
                         // looping is required to fade a static image in and out
-                        watermarkInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode));
+                        watermarkInputFile.AddOption(
+                            new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
                     }
                 }
 
@@ -634,6 +661,7 @@ public class PipelineBuilder
             if (_pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
             {
                 foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
+                             _hardwareCapabilities,
                              ffmpegState,
                              currentState,
                              desiredState,
