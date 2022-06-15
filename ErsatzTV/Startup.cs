@@ -32,6 +32,7 @@ using ErsatzTV.Core.Metadata.Nfo;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Trakt;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
@@ -396,6 +397,7 @@ public class Startup
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
+        services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<FFmpegProcessService>();

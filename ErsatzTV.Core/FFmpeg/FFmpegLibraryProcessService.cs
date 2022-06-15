@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.FFmpeg;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
@@ -16,6 +17,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
+    private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
@@ -25,12 +27,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegPlaybackSettingsCalculator playbackSettingsCalculator,
         IFFmpegStreamSelector ffmpegStreamSelector,
         ITempFilePool tempFilePool,
+        IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
         _playbackSettingsCalculator = playbackSettingsCalculator;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _tempFilePool = tempFilePool;
+        _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
         _logger = logger;
     }
 
@@ -214,6 +218,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var ffmpegState = new FFmpegState(
             saveReports,
             hwAccel,
+            hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.StreamSeek,
@@ -231,6 +236,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
         var pipelineBuilder = new PipelineBuilder(
+            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hwAccel),
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
@@ -333,6 +339,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var ffmpegState = new FFmpegState(
             false,
             hwAccel,
+            hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.StreamSeek,
@@ -359,6 +366,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("FFmpeg desired error state {FrameState}", desiredState);
 
         var pipelineBuilder = new PipelineBuilder(
+            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hwAccel),
             videoInputFile,
             audioInputFile,
             None,
@@ -372,7 +380,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, pipeline);
     }
 
-    public Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
+    public async Task<Command> ConcatChannel(
+        string ffmpegPath,
+        bool saveReports,
+        Channel channel,
+        string scheme,
+        string host)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
@@ -381,6 +394,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             resolution);
 
         var pipelineBuilder = new PipelineBuilder(
+            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
             None,
             None,
             None,
@@ -399,13 +413,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
         _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
 
-    public Command ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
+    public async Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
             new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, None, true) });
 
         var pipelineBuilder = new PipelineBuilder(
+            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
             videoInputFile,
             None,
             None,

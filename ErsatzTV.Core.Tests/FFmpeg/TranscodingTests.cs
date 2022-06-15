@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
@@ -302,6 +303,9 @@ public class TranscodingTests
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             new Mock<ITempFilePool>().Object,
+            new HardwareCapabilitiesFactory(
+                new MemoryCache(new MemoryCacheOptions()),
+                LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var v = new MediaVersion

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
@@ -54,6 +55,7 @@ public class PipelineGeneratorTests
         var ffmpegState = new FFmpegState(
             false,
             HardwareAccelerationMode.None,
+            HardwareAccelerationMode.None,
             Option<string>.None,
             Option<string>.None,
             TimeSpan.FromSeconds(1),
@@ -68,7 +70,15 @@ public class PipelineGeneratorTests
             0,
             Option<int>.None);
 
-        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", "", _logger);
+        var builder = new PipelineBuilder(
+            new DefaultHardwareCapabilities(),
+            videoInputFile,
+            audioInputFile,
+            None,
+            None,
+            "",
+            "",
+            _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -85,7 +95,7 @@ public class PipelineGeneratorTests
         var resolution = new FrameSize(1920, 1080);
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(None, None, None, None, "", "", _logger);
+        var builder = new PipelineBuilder(new DefaultHardwareCapabilities(), None, None, None, None, "", "", _logger);
         FFmpegPipeline result = builder.Concat(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -132,6 +142,7 @@ public class PipelineGeneratorTests
         var ffmpegState = new FFmpegState(
             false,
             HardwareAccelerationMode.None,
+            HardwareAccelerationMode.None,
             Option<string>.None,
             Option<string>.None,
             Option<TimeSpan>.None,
@@ -146,7 +157,15 @@ public class PipelineGeneratorTests
             0,
             Option<int>.None);
 
-        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", "", _logger);
+        var builder = new PipelineBuilder(
+            new DefaultHardwareCapabilities(),
+            videoInputFile,
+            audioInputFile,
+            None,
+            None,
+            "",
+            "",
+            _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -172,6 +191,7 @@ public class PipelineGeneratorTests
             });
 
         var pipelineBuilder = new PipelineBuilder(
+            new DefaultHardwareCapabilities(),
             videoInputFile,
             Option<AudioInputFile>.None,
             Option<WatermarkInputFile>.None,

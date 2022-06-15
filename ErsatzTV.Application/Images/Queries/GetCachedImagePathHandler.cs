@@ -69,7 +69,7 @@ public class
 
                     string originalPath = _imageCache.GetPathForImage(request.FileName, request.ArtworkKind, None);
 
-                    Command process = _ffmpegProcessService.ResizeImage(
+                    Command process = await _ffmpegProcessService.ResizeImage(
                         ffmpegPath,
                         originalPath,
                         withExtension,
