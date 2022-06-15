@@ -676,7 +676,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 }
                 else
                 {
-                    if (itemDuration >= duration * 2)
+                    if (itemDuration >= duration * 1.5)
                     {
                         _logger.LogWarning(
                             "Filler item is too long {FillerDuration} to fill {GapDuration}; skipping to next filler item",
@@ -688,6 +688,14 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     }
                     else
                     {
+                        if (itemDuration > duration)
+                        {
+                            _logger.LogWarning(
+                                "Filler item is too long {FillerDuration} to fill {GapDuration}; aborting filler block",
+                                itemDuration,
+                                duration);
+                        }
+
                         // set to zero so it breaks out of the while loop
                         remainingToFill = TimeSpan.Zero;
                     }
