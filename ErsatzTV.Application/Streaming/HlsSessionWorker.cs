@@ -28,6 +28,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private string _channelNumber;
     private bool _firstProcess;
     private DateTimeOffset _lastAccess;
+    private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
@@ -65,7 +66,19 @@ public class HlsSessionWorker : IHlsSessionWorker
         try
         {
             Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
-            return maybeLines.Map(input => _hlsPlaylistFilter.TrimPlaylist(PlaylistStart, filterBefore, input));
+            foreach (string[] input in maybeLines)
+            {
+                TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(PlaylistStart, filterBefore, input);
+                if (DateTimeOffset.Now > _lastDelete.AddSeconds(30))
+                {
+                    DeleteOldSegments(trimResult);
+                    _lastDelete = DateTimeOffset.Now;
+                }
+
+                return trimResult;
+            }
+
+            return None;
         }
         finally
         {
@@ -334,33 +347,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     lines);
                 await WritePlaylist(trimResult.Playlist, cancellationToken);
 
-                // delete old segments
-                var allSegments = Directory.GetFiles(
-                        Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
-                        "live*.ts")
-                    .Map(
-                        file =>
-                        {
-                            string fileName = Path.GetFileName(file);
-                            var sequenceNumber = int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]);
-                            return new Segment(file, sequenceNumber);
-                        })
-                    .ToList();
-
-                var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
-                // if (toDelete.Count > 0)
-                // {
-                //     _logger.LogDebug(
-                //         "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
-                //         toDelete.Map(s => s.SequenceNumber).Min(),
-                //         toDelete.Map(s => s.SequenceNumber).Max(),
-                //         trimResult.Sequence);
-                // }
-
-                foreach (Segment segment in toDelete)
-                {
-                    File.Delete(segment.File);
-                }
+                DeleteOldSegments(trimResult);
 
                 PlaylistStart = trimResult.PlaylistStart;
             }
@@ -368,6 +355,37 @@ public class HlsSessionWorker : IHlsSessionWorker
         finally
         {
             Slim.Release();
+        }
+    }
+
+    private void DeleteOldSegments(TrimPlaylistResult trimResult)
+    {
+        // delete old segments
+        var allSegments = Directory.GetFiles(
+                Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
+                "live*.ts")
+            .Map(
+                file =>
+                {
+                    string fileName = Path.GetFileName(file);
+                    var sequenceNumber = int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]);
+                    return new Segment(file, sequenceNumber);
+                })
+            .ToList();
+
+        var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
+        if (toDelete.Count > 0)
+        {
+            _logger.LogDebug(
+                "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+                toDelete.Map(s => s.SequenceNumber).Min(),
+                toDelete.Map(s => s.SequenceNumber).Max(),
+                trimResult.Sequence);
+        }
+
+        foreach (Segment segment in toDelete)
+        {
+            File.Delete(segment.File);
         }
     }
 
