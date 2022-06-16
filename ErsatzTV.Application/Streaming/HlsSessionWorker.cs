@@ -28,10 +28,10 @@ public class HlsSessionWorker : IHlsSessionWorker
     private string _channelNumber;
     private bool _firstProcess;
     private DateTimeOffset _lastAccess;
+    private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -263,7 +263,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         }
 
                         _logger.LogError(
-                            "HLS process for channel {Channel} has terminated unsuccesslly with exit code {ExitCode}: {StandardError}",
+                            "HLS process for channel {Channel} has terminated unsuccessfully with exit code {ExitCode}: {StandardError}",
                             _channelNumber,
                             commandResult.ExitCode,
                             commandResult.StandardError);
