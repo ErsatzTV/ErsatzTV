@@ -58,7 +58,7 @@
       <PackageReference Include="FluentValidation" Version="11.0.3" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.0.3" />
       <PackageReference Include="HtmlSanitizer" Version="7.1.512" />
-      <PackageReference Include="LanguageExt.Core" Version="4.2.2" />
+      <PackageReference Include="LanguageExt.Core" Version="4.2.5" />
       <PackageReference Include="Markdig" Version="0.30.2" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
