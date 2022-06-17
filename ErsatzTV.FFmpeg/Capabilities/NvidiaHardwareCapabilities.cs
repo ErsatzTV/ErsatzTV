@@ -27,6 +27,10 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
 
             // second gen maxwell is required to encode hevc
             VideoFormat.Hevc => _architecture >= 52,
+
+            // nvidia cannot encode 10-bit h264
+            VideoFormat.H264 when bitDepth == 10 => false,
+            
             _ => true
         };
     }
