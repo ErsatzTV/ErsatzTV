@@ -17,8 +17,16 @@ public class DecoderMpeg4Cuvid : DecoderBase
     {
         IList<string> result = base.InputOptions(inputFile);
 
-        result.Add("-hwaccel_output_format");
-        result.Add(_ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.None ? "cuda" : "nv12");
+        if (_ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.None)
+        {
+            result.Add("-hwaccel_output_format");
+            result.Add("cuda");
+        }
+        else
+        {
+            result.Add("-hwaccel_output_format");
+            result.Add(InputBitDepth(inputFile) == 10 ? "p010le" : "nv12");
+        }
 
         return result;
     }
