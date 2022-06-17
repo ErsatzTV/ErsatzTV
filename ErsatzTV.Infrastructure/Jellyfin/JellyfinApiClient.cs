@@ -78,7 +78,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             IJellyfinApi service = RestService.For<IJellyfinApi>(address);
             List<JellyfinUserResponse> users = await service.GetUsers(apiKey);
             Option<string> maybeUserId = users
-                .Filter(user => user.Policy.IsAdministrator)
+                .Filter(user => user.Policy.IsAdministrator && !user.Policy.IsDisabled && user.Policy.EnableAllFolders)
                 .Map(user => user.Id)
                 .HeadOrNone();
 
