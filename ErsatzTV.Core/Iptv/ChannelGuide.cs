@@ -76,7 +76,8 @@ public class ChannelGuide
             }
         }
 
-        foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(kvp => kvp.Key.Number))
+        foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(
+                     kvp => decimal.Parse(kvp.Key.Number)))
         {
             var i = 0;
             while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None &&
