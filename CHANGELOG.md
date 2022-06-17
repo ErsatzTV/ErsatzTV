@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix content repeating for up to a minute near the top of every hour
 - Check whether hardware-accelerated hevc codecs are supported by the NVIDIA card
   - Software codecs will be used if they are unsupported by the NVIDIA card
+- Fix sorting of channel contents in EPG
 
 ### Changed
 - Regularly delete old segments from transcode folder while content is actively transcoding
