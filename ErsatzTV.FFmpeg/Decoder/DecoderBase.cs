@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 
@@ -20,4 +21,22 @@ public abstract class DecoderBase : IDecoder
     public bool AppliesTo(VideoInputFile videoInputFile) => true;
 
     public bool AppliesTo(ConcatInputFile concatInputFile) => false;
+
+    protected int InputBitDepth(InputFile inputFile)
+    {
+        var bitDepth = 8;
+
+        if (inputFile is VideoInputFile videoInputFile)
+        {
+            foreach (VideoStream videoStream in videoInputFile.VideoStreams.HeadOrNone())
+            {
+                foreach (IPixelFormat pixelFormat in videoStream.PixelFormat)
+                {
+                    bitDepth = pixelFormat.BitDepth;
+                }
+            }
+        }
+
+        return bitDepth;
+    }
 }
