@@ -1,3 +1,4 @@
+using System.Numerics;
 using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Capabilities;
@@ -8,13 +9,24 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
 
     public NvidiaHardwareCapabilities(int architecture) => _architecture = architecture;
 
-    public bool CanDecode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
-        videoFormat switch
+    public bool CanDecode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
+    {
+        int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
+
+        return videoFormat switch
         {
-            // second gen maxwell is required to decode hevc/vp9
-            VideoFormat.Hevc or VideoFormat.Vp9 => _architecture >= 52,
+            // second gen maxwell is required to decode hevc
+            VideoFormat.Hevc => _architecture >= 52,
+
+            // pascal is required to decode vp9 10-bit
+            VideoFormat.Vp9 when bitDepth == 10 => _architecture >= 60,
+
+            // second gen maxwell is required to decode vp9
+            VideoFormat.Vp9 => _architecture >= 52,
+
             _ => true
         };
+    }
 
     public bool CanEncode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
     {
