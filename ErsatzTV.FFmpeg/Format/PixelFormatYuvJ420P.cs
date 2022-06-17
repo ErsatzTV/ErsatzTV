@@ -6,4 +6,5 @@ public class PixelFormatYuvJ420P : IPixelFormat
 
     // always convert this to yuv420p in filter chains
     public string FFmpegName => FFmpegFormat.YUV420P;
+    public int BitDepth => 8;
 }
