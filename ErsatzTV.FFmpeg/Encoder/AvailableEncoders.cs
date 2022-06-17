@@ -21,43 +21,57 @@ public static class AvailableEncoders
         ILogger logger) =>
         (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
         {
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(VideoFormat.Hevc) =>
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
+                    VideoFormat.Hevc,
+                    desiredState.PixelFormat) =>
                 new EncoderHevcNvenc(
                     currentState,
                     maybeWatermarkInputFile,
                     maybeSubtitleInputFile),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) when hardwareCapabilities.CanEncode(VideoFormat.H264) =>
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) when hardwareCapabilities.CanEncode(
+                    VideoFormat.H264,
+                    desiredState.PixelFormat) =>
                 new EncoderH264Nvenc(
                     currentState,
                     maybeWatermarkInputFile,
                     maybeSubtitleInputFile),
 
-            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(VideoFormat.Hevc) =>
+            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
+                    VideoFormat.Hevc,
+                    desiredState.PixelFormat) =>
                 new EncoderHevcQsv(
                     currentState,
                     maybeWatermarkInputFile,
                     maybeSubtitleInputFile),
-            (HardwareAccelerationMode.Qsv, VideoFormat.H264) when hardwareCapabilities.CanEncode(VideoFormat.H264) =>
+            (HardwareAccelerationMode.Qsv, VideoFormat.H264) when hardwareCapabilities.CanEncode(
+                    VideoFormat.H264,
+                    desiredState.PixelFormat) =>
                 new EncoderH264Qsv(
                     currentState,
                     maybeWatermarkInputFile,
                     maybeSubtitleInputFile),
 
-            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(VideoFormat.Hevc) =>
+            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
+                    VideoFormat.Hevc,
+                    desiredState.PixelFormat) =>
                 new EncoderHevcVaapi(
                     currentState,
                     maybeWatermarkInputFile,
                     maybeSubtitleInputFile),
-            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) when hardwareCapabilities.CanEncode(VideoFormat.H264) =>
+            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) when hardwareCapabilities.CanEncode(
+                    VideoFormat.H264,
+                    desiredState.PixelFormat) =>
                 new EncoderH264Vaapi(
                     currentState,
                     maybeWatermarkInputFile,
                     maybeSubtitleInputFile),
 
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
-                VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
+                VideoFormat.Hevc,
+                desiredState.PixelFormat) => new EncoderHevcVideoToolbox(),
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) when hardwareCapabilities.CanEncode(
-                VideoFormat.H264) => new EncoderH264VideoToolbox(),
+                VideoFormat.H264,
+                desiredState.PixelFormat) => new EncoderH264VideoToolbox(),
 
             (_, VideoFormat.Hevc) => new EncoderLibx265(currentState),
             (_, VideoFormat.H264) => new EncoderLibx264(),
