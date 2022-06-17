@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Check whether hardware-accelerated hevc codecs are supported by the NVIDIA card
   - Software codecs will be used if they are unsupported by the NVIDIA card
 - Fix sorting of channel contents in EPG
+- Fix Jellyfin admin user id sync
+  - Ignore disabled admins and admins who do not have access to all libraries
 
 ### Changed
 - Regularly delete old segments from transcode folder while content is actively transcoding
