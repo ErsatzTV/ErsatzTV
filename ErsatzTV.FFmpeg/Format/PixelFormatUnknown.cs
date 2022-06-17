@@ -4,4 +4,5 @@ public class PixelFormatUnknown : IPixelFormat
 {
     public string Name => "unknown";
     public string FFmpegName => "unknown";
+    public int BitDepth => 8;
 }

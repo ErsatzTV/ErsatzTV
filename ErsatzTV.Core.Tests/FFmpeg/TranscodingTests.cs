@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Serilog;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -303,9 +305,10 @@ public class TranscodingTests
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             new Mock<ITempFilePool>().Object,
-            new HardwareCapabilitiesFactory(
-                new MemoryCache(new MemoryCacheOptions()),
-                LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
+            new FakeNvidiaCapabilitiesFactory(),
+            // new HardwareCapabilitiesFactory(
+            //     new MemoryCache(new MemoryCacheOptions()),
+            //     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var v = new MediaVersion
@@ -575,6 +578,14 @@ public class TranscodingTests
             string preferredSubtitleLanguage,
             ChannelSubtitleMode subtitleMode) =>
             subtitles.HeadOrNone().AsTask();
+    }
+
+    private class FakeNvidiaCapabilitiesFactory : IHardwareCapabilitiesFactory
+    {
+        public Task<IHardwareCapabilities> GetHardwareCapabilities(
+            string ffmpegPath,
+            HardwareAccelerationMode hardwareAccelerationMode) =>
+            Task.FromResult<IHardwareCapabilities>(new NvidiaHardwareCapabilities(61));
     }
 
     private static string ExecutableName(string baseName) =>

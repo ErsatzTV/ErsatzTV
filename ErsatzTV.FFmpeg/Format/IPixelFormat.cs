@@ -4,4 +4,5 @@ public interface IPixelFormat
 {
     string Name { get; }
     string FFmpegName { get; }
+    int BitDepth { get; }
 }

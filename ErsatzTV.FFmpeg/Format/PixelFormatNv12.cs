@@ -7,4 +7,5 @@ public class PixelFormatNv12 : IPixelFormat
     public string Name { get; }
 
     public string FFmpegName => "nv12";
+    public int BitDepth => 8;
 }

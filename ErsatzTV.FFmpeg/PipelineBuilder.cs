@@ -220,8 +220,10 @@ public class PipelineBuilder
 
                 foreach (IPipelineStep accel in maybeAccel)
                 {
-                    bool canDecode = _hardwareCapabilities.CanDecode(currentState.VideoFormat);
-                    bool canEncode = _hardwareCapabilities.CanEncode(desiredState.VideoFormat);
+                    bool canDecode = _hardwareCapabilities.CanDecode(currentState.VideoFormat, videoStream.PixelFormat);
+                    bool canEncode = _hardwareCapabilities.CanEncode(
+                        desiredState.VideoFormat,
+                        desiredState.PixelFormat);
 
                     // disable hw accel if decoder/encoder isn't supported
                     if (!canDecode || !canEncode)
