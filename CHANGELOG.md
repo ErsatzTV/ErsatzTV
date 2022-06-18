@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.2-beta] - 2022-06-18
 ### Fixed
 - Fix content repeating for up to a minute near the top of every hour
 - Check whether hardware-accelerated hevc codecs are supported by the NVIDIA card
@@ -11,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix sorting of channel contents in EPG
 - Fix Jellyfin admin user id sync
   - Ignore disabled admins and admins who do not have access to all libraries
+
+### Added
+- Add 32-bit `arm` docker tags (`develop-arm` and `latest-arm`)
 
 ### Changed
 - Regularly delete old segments from transcode folder while content is actively transcoding
@@ -1247,7 +1252,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.1-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.2-beta...HEAD
+[0.6.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.1-beta...v0.6.2-beta
 [0.6.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.0-beta...v0.6.1-beta
 [0.6.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.8-beta...v0.6.0-beta
 [0.5.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.7-beta...v0.5.8-beta
