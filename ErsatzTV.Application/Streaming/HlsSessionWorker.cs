@@ -313,6 +313,8 @@ public class HlsSessionWorker : IHlsSessionWorker
                                     _seekNextItem = false;
                                 }
 
+                                _hasWrittenSegments = true;
+
                                 return true;
                             }
                         }
