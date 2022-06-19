@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Maintain stream continuity when playout is rebuilt for a channel that is actively being streamed
 
 ## [0.6.2-beta] - 2022-06-18
 ### Fixed
