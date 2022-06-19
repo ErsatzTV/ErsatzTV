@@ -27,8 +27,10 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly object _sync = new();
     private string _channelNumber;
     private bool _firstProcess;
+    private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
+    private bool _seekNextItem;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
@@ -86,7 +88,11 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    public void PlayoutUpdated() => _firstProcess = true;
+    public void PlayoutUpdated()
+    {
+        _firstProcess = true;
+        _seekNextItem = true;
+    }
 
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
     {
@@ -203,7 +209,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            long ptsOffset = await GetPtsOffset(mediator, _channelNumber, _firstProcess, cancellationToken);
+            long ptsOffset = await GetPtsOffset(mediator, _channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             var request = new GetPlayoutItemProcessByChannelNumber(
@@ -250,6 +256,13 @@ public class HlsSessionWorker : IHlsSessionWorker
                         _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
                         _transcodedUntil = processModel.Until;
                         _firstProcess = false;
+                        if (_seekNextItem)
+                        {
+                            _firstProcess = true;
+                            _seekNextItem = false;
+                        }
+
+                        _hasWrittenSegments = true;
                         return true;
                     }
                     else
@@ -294,6 +307,12 @@ public class HlsSessionWorker : IHlsSessionWorker
                             if (commandResult.ExitCode == 0)
                             {
                                 _firstProcess = false;
+                                if (_seekNextItem)
+                                {
+                                    _firstProcess = true;
+                                    _seekNextItem = false;
+                                }
+
                                 return true;
                             }
                         }
@@ -392,7 +411,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     private async Task<long> GetPtsOffset(
         IMediator mediator,
         string channelNumber,
-        bool firstProcess,
         CancellationToken cancellationToken)
     {
         await Slim.WaitAsync(cancellationToken);
@@ -400,8 +418,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             long result = 0;
 
-            // the first process always starts at zero
-            if (firstProcess)
+            // if we haven't yet written any segments, start at zero
+            if (!_hasWrittenSegments)
             {
                 return result;
             }
