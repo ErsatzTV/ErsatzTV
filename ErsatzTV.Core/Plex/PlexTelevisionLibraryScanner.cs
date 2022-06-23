@@ -520,6 +520,34 @@ public class PlexTelevisionLibraryScanner :
             }
         }
 
+        if (fullMetadata.SortTitle != existingMetadata.SortTitle || fullMetadata.Title != existingMetadata.Title)
+        {
+            existingMetadata.Title = fullMetadata.Title;
+            existingMetadata.SortTitle = fullMetadata.SortTitle;
+            if (await _televisionRepository.UpdateTitles(existingMetadata, fullMetadata.Title, fullMetadata.SortTitle))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        if (fullMetadata.Outline != existingMetadata.Outline)
+        {
+            existingMetadata.Outline = fullMetadata.Outline;
+            if (await _televisionRepository.UpdateOutline(existingMetadata, fullMetadata.Outline))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
+        if (fullMetadata.Plot != existingMetadata.Plot)
+        {
+            existingMetadata.Plot = fullMetadata.Plot;
+            if (await _televisionRepository.UpdatePlot(existingMetadata, fullMetadata.Plot))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
         if (await UpdateArtworkIfNeeded(existingMetadata, fullMetadata, ArtworkKind.Thumbnail))
         {
             result.IsUpdated = true;
