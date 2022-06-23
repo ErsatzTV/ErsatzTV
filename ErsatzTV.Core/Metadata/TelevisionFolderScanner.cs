@@ -177,7 +177,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             return new MediaItemScanResult<Show>(show);
         }
 
-        return await _televisionRepository.AddShow(libraryPathId, showFolder, metadata);
+        return await _televisionRepository.AddShow(libraryPathId, metadata);
     }
 
     private async Task<Either<BaseError, Unit>> ScanSeasons(
