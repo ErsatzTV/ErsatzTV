@@ -260,7 +260,6 @@ public class TelevisionRepository : ITelevisionRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<Show>>> AddShow(
         int libraryPathId,
-        string showFolder,
         ShowMetadata metadata)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -464,12 +463,28 @@ public class TelevisionRepository : ITelevisionRepository
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<Unit> UpdatePath(int mediaFileId, string path)
+    public async Task<bool> UpdateTitles(EpisodeMetadata metadata, string title, string sortTitle)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
-            new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
+            "UPDATE EpisodeMetadata SET Title = @Title, SortTitle = @SortTitle WHERE Id = @MetadataId",
+            new { Title = title, SortTitle = sortTitle, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
+    public async Task<bool> UpdateOutline(EpisodeMetadata metadata, string outline)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE EpisodeMetadata SET Outline = @Outline WHERE Id = @MetadataId",
+            new { Outline = outline, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
+    public async Task<bool> UpdatePlot(EpisodeMetadata metadata, string plot)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE EpisodeMetadata SET Plot = @Plot WHERE Id = @MetadataId",
+            new { Plot = plot, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
     public async Task<List<Episode>> GetShowItems(int showId)

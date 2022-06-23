@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Maintain stream continuity when playout is rebuilt for a channel that is actively being streamed
+- Properly apply changes to episode title, sort title, outline and plot from Plex
 
 ## [0.6.2-beta] - 2022-06-18
 ### Fixed
