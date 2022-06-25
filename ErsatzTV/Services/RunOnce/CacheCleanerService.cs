@@ -54,6 +54,7 @@ public class CacheCleanerService : IHostedService
         {
             _logger.LogInformation("Emptying transcode cache folder");
             localFileSystem.EmptyFolder(FileSystemLayout.TranscodeFolder);
+            _logger.LogInformation("Done emptying transcode cache folder");
         }
     }
 
