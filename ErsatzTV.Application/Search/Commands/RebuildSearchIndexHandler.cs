@@ -33,9 +33,13 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
 
     public async Task<Unit> Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Initializing search index");
+
         bool indexFolderExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
 
         await _searchIndex.Initialize(_localFileSystem, _configElementRepository);
+
+        _logger.LogInformation("Done initializing search index");
 
         if (!indexFolderExists ||
             await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
