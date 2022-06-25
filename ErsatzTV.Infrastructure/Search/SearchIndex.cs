@@ -88,7 +88,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 25;
+    public int Version => 26;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1117,8 +1117,8 @@ public sealed class SearchIndex : ISearchIndex
             EpisodeMetadata em =>
                 $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}"
                     .ToLowerInvariant(),
-            OtherVideoMetadata ovm => $"{ovm.OriginalTitle}".ToLowerInvariant(),
-            SongMetadata sm => $"{sm.OriginalTitle}".ToLowerInvariant(),
+            OtherVideoMetadata ovm => $"{ovm.Title}_{ovm.Year}".ToLowerInvariant(),
+            SongMetadata sm => $"{sm.Title}_{sm.Year}".ToLowerInvariant(),
             _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
         };
 
