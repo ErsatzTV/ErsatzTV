@@ -108,6 +108,7 @@ jobs:
             --icon "ErsatzTV.app" 200 190 \
             --hide-extension "ErsatzTV.app" \
             --app-drop-link 600 185 \
+            --skip-jenkins \
             "ErsatzTV.dmg" \
             "ErsatzTV.app/"
 
