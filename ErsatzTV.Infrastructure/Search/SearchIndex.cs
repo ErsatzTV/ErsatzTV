@@ -88,7 +88,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 26;
+    public int Version => 27;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1111,14 +1111,20 @@ public sealed class SearchIndex : ISearchIndex
         return query;
     }
 
+    // this is used for filtering duplicate search results
     private static string GetTitleAndYear(Metadata metadata) =>
         metadata switch
         {
             EpisodeMetadata em =>
-                $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}"
+                $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}_{em.Episode.State}"
                     .ToLowerInvariant(),
-            OtherVideoMetadata ovm => $"{ovm.Title}_{ovm.Year}".ToLowerInvariant(),
-            SongMetadata sm => $"{sm.Title}_{sm.Year}".ToLowerInvariant(),
+            OtherVideoMetadata ovm => $"{ovm.Title}_{ovm.Year}_{ovm.OtherVideo.State}".ToLowerInvariant(),
+            SongMetadata sm => $"{sm.Title}_{sm.Year}_{sm.Song.State}".ToLowerInvariant(),
+            MovieMetadata mm => $"{mm.Title}_{mm.Year}_{mm.Movie.State}".ToLowerInvariant(),
+            ArtistMetadata am => $"{am.Title}_{am.Year}_{am.Artist.State}".ToLowerInvariant(),
+            MusicVideoMetadata mvm => $"{mvm.Title}_{mvm.Year}_{mvm.MusicVideo.State}".ToLowerInvariant(),
+            SeasonMetadata sm => $"{sm.Title}_{sm.Year}_{sm.Season.State}".ToLowerInvariant(),
+            ShowMetadata sm => $"{sm.Title}_{sm.Year}_{sm.Show.State}".ToLowerInvariant(),
             _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
         };
 
