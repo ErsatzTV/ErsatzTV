@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly apply changes to episode title, sort title, outline and plot from Plex
 - Fix search index for other videos and songs
   - In previous versions, some libraries would incorrectly display only one item
+- Properly display old versions of renamed items in trash
 
 ## [0.6.2-beta] - 2022-06-18
 ### Fixed
