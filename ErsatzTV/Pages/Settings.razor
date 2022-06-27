@@ -6,6 +6,7 @@
 @using ErsatzTV.Application.Watermarks
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
+@using Serilog.Events
 @using ErsatzTV.Core.Domain.Filler
 @implements IDisposable
 @inject IMediator _mediator
@@ -13,7 +14,7 @@
 @inject ILogger<Settings> _logger
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="display: flex; flex-direction: row">
-    <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+    <MudGrid>
         <MudCard Class="mr-6 mb-6" Style="max-width: 400px">
             <MudCardHeader>
                 <CardHeaderContent>
@@ -100,73 +101,98 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveFFmpegSettings())">Save Settings</MudButton>
             </MudCardActions>
         </MudCard>
-        <MudCard Class="mr-6 mb-auto" Style="width: 350px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudForm @bind-IsValid="@_hdhrSuccess">
-                    <MudTextField T="int" Label="Tuner Count" @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
-                </MudForm>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
-            </MudCardActions>
-        </MudCard>
-        <MudCard Class="mr-6" Style="width: 350px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Scanner Settings</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudForm @bind-IsValid="@_scannerSuccess">
-                    <MudTextField T="int"
-                                  Label="Library Refresh Interval"
-                                  @bind-Value="_libraryRefreshInterval"
-                                  Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
-                                  Required="true"
-                                  RequiredError="Library refresh interval is required!"
-                                  Adornment="Adornment.End"
-                                  AdornmentText="Hours"/>
-                </MudForm>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
-            </MudCardActions>
-        </MudCard>
-        <MudCard Style="width: 350px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Playout Settings</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudForm @bind-IsValid="@_playoutSuccess">
-                    <MudTextField T="int"
-                                  Label="Days To Build"
-                                  @bind-Value="_playoutSettings.DaysToBuild"
-                                  Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
-                                  Required="true"
-                                  RequiredError="Days to build is required!"
-                                  Adornment="Adornment.End"
-                                  AdornmentText="Days"/>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
-                            <MudCheckBox Label="Skip Missing Items"
-                                         @bind-Checked="_playoutSettings.SkipMissingItems"
-                                         For="@(() => _playoutSettings.SkipMissingItems)"/>
-                        </MudTooltip>
-                    </MudElement>
-                </MudForm>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())">Save Settings</MudButton>
-            </MudCardActions>
-        </MudCard>
-    </div>
+        <MudStack Class="mr-6">
+            <MudCard Class="mb-6" Style="width: 350px">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">General Settings</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudForm>
+                        <MudSelect Class="mt-3"
+                                   Label="Minimum Log Level"
+                                   @bind-Value="_generalSettings.MinimumLogLevel"
+                                   For="@(() => _generalSettings.MinimumLogLevel)">
+                            <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                            <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                            <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                            <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                        </MudSelect>
+                    </MudForm>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveGeneralSettings())">Save Settings</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <MudCard Class="mb-6" Style="width: 350px">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudForm @bind-IsValid="@_hdhrSuccess">
+                        <MudTextField T="int" Label="Tuner Count" @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
+                    </MudForm>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <MudCard Class="mb-6" Style="width: 350px">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Scanner Settings</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudForm @bind-IsValid="@_scannerSuccess">
+                        <MudTextField T="int"
+                                      Label="Library Refresh Interval"
+                                      @bind-Value="_libraryRefreshInterval"
+                                      Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
+                                      Required="true"
+                                      RequiredError="Library refresh interval is required!"
+                                      Adornment="Adornment.End"
+                                      AdornmentText="Hours"/>
+                    </MudForm>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <MudCard Class="mb-6" Style="width: 350px">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Playout Settings</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudForm @bind-IsValid="@_playoutSuccess">
+                        <MudTextField T="int"
+                                      Label="Days To Build"
+                                      @bind-Value="_playoutSettings.DaysToBuild"
+                                      Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
+                                      Required="true"
+                                      RequiredError="Days to build is required!"
+                                      Adornment="Adornment.End"
+                                      AdornmentText="Days"/>
+                        <MudElement HtmlTag="div" Class="mt-3">
+                            <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
+                                <MudCheckBox Label="Skip Missing Items"
+                                             @bind-Checked="_playoutSettings.SkipMissingItems"
+                                             For="@(() => _playoutSettings.SkipMissingItems)"/>
+                            </MudTooltip>
+                        </MudElement>
+                    </MudForm>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())">Save Settings</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudStack>
+    </MudGrid>
 </MudContainer>
 
 @code {
@@ -184,6 +210,7 @@
     private int _tunerCount;
     private int _libraryRefreshInterval;
     private PlayoutSettingsViewModel _playoutSettings;
+    private GeneralSettingsViewModel _generalSettings;
 
     public void Dispose()
     {
@@ -207,6 +234,7 @@
         _scannerSuccess = _libraryRefreshInterval > 0;
         _playoutSettings = await _mediator.Send(new GetPlayoutSettings(), _cts.Token);
         _playoutSuccess = _playoutSettings.DaysToBuild > 0;
+        _generalSettings = await _mediator.Send(new GetGeneralSettings(), _cts.Token);
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
@@ -272,6 +300,18 @@
                 _logger.LogError("Unexpected error saving playout settings: {Error}", error.Value);
             },
             Right: _ => _snackbar.Add("Successfully saved playout settings", Severity.Success));
+    }
+
+    private async Task SaveGeneralSettings()
+    {
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateGeneralSettings(_generalSettings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Unexpected error saving general settings: {Error}", error.Value);
+            },
+            Right: _ => _snackbar.Add("Successfully saved general settings", Severity.Success));
     }
 
 }
