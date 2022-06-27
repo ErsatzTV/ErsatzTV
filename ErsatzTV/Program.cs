@@ -2,6 +2,8 @@ using System.Diagnostics;
 using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 
 namespace ErsatzTV;
 
@@ -29,14 +31,21 @@ public class Program
                 true)
             .AddEnvironmentVariables()
             .Build();
+
+        LoggingLevelSwitch = new LoggingLevelSwitch();
     }
 
     private static IConfiguration Configuration { get; }
 
+    private static LoggingLevelSwitch LoggingLevelSwitch { get; }
+
     public static async Task<int> Main(string[] args)
     {
+        LoggingLevelSwitch.MinimumLevel = LogEventLevel.Information;
+
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
+            .MinimumLevel.ControlledBy(LoggingLevelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
             .WriteTo.SQLite(FileSystemLayout.LogDatabasePath, retentionPeriod: TimeSpan.FromDays(1))
@@ -61,6 +70,7 @@ public class Program
 
     private static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
+            .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitch))
             .ConfigureWebHostDefaults(
                 webBuilder => webBuilder.UseStartup<Startup>()
                     .UseConfiguration(Configuration)

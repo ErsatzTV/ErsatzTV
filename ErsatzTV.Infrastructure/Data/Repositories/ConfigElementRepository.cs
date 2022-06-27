@@ -14,7 +14,7 @@ public class ConfigElementRepository : IConfigElementRepository
 
     public async Task<Unit> Upsert<T>(ConfigElementKey configElementKey, T value)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<ConfigElement> maybeElement = await dbContext.ConfigElements
             .SelectOneAsync(c => c.Key, c => c.Key == configElementKey.Key);
@@ -42,7 +42,7 @@ public class ConfigElementRepository : IConfigElementRepository
 
     public async Task<Option<ConfigElement>> Get(ConfigElementKey key)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.ConfigElements
             .OrderBy(ce => ce.Key)
             .SingleOrDefaultAsync(ce => ce.Key == key.Key)
@@ -50,18 +50,27 @@ public class ConfigElementRepository : IConfigElementRepository
     }
 
     public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
-        Get(key).MapT(ce => (T)Convert.ChangeType(ce.Value, typeof(T)));
+        Get(key).MapT(
+            ce =>
+            {
+                if (typeof(T).IsEnum)
+                {
+                    return (T)Enum.Parse(typeof(T), ce.Value);
+                }
+
+                return (T)Convert.ChangeType(ce.Value, typeof(T));
+            });
 
     public async Task Delete(ConfigElement configElement)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         dbContext.ConfigElements.Remove(configElement);
         await dbContext.SaveChangesAsync();
     }
 
     public async Task<Unit> Delete(ConfigElementKey configElementKey)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<ConfigElement> maybeExisting = await dbContext.ConfigElements
             .SelectOneAsync(ce => ce.Key, ce => ce.Key == configElementKey.Key);
         foreach (ConfigElement element in maybeExisting)
