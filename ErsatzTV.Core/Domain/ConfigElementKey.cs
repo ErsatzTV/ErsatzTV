@@ -6,6 +6,7 @@ public class ConfigElementKey
 
     public string Key { get; }
 
+    public static ConfigElementKey MinimumLogLevel => new("log.minimum_level");
     public static ConfigElementKey FFmpegPath => new("ffmpeg.ffmpeg_path");
     public static ConfigElementKey FFprobePath => new("ffmpeg.ffprobe_path");
     public static ConfigElementKey FFmpegDefaultProfileId => new("ffmpeg.default_profile_id");
