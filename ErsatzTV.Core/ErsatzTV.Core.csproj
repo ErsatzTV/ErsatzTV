@@ -11,7 +11,7 @@
       <PackageReference Include="Destructurama.Attributed" Version="3.0.0" />
       <PackageReference Include="Flurl" Version="3.0.6" />
       <PackageReference Include="LanguageExt.Core" Version="4.2.7" />
-      <PackageReference Include="LanguageExt.Transformers" Version="4.2.7" />
+      <PackageReference Include="LanguageExt.Transformers" Version="4.2.9" />
       <PackageReference Include="MediatR" Version="10.0.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
