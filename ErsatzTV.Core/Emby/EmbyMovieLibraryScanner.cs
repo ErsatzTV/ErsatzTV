@@ -26,6 +26,7 @@ public class EmbyMovieLibraryScanner :
         IMediaSourceRepository mediaSourceRepository,
         IEmbyMovieRepository embyMovieRepository,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -38,6 +39,7 @@ public class EmbyMovieLibraryScanner :
             mediator,
             searchIndex,
             searchRepository,
+            fallbackMetadataProvider,
             logger)
     {
         _embyApiClient = embyApiClient;

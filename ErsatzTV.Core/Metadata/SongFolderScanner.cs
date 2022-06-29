@@ -15,6 +15,7 @@ namespace ErsatzTV.Core.Metadata;
 public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -33,6 +34,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         IMediator mediator,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -55,6 +57,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _mediator = mediator;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _client = client;
@@ -155,7 +158,10 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(
+                                _searchRepository,
+                                _fallbackMetadataProvider,
+                                new List<int> { result.Item.Id });
                         }
                     }
                 }
@@ -173,7 +179,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 {
                     _logger.LogInformation("Flagging missing song at {Path}", path);
                     List<int> songIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, songIds);
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, songIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {

@@ -18,6 +18,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEpisode : Episode
     where TEtag : MediaServerItemEtag
 {
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -32,6 +33,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         ILocalFileSystem localFileSystem,
         ISearchRepository searchRepository,
         ISearchIndex searchIndex,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IMediator mediator,
         ILogger logger)
     {
@@ -40,6 +42,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         _localFileSystem = localFileSystem;
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _mediator = mediator;
         _logger = logger;
     }
@@ -196,7 +199,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }
@@ -204,7 +210,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash shows that are no longer present on the media server
         var fileNotFoundItemIds = existingShows.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundShows(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, ids);
+        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
 
         await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
 
@@ -358,7 +364,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }
@@ -366,7 +375,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash seasons that are no longer present on the media server
         var fileNotFoundItemIds = existingSeasons.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundSeasons(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, ids);
+        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
 
         return Unit.Default;
     }
@@ -461,7 +470,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }
@@ -469,7 +481,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash episodes that are no longer present on the media server
         var fileNotFoundItemIds = existingEpisodes.Map(m => m.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundEpisodes(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, ids);
+        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
 
         return Unit.Default;
     }
@@ -511,7 +523,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             {
                 foreach (int id in await televisionRepository.FlagUnavailable(library, incoming))
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { id });
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { id });
                 }
             }
 

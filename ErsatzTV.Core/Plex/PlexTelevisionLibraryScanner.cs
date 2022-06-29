@@ -28,6 +28,7 @@ public class PlexTelevisionLibraryScanner :
         IMetadataRepository metadataRepository,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexPathReplacementService plexPathReplacementService,
@@ -42,6 +43,7 @@ public class PlexTelevisionLibraryScanner :
             localFileSystem,
             searchRepository,
             searchIndex,
+            fallbackMetadataProvider,
             mediator,
             logger)
     {

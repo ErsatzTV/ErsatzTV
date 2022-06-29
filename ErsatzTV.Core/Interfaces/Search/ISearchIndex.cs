@@ -9,9 +9,18 @@ public interface ISearchIndex : IDisposable
 {
     public int Version { get; }
     Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository);
-    Task<Unit> Rebuild(ISearchRepository searchRepository);
-    Task<Unit> RebuildItems(ISearchRepository searchRepository, List<int> itemIds);
-    Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items);
+    Task<Unit> Rebuild(ISearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider);
+
+    Task<Unit> RebuildItems(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        List<int> itemIds);
+
+    Task<Unit> UpdateItems(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        List<MediaItem> items);
+
     Task<Unit> RemoveItems(List<int> ids);
     Task<SearchResult> Search(string query, int skip, int limit, string searchField = "");
     void Commit();

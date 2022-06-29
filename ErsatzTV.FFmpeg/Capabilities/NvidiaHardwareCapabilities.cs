@@ -1,4 +1,3 @@
-using System.Numerics;
 using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Capabilities;
@@ -42,7 +41,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
 
             // nvidia cannot encode 10-bit h264
             VideoFormat.H264 when bitDepth == 10 => false,
-            
+
             _ => true
         };
     }

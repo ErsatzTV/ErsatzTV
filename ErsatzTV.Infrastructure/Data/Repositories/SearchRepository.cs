@@ -9,6 +9,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 public class SearchRepository : ISearchRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly SemaphoreSlim _slim = new(1, 1);
+    private List<string> _allLanguageCodes;
 
     public SearchRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
@@ -49,6 +51,8 @@ public class SearchRepository : ISearchRepository
             .ThenInclude(em => em.Guids)
             .Include(mi => (mi as Episode).MediaVersions)
             .ThenInclude(em => em.Streams)
+            .Include(mi => (mi as Episode).MediaVersions)
+            .ThenInclude(em => em.MediaFiles)
             .Include(mi => (mi as Episode).Season)
             .ThenInclude(s => s.Show)
             .ThenInclude(s => s.ShowMetadata)
@@ -162,8 +166,24 @@ public class SearchRepository : ISearchRepository
 
     public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
+        if (_allLanguageCodes == null)
+        {
+            await _slim.WaitAsync();
+            try
+            {
+                if (_allLanguageCodes == null)
+                {
+                    await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+                    _allLanguageCodes = await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
+                }
+            }
+            finally
+            {
+                _slim.Release();
+            }
+        }
+
+        return _allLanguageCodes;
     }
 
     public IAsyncEnumerable<MediaItem> GetAllMediaItems()
@@ -203,6 +223,8 @@ public class SearchRepository : ISearchRepository
             .ThenInclude(em => em.Guids)
             .Include(mi => (mi as Episode).MediaVersions)
             .ThenInclude(em => em.Streams)
+            .Include(mi => (mi as Episode).MediaVersions)
+            .ThenInclude(em => em.MediaFiles)
             .Include(mi => (mi as Episode).Season)
             .ThenInclude(s => s.Show)
             .ThenInclude(s => s.ShowMetadata)
