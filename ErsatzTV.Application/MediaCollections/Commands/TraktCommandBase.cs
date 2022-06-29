@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
@@ -13,6 +14,7 @@ namespace ErsatzTV.Application.MediaCollections;
 
 public abstract class TraktCommandBase
 {
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger _logger;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -21,10 +23,12 @@ public abstract class TraktCommandBase
         ITraktApiClient traktApiClient,
         ISearchRepository searchRepository,
         ISearchIndex searchIndex,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger logger)
     {
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
         TraktApiClient = traktApiClient;
     }
@@ -158,7 +162,7 @@ public abstract class TraktCommandBase
 
             if (await dbContext.SaveChangesAsync() > 0)
             {
-                await _searchIndex.RebuildItems(_searchRepository, ids.ToList());
+                await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids.ToList());
             }
 
             _searchIndex.Commit();

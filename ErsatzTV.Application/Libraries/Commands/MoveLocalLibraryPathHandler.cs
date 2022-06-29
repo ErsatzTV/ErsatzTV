@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
@@ -13,6 +14,7 @@ namespace ErsatzTV.Application.Libraries;
 public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<MoveLocalLibraryPathHandler> _logger;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -20,11 +22,13 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
     public MoveLocalLibraryPathHandler(
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<MoveLocalLibraryPathHandler> logger)
     {
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _dbContextFactory = dbContextFactory;
         _logger = logger;
     }
@@ -35,7 +39,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => MovePath(dbContext, parameters));
+        return await validation.Apply(parameters => MovePath(dbContext, parameters));
     }
 
     private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters)
@@ -57,7 +61,10 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
                 foreach (MediaItem mediaItem in maybeMediaItem)
                 {
                     _logger.LogInformation("Moving item at {Path}", await GetPath(dbContext, mediaItem));
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { mediaItem });
+                    await _searchIndex.UpdateItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<MediaItem> { mediaItem });
                 }
             }
         }

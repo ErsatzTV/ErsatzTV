@@ -25,6 +25,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IEmbyTelevisionRepository televisionRepository,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -37,6 +38,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             localFileSystem,
             searchRepository,
             searchIndex,
+            fallbackMetadataProvider,
             mediator,
             logger)
     {

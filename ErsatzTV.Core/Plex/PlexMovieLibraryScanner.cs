@@ -28,6 +28,7 @@ public class PlexMovieLibraryScanner :
         IMetadataRepository metadataRepository,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexMovieRepository plexMovieRepository,
@@ -43,6 +44,7 @@ public class PlexMovieLibraryScanner :
             mediator,
             searchIndex,
             searchRepository,
+            fallbackMetadataProvider,
             logger)
     {
         _plexServerApiClient = plexServerApiClient;

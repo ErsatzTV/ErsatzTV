@@ -12,6 +12,7 @@ namespace ErsatzTV.Application.Search;
 public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Unit>
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RebuildSearchIndexHandler> _logger;
     private readonly ISearchIndex _searchIndex;
@@ -22,6 +23,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
         ISearchRepository searchRepository,
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<RebuildSearchIndexHandler> logger)
     {
         _searchIndex = searchIndex;
@@ -29,6 +31,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
         _searchRepository = searchRepository;
         _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
     }
 
     public async Task<Unit> Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
@@ -48,7 +51,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
             _logger.LogInformation("Migrating search index to version {Version}", _searchIndex.Version);
 
             var sw = Stopwatch.StartNew();
-            await _searchIndex.Rebuild(_searchRepository);
+            await _searchIndex.Rebuild(_searchRepository, _fallbackMetadataProvider);
 
             await _configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, _searchIndex.Version);
             sw.Stop();
