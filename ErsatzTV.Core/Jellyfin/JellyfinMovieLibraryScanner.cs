@@ -25,6 +25,7 @@ public class JellyfinMovieLibraryScanner :
         IMediator mediator,
         IJellyfinMovieRepository jellyfinMovieRepository,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IJellyfinPathReplacementService pathReplacementService,
         IMediaSourceRepository mediaSourceRepository,
         ILocalFileSystem localFileSystem,
@@ -38,6 +39,7 @@ public class JellyfinMovieLibraryScanner :
             mediator,
             searchIndex,
             searchRepository,
+            fallbackMetadataProvider,
             logger)
     {
         _jellyfinApiClient = jellyfinApiClient;

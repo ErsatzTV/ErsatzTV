@@ -24,6 +24,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public MovieFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -35,6 +36,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         IImageCache imageCache,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
@@ -59,6 +61,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _localMetadataProvider = localMetadataProvider;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _libraryRepository = libraryRepository;
         _mediator = mediator;
         _client = client;
@@ -160,7 +163,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
                         }
 
                         await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
@@ -174,7 +177,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                 {
                     _logger.LogInformation("Flagging missing movie at {Path}", path);
                     List<int> ids = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, ids);
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {

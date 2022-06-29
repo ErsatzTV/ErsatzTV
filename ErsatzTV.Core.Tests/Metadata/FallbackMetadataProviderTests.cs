@@ -40,6 +40,13 @@ public class FallbackMetadataProviderTests
         "Awesome.Show.S01E02.Description.more.Description.QUAlity.codec.CODEC-GROUP.mkv",
         1,
         2)]
+    [TestCase("Awesome Show - s01.e02.mkv", 1, 2)]
+    [TestCase("Awesome Show - S01.E02.mkv", 1, 2)]
+    [TestCase("Awesome Show - s01_e02.mkv", 1, 2)]
+    [TestCase("Awesome Show - S01_E02.mkv", 1, 2)]
+    [TestCase("Awesome Show - s01xe02.mkv", 1, 2)]
+    [TestCase("Awesome Show - S01XE02.mkv", 1, 2)]
+    [TestCase("Awesome Show - 1x02.mkv", 1, 2)]
     public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, int season, int episode)
     {
         List<EpisodeMetadata> metadata = _fallbackMetadataProvider.GetFallbackMetadata(

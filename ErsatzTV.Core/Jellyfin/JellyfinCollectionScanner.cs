@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
     private readonly IJellyfinCollectionRepository _jellyfinCollectionRepository;
     private readonly ILogger<JellyfinCollectionScanner> _logger;
     private readonly ISearchIndex _searchIndex;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     public JellyfinCollectionScanner(
@@ -19,12 +21,14 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
         IJellyfinApiClient jellyfinApiClient,
         ISearchRepository searchRepository,
         ISearchIndex searchIndex,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<JellyfinCollectionScanner> logger)
     {
         _jellyfinCollectionRepository = jellyfinCollectionRepository;
         _jellyfinApiClient = jellyfinApiClient;
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -116,7 +120,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             var changedIds = removedIds.Except(addedIds).ToList();
             changedIds.AddRange(addedIds.Except(removedIds));
 
-            await _searchIndex.RebuildItems(_searchRepository, changedIds);
+            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, changedIds);
             _searchIndex.Commit();
         }
         catch (Exception ex)

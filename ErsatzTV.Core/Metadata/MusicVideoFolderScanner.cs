@@ -24,6 +24,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public MusicVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -34,6 +35,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         IImageCache imageCache,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IArtistRepository artistRepository,
         IMusicVideoRepository musicVideoRepository,
         ILibraryRepository libraryRepository,
@@ -58,6 +60,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _localSubtitlesProvider = localSubtitlesProvider;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _artistRepository = artistRepository;
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
@@ -137,7 +140,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
                     }
                 }
             }
@@ -155,7 +158,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     _logger.LogInformation("Flagging missing music video at {Path}", path);
                     List<int> musicVideoIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, musicVideoIds);
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, musicVideoIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
@@ -330,7 +333,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                        await _searchIndex.RebuildItems(
+                            _searchRepository,
+                            _fallbackMetadataProvider,
+                            new List<int> { result.Item.Id });
                     }
                 }
             }

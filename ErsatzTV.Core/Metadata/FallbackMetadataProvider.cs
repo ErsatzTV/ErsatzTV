@@ -161,8 +161,14 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
         try
         {
-            const string PATTERN = @"[sS]\d+[eE]([e\-\d{1,2}]+)";
+            const string PATTERN = @"[sS]\d+[\._xX]?[eE]([e\-\d{1,2}]+)";
+            const string PATTERN_2 = @"\d+[\._xX]([e\-\d{1,2}]+)";
             MatchCollection matches = Regex.Matches(fileName, PATTERN);
+            if (matches.Count == 0)
+            {
+                matches = Regex.Matches(fileName, PATTERN_2);
+            }
+
             if (matches.Count > 0)
             {
                 foreach (Match match in matches)

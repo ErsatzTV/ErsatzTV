@@ -23,6 +23,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public OtherVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -34,6 +35,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         IMediator mediator,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IOtherVideoRepository otherVideoRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -57,6 +59,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _mediator = mediator;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
         _client = client;
@@ -160,7 +163,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
                         }
                     }
                 }
@@ -178,7 +181,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 {
                     _logger.LogInformation("Flagging missing other video at {Path}", path);
                     List<int> otherVideoIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, otherVideoIds);
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, otherVideoIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {

@@ -22,6 +22,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
@@ -33,6 +34,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         IMediator mediator,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -55,6 +57,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _mediator = mediator;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _client = client;
@@ -155,7 +158,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
                         }
                     }
                 }
@@ -173,7 +176,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 {
                     _logger.LogInformation("Flagging missing song at {Path}", path);
                     List<int> songIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, songIds);
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, songIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {

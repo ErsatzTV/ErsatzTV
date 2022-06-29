@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
@@ -15,19 +16,22 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
     private readonly ISearchIndex _searchIndex;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     public DeleteTraktListHandler(
         ITraktApiClient traktApiClient,
         ISearchRepository searchRepository,
         ISearchIndex searchIndex,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<DeleteTraktListHandler> logger,
         IEntityLocker entityLocker)
-        : base(traktApiClient, searchRepository, searchIndex, logger)
+        : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, logger)
     {
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _dbContextFactory = dbContextFactory;
         _entityLocker = entityLocker;
     }
@@ -38,10 +42,9 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
     {
         try
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
-            return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c));
+            return await validation.Apply(c => DoDeletion(dbContext, c));
         }
         finally
         {
@@ -56,7 +59,7 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
         dbContext.TraktLists.Remove(traktList);
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            await _searchIndex.RebuildItems(_searchRepository, mediaItemIds);
+            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, mediaItemIds);
         }
 
         _searchIndex.Commit();

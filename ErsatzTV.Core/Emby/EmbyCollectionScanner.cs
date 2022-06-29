@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
     private readonly IEmbyCollectionRepository _embyCollectionRepository;
     private readonly ILogger<EmbyCollectionScanner> _logger;
     private readonly ISearchIndex _searchIndex;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     public EmbyCollectionScanner(
@@ -19,12 +21,14 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         IEmbyApiClient embyApiClient,
         ISearchRepository searchRepository,
         ISearchIndex searchIndex,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<EmbyCollectionScanner> logger)
     {
         _embyCollectionRepository = embyCollectionRepository;
         _embyApiClient = embyApiClient;
         _searchRepository = searchRepository;
         _searchIndex = searchIndex;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -107,7 +111,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             var changedIds = removedIds.Except(addedIds).ToList();
             changedIds.AddRange(addedIds.Except(removedIds));
 
-            await _searchIndex.RebuildItems(_searchRepository, changedIds);
+            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, changedIds);
             _searchIndex.Commit();
         }
         catch (Exception ex)

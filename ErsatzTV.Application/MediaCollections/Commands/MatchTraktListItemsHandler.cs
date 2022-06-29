@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
@@ -20,9 +21,10 @@ public class MatchTraktListItemsHandler : TraktCommandBase,
         ITraktApiClient traktApiClient,
         ISearchRepository searchRepository,
         ISearchIndex searchIndex,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<MatchTraktListItemsHandler> logger,
-        IEntityLocker entityLocker) : base(traktApiClient, searchRepository, searchIndex, logger)
+        IEntityLocker entityLocker) : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, logger)
     {
         _dbContextFactory = dbContextFactory;
         _entityLocker = entityLocker;

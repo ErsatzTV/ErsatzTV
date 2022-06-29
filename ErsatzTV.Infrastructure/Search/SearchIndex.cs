@@ -88,7 +88,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 27;
+    public int Version => 28;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -117,7 +117,10 @@ public sealed class SearchIndex : ISearchIndex
         return _initialized;
     }
 
-    public async Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items)
+    public async Task<Unit> UpdateItems(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        List<MediaItem> items)
     {
         foreach (MediaItem item in items)
         {
@@ -139,7 +142,7 @@ public sealed class SearchIndex : ISearchIndex
                     await UpdateMusicVideo(searchRepository, musicVideo);
                     break;
                 case Episode episode:
-                    await UpdateEpisode(searchRepository, episode);
+                    await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
                     break;
                 case OtherVideo otherVideo:
                     await UpdateOtherVideo(searchRepository, otherVideo);
@@ -215,27 +218,32 @@ public sealed class SearchIndex : ISearchIndex
         _directory?.Dispose();
     }
 
-    public async Task<Unit> Rebuild(ISearchRepository searchRepository)
+    public async Task<Unit> Rebuild(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider)
     {
         _writer.DeleteAll();
         _writer.Commit();
 
         await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
         {
-            await RebuildItem(searchRepository, mediaItem);
+            await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
         }
 
         _writer.Commit();
         return Unit.Default;
     }
 
-    public async Task<Unit> RebuildItems(ISearchRepository searchRepository, List<int> itemIds)
+    public async Task<Unit> RebuildItems(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        List<int> itemIds)
     {
         foreach (int id in itemIds)
         {
             foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
             {
-                await RebuildItem(searchRepository, mediaItem);
+                await RebuildItem(searchRepository, fallbackMetadataProvider, mediaItem);
             }
         }
 
@@ -268,7 +276,10 @@ public sealed class SearchIndex : ISearchIndex
         }
     }
 
-    private async Task RebuildItem(ISearchRepository searchRepository, MediaItem mediaItem)
+    private async Task RebuildItem(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        MediaItem mediaItem)
     {
         switch (mediaItem)
         {
@@ -288,7 +299,7 @@ public sealed class SearchIndex : ISearchIndex
                 await UpdateMusicVideo(searchRepository, musicVideo);
                 break;
             case Episode episode:
-                await UpdateEpisode(searchRepository, episode);
+                await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
                 break;
             case OtherVideo otherVideo:
                 await UpdateOtherVideo(searchRepository, otherVideo);
@@ -807,8 +818,19 @@ public sealed class SearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateEpisode(ISearchRepository searchRepository, Episode episode)
+    private async Task UpdateEpisode(ISearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider, Episode episode)
     {
+        // try to load metadata here, since episodes without metadata won't index
+        if (episode.EpisodeMetadata.Count == 0)
+        {
+            episode.EpisodeMetadata ??= new List<EpisodeMetadata>();
+            episode.EpisodeMetadata = fallbackMetadataProvider.GetFallbackMetadata(episode);
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+            {
+                metadata.Episode = episode;
+            }
+        }
+
         foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
         {
             try

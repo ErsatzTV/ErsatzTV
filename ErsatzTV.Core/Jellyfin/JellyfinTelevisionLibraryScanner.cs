@@ -26,6 +26,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         IJellyfinTelevisionRepository televisionRepository,
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         IJellyfinPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -38,6 +39,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
             localFileSystem,
             searchRepository,
             searchIndex,
+            fallbackMetadataProvider,
             mediator,
             logger)
     {
