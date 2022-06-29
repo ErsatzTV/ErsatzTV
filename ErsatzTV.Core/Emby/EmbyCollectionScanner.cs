@@ -11,9 +11,9 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
 {
     private readonly IEmbyApiClient _embyApiClient;
     private readonly IEmbyCollectionRepository _embyCollectionRepository;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<EmbyCollectionScanner> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     public EmbyCollectionScanner(

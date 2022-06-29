@@ -15,6 +15,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     where TMovie : Movie
     where TEtag : MediaServerItemEtag
 {
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -22,7 +23,6 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     protected MediaServerMovieLibraryScanner(
         ILocalStatisticsProvider localStatisticsProvider,
@@ -171,7 +171,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }

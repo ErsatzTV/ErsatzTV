@@ -818,7 +818,10 @@ public sealed class SearchIndex : ISearchIndex
         }
     }
 
-    private async Task UpdateEpisode(ISearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider, Episode episode)
+    private async Task UpdateEpisode(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        Episode episode)
     {
         // try to load metadata here, since episodes without metadata won't index
         if (episode.EpisodeMetadata.Count == 0)

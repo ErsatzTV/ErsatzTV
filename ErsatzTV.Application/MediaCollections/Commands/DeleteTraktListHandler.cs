@@ -15,8 +15,8 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
-    private readonly ISearchIndex _searchIndex;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
 
     public DeleteTraktListHandler(
@@ -44,7 +44,7 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
         {
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
-            return await validation.Apply(c => DoDeletion(dbContext, c));
+            return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c));
         }
         finally
         {

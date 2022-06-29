@@ -9,11 +9,11 @@ namespace ErsatzTV.Core.Jellyfin;
 
 public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 {
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinCollectionRepository _jellyfinCollectionRepository;
     private readonly ILogger<JellyfinCollectionScanner> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     public JellyfinCollectionScanner(

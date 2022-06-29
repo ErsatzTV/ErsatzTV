@@ -14,9 +14,9 @@ namespace ErsatzTV.Application.MediaCollections;
 
 public abstract class TraktCommandBase
 {
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     protected TraktCommandBase(

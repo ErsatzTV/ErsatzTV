@@ -14,6 +14,7 @@ namespace ErsatzTV.Core.Metadata;
 public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
 {
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -23,7 +24,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public OtherVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -163,7 +163,10 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(
+                                _searchRepository,
+                                _fallbackMetadataProvider,
+                                new List<int> { result.Item.Id });
                         }
                     }
                 }

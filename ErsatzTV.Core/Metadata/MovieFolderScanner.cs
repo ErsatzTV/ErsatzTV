@@ -15,6 +15,7 @@ namespace ErsatzTV.Core.Metadata;
 public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -24,7 +25,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public MovieFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -163,7 +163,10 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(
+                                _searchRepository,
+                                _fallbackMetadataProvider,
+                                new List<int> { result.Item.Id });
                         }
 
                         await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);

@@ -12,8 +12,8 @@ namespace ErsatzTV.Application.Search;
 public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Unit>
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RebuildSearchIndexHandler> _logger;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;

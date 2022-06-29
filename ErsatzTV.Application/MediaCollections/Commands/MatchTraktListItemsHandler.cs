@@ -24,7 +24,12 @@ public class MatchTraktListItemsHandler : TraktCommandBase,
         IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory,
         ILogger<MatchTraktListItemsHandler> logger,
-        IEntityLocker entityLocker) : base(traktApiClient, searchRepository, searchIndex, fallbackMetadataProvider, logger)
+        IEntityLocker entityLocker) : base(
+        traktApiClient,
+        searchRepository,
+        searchIndex,
+        fallbackMetadataProvider,
+        logger)
     {
         _dbContextFactory = dbContextFactory;
         _entityLocker = entityLocker;

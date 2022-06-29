@@ -14,10 +14,10 @@ namespace ErsatzTV.Application.Libraries;
 public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<MoveLocalLibraryPathHandler> _logger;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public MoveLocalLibraryPathHandler(
         ISearchIndex searchIndex,

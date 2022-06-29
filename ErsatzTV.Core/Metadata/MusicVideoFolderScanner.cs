@@ -15,6 +15,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 {
     private readonly IArtistRepository _artistRepository;
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -24,7 +25,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
     public MusicVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -140,7 +140,10 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                        await _searchIndex.RebuildItems(
+                            _searchRepository,
+                            _fallbackMetadataProvider,
+                            new List<int> { result.Item.Id });
                     }
                 }
             }

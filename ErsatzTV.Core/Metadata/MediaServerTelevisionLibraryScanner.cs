@@ -18,13 +18,13 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEpisode : Episode
     where TEtag : MediaServerItemEtag
 {
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchRepository _searchRepository;
 
     protected MediaServerTelevisionLibraryScanner(
@@ -199,7 +199,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }
@@ -361,7 +364,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }
@@ -464,7 +470,10 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { result.Item.Id });
                 }
             }
         }

@@ -14,10 +14,10 @@ namespace ErsatzTV.Core.Metadata;
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediator _mediator;
@@ -130,7 +130,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                        await _searchIndex.RebuildItems(
+                            _searchRepository,
+                            _fallbackMetadataProvider,
+                            new List<int> { result.Item.Id });
                     }
                 }
             }
@@ -140,7 +143,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 if (!_localFileSystem.FileExists(path))
                 {
                     _logger.LogInformation("Flagging missing episode at {Path}", path);
-                    
+
                     List<int> episodeIds = await FlagFileNotFound(libraryPath, path);
                     await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, episodeIds);
                 }
@@ -245,7 +248,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
 
                     season.Show = show;
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { season.Id });
+                    await _searchIndex.RebuildItems(
+                        _searchRepository,
+                        _fallbackMetadataProvider,
+                        new List<int> { season.Id });
                 }
             }
         }
@@ -291,7 +297,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             foreach (Episode episode in maybeEpisode.RightToSeq())
             {
-                await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { episode.Id });
+                await _searchIndex.RebuildItems(
+                    _searchRepository,
+                    _fallbackMetadataProvider,
+                    new List<int> { episode.Id });
             }
         }
 

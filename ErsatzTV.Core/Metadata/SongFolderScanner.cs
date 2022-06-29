@@ -15,6 +15,7 @@ namespace ErsatzTV.Core.Metadata;
 public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -22,7 +23,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
@@ -158,7 +158,10 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { result.Item.Id });
+                            await _searchIndex.RebuildItems(
+                                _searchRepository,
+                                _fallbackMetadataProvider,
+                                new List<int> { result.Item.Id });
                         }
                     }
                 }
