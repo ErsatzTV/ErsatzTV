@@ -56,9 +56,9 @@
     <ItemGroup>
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
       <PackageReference Include="FluentValidation" Version="11.1.0" />
-      <PackageReference Include="FluentValidation.AspNetCore" Version="11.1.0" />
+      <PackageReference Include="FluentValidation.AspNetCore" Version="11.1.2" />
       <PackageReference Include="HtmlSanitizer" Version="7.1.512" />
-      <PackageReference Include="LanguageExt.Core" Version="4.2.7" />
+      <PackageReference Include="LanguageExt.Core" Version="4.2.9" />
       <PackageReference Include="Markdig" Version="0.30.2" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
@@ -72,7 +72,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.0.10" />
+      <PackageReference Include="MudBlazor" Version="6.0.11" />
       <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
