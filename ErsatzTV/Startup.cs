@@ -427,9 +427,9 @@ public class Startup
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
         // run-once/blocking startup services
-        services.AddHostedService<LoadLoggingLevelService>();
         services.AddHostedService<EndpointValidatorService>();
         services.AddHostedService<DatabaseMigratorService>();
+        services.AddHostedService<LoadLoggingLevelService>();
         services.AddHostedService<CacheCleanerService>();
         services.AddHostedService<ResourceExtractorService>();
         services.AddHostedService<PlatformSettingsService>();
