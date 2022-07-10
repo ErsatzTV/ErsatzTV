@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     protected MediaServerMovieLibraryScanner(
         ILocalStatisticsProvider localStatisticsProvider,
@@ -30,7 +31,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         ILocalFileSystem localFileSystem,
         IMediator mediator,
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger logger)
     {

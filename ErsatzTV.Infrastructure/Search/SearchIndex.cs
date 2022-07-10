@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using LanguageExt.UnsafeValueAccess;
@@ -118,7 +119,7 @@ public sealed class SearchIndex : ISearchIndex
     }
 
     public async Task<Unit> UpdateItems(
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         List<MediaItem> items)
     {
@@ -219,7 +220,7 @@ public sealed class SearchIndex : ISearchIndex
     }
 
     public async Task<Unit> Rebuild(
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider)
     {
         _writer.DeleteAll();
@@ -235,7 +236,7 @@ public sealed class SearchIndex : ISearchIndex
     }
 
     public async Task<Unit> RebuildItems(
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         List<int> itemIds)
     {

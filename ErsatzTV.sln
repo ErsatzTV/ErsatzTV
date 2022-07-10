@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.FFmpeg", "ErsatzTV
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.FFmpeg.Tests", "ErsatzTV.FFmpeg.Tests\ErsatzTV.FFmpeg.Tests.csproj", "{1C892530-CF92-4F43-8C64-BCEEF958D726}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Infrastructure.Tests", "ErsatzTV.Infrastructure.Tests\ErsatzTV.Infrastructure.Tests.csproj", "{591FB3F4-4DD8-441B-B7C8-F2A42BF69992}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{1C892530-CF92-4F43-8C64-BCEEF958D726}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C892530-CF92-4F43-8C64-BCEEF958D726}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C892530-CF92-4F43-8C64-BCEEF958D726}.Release|Any CPU.Build.0 = Release|Any CPU
+		{591FB3F4-4DD8-441B-B7C8-F2A42BF69992}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{591FB3F4-4DD8-441B-B7C8-F2A42BF69992}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{591FB3F4-4DD8-441B-B7C8-F2A42BF69992}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{591FB3F4-4DD8-441B-B7C8-F2A42BF69992}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
