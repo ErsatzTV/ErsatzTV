@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using Microsoft.Extensions.Logging;
 
@@ -14,12 +15,12 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<EmbyCollectionScanner> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     public EmbyCollectionScanner(
         IEmbyCollectionRepository embyCollectionRepository,
         IEmbyApiClient embyApiClient,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<EmbyCollectionScanner> logger)

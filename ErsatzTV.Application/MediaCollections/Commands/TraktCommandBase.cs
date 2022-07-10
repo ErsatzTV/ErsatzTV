@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Core.Trakt;
@@ -17,11 +17,11 @@ public abstract class TraktCommandBase
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     protected TraktCommandBase(
         ITraktApiClient traktApiClient,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger logger)

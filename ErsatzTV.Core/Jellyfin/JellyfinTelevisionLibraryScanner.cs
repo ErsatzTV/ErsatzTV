@@ -3,6 +3,7 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using MediatR;
@@ -25,7 +26,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         IMediaSourceRepository mediaSourceRepository,
         IJellyfinTelevisionRepository televisionRepository,
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         IJellyfinPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,

@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Tests.Fakes;
@@ -622,7 +623,7 @@ public class MovieFolderScannerTests
                 new Mock<IMetadataRepository>().Object,
                 _imageCache.Object,
                 new Mock<ISearchIndex>().Object,
-                new Mock<ISearchRepository>().Object,
+                new Mock<ICachingSearchRepository>().Object,
                 new Mock<IFallbackMetadataProvider>().Object,
                 new Mock<ILibraryRepository>().Object,
                 _mediaItemRepository.Object,
@@ -643,7 +644,7 @@ public class MovieFolderScannerTests
                 new Mock<IMetadataRepository>().Object,
                 _imageCache.Object,
                 new Mock<ISearchIndex>().Object,
-                new Mock<ISearchRepository>().Object,
+                new Mock<ICachingSearchRepository>().Object,
                 new Mock<IFallbackMetadataProvider>().Object,
                 new Mock<ILibraryRepository>().Object,
                 _mediaItemRepository.Object,

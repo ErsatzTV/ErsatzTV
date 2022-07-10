@@ -2,7 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
@@ -18,7 +18,7 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
 
     public AddTraktListHandler(
         ITraktApiClient traktApiClient,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory,
