@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly IMediator _mediator;
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     public MovieFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -35,7 +36,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,

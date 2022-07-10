@@ -3,6 +3,7 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using MediatR;
@@ -24,7 +25,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IMediaSourceRepository mediaSourceRepository,
         IEmbyTelevisionRepository televisionRepository,
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,

@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using Humanizer;
 using Microsoft.Extensions.Logging;
@@ -16,11 +17,11 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RebuildSearchIndexHandler> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     public RebuildSearchIndexHandler(
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
         IFallbackMetadataProvider fallbackMetadataProvider,

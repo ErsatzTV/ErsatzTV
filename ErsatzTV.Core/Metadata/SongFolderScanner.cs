@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
@@ -33,7 +34,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         IImageCache imageCache,
         IMediator mediator,
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,

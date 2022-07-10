@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using Microsoft.Extensions.Logging;
 
@@ -14,12 +15,12 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
     private readonly IJellyfinCollectionRepository _jellyfinCollectionRepository;
     private readonly ILogger<JellyfinCollectionScanner> _logger;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     public JellyfinCollectionScanner(
         IJellyfinCollectionRepository jellyfinCollectionRepository,
         IJellyfinApiClient jellyfinApiClient,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<JellyfinCollectionScanner> logger)

@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
@@ -17,11 +17,11 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
     private readonly IEntityLocker _entityLocker;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
+    private readonly ICachingSearchRepository _searchRepository;
 
     public DeleteTraktListHandler(
         ITraktApiClient traktApiClient,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         ISearchIndex searchIndex,
         IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory,

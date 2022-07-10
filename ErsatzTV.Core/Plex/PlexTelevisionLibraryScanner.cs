@@ -3,6 +3,7 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using MediatR;
@@ -27,7 +28,7 @@ public class PlexTelevisionLibraryScanner :
         ITelevisionRepository televisionRepository,
         IMetadataRepository metadataRepository,
         ISearchIndex searchIndex,
-        ISearchRepository searchRepository,
+        ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,

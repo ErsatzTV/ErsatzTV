@@ -9,8 +9,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 public class SearchRepository : ISearchRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly SemaphoreSlim _slim = new(1, 1);
-    private List<string> _allLanguageCodes;
 
     public SearchRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
@@ -164,26 +162,10 @@ public class SearchRepository : ISearchRepository
             new { ArtistId = artist.Id }).Map(result => result.ToList());
     }
 
-    public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
+    public virtual async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
     {
-        if (_allLanguageCodes == null)
-        {
-            await _slim.WaitAsync();
-            try
-            {
-                if (_allLanguageCodes == null)
-                {
-                    await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-                    _allLanguageCodes = await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
-                }
-            }
-            finally
-            {
-                _slim.Release();
-            }
-        }
-
-        return _allLanguageCodes;
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
     }
 
     public IAsyncEnumerable<MediaItem> GetAllMediaItems()
