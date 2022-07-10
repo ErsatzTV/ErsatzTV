@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
@@ -6,9 +7,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories.Caching;
 
 public class CachingSearchRepository : ICachingSearchRepository
 {
+    private readonly ConcurrentDictionary<List<string>, List<string>> _cache = new();
     private readonly ISearchRepository _searchRepository;
     private readonly SemaphoreSlim _slim = new(1, 1);
-    private List<string> _allLanguageCodes;
 
     public CachingSearchRepository(ISearchRepository searchRepository) => _searchRepository = searchRepository;
 
@@ -22,16 +23,12 @@ public class CachingSearchRepository : ICachingSearchRepository
 
     public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
     {
-        if (_allLanguageCodes == null)
+        if (!_cache.ContainsKey(mediaCodes))
         {
             await _slim.WaitAsync();
             try
             {
-                if (_allLanguageCodes == null)
-                {
-                    List<string> result = await _searchRepository.GetAllLanguageCodes(mediaCodes);
-                    _allLanguageCodes = result;
-                }
+                _cache.TryAdd(mediaCodes, await _searchRepository.GetAllLanguageCodes(mediaCodes));
             }
             finally
             {
@@ -39,7 +36,7 @@ public class CachingSearchRepository : ICachingSearchRepository
             }
         }
 
-        return _allLanguageCodes;
+        return _cache[mediaCodes];
     }
 
     public IAsyncEnumerable<MediaItem> GetAllMediaItems() => _searchRepository.GetAllMediaItems();
