@@ -62,7 +62,7 @@
       <PackageReference Include="Markdig" Version="0.30.2" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.6" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.7" />
       <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.6" /> 
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.6">
         <PrivateAssets>all</PrivateAssets>
