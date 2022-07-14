@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix subtitle stream selection when subtitle language is different than audio language
+- Fix bug with unsupported AAC channel layouts
 
 ## [0.6.3-beta] - 2022-07-04
 ### Fixed

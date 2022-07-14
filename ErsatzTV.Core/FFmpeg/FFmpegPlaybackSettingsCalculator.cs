@@ -148,14 +148,11 @@ public class FFmpegPlaybackSettingsCalculator
                 result.AudioBitrate = ffmpegProfile.AudioBitrate;
                 result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
 
-                audioStream.IfSome(
-                    stream =>
-                    {
-                        if (stream.Channels != ffmpegProfile.AudioChannels)
-                        {
-                            result.AudioChannels = ffmpegProfile.AudioChannels;
-                        }
-                    });
+                foreach (MediaStream _ in audioStream)
+                {
+                    // this can be optimized out later, depending on the audio codec
+                    result.AudioChannels = ffmpegProfile.AudioChannels;
+                }
 
                 result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
                 result.AudioDuration = outPoint - inPoint;
