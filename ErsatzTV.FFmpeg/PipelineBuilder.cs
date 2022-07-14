@@ -538,9 +538,16 @@ public class PipelineBuilder
                     _pipelineSteps.Add(step);
                 }
 
-                foreach (int desiredAudioChannels in audioInputFile.DesiredState.AudioChannels)
+                foreach (AudioStream audioStream in audioInputFile.AudioStreams.HeadOrNone())
                 {
-                    _pipelineSteps.Add(new AudioChannelsOutputOption(desiredAudioChannels));
+                    foreach (int desiredAudioChannels in audioInputFile.DesiredState.AudioChannels)
+                    {
+                        _pipelineSteps.Add(
+                            new AudioChannelsOutputOption(
+                                audioInputFile.DesiredState.AudioFormat,
+                                audioStream.Channels,
+                                desiredAudioChannels));
+                    }
                 }
 
                 foreach (int desiredBitrate in audioInputFile.DesiredState.AudioBitrate)

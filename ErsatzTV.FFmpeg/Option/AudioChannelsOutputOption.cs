@@ -1,10 +1,33 @@
-﻿namespace ErsatzTV.FFmpeg.Option;
+﻿using ErsatzTV.FFmpeg.Format;
+
+namespace ErsatzTV.FFmpeg.Option;
 
 public class AudioChannelsOutputOption : OutputOption
 {
-    private readonly int _channels;
+    private readonly Option<string> _audioFormat;
+    private readonly int _desiredChannels;
+    private readonly int _sourceChannels;
 
-    public AudioChannelsOutputOption(int channels) => _channels = channels;
+    public AudioChannelsOutputOption(Option<string> audioFormat, int sourceChannels, int desiredChannels)
+    {
+        _audioFormat = audioFormat;
+        _sourceChannels = sourceChannels;
+        _desiredChannels = desiredChannels;
+    }
 
-    public override IList<string> OutputOptions => new List<string> { "-ac", _channels.ToString() };
+    public override IList<string> OutputOptions
+    {
+        get
+        {
+            if (_sourceChannels != _desiredChannels || _audioFormat == Some(AudioFormat.Aac) && _desiredChannels > 2)
+            {
+                return new List<string>
+                {
+                    "-ac", _desiredChannels.ToString()
+                };
+            }
+
+            return Array.Empty<string>();
+        }
+    }
 }
