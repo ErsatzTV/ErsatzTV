@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix subtitle stream selection when subtitle language is different than audio language
 - Fix bug with unsupported AAC channel layouts
 
+### Added
+- Add `640x480` resolution
+
 ## [0.6.3-beta] - 2022-07-04
 ### Fixed
 - Maintain stream continuity when playout is rebuilt for a channel that is actively being streamed
