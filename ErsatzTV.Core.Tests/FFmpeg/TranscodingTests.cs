@@ -585,7 +585,7 @@ public class TranscodingTests
         public Task<IHardwareCapabilities> GetHardwareCapabilities(
             string ffmpegPath,
             HardwareAccelerationMode hardwareAccelerationMode) =>
-            Task.FromResult<IHardwareCapabilities>(new NvidiaHardwareCapabilities(61));
+            Task.FromResult<IHardwareCapabilities>(new NvidiaHardwareCapabilities(61, string.Empty));
     }
 
     private static string ExecutableName(string baseName) =>

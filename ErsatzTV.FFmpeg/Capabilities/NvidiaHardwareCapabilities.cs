@@ -5,8 +5,14 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 public class NvidiaHardwareCapabilities : IHardwareCapabilities
 {
     private readonly int _architecture;
+    private readonly List<string> _maxwellGm206 = new() { "GTX 750", "GTX 950", "GTX 960", "GTX 965M" };
+    private readonly string _model;
 
-    public NvidiaHardwareCapabilities(int architecture) => _architecture = architecture;
+    public NvidiaHardwareCapabilities(int architecture, string model)
+    {
+        _architecture = architecture;
+        _model = model;
+    }
 
     public bool CanDecode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
     {
@@ -14,14 +20,14 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
 
         return videoFormat switch
         {
-            // second gen maxwell is required to decode hevc
-            VideoFormat.Hevc => _architecture >= 52,
+            // some second gen maxwell can decode hevc, otherwise pascal is required
+            VideoFormat.Hevc => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
 
             // pascal is required to decode vp9 10-bit
             VideoFormat.Vp9 when bitDepth == 10 => _architecture >= 60,
 
-            // second gen maxwell is required to decode vp9
-            VideoFormat.Vp9 => _architecture >= 52,
+            // some second gen maxwell can decode vp9, otherwise pascal is required
+            VideoFormat.Vp9 => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
 
             _ => true
         };

@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix subtitle stream selection when subtitle language is different than audio language
 - Fix bug with unsupported AAC channel layouts
+- Fix NVIDIA second-gen maxwell capabilities detection
 
 ### Added
 - Add `640x480` resolution
