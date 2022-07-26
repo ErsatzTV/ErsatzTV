@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix subtitle stream selection when subtitle language is different than audio language
 - Fix bug with unsupported AAC channel layouts
 - Fix NVIDIA second-gen maxwell capabilities detection
+- Return distinct search results for episodes and other videos that have the same title
+  - For example, two other videos both named `Trailer` would previously have displayed as one item in search results
 
 ### Added
 - Add `640x480` resolution
