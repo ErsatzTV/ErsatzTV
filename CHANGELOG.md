@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix NVIDIA second-gen maxwell capabilities detection
 - Return distinct search results for episodes and other videos that have the same title
   - For example, two other videos both named `Trailer` would previously have displayed as one item in search results
+- Fix schedules that would begin to repeat the same content in the same order after a couple of days
 
 ### Added
 - Add `640x480` resolution
