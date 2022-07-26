@@ -626,9 +626,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.MediaItemId == collectionKey.MediaItemId
                      && a.AnchorDate is null);
 
-            var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State).ToDictionary(
-                mcs => mcs.Key,
-                mcs => mcs.Head());
+            var maybeEnumeratorState = collectionEnumerators.ToDictionary(e => e.Key, e => e.Value.State);
 
             PlayoutProgramScheduleAnchor scheduleAnchor = maybeExisting.Match(
                 existing =>
@@ -658,10 +656,10 @@ public class PlayoutBuilder : IPlayoutBuilder
             result.Add(scheduleAnchor);
         }
 
-        foreach (PlayoutProgramScheduleAnchor continueAnchor in playout.ProgramScheduleAnchors.Where(
+        foreach (PlayoutProgramScheduleAnchor checkpointAnchor in playout.ProgramScheduleAnchors.Where(
                      a => a.AnchorDate is not null))
         {
-            result.Add(continueAnchor);
+            result.Add(checkpointAnchor);
         }
 
         return result;
@@ -675,7 +673,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         bool randomStartPoint)
     {
         Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
-            .OrderByDescending(a => a.AnchorDate is null)
+            .OrderByDescending(a => a.AnchorDate ?? DateTime.MaxValue)
             .FirstOrDefault(
                 a => a.ProgramScheduleId == playout.ProgramScheduleId
                      && a.CollectionType == collectionKey.CollectionType
