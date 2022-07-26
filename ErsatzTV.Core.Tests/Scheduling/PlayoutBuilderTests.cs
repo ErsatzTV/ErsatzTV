@@ -2235,13 +2235,64 @@ public class PlayoutBuilderTests
             DateTimeOffset start2 = HoursAfterMidnight(0);
             DateTimeOffset finish2 = start2 + TimeSpan.FromHours(6);
 
-            Playout result2 = await builder.Build(playout, PlayoutBuildMode.Continue, start2, finish2);
+            Playout result2 = await builder.Build(result, PlayoutBuildMode.Continue, start2, finish2);
 
             int secondSeedValue = result2.ProgramScheduleAnchors.Head().EnumeratorState.Seed;
 
             firstSeedValue.Should().Be(secondSeedValue);
 
             result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
+        }
+
+        [Test]
+        public async Task ShuffleFlood_Should_MaintainRandomSeed_MultipleDays()
+        {
+            var mediaItems = new List<MediaItem>();
+            for (int i = 1; i <= 25; i++)
+            {
+                mediaItems.Add(TestMovie(i, TimeSpan.FromMinutes(55), DateTime.Today.AddHours(i)));
+            }
+
+            (PlayoutBuilder builder, Playout playout) = TestDataFloodForItems(mediaItems, PlaybackOrder.Shuffle);
+            DateTimeOffset start = HoursAfterMidnight(0).AddSeconds(5);
+            DateTimeOffset finish = start + TimeSpan.FromDays(2);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(53);
+            result.ProgramScheduleAnchors.Count.Should().Be(2);
+
+            result.ProgramScheduleAnchors.All(x => x.AnchorDate is not null).Should().BeTrue();
+            PlayoutProgramScheduleAnchor lastCheckpoint = result.ProgramScheduleAnchors
+                .OrderByDescending(a => a.AnchorDate ?? DateTime.MinValue)
+                .First();
+            lastCheckpoint.EnumeratorState.Seed.Should().BeGreaterThan(0);
+            lastCheckpoint.EnumeratorState.Index.Should().Be(3);
+            
+            // we need to mess up the ordering to trigger the problematic behavior
+            // this simulates the way the rows are loaded with EF
+            PlayoutProgramScheduleAnchor oldest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate).Last();
+            PlayoutProgramScheduleAnchor newest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate).First();
+
+            result.ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>
+            {
+                oldest,
+                newest
+            };
+
+            int firstSeedValue = lastCheckpoint.EnumeratorState.Seed;
+
+            DateTimeOffset start2 = start.AddHours(1);
+            DateTimeOffset finish2 = start2 + TimeSpan.FromDays(2);
+
+            Playout result2 = await builder.Build(result, PlayoutBuildMode.Continue, start2, finish2);
+
+            PlayoutProgramScheduleAnchor continueAnchor =
+                result2.ProgramScheduleAnchors.First(x => x.AnchorDate is null);
+            int secondSeedValue = continueAnchor.EnumeratorState.Seed;
+            
+            // the continue anchor should have the same seed as the most recent (last) checkpoint from the first run
+            firstSeedValue.Should().Be(secondSeedValue);
         }
 
         [Test]
