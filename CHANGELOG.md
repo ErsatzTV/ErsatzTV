@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.4-beta] - 2022-07-28
 ### Fixed
 - Fix subtitle stream selection when subtitle language is different than audio language
 - Fix bug with unsupported AAC channel layouts
@@ -1274,7 +1276,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.3-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.4-beta...HEAD
+[0.6.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.3-beta...v0.6.4-beta
 [0.6.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.2-beta...v0.6.3-beta
 [0.6.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.1-beta...v0.6.2-beta
 [0.6.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.0-beta...v0.6.1-beta
