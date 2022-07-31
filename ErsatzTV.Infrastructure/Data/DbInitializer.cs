@@ -44,7 +44,7 @@ public static class DbInitializer
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        if (context.Resolutions.Any())
+        if (context.Resolutions.Any(x => x.Width == 1920))
         {
             return Unit.Default;
         }
