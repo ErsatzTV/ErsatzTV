@@ -21,7 +21,7 @@ public abstract class LocalFolderScanner
 
     public static readonly List<string> AudioFileExtensions = new()
     {
-        ".aac", ".alac", ".flac", ".mp3", ".m4a", ".wav", ".wma"
+        ".aac", ".alac", ".dff", ".dsf", ".flac", ".mp3", ".m4a", ".wav", ".wma"
     };
 
     public static readonly List<string> ImageFileExtensions = new()
