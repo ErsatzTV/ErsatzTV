@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix database initializer; fresh installs with v0.6.4-beta are missing some config data and should upgrade
 
+### Added
+- Support DSD audio file formats (DFF and DSF) in local song libraries
+
 ## [0.6.4-beta] - 2022-07-28
 ### Fixed
 - Fix subtitle stream selection when subtitle language is different than audio language
