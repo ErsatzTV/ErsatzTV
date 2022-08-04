@@ -4,13 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Support DSD audio file formats (DFF and DSF) in local song libraries
+- Support OGG audio file formats (OGG, OPUS, OGA, OGX, SPX) in local song libraries
 
 ## [0.6.5-beta] - 2022-08-02
 ### Fixed
 - Fix database initializer; fresh installs with v0.6.4-beta are missing some config data and should upgrade
-
-### Added
-- Support DSD audio file formats (DFF and DSF) in local song libraries
 
 ## [0.6.4-beta] - 2022-07-28
 ### Fixed
