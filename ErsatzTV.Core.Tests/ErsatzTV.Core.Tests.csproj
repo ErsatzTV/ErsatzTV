@@ -16,8 +16,8 @@
       <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
-      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.2.32">
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.3.44">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>

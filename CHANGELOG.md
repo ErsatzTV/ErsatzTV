@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support DSD audio file formats (DFF and DSF) in local song libraries
 - Support OGG audio file formats (OGG, OPUS, OGA, OGX, SPX) in local song libraries
 
+### Changed
+- Always return playlist after a maximum of 8 seconds while starting up an HLS Segmenter session
+
 ## [0.6.5-beta] - 2022-08-02
 ### Fixed
 - Fix database initializer; fresh installs with v0.6.4-beta are missing some config data and should upgrade

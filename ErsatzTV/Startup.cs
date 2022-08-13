@@ -52,6 +52,7 @@ using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
+using FluentValidation;
 using FluentValidation.AspNetCore;
 using Ganss.XSS;
 using MediatR;
@@ -131,13 +132,10 @@ public class Startup
                     opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                     opt.SerializerSettings.ContractResolver = new CustomContractResolver();
                     opt.SerializerSettings.Converters.Add(new StringEnumConverter());
-                })
-            .AddFluentValidation(
-                options =>
-                {
-                    options.RegisterValidatorsFromAssemblyContaining<Startup>();
-                    options.ImplicitlyValidateChildProperties = true;
                 });
+
+        services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<Startup>();
 
         if (!CurrentEnvironment.IsDevelopment())
         {
