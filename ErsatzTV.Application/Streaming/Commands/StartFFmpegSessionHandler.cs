@@ -78,13 +78,16 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         IHlsSessionWorker worker,
         CancellationToken cancellationToken)
     {
+        DateTimeOffset start = DateTimeOffset.Now;
+        DateTimeOffset finish = start.AddSeconds(8);
+    
         while (!File.Exists(playlistFileName))
         {
             await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
         }
 
         var segmentCount = 0;
-        while (segmentCount < initialSegmentCount)
+        while (DateTimeOffset.Now < finish && segmentCount < initialSegmentCount)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
 
