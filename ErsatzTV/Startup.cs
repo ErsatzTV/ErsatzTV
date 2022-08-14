@@ -254,7 +254,7 @@ public class Startup
         app.UseStaticFiles();
 
         var extensionProvider = new FileExtensionContentTypeProvider();
-        extensionProvider.Mappings.Add(".m3u8", "application/vnd.apple.mpegurl");
+        extensionProvider.Mappings.Add(".m3u8", "application/x-mpegurl");
 
         app.UseStaticFiles(
             new StaticFileOptions

@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Use MIME Type `application/x-mpegurl` for all playlists instead of `application/vnd.apple.mpegurl`
+
 ### Added
 - Support DSD audio file formats (DFF and DSF) in local song libraries
 - Support OGG audio file formats (OGG, OPUS, OGA, OGX, SPX) in local song libraries
 
 ### Changed
 - Always return playlist after a maximum of 8 seconds while starting up an HLS Segmenter session
+- Use multi-variant playlists instead of redirects for HLS Segmenter sessions
 
 ## [0.6.5-beta] - 2022-08-02
 ### Fixed

@@ -134,7 +134,7 @@ public class IptvController : ControllerBase
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
             foreach (TrimPlaylistResult result in maybePlaylist)
             {
-                return Content(result.Playlist, "application/vnd.apple.mpegurl");
+                return Content(result.Playlist, "application/x-mpegurl");
             }
 
             // TODO: better error here?
@@ -181,9 +181,10 @@ public class IptvController : ControllerBase
                     _ =>
                     {
                         _logger.LogDebug(
-                            "Session started; redirecting to session for channel {Channel}",
+                            "Session started; returning multi-variant playlist for channel {Channel}",
                             channelNumber);
-                        return Redirect($"/iptv/session/{channelNumber}/hls.m3u8");
+                        return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                        // return Redirect($"/iptv/session/{channelNumber}/hls.m3u8");
                     },
                     error =>
                     {
@@ -191,9 +192,10 @@ public class IptvController : ControllerBase
                         {
                             case ChannelSessionAlreadyActive:
                                 _logger.LogDebug(
-                                    "Session is already active; redirecting to session for channel {Channel}",
+                                    "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
-                                return RedirectPreserveMethod($"/iptv/session/{channelNumber}/hls.m3u8");
+                                return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                                // return RedirectPreserveMethod($"/iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(
                                     "Failed to start segmenter for channel {ChannelNumber}: {Error}",
@@ -227,4 +229,11 @@ public class IptvController : ControllerBase
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
+
+    // TODO: include resolution here?
+    private string GetMultiVariantPlaylist(string channelNumber) =>
+        $@"#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000
+{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8";
 }
