@@ -134,7 +134,7 @@ public class IptvController : ControllerBase
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
             foreach (TrimPlaylistResult result in maybePlaylist)
             {
-                return Content(result.Playlist, "application/x-mpegURL");
+                return Content(result.Playlist, "application/x-mpegurl");
             }
 
             // TODO: better error here?
