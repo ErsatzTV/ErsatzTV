@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Diagnostics;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
@@ -78,25 +79,47 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         IHlsSessionWorker worker,
         CancellationToken cancellationToken)
     {
-        DateTimeOffset start = DateTimeOffset.Now;
-        DateTimeOffset finish = start.AddSeconds(8);
-    
-        while (!File.Exists(playlistFileName))
+        var sw = Stopwatch.StartNew();
+        try
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
-        }
+            DateTimeOffset start = DateTimeOffset.Now;
+            DateTimeOffset finish = start.AddSeconds(8);
 
-        var segmentCount = 0;
-        while (DateTimeOffset.Now < finish && segmentCount < initialSegmentCount)
-        {
-            await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
-
-            DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
-            Option<TrimPlaylistResult> maybeResult = await worker.TrimPlaylist(now, cancellationToken);
-            foreach (TrimPlaylistResult result in maybeResult)
+            _logger.LogDebug("Waiting for playlist to exist");
+            while (!File.Exists(playlistFileName))
             {
-                segmentCount = result.SegmentCount;
+                await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
             }
+
+            _logger.LogDebug("Playlist exists");
+
+            var segmentCount = 0;
+            var lastSegmentCount = -1;
+            while (DateTimeOffset.Now < finish && segmentCount < initialSegmentCount)
+            {
+                if (segmentCount != lastSegmentCount)
+                {
+                    lastSegmentCount = segmentCount;
+                    _logger.LogDebug(
+                        "Segment count {SegmentCount} of {InitialSegmentCount}",
+                        segmentCount,
+                        initialSegmentCount);
+                }
+
+                await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
+
+                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
+                Option<TrimPlaylistResult> maybeResult = await worker.TrimPlaylist(now, cancellationToken);
+                foreach (TrimPlaylistResult result in maybeResult)
+                {
+                    segmentCount = result.SegmentCount;
+                }
+            }
+        }
+        finally
+        {
+            sw.Stop();
+            _logger.LogDebug("WaitForPlaylistSegments took {Duration}", sw.Elapsed);
         }
     }
 
