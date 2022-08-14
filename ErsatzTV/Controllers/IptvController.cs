@@ -124,16 +124,25 @@ public class IptvController : ControllerBase
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Checking for session worker for channel {Channel}", channelNumber);
+        
         if (_ffmpegSegmenterService.SessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
         {
+            _logger.LogDebug("Trimming playlist for channel {Channel}", channelNumber);
+
             DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
             foreach (TrimPlaylistResult result in maybePlaylist)
             {
                 return Content(result.Playlist, "application/vnd.apple.mpegurl");
             }
+
+            // TODO: better error here?
+            _logger.LogWarning("Trim playlist failure; will return not found for channel {Channel}", channelNumber);
+            return NotFound();
         }
 
+        _logger.LogWarning("Unable to locate session worker for channel {Channel}", channelNumber);
         return NotFound();
     }
 
@@ -166,14 +175,24 @@ public class IptvController : ControllerBase
         switch (mode)
         {
             case "segmenter":
+                _logger.LogDebug("Maybe starting ffmpeg session for channel {Channel}", channelNumber);
                 Either<BaseError, Unit> result = await _mediator.Send(new StartFFmpegSession(channelNumber, false));
                 return result.Match<IActionResult>(
-                    _ => Redirect($"/iptv/session/{channelNumber}/hls.m3u8"),
+                    _ =>
+                    {
+                        _logger.LogDebug(
+                            "Session started; redirecting to session for channel {Channel}",
+                            channelNumber);
+                        return Redirect($"/iptv/session/{channelNumber}/hls.m3u8");
+                    },
                     error =>
                     {
                         switch (error)
                         {
                             case ChannelSessionAlreadyActive:
+                                _logger.LogDebug(
+                                    "Session is already active; redirecting to session for channel {Channel}",
+                                    channelNumber);
                                 return RedirectPreserveMethod($"/iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(

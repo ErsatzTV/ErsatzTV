@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Timers;
 using Bugsnag;
 using CliWrap;
@@ -64,6 +65,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         DateTimeOffset filterBefore,
         CancellationToken cancellationToken)
     {
+        var sw = Stopwatch.StartNew();
         await Slim.WaitAsync(cancellationToken);
         try
         {
@@ -85,6 +87,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         finally
         {
             Slim.Release();
+            sw.Stop();
+            _logger.LogDebug("TrimPlaylist took {Duration}", sw.Elapsed);
         }
     }
 
