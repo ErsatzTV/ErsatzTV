@@ -379,10 +379,6 @@ public class PipelineBuilder
                         IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
-
-                        IPipelineFilterStep sarStep = new SetSarFilter();
-                        currentState = sarStep.NextState(currentState);
-                        _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                     }
                 }
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
@@ -402,10 +398,6 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-
-                    IPipelineFilterStep sarStep = new SetSarFilter();
-                    currentState = sarStep.NextState(currentState);
-                    _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
@@ -423,10 +415,6 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-
-                    IPipelineFilterStep sarStep = new SetSarFilter();
-                    currentState = sarStep.NextState(currentState);
-                    _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
 
                 if (hasOverlay && currentState.PixelFormat.Map(pf => pf.FFmpegName) !=
