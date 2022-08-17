@@ -88,7 +88,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             Slim.Release();
             sw.Stop();
-            _logger.LogDebug("TrimPlaylist took {Duration}", sw.Elapsed);
+            // _logger.LogDebug("TrimPlaylist took {Duration}", sw.Elapsed);
         }
     }
 
@@ -401,11 +401,11 @@ public class HlsSessionWorker : IHlsSessionWorker
         var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
         if (toDelete.Count > 0)
         {
-            _logger.LogDebug(
-                "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
-                toDelete.Map(s => s.SequenceNumber).Min(),
-                toDelete.Map(s => s.SequenceNumber).Max(),
-                trimResult.Sequence);
+            // _logger.LogDebug(
+            //     "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+            //     toDelete.Map(s => s.SequenceNumber).Min(),
+            //     toDelete.Map(s => s.SequenceNumber).Max(),
+            //     trimResult.Sequence);
         }
 
         foreach (Segment segment in toDelete)

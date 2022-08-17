@@ -1,7 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal-arm64v8 AS dotnet-runtime
 
-# TODO: upgrade once https://github.com/linuxserver/docker-ffmpeg/issues/19 is fixed
-FROM linuxserver/ffmpeg:arm64v8-4.4-cli-ls55 AS runtime-base
+FROM linuxserver/ffmpeg:arm64v8-latest AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev \
     tzdata \

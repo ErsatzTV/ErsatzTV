@@ -29,7 +29,7 @@ ARG INFO_VERSION="unknown"
 RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM jasongdove/ffmpeg:5.0-vaapi2004 AS runtime-base
+FROM jasongdove/ffmpeg:5.1-vaapi2004 AS runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app

@@ -124,11 +124,11 @@ public class IptvController : ControllerBase
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Checking for session worker for channel {Channel}", channelNumber);
+        // _logger.LogDebug("Checking for session worker for channel {Channel}", channelNumber);
         
         if (_ffmpegSegmenterService.SessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
         {
-            _logger.LogDebug("Trimming playlist for channel {Channel}", channelNumber);
+            // _logger.LogDebug("Trimming playlist for channel {Channel}", channelNumber);
 
             DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
