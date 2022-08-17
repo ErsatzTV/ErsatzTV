@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Always return playlist after a maximum of 8 seconds while starting up an HLS Segmenter session
 - Use multi-variant playlists instead of redirects for HLS Segmenter sessions
+- Upgrade ffmpeg from 5.0 to 5.1 in most docker images (not ARM variants)
+    - Upgrading from 5.0 to 5.1 is also recommended for other installations (Windows, Linux)
 
 ## [0.6.5-beta] - 2022-08-02
 ### Fixed
