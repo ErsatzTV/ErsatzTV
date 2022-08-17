@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Use MIME Type `application/x-mpegurl` for all playlists instead of `application/vnd.apple.mpegurl`
-- Remove `setsar` filter which caused issues scaling between two different aspect ratios
-  - For example, some 4:3 content would appear stretched when scaled to a 16:9 resolution
+- Replace `setsar` filter with `setdar` filter
+  - `setsar` caused issues scaling between two different aspect ratios
+    - For example, some 4:3 content would appear stretched when scaled to a 16:9 resolution
+  - `setdar` is now only used when aspect ratios match 
+- Prioritize aspect ratio from container when video stream contains conflicting aspect ratio
+  - This is usually caused by bad authoring, but the change should improve scaling behavior for edge cases
 
 ### Added
 - Support DSD audio file formats (DFF and DSF) in local song libraries

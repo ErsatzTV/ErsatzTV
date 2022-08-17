@@ -9,6 +9,7 @@ public record FrameState(
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,
+    string DisplayAspectRatio,
     Option<int> FrameRate,
     Option<int> VideoBitrate,
     Option<int> VideoBufferSize,
