@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Bugsnag;
+using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -157,42 +159,48 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         return await _metadataRepository.UpdateLocalStatistics(mediaItem, version) && durationChange;
     }
 
-    private Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
+    private async Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
     {
-        var startInfo = new ProcessStartInfo
+        string[] arguments =
         {
-            FileName = ffprobePath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
+            "-hide_banner",
+            "-print_format", "json",
+            "-show_format",
+            "-show_streams",
+            "-show_chapters",
+            "-i", filePath
         };
 
-        startInfo.ArgumentList.Add("-v");
-        startInfo.ArgumentList.Add("quiet");
-        startInfo.ArgumentList.Add("-print_format");
-        startInfo.ArgumentList.Add("json");
-        startInfo.ArgumentList.Add("-show_format");
-        startInfo.ArgumentList.Add("-show_streams");
-        startInfo.ArgumentList.Add("-show_chapters");
-        startInfo.ArgumentList.Add("-i");
-        startInfo.ArgumentList.Add(filePath);
+        BufferedCommandResult probe = await Cli.Wrap(ffprobePath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
 
-        var probe = new Process
+        if (probe.ExitCode != 0)
         {
-            StartInfo = startInfo
-        };
+            return BaseError.New($"FFprobe at {ffprobePath} exited with code {probe.ExitCode}");
+        }
 
-        probe.Start();
-        return probe.StandardOutput.ReadToEndAsync().MapAsync<string, Either<BaseError, FFprobe>>(
-            async output =>
+        FFprobe ffprobe = JsonConvert.DeserializeObject<FFprobe>(probe.StandardOutput);
+
+        if (ffprobe != null)
+        {
+            const string PATTERN = @"\[SAR\s+([0-9]+:[0-9]+)\s+DAR\s+([0-9]+:[0-9]+)\]";
+            Match match = Regex.Match(probe.StandardError, PATTERN);
+            if (match.Success)
             {
-                await probe.WaitForExitAsync();
-                return probe.ExitCode == 0
-                    ? JsonConvert.DeserializeObject<FFprobe>(output)
-                    : BaseError.New($"FFprobe at {ffprobePath} exited with code {probe.ExitCode}");
-            });
+                string sar = match.Groups[1].Value;
+                string dar = match.Groups[2].Value;
+                foreach (FFprobeStream stream in ffprobe.streams.Where(s => s.codec_type == "video").ToList())
+                {
+                    FFprobeStream replacement = stream with { sample_aspect_ratio = sar, display_aspect_ratio = dar };
+                    ffprobe.streams.Remove(stream);
+                    ffprobe.streams.Add(replacement);
+                }
+            }
+        }
+
+        return ffprobe;
     }
 
     private async Task AnalyzeDuration(string ffmpegPath, string path, MediaVersion version)
