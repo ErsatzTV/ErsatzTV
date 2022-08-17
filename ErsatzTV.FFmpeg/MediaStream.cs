@@ -14,6 +14,7 @@ public record VideoStream(
     string Codec,
     Option<IPixelFormat> PixelFormat,
     FrameSize FrameSize,
+    string DisplayAspectRatio,
     Option<string> FrameRate,
     bool StillImage) : MediaStream(
     Index,

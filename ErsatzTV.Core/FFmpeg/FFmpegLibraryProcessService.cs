@@ -140,6 +140,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoStream.Codec,
             AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger),
             new FrameSize(videoVersion.Width, videoVersion.Height),
+            videoVersion.DisplayAspectRatio,
             videoVersion.RFrameRate,
             videoPath != audioPath); // still image when paths are different
 
@@ -209,6 +210,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
                 .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
+            channel.FFmpegProfile.Resolution.Width == 640 ? "4:3" : "16:9",
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
@@ -302,6 +304,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             new PixelFormatYuv420P(),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
+            desiredResolution.Width == 640 ? "4:3" : "16:9",
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
@@ -329,6 +332,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             VideoFormat.GeneratedImage,
             new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
             new FrameSize(videoVersion.Width, videoVersion.Height),
+            videoVersion.DisplayAspectRatio,
             None,
             true);
 
@@ -417,7 +421,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
-            new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, None, true) });
+            new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, string.Empty, None, true) });
 
         var pipelineBuilder = new PipelineBuilder(
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
@@ -497,6 +501,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                     "unknown",
                                     new PixelFormatUnknown(),
                                     new FrameSize(1, 1),
+                                    string.Empty,
                                     Option<string>.None,
                                     !options.IsAnimated)
                             },

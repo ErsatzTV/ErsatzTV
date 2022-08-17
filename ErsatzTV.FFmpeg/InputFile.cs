@@ -19,6 +19,7 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
             string.Empty,
             Option<IPixelFormat>.None,
             Resolution,
+            string.Empty,
             Option<string>.None,
             false)
     })
