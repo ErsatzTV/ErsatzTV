@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.6-beta] - 2022-08-17
 ### Fixed
 - Use MIME Type `application/x-mpegurl` for all playlists instead of `application/vnd.apple.mpegurl`
 - Replace `setsar` filter with `setdar` filter
@@ -1298,7 +1300,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.5-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...HEAD
+[0.6.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.5-beta...v0.6.6-beta
 [0.6.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.4-beta...v0.6.5-beta
 [0.6.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.3-beta...v0.6.4-beta
 [0.6.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.2-beta...v0.6.3-beta
