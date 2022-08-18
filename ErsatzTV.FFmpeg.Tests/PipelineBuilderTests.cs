@@ -252,6 +252,69 @@ public class PipelineGeneratorTests
     }
 
     [Test]
+    public void HlsDirect_Test_All_Audio_Streams()
+    {
+        var videoInputFile = new VideoInputFile(
+            "/tmp/whatever.mkv",
+            new List<VideoStream>
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "16:9", "24", false) });
+
+        Option<AudioInputFile> audioInputFile = Option<AudioInputFile>.None;
+
+        var desiredState = new FrameState(
+            true,
+            false,
+            VideoFormat.Copy,
+            new PixelFormatYuv420P(),
+            new FrameSize(1920, 1080),
+            new FrameSize(1920, 1080),
+            "16:9",
+            Option<int>.None,
+            2000,
+            4000,
+            90_000,
+            false);
+
+        var ffmpegState = new FFmpegState(
+            false,
+            HardwareAccelerationMode.None,
+            HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
+            false,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None,
+            OutputFormatKind.MpegTs,
+            Option<string>.None,
+            Option<string>.None,
+            0,
+            Option<int>.None);
+
+        var builder = new PipelineBuilder(
+            new DefaultHardwareCapabilities(),
+            videoInputFile,
+            audioInputFile,
+            None,
+            None,
+            "",
+            "",
+            _logger);
+        FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
+
+        result.PipelineSteps.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyVideo);
+        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyAudio);
+
+        string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
+
+        command.Should().Be(
+            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -i /tmp/whatever.mkv -map 0:a -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+    }
+
+    [Test]
     public void Resize_Image_Test()
     {
         var height = 200;

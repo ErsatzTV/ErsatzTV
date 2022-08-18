@@ -539,6 +539,16 @@ public class PipelineBuilder
             // TODO: if all video filters are software, use software pixel format for hwaccel output
             // might be able to skip scale_cuda=format=whatever,hwdownload,format=whatever
 
+            if (_audioInputFile.IsNone)
+            {
+                // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want
+                foreach (IEncoder step in AvailableEncoders.ForAudioFormat(AudioState.Copy, _logger))
+                {
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+            }
+
             foreach (AudioInputFile audioInputFile in _audioInputFile)
             {
                 // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- When all audio streams are selected with `HLS Direct`, explicitly copy them without transcoding
 
 ## [0.6.6-beta] - 2022-08-17
 ### Fixed
