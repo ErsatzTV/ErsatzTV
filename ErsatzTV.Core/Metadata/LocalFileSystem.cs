@@ -33,8 +33,17 @@ public class LocalFileSystem : ILocalFileSystem
         return Unit.Default;
     }
 
-    public DateTime GetLastWriteTime(string path) =>
-        Try(File.GetLastWriteTimeUtc(path)).IfFail(() => SystemTime.MinValueUtc);
+    public DateTime GetLastWriteTime(string path)
+    {
+        try
+        {
+            return File.GetLastWriteTimeUtc(path);
+        }
+        catch
+        {
+            return SystemTime.MinValueUtc;
+        }
+    }
 
     public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
         Directory.Exists(libraryPath.Path);
