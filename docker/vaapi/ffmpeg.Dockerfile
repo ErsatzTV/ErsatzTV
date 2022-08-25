@@ -17,9 +17,10 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     cmake \
     wget \
     mesa-va-drivers \
+    vainfo \
     && mkdir /tmp/intel && cd /tmp/intel \
-    && wget -O - https://github.com/intel/libva/archive/refs/tags/2.15.0.tar.gz | tar zxf - \
-    && cd libva-2.15.0 \
+    && wget -O - https://github.com/intel/libva/archive/refs/tags/2.14.0.tar.gz | tar zxf - \
+    && cd libva-2.14.0 \
     && ./autogen.sh \
     && ./configure \
     && make -j$(nproc) \
