@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="Blurhash.ImageSharp" Version="3.0.0" />
-      <PackageReference Include="CliWrap" Version="3.4.4" />
+      <PackageReference Include="CliWrap" Version="3.5.0" />
       <PackageReference Include="Dapper" Version="2.0.123" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
