@@ -26,6 +26,7 @@ public record AddProgramScheduleItem(
     int? FallbackFillerId,
     int? WatermarkId,
     string PreferredAudioLanguageCode,
+    string PreferredAudioTitle,
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode? SubtitleMode) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>,
     IProgramScheduleItemRequest;

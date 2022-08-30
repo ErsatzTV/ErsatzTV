@@ -19,6 +19,7 @@ public interface IFFmpegProcessService
         string audioPath,
         List<Subtitle> subtitles,
         string preferredAudioLanguage,
+        string preferredAudioTitle,
         string preferredSubtitleLanguage,
         ChannelSubtitleMode subtitleMode,
         DateTimeOffset start,

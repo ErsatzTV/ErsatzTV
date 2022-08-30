@@ -27,6 +27,7 @@ public abstract record ProgramScheduleItemViewModel(
     FillerPresetViewModel FallbackFiller,
     WatermarkViewModel Watermark,
     string PreferredAudioLanguageCode,
+    string PreferredAudioTitle,
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode? SubtitleMode)
 {

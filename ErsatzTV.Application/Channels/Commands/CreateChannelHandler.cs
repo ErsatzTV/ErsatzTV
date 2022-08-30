@@ -71,6 +71,7 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                     StreamingMode = request.StreamingMode,
                     Artwork = artwork,
                     PreferredAudioLanguageCode = preferredAudioLanguageCode,
+                    PreferredAudioTitle = request.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = preferredSubtitleLanguageCode,
                     SubtitleMode = request.SubtitleMode,
                     MusicVideoCreditsMode = request.MusicVideoCreditsMode

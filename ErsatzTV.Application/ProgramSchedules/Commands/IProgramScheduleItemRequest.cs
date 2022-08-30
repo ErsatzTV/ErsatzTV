@@ -24,6 +24,7 @@ public interface IProgramScheduleItemRequest
     int? FallbackFillerId { get; }
     int? WatermarkId { get; }
     string PreferredAudioLanguageCode { get; }
+    string PreferredAudioTitle { get; }
     string PreferredSubtitleLanguageCode { get; }
     ChannelSubtitleMode? SubtitleMode { get; }
 }

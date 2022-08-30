@@ -10,7 +10,8 @@ public interface IFFmpegStreamSelector
         MediaVersion version,
         StreamingMode streamingMode,
         string channelNumber,
-        string preferredAudioLanguage);
+        string preferredAudioLanguage,
+        string preferredAudioTitle);
 
     Task<Option<Subtitle>> SelectSubtitleStream(
         List<Subtitle> subtitles,

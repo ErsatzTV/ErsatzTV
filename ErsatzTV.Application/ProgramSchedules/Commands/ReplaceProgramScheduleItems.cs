@@ -26,6 +26,7 @@ public record ReplaceProgramScheduleItem(
     int? FallbackFillerId,
     int? WatermarkId,
     string PreferredAudioLanguageCode,
+    string PreferredAudioTitle,
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode? SubtitleMode) : IProgramScheduleItemRequest;
 

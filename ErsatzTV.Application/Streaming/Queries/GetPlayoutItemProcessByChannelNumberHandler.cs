@@ -174,6 +174,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 audioPath,
                 subtitles,
                 playoutItemWithPath.PlayoutItem.PreferredAudioLanguageCode ?? channel.PreferredAudioLanguageCode,
+                playoutItemWithPath.PlayoutItem.PreferredAudioTitle ?? channel.PreferredAudioTitle,
                 playoutItemWithPath.PlayoutItem.PreferredSubtitleLanguageCode ?? channel.PreferredSubtitleLanguageCode,
                 playoutItemWithPath.PlayoutItem.SubtitleMode ?? channel.SubtitleMode,
                 playoutItemWithPath.PlayoutItem.StartOffset,
