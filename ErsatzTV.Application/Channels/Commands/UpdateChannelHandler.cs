@@ -31,7 +31,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Channel> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<ChannelViewModel> ApplyUpdateRequest(TvContext dbContext, Channel c, UpdateChannel update)
@@ -42,6 +42,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         c.Categories = update.Categories;
         c.FFmpegProfileId = update.FFmpegProfileId;
         c.PreferredAudioLanguageCode = update.PreferredAudioLanguageCode;
+        c.PreferredAudioTitle = update.PreferredAudioTitle;
         c.PreferredSubtitleLanguageCode = update.PreferredSubtitleLanguageCode;
         c.SubtitleMode = update.SubtitleMode;
         c.MusicVideoCreditsMode = update.MusicVideoCreditsMode;

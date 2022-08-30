@@ -54,6 +54,7 @@
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
                     </MudSelect>
+                    <MudTextField Label="Preferred Audio Title" @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
                     <MudSelect Class="mt-3"
                                Label="Preferred Subtitle Language"
                                @bind-Value="_model.PreferredSubtitleLanguageCode"
@@ -167,6 +168,7 @@
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
+                    _model.PreferredAudioTitle = channelViewModel.PreferredAudioTitle;
                     _model.WatermarkId = channelViewModel.WatermarkId;
                     _model.FallbackFillerId = channelViewModel.FallbackFillerId;
                     _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;

@@ -299,6 +299,7 @@
                         <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                     }
                 </MudSelect>
+                <MudTextField Class="mt-3" Label="Preferred Audio Title" @bind-Value="@_selectedItem.PreferredAudioTitle" For="@(() => _selectedItem.PreferredAudioTitle)"/>
                 <MudSelect Class="mt-3"
                            Label="Preferred Subtitle Language"
                            @bind-Value="_selectedItem.PreferredSubtitleLanguageCode"
@@ -422,6 +423,7 @@
             FallbackFiller = item.FallbackFiller,
             Watermark = item.Watermark,
             PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+            PreferredAudioTitle = item.PreferredAudioTitle,
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
             SubtitleMode = item.SubtitleMode
         };
@@ -500,6 +502,7 @@
             item.FallbackFiller?.Id,
             item.Watermark?.Id,
             item.PreferredAudioLanguageCode,
+            item.PreferredAudioTitle,
             item.PreferredSubtitleLanguageCode,
             item.SubtitleMode)).ToList();
 

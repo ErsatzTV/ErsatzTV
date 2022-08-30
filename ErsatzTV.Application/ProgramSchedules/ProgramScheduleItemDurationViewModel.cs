@@ -30,6 +30,7 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel fallbackFiller,
         WatermarkViewModel watermark,
         string preferredAudioLanguageCode,
+        string preferredAudioTitle,
         string preferredSubtitleLanguageCode,
         ChannelSubtitleMode? subtitleMode) : base(
         id,
@@ -52,6 +53,7 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         fallbackFiller,
         watermark,
         preferredAudioLanguageCode,
+        preferredAudioTitle,
         preferredSubtitleLanguageCode,
         subtitleMode)
     {

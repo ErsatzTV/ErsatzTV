@@ -13,6 +13,7 @@ public record UpdateChannel
     int FFmpegProfileId,
     string Logo,
     string PreferredAudioLanguageCode,
+    string PreferredAudioTitle,
     StreamingMode StreamingMode,
     int? WatermarkId,
     int? FallbackFillerId,

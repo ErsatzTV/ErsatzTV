@@ -12,6 +12,7 @@ public class ChannelEditViewModel
     public string Number { get; set; }
     public int FFmpegProfileId { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
+    public string PreferredAudioTitle { get; set; }
     public string Logo { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public int? WatermarkId { get; set; }
@@ -30,6 +31,7 @@ public class ChannelEditViewModel
             FFmpegProfileId,
             Logo,
             PreferredAudioLanguageCode,
+            PreferredAudioTitle,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,
@@ -46,6 +48,7 @@ public class ChannelEditViewModel
             FFmpegProfileId,
             Logo,
             PreferredAudioLanguageCode,
+            PreferredAudioTitle,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,
