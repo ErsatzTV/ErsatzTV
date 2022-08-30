@@ -29,6 +29,7 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel fallbackFiller,
         WatermarkViewModel watermark,
         string preferredAudioLanguageCode,
+        string preferredAudioTitle,
         string preferredSubtitleLanguageCode,
         ChannelSubtitleMode? subtitleMode) : base(
         id,
@@ -51,6 +52,7 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         fallbackFiller,
         watermark,
         preferredAudioLanguageCode,
+        preferredAudioTitle,
         preferredSubtitleLanguageCode,
         subtitleMode) =>
         Count = count;

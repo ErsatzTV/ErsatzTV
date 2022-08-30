@@ -63,6 +63,7 @@ internal static class Mapper
                         ? Watermarks.Mapper.ProjectToViewModel(duration.Watermark)
                         : null,
                     duration.PreferredAudioLanguageCode,
+                    duration.PreferredAudioTitle,
                     duration.PreferredSubtitleLanguageCode,
                     duration.SubtitleMode),
             ProgramScheduleItemFlood flood =>
@@ -110,6 +111,7 @@ internal static class Mapper
                         ? Watermarks.Mapper.ProjectToViewModel(flood.Watermark)
                         : null,
                     flood.PreferredAudioLanguageCode,
+                    flood.PreferredAudioTitle,
                     flood.PreferredSubtitleLanguageCode,
                     flood.SubtitleMode),
             ProgramScheduleItemMultiple multiple =>
@@ -158,6 +160,7 @@ internal static class Mapper
                         ? Watermarks.Mapper.ProjectToViewModel(multiple.Watermark)
                         : null,
                     multiple.PreferredAudioLanguageCode,
+                    multiple.PreferredAudioTitle,
                     multiple.PreferredSubtitleLanguageCode,
                     multiple.SubtitleMode),
             ProgramScheduleItemOne one =>
@@ -205,6 +208,7 @@ internal static class Mapper
                         ? Watermarks.Mapper.ProjectToViewModel(one.Watermark)
                         : null,
                     one.PreferredAudioLanguageCode,
+                    one.PreferredAudioTitle,
                     one.PreferredSubtitleLanguageCode,
                     one.SubtitleMode),
             _ => throw new NotSupportedException(

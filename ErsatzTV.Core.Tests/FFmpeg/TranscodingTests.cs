@@ -483,6 +483,7 @@ public class TranscodingTests
             subtitles,
             string.Empty,
             string.Empty,
+            string.Empty,
             subtitleMode,
             now,
             now + TimeSpan.FromSeconds(5),
@@ -569,7 +570,8 @@ public class TranscodingTests
             MediaVersion version,
             StreamingMode streamingMode,
             string channelNumber,
-            string preferredAudioLanguage) =>
+            string preferredAudioLanguage,
+            string preferredAudioTitle) =>
             Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
 
         public Task<Option<Domain.Subtitle>> SelectSubtitleStream(

@@ -28,13 +28,14 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         MediaVersion version,
         StreamingMode streamingMode,
         string channelNumber,
-        string preferredAudioLanguage)
+        string preferredAudioLanguage,
+        string preferredAudioTitle)
     {
         if (streamingMode == StreamingMode.HttpLiveStreamingDirect &&
-            string.IsNullOrWhiteSpace(preferredAudioLanguage))
+            string.IsNullOrWhiteSpace(preferredAudioLanguage) && string.IsNullOrWhiteSpace(preferredAudioTitle))
         {
             _logger.LogDebug(
-                "Channel {Number} is HLS Direct with no preferred audio language; using all audio streams",
+                "Channel {Number} is HLS Direct with no preferred audio language or title; using all audio streams",
                 channelNumber);
             return None;
         }
@@ -71,18 +72,18 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         if (correctLanguage.Any())
         {
             _logger.LogDebug(
-                "Found {Count} audio streams with preferred audio language code(s) {Code}; selecting stream with most channels",
+                "Found {Count} audio streams with preferred audio language code(s) {Code}",
                 correctLanguage.Count,
                 allCodes);
 
-            return correctLanguage.OrderByDescending(s => s.Channels).Head();
+            return PrioritizeAudioTitle(correctLanguage, preferredAudioTitle ?? string.Empty);
         }
 
         _logger.LogDebug(
-            "Unable to find audio stream with preferred audio language code(s) {Code}; selecting stream with most channels",
+            "Unable to find audio stream with preferred audio language code(s) {Code}",
             allCodes);
 
-        return audioStreams.OrderByDescending(s => s.Channels).HeadOrNone();
+        return PrioritizeAudioTitle(audioStreams, preferredAudioTitle ?? string.Empty);
     }
 
     public async Task<Option<Subtitle>> SelectSubtitleStream(
@@ -162,5 +163,35 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             preferredSubtitleLanguage);
 
         return None;
+    }
+
+    private Option<MediaStream> PrioritizeAudioTitle(IReadOnlyCollection<MediaStream> streams, string title)
+    {
+        // return correctLanguage.OrderByDescending(s => s.Channels).Head();
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            _logger.LogDebug("No audio title has been specified; selecting stream with most channels");
+            return streams.OrderByDescending(s => s.Channels).Head();
+        }
+
+        // prioritize matching titles
+        var matchingTitle = streams
+            .Filter(ms => (ms.Title ?? string.Empty).Contains(title, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (matchingTitle.Any())
+        {
+            _logger.LogDebug(
+                "Found {Count} audio streams with preferred title {Title}; selecting stream with most channels",
+                matchingTitle.Count,
+                title);
+
+            return matchingTitle.OrderByDescending(s => s.Channels).Head();
+        }
+
+        _logger.LogDebug(
+            "Unable to find audio stream with preferred title {Title}; selecting stream with most channels",
+            title);
+
+        return streams.OrderByDescending(s => s.Channels).Head();
     }
 }

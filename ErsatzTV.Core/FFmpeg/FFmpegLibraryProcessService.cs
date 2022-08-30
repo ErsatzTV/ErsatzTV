@@ -49,6 +49,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string audioPath,
         List<Subtitle> subtitles,
         string preferredAudioLanguage,
+        string preferredAudioTitle,
         string preferredSubtitleLanguage,
         ChannelSubtitleMode subtitleMode,
         DateTimeOffset start,
@@ -72,7 +73,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 audioVersion,
                 channel.StreamingMode,
                 channel.Number,
-                preferredAudioLanguage);
+                preferredAudioLanguage,
+                preferredAudioTitle);
         Option<Subtitle> maybeSubtitle =
             await _ffmpegStreamSelector.SelectSubtitleStream(
                 subtitles,

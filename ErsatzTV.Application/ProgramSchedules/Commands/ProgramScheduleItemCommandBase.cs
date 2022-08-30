@@ -180,6 +180,7 @@ public abstract class ProgramScheduleItemCommandBase
                 FallbackFillerId = item.FallbackFillerId,
                 WatermarkId = item.WatermarkId,
                 PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredAudioTitle = item.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
                 SubtitleMode = item.SubtitleMode
             },
@@ -203,6 +204,7 @@ public abstract class ProgramScheduleItemCommandBase
                 FallbackFillerId = item.FallbackFillerId,
                 WatermarkId = item.WatermarkId,
                 PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredAudioTitle = item.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
                 SubtitleMode = item.SubtitleMode
             },
@@ -227,6 +229,7 @@ public abstract class ProgramScheduleItemCommandBase
                 FallbackFillerId = item.FallbackFillerId,
                 WatermarkId = item.WatermarkId,
                 PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredAudioTitle = item.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
                 SubtitleMode = item.SubtitleMode
             },
@@ -252,6 +255,7 @@ public abstract class ProgramScheduleItemCommandBase
                 FallbackFillerId = item.FallbackFillerId,
                 WatermarkId = item.WatermarkId,
                 PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredAudioTitle = item.PreferredAudioTitle,
                 PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
                 SubtitleMode = item.SubtitleMode
             },

@@ -7,10 +7,13 @@
             class="elevation-1"
         >
             <template v-slot:[`item.actions`]="{ item }">
-                <v-icon small class="mr-2" @click="editRow(item.id)">
-                    mdi-lead-pencil
-                </v-icon>
-                <v-icon small @click="deleteRow(item.id)">mdi-delete</v-icon>
+                <v-btn icon class="mr-2" @click="editRow(item.id)">
+                    <v-icon>mdi-lead-pencil</v-icon>
+                </v-btn>
+
+                <v-btn icon @click.stop="deleteRow(item.id)">
+                    <v-icon>mdi-delete</v-icon></v-btn
+                >
             </template>
         </v-data-table>
     </div>

@@ -10,6 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix scanner crash caused by invalid mtime
 - `VAAPI`: Downgrade libva from 2.15 to 2.14
 
+### Added
+- Add `Preferred Audio Title` feature
+    - Preference can be configured in channel settings and overridden on schedule items
+    - When a title is specified, audio streams that contain that title (case-insensitive search) will be prioritized
+    - This can be helpful for creating channels that use commentary tracks
+    - External tooling exists to easily update title/name metadata if your audio streams don't already have this metadata
+
 ## [0.6.6-beta] - 2022-08-17
 ### Fixed
 - Use MIME Type `application/x-mpegurl` for all playlists instead of `application/vnd.apple.mpegurl`
