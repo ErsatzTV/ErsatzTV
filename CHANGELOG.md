@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This only happens when the channel does not have a `Preferred Audio Language`
 - Fix scanner crash caused by invalid mtime
 - `VAAPI`: Downgrade libva from 2.15 to 2.14
+- Fix bug with XMLTV that caused some filler to display with primary content details
 
 ### Added
 - Add `Preferred Audio Title` feature
