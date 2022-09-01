@@ -79,6 +79,7 @@ public class ChannelGuide
         foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(
                      kvp => decimal.Parse(kvp.Key.Number)))
         {
+            // skip all filler that isn't pre-roll
             var i = 0;
             while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None &&
                    sorted[i].FillerKind != FillerKind.PreRoll)
@@ -90,7 +91,7 @@ public class ChannelGuide
             {
                 PlayoutItem startItem = sorted[i];
                 int j = i;
-                while (j + 1 < sorted.Count && sorted[j].FillerKind != FillerKind.None)
+                while (sorted[j].FillerKind != FillerKind.None && j + 1 < sorted.Count)
                 {
                     j++;
                 }
@@ -98,7 +99,7 @@ public class ChannelGuide
                 PlayoutItem displayItem = sorted[j];
                 bool hasCustomTitle = !string.IsNullOrWhiteSpace(startItem.CustomTitle);
 
-                int finishIndex = i;
+                int finishIndex = j;
                 while (finishIndex + 1 < sorted.Count && sorted[finishIndex + 1].GuideGroup == startItem.GuideGroup)
                 {
                     finishIndex++;
