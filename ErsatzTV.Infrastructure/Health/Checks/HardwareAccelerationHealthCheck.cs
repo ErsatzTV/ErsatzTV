@@ -1,8 +1,10 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
@@ -12,14 +14,17 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAccelerationHealthCheck
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IRuntimeInfo _runtimeInfo;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
     public HardwareAccelerationHealthCheck(
         IDbContextFactory<TvContext> dbContextFactory,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        IRuntimeInfo runtimeInfo)
     {
         _dbContextFactory = dbContextFactory;
         _configElementRepository = configElementRepository;
+        _runtimeInfo = runtimeInfo;
     }
 
     public override string Title => "Hardware Acceleration";
@@ -91,7 +96,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
         return None;
     }
 
-    private static async Task<List<HardwareAccelerationKind>> GetSupportedAccelerationKinds(
+    private async Task<List<HardwareAccelerationKind>> GetSupportedAccelerationKinds(
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
@@ -117,6 +122,21 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
                 case "videotoolbox":
                     result.Add(HardwareAccelerationKind.VideoToolbox);
                     break;
+            }
+        }
+
+        if (_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+        {
+            string output2 = await GetProcessOutput(
+                ffmpegPath,
+                new[] { "-v", "quiet", "-encoders" },
+                cancellationToken);
+            foreach (string method in output2.Split("\n").Map(s => s.Trim()))
+            {
+                if (method.Contains("_amf "))
+                {
+                    result.Add(HardwareAccelerationKind.Amf);
+                }
             }
         }
 

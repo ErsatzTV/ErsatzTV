@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - When a title is specified, audio streams that contain that title (case-insensitive search) will be prioritized
     - This can be helpful for creating channels that use commentary tracks
     - External tooling exists to easily update title/name metadata if your audio streams don't already have this metadata
+- Add `Amf` hardware acceleration option for AMD GPUs on Windows
 
 ## [0.6.6-beta] - 2022-08-17
 ### Fixed
