@@ -169,6 +169,7 @@ public class FFmpegComplexFilterBuilder
                                                _videoDecoder.Contains("cuvid")),
             HardwareAccelerationKind.Qsv => !isSong,
             HardwareAccelerationKind.VideoToolbox => false,
+            HardwareAccelerationKind.Amf => false,
             _ => false
         };
 
@@ -200,6 +201,7 @@ public class FFmpegComplexFilterBuilder
 
         bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None &&
                                    acceleration != HardwareAccelerationKind.VideoToolbox &&
+                                   acceleration != HardwareAccelerationKind.Amf &&
                                    !isHardwareDecode &&
                                    (_deinterlace || _scaleToSize.IsSome);
 

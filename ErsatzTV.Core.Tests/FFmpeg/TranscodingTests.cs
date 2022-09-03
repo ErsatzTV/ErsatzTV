@@ -168,6 +168,11 @@ public class TranscodingTests
             HardwareAccelerationKind.VideoToolbox
         };
 
+        public static HardwareAccelerationKind[] AmfAcceleration =
+        {
+            HardwareAccelerationKind.Amf
+        };
+
         public static HardwareAccelerationKind[] QsvAcceleration =
         {
             HardwareAccelerationKind.Qsv
@@ -192,11 +197,11 @@ public class TranscodingTests
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))]
-            HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
     {
         if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
         {
