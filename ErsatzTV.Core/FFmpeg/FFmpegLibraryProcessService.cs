@@ -627,6 +627,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
             HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
             HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
+            HardwareAccelerationKind.Amf => HardwareAccelerationMode.Amf,
             _ => HardwareAccelerationMode.None
         };
 }

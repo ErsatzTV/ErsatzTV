@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Encoder.Amf;
 using ErsatzTV.FFmpeg.Encoder.Nvenc;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder.Vaapi;
@@ -72,6 +73,13 @@ public static class AvailableEncoders
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) when hardwareCapabilities.CanEncode(
                 VideoFormat.H264,
                 desiredState.PixelFormat) => new EncoderH264VideoToolbox(),
+            
+            (HardwareAccelerationMode.Amf, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
+                VideoFormat.Hevc,
+                desiredState.PixelFormat) => new EncoderHevcAmf(),
+            (HardwareAccelerationMode.Amf, VideoFormat.H264) when hardwareCapabilities.CanEncode(
+                VideoFormat.H264,
+                desiredState.PixelFormat) => new EncoderH264Amf(),
 
             (_, VideoFormat.Hevc) => new EncoderLibx265(currentState),
             (_, VideoFormat.H264) => new EncoderLibx264(),

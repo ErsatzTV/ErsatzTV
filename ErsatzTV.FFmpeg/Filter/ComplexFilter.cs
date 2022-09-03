@@ -173,7 +173,8 @@ public class ComplexFilter : IPipelineStep
 
                     if (_maybeSubtitleInputFile.Map(s => !s.IsImageBased).IfNone(false) &&
                         _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Vaapi &&
-                        _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.VideoToolbox)
+                        _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.VideoToolbox &&
+                        _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Amf)
                     {
                         uploadDownloadFilter = new HardwareDownloadFilter(_currentState).Filter;
                     }
@@ -230,10 +231,9 @@ public class ComplexFilter : IPipelineStep
 
                 if (filter != string.Empty)
                 {
-                    string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex) &&
-                                            string.IsNullOrWhiteSpace(watermarkFilterComplex)
-                        ? $"[{videoLabel}]"
-                        : videoLabel;
+                    string tempVideoLabel = videoLabel.StartsWith('[') && videoLabel.EndsWith(']')
+                        ? videoLabel
+                        : $"[{videoLabel}]";
 
                     // vaapi uses software overlay and needs to upload
                     // videotoolbox seems to require a hwupload for hevc

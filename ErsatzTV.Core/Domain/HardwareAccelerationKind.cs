@@ -6,5 +6,6 @@ public enum HardwareAccelerationKind
     Qsv = 1,
     Nvenc = 2,
     Vaapi = 3,
-    VideoToolbox = 4
+    VideoToolbox = 4,
+    Amf = 5
 }
