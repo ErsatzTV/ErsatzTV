@@ -19,7 +19,6 @@ public static class AvailableSubtitleScaleFilters
             HardwareAccelerationMode.Qsv when currentState.FrameDataLocation == FrameDataLocation.Hardware ||
                                               scaledSize == paddedSize =>
                 new ScaleQsvFilter(runtimeInfo, currentState, scaledSize, paddedSize),
-            HardwareAccelerationMode.Vaapi => new ScaleVaapiFilter(currentState, scaledSize, paddedSize),
-            _ => new ScaleFilter(currentState, scaledSize, paddedSize)
+            _ => new ScaleImageFilter(paddedSize)
         };
 }
