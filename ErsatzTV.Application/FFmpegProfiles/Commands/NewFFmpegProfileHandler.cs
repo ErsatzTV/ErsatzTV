@@ -15,7 +15,7 @@ public class NewFFmpegProfileHandler : IRequestHandler<NewFFmpegProfile, FFmpegP
 
     public async Task<FFmpegProfileViewModel> Handle(NewFFmpegProfile request, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         int defaultResolutionId = await dbContext.ConfigElements
             .GetValue<int>(ConfigElementKey.FFmpegDefaultResolutionId)

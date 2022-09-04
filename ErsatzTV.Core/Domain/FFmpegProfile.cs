@@ -10,6 +10,7 @@ public record FFmpegProfile
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
     public string VaapiDevice { get; set; }
+    public int? QsvExtraHardwareFrames { get; set; }
     public int ResolutionId { get; set; }
     public Resolution Resolution { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
@@ -42,6 +43,7 @@ public record FFmpegProfile
             AudioSampleRate = 48,
             DeinterlaceVideo = true,
             NormalizeFramerate = false,
-            HardwareAcceleration = HardwareAccelerationKind.None
+            HardwareAcceleration = HardwareAccelerationKind.None,
+            QsvExtraHardwareFrames = 64
         };
 }

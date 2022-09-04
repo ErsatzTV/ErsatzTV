@@ -14,6 +14,7 @@ internal static class Mapper
             profile.HardwareAcceleration,
             profile.VaapiDriver,
             profile.VaapiDevice,
+            profile.QsvExtraHardwareFrames,
             Project(profile.Resolution),
             profile.VideoFormat,
             profile.VideoBitrate,
