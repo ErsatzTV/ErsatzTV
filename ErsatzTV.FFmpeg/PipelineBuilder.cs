@@ -10,6 +10,7 @@ using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 using ErsatzTV.FFmpeg.Option.Metadata;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
+using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,7 @@ public class PipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly string _fontsFolder;
+    private readonly IRuntimeInfo _runtimeInfo;
     private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
     private readonly List<IPipelineStep> _pipelineSteps;
@@ -28,6 +30,7 @@ public class PipelineBuilder
     private readonly Option<WatermarkInputFile> _watermarkInputFile;
 
     public PipelineBuilder(
+        IRuntimeInfo runtimeInfo,
         IHardwareCapabilities hardwareCapabilities,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
@@ -49,6 +52,7 @@ public class PipelineBuilder
             new ClosedGopOutputOption()
         };
 
+        _runtimeInfo = runtimeInfo;
         _hardwareCapabilities = hardwareCapabilities;
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
@@ -392,6 +396,7 @@ public class PipelineBuilder
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                        _runtimeInfo,
                         ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
@@ -418,6 +423,7 @@ public class PipelineBuilder
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                        _runtimeInfo,
                         ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
@@ -472,6 +478,7 @@ public class PipelineBuilder
                                 currentState = currentState with { PixelFormat = desiredState.PixelFormat };
 
                                 IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                                    _runtimeInfo,
                                     ffmpegState.EncoderHardwareAccelerationMode,
                                     currentState,
                                     desiredState.ScaledSize,
@@ -501,6 +508,7 @@ public class PipelineBuilder
                             currentState = currentState with { PixelFormat = desiredState.PixelFormat };
 
                             IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                                _runtimeInfo,
                                 ffmpegState.EncoderHardwareAccelerationMode,
                                 currentState,
                                 desiredState.ScaledSize,
@@ -627,6 +635,7 @@ public class PipelineBuilder
                         _videoInputFile.Map(f => f.FilterSteps.Count).IfNone(1) == 0)
                     {
                         IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                            _runtimeInfo,
                             ffmpegState.EncoderHardwareAccelerationMode,
                             currentState,
                             desiredState.ScaledSize,

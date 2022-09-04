@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Core.Jellyfin;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;

@@ -13,6 +13,7 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.State;
+using ErsatzTV.Infrastructure.Runtime;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -314,6 +315,7 @@ public class TranscodingTests
             // new HardwareCapabilitiesFactory(
             //     new MemoryCache(new MemoryCacheOptions()),
             //     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
+            new RuntimeInfo(),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var v = new MediaVersion
