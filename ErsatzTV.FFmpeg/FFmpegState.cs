@@ -18,8 +18,11 @@ public record FFmpegState(
     Option<string> HlsPlaylistPath,
     Option<string> HlsSegmentTemplate,
     long PtsOffset,
-    Option<int> ThreadCount)
+    Option<int> ThreadCount,
+    Option<int> MaybeQsvExtraHardwareFrames)
 {
+    public int QsvExtraHardwareFrames => MaybeQsvExtraHardwareFrames.IfNone(64);
+    
     public static FFmpegState Concat(bool saveReport, string channelName) =>
         new(
             saveReport,
@@ -37,5 +40,6 @@ public record FFmpegState(
             Option<string>.None,
             Option<string>.None,
             0,
+            Option<int>.None,
             Option<int>.None);
 }

@@ -400,7 +400,8 @@ public class PipelineBuilder
                         ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
-                        desiredState.PaddedSize);
+                        desiredState.PaddedSize,
+                        ffmpegState.QsvExtraHardwareFrames);
                     currentState = scaleFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
@@ -427,7 +428,8 @@ public class PipelineBuilder
                         ffmpegState.EncoderHardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
-                        desiredState.PaddedSize);
+                        desiredState.PaddedSize,
+                        ffmpegState.QsvExtraHardwareFrames);
                     currentState = scaleFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
@@ -482,7 +484,8 @@ public class PipelineBuilder
                                     ffmpegState.EncoderHardwareAccelerationMode,
                                     currentState,
                                     desiredState.ScaledSize,
-                                    desiredState.PaddedSize);
+                                    desiredState.PaddedSize,
+                                    ffmpegState.QsvExtraHardwareFrames);
                                 currentState = scaleFilter.NextState(currentState);
                                 _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
                             }
@@ -512,7 +515,8 @@ public class PipelineBuilder
                                 ffmpegState.EncoderHardwareAccelerationMode,
                                 currentState,
                                 desiredState.ScaledSize,
-                                desiredState.PaddedSize);
+                                desiredState.PaddedSize,
+                                ffmpegState.QsvExtraHardwareFrames);
                             currentState = scaleFilter.NextState(currentState);
                             videoInputFile.FilterSteps.Add(scaleFilter);
                         }
@@ -642,11 +646,11 @@ public class PipelineBuilder
                     }
 
                     IPipelineFilterStep scaleFilter = AvailableSubtitleScaleFilters.ForAcceleration(
-                        _runtimeInfo,
                         ffmpegState.EncoderHardwareAccelerationMode,
                         fakeState,
                         desiredState.ScaledSize,
-                        desiredState.PaddedSize);
+                        desiredState.PaddedSize,
+                        ffmpegState.QsvExtraHardwareFrames);
                     subtitleInputFile.FilterSteps.Add(scaleFilter);
                 }
                 else
@@ -665,7 +669,8 @@ public class PipelineBuilder
                             ffmpegState.EncoderHardwareAccelerationMode,
                             currentState,
                             desiredState.ScaledSize,
-                            desiredState.PaddedSize);
+                            desiredState.PaddedSize,
+                            ffmpegState.QsvExtraHardwareFrames);
                         currentState = scaleFilter.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
                     }

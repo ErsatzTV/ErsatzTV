@@ -4,13 +4,16 @@ public class HardwareUploadFilter : BaseFilter
 {
     private readonly FFmpegState _ffmpegState;
 
-    public HardwareUploadFilter(FFmpegState ffmpegState) => _ffmpegState = ffmpegState;
+    public HardwareUploadFilter(FFmpegState ffmpegState)
+    {
+        _ffmpegState = ffmpegState;
+    }
 
     public override string Filter => _ffmpegState.EncoderHardwareAccelerationMode switch
     {
         HardwareAccelerationMode.None => string.Empty,
         HardwareAccelerationMode.Nvenc => "hwupload_cuda",
-        HardwareAccelerationMode.Qsv => "hwupload=extra_hw_frames=64",
+        HardwareAccelerationMode.Qsv => $"hwupload=extra_hw_frames={_ffmpegState.QsvExtraHardwareFrames}",
         HardwareAccelerationMode.Vaapi => "format=nv12|vaapi,hwupload",
         _ => "hwupload"
     };
