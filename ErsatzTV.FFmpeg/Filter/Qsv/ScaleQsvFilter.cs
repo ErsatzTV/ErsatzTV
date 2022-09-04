@@ -10,13 +10,20 @@ public class ScaleQsvFilter : BaseFilter
     private readonly FrameState _currentState;
     private readonly FrameSize _scaledSize;
     private readonly FrameSize _paddedSize;
+    private readonly int _extraHardwareFrames;
 
-    public ScaleQsvFilter(IRuntimeInfo runtimeInfo, FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
+    public ScaleQsvFilter(
+        IRuntimeInfo runtimeInfo,
+        FrameState currentState,
+        FrameSize scaledSize,
+        FrameSize paddedSize,
+        int extraHardwareFrames)
     {
         _runtimeInfo = runtimeInfo;
         _currentState = currentState;
         _scaledSize = scaledSize;
         _paddedSize = paddedSize;
+        _extraHardwareFrames = extraHardwareFrames;
     }
 
     public override string Filter
@@ -57,10 +64,10 @@ public class ScaleQsvFilter : BaseFilter
             string initialPixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, FFmpegFormat.NV12);
             if (!string.IsNullOrWhiteSpace(scale))
             {
-                return $"format={initialPixelFormat},hwupload=extra_hw_frames=64,{scale}";
+                return $"format={initialPixelFormat},hwupload=extra_hw_frames={_extraHardwareFrames},{scale}";
             }
 
-            return $"format={initialPixelFormat},hwupload=extra_hw_frames=64";
+            return $"format={initialPixelFormat},hwupload=extra_hw_frames={_extraHardwareFrames}";
         }
     }
 
