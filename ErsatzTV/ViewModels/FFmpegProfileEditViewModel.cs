@@ -28,6 +28,7 @@ public class FFmpegProfileEditViewModel
         HardwareAcceleration = viewModel.HardwareAcceleration;
         VaapiDriver = viewModel.VaapiDriver;
         VaapiDevice = viewModel.VaapiDevice;
+        QsvExtraHardwareFrames = viewModel.QsvExtraHardwareFrames;
         VideoBitrate = viewModel.VideoBitrate;
         VideoBufferSize = viewModel.VideoBufferSize;
         VideoFormat = viewModel.VideoFormat;
