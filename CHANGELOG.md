@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This can be helpful for creating channels that use commentary tracks
     - External tooling exists to easily update title/name metadata if your audio streams don't already have this metadata
 - Add `Amf` hardware acceleration option for AMD GPUs on Windows
+- Add `QSV Extra Hardware Frames` parameter for tuning QSV acceleration; some systems may run better after doubling or halving the default value of `64`
 
 ## [0.6.6-beta] - 2022-08-17
 ### Fixed
