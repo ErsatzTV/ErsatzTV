@@ -1,16 +1,22 @@
-﻿using ErsatzTV.FFmpeg.Format;
+﻿using System.Runtime.InteropServices;
+using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.Runtime;
 
 namespace ErsatzTV.FFmpeg.Filter.Qsv;
 
 public class ScaleQsvFilter : BaseFilter
 {
+    private readonly IRuntimeInfo _runtimeInfo;
     private readonly FrameState _currentState;
     private readonly FrameSize _scaledSize;
+    private readonly FrameSize _paddedSize;
 
-    public ScaleQsvFilter(FrameState currentState, FrameSize scaledSize)
+    public ScaleQsvFilter(IRuntimeInfo runtimeInfo, FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
     {
+        _runtimeInfo = runtimeInfo;
         _currentState = currentState;
         _scaledSize = scaledSize;
+        _paddedSize = paddedSize;
     }
 
     public override string Filter
@@ -37,7 +43,9 @@ public class ScaleQsvFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                string targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
+                string targetSize = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
+                    ? $"w={_paddedSize.Width}:h={_paddedSize.Height}"
+                    : $"w={_scaledSize.Width}:h={_scaledSize.Height}";
                 scale = $"vpp_qsv={targetSize}{format}";
             }
 

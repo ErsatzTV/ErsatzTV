@@ -4,6 +4,7 @@ using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
 using LanguageExt;
@@ -72,6 +73,7 @@ public class PipelineGeneratorTests
             Option<int>.None);
 
         var builder = new PipelineBuilder(
+            new Mock<IRuntimeInfo>().Object,
             new DefaultHardwareCapabilities(),
             videoInputFile,
             audioInputFile,
@@ -143,6 +145,7 @@ public class PipelineGeneratorTests
             Option<int>.None);
 
         var builder = new PipelineBuilder(
+            new Mock<IRuntimeInfo>().Object,
             new DefaultHardwareCapabilities(),
             videoInputFile,
             audioInputFile,
@@ -167,7 +170,16 @@ public class PipelineGeneratorTests
         var resolution = new FrameSize(1920, 1080);
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(new DefaultHardwareCapabilities(), None, None, None, None, "", "", _logger);
+        var builder = new PipelineBuilder(
+            new Mock<IRuntimeInfo>().Object,
+            new DefaultHardwareCapabilities(),
+            None,
+            None,
+            None,
+            None,
+            "",
+            "",
+            _logger);
         FFmpegPipeline result = builder.Concat(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -231,6 +243,7 @@ public class PipelineGeneratorTests
             Option<int>.None);
 
         var builder = new PipelineBuilder(
+            new Mock<IRuntimeInfo>().Object,
             new DefaultHardwareCapabilities(),
             videoInputFile,
             audioInputFile,
@@ -294,6 +307,7 @@ public class PipelineGeneratorTests
             Option<int>.None);
 
         var builder = new PipelineBuilder(
+            new Mock<IRuntimeInfo>().Object,
             new DefaultHardwareCapabilities(),
             videoInputFile,
             audioInputFile,
@@ -327,6 +341,7 @@ public class PipelineGeneratorTests
             });
 
         var pipelineBuilder = new PipelineBuilder(
+            new Mock<IRuntimeInfo>().Object,
             new DefaultHardwareCapabilities(),
             videoInputFile,
             Option<AudioInputFile>.None,

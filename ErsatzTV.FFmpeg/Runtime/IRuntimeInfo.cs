@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace ErsatzTV.Core.Interfaces.Runtime;
+namespace ErsatzTV.FFmpeg.Runtime;
 
 public interface IRuntimeInfo
 {
