@@ -29,6 +29,7 @@ public interface IFFmpegProcessService
         Option<ChannelWatermark> globalWatermark,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
+        Option<int> qsvExtraHardwareFrames,
         bool hlsRealtime,
         FillerKind fillerKind,
         TimeSpan inPoint,
@@ -45,7 +46,8 @@ public interface IFFmpegProcessService
         bool hlsRealtime,
         long ptsOffset,
         VaapiDriver vaapiDriver,
-        string vaapiDevice);
+        string vaapiDevice,
+        Option<int> qsvExtraHardwareFrames);
 
     Task<Command> ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 

@@ -11,6 +11,7 @@ public record FFmpegProfileViewModel(
     HardwareAccelerationKind HardwareAcceleration,
     VaapiDriver VaapiDriver,
     string VaapiDevice,
+    int? QsvExtraHardwareFrames,
     ResolutionViewModel Resolution,
     FFmpegProfileVideoFormat VideoFormat,
     int VideoBitrate,

@@ -10,6 +10,7 @@ public record CreateFFmpegProfile(
     HardwareAccelerationKind HardwareAcceleration,
     VaapiDriver VaapiDriver,
     string VaapiDevice,
+    int? QsvExtraHardwareFrames,
     int ResolutionId,
     FFmpegProfileVideoFormat VideoFormat,
     int VideoBitrate,
