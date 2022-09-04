@@ -63,6 +63,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<ChannelWatermark> globalWatermark,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
+        Option<int> qsvExtraHardwareFrames,
         bool hlsRealtime,
         FillerKind fillerKind,
         TimeSpan inPoint,
@@ -240,7 +241,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsSegmentTemplate,
             ptsOffset,
             playbackSettings.ThreadCount,
-            128);
+            qsvExtraHardwareFrames);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -268,7 +269,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool hlsRealtime,
         long ptsOffset,
         VaapiDriver vaapiDriver,
-        string vaapiDevice)
+        string vaapiDevice,
+        Option<int> qsvExtraHardwareFrames)
     {
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateErrorSettings(
             channel.StreamingMode,
@@ -365,7 +367,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsSegmentTemplate,
             ptsOffset,
             Option<int>.None,
-            128);
+            qsvExtraHardwareFrames);
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 

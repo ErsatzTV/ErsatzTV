@@ -499,6 +499,7 @@ public class TranscodingTests
             channelWatermark,
             VaapiDriver.Default,
             "/dev/dri/renderD128",
+            Option<int>.None,
             false,
             FillerKind.None,
             TimeSpan.Zero,

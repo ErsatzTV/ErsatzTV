@@ -33,6 +33,7 @@ public class
         p.HardwareAcceleration = update.HardwareAcceleration;
         p.VaapiDriver = update.VaapiDriver;
         p.VaapiDevice = update.VaapiDevice;
+        p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;
         p.ResolutionId = update.ResolutionId;
         p.VideoFormat = update.VideoFormat;
         p.VideoBitrate = update.VideoBitrate;

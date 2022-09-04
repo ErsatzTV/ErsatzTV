@@ -48,6 +48,7 @@ public class FFmpegProfileEditViewModel
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
     public string VaapiDevice { get; set; }
+    public int? QsvExtraHardwareFrames { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
@@ -59,6 +60,7 @@ public class FFmpegProfileEditViewModel
             HardwareAcceleration,
             VaapiDriver,
             VaapiDevice,
+            QsvExtraHardwareFrames,
             Resolution.Id,
             VideoFormat,
             VideoBitrate,
@@ -81,6 +83,7 @@ public class FFmpegProfileEditViewModel
             HardwareAcceleration,
             VaapiDriver,
             VaapiDevice,
+            QsvExtraHardwareFrames,
             Resolution.Id,
             VideoFormat,
             VideoBitrate,

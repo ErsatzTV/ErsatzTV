@@ -44,6 +44,7 @@ public class CreateFFmpegProfileHandler :
                 HardwareAcceleration = request.HardwareAcceleration,
                 VaapiDriver = request.VaapiDriver,
                 VaapiDevice = request.VaapiDevice,
+                QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
                 ResolutionId = resolutionId,
                 VideoFormat = request.VideoFormat,
                 VideoBitrate = request.VideoBitrate,

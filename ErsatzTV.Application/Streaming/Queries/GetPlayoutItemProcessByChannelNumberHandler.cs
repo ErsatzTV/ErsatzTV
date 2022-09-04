@@ -184,6 +184,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 maybeGlobalWatermark,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
+                Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
                 request.HlsRealtime,
                 playoutItemWithPath.PlayoutItem.FillerKind,
                 playoutItemWithPath.PlayoutItem.InPoint,
@@ -230,7 +231,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         request.HlsRealtime,
                         request.PtsOffset,
                         channel.FFmpegProfile.VaapiDriver,
-                        channel.FFmpegProfile.VaapiDevice);
+                        channel.FFmpegProfile.VaapiDevice,
+                        Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
                     return new PlayoutItemProcessModel(offlineProcess, maybeDuration, finish);
                 case PlayoutItemDoesNotExistOnDisk:
@@ -242,7 +244,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         request.HlsRealtime,
                         request.PtsOffset,
                         channel.FFmpegProfile.VaapiDriver,
-                        channel.FFmpegProfile.VaapiDevice);
+                        channel.FFmpegProfile.VaapiDevice,
+                        Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
                     return new PlayoutItemProcessModel(doesNotExistProcess, maybeDuration, finish);
                 default:
@@ -254,7 +257,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         request.HlsRealtime,
                         request.PtsOffset,
                         channel.FFmpegProfile.VaapiDriver,
-                        channel.FFmpegProfile.VaapiDevice);
+                        channel.FFmpegProfile.VaapiDevice,
+                        Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
                     return new PlayoutItemProcessModel(errorProcess, maybeDuration, finish);
             }

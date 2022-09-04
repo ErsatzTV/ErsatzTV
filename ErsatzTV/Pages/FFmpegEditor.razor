@@ -77,6 +77,9 @@
                                     </MudSelect>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Qsv)" Label="QSV Extra Hardware Frames" @bind-Value="_model.QsvExtraHardwareFrames" For="@(() => _model.QsvExtraHardwareFrames)" />
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
                                     <MudCheckBox Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
