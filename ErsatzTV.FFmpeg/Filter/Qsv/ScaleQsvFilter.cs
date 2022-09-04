@@ -6,11 +6,13 @@ public class ScaleQsvFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _scaledSize;
+    private readonly FrameSize _paddedSize;
 
-    public ScaleQsvFilter(FrameState currentState, FrameSize scaledSize)
+    public ScaleQsvFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
+        _paddedSize = paddedSize;
     }
 
     public override string Filter
@@ -37,7 +39,7 @@ public class ScaleQsvFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                string targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
+                string targetSize = $"w={_paddedSize.Width}:h={_paddedSize.Height}";
                 scale = $"vpp_qsv={targetSize}{format}";
             }
 

@@ -16,7 +16,7 @@ public static class AvailableScaleFilters
             HardwareAccelerationMode.Nvenc => new ScaleCudaFilter(currentState, scaledSize, paddedSize),
             HardwareAccelerationMode.Qsv when currentState.FrameDataLocation == FrameDataLocation.Hardware ||
                                               scaledSize == paddedSize =>
-                new ScaleQsvFilter(currentState, scaledSize),
+                new ScaleQsvFilter(currentState, scaledSize, paddedSize),
             HardwareAccelerationMode.Vaapi => new ScaleVaapiFilter(currentState, scaledSize, paddedSize),
             _ => new ScaleFilter(currentState, scaledSize, paddedSize)
         };

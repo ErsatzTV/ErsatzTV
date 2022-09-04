@@ -406,8 +406,9 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-                    
-                    if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio)
+
+                    if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
+                        ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
                     {
                         IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
                         currentState = darStep.NextState(currentState);
@@ -430,8 +431,9 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-                    
-                    if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio)
+
+                    if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
+                        ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
                     {
                         IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
                         currentState = darStep.NextState(currentState);
