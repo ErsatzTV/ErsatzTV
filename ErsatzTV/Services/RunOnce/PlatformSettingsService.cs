@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.Extensions.Caching.Memory;
 

@@ -1,5 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.FFmpeg.Runtime;
 
 namespace ErsatzTV.Infrastructure.Runtime;
 

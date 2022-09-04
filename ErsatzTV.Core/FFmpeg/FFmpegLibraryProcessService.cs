@@ -7,6 +7,7 @@ using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
@@ -18,6 +19,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
+    private readonly IRuntimeInfo _runtimeInfo;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
@@ -28,6 +30,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IFFmpegStreamSelector ffmpegStreamSelector,
         ITempFilePool tempFilePool,
         IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
+        IRuntimeInfo runtimeInfo,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -35,6 +38,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _tempFilePool = tempFilePool;
         _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
+        _runtimeInfo = runtimeInfo;
         _logger = logger;
     }
 
@@ -240,6 +244,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
         var pipelineBuilder = new PipelineBuilder(
+            _runtimeInfo,
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hwAccel),
             videoInputFile,
             audioInputFile,
@@ -372,6 +377,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger.LogDebug("FFmpeg desired error state {FrameState}", desiredState);
 
         var pipelineBuilder = new PipelineBuilder(
+            _runtimeInfo,
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hwAccel),
             videoInputFile,
             audioInputFile,
@@ -400,6 +406,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             resolution);
 
         var pipelineBuilder = new PipelineBuilder(
+            _runtimeInfo,
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
             None,
             None,
@@ -426,6 +433,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, string.Empty, None, true) });
 
         var pipelineBuilder = new PipelineBuilder(
+            _runtimeInfo,
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
             videoInputFile,
             None,

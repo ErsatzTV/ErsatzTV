@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Plex;
