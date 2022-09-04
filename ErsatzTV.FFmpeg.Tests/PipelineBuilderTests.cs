@@ -70,6 +70,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             Option<string>.None,
             0,
+            Option<int>.None,
             Option<int>.None);
 
         var builder = new PipelineBuilder(
@@ -142,6 +143,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             Option<string>.None,
             0,
+            Option<int>.None,
             Option<int>.None);
 
         var builder = new PipelineBuilder(
@@ -240,6 +242,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             Option<string>.None,
             0,
+            Option<int>.None,
             Option<int>.None);
 
         var builder = new PipelineBuilder(
@@ -304,6 +307,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             Option<string>.None,
             0,
+            Option<int>.None,
             Option<int>.None);
 
         var builder = new PipelineBuilder(

@@ -11,6 +11,7 @@ public static class AvailablePixelFormats
             PixelFormat.YUV420P10LE => new PixelFormatYuv420P10Le(),
             PixelFormat.YUVJ420P => new PixelFormatYuvJ420P(),
             PixelFormat.YUV444P => new PixelFormatYuv444P(),
+            PixelFormat.YUVA420P => new PixelFormatYuva420P(),
             _ => LogUnknownPixelFormat(pixelFormat, logger)
         };
 

@@ -239,7 +239,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsPlaylistPath,
             hlsSegmentTemplate,
             ptsOffset,
-            playbackSettings.ThreadCount);
+            playbackSettings.ThreadCount,
+            128);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -363,7 +364,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsPlaylistPath,
             hlsSegmentTemplate,
             ptsOffset,
-            Option<int>.None);
+            Option<int>.None,
+            128);
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 
