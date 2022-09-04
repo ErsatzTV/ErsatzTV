@@ -619,9 +619,35 @@ public class PipelineBuilder
                         _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
                     }
 
-                    subtitleInputFile.FilterSteps.Add(new SubtitlePixelFormatFilter(ffmpegState));
+                    var pixelFormatFilter = new SubtitlePixelFormatFilter(ffmpegState);
+                    subtitleInputFile.FilterSteps.Add(pixelFormatFilter);
 
                     subtitleInputFile.FilterSteps.Add(new SubtitleHardwareUploadFilter(currentState, ffmpegState));
+
+                    FrameState fakeState = currentState;
+                    foreach (string format in pixelFormatFilter.MaybeFormat)
+                    {
+                        fakeState = fakeState with
+                        {
+                            PixelFormat = AvailablePixelFormats.ForPixelFormat(format, _logger)
+                        };
+                    }
+
+                    // hacky check for actual scaling or padding
+                    if (_videoInputFile.Exists(
+                            v => v.FilterSteps.Any(s => s.Filter.Contains(currentState.PaddedSize.Height.ToString()))))
+                    {
+                        // enable scaling the subtitle stream
+                        fakeState = fakeState with { ScaledSize = new FrameSize(1, 1) };
+                    }
+
+                    IPipelineFilterStep scaleFilter = AvailableSubtitleScaleFilters.ForAcceleration(
+                        _runtimeInfo,
+                        ffmpegState.EncoderHardwareAccelerationMode,
+                        fakeState,
+                        desiredState.ScaledSize,
+                        desiredState.PaddedSize);
+                    subtitleInputFile.FilterSteps.Add(scaleFilter);
                 }
                 else
                 {

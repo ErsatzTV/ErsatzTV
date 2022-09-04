@@ -6,20 +6,14 @@ public class SubtitlePixelFormatFilter : BaseFilter
 
     public SubtitlePixelFormatFilter(FFmpegState ffmpegState) => _ffmpegState = ffmpegState;
 
-    public override string Filter
-    {
-        get
-        {
-            Option<string> maybeFormat = _ffmpegState.EncoderHardwareAccelerationMode switch
-            {
-                HardwareAccelerationMode.Nvenc => "yuva420p",
-                HardwareAccelerationMode.Qsv => "yuva420p",
-                _ => None
-            };
+    public override string Filter => MaybeFormat.Match(f => $"format={f}", () => string.Empty);
 
-            return maybeFormat.Match(f => $"format={f}", () => string.Empty);
-        }
-    }
+    public Option<string> MaybeFormat =>_ffmpegState.EncoderHardwareAccelerationMode switch
+    {
+        HardwareAccelerationMode.Nvenc => "yuva420p",
+        HardwareAccelerationMode.Qsv => "yuva420p",
+        _ => None
+    }; 
 
     public override FrameState NextState(FrameState currentState) => currentState;
 }
