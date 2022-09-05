@@ -419,7 +419,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         result.Add(
             new CollectionWithItems(
-                id,
+                id--,
                 items.OfType<Movie>().Cast<MediaItem>().ToList(),
                 true,
                 PlaybackOrder.Chronological,
