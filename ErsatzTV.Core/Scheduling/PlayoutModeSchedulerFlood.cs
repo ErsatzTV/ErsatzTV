@@ -67,8 +67,9 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 SubtitleMode = scheduleItem.SubtitleMode
             };
 
+            // never block scheduling when there is only one schedule item (with fixed start and flood) 
             DateTimeOffset peekScheduleItemStart =
-                peekScheduleItem.StartType == StartType.Fixed
+                scheduleItem.Id != peekScheduleItem.Id && peekScheduleItem.StartType == StartType.Fixed
                     ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
                     : DateTimeOffset.MaxValue;
 
