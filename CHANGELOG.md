@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug with XMLTV that caused some filler to display with primary content details
 - Multiple fixes for content scaling with `Nvidia`, `Qsv` and `Vaapi` accelerations
 - Properly scale image-based subtitles
+- Abort when an infinite playout building loop is detected; proper bug fix will be released soon
 
 ### Added
 - Add `Preferred Audio Title` feature
