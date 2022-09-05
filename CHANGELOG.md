@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.7-beta] - 2022-09-05
 ### Fixed
 - When all audio streams are selected with `HLS Direct`, explicitly copy them without transcoding
   - This only happens when the channel does not have a `Preferred Audio Language`
@@ -23,7 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This can be helpful for creating channels that use commentary tracks
     - External tooling exists to easily update title/name metadata if your audio streams don't already have this metadata
 - Add `Amf` hardware acceleration option for AMD GPUs on Windows
-- Add `QSV Extra Hardware Frames` parameter for tuning QSV acceleration; some systems may run better after doubling or halving the default value of `64`
+- Add `QSV Extra Hardware Frames` parameter for tuning QSV acceleration
+  - Performance may improve on some systems after doubling or halving the default value of `64`
 
 ## [0.6.6-beta] - 2022-08-17
 ### Fixed
@@ -1320,7 +1323,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.7-beta...HEAD
+[0.6.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...v0.6.7-beta
 [0.6.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.5-beta...v0.6.6-beta
 [0.6.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.4-beta...v0.6.5-beta
 [0.6.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.3-beta...v0.6.4-beta
