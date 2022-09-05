@@ -515,6 +515,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -523,6 +524,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemOne
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -605,6 +607,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -613,6 +616,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemOne
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -742,6 +746,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -750,6 +755,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemMultiple
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -839,6 +845,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -847,6 +854,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemOne
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -934,6 +942,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -942,6 +951,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemOne
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -1040,6 +1050,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -1048,6 +1059,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemDuration
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -1141,6 +1153,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemMultiple
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = multipleCollection,
                     CollectionId = multipleCollection.Id,
@@ -1150,6 +1163,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemDuration
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = dynamicCollection,
                     CollectionId = dynamicCollection.Id,
@@ -2329,6 +2343,7 @@ public class PlayoutBuilderTests
             {
                 new ProgramScheduleItemFlood
                 {
+                    Id = 1,
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
@@ -2337,6 +2352,7 @@ public class PlayoutBuilderTests
                 },
                 new ProgramScheduleItemOne
                 {
+                    Id = 2,
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
@@ -2622,6 +2638,7 @@ public class PlayoutBuilderTests
     private static ProgramScheduleItem Flood(Collection mediaCollection, PlaybackOrder playbackOrder) =>
         new ProgramScheduleItemFlood
         {
+            Id = 1,
             Index = 1,
             Collection = mediaCollection,
             CollectionId = mediaCollection.Id,
