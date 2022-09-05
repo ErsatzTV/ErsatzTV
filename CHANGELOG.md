@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly scale image-based subtitles
 - Fix bug where a schedule containing a single item (fixed start and flood) would never finish building a playout
   - Logic was also added to detect infinite playout build loops in the future and stop them
+- Fix bug where `Other Videos` wouldn't be included in scheduling mode `Shuffle In Order`
 
 ### Added
 - Add `Preferred Audio Title` feature

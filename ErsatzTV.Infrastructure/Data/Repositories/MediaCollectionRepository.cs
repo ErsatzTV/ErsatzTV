@@ -425,6 +425,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 PlaybackOrder.Chronological,
                 false));
 
+        result.Add(
+            new CollectionWithItems(
+                id,
+                items.OfType<OtherVideo>().Cast<MediaItem>().ToList(),
+                true,
+                PlaybackOrder.Chronological,
+                false));
+
         return result;
     }
 
