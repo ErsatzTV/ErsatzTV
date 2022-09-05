@@ -423,9 +423,29 @@ public class PlayoutBuilder : IPlayoutBuilder
         var schedulerDuration = new PlayoutModeSchedulerDuration(_logger);
         var schedulerFlood = new PlayoutModeSchedulerFlood(_logger);
 
+        var timeHash = new Dictionary<DateTimeOffset, int>();
+        
         // loop until we're done filling the desired amount of time
         while (playoutBuilderState.CurrentTime < playoutFinish)
         {
+            if (timeHash.TryGetValue(playoutBuilderState.CurrentTime, out int count))
+            {
+                timeHash[playoutBuilderState.CurrentTime] = count + 1;
+            }
+            else
+            {
+                timeHash[playoutBuilderState.CurrentTime] = 1;
+            }
+
+            if (timeHash[playoutBuilderState.CurrentTime] == 6)
+            {
+                _logger.LogWarning(
+                    "Failed to schedule beyond {Time}; aborting playout build - this is a bug",
+                    playoutBuilderState.CurrentTime);
+
+                throw new ApplicationException("Scheduling loop encountered");
+            }
+
             // _logger.LogDebug("Playout time is {CurrentTime}", playoutBuilderState.CurrentTime);
 
             // get the schedule item out of the sorted list
