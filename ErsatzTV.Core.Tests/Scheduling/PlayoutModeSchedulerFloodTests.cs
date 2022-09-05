@@ -85,6 +85,98 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].CustomTitle.Should().Be("CustomTitle");
     }
+    
+    [Test]
+    public void Should_Schedule_Single_Item_Fixed_Start_Flood()
+    {
+        Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));
+
+        var scheduleItem = new ProgramScheduleItemFlood
+        {
+            Id = 1,
+            Index = 1,
+            Collection = collectionOne,
+            CollectionId = collectionOne.Id,
+            StartTime = TimeSpan.Zero,
+            PlaybackOrder = PlaybackOrder.Chronological,
+            TailFiller = null,
+            FallbackFiller = null,
+            CustomTitle = "CustomTitle"
+        };
+
+        var enumerator = new ChronologicalMediaCollectionEnumerator(
+            collectionOne.MediaItems,
+            new CollectionEnumeratorState());
+
+        var sortedScheduleItems = new List<ProgramScheduleItem>
+        {
+            scheduleItem
+        };
+
+        var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+            sortedScheduleItems,
+            new CollectionEnumeratorState());
+
+        PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+            startState,
+            CollectionEnumerators(scheduleItem, enumerator),
+            scheduleItem,
+            scheduleItem,
+            HardStop(scheduleItemsEnumerator));
+
+        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(6));
+        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+        playoutBuilderState.NextGuideGroup.Should().Be(2); // one guide group here because of custom title
+        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+        playoutBuilderState.InFlood.Should().BeTrue();
+        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+        playoutBuilderState.InDurationFiller.Should().BeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+
+        enumerator.State.Index.Should().Be(0);
+
+        playoutItems.Count.Should().Be(6);
+
+        playoutItems[0].MediaItemId.Should().Be(1);
+        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+        playoutItems[0].GuideGroup.Should().Be(1);
+        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].CustomTitle.Should().Be("CustomTitle");
+
+        playoutItems[1].MediaItemId.Should().Be(2);
+        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddHours(1));
+        playoutItems[1].GuideGroup.Should().Be(1);
+        playoutItems[1].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[1].CustomTitle.Should().Be("CustomTitle");
+
+        playoutItems[2].MediaItemId.Should().Be(1);
+        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.AddHours(2));
+        playoutItems[2].GuideGroup.Should().Be(1);
+        playoutItems[2].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[2].CustomTitle.Should().Be("CustomTitle");
+
+        playoutItems[3].MediaItemId.Should().Be(2);
+        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.AddHours(3));
+        playoutItems[3].GuideGroup.Should().Be(1);
+        playoutItems[3].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[3].CustomTitle.Should().Be("CustomTitle");
+    
+        playoutItems[4].MediaItemId.Should().Be(1);
+        playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.AddHours(4));
+        playoutItems[4].GuideGroup.Should().Be(1);
+        playoutItems[4].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[4].CustomTitle.Should().Be("CustomTitle");
+    
+        playoutItems[5].MediaItemId.Should().Be(2);
+        playoutItems[5].StartOffset.Should().Be(startState.CurrentTime.AddHours(5));
+        playoutItems[5].GuideGroup.Should().Be(1);
+        playoutItems[5].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[5].CustomTitle.Should().Be("CustomTitle");
+    }
 
     [Test]
     public void Should_Fill_Exactly_To_Next_Schedule_Item_Flood()
