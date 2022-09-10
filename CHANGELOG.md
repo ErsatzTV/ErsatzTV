@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix typo introduced in `0.6.7-beta` that stopped QSV HEVC encoder from working
 
 ## [0.6.7-beta] - 2022-09-05
 ### Fixed
