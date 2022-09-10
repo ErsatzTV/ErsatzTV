@@ -25,7 +25,7 @@ public class EncoderHevcQsv : EncoderBase
     public override StreamKind Kind => StreamKind.Video;
 
     public override IList<string> OutputOptions =>
-        new[] { "-c:v", "hevc_qsv", "-low_power", "0", "-look_head", "0" };
+        new[] { "-c:v", "hevc_qsv", "-low_power", "0", "-look_ahead", "0" };
 
     // need to upload if we're still in software and a watermark is used
     public override string Filter
