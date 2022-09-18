@@ -9,10 +9,13 @@ public record FrameState(
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,
-    string DisplayAspectRatio,
+    bool IsAnamorphic,
     Option<int> FrameRate,
     Option<int> VideoBitrate,
     Option<int> VideoBufferSize,
     Option<int> VideoTrackTimeScale,
     bool Deinterlaced,
-    FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown);
+    FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
+{
+    public string FFmpegAspectRatio => PaddedSize.Width == 640 ? "4/3" : "16/9";
+}

@@ -29,7 +29,7 @@ public class SubtitleScaleNppFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                scale = $"scale_npp={targetSize}{format}";
+                scale = $"scale_npp={targetSize}{format}:force_original_aspect_ratio=1";
             }
 
             return scale;

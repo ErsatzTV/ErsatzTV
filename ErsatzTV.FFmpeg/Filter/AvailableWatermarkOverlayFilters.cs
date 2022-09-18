@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.State;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
@@ -8,13 +9,16 @@ public static class AvailableWatermarkOverlayFilters
 {
     public static IPipelineFilterStep ForAcceleration(
         HardwareAccelerationMode accelMode,
-        FrameState currentState,
         WatermarkState watermarkState,
-        FrameSize resolution) =>
+        FrameSize resolution,
+        FrameSize squarePixelFrameSize,
+        ILogger logger) =>
         accelMode switch
         {
-            HardwareAccelerationMode.Nvenc => new OverlayWatermarkCudaFilter(currentState, watermarkState, resolution),
-            HardwareAccelerationMode.Qsv => new OverlayWatermarkQsvFilter(currentState, watermarkState, resolution),
-            _ => new OverlayWatermarkFilter(currentState, watermarkState, resolution)
+            HardwareAccelerationMode.Nvenc =>
+                new OverlayWatermarkCudaFilter(watermarkState, resolution, squarePixelFrameSize, logger),
+            HardwareAccelerationMode.Qsv =>
+                new OverlayWatermarkQsvFilter(watermarkState, resolution, squarePixelFrameSize, logger),
+            _ => new OverlayWatermarkFilter(watermarkState, resolution, squarePixelFrameSize, logger)
         };
 }
