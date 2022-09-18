@@ -8,19 +8,27 @@ namespace ErsatzTV.FFmpeg.Filter;
 public static class AvailableScaleFilters
 {
     public static IPipelineFilterStep ForAcceleration(
-        IRuntimeInfo runtimeInfo,
+        IRuntimeInfo _,
         HardwareAccelerationMode accelMode,
         FrameState currentState,
         FrameSize scaledSize,
         FrameSize paddedSize,
-        int extraHardwareFrames) =>
+        int extraHardwareFrames,
+        bool isAnamorphicEdgeCase,
+        string sampleAspectRatio) =>
         accelMode switch
         {
-            HardwareAccelerationMode.Nvenc => new ScaleCudaFilter(currentState, scaledSize, paddedSize),
+            HardwareAccelerationMode.Nvenc =>
+                new ScaleCudaFilter(currentState, scaledSize, paddedSize, isAnamorphicEdgeCase),
             HardwareAccelerationMode.Qsv when currentState.FrameDataLocation == FrameDataLocation.Hardware ||
                                               scaledSize == paddedSize =>
-                new ScaleQsvFilter(runtimeInfo, currentState, scaledSize, paddedSize, extraHardwareFrames),
+                new ScaleQsvFilter(
+                    currentState,
+                    scaledSize,
+                    extraHardwareFrames,
+                    isAnamorphicEdgeCase,
+                    sampleAspectRatio),
             HardwareAccelerationMode.Vaapi => new ScaleVaapiFilter(currentState, scaledSize, paddedSize),
-            _ => new ScaleFilter(currentState, scaledSize, paddedSize)
+            _ => new ScaleFilter(currentState, scaledSize, paddedSize, isAnamorphicEdgeCase)
         };
 }

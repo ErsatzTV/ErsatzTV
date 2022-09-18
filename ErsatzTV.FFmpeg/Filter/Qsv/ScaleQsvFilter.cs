@@ -1,29 +1,27 @@
-﻿using System.Runtime.InteropServices;
-using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Runtime;
+﻿using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Filter.Qsv;
 
 public class ScaleQsvFilter : BaseFilter
 {
-    private readonly IRuntimeInfo _runtimeInfo;
     private readonly FrameState _currentState;
     private readonly FrameSize _scaledSize;
-    private readonly FrameSize _paddedSize;
     private readonly int _extraHardwareFrames;
+    private readonly bool _isAnamorphicEdgeCase;
+    private readonly string _sampleAspectRatio;
 
     public ScaleQsvFilter(
-        IRuntimeInfo runtimeInfo,
         FrameState currentState,
         FrameSize scaledSize,
-        FrameSize paddedSize,
-        int extraHardwareFrames)
+        int extraHardwareFrames,
+        bool isAnamorphicEdgeCase,
+        string sampleAspectRatio)
     {
-        _runtimeInfo = runtimeInfo;
         _currentState = currentState;
         _scaledSize = scaledSize;
-        _paddedSize = paddedSize;
         _extraHardwareFrames = extraHardwareFrames;
+        _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
+        _sampleAspectRatio = sampleAspectRatio;
     }
 
     public override string Filter
@@ -44,16 +42,29 @@ public class ScaleQsvFilter : BaseFilter
             }
             else
             {
+                string squareScale = string.Empty;
+                string targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                string targetSize = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
-                    ? $"w={_paddedSize.Width}:h={_paddedSize.Height}"
-                    : $"w={_scaledSize.Width}:h={_scaledSize.Height}";
-                scale = $"vpp_qsv={targetSize}{format}";
+                string sar = _sampleAspectRatio.Replace(':', '/');
+                if (_isAnamorphicEdgeCase)
+                {
+                    squareScale = $"vpp_qsv=w=iw:h={sar}*ih{format},setsar=1,";
+                }
+                else if (_currentState.IsAnamorphic)
+                {
+                    squareScale = $"vpp_qsv=w=iw*{sar}:h=ih{format},setsar=1,";
+                }
+                else
+                {
+                    format += ",setsar=1";
+                }
+
+                scale = $"{squareScale}vpp_qsv={targetSize}{format}";
             }
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
@@ -75,6 +86,7 @@ public class ScaleQsvFilter : BaseFilter
     {
         ScaledSize = _scaledSize,
         PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Hardware
+        FrameDataLocation = FrameDataLocation.Hardware,
+        IsAnamorphic = false // this filter always outputs square pixels
     };
 }

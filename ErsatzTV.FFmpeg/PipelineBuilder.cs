@@ -192,7 +192,7 @@ public class PipelineBuilder
                 videoStream.PixelFormat,
                 videoStream.FrameSize,
                 videoStream.FrameSize,
-                videoStream.DisplayAspectRatio,
+                videoStream.IsAnamorphic,
                 initialFrameRate,
                 Option<int>.None,
                 Option<int>.None,
@@ -376,7 +376,8 @@ public class PipelineBuilder
                         IPipelineFilterStep scaleStep = new ScaleFilter(
                             currentState,
                             desiredState.ScaledSize,
-                            desiredState.PaddedSize);
+                            desiredState.PaddedSize,
+                            videoStream.IsAnamorphicEdgeCase);
                         currentState = scaleStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(scaleStep));
 
@@ -385,12 +386,12 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
 
-                        if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio)
-                        {
-                            IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
-                            currentState = darStep.NextState(currentState);
-                            _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
-                        }
+                        // if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio)
+                        // {
+                        //     IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
+                        //     currentState = darStep.NextState(currentState);
+                        //     _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
+                        // }
                     }
                 }
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
@@ -401,7 +402,9 @@ public class PipelineBuilder
                         currentState,
                         desiredState.ScaledSize,
                         desiredState.PaddedSize,
-                        ffmpegState.QsvExtraHardwareFrames);
+                        ffmpegState.QsvExtraHardwareFrames,
+                        videoStream.IsAnamorphicEdgeCase,
+                        videoStream.SampleAspectRatio);
                     currentState = scaleFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
@@ -413,13 +416,13 @@ public class PipelineBuilder
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
 
-                    if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
-                        ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
-                    {
-                        IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
-                        currentState = darStep.NextState(currentState);
-                        _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
-                    }
+                    // if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
+                    //     ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
+                    // {
+                    //     IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
+                    //     currentState = darStep.NextState(currentState);
+                    //     _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
+                    // }
                 }
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
@@ -429,7 +432,9 @@ public class PipelineBuilder
                         currentState,
                         desiredState.ScaledSize,
                         desiredState.PaddedSize,
-                        ffmpegState.QsvExtraHardwareFrames);
+                        ffmpegState.QsvExtraHardwareFrames,
+                        videoStream.IsAnamorphicEdgeCase,
+                        videoStream.SampleAspectRatio);
                     currentState = scaleFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
@@ -440,13 +445,13 @@ public class PipelineBuilder
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
 
-                    if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
-                        ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
-                    {
-                        IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
-                        currentState = darStep.NextState(currentState);
-                        _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
-                    }
+                    // if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
+                    //     ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
+                    // {
+                    //     IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
+                    //     currentState = darStep.NextState(currentState);
+                    //     _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
+                    // }
                 }
 
                 if (hasOverlay && currentState.PixelFormat.Map(pf => pf.FFmpegName) !=
@@ -485,7 +490,9 @@ public class PipelineBuilder
                                     currentState,
                                     desiredState.ScaledSize,
                                     desiredState.PaddedSize,
-                                    ffmpegState.QsvExtraHardwareFrames);
+                                    ffmpegState.QsvExtraHardwareFrames,
+                                    videoStream.IsAnamorphicEdgeCase,
+                                    videoStream.SampleAspectRatio);
                                 currentState = scaleFilter.NextState(currentState);
                                 _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
                             }
@@ -516,7 +523,9 @@ public class PipelineBuilder
                                 currentState,
                                 desiredState.ScaledSize,
                                 desiredState.PaddedSize,
-                                ffmpegState.QsvExtraHardwareFrames);
+                                ffmpegState.QsvExtraHardwareFrames,
+                                videoStream.IsAnamorphicEdgeCase,
+                                videoStream.SampleAspectRatio);
                             currentState = scaleFilter.NextState(currentState);
                             videoInputFile.FilterSteps.Add(scaleFilter);
                         }
@@ -670,7 +679,9 @@ public class PipelineBuilder
                             currentState,
                             desiredState.ScaledSize,
                             desiredState.PaddedSize,
-                            ffmpegState.QsvExtraHardwareFrames);
+                            ffmpegState.QsvExtraHardwareFrames,
+                            videoStream.IsAnamorphicEdgeCase,
+                            videoStream.SampleAspectRatio);
                         currentState = scaleFilter.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
                     }
@@ -800,7 +811,8 @@ public class PipelineBuilder
                 _watermarkInputFile,
                 _subtitleInputFile,
                 currentState.PaddedSize,
-                _fontsFolder);
+                _fontsFolder,
+                _logger);
 
             _pipelineSteps.Add(complexFilter);
         }

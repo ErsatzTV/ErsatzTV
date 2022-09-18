@@ -6,9 +6,7 @@ public class ScaleImageFilter : BaseFilter
 
     public ScaleImageFilter(FrameSize scaledSize) => _scaledSize = scaledSize;
 
-    public override string Filter => $"scale={_scaledSize.Width}:{_scaledSize.Height}";
-
-    // public override IList<string> OutputOptions => new List<string> { "-q:v", "2" };
+    public override string Filter => $"scale={_scaledSize.Width}:{_scaledSize.Height}:force_original_aspect_ratio=decrease";
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {
