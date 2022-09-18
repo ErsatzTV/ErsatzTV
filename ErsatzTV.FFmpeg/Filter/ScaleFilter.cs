@@ -6,13 +6,15 @@ public class ScaleFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _paddedSize;
+    private readonly bool _isAnamorphicEdgeCase;
     private readonly FrameSize _scaledSize;
 
-    public ScaleFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
+    public ScaleFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize, bool isAnamorphicEdgeCase)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
         _paddedSize = paddedSize;
+        _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
     }
 
     public override string Filter
@@ -25,8 +27,19 @@ public class ScaleFilter : BaseFilter
                 aspectRatio = ":force_original_aspect_ratio=decrease";
             }
 
-            string scale =
-                $"scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
+            string scale;
+            if (_isAnamorphicEdgeCase)
+            {
+                scale = $"scale=iw:sar*ih,setsar=1,scale=-1:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
+            }
+            else if (_currentState.IsAnamorphic)
+            {
+                scale = $"scale=iw*sar:ih,setsar=1,scale={_paddedSize.Width}:-1:flags=fast_bilinear{aspectRatio}";
+            }
+            else
+            {
+                scale = $"scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio},setsar=1";
+            }
 
             string hwdownload = string.Empty;
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
@@ -49,6 +62,7 @@ public class ScaleFilter : BaseFilter
     {
         ScaledSize = _scaledSize,
         PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Software
+        FrameDataLocation = FrameDataLocation.Software,
+        IsAnamorphic = false // this filter always outputs square pixels
     };
 }

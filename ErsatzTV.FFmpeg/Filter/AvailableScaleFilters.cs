@@ -13,7 +13,8 @@ public static class AvailableScaleFilters
         FrameState currentState,
         FrameSize scaledSize,
         FrameSize paddedSize,
-        int extraHardwareFrames) =>
+        int extraHardwareFrames,
+        bool isAnamorphicEdgeCase) =>
         accelMode switch
         {
             HardwareAccelerationMode.Nvenc => new ScaleCudaFilter(currentState, scaledSize, paddedSize),
@@ -21,6 +22,6 @@ public static class AvailableScaleFilters
                                               scaledSize == paddedSize =>
                 new ScaleQsvFilter(runtimeInfo, currentState, scaledSize, paddedSize, extraHardwareFrames),
             HardwareAccelerationMode.Vaapi => new ScaleVaapiFilter(currentState, scaledSize, paddedSize),
-            _ => new ScaleFilter(currentState, scaledSize, paddedSize)
+            _ => new ScaleFilter(currentState, scaledSize, paddedSize, isAnamorphicEdgeCase)
         };
 }
