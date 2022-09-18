@@ -28,7 +28,11 @@ public static class AvailableScaleFilters
                     extraHardwareFrames,
                     isAnamorphicEdgeCase,
                     sampleAspectRatio),
-            HardwareAccelerationMode.Vaapi => new ScaleVaapiFilter(currentState, scaledSize, paddedSize),
+            HardwareAccelerationMode.Vaapi => new ScaleVaapiFilter(
+                currentState,
+                scaledSize,
+                paddedSize,
+                isAnamorphicEdgeCase),
             _ => new ScaleFilter(currentState, scaledSize, paddedSize, isAnamorphicEdgeCase)
         };
 }
