@@ -360,7 +360,7 @@ public class PipelineGeneratorTests
         string command = PrintCommand(videoInputFile, None, None, None, result);
 
         command.Should().Be(
-            "-nostdin -hide_banner -nostats -loglevel error -i /test/input/file.png -vf scale=-1:200 /test/output/file.jpg");
+            "-nostdin -hide_banner -nostats -loglevel error -i /test/input/file.png -vf scale=-1:200:force_original_aspect_ratio=decrease /test/output/file.jpg");
     }
 
     private static string PrintCommand(

@@ -228,10 +228,8 @@ public class ComplexFilter : IPipelineStep
                 string filter;
                 if (subtitleInputFile.IsImageBased)
                 {
-                    IPipelineFilterStep overlayFilter =
-                        AvailableSubtitleOverlayFilters.ForAcceleration(
-                            _ffmpegState.EncoderHardwareAccelerationMode,
-                            _currentState);
+                    IPipelineFilterStep overlayFilter = AvailableSubtitleOverlayFilters.ForAcceleration(
+                        _ffmpegState.EncoderHardwareAccelerationMode);
                     filter = overlayFilter.Filter;
                 }
                 else

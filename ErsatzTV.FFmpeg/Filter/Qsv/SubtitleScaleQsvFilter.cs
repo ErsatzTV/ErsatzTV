@@ -31,7 +31,7 @@ public class SubtitleScaleQsvFilter : BaseFilter
                 string targetSize = $"w={_paddedSize.Width}:h={_paddedSize.Height}";
                 
                 // use software scaling
-                scale = $"scale={targetSize}";
+                scale = $"scale={targetSize}:force_original_aspect_ratio=decrease";
             }
 
             string initialPixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, FFmpegFormat.NV12);

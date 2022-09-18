@@ -403,7 +403,8 @@ public class PipelineBuilder
                         desiredState.ScaledSize,
                         desiredState.PaddedSize,
                         ffmpegState.QsvExtraHardwareFrames,
-                        videoStream.IsAnamorphicEdgeCase);
+                        videoStream.IsAnamorphicEdgeCase,
+                        videoStream.SampleAspectRatio);
                     currentState = scaleFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
@@ -432,7 +433,8 @@ public class PipelineBuilder
                         desiredState.ScaledSize,
                         desiredState.PaddedSize,
                         ffmpegState.QsvExtraHardwareFrames,
-                        videoStream.IsAnamorphicEdgeCase);
+                        videoStream.IsAnamorphicEdgeCase,
+                        videoStream.SampleAspectRatio);
                     currentState = scaleFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
@@ -489,7 +491,8 @@ public class PipelineBuilder
                                     desiredState.ScaledSize,
                                     desiredState.PaddedSize,
                                     ffmpegState.QsvExtraHardwareFrames,
-                                    videoStream.IsAnamorphicEdgeCase);
+                                    videoStream.IsAnamorphicEdgeCase,
+                                    videoStream.SampleAspectRatio);
                                 currentState = scaleFilter.NextState(currentState);
                                 _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
                             }
@@ -521,7 +524,8 @@ public class PipelineBuilder
                                 desiredState.ScaledSize,
                                 desiredState.PaddedSize,
                                 ffmpegState.QsvExtraHardwareFrames,
-                                videoStream.IsAnamorphicEdgeCase);
+                                videoStream.IsAnamorphicEdgeCase,
+                                videoStream.SampleAspectRatio);
                             currentState = scaleFilter.NextState(currentState);
                             videoInputFile.FilterSteps.Add(scaleFilter);
                         }
@@ -676,7 +680,8 @@ public class PipelineBuilder
                             desiredState.ScaledSize,
                             desiredState.PaddedSize,
                             ffmpegState.QsvExtraHardwareFrames,
-                            videoStream.IsAnamorphicEdgeCase);
+                            videoStream.IsAnamorphicEdgeCase,
+                            videoStream.SampleAspectRatio);
                         currentState = scaleFilter.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
                     }
