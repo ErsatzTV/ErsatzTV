@@ -15,7 +15,7 @@ public class PadFilter : BaseFilter
     {
         get
         {
-            string pad = $"pad=max(iw\\,ih*({_currentState.FFmpegAspectRatio})):ow/({_currentState.FFmpegAspectRatio}):(ow-iw)/2:(oh-ih)/2:color=black";
+            string pad = $"pad={_paddedSize.Width}:{_paddedSize.Height}:-1:-1:color=black";
             string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)

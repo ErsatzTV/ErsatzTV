@@ -215,8 +215,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             false, // TODO: fallback filler needs to loop
             videoFormat,
             desiredPixelFormat,
-            await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
-                .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
+            ffmpegVideoStream.SquarePixelFrameSize(
+                new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
             false,
             playbackSettings.FrameRate,

@@ -806,7 +806,8 @@ public class PipelineBuilder
                 _watermarkInputFile,
                 _subtitleInputFile,
                 currentState.PaddedSize,
-                _fontsFolder);
+                _fontsFolder,
+                _logger);
 
             _pipelineSteps.Add(complexFilter);
         }

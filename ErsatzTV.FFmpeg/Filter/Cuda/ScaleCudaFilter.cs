@@ -53,12 +53,10 @@ public class ScaleCudaFilter : BaseFilter
                 if (_isAnamorphicEdgeCase)
                 {
                     squareScale = $"scale_cuda=iw:sar*ih{format},setsar=1,";
-                    targetSize = $"-1:{_paddedSize.Height}";
                 }
                 else if (_currentState.IsAnamorphic)
                 {
                     squareScale = $"scale_cuda=iw*sar:ih{format},setsar=1,";
-                    targetSize = $"{_paddedSize.Width}:-1";
                 }
                 else
                 {

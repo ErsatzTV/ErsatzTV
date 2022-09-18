@@ -30,11 +30,11 @@ public class ScaleFilter : BaseFilter
             string scale;
             if (_isAnamorphicEdgeCase)
             {
-                scale = $"scale=iw:sar*ih,setsar=1,scale=-1:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
+                scale = $"scale=iw:sar*ih,setsar=1,scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
             }
             else if (_currentState.IsAnamorphic)
             {
-                scale = $"scale=iw*sar:ih,setsar=1,scale={_paddedSize.Width}:-1:flags=fast_bilinear{aspectRatio}";
+                scale = $"scale=iw*sar:ih,setsar=1,scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
             }
             else
             {
@@ -58,11 +58,12 @@ public class ScaleFilter : BaseFilter
         }
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        ScaledSize = _scaledSize,
-        PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Software,
-        IsAnamorphic = false // this filter always outputs square pixels
-    };
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with
+        {
+            ScaledSize = _scaledSize,
+            PaddedSize = _scaledSize,
+            FrameDataLocation = FrameDataLocation.Software,
+            IsAnamorphic = false // this filter always outputs square pixels
+        };
 }

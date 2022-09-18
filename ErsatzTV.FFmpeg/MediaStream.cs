@@ -76,4 +76,37 @@ public record VideoStream(
             }
         }
     }
+
+    public FrameSize SquarePixelFrameSize(FrameSize resolution)
+    {
+        int width = FrameSize.Width;
+        int height = FrameSize.Height;
+
+        if (IsAnamorphic)
+        {
+            string[] split = SampleAspectRatio.Split(':');
+            var num = double.Parse(split[0]);
+            var den = double.Parse(split[1]);
+
+            bool edgeCase = IsAnamorphicEdgeCase;
+
+            width = edgeCase
+                ? FrameSize.Width
+                : (int)Math.Floor(FrameSize.Width * num / den);
+
+            height = edgeCase
+                ? (int)Math.Floor(FrameSize.Height * num / den)
+                : FrameSize.Height;
+        }
+
+        double widthPercent = (double)resolution.Width / width;
+        double heightPercent = (double)resolution.Height / height;
+        double minPercent = Math.Min(widthPercent, heightPercent);
+
+        var result = new FrameSize(
+            (int)Math.Floor(width * minPercent),
+            (int)Math.Floor(height * minPercent));
+
+        return result;
+    }
 }
