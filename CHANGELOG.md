@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix scaling logic for `Nvidia` acceleration and software mode
 - Attempt to position watermarks within content (not over added black padding) 
 
+### Added
+- Add `QSV Device` option to ffmpeg profile on linux
+
 ## [0.6.7-beta] - 2022-09-05
 ### Fixed
 - When all audio streams are selected with `HLS Direct`, explicitly copy them without transcoding
