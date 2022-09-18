@@ -6,13 +6,19 @@ public class ScaleCudaFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _paddedSize;
+    private readonly bool _isAnamorphicEdgeCase;
     private readonly FrameSize _scaledSize;
 
-    public ScaleCudaFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
+    public ScaleCudaFilter(
+        FrameState currentState,
+        FrameSize scaledSize,
+        FrameSize paddedSize,
+        bool isAnamorphicEdgeCase)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
         _paddedSize = paddedSize;
+        _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
     }
 
     public override string Filter
@@ -30,6 +36,13 @@ public class ScaleCudaFilter : BaseFilter
             }
             else
             {
+                string aspectRatio = string.Empty;
+                if (_scaledSize != _paddedSize)
+                {
+                    aspectRatio = ":force_original_aspect_ratio=decrease";
+                }
+
+                string squareScale = string.Empty;
                 string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
@@ -37,7 +50,22 @@ public class ScaleCudaFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                scale = $"scale_cuda={targetSize}{format}";
+                if (_isAnamorphicEdgeCase)
+                {
+                    squareScale = $"scale_cuda=iw:sar*ih{format},setsar=1,";
+                    targetSize = $"-1:{_paddedSize.Height}";
+                }
+                else if (_currentState.IsAnamorphic)
+                {
+                    squareScale = $"scale_cuda=iw*sar:ih{format},setsar=1,";
+                    targetSize = $"{_paddedSize.Width}:-1";
+                }
+                else
+                {
+                    aspectRatio += ",setsar=1";
+                }
+
+                scale = $"{squareScale}scale_cuda={targetSize}{format}{aspectRatio}";
             }
 
             // TODO: this might not always upload to hardware, so NextState could be inaccurate
@@ -56,6 +84,7 @@ public class ScaleCudaFilter : BaseFilter
     {
         ScaledSize = _scaledSize,
         PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Hardware
+        FrameDataLocation = FrameDataLocation.Hardware,
+        IsAnamorphic = false // this filter always outputs square pixels
     };
 }

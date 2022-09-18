@@ -17,7 +17,8 @@ public static class AvailableScaleFilters
         bool isAnamorphicEdgeCase) =>
         accelMode switch
         {
-            HardwareAccelerationMode.Nvenc => new ScaleCudaFilter(currentState, scaledSize, paddedSize),
+            HardwareAccelerationMode.Nvenc =>
+                new ScaleCudaFilter(currentState, scaledSize, paddedSize, isAnamorphicEdgeCase),
             HardwareAccelerationMode.Qsv when currentState.FrameDataLocation == FrameDataLocation.Hardware ||
                                               scaledSize == paddedSize =>
                 new ScaleQsvFilter(runtimeInfo, currentState, scaledSize, paddedSize, extraHardwareFrames),
