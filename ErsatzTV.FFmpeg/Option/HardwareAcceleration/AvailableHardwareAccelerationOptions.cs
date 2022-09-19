@@ -6,13 +6,13 @@ public static class AvailableHardwareAccelerationOptions
 {
     public static Option<IPipelineStep> ForMode(
         HardwareAccelerationMode mode,
-        Option<string> vaapiDevice,
+        Option<string> gpuDevice,
         ILogger logger) =>
         mode switch
         {
             HardwareAccelerationMode.Nvenc => new CudaHardwareAccelerationOption(),
-            HardwareAccelerationMode.Qsv => new QsvHardwareAccelerationOption(),
-            HardwareAccelerationMode.Vaapi => GetVaapiAcceleration(vaapiDevice, logger),
+            HardwareAccelerationMode.Qsv => new QsvHardwareAccelerationOption(gpuDevice),
+            HardwareAccelerationMode.Vaapi => GetVaapiAcceleration(gpuDevice, logger),
             HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareAccelerationOption(),
             HardwareAccelerationMode.Amf => new AmfHardwareAccelerationOption(),
             HardwareAccelerationMode.None => Option<IPipelineStep>.None,

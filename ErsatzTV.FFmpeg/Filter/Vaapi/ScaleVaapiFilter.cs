@@ -6,13 +6,19 @@ public class ScaleVaapiFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _paddedSize;
+    private readonly bool _isAnamorphicEdgeCase;
     private readonly FrameSize _scaledSize;
 
-    public ScaleVaapiFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
+    public ScaleVaapiFilter(
+        FrameState currentState,
+        FrameSize scaledSize,
+        FrameSize paddedSize,
+        bool isAnamorphicEdgeCase)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
         _paddedSize = paddedSize;
+        _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
     }
 
     public override string Filter
@@ -31,14 +37,34 @@ public class ScaleVaapiFilter : BaseFilter
             }
             else
             {
+                string aspectRatio = string.Empty;
+                if (_scaledSize != _paddedSize)
+                {
+                    aspectRatio = ":force_original_aspect_ratio=decrease";
+                }
+
+                string squareScale = string.Empty;
+                string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                scale = $"scale_vaapi={targetSize}:force_divisible_by=2{format}";
+                if (_isAnamorphicEdgeCase)
+                {
+                    squareScale = $"scale_vaapi=iw:sar*ih{format},setsar=1,";
+                }
+                else if (_currentState.IsAnamorphic)
+                {
+                    squareScale = $"scale_vaapi=iw*sar:ih{format},setsar=1,";
+                }
+                else
+                {
+                    aspectRatio += ",setsar=1";
+                }
+
+                scale = $"{squareScale}scale_vaapi={targetSize}:force_divisible_by=2{format}{aspectRatio}";
             }
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
@@ -59,6 +85,7 @@ public class ScaleVaapiFilter : BaseFilter
     {
         ScaledSize = _scaledSize,
         PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Hardware
+        FrameDataLocation = FrameDataLocation.Hardware,
+        IsAnamorphic = false // this filter always outputs square pixels
     };
 }

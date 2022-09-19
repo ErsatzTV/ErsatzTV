@@ -385,13 +385,6 @@ public class PipelineBuilder
                         IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
-
-                        // if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio)
-                        // {
-                        //     IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
-                        //     currentState = darStep.NextState(currentState);
-                        //     _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
-                        // }
                     }
                 }
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
@@ -415,14 +408,6 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-
-                    // if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
-                    //     ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
-                    // {
-                    //     IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
-                    //     currentState = darStep.NextState(currentState);
-                    //     _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
-                    // }
                 }
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
@@ -444,14 +429,6 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-
-                    // if (videoStream.DisplayAspectRatio == desiredState.DisplayAspectRatio ||
-                    //     ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
-                    // {
-                    //     IPipelineFilterStep darStep = new SetDarFilter(desiredState.DisplayAspectRatio);
-                    //     currentState = darStep.NextState(currentState);
-                    //     _videoInputFile.Iter(f => f.FilterSteps.Add(darStep));
-                    // }
                 }
 
                 if (hasOverlay && currentState.PixelFormat.Map(pf => pf.FFmpegName) !=

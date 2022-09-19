@@ -4,6 +4,13 @@ namespace ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 
 public class QsvHardwareAccelerationOption : GlobalOption
 {
+    private readonly Option<string> _qsvDevice;
+
+    public QsvHardwareAccelerationOption(Option<string> qsvDevice)
+    {
+        _qsvDevice = qsvDevice;
+    }
+    
     // TODO: read this from ffmpeg output
     private readonly List<string> _supportedFFmpegFormats = new()
     {
@@ -17,13 +24,24 @@ public class QsvHardwareAccelerationOption : GlobalOption
         {
             string[] initDevices = OperatingSystem.IsWindows()
                 ? new[] { "-init_hw_device", "qsv=hw:hw,child_device_type=dxva2", "-filter_hw_device", "hw" }
-                : new[] { "-init_hw_device", "qsv=hw", "-filter_hw_device", "hw" };
+                : new[] { "-init_hw_device", "qsv=hw:hw,child_device_type=vaapi", "-filter_hw_device", "hw" };
 
             var result = new List<string>
             {
                 "-hwaccel", "qsv",
                 "-hwaccel_output_format", "qsv"
             };
+
+            if (OperatingSystem.IsLinux())
+            {
+                foreach (string qsvDevice in _qsvDevice)
+                {
+                    if (!string.IsNullOrWhiteSpace(qsvDevice))
+                    {
+                        result.AddRange(new[] { "-qsv_device", qsvDevice });
+                    }
+                }
+            }
 
             result.AddRange(initDevices);
 
