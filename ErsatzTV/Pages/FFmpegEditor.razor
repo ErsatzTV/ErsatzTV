@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Core.FFmpeg
 @using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Infrastructure.Runtime
+@using System.Runtime.InteropServices
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FFmpegEditor> _logger
@@ -60,25 +62,40 @@
                                         }
                                     </MudSelect>
                                 </MudElement>
-                                <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Driver" @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
-                                        @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
-                                        {
-                                            <MudSelectItem Value="@driver">@driver</MudSelectItem>
-                                        }
-                                    </MudSelect>
-                                </MudElement>
-                                <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Device" @bind-Value="_model.VaapiDevice" For="@(() => _model.VaapiDevice)">
-                                        @foreach (string device in _vaapiDevices)
-                                        {
-                                            <MudSelectItem Value="@device">@device</MudSelectItem>
-                                        }
-                                    </MudSelect>
-                                </MudElement>
-                                <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudTextField Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Qsv)" Label="QSV Extra Hardware Frames" @bind-Value="_model.QsvExtraHardwareFrames" For="@(() => _model.QsvExtraHardwareFrames)" />
-                                </MudElement>
+                                @if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                                {
+                                    @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
+                                    {
+                                        <MudElement HtmlTag="div" Class="mt-3">
+                                            <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Driver" @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
+                                                @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
+                                                {
+                                                    <MudSelectItem Value="@driver">@driver</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudElement>
+                                    }
+                                    @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi || _model.HardwareAcceleration == HardwareAccelerationKind.Qsv)
+                                    {
+                                        <MudElement HtmlTag="div" Class="mt-3">
+                                            <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv)"
+                                                       Label="@(_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi ? "VAAPI Device" : "QSV Device")"
+                                                       @bind-Value="_model.VaapiDevice"
+                                                       For="@(() => _model.VaapiDevice)">
+                                                @foreach (string device in _vaapiDevices)
+                                                {
+                                                    <MudSelectItem Value="@device">@device</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudElement>
+                                    }
+                                }
+                                @if (_model.HardwareAcceleration == HardwareAccelerationKind.Qsv)
+                                {
+                                    <MudElement HtmlTag="div" Class="mt-3">
+                                        <MudTextField Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Qsv)" Label="QSV Extra Hardware Frames" @bind-Value="_model.QsvExtraHardwareFrames" For="@(() => _model.QsvExtraHardwareFrames)"/>
+                                    </MudElement>
+                                }
                                 <MudElement HtmlTag="div" Class="mt-3">
                                     <MudCheckBox Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
                                 </MudElement>

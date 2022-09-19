@@ -623,7 +623,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     }
 
     private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice) =>
-        accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
+        accelerationMode == HardwareAccelerationMode.Vaapi ||
+        OperatingSystem.IsLinux() && accelerationMode == HardwareAccelerationMode.Qsv
+            ? vaapiDevice
+            : Option<string>.None;
 
     private static string GetVideoFormat(FFmpegPlaybackSettings playbackSettings) =>
         playbackSettings.VideoFormat switch
