@@ -60,6 +60,7 @@ public class WorkerService : BackgroundService
                                     error.Value));
                             break;
                         case IScanLocalLibrary scanLocalLibrary:
+#if !DEBUG_NO_SYNC
                             Either<BaseError, string> scanResult = await mediator.Send(
                                 scanLocalLibrary,
                                 cancellationToken);
@@ -71,6 +72,7 @@ public class WorkerService : BackgroundService
                                     "Unable to scan local library {LibraryId}: {Error}",
                                     scanLocalLibrary.LibraryId,
                                     error.Value));
+#endif
                             break;
                         case RebuildSearchIndex rebuildSearchIndex:
                             await mediator.Send(rebuildSearchIndex, cancellationToken);

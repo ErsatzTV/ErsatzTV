@@ -10,6 +10,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <NoWarn>VSTHRD200</NoWarn>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <Configurations>Debug;Release;Debug No Sync</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
