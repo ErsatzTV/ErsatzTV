@@ -93,10 +93,12 @@ public class SchedulerService : BackgroundService
         {
             await DeleteOrphanedArtwork(cancellationToken);
             await BuildPlayouts(cancellationToken);
+#if !DEBUG_NO_SYNC            
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
             await ScanJellyfinMediaSources(cancellationToken);
             await ScanEmbyMediaSources(cancellationToken);
+#endif
             await MatchTraktLists(cancellationToken);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)

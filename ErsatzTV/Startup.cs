@@ -437,14 +437,16 @@ public class Startup
         services.AddHostedService<RebuildSearchIndexService>();
 
         // background services
+#if !DEBUG_NO_SYNC
         services.AddHostedService<EmbyService>();
         services.AddHostedService<JellyfinService>();
         services.AddHostedService<PlexService>();
+        services.AddHostedService<SubtitleWorkerService>();
+#endif
         services.AddHostedService<FFmpegLocatorService>();
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
-        services.AddHostedService<SubtitleWorkerService>();
     }
 
     private void AddChannel<TMessageType>(IServiceCollection services)
