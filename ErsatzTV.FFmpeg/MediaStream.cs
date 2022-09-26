@@ -50,32 +50,8 @@ public record VideoStream(
         }
     }
 
-    // TODO: figure out what's really causing this
-    public bool IsAnamorphicEdgeCase
-    {
-        get
-        {
-            try
-            {
-                string[] split = SampleAspectRatio.Split(':');
-                var num = double.Parse(split[0]);
-                var den = double.Parse(split[1]);
-                
-                if (num <= den)
-                {
-                    return false;
-                }
-
-                double sar = num / den;
-                double res = (double)FrameSize.Width / FrameSize.Height;
-                return res - sar > 0.01;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-    }
+    // TODO: figure out what's really causing this, then re-enable if needed
+    public bool IsAnamorphicEdgeCase => false;
 
     public FrameSize SquarePixelFrameSize(FrameSize resolution)
     {
