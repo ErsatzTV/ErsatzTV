@@ -10,7 +10,7 @@ public class EmbyLibraryItemResponse
     public DateTimeOffset DateCreated { get; set; }
     public long RunTimeTicks { get; set; }
     public List<string> Genres { get; set; }
-    public List<string> Tags { get; set; }
+    public List<EmbyTagItemResponse> TagItems { get; set; }
     public int ProductionYear { get; set; }
     public EmbyProviderIdsResponse ProviderIds { get; set; }
     public string PremiereDate { get; set; }
