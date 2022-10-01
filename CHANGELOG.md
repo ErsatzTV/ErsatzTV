@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Attempt to position watermarks within content (not over added black padding)
 - Fix search results for `Other Videos` when NFO metadata is used
 - Properly synchronize tags from Emby movies and shows
+- Properly sync updated file paths from Plex
 
 ### Added
 - Add `QSV Device` option to ffmpeg profile on linux
