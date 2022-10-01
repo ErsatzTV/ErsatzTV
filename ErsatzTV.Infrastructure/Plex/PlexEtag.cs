@@ -36,6 +36,9 @@ public class PlexEtag
             {
                 bw.Write((byte)FieldKey.PartId);
                 bw.Write(part.Id);
+
+                bw.Write((byte)FieldKey.File);
+                bw.Write(part.File);
             }
         }
 
@@ -197,7 +200,10 @@ public class PlexEtag
                 bw.Write((byte)FieldKey.PartId);
                 bw.Write(part.Id);
 
-                // media part id
+                bw.Write((byte)FieldKey.File);
+                bw.Write(part.File);
+
+                // stream id
                 foreach (PlexStreamResponse stream in part.Stream)
                 {
                     bw.Write((byte)FieldKey.StreamId);
@@ -260,6 +266,8 @@ public class PlexEtag
         LabelTag = 15,
 
         Thumb = 20,
-        Art = 21
+        Art = 21,
+
+        File = 30
     }
 }

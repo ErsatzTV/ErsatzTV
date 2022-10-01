@@ -576,7 +576,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateEpisode(TvContext dbContext, EmbyEpisode existing, EmbyEpisode incoming)
+    private static async Task UpdateEpisode(TvContext dbContext, EmbyEpisode existing, EmbyEpisode incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;

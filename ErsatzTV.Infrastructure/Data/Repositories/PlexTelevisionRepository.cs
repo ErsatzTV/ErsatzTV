@@ -218,7 +218,14 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
         foreach (PlexEpisode plexEpisode in maybeExisting)
         {
-            return new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
+            var result = new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
+            if (plexEpisode.Etag != item.Etag)
+            {
+                await UpdateEpisodePath(dbContext, plexEpisode, item);
+                result.IsUpdated = true;
+            }
+
+            return result;
         }
 
         return await AddEpisode(dbContext, library, item);
@@ -423,5 +430,31 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         {
             return BaseError.New(ex.Message);
         }
+    }
+
+    private static async Task UpdateEpisodePath(TvContext dbContext, PlexEpisode existing, PlexEpisode incoming)
+    {
+        // library path is used for search indexing later
+        incoming.LibraryPath = existing.LibraryPath;
+        incoming.Id = existing.Id;
+
+        // version
+        MediaVersion version = existing.MediaVersions.Head();
+        MediaVersion incomingVersion = incoming.MediaVersions.Head();
+        version.Name = incomingVersion.Name;
+        version.DateAdded = incomingVersion.DateAdded;
+
+        await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
+            new { version.Name, version.DateAdded, version.Id });
+
+        // media file
+        MediaFile file = version.MediaFiles.Head();
+        MediaFile incomingFile = incomingVersion.MediaFiles.Head();
+        file.Path = incomingFile.Path;
+
+        await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
+            new { file.Path, file.Id });
     }
 }

@@ -125,7 +125,14 @@ public class PlexMovieRepository : IPlexMovieRepository
 
         foreach (PlexMovie plexMovie in maybeExisting)
         {
-            return new MediaItemScanResult<PlexMovie>(plexMovie) { IsAdded = false };
+            var result = new MediaItemScanResult<PlexMovie>(plexMovie) { IsAdded = false };
+            if (plexMovie.Etag != item.Etag)
+            {
+                await UpdateMoviePath(dbContext, plexMovie, item);
+                result.IsUpdated = true;
+            }
+
+            return result;
         }
 
         return await AddMovie(dbContext, library, item);
@@ -166,5 +173,31 @@ public class PlexMovieRepository : IPlexMovieRepository
         {
             return BaseError.New(ex.ToString());
         }
+    }
+    
+    private static async Task UpdateMoviePath(TvContext dbContext, PlexMovie existing, PlexMovie incoming)
+    {
+        // library path is used for search indexing later
+        incoming.LibraryPath = existing.LibraryPath;
+        incoming.Id = existing.Id;
+
+        // version
+        MediaVersion version = existing.MediaVersions.Head();
+        MediaVersion incomingVersion = incoming.MediaVersions.Head();
+        version.Name = incomingVersion.Name;
+        version.DateAdded = incomingVersion.DateAdded;
+
+        await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
+            new { version.Name, version.DateAdded, version.Id });
+
+        // media file
+        MediaFile file = version.MediaFiles.Head();
+        MediaFile incomingFile = incomingVersion.MediaFiles.Head();
+        file.Path = incomingFile.Path;
+
+        await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
+            new { file.Path, file.Id });
     }
 }
