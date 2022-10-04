@@ -84,10 +84,25 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         bool startInclusive,
         bool endInclusive)
     {
-        if (CustomQueryParser.NumericFields.Contains(field) && int.TryParse(part1, out int min) &&
-            int.TryParse(part2, out int max))
+        if (CustomQueryParser.NumericFields.Contains(field))
         {
-            return NumericRangeQuery.NewInt32Range(field, 1, min, max, startInclusive, endInclusive);
+            if (part1 is null or "*" && int.TryParse(part2, out int max1))
+            {
+                return NumericRangeQuery.NewInt32Range(field, null, max1, startInclusive, endInclusive);
+            }
+
+            if (int.TryParse(part1, out int min))
+            {
+                if (part2 is null or "*")
+                {
+                    return NumericRangeQuery.NewInt32Range(field, min, null, startInclusive, endInclusive);
+                }
+
+                if (int.TryParse(part2, out int max))
+                {
+                    return NumericRangeQuery.NewInt32Range(field, min, max, startInclusive, endInclusive);
+                }
+            }
         }
 
         return base.GetRangeQuery(field, part1, part2, startInclusive, endInclusive);
