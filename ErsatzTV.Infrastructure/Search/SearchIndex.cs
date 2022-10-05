@@ -89,7 +89,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 31;
+    public int Version => 32;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -251,7 +251,7 @@ public sealed class SearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    private bool ValidateDirectory(string folder)
+    private static bool ValidateDirectory(string folder)
     {
         try
         {
@@ -450,6 +450,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
             }
@@ -570,6 +572,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
             }
@@ -656,6 +660,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, season.Id.ToString()), doc);
             }
@@ -708,6 +714,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(MoodField, mood.Name, Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, artist.Id.ToString()), doc);
             }
@@ -808,6 +816,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ArtistField, artist, Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
             }
@@ -941,6 +951,8 @@ public sealed class SearchIndex : ISearchIndex
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                 }
 
+                AddMetadataGuids(metadata, doc);
+
                 _writer.UpdateDocument(new Term(IdField, episode.Id.ToString()), doc);
             }
             catch (Exception ex)
@@ -1039,6 +1051,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, otherVideo.Id.ToString()), doc);
             }
@@ -1107,6 +1121,8 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
                 }
+                
+                AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, song.Id.ToString()), doc);
             }
@@ -1118,11 +1134,11 @@ public sealed class SearchIndex : ISearchIndex
         }
     }
 
-    private SearchItem ProjectToSearchItem(Document doc) => new(
+    private static SearchItem ProjectToSearchItem(Document doc) => new(
         doc.Get(TypeField),
         Convert.ToInt32(doc.Get(IdField)));
 
-    private Query ParseQuery(string searchQuery, QueryParser parser)
+    private static Query ParseQuery(string searchQuery, QueryParser parser)
     {
         Query query;
         try
@@ -1137,22 +1153,37 @@ public sealed class SearchIndex : ISearchIndex
         return query;
     }
 
+    private static void AddMetadataGuids(Metadata metadata, Document doc)
+    {
+        foreach (MetadataGuid guid in metadata.Guids)
+        {
+            string[] split = (guid.Guid ?? string.Empty).Split("://");
+            if (split.Length == 2 && !string.IsNullOrWhiteSpace(split[1]))
+            {
+                doc.Add(new StringField(split[0], split[1].ToLowerInvariant(), Field.Store.NO));
+            }
+        }
+    }
+
     // this is used for filtering duplicate search results
     private static string GetTitleAndYear(Metadata metadata) =>
         metadata switch
         {
             EpisodeMetadata em =>
-                $"{em.Title}_{em.Episode.Season.Show.ShowMetadata.Head().Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}_{em.Episode.State}"
+                $"{Title(em)}_{em.Episode.Season.Show.ShowMetadata.Head().Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}_{em.Episode.State}"
                     .ToLowerInvariant(),
-            OtherVideoMetadata ovm => $"{OtherVideoTitle(ovm)}_{ovm.Year}_{ovm.OtherVideo.State}".ToLowerInvariant(),
-            SongMetadata sm => $"{sm.Title}_{sm.Year}_{sm.Song.State}".ToLowerInvariant(),
-            MovieMetadata mm => $"{mm.Title}_{mm.Year}_{mm.Movie.State}".ToLowerInvariant(),
-            ArtistMetadata am => $"{am.Title}_{am.Year}_{am.Artist.State}".ToLowerInvariant(),
-            MusicVideoMetadata mvm => $"{mvm.Title}_{mvm.Year}_{mvm.MusicVideo.State}".ToLowerInvariant(),
-            SeasonMetadata sm => $"{sm.Title}_{sm.Year}_{sm.Season.State}".ToLowerInvariant(),
-            ShowMetadata sm => $"{sm.Title}_{sm.Year}_{sm.Show.State}".ToLowerInvariant(),
-            _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
+            OtherVideoMetadata ovm => $"{OtherVideoTitle(ovm).Replace(' ', '_')}_{ovm.Year}_{ovm.OtherVideo.State}".ToLowerInvariant(),
+            SongMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Song.State}".ToLowerInvariant(),
+            MovieMetadata mm => $"{Title(mm)}_{mm.Year}_{mm.Movie.State}".ToLowerInvariant(),
+            ArtistMetadata am => $"{Title(am)}_{am.Year}_{am.Artist.State}".ToLowerInvariant(),
+            MusicVideoMetadata mvm => $"{Title(mvm)}_{mvm.Year}_{mvm.MusicVideo.State}".ToLowerInvariant(),
+            SeasonMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Season.State}".ToLowerInvariant(),
+            ShowMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Show.State}".ToLowerInvariant(),
+            _ => $"{Title(metadata)}_{metadata.Year}".ToLowerInvariant()
         };
+
+    private static string Title(Metadata metadata) =>
+        metadata.Title.Replace(' ', '_');
 
     private static string GetJumpLetter(Metadata metadata)
     {
