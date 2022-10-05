@@ -11,9 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix search results for `Other Videos` when NFO metadata is used
 - Properly synchronize tags from Emby movies and shows
 - Properly sync updated file paths from Plex
+- Fix numeric range search queries (e.g. `minutes:[5 TO 10]`, `minutes:[* TO 3]`)
 
 ### Added
 - Add `QSV Device` option to ffmpeg profile on linux
+- Add guids to search index (e.g. `imdb:tt000000`, `tvdb:12345`)
 
 ## [0.6.7-beta] - 2022-09-05
 ### Fixed
