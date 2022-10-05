@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.8-beta] - 2022-10-05
 ### Fixed
 - Fix typo introduced in `0.6.7-beta` that stopped QSV HEVC encoder from working
 - Fix scaling logic for `Nvidia` acceleration and software mode
@@ -1335,7 +1337,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.7-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.8-beta...HEAD
+[0.6.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.7-beta...v0.6.8-beta
 [0.6.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...v0.6.7-beta
 [0.6.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.5-beta...v0.6.6-beta
 [0.6.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.4-beta...v0.6.5-beta
