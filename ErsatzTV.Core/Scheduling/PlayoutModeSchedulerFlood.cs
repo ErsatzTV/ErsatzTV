@@ -138,7 +138,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
         }
 
         ProgramScheduleItem peekItem = nextScheduleItem;
-        DateTimeOffset peekItemStart = GetStartTimeAfter(nextState, peekItem);
+        DateTimeOffset peekItemStart = GetFillerStartTimeAfter(nextState, peekItem, hardStop);
 
         if (scheduleItem.TailFiller != null)
         {

@@ -823,6 +823,216 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[6].GuideGroup.Should().Be(3);
         playoutItems[6].FillerKind.Should().Be(FillerKind.Fallback);
     }
+    
+    [Test]
+    public void Should_Not_Schedule_Fallback_Filler_Incomplete_Flood()
+    {
+        Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(20));
+        Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(1));
+
+        var scheduleItem = new ProgramScheduleItemFlood
+        {
+            Id = 1,
+            Index = 1,
+            Collection = collectionOne,
+            CollectionId = collectionOne.Id,
+            StartTime = null,
+            PlaybackOrder = PlaybackOrder.Chronological,
+            TailFiller = null,
+            FallbackFiller = new FillerPreset
+            {
+                FillerKind = FillerKind.Fallback,
+                Collection = collectionTwo,
+                CollectionId = collectionTwo.Id
+            }
+        };
+
+        var enumerator1 = new ChronologicalMediaCollectionEnumerator(
+            collectionOne.MediaItems,
+            new CollectionEnumeratorState());
+
+        var enumerator2 = new ChronologicalMediaCollectionEnumerator(
+            collectionTwo.MediaItems,
+            new CollectionEnumeratorState());
+
+        var sortedScheduleItems = new List<ProgramScheduleItem>
+        {
+            scheduleItem,
+            NextScheduleItem
+        };
+
+        var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+            sortedScheduleItems,
+            new CollectionEnumeratorState());
+
+        PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        
+        // hard stop at 2, an hour before the "next schedule item" at 3
+        DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
+
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+            startState,
+            CollectionEnumerators(
+                scheduleItem,
+                enumerator1,
+                scheduleItem.FallbackFiller,
+                enumerator2),
+            scheduleItem,
+            NextScheduleItem,
+            hardStop);
+
+        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(2));
+        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+        playoutBuilderState.NextGuideGroup.Should().Be(7);
+        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+        playoutBuilderState.InFlood.Should().BeTrue();
+        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+        playoutBuilderState.InDurationFiller.Should().BeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+
+        enumerator1.State.Index.Should().Be(0);
+        enumerator2.State.Index.Should().Be(0);
+
+        playoutItems.Count.Should().Be(6);
+
+        playoutItems[0].MediaItemId.Should().Be(1);
+        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+        playoutItems[0].GuideGroup.Should().Be(1);
+        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[1].MediaItemId.Should().Be(2);
+        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(20));
+        playoutItems[1].GuideGroup.Should().Be(2);
+        playoutItems[1].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[2].MediaItemId.Should().Be(1);
+        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(40));
+        playoutItems[2].GuideGroup.Should().Be(3);
+        playoutItems[2].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[3].MediaItemId.Should().Be(2);
+        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(60));
+        playoutItems[3].GuideGroup.Should().Be(4);
+        playoutItems[3].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[4].MediaItemId.Should().Be(1);
+        playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(80));
+        playoutItems[4].GuideGroup.Should().Be(5);
+        playoutItems[4].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[5].MediaItemId.Should().Be(2);
+        playoutItems[5].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(100));
+        playoutItems[5].GuideGroup.Should().Be(6);
+        playoutItems[5].FillerKind.Should().Be(FillerKind.None);
+    }
+    
+    [Test]
+    public void Should_Not_Schedule_Tail_Filler_Incomplete_Flood()
+    {
+        Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(20));
+        Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(1));
+
+        var scheduleItem = new ProgramScheduleItemFlood
+        {
+            Id = 1,
+            Index = 1,
+            Collection = collectionOne,
+            CollectionId = collectionOne.Id,
+            StartTime = null,
+            PlaybackOrder = PlaybackOrder.Chronological,
+            TailFiller = new FillerPreset
+            {
+                FillerKind = FillerKind.Tail,
+                Collection = collectionTwo,
+                CollectionId = collectionTwo.Id
+            },
+            FallbackFiller = null
+        };
+
+        var enumerator1 = new ChronologicalMediaCollectionEnumerator(
+            collectionOne.MediaItems,
+            new CollectionEnumeratorState());
+
+        var enumerator2 = new ChronologicalMediaCollectionEnumerator(
+            collectionTwo.MediaItems,
+            new CollectionEnumeratorState());
+
+        var sortedScheduleItems = new List<ProgramScheduleItem>
+        {
+            scheduleItem,
+            NextScheduleItem
+        };
+
+        var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+            sortedScheduleItems,
+            new CollectionEnumeratorState());
+
+        PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        
+        // hard stop at 2, an hour before the "next schedule item" at 3
+        DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
+
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+            startState,
+            CollectionEnumerators(
+                scheduleItem,
+                enumerator1,
+                scheduleItem.TailFiller,
+                enumerator2),
+            scheduleItem,
+            NextScheduleItem,
+            hardStop);
+
+        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(2));
+        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+        playoutBuilderState.NextGuideGroup.Should().Be(7);
+        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+        playoutBuilderState.InFlood.Should().BeTrue();
+        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+        playoutBuilderState.InDurationFiller.Should().BeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+
+        enumerator1.State.Index.Should().Be(0);
+        enumerator2.State.Index.Should().Be(0);
+
+        playoutItems.Count.Should().Be(6);
+
+        playoutItems[0].MediaItemId.Should().Be(1);
+        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+        playoutItems[0].GuideGroup.Should().Be(1);
+        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[1].MediaItemId.Should().Be(2);
+        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(20));
+        playoutItems[1].GuideGroup.Should().Be(2);
+        playoutItems[1].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[2].MediaItemId.Should().Be(1);
+        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(40));
+        playoutItems[2].GuideGroup.Should().Be(3);
+        playoutItems[2].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[3].MediaItemId.Should().Be(2);
+        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(60));
+        playoutItems[3].GuideGroup.Should().Be(4);
+        playoutItems[3].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[4].MediaItemId.Should().Be(1);
+        playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(80));
+        playoutItems[4].GuideGroup.Should().Be(5);
+        playoutItems[4].FillerKind.Should().Be(FillerKind.None);
+
+        playoutItems[5].MediaItemId.Should().Be(2);
+        playoutItems[5].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(100));
+        playoutItems[5].GuideGroup.Should().Be(6);
+        playoutItems[5].FillerKind.Should().Be(FillerKind.None);
+    }
 
     [Test]
     public void Should_Not_Have_Gap_With_Unused_Tail_And_Unused_Fallback()

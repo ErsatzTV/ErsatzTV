@@ -196,7 +196,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
         // clear guide finish on all but the last item
         var all = playoutItems.Filter(pi => pi.FillerKind == FillerKind.None).ToList();
-        PlayoutItem last = all.OrderBy(pi => pi.FinishOffset).LastOrDefault();
+        PlayoutItem last = all.MaxBy(pi => pi.FinishOffset);
         foreach (PlayoutItem item in all.Filter(pi => pi != last))
         {
             item.GuideFinish = null;

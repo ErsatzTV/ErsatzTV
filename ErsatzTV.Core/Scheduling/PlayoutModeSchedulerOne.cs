@@ -23,10 +23,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
         foreach (MediaItem mediaItem in contentEnumerator.Current)
         {
             // find when we should start this item, based on the current time
-            DateTimeOffset itemStartTime = GetStartTimeAfter(
-                playoutBuilderState,
-                scheduleItem);
-
+            DateTimeOffset itemStartTime = GetStartTimeAfter(playoutBuilderState, scheduleItem);
             if (itemStartTime >= hardStop)
             {
                 playoutBuilderState = playoutBuilderState with { CurrentTime = hardStop };
@@ -84,7 +81,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
             //     "Advancing to next schedule item after playout mode {PlayoutMode}",
             //     "One");
 
-            DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
+            DateTimeOffset nextItemStart = GetFillerStartTimeAfter(nextState, nextScheduleItem, hardStop);
 
             if (scheduleItem.TailFiller != null)
             {
