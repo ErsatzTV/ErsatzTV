@@ -119,7 +119,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
             nextState.ScheduleItemsEnumerator.MoveNext();
         }
 
-        DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
+        DateTimeOffset nextItemStart = GetFillerStartTimeAfter(nextState, nextScheduleItem, hardStop);
 
         if (scheduleItem.TailFiller != null)
         {

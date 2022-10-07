@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix bug where tail or fallback filler would sometimes schedule much longer than expected
+  - This only happened with fixed start schedule items following a schedule item with tail or fallback filler
 
 ## [0.6.8-beta] - 2022-10-05
 ### Fixed
