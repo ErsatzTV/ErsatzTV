@@ -20,9 +20,24 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         ProgramScheduleItem nextScheduleItem,
         DateTimeOffset hardStop);
 
-    public static DateTimeOffset GetStartTimeAfter(
+    public static DateTimeOffset GetFillerStartTimeAfter(
         PlayoutBuilderState state,
-        ProgramScheduleItem scheduleItem)
+        ProgramScheduleItem scheduleItem,
+        DateTimeOffset hardStop
+    )
+    {
+        DateTimeOffset startTime = GetStartTimeAfter(state, scheduleItem);
+        
+        // filler should always stop at the hard stop
+        if (hardStop < startTime)
+        {
+            startTime = hardStop;
+        }
+
+        return startTime;
+    }
+
+    public static DateTimeOffset GetStartTimeAfter(PlayoutBuilderState state, ProgramScheduleItem scheduleItem)
     {
         DateTimeOffset startTime = state.CurrentTime.ToLocalTime();
 
