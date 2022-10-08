@@ -5,9 +5,11 @@ ScaledBorderAndShadow: yes
 YCbCr Matrix: None
 PlayResX: {{ resolution.width }}
 PlayResY: {{ resolution.height }}
+
 [V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment, Encoding
-Style: Default,OPTIKabel-Heavy,{{ resolution.height // 20.0 }},&HFFFFFF,&H444444,1,1,3,0,1
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,OPTIKabel-Heavy,{{ resolution.height // 20.0 }},&HFFFFFF,&HFFFFFF,&H444444,&H00000000,0,0,0,0,100,100,0,0,1,1,3,0,10,10,10,1
+
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Dialogue: 0,00:00:09.00,00:00:16.00,Default,,{{ resolution.width * 0.03 | math.round }},{{ resolution.width * 0.03 | math.round }},{{ resolution.height * 0.05 | math.round }},,{fad(1200, 1200)}{{ if all_artists | array.size == 0 }}{{ artist }}{{ else }}{{ all_artists | array.join " / " }}{{ end }}\N"{{ title }}"{{ if album }}\N{{ album }}{{ end }}
