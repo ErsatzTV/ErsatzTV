@@ -22,6 +22,12 @@ public class ResourceExtractorService : IHostedService
 
         await ExtractFontResource(assembly, "Roboto-Regular.ttf", cancellationToken);
         await ExtractFontResource(assembly, "OPTIKabel-Heavy.otf", cancellationToken);
+
+        await ExtractTemplateResource(
+            assembly,
+            "_default.ass.sbntxt",
+            FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -31,8 +37,7 @@ public class ResourceExtractorService : IHostedService
         await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.{name}");
         if (resource != null)
         {
-            await using FileStream fs = File.Create(
-                Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
+            await using FileStream fs = File.Create(Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
             await resource.CopyToAsync(fs, cancellationToken);
         }
     }
@@ -42,15 +47,28 @@ public class ResourceExtractorService : IHostedService
         await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.{name}");
         if (resource != null)
         {
-            await using FileStream fs = File.Create(
-                Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
+            await using FileStream fs = File.Create(Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
             await resource.CopyToAsync(fs, cancellationToken);
 
             resource.Position = 0;
 
-            await using FileStream fontCacheFileStream = File.Create(
-                Path.Combine(FileSystemLayout.FontsCacheFolder, name));
+            await using FileStream fontCacheFileStream =
+                File.Create(Path.Combine(FileSystemLayout.FontsCacheFolder, name));
             await resource.CopyToAsync(fontCacheFileStream, cancellationToken);
+        }
+    }
+
+    private static async Task ExtractTemplateResource(
+        Assembly assembly,
+        string name,
+        string targetFolder,
+        CancellationToken cancellationToken)
+    {
+        await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.Templates.{name}");
+        if (resource != null)
+        {
+            await using FileStream fs = File.Create(Path.Combine(targetFolder, name));
+            await resource.CopyToAsync(fs, cancellationToken);
         }
     }
 }

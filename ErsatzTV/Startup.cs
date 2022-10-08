@@ -39,6 +39,7 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Emby;
+using ErsatzTV.Infrastructure.FFmpeg;
 using ErsatzTV.Infrastructure.GitHub;
 using ErsatzTV.Infrastructure.Health;
 using ErsatzTV.Infrastructure.Health.Checks;
@@ -186,6 +187,16 @@ public class Startup
         if (!Directory.Exists(FileSystemLayout.FontsCacheFolder))
         {
             Directory.CreateDirectory(FileSystemLayout.FontsCacheFolder);
+        }
+
+        if (!Directory.Exists(FileSystemLayout.TemplatesFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.TemplatesFolder);
+        }
+
+        if (!Directory.Exists(FileSystemLayout.MusicVideoCreditsTemplatesFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.MusicVideoCreditsTemplatesFolder);
         }
 
         Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);

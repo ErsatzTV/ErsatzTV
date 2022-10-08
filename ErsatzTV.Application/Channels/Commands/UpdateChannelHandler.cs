@@ -46,6 +46,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         c.PreferredSubtitleLanguageCode = update.PreferredSubtitleLanguageCode;
         c.SubtitleMode = update.SubtitleMode;
         c.MusicVideoCreditsMode = update.MusicVideoCreditsMode;
+        c.MusicVideoCreditsTemplate = update.MusicVideoCreditsTemplate;
         c.Artwork ??= new List<Artwork>();
 
         if (!string.IsNullOrWhiteSpace(update.Logo))

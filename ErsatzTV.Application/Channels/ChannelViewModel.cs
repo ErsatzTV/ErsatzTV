@@ -18,4 +18,5 @@ public record ChannelViewModel(
     int PlayoutCount,
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode SubtitleMode,
-    ChannelMusicVideoCreditsMode MusicVideoCreditsMode);
+    ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
+    string MusicVideoCreditsTemplate);

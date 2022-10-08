@@ -69,6 +69,8 @@ public class SearchRepository : ISearchRepository
             .ThenInclude(sm => sm.Studios)
             .Include(mi => (mi as Season).SeasonMetadata)
             .ThenInclude(sm => sm.Actors)
+            .Include(mi => (mi as Season).SeasonMetadata)
+            .ThenInclude(sm => sm.Guids)
             .Include(mi => (mi as Season).Show)
             .ThenInclude(sm => sm.ShowMetadata)
             .ThenInclude(sm => sm.Genres)
