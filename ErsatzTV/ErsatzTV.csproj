@@ -105,7 +105,6 @@
       <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
       <EmbeddedResource Include="Resources\OPTIKabel-Heavy.otf" />
       <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
-      <None Remove="Resources\Templates\_default.ass.sbntxt" />
       <EmbeddedResource Include="Resources\Templates\_default.ass.sbntxt" />
     </ItemGroup>
 
