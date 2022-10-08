@@ -24,7 +24,7 @@ public class ChannelEditViewModel
 
     public string MusicVideoCreditsTemplate
     {
-        get => MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.TemplateSubtitles
+        get => MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.GenerateSubtitles
             ? _musicVideoCreditsTemplate
             : null;
         set => _musicVideoCreditsTemplate = value;

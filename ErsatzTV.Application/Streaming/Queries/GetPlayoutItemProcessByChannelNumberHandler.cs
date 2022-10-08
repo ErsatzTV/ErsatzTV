@@ -327,10 +327,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         switch (channel.MusicVideoCreditsMode)
         {
             case ChannelMusicVideoCreditsMode.GenerateSubtitles:
-                subtitles.AddRange(
-                    await _musicVideoCreditsGenerator.GenerateCreditsSubtitle(musicVideo, channel.FFmpegProfile));
-                break;
-            case ChannelMusicVideoCreditsMode.TemplateSubtitles:
                 var fileWithExtension = $"{channel.MusicVideoCreditsTemplate}.sbntxt";
                 if (!string.IsNullOrWhiteSpace(fileWithExtension))
                 {
@@ -340,6 +336,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                             channel.FFmpegProfile,
                             Path.Combine(FileSystemLayout.MusicVideoCreditsTemplatesFolder, fileWithExtension)));
                 }
+                else
+                {
+                    _logger.LogWarning(
+                        "Music video credits template {Template} does not exist; falling back to built-in template",
+                        fileWithExtension);
+
+                    subtitles.AddRange(
+                        await _musicVideoCreditsGenerator.GenerateCreditsSubtitle(musicVideo, channel.FFmpegProfile));
+                }
+
                 break;
             case ChannelMusicVideoCreditsMode.None:
             default:
