@@ -76,13 +76,12 @@
                     <MudSelect Class="mt-3" Label="Music Video Credits Mode" @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.TemplateSubtitles)">Template Subtitles</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3"
                                Label="Music Video Credits Template"
                                @bind-Value="_model.MusicVideoCreditsTemplate"
                                For="@(() => _model.MusicVideoCreditsTemplate)"
-                               Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.TemplateSubtitles)">
+                               Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.GenerateSubtitles)">
                         <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
                         @foreach (string template in _musicVideoCreditsTemplates)
                         {
