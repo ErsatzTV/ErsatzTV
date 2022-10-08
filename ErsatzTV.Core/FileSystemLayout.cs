@@ -45,4 +45,9 @@ public static class FileSystemLayout
 
     public static readonly string SubtitleCacheFolder = Path.Combine(StreamsCacheFolder, "subtitles");
     public static readonly string FontsCacheFolder = Path.Combine(StreamsCacheFolder, "fonts");
+
+    public static readonly string TemplatesFolder = Path.Combine(AppDataFolder, "templates");
+
+    public static readonly string MusicVideoCreditsTemplatesFolder =
+        Path.Combine(TemplatesFolder, "music-video-credits");
 }

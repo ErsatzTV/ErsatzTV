@@ -9,6 +9,7 @@
 @using System.Globalization
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Channels
+@using ErsatzTV.Application.Templates
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ChannelEditor> Logger
@@ -75,6 +76,18 @@
                     <MudSelect Class="mt-3" Label="Music Video Credits Mode" @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.TemplateSubtitles)">Template Subtitles</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                               Label="Music Video Credits Template"
+                               @bind-Value="_model.MusicVideoCreditsTemplate"
+                               For="@(() => _model.MusicVideoCreditsTemplate)"
+                               Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.TemplateSubtitles)">
+                        <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
+                        @foreach (string template in _musicVideoCreditsTemplates)
+                        {
+                            <MudSelectItem T="string" Value="@template">@template</MudSelectItem>
+                        }
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
@@ -139,6 +152,7 @@
     private List<CultureInfo> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
     private List<FillerPresetViewModel> _fillerPresets;
+    private List<string> _musicVideoCreditsTemplates;
 
     public void Dispose()
     {
@@ -152,6 +166,7 @@
         _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
         await LoadWatermarks(_cts.Token);
         await LoadFillerPresets(_cts.Token);
+        await LoadMusicVideoCreditsTemplates(_cts.Token);
 
         if (Id.HasValue)
         {
@@ -174,6 +189,7 @@
                     _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
                     _model.SubtitleMode = channelViewModel.SubtitleMode;
                     _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
+                    _model.MusicVideoCreditsTemplate = channelViewModel.MusicVideoCreditsTemplate;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }
@@ -210,6 +226,9 @@
     private async Task LoadFillerPresets(CancellationToken cancellationToken) =>
         _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), cancellationToken)
             .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList());
+
+    private async Task LoadMusicVideoCreditsTemplates(CancellationToken cancellationToken) =>
+        _musicVideoCreditsTemplates = await Mediator.Send(new GetMusicVideoCreditTemplates(), cancellationToken);
 
     private async Task HandleSubmitAsync()
     {

@@ -74,7 +74,8 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                     PreferredAudioTitle = request.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = preferredSubtitleLanguageCode,
                     SubtitleMode = request.SubtitleMode,
-                    MusicVideoCreditsMode = request.MusicVideoCreditsMode
+                    MusicVideoCreditsMode = request.MusicVideoCreditsMode,
+                    MusicVideoCreditsTemplate = request.MusicVideoCreditsTemplate
                 };
 
                 foreach (int id in watermarkId)

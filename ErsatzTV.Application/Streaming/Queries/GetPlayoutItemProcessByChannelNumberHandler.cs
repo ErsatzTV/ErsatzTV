@@ -324,18 +324,30 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     {
         var subtitles = new List<Subtitle>();
 
-        bool musicVideoCredits = channel.MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.GenerateSubtitles;
-        if (musicVideoCredits)
+        switch (channel.MusicVideoCreditsMode)
         {
-            subtitles.AddRange(
-                await _musicVideoCreditsGenerator.GenerateCreditsSubtitle(musicVideo, channel.FFmpegProfile));
-        }
-        else
-        {
-            subtitles.AddRange(
-                await Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
-                    .Map(mm => mm.Subtitles)
-                    .IfNoneAsync(new List<Subtitle>()));
+            case ChannelMusicVideoCreditsMode.GenerateSubtitles:
+                subtitles.AddRange(
+                    await _musicVideoCreditsGenerator.GenerateCreditsSubtitle(musicVideo, channel.FFmpegProfile));
+                break;
+            case ChannelMusicVideoCreditsMode.TemplateSubtitles:
+                var fileWithExtension = $"{channel.MusicVideoCreditsTemplate}.sbntxt";
+                if (!string.IsNullOrWhiteSpace(fileWithExtension))
+                {
+                    subtitles.AddRange(
+                        await _musicVideoCreditsGenerator.GenerateCreditsSubtitleFromTemplate(
+                            musicVideo,
+                            channel.FFmpegProfile,
+                            Path.Combine(FileSystemLayout.MusicVideoCreditsTemplatesFolder, fileWithExtension)));
+                }
+                break;
+            case ChannelMusicVideoCreditsMode.None:
+            default:
+                subtitles.AddRange(
+                    await Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone()
+                        .Map(mm => mm.Subtitles)
+                        .IfNoneAsync(new List<Subtitle>()));
+                break;
         }
 
         return subtitles;

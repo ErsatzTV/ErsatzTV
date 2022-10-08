@@ -5,6 +5,7 @@ namespace ErsatzTV.ViewModels;
 
 public class ChannelEditViewModel
 {
+    private string _musicVideoCreditsTemplate;
     public int Id { get; set; }
     public string Name { get; set; }
     public string Group { get; set; }
@@ -20,6 +21,14 @@ public class ChannelEditViewModel
     public string PreferredSubtitleLanguageCode { get; set; }
     public ChannelSubtitleMode SubtitleMode { get; set; }
     public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
+
+    public string MusicVideoCreditsTemplate
+    {
+        get => MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.TemplateSubtitles
+            ? _musicVideoCreditsTemplate
+            : null;
+        set => _musicVideoCreditsTemplate = value;
+    }
 
     public UpdateChannel ToUpdate() =>
         new(
@@ -37,7 +46,8 @@ public class ChannelEditViewModel
             FallbackFillerId,
             PreferredSubtitleLanguageCode,
             SubtitleMode,
-            MusicVideoCreditsMode);
+            MusicVideoCreditsMode,
+            MusicVideoCreditsTemplate);
 
     public CreateChannel ToCreate() =>
         new(
@@ -54,5 +64,6 @@ public class ChannelEditViewModel
             FallbackFillerId,
             PreferredSubtitleLanguageCode,
             SubtitleMode,
-            MusicVideoCreditsMode);
+            MusicVideoCreditsMode,
+            MusicVideoCreditsTemplate);
 }

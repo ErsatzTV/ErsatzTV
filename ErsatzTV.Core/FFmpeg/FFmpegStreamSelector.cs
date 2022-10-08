@@ -92,7 +92,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         string preferredSubtitleLanguage,
         ChannelSubtitleMode subtitleMode)
     {
-        if (channel.MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.GenerateSubtitles &&
+        if (channel.MusicVideoCreditsMode is ChannelMusicVideoCreditsMode.GenerateSubtitles
+                or ChannelMusicVideoCreditsMode.TemplateSubtitles &&
             subtitles.FirstOrDefault(s => s.SubtitleKind == SubtitleKind.Generated) is { } generatedSubtitle)
         {
             _logger.LogDebug("Selecting generated subtitle for channel {Number}", channel.Number);
