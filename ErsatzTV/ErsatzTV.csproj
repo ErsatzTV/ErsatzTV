@@ -50,10 +50,6 @@
 
         <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
     </Target>
-
-    <ItemGroup>
-      <Folder Include="Resources" />
-    </ItemGroup>
     
     <ItemGroup>
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
@@ -109,6 +105,7 @@
       <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
       <EmbeddedResource Include="Resources\OPTIKabel-Heavy.otf" />
       <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
+      <EmbeddedResource Include="Resources\Templates\_default.ass.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>

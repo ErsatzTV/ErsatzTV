@@ -19,4 +19,5 @@ public record UpdateChannel
     int? FallbackFillerId,
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode SubtitleMode,
-    ChannelMusicVideoCreditsMode MusicVideoCreditsMode) : IRequest<Either<BaseError, ChannelViewModel>>;
+    ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
+    string MusicVideoCreditsTemplate) : IRequest<Either<BaseError, ChannelViewModel>>;

@@ -18,4 +18,5 @@ public record CreateChannel
     int? FallbackFillerId,
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode SubtitleMode,
-    ChannelMusicVideoCreditsMode MusicVideoCreditsMode) : IRequest<Either<BaseError, CreateChannelResult>>;
+    ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
+    string MusicVideoCreditsTemplate) : IRequest<Either<BaseError, CreateChannelResult>>;

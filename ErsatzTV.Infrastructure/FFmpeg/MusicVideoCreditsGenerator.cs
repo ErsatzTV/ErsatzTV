@@ -1,14 +1,23 @@
 ﻿using System.Text;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using Microsoft.Extensions.Logging;
+using Scriban;
 
-namespace ErsatzTV.Core.FFmpeg;
+namespace ErsatzTV.Infrastructure.FFmpeg;
 
 public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
 {
     private readonly ITempFilePool _tempFilePool;
+    private readonly ILogger<MusicVideoCreditsGenerator> _logger;
 
-    public MusicVideoCreditsGenerator(ITempFilePool tempFilePool) => _tempFilePool = tempFilePool;
+    public MusicVideoCreditsGenerator(ITempFilePool tempFilePool, ILogger<MusicVideoCreditsGenerator> logger)
+    {
+        _tempFilePool = tempFilePool;
+        _logger = logger;
+    }
 
     public async Task<Option<Subtitle>> GenerateCreditsSubtitle(MusicVideo musicVideo, FFmpegProfile ffmpegProfile)
     {
@@ -77,6 +86,59 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                 Path = subtitles,
                 SDH = false
             };
+        }
+
+        return None;
+    }
+
+    public async Task<Option<Subtitle>> GenerateCreditsSubtitleFromTemplate(
+        MusicVideo musicVideo,
+        FFmpegProfile ffmpegProfile,
+        string templateFileName)
+    {
+        try
+        {
+            string text = await File.ReadAllTextAsync(templateFileName);
+            var template = Template.Parse(text, templateFileName);
+            foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata)
+            {
+                string artist = string.Empty;
+                foreach (ArtistMetadata artistMetadata in Optional(musicVideo.Artist?.ArtistMetadata).Flatten())
+                {
+                    artist = artistMetadata.Title;
+                }
+                
+                string result = await template.RenderAsync(
+                    new
+                    {
+                        ffmpegProfile.Resolution,
+                        metadata.Title,
+                        metadata.Track,
+                        metadata.Album,
+                        metadata.Plot,
+                        metadata.ReleaseDate,
+                        AllArtists = (metadata.Artists ?? new List<MusicVideoArtist>()).Map(a => a.Name),
+                        Artist = artist,
+                        musicVideo.GetHeadVersion().Duration
+                    });
+
+                string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
+                await File.WriteAllTextAsync(fileName, result);
+                return new Subtitle
+                {
+                    Codec = "ass",
+                    Default = true,
+                    Forced = true,
+                    IsExtracted = false,
+                    SubtitleKind = SubtitleKind.Generated,
+                    Path = fileName,
+                    SDH = false
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating music video credits from template {Template}", templateFileName);
         }
 
         return None;

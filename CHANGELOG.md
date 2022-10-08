@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where tail or fallback filler would sometimes schedule much longer than expected
   - This only happened with fixed start schedule items following a schedule item with tail or fallback filler
 
+### Added
+- Add music video credits template system
+  - Templates are selected in each channel's settings 
+  - Templates should be copied from `_default.ass.sbntxt` which is located in the config subfolder `templates/music-video-credits`
+    - Copy the file, give it any name ending with `.ass.sbntext`, and only make edits to the copied file
+  - The default template will be extracted and overwritten every time ErsatzTV is started
+  - The template is a [Sub Station Alpha](http://www.tcax.org/docs/ass-specs.htm) file using [scribian](https://github.com/scriban/scriban/tree/master/doc) template syntax
+  - The following fields are available for use in the template:
+    - `resolution`: the ffmpeg profile's resolution, which is used for margin calculations
+    - `title`: the title of the music video
+    - `track`: the music video's track number
+    - `album`: the music video's album
+    - `plot`: the music video's plot
+    - `release_date`: the music video's release date
+    - `artist`: the music videos artist (the parent folder)
+    - `all_artists`: a list of additional artists from the music video's sidecar NFO metadata file
+    - `duration`: the timespan duration of the music video, which can be used to calculate timing of additional subtitles
+
 ## [0.6.8-beta] - 2022-10-05
 ### Fixed
 - Fix typo introduced in `0.6.7-beta` that stopped QSV HEVC encoder from working
