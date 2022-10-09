@@ -46,7 +46,8 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
                     VerticalMarginPercent = request.VerticalMargin,
                     FrequencyMinutes = request.FrequencyMinutes,
                     DurationSeconds = request.DurationSeconds,
-                    Opacity = request.Opacity
+                    Opacity = request.Opacity,
+                    PlaceWithinSourceContent = request.PlaceWithinSourceContent
                 });
 
     private static Validation<BaseError, string> ValidateName(CreateWatermark request) =>

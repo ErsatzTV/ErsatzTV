@@ -27,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `duration`: the timespan duration of the music video, which can be used to calculate timing of additional subtitles
     - `stream_seek`: the timespan that ffmpeg will seek into the media item before beginning playback
 
+### Changed
+- No longer place watermarks within content by default (e.g. within 4:3 content padded to a 16:9 resolution)
+  - This can be re-enabled if desired using the `Place Within Source Content` checkbox in watermark settings
+
 ## [0.6.8-beta] - 2022-10-05
 ### Fixed
 - Fix typo introduced in `0.6.7-beta` that stopped QSV HEVC encoder from working

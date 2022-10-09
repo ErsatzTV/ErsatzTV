@@ -18,5 +18,6 @@ internal static class Mapper
             watermark.VerticalMarginPercent,
             watermark.FrequencyMinutes,
             watermark.DurationSeconds,
-            watermark.Opacity);
+            watermark.Opacity,
+            watermark.PlaceWithinSourceContent);
 }

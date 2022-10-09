@@ -25,6 +25,7 @@ public class WatermarkEditViewModel
         FrequencyMinutes = vm.FrequencyMinutes;
         DurationSeconds = vm.DurationSeconds;
         Opacity = vm.Opacity;
+        PlaceWithinSourceContent = vm.PlaceWithinSourceContent;
     }
 
     public int Id { get; set; }
@@ -40,6 +41,7 @@ public class WatermarkEditViewModel
     public int FrequencyMinutes { get; set; }
     public int DurationSeconds { get; set; }
     public int Opacity { get; set; }
+    public bool PlaceWithinSourceContent { get; set; }
 
     public CreateWatermark ToCreate() =>
         new(
@@ -54,8 +56,8 @@ public class WatermarkEditViewModel
             VerticalMargin,
             FrequencyMinutes,
             DurationSeconds,
-            Opacity
-        );
+            Opacity,
+            PlaceWithinSourceContent);
 
     public UpdateWatermark ToUpdate() =>
         new(
@@ -71,6 +73,6 @@ public class WatermarkEditViewModel
             VerticalMargin,
             FrequencyMinutes,
             DurationSeconds,
-            Opacity
-        );
+            Opacity,
+            PlaceWithinSourceContent);
 }

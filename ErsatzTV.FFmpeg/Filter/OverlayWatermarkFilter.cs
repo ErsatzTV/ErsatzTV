@@ -28,20 +28,9 @@ public class OverlayWatermarkFilter : BaseFilter
     {
         get
         {
-            int horizontalPadding = _resolution.Width - _squarePixelFrameSize.Width;
-            int verticalPadding = _resolution.Height - _squarePixelFrameSize.Height;
-
-            _logger.LogDebug(
-                $"Resolution: {_resolution.Width}x{_resolution.Height}");
-            _logger.LogDebug(
-                $"Square Pix: {_squarePixelFrameSize.Width}x{_squarePixelFrameSize.Height}");    
-
-            double horizontalMargin = Math.Round(
-                _watermarkState.HorizontalMarginPercent / 100.0 * _squarePixelFrameSize.Width
-                + horizontalPadding / 2.0);
-            double verticalMargin = Math.Round(
-                _watermarkState.VerticalMarginPercent / 100.0 * _squarePixelFrameSize.Height
-                + verticalPadding / 2.0);
+            (double horizontalMargin, double verticalMargin) = _watermarkState.PlaceWithinSourceContent
+                ? SourceContentMargins()
+                : NormalMargins();
 
             return _watermarkState.Location switch
             {
@@ -58,4 +47,32 @@ public class OverlayWatermarkFilter : BaseFilter
     }
 
     public override FrameState NextState(FrameState currentState) => currentState;
+
+    private WatermarkMargins NormalMargins()
+    {
+        double horizontalMargin = Math.Round(_watermarkState.HorizontalMarginPercent / 100.0 * _resolution.Width);
+        double verticalMargin = Math.Round(_watermarkState.VerticalMarginPercent / 100.0 * _resolution.Height);
+
+        return new WatermarkMargins(horizontalMargin, verticalMargin);
+    }
+
+    private WatermarkMargins SourceContentMargins()
+    {
+        int horizontalPadding = _resolution.Width - _squarePixelFrameSize.Width;
+        int verticalPadding = _resolution.Height - _squarePixelFrameSize.Height;
+
+        _logger.LogDebug("Resolution: {Width}x{Height}", _resolution.Width, _resolution.Height);
+        _logger.LogDebug("Square Pix: {Width}x{Height}", _squarePixelFrameSize.Width, _squarePixelFrameSize.Height);    
+
+        double horizontalMargin = Math.Round(
+            _watermarkState.HorizontalMarginPercent / 100.0 * _squarePixelFrameSize.Width
+            + horizontalPadding / 2.0);
+        double verticalMargin = Math.Round(
+            _watermarkState.VerticalMarginPercent / 100.0 * _squarePixelFrameSize.Height
+            + verticalPadding / 2.0);
+
+        return new WatermarkMargins(horizontalMargin, verticalMargin);
+    }
+
+    private record WatermarkMargins(double HorizontalMargin, double VerticalMargin);
 }

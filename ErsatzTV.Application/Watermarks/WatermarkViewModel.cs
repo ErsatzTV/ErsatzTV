@@ -16,5 +16,6 @@ public record WatermarkViewModel(
     int VerticalMargin,
     int FrequencyMinutes,
     int DurationSeconds,
-    int Opacity
+    int Opacity,
+    bool PlaceWithinSourceContent
 );
