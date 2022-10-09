@@ -4,10 +4,10 @@
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Images
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<WatermarkEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<WatermarkEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -65,6 +65,10 @@
                         <MudSelectItem Value="@(WatermarkLocation.TopRight)">Top Right</MudSelectItem>
                         <MudSelectItem Value="@(WatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
                     </MudSelect>
+                    <MudCheckBox Class="mt-3" Label="Place Within Source Content"
+                                 @bind-Checked="_model.PlaceWithinSourceContent"
+                                 For="@(() => _model.PlaceWithinSourceContent)"
+                                 Disabled="@(_model.Mode == ChannelWatermarkMode.None)" />
                     <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
                         <MudItem xs="6">
                             <MudSelect Label="Size" @bind-Value="_model.Size"
@@ -165,10 +169,10 @@
     {
         if (IsEdit)
         {
-            Option<WatermarkViewModel> watermark = await _mediator.Send(new GetWatermarkById(Id), _cts.Token);
+            Option<WatermarkViewModel> watermark = await Mediator.Send(new GetWatermarkById(Id), _cts.Token);
             watermark.Match(
                 watermarkViewModel => _model = new WatermarkEditViewModel(watermarkViewModel),
-                () => _navigationManager.NavigateTo("404"));
+                () => NavigationManager.NavigateTo("404"));
         }
         else
         {
@@ -184,7 +188,8 @@
                 VerticalMargin = 5,
                 FrequencyMinutes = 15,
                 DurationSeconds = 15,
-                Opacity = 100
+                Opacity = 100,
+                PlaceWithinSourceContent = false
             };
         }
 
@@ -200,16 +205,16 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+                (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    _snackbar.Add("Unexpected error saving watermark");
-                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                    Snackbar.Add("Unexpected error saving watermark");
+                    Logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo("/watermarks"));
+                () => NavigationManager.NavigateTo("/watermarks"));
         }
     }
 
@@ -217,7 +222,7 @@
     {
         try
         {
-            Either<BaseError, string> maybeCacheFileName = await _mediator.Send(
+            Either<BaseError, string> maybeCacheFileName = await Mediator.Send(
                 new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Watermark),
                 _cts.Token);
             maybeCacheFileName.Match(
@@ -230,19 +235,19 @@
                 },
                 error =>
                 {
-                    _snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
-                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                    Snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
+                    Logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
                 });
         }
         catch (IOException)
         {
-            _snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
-            _logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
+            Snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
+            Logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
         }
         catch (Exception ex)
         {
-            _snackbar.Add($"Unexpected error saving watermark: {ex.Message}", Severity.Error);
-            _logger.LogError("Unexpected error saving watermark: {Error}", ex.Message);
+            Snackbar.Add($"Unexpected error saving watermark: {ex.Message}", Severity.Error);
+            Logger.LogError("Unexpected error saving watermark: {Error}", ex.Message);
         }
     }
 

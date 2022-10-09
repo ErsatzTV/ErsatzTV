@@ -7,7 +7,8 @@ public record WatermarkState(
     int WidthPercent,
     int HorizontalMarginPercent,
     int VerticalMarginPercent,
-    int Opacity);
+    int Opacity,
+    bool PlaceWithinSourceContent);
 
 public record WatermarkFadePoint(TimeSpan Time, TimeSpan EnableStart, TimeSpan EnableFinish);
 

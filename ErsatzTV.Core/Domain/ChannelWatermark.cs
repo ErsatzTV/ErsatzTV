@@ -17,6 +17,7 @@ public class ChannelWatermark
     public int FrequencyMinutes { get; set; }
     public int DurationSeconds { get; set; }
     public int Opacity { get; set; }
+    public bool PlaceWithinSourceContent { get; set; }
 }
 
 public enum ChannelWatermarkMode

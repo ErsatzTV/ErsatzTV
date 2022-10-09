@@ -546,7 +546,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                 watermark.WidthPercent,
                                 watermark.HorizontalMarginPercent,
                                 watermark.VerticalMarginPercent,
-                                watermark.Opacity));
+                                watermark.Opacity,
+                                watermark.PlaceWithinSourceContent));
 
                         return watermarkInputFile;
                     }

@@ -15,7 +15,7 @@ public class GetAllWatermarksHandler : IRequestHandler<GetAllWatermarks, List<Wa
         GetAllWatermarks request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ChannelWatermarks
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
