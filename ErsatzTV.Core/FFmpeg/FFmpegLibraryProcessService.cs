@@ -51,7 +51,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         MediaVersion audioVersion,
         string videoPath,
         string audioPath,
-        List<Subtitle> subtitles,
+        Func<FFmpegPlaybackSettings, Task<List<Subtitle>>> getSubtitles,
         string preferredAudioLanguage,
         string preferredAudioTitle,
         string preferredSubtitleLanguage,
@@ -80,12 +80,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 channel.Number,
                 preferredAudioLanguage,
                 preferredAudioTitle);
-        Option<Subtitle> maybeSubtitle =
-            await _ffmpegStreamSelector.SelectSubtitleStream(
-                subtitles,
-                channel,
-                preferredSubtitleLanguage,
-                subtitleMode);
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
@@ -99,6 +93,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outPoint,
             hlsRealtime,
             targetFramerate);
+
+        Option<Subtitle> maybeSubtitle =
+            await _ffmpegStreamSelector.SelectSubtitleStream(
+                await getSubtitles(playbackSettings),
+                channel,
+                preferredSubtitleLanguage,
+                subtitleMode);
 
         Option<WatermarkOptions> watermarkOptions = disableWatermarks
             ? None

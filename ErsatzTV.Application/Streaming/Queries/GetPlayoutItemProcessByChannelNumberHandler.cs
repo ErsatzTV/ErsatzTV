@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -164,8 +165,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            List<Subtitle> subtitles = await GetSubtitles(playoutItemWithPath, channel);
-
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
                 ffprobePath,
@@ -175,7 +174,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 audioVersion,
                 videoPath,
                 audioPath,
-                subtitles,
+                settings => GetSubtitles(playoutItemWithPath, channel, settings),
                 playoutItemWithPath.PlayoutItem.PreferredAudioLanguageCode ?? channel.PreferredAudioLanguageCode,
                 playoutItemWithPath.PlayoutItem.PreferredAudioTitle ?? channel.PreferredAudioTitle,
                 playoutItemWithPath.PlayoutItem.PreferredSubtitleLanguageCode ?? channel.PreferredSubtitleLanguageCode,
@@ -272,7 +271,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
     private async Task<List<Subtitle>> GetSubtitles(
         PlayoutItemWithPath playoutItemWithPath,
-        Channel channel)
+        Channel channel,
+        FFmpegPlaybackSettings settings)
     {
         List<Subtitle> allSubtitles = playoutItemWithPath.PlayoutItem.MediaItem switch
         {
@@ -282,7 +282,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
                 .Map(mm => mm.Subtitles ?? new List<Subtitle>())
                 .IfNoneAsync(new List<Subtitle>()),
-            MusicVideo musicVideo => await GetMusicVideoSubtitles(musicVideo, channel),
+            MusicVideo musicVideo => await GetMusicVideoSubtitles(musicVideo, channel, settings),
             OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
                 .Map(mm => mm.Subtitles ?? new List<Subtitle>())
                 .IfNoneAsync(new List<Subtitle>()),
@@ -323,7 +323,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return allSubtitles;
     }
 
-    private async Task<List<Subtitle>> GetMusicVideoSubtitles(MusicVideo musicVideo, Channel channel)
+    private async Task<List<Subtitle>> GetMusicVideoSubtitles(
+        MusicVideo musicVideo,
+        Channel channel,
+        FFmpegPlaybackSettings settings)
     {
         var subtitles = new List<Subtitle>();
 
@@ -337,6 +340,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         await _musicVideoCreditsGenerator.GenerateCreditsSubtitleFromTemplate(
                             musicVideo,
                             channel.FFmpegProfile,
+                            settings,
                             Path.Combine(FileSystemLayout.MusicVideoCreditsTemplatesFolder, fileWithExtension)));
                 }
                 else
