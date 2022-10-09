@@ -19,7 +19,7 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ChannelWatermark> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, p => ApplyUpdateRequest(dbContext, p, request));
+        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
     }
 
     private static async Task<UpdateWatermarkResult> ApplyUpdateRequest(
@@ -39,6 +39,7 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
         p.FrequencyMinutes = update.FrequencyMinutes;
         p.DurationSeconds = update.DurationSeconds;
         p.Opacity = update.Opacity;
+        p.PlaceWithinSourceContent = update.PlaceWithinSourceContent;
         await dbContext.SaveChangesAsync();
         return new UpdateWatermarkResult(p.Id);
     }
