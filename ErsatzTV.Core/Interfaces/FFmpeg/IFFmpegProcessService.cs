@@ -17,7 +17,7 @@ public interface IFFmpegProcessService
         MediaVersion audioVersion,
         string videoPath,
         string audioPath,
-        List<Subtitle> subtitles,
+        Func<FFmpegPlaybackSettings, Task<List<Subtitle>>> getSubtitles,
         string preferredAudioLanguage,
         string preferredAudioTitle,
         string preferredSubtitleLanguage,

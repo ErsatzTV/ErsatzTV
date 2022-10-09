@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `artist`: the music videos artist (the parent folder)
     - `all_artists`: a list of additional artists from the music video's sidecar NFO metadata file
     - `duration`: the timespan duration of the music video, which can be used to calculate timing of additional subtitles
+    - `stream_seek`: the timespan that ffmpeg will seek into the media item before beginning playback
 
 ## [0.6.8-beta] - 2022-10-05
 ### Fixed

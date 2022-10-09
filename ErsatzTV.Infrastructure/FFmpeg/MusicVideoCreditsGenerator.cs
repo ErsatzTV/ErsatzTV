@@ -94,6 +94,7 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
     public async Task<Option<Subtitle>> GenerateCreditsSubtitleFromTemplate(
         MusicVideo musicVideo,
         FFmpegProfile ffmpegProfile,
+        FFmpegPlaybackSettings settings,
         string templateFileName)
     {
         try
@@ -119,7 +120,8 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                         metadata.ReleaseDate,
                         AllArtists = (metadata.Artists ?? new List<MusicVideoArtist>()).Map(a => a.Name),
                         Artist = artist,
-                        musicVideo.GetHeadVersion().Duration
+                        musicVideo.GetHeadVersion().Duration,
+                        settings.StreamSeek
                     });
 
                 string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
