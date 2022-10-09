@@ -487,7 +487,7 @@ public class TranscodingTests
             v,
             file,
             file,
-            subtitles,
+            _ => subtitles.AsTask(),
             string.Empty,
             string.Empty,
             string.Empty,
