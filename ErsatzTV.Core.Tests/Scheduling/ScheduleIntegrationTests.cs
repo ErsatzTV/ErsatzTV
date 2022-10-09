@@ -1,6 +1,8 @@
 using Dapper;
 using Destructurama;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
@@ -153,6 +155,8 @@ public class ScheduleIntegrationTests
             new MediaCollectionRepository(new Mock<ISearchIndex>().Object, factory),
             new TelevisionRepository(factory),
             new ArtistRepository(factory),
+            new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,
+            new Mock<ILocalFileSystem>().Object,
             provider.GetRequiredService<ILogger<PlayoutBuilder>>());
 
         for (var i = 0; i <= (24 * 4); i++)

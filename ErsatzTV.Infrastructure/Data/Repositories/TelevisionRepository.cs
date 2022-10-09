@@ -67,6 +67,8 @@ public class TelevisionRepository : ITelevisionRepository
             .Include(s => s.ShowMetadata)
             .ThenInclude(sm => sm.Actors)
             .ThenInclude(a => a.Artwork)
+            .Include(s => s.ShowMetadata)
+            .ThenInclude(sm => sm.Guids)
             .OrderBy(s => s.Id)
             .SingleOrDefaultAsync()
             .Map(Optional);

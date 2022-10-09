@@ -26,6 +26,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `all_artists`: a list of additional artists from the music video's sidecar NFO metadata file
     - `duration`: the timespan duration of the music video, which can be used to calculate timing of additional subtitles
     - `stream_seek`: the timespan that ffmpeg will seek into the media item before beginning playback
+- Add `Multi-Episode Shuffle` playout order for `Television Show` schedule items
+  - The purpose of this playout order is to improve randomization for shows that normally have intro, multiple episodes, and outro
+  - This playout order requires splitting the parts into individual files (e.g. splitting `s01e01-03.mkv` into `s01e01.mkv`, `s01e02.mkv` and `s01e03.mkv`)
+  - This playout order requires a lua script in the config subfolder `scripts/multi-episode-shuffle`
+  - The lua script should be named for the television show's guid, e.g. `tvdb_12345.lua` or `imdb_tt123456789.lua`
+  - The script defines the number of parts that each un-split file typically contains
+  - The script also defines a function to map each episode to a part number (or no part number i.e. `nil` if an episode has not been split)
+  - All groups of part numbers (i.e. all part 1s, all part 2s) will be shuffled
+  - The playout order will then schedule a random part 1 followed by a random part 2, etc
+    - Un-split (`nil`) episodes will be randomly placed between re-combined parts (e.g. part1, part2, part3, un-split, part1, part2, part3)
 
 ### Changed
 - No longer place watermarks within content by default (e.g. within 4:3 content padded to a 16:9 resolution)

@@ -50,4 +50,9 @@ public static class FileSystemLayout
 
     public static readonly string MusicVideoCreditsTemplatesFolder =
         Path.Combine(TemplatesFolder, "music-video-credits");
+
+    public static readonly string ScriptsFolder = Path.Combine(AppDataFolder, "scripts");
+
+    public static readonly string MultiEpisodeShuffleTemplatesFolder =
+        Path.Combine(ScriptsFolder, "multi-episode-shuffle");
 }

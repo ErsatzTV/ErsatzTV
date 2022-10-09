@@ -48,6 +48,7 @@ using ErsatzTV.Infrastructure.Jellyfin;
 using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
+using ErsatzTV.Infrastructure.Scheduling;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
@@ -197,6 +198,16 @@ public class Startup
         if (!Directory.Exists(FileSystemLayout.MusicVideoCreditsTemplatesFolder))
         {
             Directory.CreateDirectory(FileSystemLayout.MusicVideoCreditsTemplatesFolder);
+        }
+
+        if (!Directory.Exists(FileSystemLayout.ScriptsFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.ScriptsFolder);
+        }
+
+        if (!Directory.Exists(FileSystemLayout.MultiEpisodeShuffleTemplatesFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.MultiEpisodeShuffleTemplatesFolder);
         }
 
         Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
@@ -410,6 +421,8 @@ public class Startup
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
+        services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
+                MultiEpisodeShuffleCollectionEnumeratorFactory>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<FFmpegProcessService>();
