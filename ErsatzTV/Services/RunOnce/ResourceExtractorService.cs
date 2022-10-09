@@ -28,6 +28,12 @@ public class ResourceExtractorService : IHostedService
             "_default.ass.sbntxt",
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
             cancellationToken);
+
+        await ExtractScriptResource(
+            assembly,
+            "_threePartEpisodes.lua",
+            FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
+            cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -65,6 +71,20 @@ public class ResourceExtractorService : IHostedService
         CancellationToken cancellationToken)
     {
         await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.Templates.{name}");
+        if (resource != null)
+        {
+            await using FileStream fs = File.Create(Path.Combine(targetFolder, name));
+            await resource.CopyToAsync(fs, cancellationToken);
+        }
+    }
+
+    private static async Task ExtractScriptResource(
+        Assembly assembly,
+        string name,
+        string targetFolder,
+        CancellationToken cancellationToken)
+    {
+        await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.Scripts.{name}");
         if (resource != null)
         {
             await using FileStream fs = File.Create(Path.Combine(targetFolder, name));
