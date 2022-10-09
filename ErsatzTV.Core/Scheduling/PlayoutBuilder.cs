@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
@@ -14,6 +15,8 @@ public class PlayoutBuilder : IPlayoutBuilder
 {
     private static readonly Random Random = new();
     private readonly IArtistRepository _artistRepository;
+    private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILogger<PlayoutBuilder> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
@@ -24,12 +27,16 @@ public class PlayoutBuilder : IPlayoutBuilder
         IMediaCollectionRepository mediaCollectionRepository,
         ITelevisionRepository televisionRepository,
         IArtistRepository artistRepository,
+        IMultiEpisodeShuffleCollectionEnumeratorFactory multiEpisodeFactory,
+        ILocalFileSystem localFileSystem,
         ILogger<PlayoutBuilder> logger)
     {
         _configElementRepository = configElementRepository;
         _mediaCollectionRepository = mediaCollectionRepository;
         _televisionRepository = televisionRepository;
         _artistRepository = artistRepository;
+        _multiEpisodeFactory = multiEpisodeFactory;
+        _localFileSystem = localFileSystem;
         _logger = logger;
     }
 
@@ -746,15 +753,50 @@ public class PlayoutBuilder : IPlayoutBuilder
                 return new ChronologicalMediaCollectionEnumerator(mediaItems, state);
             case PlaybackOrder.Random:
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
-            case PlaybackOrder.Shuffle:
-                return new ShuffledMediaCollectionEnumerator(
-                    await GetGroupedMediaItemsForShuffle(playout, mediaItems, collectionKey),
-                    state);
             case PlaybackOrder.ShuffleInOrder:
                 return new ShuffleInOrderCollectionEnumerator(
                     await GetCollectionItemsForShuffleInOrder(collectionKey),
                     state,
                     playout.ProgramSchedule.RandomStartPoint);
+            case PlaybackOrder.MultiEpisodeShuffle when
+                collectionKey.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow &&
+                collectionKey.MediaItemId.HasValue:
+                foreach (Show show in await _televisionRepository.GetShow(collectionKey.MediaItemId.Value))
+                {
+                    foreach (MetadataGuid guid in show.ShowMetadata.Map(sm => sm.Guids).Flatten())
+                    {
+                        string luaTemplatePath = Path.ChangeExtension(
+                            Path.Combine(
+                                FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
+                                guid.Guid.Replace("://", "_")),
+                            "lua");
+                        _logger.LogDebug("Checking for lua template at {Path}", luaTemplatePath);
+                        if (_localFileSystem.FileExists(luaTemplatePath))
+                        {
+                            _logger.LogDebug("Found lua template at {Path}", luaTemplatePath);
+                            try
+                            {
+                                return _multiEpisodeFactory.Create(luaTemplatePath, mediaItems, state);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(
+                                    ex,
+                                    "Failed to initialize multi-episode shuffle; falling back to normal shuffle");
+                            }
+                        }
+                    }
+                }
+
+                // fall back to shuffle if show or template cannot be found
+                goto case PlaybackOrder.Shuffle;
+
+            // fall back to shuffle when television show isn't selected
+            case PlaybackOrder.MultiEpisodeShuffle:
+            case PlaybackOrder.Shuffle:
+                return new ShuffledMediaCollectionEnumerator(
+                    await GetGroupedMediaItemsForShuffle(playout, mediaItems, collectionKey),
+                    state);
             default:
                 // TODO: handle this error case differently?
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
