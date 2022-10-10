@@ -18,12 +18,12 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     public MultiEpisodeShuffleCollectionEnumerator(
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state,
-        string templateFile,
+        string scriptFile,
         ILogger logger)
     {
         _logger = logger;
         using var lua = new Lua();
-        lua.DoFile(templateFile);
+        lua.DoFile(scriptFile);
 
         var numGroups = (int)(double)lua["numParts"];
         
