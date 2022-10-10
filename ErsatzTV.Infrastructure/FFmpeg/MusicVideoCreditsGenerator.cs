@@ -121,7 +121,7 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                         AllArtists = (metadata.Artists ?? new List<MusicVideoArtist>()).Map(a => a.Name),
                         Artist = artist,
                         musicVideo.GetHeadVersion().Duration,
-                        settings.StreamSeek
+                        StreamSeek = await settings.StreamSeek.IfNoneAsync(TimeSpan.Zero)
                     });
 
                 string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
