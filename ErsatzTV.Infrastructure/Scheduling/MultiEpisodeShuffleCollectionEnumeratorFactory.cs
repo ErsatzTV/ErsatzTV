@@ -16,8 +16,8 @@ public class MultiEpisodeShuffleCollectionEnumeratorFactory
     }
 
     public IMediaCollectionEnumerator Create(
-        string luaTemplatePath,
+        string luaScriptPath,
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state) =>
-        new MultiEpisodeShuffleCollectionEnumerator(mediaItems, state, luaTemplatePath, _logger);
+        new MultiEpisodeShuffleCollectionEnumerator(mediaItems, state, luaScriptPath, _logger);
 }
