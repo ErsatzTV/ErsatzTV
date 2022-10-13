@@ -56,7 +56,7 @@ using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Ganss.XSS;
+using Ganss.Xss;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
