@@ -35,22 +35,16 @@ public abstract class NfoReader<T>
 
     protected async Task<Stream> SanitizedStreamForFile(string fileName)
     {
-        using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, Buffer.Length, true))
-        {
-            while (await fs.ReadAsync(Buffer) > 0)
-            {
-                // read the file
-            }
+        await using var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, Buffer.Length, true);
+        using var sr = new StreamReader(fs, Encoding.UTF8);
+        string text = await sr.ReadToEndAsync();
+        // trim BOM and zero width space, replace controls with replacement character
+        string stripped = Pattern.Replace(text.Trim('\uFEFF', '\u200B'), "\ufffd");
 
-            string text = Encoding.UTF8.GetString(Buffer);
-            // trim BOM and zero width space, replace controls with replacement character
-            string stripped = Pattern.Replace(text.Trim('\uFEFF', '\u200B'), "\ufffd");
-
-            MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
-            await ms.WriteAsync(Encoding.UTF8.GetBytes(stripped));
-            ms.Position = 0;
-            return ms;
-        }
+        MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
+        await ms.WriteAsync(Encoding.UTF8.GetBytes(stripped));
+        ms.Position = 0;
+        return ms;
     }
 
     protected async Task ReadStringContent(XmlReader reader, T nfo, Action<T, string> action)
