@@ -16,7 +16,7 @@
     <div class="fanart-tint"></div>
     @if (!string.IsNullOrWhiteSpace(_artist.FanArt))
     {
-        <img src="@($"/artwork/fanart/{_artist.FanArt}")" alt="fan art"/>
+        <img src="@($"artwork/fanart/{_artist.FanArt}")" alt="fan art"/>
     }
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
@@ -25,7 +25,7 @@
         {
             <img class="mud-elevation-2 mr-6"
                  style="border-radius: 4px; flex-shrink: 0; height: 220px; width: 220px"
-                 src="@($"/artwork/thumbnails/{_artist.Thumbnail}")" alt="artist thumbnail"/>
+                 src="@($"artwork/thumbnails/{_artist.Thumbnail}")" alt="artist thumbnail"/>
         }
         <div style="display: flex; flex-direction: column; height: 100%">
             <MudText Typo="Typo.h2" Class="media-item-title">@_artist.Name</MudText>
@@ -125,7 +125,7 @@
                 @if (!string.IsNullOrWhiteSpace(musicVideo.Poster))
                 {
                     <MudPaper style="display: flex; flex-direction: column; position: relative">
-                        <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
+                        <MudCardMedia Image="@($"artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
                         @if (musicVideo.State == MediaItemState.FileNotFound)
                         {
                             <div style="position: absolute; right: 10px; top: 8px;">
@@ -245,7 +245,7 @@
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
             await _mediator.Send(new AddArtistToCollection(collection.Id, ArtistId), _cts.Token);
-            _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
+            _navigationManager.NavigateTo($"media/collections/{collection.Id}");
         }
     }
 
@@ -259,7 +259,7 @@
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
             await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
-            _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
+            _navigationManager.NavigateTo($"schedules/{schedule.Id}/items");
         }
     }
 

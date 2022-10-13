@@ -67,7 +67,7 @@
 @if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
-               BaseUri="/media/music/videos"
+               BaseUri="media/music/videos"
                Query="@_query"/>
 }
 
@@ -99,7 +99,7 @@
 
     private void PrevPage()
     {
-        string uri = $"/media/music/videos/page/{PageNumber - 1}";
+        string uri = $"media/music/videos/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -110,7 +110,7 @@
 
     private void NextPage()
     {
-        string uri = $"/media/music/videos/page/{PageNumber + 1}";
+        string uri = $"media/music/videos/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();

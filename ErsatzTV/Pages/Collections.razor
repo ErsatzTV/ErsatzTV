@@ -8,10 +8,10 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="media/collections/add">
             Add Collection
         </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="/media/multi-collections/add">
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="media/multi-collections/add">
             Add Multi Collection
         </MudButton>
     </div>
@@ -38,7 +38,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Collection">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"/media/collections/{context.Id}")">
+                                       Link="@($"media/collections/{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Collection">
@@ -76,7 +76,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Collection">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"/media/multi-collections/{context.Id}/edit")">
+                                       Link="@($"media/multi-collections/{context.Id}/edit")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Collection">

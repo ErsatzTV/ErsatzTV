@@ -32,7 +32,7 @@
             <div style="align-items: center; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4">@_data.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                               Link="@($"/media/collections/{Id}/edit")"/>
+                               Link="@($"media/collections/{Id}/edit")"/>
             </div>
             @if (_data.MovieCards.Any())
             {
@@ -95,7 +95,7 @@
             @foreach (MovieCardViewModel card in OrderMovies(_data.MovieCards))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/movies/{card.MovieId}")"
+                           Link="@($"media/movies/{card.MovieId}")"
                            DeleteClicked="@RemoveMovieFromCollection"
                            SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
@@ -118,7 +118,7 @@
             @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+                           Link="@($"media/tv/shows/{card.TelevisionShowId}")"
                            DeleteClicked="@RemoveShowFromCollection"
                            SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
@@ -141,7 +141,7 @@
             @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
+                           Link="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
                            DeleteClicked="@RemoveSeasonFromCollection"
@@ -166,7 +166,7 @@
             @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
+                           Link="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
                            ContainerClass="media-card-episode-container mx-2"
@@ -194,7 +194,7 @@
             @foreach (ArtistCardViewModel card in _data.ArtistCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/music/artists/{card.ArtistId}")"
+                           Link="@($"media/music/artists/{card.ArtistId}")"
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveArtistFromCollection"
                            SelectColor="@Color.Error"

@@ -81,7 +81,7 @@
                     if (_locker.LockLibrary(_library.Id))
                     {
                         await _channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id), _cts.Token);
-                        _navigationManager.NavigateTo("/media/libraries");
+                        _navigationManager.NavigateTo("media/libraries");
                     }
                 });
         }

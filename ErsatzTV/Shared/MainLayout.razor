@@ -13,8 +13,8 @@
 <MudLayout @onclick="@(() => _isOpen = false)">
     <MudAppBar Elevation="1" Class="app-bar">
         <div style="min-width: 240px">
-            <a href="/">
-                <img src="/images/ersatztv.png" alt="ErsatzTV"/>
+            <a href="">
+                <img src="images/ersatztv.png" alt="ErsatzTV"/>
             </a>
         </div>
         <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
@@ -61,8 +61,8 @@
             </MudPopover>
         </EditForm>
         <MudSpacer/>
-        <MudLink Color="Color.Info" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
-        <MudLink Color="Color.Info" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+        <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
+        <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
         @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
         <MudTooltip Text="Documentation">
             <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Link="https://ersatztv.org" Target="_blank"/>
@@ -76,33 +76,33 @@
     </MudAppBar>
     <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
         <MudNavMenu>
-            <MudNavLink Href="/channels">Channels</MudNavLink>
-            <MudNavLink Href="/ffmpeg">FFmpeg Profiles</MudNavLink>
-            <MudNavLink Href="/watermarks">Watermarks</MudNavLink>
+            <MudNavLink Href="channels">Channels</MudNavLink>
+            <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
+            <MudNavLink Href="watermarks">Watermarks</MudNavLink>
             <MudNavGroup Title="Media Sources" Expanded="true">
-                <MudNavLink Href="/media/sources/local">Local</MudNavLink>
-                <MudNavLink Href="/media/sources/emby">Emby</MudNavLink>
-                <MudNavLink Href="/media/sources/jellyfin">Jellyfin</MudNavLink>
-                <MudNavLink Href="/media/sources/plex">Plex</MudNavLink>
+                <MudNavLink Href="media/sources/local">Local</MudNavLink>
+                <MudNavLink Href="media/sources/emby">Emby</MudNavLink>
+                <MudNavLink Href="media/sources/jellyfin">Jellyfin</MudNavLink>
+                <MudNavLink Href="media/sources/plex">Plex</MudNavLink>
             </MudNavGroup>
             <MudNavGroup Title="Media" Expanded="true">
-                <MudNavLink Href="/media/libraries">Libraries</MudNavLink>
-                <MudNavLink Href="/media/trash">Trash</MudNavLink>
-                <MudNavLink Href="/media/tv/shows">TV Shows</MudNavLink>
-                <MudNavLink Href="/media/movies">Movies</MudNavLink>
-                <MudNavLink Href="/media/music/artists">Music</MudNavLink>
-                <MudNavLink Href="/media/other/videos">Other Videos</MudNavLink>
-                <MudNavLink Href="/media/music/songs">Songs</MudNavLink>
+                <MudNavLink Href="media/libraries">Libraries</MudNavLink>
+                <MudNavLink Href="media/trash">Trash</MudNavLink>
+                <MudNavLink Href="media/tv/shows">TV Shows</MudNavLink>
+                <MudNavLink Href="media/movies">Movies</MudNavLink>
+                <MudNavLink Href="media/music/artists">Music</MudNavLink>
+                <MudNavLink Href="media/other/videos">Other Videos</MudNavLink>
+                <MudNavLink Href="media/music/songs">Songs</MudNavLink>
             </MudNavGroup>
             <MudNavGroup Title="Lists" Expanded="true">
-                <MudNavLink Href="/media/collections">Collections</MudNavLink>
-                <MudNavLink Href="/media/trakt/lists">Trakt Lists</MudNavLink>
-                <MudNavLink Href="/media/filler/presets">Filler Presets</MudNavLink>
+                <MudNavLink Href="media/collections">Collections</MudNavLink>
+                <MudNavLink Href="media/trakt/lists">Trakt Lists</MudNavLink>
+                <MudNavLink Href="media/filler/presets">Filler Presets</MudNavLink>
             </MudNavGroup>
-            <MudNavLink Href="/schedules">Schedules</MudNavLink>
-            <MudNavLink Href="/playouts">Playouts</MudNavLink>
-            <MudNavLink Href="/settings">Settings</MudNavLink>
-            <MudNavLink Href="/system/logs">Logs</MudNavLink>
+            <MudNavLink Href="schedules">Schedules</MudNavLink>
+            <MudNavLink Href="playouts">Playouts</MudNavLink>
+            <MudNavLink Href="settings">Settings</MudNavLink>
+            <MudNavLink Href="system/logs">Logs</MudNavLink>
             <MudDivider Class="my-6" DividerType="DividerType.Middle"/>
             <MudContainer Style="text-align: right" Class="mr-6">
                 <MudText Typo="Typo.body2">ErsatzTV Version</MudText>

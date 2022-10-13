@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where tail or fallback filler would sometimes schedule much longer than expected
   - This only happened with fixed start schedule items following a schedule item with tail or fallback filler
 - Fix NFO reader bug that caused inaccurate warning messages about invalid XML and incomplete metadata
+- Fix reverse proxy SSL termination support by supporting `X-Forwarded-Proto` header
 
 ### Added
 - Add music video credits template system
@@ -37,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - All groups of part numbers (i.e. all part 1s, all part 2s) will be shuffled
   - The playout order will then schedule a random part 1 followed by a random part 2, etc
     - Un-split (`nil`) episodes will be randomly placed between re-combined parts (e.g. part1, part2, part3, un-split, part1, part2, part3)
+- Add `ETV_BASE_URL` environment variable to support reverse proxies that use paths (e.g. `/ersatztv`)
 
 ### Changed
 - No longer place watermarks within content by default (e.g. within 4:3 content padded to a 16:9 resolution)

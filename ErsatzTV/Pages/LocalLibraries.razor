@@ -32,7 +32,7 @@
                     <MudTooltip Text="Edit Library">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Disabled="@_locker.IsLibraryLocked(context.Id)"
-                                       Link="@($"/media/sources/local/{context.Id}/edit")">
+                                       Link="@($"media/sources/local/{context.Id}/edit")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Library">
@@ -45,7 +45,7 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/sources/local/add" Class="mt-4">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="media/sources/local/add" Class="mt-4">
         Add Local Library
     </MudButton>
 </MudContainer>

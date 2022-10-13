@@ -48,7 +48,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Watermark">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"/watermarks/{context.Id}")">
+                                       Link="@($"watermarks/{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Copy Watermark">
@@ -65,7 +65,7 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/watermarks/add" Class="mt-4">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="watermarks/add" Class="mt-4">
         Add Watermark
     </MudButton>
 </MudContainer>
