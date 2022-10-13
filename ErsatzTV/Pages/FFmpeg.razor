@@ -3,8 +3,6 @@
 @implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
-@inject ILogger<FFmpeg> _logger
-@inject ISnackbar _snackbar
 @inject NavigationManager _navigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -44,7 +42,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Profile">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"/ffmpeg/{context.Id}")">
+                                       Link="@($"ffmpeg/{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Copy Profile">
@@ -61,7 +59,7 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/ffmpeg/add" Class="mt-4">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="ffmpeg/add" Class="mt-4">
         Add Profile
     </MudButton>
 </MudContainer>
@@ -105,7 +103,7 @@
         DialogResult dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && dialogResult.Data is FFmpegProfileViewModel data)
         {
-            _navigationManager.NavigateTo($"/ffmpeg/{data.Id}");
+            _navigationManager.NavigateTo($"ffmpeg/{data.Id}");
         }
     }
 

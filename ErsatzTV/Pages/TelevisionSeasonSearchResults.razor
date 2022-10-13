@@ -55,7 +55,7 @@
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
         <FragmentLetterAnchor TCard="TelevisionSeasonCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
-                       Link="@($"/media/tv/seasons/{context.TelevisionSeasonId}")"
+                       Link="@($"media/tv/seasons/{context.TelevisionSeasonId}")"
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(context, e))"
                        IsSelected="@IsSelected(context)"
@@ -66,7 +66,7 @@
 @if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
-               BaseUri="/media/tv/seasons"
+               BaseUri="media/tv/seasons"
                Query="@_query"/>
 }
 
@@ -98,7 +98,7 @@
 
     private void PrevPage()
     {
-        string uri = $"/media/tv/seasons/page/{PageNumber - 1}";
+        string uri = $"media/tv/seasons/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -109,7 +109,7 @@
 
     private void NextPage()
     {
-        string uri = $"/media/tv/seasons/page/{PageNumber + 1}";
+        string uri = $"media/tv/seasons/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();

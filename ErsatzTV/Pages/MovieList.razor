@@ -55,7 +55,7 @@
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
         <FragmentLetterAnchor TCard="MovieCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
-                       Link="@($"/media/movies/{context.MovieId}")"
+                       Link="@($"media/movies/{context.MovieId}")"
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(context, e))"
                        IsSelected="@IsSelected(context)"
@@ -66,7 +66,7 @@
 @if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
-               BaseUri="/media/movies"
+               BaseUri="media/movies"
                Query="@_query"/>
 }
 
@@ -98,7 +98,7 @@
 
     private void PrevPage()
     {
-        string uri = $"/media/movies/page/{PageNumber - 1}";
+        string uri = $"media/movies/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -109,7 +109,7 @@
 
     private void NextPage()
     {
-        string uri = $"/media/movies/page/{PageNumber + 1}";
+        string uri = $"media/movies/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();

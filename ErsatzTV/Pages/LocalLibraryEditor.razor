@@ -148,7 +148,7 @@
             var request = new MoveLocalLibraryPath(libraryPath.Id, library.Id);
             Either<BaseError, Unit> moveResult = await _mediator.Send(request, _cts.Token);
             moveResult.Match(
-                _ => _navigationManager.NavigateTo($"/media/sources/local/{library.Id}/edit"),
+                _ => _navigationManager.NavigateTo($"media/sources/local/{library.Id}/edit"),
                 error =>
                 {
                     _snackbar.Add(error.Value, Severity.Error);
@@ -214,7 +214,7 @@
                     _model.Paths.Map(p => p.Path).ToList()), _cts.Token);
 
             result.Match(
-                _ => _navigationManager.NavigateTo("/media/sources/local"),
+                _ => _navigationManager.NavigateTo("media/sources/local"),
                 error =>
                 {
                     _snackbar.Add(error.Value, Severity.Error);

@@ -33,7 +33,7 @@ public static class StringExtensions
     public static string GetRelativeSearchQuery(this string query)
     {
         (string key, string value) = EncodeQuery(query);
-        return $"/search?{key}={value}";
+        return $"search?{key}={value}";
     }
 
     private static string DecodeBase64(this StringValues input) =>

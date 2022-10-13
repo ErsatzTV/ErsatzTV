@@ -77,7 +77,7 @@ public class IptvController : ControllerBase
                         mode = "ts";
                         break;
                     default:
-                        return Redirect($"/iptv/channel/{channelNumber}.m3u8");
+                        return Redirect($"~/iptv/channel/{channelNumber}.m3u8");
                 }
             }
         }
@@ -167,7 +167,7 @@ public class IptvController : ControllerBase
                         mode = "segmenter";
                         break;
                     default:
-                        return Redirect($"/iptv/channel/{channelNumber}.ts");
+                        return Redirect($"~/iptv/channel/{channelNumber}.ts");
                 }
             }
         }
@@ -184,7 +184,7 @@ public class IptvController : ControllerBase
                             "Session started; returning multi-variant playlist for channel {Channel}",
                             channelNumber);
                         return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
-                        // return Redirect($"/iptv/session/{channelNumber}/hls.m3u8");
+                        // return Redirect($"~/iptv/session/{channelNumber}/hls.m3u8");
                     },
                     error =>
                     {
@@ -195,7 +195,7 @@ public class IptvController : ControllerBase
                                     "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
                                 return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
-                                // return RedirectPreserveMethod($"/iptv/session/{channelNumber}/hls.m3u8");
+                                // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(
                                     "Failed to start segmenter for channel {ChannelNumber}: {Error}",

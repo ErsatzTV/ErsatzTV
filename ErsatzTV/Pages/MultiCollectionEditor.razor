@@ -186,7 +186,7 @@
                     _snackbar.Add(error.Value, Severity.Error);
                     _logger.LogError("Error saving collection: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo("/media/collections"));
+                () => _navigationManager.NavigateTo("media/collections"));
         }
     }
 

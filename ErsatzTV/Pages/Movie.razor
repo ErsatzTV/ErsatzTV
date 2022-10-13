@@ -19,7 +19,7 @@
         }
         else
         {
-            <img src="@($"/artwork/fanart/{_movie.FanArt}")" alt="fan art"/>
+            <img src="@($"artwork/fanart/{_movie.FanArt}")" alt="fan art"/>
         }
     }
 </MudContainer>
@@ -38,7 +38,7 @@
                 {
                     <img class="mud-elevation-2"
                          style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                         src="@($"/artwork/posters/{_movie.Poster}")" alt="movie poster"/>
+                         src="@($"artwork/posters/{_movie.Poster}")" alt="movie poster"/>
                 }
                 @if (_movie.MediaItemState == MediaItemState.FileNotFound)
                 {
@@ -249,7 +249,7 @@
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
             await _mediator.Send(new AddMovieToCollection(collection.Id, MovieId), _cts.Token);
-            _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
+            _navigationManager.NavigateTo($"media/collections/{collection.Id}");
         }
     }
 
