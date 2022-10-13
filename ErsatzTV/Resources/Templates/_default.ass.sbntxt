@@ -12,4 +12,4 @@ Style: Default,OPTIKabel-Heavy,{{ resolution.height // 20.0 }},&HFFFFFF,&HFFFFFF
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-Dialogue: 0,00:00:09.00,00:00:16.00,Default,,{{ resolution.width * 0.03 | math.round }},{{ resolution.width * 0.03 | math.round }},{{ resolution.height * 0.05 | math.round }},,{fad(1200, 1200)}{{ if all_artists | array.size == 0 }}{{ artist }}{{ else }}{{ all_artists | array.join " / " }}{{ end }}\N"{{ title }}"{{ if album }}\N{{ album }}{{ end }}
+Dialogue: 0,00:00:09.00,00:00:16.00,Default,,{{ resolution.width * 0.03 | math.round }},{{ resolution.width * 0.03 | math.round }},{{ resolution.height * 0.05 | math.round }},,{\fad(1200, 1200)}{{ if all_artists | array.size == 0 }}{{ artist }}{{ else }}{{ all_artists | array.join " / " }}{{ end }}\N"{{ title }}"{{ if album }}\N{{ album }}{{ end }}
