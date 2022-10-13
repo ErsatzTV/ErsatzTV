@@ -107,7 +107,7 @@
         @foreach (MovieCardViewModel card in _movies.Cards.OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
-                       Link="@($"/media/movies/{card.MovieId}")"
+                       Link="@($"media/movies/{card.MovieId}")"
                        DeleteClicked="@DeleteItemFromDatabase"
                        SelectColor="@Color.Error"
                        SelectClicked="@(e => SelectClicked(card, e))"
@@ -135,7 +135,7 @@
         @foreach (TelevisionShowCardViewModel card in _shows.Cards.OrderBy(s => s.SortTitle))
         {
             <MediaCard Data="@card"
-                       Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+                       Link="@($"media/tv/shows/{card.TelevisionShowId}")"
                        DeleteClicked="@DeleteItemFromDatabase"
                        SelectColor="@Color.Error"
                        SelectClicked="@(e => SelectClicked(card, e))"
@@ -163,7 +163,7 @@
         @foreach (TelevisionSeasonCardViewModel card in _seasons.Cards.OrderBy(s => s.SortTitle))
         {
             <MediaCard Data="@card"
-                       Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
+                       Link="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
                        DeleteClicked="@DeleteItemFromDatabase"
                        SelectColor="@Color.Error"
                        SelectClicked="@(e => SelectClicked(card, e))"
@@ -193,7 +193,7 @@
             <MediaCard Data="@card"
                        DeleteClicked="@DeleteItemFromDatabase"
                        SelectColor="@Color.Error"
-                       Link="@($"/media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
+                       Link="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
                        Subtitle="@($"{card.ShowTitle} - S{card.Season} E{card.Episode}")"
                        SelectClicked="@(e => SelectClicked(card, e))"
                        IsSelected="@IsSelected(card)"
@@ -220,7 +220,7 @@
         @foreach (ArtistCardViewModel card in _artists.Cards.OrderBy(s => s.SortTitle))
         {
             <MediaCard Data="@card"
-                       Link="@($"/media/music/artists/{card.ArtistId}")"
+                       Link="@($"media/music/artists/{card.ArtistId}")"
                        ArtworkKind="ArtworkKind.Thumbnail"
                        DeleteClicked="@DeleteItemFromDatabase"
                        SelectColor="@Color.Error"
@@ -368,7 +368,7 @@
 
     private string GetMoviesLink()
     {
-        var uri = "/media/movies/page/1";
+        var uri = "media/movies/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -379,7 +379,7 @@
 
     private string GetShowsLink()
     {
-        var uri = "/media/tv/shows/page/1";
+        var uri = "media/tv/shows/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -390,7 +390,7 @@
 
     private string GetSeasonsLink()
     {
-        var uri = "/media/tv/seasons/page/1";
+        var uri = "media/tv/seasons/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -401,7 +401,7 @@
 
     private string GetEpisodesLink()
     {
-        var uri = "/media/tv/episodes/page/1";
+        var uri = "media/tv/episodes/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -412,7 +412,7 @@
 
     private string GetArtistsLink()
     {
-        var uri = "/media/music/artists/page/1";
+        var uri = "media/music/artists/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -423,7 +423,7 @@
 
     private string GetMusicVideosLink()
     {
-        var uri = "/media/music/videos/page/1";
+        var uri = "media/music/videos/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -434,7 +434,7 @@
 
     private string GetOtherVideosLink()
     {
-        var uri = "/media/other/videos/page/1";
+        var uri = "media/other/videos/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -445,7 +445,7 @@
 
     private string GetSongsLink()
     {
-        var uri = "/media/music/songs/page/1";
+        var uri = "media/music/songs/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();

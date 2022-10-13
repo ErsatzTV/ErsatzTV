@@ -59,6 +59,7 @@ using FluentValidation.AspNetCore;
 using Ganss.Xss;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -87,6 +88,7 @@ public class Startup
     {
         BugsnagConfiguration bugsnagConfig = Configuration.GetSection("Bugsnag").Get<BugsnagConfiguration>();
         services.Configure<BugsnagConfiguration>(Configuration.GetSection("Bugsnag"));
+        services.Configure<ForwardedHeadersOptions>(options => { options.ForwardedHeaders = ForwardedHeaders.All; });
 
         services.AddBugsnag(
             configuration =>
@@ -269,8 +271,16 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        app.UseCors("AllowAll");
+        string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
+        if (!string.IsNullOrWhiteSpace(baseUrl))
+        {
+            app.UsePathBase(baseUrl);
+        }
 
+        app.UseCors("AllowAll");
+        app.UseForwardedHeaders();
+
+        // app.UseHttpLogging();
         // app.UseSerilogRequestLogging();
 
         app.UseStaticFiles();

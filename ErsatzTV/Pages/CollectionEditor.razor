@@ -83,7 +83,7 @@
                     _snackbar.Add(error.Value, Severity.Error);
                     _logger.LogError("Error saving collection: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
+                () => _navigationManager.NavigateTo(_model.Id > 0 ? $"media/collections/{_model.Id}" : "media/collections"));
         }
     }
 
