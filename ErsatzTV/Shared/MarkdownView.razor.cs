@@ -1,4 +1,4 @@
-﻿using Ganss.XSS;
+﻿using Ganss.Xss;
 using Markdig;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

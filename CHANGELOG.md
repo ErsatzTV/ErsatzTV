@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix bug where tail or fallback filler would sometimes schedule much longer than expected
   - This only happened with fixed start schedule items following a schedule item with tail or fallback filler
+- Fix NFO reader bug that caused inaccurate warning messages about invalid XML and incomplete metadata
 
 ### Added
 - Add music video credits template system
