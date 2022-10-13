@@ -88,7 +88,14 @@ public class Startup
     {
         BugsnagConfiguration bugsnagConfig = Configuration.GetSection("Bugsnag").Get<BugsnagConfiguration>();
         services.Configure<BugsnagConfiguration>(Configuration.GetSection("Bugsnag"));
-        services.Configure<ForwardedHeadersOptions>(options => { options.ForwardedHeaders = ForwardedHeaders.All; });
+        services.Configure<ForwardedHeadersOptions>(
+            options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.All;
+                options.ForwardLimit = 2;
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
 
         services.AddBugsnag(
             configuration =>
@@ -280,7 +287,7 @@ public class Startup
         app.UseCors("AllowAll");
         app.UseForwardedHeaders();
 
-        app.UseHttpLogging();
+        // app.UseHttpLogging();
         // app.UseSerilogRequestLogging();
 
         app.UseStaticFiles();
