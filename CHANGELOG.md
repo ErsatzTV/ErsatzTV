@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix reverse proxy SSL termination support by supporting `X-Forwarded-Proto` header
 - Fix automatic playout reset scheduling
   - Playouts would reset every 30 minutes between midnight and the configured time, instead of only at the configured time
+- XMLTV: properly group schedule items with `Custom Title` followed by item(s) with `Guide Mode` set to `Filler`
 
 ### Added
 - Add music video credits template system

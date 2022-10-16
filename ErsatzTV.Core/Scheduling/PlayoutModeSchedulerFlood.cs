@@ -57,7 +57,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 OutPoint = itemDuration,
                 GuideGroup = nextState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
-                    ? FillerKind.Tail
+                    ? FillerKind.GuideMode
                     : FillerKind.None,
                 CustomTitle = scheduleItem.CustomTitle,
                 WatermarkId = scheduleItem.WatermarkId,
