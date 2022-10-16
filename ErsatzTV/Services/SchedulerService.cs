@@ -138,8 +138,10 @@ public class SchedulerService : BackgroundService
 
             foreach (Playout playout in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)))
             {
-                if (DateTime.Now.Subtract(DateTime.Today.Add(playout.DailyRebuildTime ?? TimeSpan.FromDays(7))) <
-                    TimeSpan.FromMinutes(5))
+                DateTime now = DateTime.Now;
+                DateTime target = DateTime.Today.Add(playout.DailyRebuildTime ?? TimeSpan.FromDays(7));
+                // check absolute diff
+                if (now.Subtract(target).Duration() < TimeSpan.FromMinutes(5))
                 {
                     await _workerChannel.WriteAsync(
                         new BuildPlayout(playout.Id, PlayoutBuildMode.Reset),
