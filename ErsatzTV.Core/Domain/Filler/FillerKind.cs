@@ -7,5 +7,7 @@ public enum FillerKind
     MidRoll = 2,
     PostRoll = 3,
     Tail = 4,
-    Fallback = 5
+    Fallback = 5,
+    
+    GuideMode = 99
 }
