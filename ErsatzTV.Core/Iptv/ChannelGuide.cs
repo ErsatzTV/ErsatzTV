@@ -100,7 +100,8 @@ public class ChannelGuide
                 bool hasCustomTitle = !string.IsNullOrWhiteSpace(startItem.CustomTitle);
 
                 int finishIndex = j;
-                while (finishIndex + 1 < sorted.Count && sorted[finishIndex + 1].GuideGroup == startItem.GuideGroup)
+                while (finishIndex + 1 < sorted.Count && (sorted[finishIndex + 1].GuideGroup == startItem.GuideGroup
+                       || sorted[finishIndex + 1].FillerKind == FillerKind.GuideMode))
                 {
                     finishIndex++;
                 }
