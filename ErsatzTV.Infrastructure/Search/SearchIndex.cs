@@ -89,7 +89,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 32;
+    public int Version => 33;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
