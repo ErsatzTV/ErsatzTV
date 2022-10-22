@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.6.9-beta] - 2022-10-21
 ### Fixed
 - Fix bug where tail or fallback filler would sometimes schedule much longer than expected
   - This only happened with fixed start schedule items following a schedule item with tail or fallback filler
@@ -1379,7 +1381,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.8-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...HEAD
+[0.6.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.8-beta...v0.6.9-beta
 [0.6.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.7-beta...v0.6.8-beta
 [0.6.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...v0.6.7-beta
 [0.6.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.5-beta...v0.6.6-beta
