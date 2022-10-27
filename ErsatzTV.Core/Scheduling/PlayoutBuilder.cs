@@ -765,18 +765,18 @@ public class PlayoutBuilder : IPlayoutBuilder
                 {
                     foreach (MetadataGuid guid in show.ShowMetadata.Map(sm => sm.Guids).Flatten())
                     {
-                        string luaScriptPath = Path.ChangeExtension(
+                        string jsScriptPath = Path.ChangeExtension(
                             Path.Combine(
                                 FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
                                 guid.Guid.Replace("://", "_")),
-                            "lua");
-                        _logger.LogDebug("Checking for lua script at {Path}", luaScriptPath);
-                        if (_localFileSystem.FileExists(luaScriptPath))
+                            "js");
+                        _logger.LogDebug("Checking for js script at {Path}", jsScriptPath);
+                        if (_localFileSystem.FileExists(jsScriptPath))
                         {
-                            _logger.LogDebug("Found lua script at {Path}", luaScriptPath);
+                            _logger.LogDebug("Found js script at {Path}", jsScriptPath);
                             try
                             {
-                                return _multiEpisodeFactory.Create(luaScriptPath, mediaItems, state);
+                                return _multiEpisodeFactory.Create(jsScriptPath, mediaItems, state);
                             }
                             catch (Exception ex)
                             {

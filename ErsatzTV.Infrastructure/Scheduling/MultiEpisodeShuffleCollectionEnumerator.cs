@@ -2,7 +2,9 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using Microsoft.Extensions.Logging;
-using NLua;
+using Jint;
+using Jint.Native;
+using Jint.Runtime;
 
 namespace ErsatzTV.Infrastructure.Scheduling;
 
@@ -22,13 +24,14 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         ILogger logger)
     {
         _logger = logger;
-        using var lua = new Lua();
-        lua.DoFile(scriptFile);
 
-        var numGroups = (int)(double)lua["numParts"];
+        string contents = File.ReadAllText(scriptFile);
+        using Engine engine = new Engine().Execute(contents);
+
+        var numParts = (int)engine.GetValue("numParts").AsNumber();
         
         _mediaItemGroups = new Dictionary<int, List<MediaItem>>();
-        for (var i = 1; i <= numGroups; i++)
+        for (var i = 1; i <= numParts; i++)
         {
             _mediaItemGroups.Add(i, new List<MediaItem>());
         }
@@ -36,7 +39,6 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         _ungrouped = new List<MediaItem>();
         _mediaItemCount = mediaItems.Count;
         
-        var groupForEpisode = (LuaFunction)lua["partNumberForEpisode"];
         IList<Episode> validEpisodes = mediaItems
             .OfType<Episode>()
             .Filter(e => e.Season is not null && e.EpisodeMetadata is not null && e.EpisodeMetadata.Count == 1)
@@ -48,12 +50,12 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
             int episodeNumber = episode.EpisodeMetadata[0].EpisodeNumber;
             
             // call the lua fn
-            object[] result = groupForEpisode.Call(seasonNumber, episodeNumber);
+            JsValue result = engine.Invoke("partNumberForEpisode", seasonNumber, episodeNumber);
             
             // if we get a group number back, use it
-            if (result[0] is long groupNumber)
+            if (result.Type is Types.Number)
             {
-                _mediaItemGroups[(int)groupNumber].Add(episode);
+                _mediaItemGroups[(int)result.AsNumber()].Add(episode);
             }
             else
             {

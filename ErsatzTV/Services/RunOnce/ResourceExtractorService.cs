@@ -31,7 +31,7 @@ public class ResourceExtractorService : IHostedService
 
         await ExtractScriptResource(
             assembly,
-            "_threePartEpisodes.lua",
+            "_threePartEpisodes.js",
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
             cancellationToken);
     }

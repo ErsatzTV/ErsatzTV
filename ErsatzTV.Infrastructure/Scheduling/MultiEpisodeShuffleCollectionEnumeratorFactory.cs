@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
 
@@ -16,8 +17,8 @@ public class MultiEpisodeShuffleCollectionEnumeratorFactory
     }
 
     public IMediaCollectionEnumerator Create(
-        string luaScriptPath,
+        string jsScriptPath,
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state) =>
-        new MultiEpisodeShuffleCollectionEnumerator(mediaItems, state, luaScriptPath, _logger);
+        new MultiEpisodeShuffleCollectionEnumerator(mediaItems, state, jsScriptPath, _logger);
 }
