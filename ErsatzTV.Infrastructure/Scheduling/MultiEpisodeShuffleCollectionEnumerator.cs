@@ -1,8 +1,8 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Interfaces.Scripting;
 using ErsatzTV.Core.Scheduling;
 using Microsoft.Extensions.Logging;
-using NLua;
 
 namespace ErsatzTV.Infrastructure.Scheduling;
 
@@ -18,17 +18,18 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     public MultiEpisodeShuffleCollectionEnumerator(
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state,
+        IScriptEngine scriptEngine,
         string scriptFile,
         ILogger logger)
     {
         _logger = logger;
-        using var lua = new Lua();
-        lua.DoFile(scriptFile);
 
-        var numGroups = (int)(double)lua["numParts"];
+        scriptEngine.Load(scriptFile);
+
+        var numParts = (int)(double)scriptEngine.GetValue("numParts");
         
         _mediaItemGroups = new Dictionary<int, List<MediaItem>>();
-        for (var i = 1; i <= numGroups; i++)
+        for (var i = 1; i <= numParts; i++)
         {
             _mediaItemGroups.Add(i, new List<MediaItem>());
         }
@@ -36,24 +37,20 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         _ungrouped = new List<MediaItem>();
         _mediaItemCount = mediaItems.Count;
         
-        var groupForEpisode = (LuaFunction)lua["partNumberForEpisode"];
         IList<Episode> validEpisodes = mediaItems
             .OfType<Episode>()
             .Filter(e => e.Season is not null && e.EpisodeMetadata is not null && e.EpisodeMetadata.Count == 1)
             .ToList();
         foreach (Episode episode in validEpisodes)
         {
-            // prep lua params
+            // prep script params
             int seasonNumber = episode.Season.SeasonNumber;
             int episodeNumber = episode.EpisodeMetadata[0].EpisodeNumber;
             
-            // call the lua fn
-            object[] result = groupForEpisode.Call(seasonNumber, episodeNumber);
-            
-            // if we get a group number back, use it
-            if (result[0] is long groupNumber)
+            // call the script function, and if we get a part (group) number back, use it
+            if (scriptEngine.Invoke("partNumberForEpisode", seasonNumber, episodeNumber) is double result)
             {
-                _mediaItemGroups[(int)groupNumber].Add(episode);
+                _mediaItemGroups[(int)result].Add(episode);
             }
             else
             {

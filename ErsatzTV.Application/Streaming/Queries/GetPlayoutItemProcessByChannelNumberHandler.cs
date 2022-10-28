@@ -171,7 +171,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 saveReports,
                 channel,
                 videoVersion,
-                audioVersion,
+                new MediaItemAudioVersion(playoutItemWithPath.PlayoutItem.MediaItem, audioVersion),
                 videoPath,
                 audioPath,
                 settings => GetSubtitles(playoutItemWithPath, channel, settings),

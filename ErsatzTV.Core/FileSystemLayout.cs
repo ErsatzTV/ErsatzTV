@@ -55,4 +55,7 @@ public static class FileSystemLayout
 
     public static readonly string MultiEpisodeShuffleTemplatesFolder =
         Path.Combine(ScriptsFolder, "multi-episode-shuffle");
+
+    public static readonly string AudioStreamSelectorScriptsFolder =
+        Path.Combine(ScriptsFolder, "audio-stream-selector");
 }

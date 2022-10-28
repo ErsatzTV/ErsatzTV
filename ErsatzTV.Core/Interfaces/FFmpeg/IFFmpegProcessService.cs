@@ -14,7 +14,7 @@ public interface IFFmpegProcessService
         bool saveReports,
         Channel channel,
         MediaVersion videoVersion,
-        MediaVersion audioVersion,
+        MediaItemAudioVersion audioVersion,
         string videoPath,
         string audioPath,
         Func<FFmpegPlaybackSettings, Task<List<Subtitle>>> getSubtitles,
