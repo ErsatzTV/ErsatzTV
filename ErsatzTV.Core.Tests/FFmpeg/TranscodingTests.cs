@@ -484,7 +484,7 @@ public class TranscodingTests
                 SubtitleMode = subtitleMode
             },
             v,
-            v,
+            new MediaItemAudioVersion(null, v),
             file,
             file,
             _ => subtitles.AsTask(),
@@ -575,12 +575,12 @@ public class TranscodingTests
             version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
 
         public Task<Option<MediaStream>> SelectAudioStream(
-            MediaVersion version,
+            MediaItemAudioVersion version,
             StreamingMode streamingMode,
-            string channelNumber,
+            Channel channel,
             string preferredAudioLanguage,
             string preferredAudioTitle) =>
-            Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
+            Optional(version.MediaVersion.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
 
         public Task<Option<Domain.Subtitle>> SelectSubtitleStream(
             List<Domain.Subtitle> subtitles,

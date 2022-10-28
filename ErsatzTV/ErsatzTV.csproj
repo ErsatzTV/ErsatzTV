@@ -66,7 +66,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.3.44">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.3.48">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -98,7 +98,9 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Resources\background.png" />
-      <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.lua" />
+      <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.js" />
+      <EmbeddedResource Include="Resources\Scripts\_episode.js" />
+      <EmbeddedResource Include="Resources\Scripts\_movie.js" />
       <EmbeddedResource Include="Resources\song_background_1.png" />
       <EmbeddedResource Include="Resources\song_background_2.png" />
       <EmbeddedResource Include="Resources\song_background_3.png" />

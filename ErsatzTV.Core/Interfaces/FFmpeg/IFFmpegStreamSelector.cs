@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 
 namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
@@ -7,9 +8,9 @@ public interface IFFmpegStreamSelector
     Task<MediaStream> SelectVideoStream(MediaVersion version);
 
     Task<Option<MediaStream>> SelectAudioStream(
-        MediaVersion version,
+        MediaItemAudioVersion version,
         StreamingMode streamingMode,
-        string channelNumber,
+        Channel channel,
         string preferredAudioLanguage,
         string preferredAudioTitle);
 

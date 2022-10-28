@@ -48,7 +48,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool saveReports,
         Channel channel,
         MediaVersion videoVersion,
-        MediaVersion audioVersion,
+        MediaItemAudioVersion audioVersion,
         string videoPath,
         string audioPath,
         Func<FFmpegPlaybackSettings, Task<List<Subtitle>>> getSubtitles,
@@ -77,7 +77,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             await _ffmpegStreamSelector.SelectAudioStream(
                 audioVersion,
                 channel.StreamingMode,
-                channel.Number,
+                channel,
                 preferredAudioLanguage,
                 preferredAudioTitle);
 

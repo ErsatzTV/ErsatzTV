@@ -4,6 +4,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add audio stream selector scripts for episodes and movies
+  - This will let you customize which audio stream is selected for playback
+  - Episodes are passed the following data:
+    - `channelNumber`
+    - `channelName`
+    - `showTitle`
+    - `showGuids`: array of string ids like `imdb_1234` or `tvdb_1234`
+    - `seasonNumber`
+    - `episodeNumber`
+    - `episodeGuids`: array of string ids like `imdb_1234` or `tvdb_1234`
+    - `preferredLanguageCodes`: array of string preferred language codes configured for the channel
+    - `audioStreams`: array of audio stream data, each containing
+      - `index`: the stream's index number, this is what the function needs to return
+      - `channels`: the number of audio channels
+      - `codec`: the audio codec
+      - `isDefault`: bool indicating whether the stream is flagged as default
+      - `isForced`: bool indicating whether the stream is flagged as forced
+      - `language`: the stream's language
+      - `title`: the stream's title
+  - Movies are passed the following data:
+      - `channelNumber`
+      - `channelName`
+      - `title`
+      - `guids`: array of string ids like `imdb_1234` or `tvdb_1234`
+    - `preferredLanguageCodes`: array of string preferred language codes configured for the channel
+    - `audioStreams`: array of audio stream data, each containing
+        - `index`: the stream's index number, this is what the function needs to return
+        - `channels`: the number of audio channels
+        - `codec`: the audio codec
+        - `isDefault`: bool indicating whether the stream is flagged as default
+        - `isForced`: bool indicating whether the stream is flagged as forced
+        - `language`: the stream's language
+        - `title`: the stream's title
+
+### Changed
+- Change `Multi-Episode Shuffle` scripting system to use Javascript instead of Lua
 
 ## [0.6.9-beta] - 2022-10-21
 ### Fixed

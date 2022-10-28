@@ -24,6 +24,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Interfaces.Scripting;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Core.Jellyfin;
@@ -49,6 +50,7 @@ using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Scheduling;
+using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
@@ -217,6 +219,11 @@ public class Startup
         if (!Directory.Exists(FileSystemLayout.MultiEpisodeShuffleTemplatesFolder))
         {
             Directory.CreateDirectory(FileSystemLayout.MultiEpisodeShuffleTemplatesFolder);
+        }
+
+        if (!Directory.Exists(FileSystemLayout.AudioStreamSelectorScriptsFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.AudioStreamSelectorScriptsFolder);
         }
 
         Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
@@ -437,6 +444,7 @@ public class Startup
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
+        services.AddScoped<IStreamSelectorRepository, StreamSelectorRepository>();
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
         services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
                 MultiEpisodeShuffleCollectionEnumeratorFactory>();
@@ -463,6 +471,7 @@ public class Startup
         services.AddScoped<IMusicVideoNfoReader, MusicVideoNfoReader>();
         services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
         services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
+        services.AddScoped<IScriptEngine, ScriptEngine>();
 
         services.AddScoped<PlexEtag>();
 
