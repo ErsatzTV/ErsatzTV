@@ -1,6 +1,6 @@
 // copy this file to episode.js (no underscore) and modify
 
-function selectAudioStreamIndex(
+function selectEpisodeAudioStreamIndex(
     channelNumber,
     channelName,
     showTitle,

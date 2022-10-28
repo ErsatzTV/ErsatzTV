@@ -54,5 +54,27 @@ public class StreamSelectorRepository : IStreamSelectorRepository
             episodeGuids);
     }
 
+    public async Task<MovieAudioStreamSelectorData> GetMovieData(int movieId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        dynamic movieData = await dbContext.Connection.QuerySingleAsync(
+            @"select
+                MM.Id AS MovieMetadataId,
+                MM.Title as Title
+            from MovieMetadata MM
+            where MovieId = @Id",
+            new { Id = movieId });
+
+        string[] movieGuids = await dbContext.Connection
+            .QueryAsync<string>(
+                @"SELECT Guid FROM MetadataGuid WHERE MovieMetadataId = @Id",
+                new { Id = (int)movieData.MovieMetadataId })
+            .MapT(FormatGuid)
+            .Map(result => result.ToArray());
+
+        return new MovieAudioStreamSelectorData(movieData.Title, movieGuids);
+    }
+
     private static string FormatGuid(string guid) => guid.Replace("://", "_");
 }

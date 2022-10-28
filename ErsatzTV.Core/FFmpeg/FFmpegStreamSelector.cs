@@ -86,8 +86,19 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         allLanguageCodes,
                         version.MediaItem.Id,
                         version.MediaVersion);
+                    sw.Stop();
                     _logger.LogDebug("SelectAudioStream duration: {Duration}", sw.Elapsed);
                     return result;
+                case Movie:
+                    var sw2 = Stopwatch.StartNew();
+                    Option<MediaStream> result2 = await SelectMovieAudioStream(
+                        channel,
+                        allLanguageCodes,
+                        version.MediaItem.Id,
+                        version.MediaVersion);
+                    sw2.Stop();
+                    _logger.LogDebug("SelectAudioStream duration: {Duration}", sw2.Elapsed);
+                    return result2;
                 // let default fall through
             }
         }
@@ -264,7 +275,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         AudioStream[] audioStreams = GetAudioStreamsForScript(version);
 
         object result = _scriptEngine.Invoke(
-            "selectAudioStreamIndex",
+            "selectEpisodeAudioStreamIndex",
             channel.Number,
             channel.Name,
             data.ShowTitle,
@@ -275,6 +286,48 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             preferredLanguageCodes.ToArray(),
             audioStreams);
 
+        return ProcessScriptResult(version, result);
+    }
+
+    private async Task<Option<MediaStream>> SelectMovieAudioStream(
+        Channel channel,
+        List<string> preferredLanguageCodes,
+        int movieId,
+        MediaVersion version)
+    {
+        string jsScriptPath = Path.ChangeExtension(
+            Path.Combine(FileSystemLayout.AudioStreamSelectorScriptsFolder, "movie"),
+            "js");
+
+        _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
+        if (!_localFileSystem.FileExists(jsScriptPath))
+        {
+            _logger.LogWarning("Unable to locate movie audio stream selector script; falling back to built-in logic");
+            return Option<MediaStream>.None;
+        }
+
+        _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
+
+        await _scriptEngine.LoadAsync(jsScriptPath);
+
+        MovieAudioStreamSelectorData data = await _streamSelectorRepository.GetMovieData(movieId);
+
+        AudioStream[] audioStreams = GetAudioStreamsForScript(version);
+
+        object result = _scriptEngine.Invoke(
+            "selectMovieAudioStreamIndex",
+            channel.Number,
+            channel.Name,
+            data.Title,
+            data.Guids,
+            preferredLanguageCodes.ToArray(),
+            audioStreams);
+
+        return ProcessScriptResult(version, result);
+    }
+
+    private Option<MediaStream> ProcessScriptResult(MediaVersion version, object result)
+    {
         if (result is double d)
         {
             var streamIndex = (int)d;
