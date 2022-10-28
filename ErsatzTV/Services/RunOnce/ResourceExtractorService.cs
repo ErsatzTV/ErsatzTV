@@ -34,6 +34,12 @@ public class ResourceExtractorService : IHostedService
             "_threePartEpisodes.js",
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
             cancellationToken);
+
+        await ExtractScriptResource(
+            assembly,
+            "_episode.js",
+            FileSystemLayout.AudioStreamSelectorScriptsFolder,
+            cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

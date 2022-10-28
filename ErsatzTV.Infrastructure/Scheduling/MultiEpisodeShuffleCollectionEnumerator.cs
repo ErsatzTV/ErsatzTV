@@ -1,10 +1,8 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Interfaces.Scripting;
 using ErsatzTV.Core.Scheduling;
 using Microsoft.Extensions.Logging;
-using Jint;
-using Jint.Native;
-using Jint.Runtime;
 
 namespace ErsatzTV.Infrastructure.Scheduling;
 
@@ -20,15 +18,15 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     public MultiEpisodeShuffleCollectionEnumerator(
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state,
+        IScriptEngine scriptEngine,
         string scriptFile,
         ILogger logger)
     {
         _logger = logger;
 
-        string contents = File.ReadAllText(scriptFile);
-        using Engine engine = new Engine().Execute(contents);
+        scriptEngine.Load(scriptFile);
 
-        var numParts = (int)engine.GetValue("numParts").AsNumber();
+        var numParts = (int)(double)scriptEngine.GetValue("numParts");
         
         _mediaItemGroups = new Dictionary<int, List<MediaItem>>();
         for (var i = 1; i <= numParts; i++)
@@ -45,17 +43,14 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
             .ToList();
         foreach (Episode episode in validEpisodes)
         {
-            // prep lua params
+            // prep script params
             int seasonNumber = episode.Season.SeasonNumber;
             int episodeNumber = episode.EpisodeMetadata[0].EpisodeNumber;
             
-            // call the lua fn
-            JsValue result = engine.Invoke("partNumberForEpisode", seasonNumber, episodeNumber);
-            
-            // if we get a group number back, use it
-            if (result.Type is Types.Number)
+            // call the script function, and if we get a part (group) number back, use it
+            if (scriptEngine.Invoke("partNumberForEpisode", seasonNumber, episodeNumber) is double result)
             {
-                _mediaItemGroups[(int)result.AsNumber()].Add(episode);
+                _mediaItemGroups[(int)result].Add(episode);
             }
             else
             {

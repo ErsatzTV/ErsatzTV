@@ -770,10 +770,10 @@ public class PlayoutBuilder : IPlayoutBuilder
                                 FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
                                 guid.Guid.Replace("://", "_")),
                             "js");
-                        _logger.LogDebug("Checking for js script at {Path}", jsScriptPath);
+                        _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
                         if (_localFileSystem.FileExists(jsScriptPath))
                         {
-                            _logger.LogDebug("Found js script at {Path}", jsScriptPath);
+                            _logger.LogDebug("Found JS Script at {Path}", jsScriptPath);
                             try
                             {
                                 return _multiEpisodeFactory.Create(jsScriptPath, mediaItems, state);
