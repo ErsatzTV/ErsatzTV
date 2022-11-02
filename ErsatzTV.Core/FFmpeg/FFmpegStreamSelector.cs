@@ -88,7 +88,11 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         version.MediaVersion);
                     sw.Stop();
                     _logger.LogDebug("SelectAudioStream duration: {Duration}", sw.Elapsed);
-                    return result;
+                    if (result.IsSome)
+                    {
+                        return result;
+                    }
+                    break;
                 case Movie:
                     var sw2 = Stopwatch.StartNew();
                     Option<MediaStream> result2 = await SelectMovieAudioStream(
@@ -98,7 +102,11 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                         version.MediaVersion);
                     sw2.Stop();
                     _logger.LogDebug("SelectAudioStream duration: {Duration}", sw2.Elapsed);
-                    return result2;
+                    if (result2.IsSome)
+                    {
+                        return result2;
+                    }
+                    break;
                 // let default fall through
             }
         }
