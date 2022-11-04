@@ -700,7 +700,6 @@ public class MediaSourceRepository : IMediaSourceRepository
     {
         await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
         return await context.EmbyMediaSources
-            .AsNoTracking()
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
             .ThenInclude(l => (l as EmbyLibrary).PathInfos)
