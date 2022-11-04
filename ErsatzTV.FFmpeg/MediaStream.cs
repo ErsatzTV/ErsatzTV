@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using ErsatzTV.FFmpeg.Format;
+﻿using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg;
 
@@ -14,6 +13,7 @@ public record VideoStream(
     int Index,
     string Codec,
     Option<IPixelFormat> PixelFormat,
+    ColorParams ColorParams,
     FrameSize FrameSize,
     string SampleAspectRatio,
     string DisplayAspectRatio,

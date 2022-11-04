@@ -1,4 +1,6 @@
-﻿using ErsatzTV.FFmpeg.Environment;
+﻿using ErsatzTV.FFmpeg.Encoder;
+using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Option;
 
 namespace ErsatzTV.FFmpeg;
@@ -80,8 +82,18 @@ public static class CommandGenerator
             arguments.AddRange(step.FilterOptions);
         }
 
-        foreach (IPipelineStep step in pipelineSteps.Filter(s => s is not StreamSeekFilterOption))
+        // rearrange complex filter output options directly after video encoder
+        var sortedSteps = pipelineSteps.Filter(s => s is not StreamSeekFilterOption && s is not ComplexFilter).ToList();
+        Option<IPipelineStep> maybeComplex = pipelineSteps.Find(s => s is ComplexFilter);
+        foreach (IPipelineStep complex in maybeComplex)
         {
+            int encoderIndex = sortedSteps.FindIndex(s => s is EncoderBase { Kind: StreamKind.Video });
+            sortedSteps.Insert(encoderIndex + 1, complex);
+        }
+
+        foreach (IPipelineStep step in sortedSteps)
+        {
+            
             arguments.AddRange(step.OutputOptions);
         }
 

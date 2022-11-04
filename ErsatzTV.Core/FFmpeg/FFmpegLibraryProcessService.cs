@@ -147,6 +147,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoStream.Index,
             videoStream.Codec,
             AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger),
+            new ColorParams(
+                videoStream.ColorRange,
+                videoStream.ColorSpace,
+                videoStream.ColorTransfer,
+                videoStream.ColorPrimaries),
             new FrameSize(videoVersion.Width, videoVersion.Height),
             videoVersion.SampleAspectRatio,
             videoVersion.DisplayAspectRatio,
@@ -208,14 +213,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             : Option<string>.None;
 
         // normalize songs to yuv420p
-        Option<IPixelFormat> desiredPixelFormat =
-            videoPath == audioPath ? ffmpegVideoStream.PixelFormat : new PixelFormatYuv420P();
+        IPixelFormat desiredPixelFormat =
+            videoPath == audioPath ? playbackSettings.PixelFormat : new PixelFormatYuv420P();
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             false, // TODO: fallback filler needs to loop
             videoFormat,
-            desiredPixelFormat,
+            Some(desiredPixelFormat),
             ffmpegVideoStream.SquarePixelFrameSize(
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
@@ -343,6 +348,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             0,
             VideoFormat.GeneratedImage,
             new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
+            ColorParams.Default,
             new FrameSize(videoVersion.Width, videoVersion.Height),
             videoVersion.SampleAspectRatio,
             videoVersion.DisplayAspectRatio,
@@ -437,7 +443,19 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
-            new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, string.Empty, string.Empty, None, true) });
+            new List<VideoStream>
+            {
+                new(
+                    0,
+                    string.Empty,
+                    None,
+                    ColorParams.Default,
+                    FrameSize.Unknown,
+                    string.Empty,
+                    string.Empty,
+                    None,
+                    true)
+            });
 
         var pipelineBuilder = new PipelineBuilder(
             _runtimeInfo,
@@ -517,6 +535,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                     options.ImageStreamIndex.IfNone(0),
                                     "unknown",
                                     new PixelFormatUnknown(),
+                                    ColorParams.Default,
                                     new FrameSize(1, 1),
                                     string.Empty,
                                     string.Empty,

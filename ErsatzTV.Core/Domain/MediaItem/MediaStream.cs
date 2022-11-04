@@ -14,6 +14,10 @@ public class MediaStream
     public bool Forced { get; set; }
     public bool AttachedPic { get; set; }
     public string PixelFormat { get; set; }
+    public string ColorRange { get; set; }
+    public string ColorSpace { get; set; }
+    public string ColorTransfer { get; set; }
+    public string ColorPrimaries { get; set; }
     public int BitsPerRawSample { get; set; }
     public string FileName { get; set; }
     public string MimeType { get; set; }
