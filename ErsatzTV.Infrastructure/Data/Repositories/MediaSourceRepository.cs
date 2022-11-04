@@ -178,9 +178,16 @@ public class MediaSourceRepository : IMediaSourceRepository
             dbContext.JellyfinLibraries.Add(add);
         }
 
-        dbContext.JellyfinLibraries.RemoveRange(toDelete);
+        var libraryIds = toDelete.Map(l => l.Id).ToList();
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
 
-        List<int> ids = await DisableJellyfinLibrarySync(toDelete.Map(l => l.Id).ToList());
+        foreach (JellyfinLibrary delete in toDelete)
+        {
+            dbContext.JellyfinLibraries.Remove(delete);
+        }
 
         foreach (JellyfinLibrary incoming in toUpdate)
         {
@@ -214,7 +221,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
         await dbContext.SaveChangesAsync();
 
-        return ids;
+        return deletedMediaIds;
     }
 
     public async Task<List<int>> UpdateLibraries(
@@ -231,9 +238,16 @@ public class MediaSourceRepository : IMediaSourceRepository
             dbContext.EmbyLibraries.Add(add);
         }
 
-        dbContext.EmbyLibraries.RemoveRange(toDelete);
+        var libraryIds = toDelete.Map(l => l.Id).ToList();
+        List<int> deletedMediaIds = await dbContext.MediaItems
+            .Filter(mi => libraryIds.Contains(mi.LibraryPath.LibraryId))
+            .Map(mi => mi.Id)
+            .ToListAsync();
 
-        List<int> ids = await DisableEmbyLibrarySync(toDelete.Map(l => l.Id).ToList());
+        foreach (EmbyLibrary delete in toDelete)
+        {
+            dbContext.EmbyLibraries.Remove(delete);
+        }
 
         foreach (EmbyLibrary incoming in toUpdate)
         {
@@ -267,7 +281,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
         await dbContext.SaveChangesAsync();
 
-        return ids;
+        return deletedMediaIds;
     }
 
     public async Task<Unit> UpdatePathReplacements(
@@ -686,6 +700,7 @@ public class MediaSourceRepository : IMediaSourceRepository
     {
         await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
         return await context.EmbyMediaSources
+            .AsNoTracking()
             .Include(p => p.Connections)
             .Include(p => p.Libraries)
             .ThenInclude(l => (l as EmbyLibrary).PathInfos)
