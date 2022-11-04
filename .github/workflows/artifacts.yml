@@ -131,7 +131,7 @@ jobs:
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
-        if: ${{ inputs.release_version == 'develop' }}
+        if: ${{ inputs.release_tag == 'develop' }}
         with:
           token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}
@@ -238,7 +238,7 @@ jobs:
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
-        if: ${{ inputs.release_version == 'develop' }}
+        if: ${{ inputs.release_tag == 'develop' }}
         with:
           token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}
