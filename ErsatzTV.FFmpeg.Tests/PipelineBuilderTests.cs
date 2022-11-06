@@ -216,7 +216,7 @@ public class PipelineGeneratorTests
             true,
             false,
             VideoFormat.Copy,
-            new PixelFormatYuv420P(),
+            Option<IPixelFormat>.None,
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
             false,
