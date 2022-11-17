@@ -351,7 +351,10 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
         finally
         {
-            Interlocked.Decrement(ref _workAheadCount);
+            if (!realtime)
+            {
+                Interlocked.Decrement(ref _workAheadCount);
+            }
         }
 
         return false;
