@@ -125,7 +125,8 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
     private async Task<IHardwareCapabilities> GetNvidiaCapabilities(string ffmpegPath)
     {
         if (_memoryCache.TryGetValue(ArchitectureCacheKey, out int cachedArchitecture)
-            && _memoryCache.TryGetValue(ModelCacheKey, out string cachedModel))
+            && _memoryCache.TryGetValue(ModelCacheKey, out string? cachedModel)
+            && cachedModel is not null)
         {
             return new NvidiaHardwareCapabilities(cachedArchitecture, cachedModel);
         }
