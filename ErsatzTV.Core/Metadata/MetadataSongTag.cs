@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.Core.Metadata;
 
-public static class MetadataFormatTag
+public static class MetadataSongTag
 {
     public static readonly string Album = "album";
     public static readonly string Artist = "artist";
