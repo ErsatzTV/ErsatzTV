@@ -43,11 +43,13 @@ public class EndpointValidatorService : IHostedService
         {
             throw new NotSupportedException($"Invalid endpoint format: {urls}");
         }
+        
+        string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
 
         _logger.LogInformation(
             "Server will listen on port {Port} - try UI at {UI}",
             Settings.ListenPort,
-            $"http://localhost:{Settings.ListenPort}");
+            $"http://localhost:{Settings.ListenPort}{baseUrl}");
 
         return Task.CompletedTask;
     }

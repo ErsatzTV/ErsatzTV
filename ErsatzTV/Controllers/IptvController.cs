@@ -36,12 +36,12 @@ public class IptvController : ControllerBase
     public Task<IActionResult> GetChannelPlaylist(
         [FromQuery]
         string mode = "mixed") =>
-        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), mode))
+        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), Request.PathBase, mode))
             .Map<ChannelPlaylist, IActionResult>(Ok);
 
     [HttpGet("iptv/xmltv.xml")]
     public Task<IActionResult> GetGuide() =>
-        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString()))
+        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString(), Request.PathBase))
             .Map<ChannelGuide, IActionResult>(Ok);
 
     [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]

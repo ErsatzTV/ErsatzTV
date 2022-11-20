@@ -288,7 +288,17 @@ public class Startup
         string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
         if (!string.IsNullOrWhiteSpace(baseUrl))
         {
-            app.UsePathBase(baseUrl);
+            try
+            {
+                app.UsePathBase(baseUrl);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    ex,
+                    "Failed to configure ETV_BASE_URL; please check syntax and include leading slash e.g. `/etv`: {BaseUrl}",
+                    baseUrl);
+            }
         }
 
         app.UseCors("AllowAll");
