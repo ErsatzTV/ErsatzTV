@@ -19,5 +19,11 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, ChannelGu
 
     public Task<ChannelGuide> Handle(GetChannelGuide request, CancellationToken cancellationToken) =>
         _channelRepository.GetAllForGuide()
-            .Map(channels => new ChannelGuide(_recyclableMemoryStreamManager, request.Scheme, request.Host, channels));
+            .Map(
+                channels => new ChannelGuide(
+                    _recyclableMemoryStreamManager,
+                    request.Scheme,
+                    request.Host,
+                    request.BaseUrl,
+                    channels));
 }
