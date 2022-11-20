@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Channels;
 
-public record GetChannelGuide(string Scheme, string Host) : IRequest<ChannelGuide>;
+public record GetChannelGuide(string Scheme, string Host, string BaseUrl) : IRequest<ChannelGuide>;

@@ -13,6 +13,7 @@ public class ChannelGuide
 {
     private readonly List<Channel> _channels;
     private readonly string _host;
+    private readonly string _baseUrl;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly string _scheme;
 
@@ -20,11 +21,13 @@ public class ChannelGuide
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         string scheme,
         string host,
+        string baseUrl,
         List<Channel> channels)
     {
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _scheme = scheme;
         _host = host;
+        _baseUrl = baseUrl;
         _channels = channels;
     }
 
@@ -67,8 +70,8 @@ public class ChannelGuide
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                     .HeadOrNone()
                     .Match(
-                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}.jpg",
-                        () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
+                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg",
+                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png");
                 xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
@@ -394,7 +397,7 @@ public class ChannelGuide
                 _ => "posters"
             };
 
-            artworkPath = $"{_scheme}://{_host}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg";
+            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg";
         }
 
         return artworkPath;
