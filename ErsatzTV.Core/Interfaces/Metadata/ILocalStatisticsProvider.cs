@@ -12,5 +12,5 @@ public interface ILocalStatisticsProvider
         MediaItem mediaItem,
         string mediaItemPath);
 
-    Task<Either<BaseError, Dictionary<string, string>>> GetFormatTags(string ffprobePath, MediaItem mediaItem);
+    Task<Either<BaseError, Dictionary<string, string>>> GetSongTags(string ffprobePath, MediaItem mediaItem);
 }
