@@ -46,6 +46,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - `isForced`: bool indicating whether the stream is flagged as forced
         - `language`: the stream's language
         - `title`: the stream's title
+- Add new fields to search index
+  - `video_codec`: the video codec
+  - `video_bit_depth`: the number of bits in the video stream's pixel format, e.g. 8 or 10
+  - `video_dynamic_range`: the video's dynamic range, either `sdr` or `hdr`
 
 ### Changed
 - Change `Multi-Episode Shuffle` scripting system to use Javascript instead of Lua
