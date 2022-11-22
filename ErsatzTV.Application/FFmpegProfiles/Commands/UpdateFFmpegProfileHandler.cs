@@ -36,6 +36,7 @@ public class
         p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;
         p.ResolutionId = update.ResolutionId;
         p.VideoFormat = update.VideoFormat;
+        p.BitDepth = update.BitDepth;
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.AudioFormat = update.AudioFormat;

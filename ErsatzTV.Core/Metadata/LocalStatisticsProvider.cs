@@ -399,7 +399,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                             Index = videoStream.index,
                             Codec = videoStream.codec_name,
                             Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant(),
-                            PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant()
+                            PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant(),
+                            ColorRange = (videoStream.color_range ?? string.Empty).ToLowerInvariant(),
+                            ColorSpace = (videoStream.color_space ?? string.Empty).ToLowerInvariant(),
+                            ColorTransfer = (videoStream.color_transfer ?? string.Empty).ToLowerInvariant(),
+                            ColorPrimaries = (videoStream.color_primaries ?? string.Empty).ToLowerInvariant()
                         };
 
                         if (int.TryParse(videoStream.bits_per_raw_sample, out int bitsPerRawSample))
@@ -538,6 +542,10 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         string sample_aspect_ratio,
         string display_aspect_ratio,
         string pix_fmt,
+        string color_range,
+        string color_space,
+        string color_transfer,
+        string color_primaries,
         string field_order,
         string r_frame_rate,
         string bits_per_raw_sample,

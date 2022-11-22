@@ -26,7 +26,7 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
@@ -99,7 +99,7 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
@@ -198,7 +198,7 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
@@ -216,7 +216,7 @@ public class PipelineGeneratorTests
             true,
             false,
             VideoFormat.Copy,
-            new PixelFormatYuv420P(),
+            Option<IPixelFormat>.None,
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
             false,
@@ -273,7 +273,7 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
 
         Option<AudioInputFile> audioInputFile = Option<AudioInputFile>.None;
 
@@ -341,7 +341,7 @@ public class PipelineGeneratorTests
             "/test/input/file.png",
             new List<VideoStream>
             {
-                new(0, string.Empty, Option<IPixelFormat>.None, FrameSize.Unknown, string.Empty, string.Empty, Option<string>.None, true)
+                new(0, string.Empty, Option<IPixelFormat>.None, ColorParams.Default, FrameSize.Unknown, string.Empty, string.Empty, Option<string>.None, true)
             });
 
         var pipelineBuilder = new PipelineBuilder(

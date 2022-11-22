@@ -32,6 +32,7 @@ public class FFmpegProfileEditViewModel
         VideoBitrate = viewModel.VideoBitrate;
         VideoBufferSize = viewModel.VideoBufferSize;
         VideoFormat = viewModel.VideoFormat;
+        BitDepth = viewModel.BitDepth;
     }
 
     public int AudioBitrate { get; set; }
@@ -53,6 +54,7 @@ public class FFmpegProfileEditViewModel
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
+    public FFmpegProfileBitDepth BitDepth { get; set; }
 
     public CreateFFmpegProfile ToCreate() =>
         new(
@@ -64,6 +66,7 @@ public class FFmpegProfileEditViewModel
             QsvExtraHardwareFrames,
             Resolution.Id,
             VideoFormat,
+            BitDepth,
             VideoBitrate,
             VideoBufferSize,
             AudioFormat,
@@ -87,6 +90,7 @@ public class FFmpegProfileEditViewModel
             QsvExtraHardwareFrames,
             Resolution.Id,
             VideoFormat,
+            BitDepth,
             VideoBitrate,
             VideoBufferSize,
             AudioFormat,

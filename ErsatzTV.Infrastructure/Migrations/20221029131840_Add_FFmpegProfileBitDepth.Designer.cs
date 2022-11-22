@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20221029131840_Add_FFmpegProfileBitDepth")]
+    partial class Add_FFmpegProfileBitDepth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
@@ -962,18 +964,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Codec")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ColorPrimaries")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ColorRange")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ColorSpace")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ColorTransfer")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Default")

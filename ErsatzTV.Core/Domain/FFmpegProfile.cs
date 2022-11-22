@@ -14,6 +14,7 @@ public record FFmpegProfile
     public int ResolutionId { get; set; }
     public Resolution Resolution { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
+    public FFmpegProfileBitDepth BitDepth { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
     public FFmpegProfileAudioFormat AudioFormat { get; set; }

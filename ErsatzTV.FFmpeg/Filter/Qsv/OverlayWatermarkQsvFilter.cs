@@ -19,5 +19,6 @@ public class OverlayWatermarkQsvFilter : OverlayWatermarkFilter
 
     public override string Filter => $"overlay_qsv={Position}";
 
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { FrameDataLocation = FrameDataLocation.Hardware };
 }

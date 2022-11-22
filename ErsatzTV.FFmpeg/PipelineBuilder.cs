@@ -123,6 +123,8 @@ public class PipelineBuilder
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
+        var originalDesiredPixelFormat = desiredState.PixelFormat;
+        
         if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
         {
             _logger.LogInformation(
@@ -520,20 +522,6 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-
-                foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
-                {
-                    if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
-                    {
-                        // qsv doesn't seem to like this
-                        if (ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Qsv)
-                        {
-                            IPipelineStep step = new PixelFormatOutputOption(desiredPixelFormat);
-                            currentState = step.NextState(currentState);
-                            _pipelineSteps.Add(step);
-                        }
-                    }
-                }
             }
 
             // TODO: if all video filters are software, use software pixel format for hwaccel output
@@ -787,6 +775,7 @@ public class PipelineBuilder
                 _audioInputFile,
                 _watermarkInputFile,
                 _subtitleInputFile,
+                originalDesiredPixelFormat,
                 currentState.PaddedSize,
                 _fontsFolder,
                 _logger);

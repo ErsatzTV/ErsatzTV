@@ -17,6 +17,7 @@ internal static class Mapper
             profile.QsvExtraHardwareFrames,
             Project(profile.Resolution),
             profile.VideoFormat,
+            profile.BitDepth,
             profile.VideoBitrate,
             profile.VideoBufferSize,
             profile.AudioFormat,

@@ -14,6 +14,7 @@ public record FFmpegProfileViewModel(
     int? QsvExtraHardwareFrames,
     ResolutionViewModel Resolution,
     FFmpegProfileVideoFormat VideoFormat,
+    FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,
     FFmpegProfileAudioFormat AudioFormat,

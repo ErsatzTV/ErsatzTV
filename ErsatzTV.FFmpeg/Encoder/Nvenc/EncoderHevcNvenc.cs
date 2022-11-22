@@ -44,6 +44,6 @@ public class EncoderHevcNvenc : EncoderBase
     public override FrameState NextState(FrameState currentState) => currentState with
     {
         VideoFormat = VideoFormat.Hevc,
-        FrameDataLocation = FrameDataLocation.Hardware
+        // FrameDataLocation = FrameDataLocation.Hardware
     };
 }
