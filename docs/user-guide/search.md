@@ -28,6 +28,9 @@ The following fields are available for searching movies:
 - `minutes`: The rounded-up whole number duration of the movie in minutes
 - `height`: The movie height
 - `width`: The movie width
+- `video_codec`: The video codec
+- `video_bit_depth`: The number of bits in the movie's pixel format
+- `video_dynamic_range`: The movie's dynamic range (`sdr` or `hdr`)
 - `type`: Always `movie`
 
 ### Shows
@@ -79,6 +82,9 @@ The following fields are available for searching episodes:
 - `show_title`: The title of the show that contains the episode
 - `show_genre`: The genre of the show that contains the episode
 - `show_tag`: The tag of the show that contains the episode
+- `video_codec`: The video codec
+- `video_bit_depth`: The number of bits in the episode's pixel format
+- `video_dynamic_range`: The episode's dynamic range (`sdr` or `hdr`)
 - `type`: Always `episode`
 
 ### Artists
@@ -108,6 +114,9 @@ The following fields are available for searching music videos:
 - `minutes`: The rounded-up whole number duration of the music video in minutes
 - `height`: The music video height
 - `width`: The music video width
+- `video_codec`: The video codec
+- `video_bit_depth`: The number of bits in the music video's pixel format
+- `video_dynamic_range`: The music video's dynamic range (`sdr` or `hdr`)
 - `type`: Always `music_video`
 
 ### Other Videos
@@ -130,6 +139,9 @@ The following fields are available for searching other videos:
 - `minutes`: The rounded-up whole number duration of the video in minutes
 - `height`: The video height
 - `width`: The video width
+- `video_codec`: The video codec
+- `video_bit_depth`: The number of bits in the other video's pixel format
+- `video_dynamic_range`: The other video's dynamic range (`sdr` or `hdr`)
 - `type`: Always `other_video`
 
 ### Songs
