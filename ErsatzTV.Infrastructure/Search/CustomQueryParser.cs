@@ -16,7 +16,8 @@ public class CustomQueryParser : QueryParser
         SearchIndex.HeightField,
         SearchIndex.WidthField,
         SearchIndex.SeasonNumberField,
-        SearchIndex.EpisodeNumberField
+        SearchIndex.EpisodeNumberField,
+        SearchIndex.VideoBitDepthField
     };
 
     public CustomQueryParser(LuceneVersion matchVersion, string f, Analyzer a) : base(matchVersion, f, a)

@@ -4,7 +4,7 @@ namespace ErsatzTV.FFmpeg.Format;
 
 public static class AvailablePixelFormats
 {
-    public static Option<IPixelFormat> ForPixelFormat(string pixelFormat, ILogger logger) =>
+    public static Option<IPixelFormat> ForPixelFormat(string pixelFormat, ILogger? logger) =>
         pixelFormat switch
         {
             PixelFormat.YUV420P => new PixelFormatYuv420P(),
@@ -15,9 +15,9 @@ public static class AvailablePixelFormats
             _ => LogUnknownPixelFormat(pixelFormat, logger)
         };
 
-    private static Option<IPixelFormat> LogUnknownPixelFormat(string pixelFormat, ILogger logger)
+    private static Option<IPixelFormat> LogUnknownPixelFormat(string pixelFormat, ILogger? logger)
     {
-        logger.LogWarning("Unexpected pixel format {PixelFormat} may have playback issues", pixelFormat);
+        logger?.LogWarning("Unexpected pixel format {PixelFormat} may have playback issues", pixelFormat);
         return Option<IPixelFormat>.None;
     }
 }
