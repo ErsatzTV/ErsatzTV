@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix removing Jellyfin and Emby libraries that have been deleted from the source media server
+- Fix `Work-Ahead HLS Segmenter Limit` setting to properly limit number of channels that can work-ahead at once
+- Include base path value in generated channel playlist (M3U) and channel guide (XMLTV) links
+- Fix parsing song metadata from OGG audio files
 
 ### Added
 - Add audio stream selector scripts for episodes and movies

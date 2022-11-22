@@ -7,12 +7,14 @@ public class ChannelPlaylist
 {
     private readonly List<Channel> _channels;
     private readonly string _host;
+    private readonly string _baseUrl;
     private readonly string _scheme;
 
-    public ChannelPlaylist(string scheme, string host, List<Channel> channels)
+    public ChannelPlaylist(string scheme, string host, string baseUrl, List<Channel> channels)
     {
         _scheme = scheme;
         _host = host;
+        _baseUrl = baseUrl;
         _channels = channels;
     }
 
@@ -20,7 +22,7 @@ public class ChannelPlaylist
     {
         var sb = new StringBuilder();
 
-        var xmltv = $"{_scheme}://{_host}/iptv/xmltv.xml";
+        string xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml";
         sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
         foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
         {
@@ -28,8 +30,8 @@ public class ChannelPlaylist
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                 .HeadOrNone()
                 .Match(
-                    artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}.jpg",
-                    () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
+                    artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg",
+                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png");
 
             string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                 .TrimEnd('=')
@@ -49,7 +51,7 @@ public class ChannelPlaylist
 
             sb.AppendLine(
                 $"#EXTINF:0 tvg-id=\"{channel.Number}.etv\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"{channel.Group}\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
-            sb.AppendLine($"{_scheme}://{_host}/iptv/channel/{channel.Number}.{format}");
+            sb.AppendLine($"{_scheme}://{_host}{_baseUrl}/iptv/channel/{channel.Number}.{format}");
         }
 
         return sb.ToString();

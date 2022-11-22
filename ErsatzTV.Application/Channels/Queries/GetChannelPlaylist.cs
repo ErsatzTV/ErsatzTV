@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Channels;
 
-public record GetChannelPlaylist(string Scheme, string Host, string Mode) : IRequest<ChannelPlaylist>;
+public record GetChannelPlaylist(string Scheme, string Host, string BaseUrl, string Mode) : IRequest<ChannelPlaylist>;

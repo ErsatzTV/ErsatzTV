@@ -277,7 +277,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         try
         {
             Either<BaseError, Dictionary<string, string>> maybeTags =
-                await _localStatisticsProvider.GetFormatTags(ffprobePath, song);
+                await _localStatisticsProvider.GetSongTags(ffprobePath, song);
 
             foreach (Dictionary<string, string> tags in maybeTags.RightToSeq())
             {
@@ -297,37 +297,37 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Tags = new List<Tag>()
                 };
 
-                if (tags.TryGetValue(MetadataFormatTag.Album, out string album))
+                if (tags.TryGetValue(MetadataSongTag.Album, out string album))
                 {
                     result.Album = album;
                 }
 
-                if (tags.TryGetValue(MetadataFormatTag.Artist, out string artist))
+                if (tags.TryGetValue(MetadataSongTag.Artist, out string artist))
                 {
                     result.Artist = artist;
                 }
 
-                if (tags.TryGetValue(MetadataFormatTag.AlbumArtist, out string albumArtist))
+                if (tags.TryGetValue(MetadataSongTag.AlbumArtist, out string albumArtist))
                 {
                     result.AlbumArtist = albumArtist;
                 }
 
-                if (tags.TryGetValue(MetadataFormatTag.Date, out string date))
+                if (tags.TryGetValue(MetadataSongTag.Date, out string date))
                 {
                     result.Date = date;
                 }
 
-                if (tags.TryGetValue(MetadataFormatTag.Genre, out string genre))
+                if (tags.TryGetValue(MetadataSongTag.Genre, out string genre))
                 {
                     result.Genres.AddRange(SplitGenres(genre).Map(n => new Genre { Name = n }));
                 }
 
-                if (tags.TryGetValue(MetadataFormatTag.Title, out string title))
+                if (tags.TryGetValue(MetadataSongTag.Title, out string title))
                 {
                     result.Title = title;
                 }
 
-                if (tags.TryGetValue(MetadataFormatTag.Track, out string track))
+                if (tags.TryGetValue(MetadataSongTag.Track, out string track))
                 {
                     result.Track = track;
                 }
