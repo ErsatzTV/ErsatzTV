@@ -14,6 +14,7 @@ public record UpdateFFmpegProfile(
     int? QsvExtraHardwareFrames,
     int ResolutionId,
     FFmpegProfileVideoFormat VideoFormat,
+    FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,
     FFmpegProfileAudioFormat AudioFormat,

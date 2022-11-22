@@ -46,7 +46,8 @@ public class OverlayWatermarkFilter : BaseFilter
         }
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { FrameDataLocation = FrameDataLocation.Software };
 
     private WatermarkMargins NormalMargins()
     {

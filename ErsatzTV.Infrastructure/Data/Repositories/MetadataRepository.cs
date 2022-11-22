@@ -170,6 +170,10 @@ public class MetadataRepository : IMetadataRepository
                     existingStream.Forced = incomingStream.Forced;
                     existingStream.AttachedPic = incomingStream.AttachedPic;
                     existingStream.PixelFormat = incomingStream.PixelFormat;
+                    existingStream.ColorRange = incomingStream.ColorRange;
+                    existingStream.ColorSpace = incomingStream.ColorSpace;
+                    existingStream.ColorTransfer = incomingStream.ColorTransfer;
+                    existingStream.ColorPrimaries = incomingStream.ColorPrimaries;
                     existingStream.BitsPerRawSample = incomingStream.BitsPerRawSample;
                     existingStream.FileName = incomingStream.FileName;
                     existingStream.MimeType = incomingStream.MimeType;

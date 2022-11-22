@@ -47,6 +47,7 @@ public class CreateFFmpegProfileHandler :
                 QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
                 ResolutionId = resolutionId,
                 VideoFormat = request.VideoFormat,
+                BitDepth = request.BitDepth,
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,
                 AudioFormat = request.AudioFormat,

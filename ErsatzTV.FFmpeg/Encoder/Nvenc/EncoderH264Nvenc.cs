@@ -44,6 +44,6 @@ public class EncoderH264Nvenc : EncoderBase
     public override FrameState NextState(FrameState currentState) => currentState with
     {
         VideoFormat = VideoFormat.H264,
-        FrameDataLocation = FrameDataLocation.Hardware
+        // FrameDataLocation = FrameDataLocation.Hardware
     };
 }

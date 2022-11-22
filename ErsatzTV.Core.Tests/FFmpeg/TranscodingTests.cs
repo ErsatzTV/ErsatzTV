@@ -113,26 +113,26 @@ public class TranscodingTests
         public static InputFormat[] InputFormats =
         {
             new("libx264", "yuv420p"),
-            new("libx264", "yuvj420p"),
+            // new("libx264", "yuvj420p"),
             new("libx264", "yuv420p10le"),
             // new("libx264", "yuv444p10le"),
 
-            new("mpeg1video", "yuv420p"),
-
-            new("mpeg2video", "yuv420p"),
+            // new("mpeg1video", "yuv420p"),
+            //
+            // new("mpeg2video", "yuv420p"),
 
             new("libx265", "yuv420p"),
             new("libx265", "yuv420p10le"),
 
-            new("mpeg4", "yuv420p"),
-
-            new("libvpx-vp9", "yuv420p"),
-
-            // new("libaom-av1", "yuv420p")
-            // av1    yuv420p10le    51
-
-            new("msmpeg4v2", "yuv420p"),
-            new("msmpeg4v3", "yuv420p")
+            // new("mpeg4", "yuv420p"),
+            //
+            // new("libvpx-vp9", "yuv420p"),
+            //
+            // // new("libaom-av1", "yuv420p")
+            // // av1    yuv420p10le    51
+            //
+            // new("msmpeg4v2", "yuv420p"),
+            // new("msmpeg4v3", "yuv420p")
 
             // wmv3    yuv420p    1
         };
@@ -141,6 +141,12 @@ public class TranscodingTests
         {
             new() { Width = 1920, Height = 1080 },
             new() { Width = 1280, Height = 720 }
+        };
+
+        public static FFmpegProfileBitDepth[] BitDepths =
+        {
+            FFmpegProfileBitDepth.EightBit,
+            FFmpegProfileBitDepth.TenBit
         };
 
         public static HardwareAccelerationKind[] NoAcceleration =
@@ -187,6 +193,8 @@ public class TranscodingTests
             InputFormat inputFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
             Resolution profileResolution,
+            [ValueSource(typeof(TestData), nameof(TestData.BitDepths))]
+            FFmpegProfileBitDepth profileBitDepth,
             [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
             Padding padding,
             [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
@@ -213,8 +221,7 @@ public class TranscodingTests
             }
         }
 
-        string name = GetStringSha256Hash(
-            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{watermark}_{subtitle}_{profileResolution}_{profileVideoFormat}_{profileAcceleration}");
+        string name = GetStringSha256Hash($"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -478,7 +485,8 @@ public class TranscodingTests
                     HardwareAcceleration = profileAcceleration,
                     VideoFormat = profileVideoFormat,
                     AudioFormat = FFmpegProfileAudioFormat.Aac,
-                    DeinterlaceVideo = true
+                    DeinterlaceVideo = true,
+                    BitDepth = profileBitDepth
                 },
                 StreamingMode = StreamingMode.TransportStream,
                 SubtitleMode = subtitleMode
