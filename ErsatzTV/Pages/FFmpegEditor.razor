@@ -4,7 +4,6 @@
 @using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Core.FFmpeg
 @using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Infrastructure.Runtime
 @using System.Runtime.InteropServices
 @implements IDisposable
 @inject NavigationManager _navigationManager
@@ -47,6 +46,10 @@
                                     <MudSelectItem Value="@FFmpegProfileVideoFormat.H264">h264</MudSelectItem>
                                     <MudSelectItem Value="@FFmpegProfileVideoFormat.Hevc">hevc</MudSelectItem>
                                     <MudSelectItem Value="@FFmpegProfileVideoFormat.Mpeg2Video">mpeg-2</MudSelectItem>
+                                </MudSelect>
+                                <MudSelect Label="Bit Depth" @bind-Value="_model.BitDepth" For="@(() => _model.BitDepth)">
+                                    <MudSelectItem Value="@FFmpegProfileBitDepth.EightBit">8-bit</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileBitDepth.TenBit">10-bit</MudSelectItem>
                                 </MudSelect>
                                 <MudElement HtmlTag="div" Class="mt-3">
                                     <MudTextField Label="Bitrate" @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
