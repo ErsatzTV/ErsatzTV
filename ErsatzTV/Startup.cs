@@ -107,11 +107,11 @@ public class Startup
                 configuration.AppVersion = Assembly.GetEntryAssembly()
                     ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown";
-                configuration.AutoNotify = false;
+                configuration.AutoNotify = true;
 
                 configuration.NotifyReleaseStages = new[] { "public", "develop" };
 
-#if DEBUG
+#if DEBUG || DEBUG_NO_SYNC
                 configuration.ReleaseStage = "develop";
 #else
                     // effectively "disable" by tweaking app config
