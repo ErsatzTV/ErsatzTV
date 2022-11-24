@@ -141,7 +141,7 @@
         var parameters = new DialogParameters { { "MediaKind", _model.MediaKind }, { "SourceLibraryId", Id } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<MoveLocalLibraryPathDialog>("Move Local Library Path", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<MoveLocalLibraryPathDialog>("Move Local Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is LocalLibraryViewModel library)
         {
@@ -175,7 +175,7 @@
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {

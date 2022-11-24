@@ -119,7 +119,7 @@
     {
         var parameters = new DialogParameters { { "Name", Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-        IDialogReference dialog = _dialog.Show<DisconnectRemoteMediaSourceDialog>($"Disconnect {Name}", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DisconnectRemoteMediaSourceDialog>($"Disconnect {Name}", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {

@@ -85,7 +85,7 @@
         var parameters = new DialogParameters { { "EntityType", "ffmpeg profile" }, { "EntityName", ffmpegProfile.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete FFmpeg Profile", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete FFmpeg Profile", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
@@ -99,7 +99,7 @@
         var parameters = new DialogParameters { { "FFmpegProfileId", ffmpegProfile.Id } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<CopyFFmpegProfileDialog>("Copy FFmpeg Profile", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<CopyFFmpegProfileDialog>("Copy FFmpeg Profile", parameters, options);
         DialogResult dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && dialogResult.Data is FFmpegProfileViewModel data)
         {
