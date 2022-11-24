@@ -150,7 +150,7 @@
         var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ScheduleName} on {playout.ChannelNumber} - {playout.ChannelName}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Playout", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Playout", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
@@ -184,7 +184,7 @@
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
         await dialog.Result;
 
         await _table.ReloadServerData();
