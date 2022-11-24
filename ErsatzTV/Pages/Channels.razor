@@ -104,7 +104,7 @@
         var parameters = new DialogParameters { { "EntityType", "channel" }, { "EntityName", channel.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Channel", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Channel", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {

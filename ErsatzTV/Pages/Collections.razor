@@ -165,7 +165,7 @@
         var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
@@ -179,7 +179,7 @@
         var parameters = new DialogParameters { { "EntityType", "multi collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Multi Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Multi Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
@@ -193,7 +193,7 @@
         var parameters = new DialogParameters { { "EntityType", "smart collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Smart Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {

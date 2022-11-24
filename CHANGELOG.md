@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix `Work-Ahead HLS Segmenter Limit` setting to properly limit number of channels that can work-ahead at once
 - Include base path value in generated channel playlist (M3U) and channel guide (XMLTV) links
 - Fix parsing song metadata from OGG audio files
+- Properly unlock/re-enable trakt list operations after an operation is canceled
 
 ### Added
 - Add (required) bit depth normalization option to ffmpeg profile

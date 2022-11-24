@@ -214,7 +214,7 @@
         var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
@@ -229,7 +229,7 @@
         var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<AddToScheduleDialog>("Add To Schedule", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
@@ -243,7 +243,7 @@
         var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
