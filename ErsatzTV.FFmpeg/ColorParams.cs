@@ -10,5 +10,19 @@ public record ColorParams(string ColorRange, string ColorSpace, string ColorTran
                              string.IsNullOrWhiteSpace(ColorTransfer) &&
                              string.IsNullOrWhiteSpace(ColorPrimaries);
 
-    public bool IsBt709 => this == Default;
+    public bool IsBt709
+    {
+        get
+        {
+            if (this == Default)
+            {
+                return true;
+            }
+
+            // some sources don't set transfer and primaries metadata
+            return ColorRange == "tv" && ColorSpace == "bt709"
+                                      && string.IsNullOrWhiteSpace(ColorTransfer)
+                                      && string.IsNullOrWhiteSpace(ColorPrimaries);
+        }
+    }
 }
