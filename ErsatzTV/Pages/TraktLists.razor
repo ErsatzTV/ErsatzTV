@@ -94,7 +94,7 @@
         InvokeAsync(async () =>
         {
             StateHasChanged();
-            if (!_locker.IsTraktLocked())
+            if (_traktListsTable != null && !_locker.IsTraktLocked())
             {
                 await _traktListsTable.ReloadServerData();
             }

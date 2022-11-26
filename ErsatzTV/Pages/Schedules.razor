@@ -113,7 +113,10 @@
     private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
     {
         _selectedSchedule = schedule;
-        await _detailTable.ReloadServerData();
+        if (_selectedSchedule != null && _detailTable != null)
+        {
+            await _detailTable.ReloadServerData();
+        }
     }
 
     private async Task DeleteSchedule(ProgramScheduleViewModel programSchedule)
@@ -126,7 +129,10 @@
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteProgramSchedule(programSchedule.Id), _cts.Token);
-            await _table.ReloadServerData();
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
             if (_selectedSchedule == programSchedule)
             {
                 _selectedSchedule = null;
