@@ -24,20 +24,23 @@ public class ColorspaceFilter : BaseFilter
     {
         get
         {
-            string setParams = string.Empty;
-            if (_videoStream.ColorParams.IsUnknown)
+            string inputOverrides = string.Empty;
+            ColorParams cp = _videoStream.ColorParams;
+            if (cp.IsMixed)
             {
-                setParams = "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709";
+                inputOverrides =
+                    $"irange={cp.ColorRange}:ispace={cp.ColorSpace}:itrc={cp.ColorTransfer}:iprimaries={cp.ColorPrimaries}:";
             }
 
             string colorspace = _desiredPixelFormat.BitDepth switch
             {
-                10 when !_videoStream.ColorParams.IsUnknown => "colorspace=all=bt709:format=yuv420p10",
-                8 when !_videoStream.ColorParams.IsUnknown => "colorspace=all=bt709:format=yuv420p",
+                _ when cp.IsUnknown => "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709",
+                10 when !cp.IsUnknown => $"colorspace={inputOverrides}all=bt709:format=yuv420p10",
+                8 when !cp.IsUnknown => $"colorspace={inputOverrides}all=bt709:format=yuv420p",
                 _ => string.Empty
             };
 
-            return string.Join(',', new[] { setParams, colorspace }.Filter(s => !string.IsNullOrWhiteSpace(s)));
+            return colorspace;
         }
     }
 }
