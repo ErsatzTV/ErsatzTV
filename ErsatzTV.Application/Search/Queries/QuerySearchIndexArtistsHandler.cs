@@ -6,9 +6,7 @@ using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;
 
-public class
-    QuerySearchIndexArtistsHandler : IRequestHandler<QuerySearchIndexArtists, ArtistCardResultsViewModel
-    >
+public class QuerySearchIndexArtistsHandler : IRequestHandler<QuerySearchIndexArtists, ArtistCardResultsViewModel>
 {
     private readonly IArtistRepository _artistRepository;
     private readonly ISearchIndex _searchIndex;
@@ -23,7 +21,7 @@ public class
         QuerySearchIndexArtists request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
+        SearchResult searchResult = _searchIndex.Search(
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

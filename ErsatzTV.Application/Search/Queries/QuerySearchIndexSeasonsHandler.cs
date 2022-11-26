@@ -28,7 +28,7 @@ public class
         QuerySearchIndexSeasons request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
+        SearchResult searchResult = _searchIndex.Search(
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

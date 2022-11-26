@@ -23,6 +23,6 @@ public interface ISearchIndex : IDisposable
         List<MediaItem> items);
 
     Task<Unit> RemoveItems(List<int> ids);
-    Task<SearchResult> Search(string query, int skip, int limit, string searchField = "");
+    SearchResult Search(string query, int skip, int limit, string searchField = "");
     void Commit();
 }

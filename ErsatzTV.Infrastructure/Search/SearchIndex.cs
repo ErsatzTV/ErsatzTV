@@ -173,11 +173,11 @@ public sealed class SearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
+    public SearchResult Search(string searchQuery, int skip, int limit, string searchField = "")
     {
         if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
         {
-            return new SearchResult(new List<SearchItem>(), 0).AsTask();
+            return new SearchResult(new List<SearchItem>(), 0);
         }
 
         using DirectoryReader reader = _writer.GetReader(true);
@@ -214,7 +214,7 @@ public sealed class SearchIndex : ISearchIndex
             searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
         }
 
-        return searchResult.AsTask();
+        return searchResult;
     }
 
     public void Commit() => _writer.Commit();
