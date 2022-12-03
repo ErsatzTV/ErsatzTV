@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Bugsnag;
+using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -13,12 +14,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 public class MediaCollectionRepository : IMediaCollectionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
     public MediaCollectionRepository(
+        IClient client,
         ISearchIndex searchIndex,
         IDbContextFactory<TvContext> dbContextFactory)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _dbContextFactory = dbContextFactory;
     }
@@ -96,7 +100,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            SearchResult searchResults = await _searchIndex.Search(collection.Query, 0, 0);
+            SearchResult searchResults = _searchIndex.Search(_client, collection.Query, 0, 0);
 
             var movieIds = searchResults.Items
                 .Filter(i => i.Type == SearchIndex.MovieType)

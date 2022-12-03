@@ -109,7 +109,10 @@
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteChannel(channel.Id), _cts.Token);
-            await _table.ReloadServerData();
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
         }
     }
 
