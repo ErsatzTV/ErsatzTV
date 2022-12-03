@@ -103,7 +103,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             return jsonService
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
-                .Map(r => r.MediaContainer.Metadata)
+                .Map(r => r.MediaContainer.Metadata ?? new List<PlexMetadataResponse>())
                 .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)));
         }
 

@@ -115,7 +115,7 @@
             if (_showFiller != value)
             {
                 _showFiller = value;
-                if (_selectedPlayoutId != null)
+                if (_detailTable != null && _selectedPlayoutId != null)
                 {
                     _detailTable.ReloadServerData();
                 }
@@ -142,7 +142,10 @@
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
         _selectedPlayoutId = playout.PlayoutId;
-        await _detailTable.ReloadServerData();
+        if (_detailTable != null)
+        {
+            await _detailTable.ReloadServerData();
+        }
     }
 
     private async Task DeletePlayout(PlayoutNameViewModel playout)
@@ -155,7 +158,10 @@
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeletePlayout(playout.PlayoutId), _cts.Token);
-            await _table.ReloadServerData();
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
             if (_selectedPlayoutId == playout.PlayoutId)
             {
                 _selectedPlayoutId = null;
@@ -166,7 +172,10 @@
     private async Task ResetPlayout(PlayoutNameViewModel playout)
     {
         await _mediator.Send(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
-        await _table.ReloadServerData();
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
         if (_selectedPlayoutId == playout.PlayoutId)
         {
             await PlayoutSelected(playout);
@@ -187,7 +196,10 @@
         IDialogReference dialog = await _dialog.ShowAsync<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
         await dialog.Result;
 
-        await _table.ReloadServerData();
+        if (_table != null)
+        {
+            await _table.ReloadServerData();
+        }
     }
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)

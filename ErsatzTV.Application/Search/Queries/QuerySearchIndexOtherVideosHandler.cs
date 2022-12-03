@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using Bugsnag;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
@@ -11,10 +12,15 @@ public class
         OtherVideoCardResultsViewModel>
 {
     private readonly IOtherVideoRepository _otherVideoRepository;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
-    public QuerySearchIndexOtherVideosHandler(ISearchIndex searchIndex, IOtherVideoRepository otherVideoRepository)
+    public QuerySearchIndexOtherVideosHandler(
+        IClient client,
+        ISearchIndex searchIndex,
+        IOtherVideoRepository otherVideoRepository)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _otherVideoRepository = otherVideoRepository;
     }
@@ -23,7 +29,8 @@ public class
         QuerySearchIndexOtherVideos request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
+        SearchResult searchResult = _searchIndex.Search(
+            _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

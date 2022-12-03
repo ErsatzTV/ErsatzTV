@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using Bugsnag;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
@@ -18,15 +19,18 @@ public class
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
     public QuerySearchIndexMusicVideosHandler(
+        IClient client,
         ISearchIndex searchIndex,
         IMusicVideoRepository musicVideoRepository,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
         IEmbyPathReplacementService embyPathReplacementService)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _musicVideoRepository = musicVideoRepository;
         _plexPathReplacementService = plexPathReplacementService;
@@ -38,7 +42,8 @@ public class
         QuerySearchIndexMusicVideos request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
+        SearchResult searchResult = _searchIndex.Search(
+            _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

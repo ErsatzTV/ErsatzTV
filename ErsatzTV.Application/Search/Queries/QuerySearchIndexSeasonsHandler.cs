@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using Bugsnag;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -11,14 +12,17 @@ public class
     QuerySearchIndexSeasonsHandler : IRequestHandler<QuerySearchIndexSeasons, TelevisionSeasonCardResultsViewModel>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
     private readonly ITelevisionRepository _televisionRepository;
 
     public QuerySearchIndexSeasonsHandler(
+        IClient client,
         ISearchIndex searchIndex,
         ITelevisionRepository televisionRepository,
         IMediaSourceRepository mediaSourceRepository)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _televisionRepository = televisionRepository;
         _mediaSourceRepository = mediaSourceRepository;
@@ -28,7 +32,8 @@ public class
         QuerySearchIndexSeasons request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
+        SearchResult searchResult = _searchIndex.Search(
+            _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

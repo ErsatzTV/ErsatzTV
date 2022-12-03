@@ -92,7 +92,10 @@
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id), _cts.Token);
-            await _fillerPresetsTable.ReloadServerData();
+            if (_fillerPresetsTable != null)
+            {
+                await _fillerPresetsTable.ReloadServerData();
+            }
         }
     }
 
