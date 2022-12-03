@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
@@ -23,6 +24,6 @@ public interface ISearchIndex : IDisposable
         List<MediaItem> items);
 
     Task<Unit> RemoveItems(List<int> ids);
-    SearchResult Search(string query, int skip, int limit, string searchField = "");
+    SearchResult Search(IClient client, string query, int skip, int limit, string searchField = "");
     void Commit();
 }

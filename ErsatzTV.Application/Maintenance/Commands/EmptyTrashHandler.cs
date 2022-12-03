@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
@@ -8,13 +9,16 @@ namespace ErsatzTV.Application.Maintenance;
 
 public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, Unit>>
 {
+    private readonly IClient _client;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ISearchIndex _searchIndex;
 
     public EmptyTrashHandler(
+        IClient client,
         IMediaItemRepository mediaItemRepository,
         ISearchIndex searchIndex)
     {
+        _client = client;
         _mediaItemRepository = mediaItemRepository;
         _searchIndex = searchIndex;
     }
@@ -39,7 +43,7 @@ public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, U
 
         foreach (string type in types)
         {
-            SearchResult result = _searchIndex.Search($"type:{type} AND (state:FileNotFound)", 0, 0);
+            SearchResult result = _searchIndex.Search(_client, $"type:{type} AND (state:FileNotFound)", 0, 0);
             ids.AddRange(result.Items.Map(i => i.Id));
         }
 

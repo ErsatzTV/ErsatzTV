@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using Bugsnag;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
@@ -24,10 +25,12 @@ public class
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
     private readonly ITelevisionRepository _televisionRepository;
 
     public QuerySearchIndexEpisodesHandler(
+        IClient client,
         ISearchIndex searchIndex,
         ITelevisionRepository televisionRepository,
         IMediaSourceRepository mediaSourceRepository,
@@ -37,6 +40,7 @@ public class
         IFallbackMetadataProvider fallbackMetadataProvider,
         IDbContextFactory<TvContext> dbContextFactory)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _televisionRepository = televisionRepository;
         _mediaSourceRepository = mediaSourceRepository;
@@ -52,6 +56,7 @@ public class
         CancellationToken cancellationToken)
     {
         SearchResult searchResult = _searchIndex.Search(
+            _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

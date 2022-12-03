@@ -1,3 +1,4 @@
+using Bugsnag;
 using Dapper;
 using Destructurama;
 using ErsatzTV.Core.Domain;
@@ -152,7 +153,7 @@ public class ScheduleIntegrationTests
         
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
-            new MediaCollectionRepository(new Mock<ISearchIndex>().Object, factory),
+            new MediaCollectionRepository(new Mock<IClient>().Object, new Mock<ISearchIndex>().Object, factory),
             new TelevisionRepository(factory),
             new ArtistRepository(factory),
             new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,

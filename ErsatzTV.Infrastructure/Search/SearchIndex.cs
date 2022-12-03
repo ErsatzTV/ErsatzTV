@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -173,8 +174,18 @@ public sealed class SearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public SearchResult Search(string searchQuery, int skip, int limit, string searchField = "")
+    public SearchResult Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
     {
+        var metadata = new Dictionary<string, string>
+        {
+            { "searchQuery", searchQuery },
+            { "skip", skip.ToString() },
+            { "limit", limit.ToString() },
+            { "searchField", searchField }
+        };
+
+        client.Breadcrumbs.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
+        
         if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
         {
             return new SearchResult(new List<SearchItem>(), 0);

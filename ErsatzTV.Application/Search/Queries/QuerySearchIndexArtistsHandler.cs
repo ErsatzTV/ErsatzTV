@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using Bugsnag;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
@@ -9,10 +10,12 @@ namespace ErsatzTV.Application.Search;
 public class QuerySearchIndexArtistsHandler : IRequestHandler<QuerySearchIndexArtists, ArtistCardResultsViewModel>
 {
     private readonly IArtistRepository _artistRepository;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
-    public QuerySearchIndexArtistsHandler(ISearchIndex searchIndex, IArtistRepository artistRepository)
+    public QuerySearchIndexArtistsHandler(IClient client, ISearchIndex searchIndex, IArtistRepository artistRepository)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _artistRepository = artistRepository;
     }
@@ -22,6 +25,7 @@ public class QuerySearchIndexArtistsHandler : IRequestHandler<QuerySearchIndexAr
         CancellationToken cancellationToken)
     {
         SearchResult searchResult = _searchIndex.Search(
+            _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

@@ -1,13 +1,19 @@
-﻿using ErsatzTV.Core.Interfaces.Search;
+﻿using Bugsnag;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Search;
 
 namespace ErsatzTV.Application.Search;
 
 public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexAllItems, SearchResultAllItemsViewModel>
 {
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
-    public QuerySearchIndexAllItemsHandler(ISearchIndex searchIndex) => _searchIndex = searchIndex;
+    public QuerySearchIndexAllItemsHandler(IClient client, ISearchIndex searchIndex)
+    {
+        _client = client;
+        _searchIndex = searchIndex;
+    }
 
     public Task<SearchResultAllItemsViewModel> Handle(
         QuerySearchIndexAllItems request,
@@ -23,5 +29,5 @@ public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexA
             GetIds(SearchIndex.SongType, request.Query)).AsTask();
 
     private List<int> GetIds(string type, string query) =>
-        _searchIndex.Search($"type:{type} AND ({query})", 0, 0).Items.Map(i => i.Id).ToList();
+        _searchIndex.Search(_client, $"type:{type} AND ({query})", 0, 0).Items.Map(i => i.Id).ToList();
 }
