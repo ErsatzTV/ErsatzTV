@@ -70,7 +70,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         TimeSpan outPoint,
         long ptsOffset,
         Option<int> targetFramerate,
-        bool disableWatermarks)
+        bool disableWatermarks,
+        Action<FFmpegPipeline> pipelineAction)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
         Option<MediaStream> maybeAudioStream =
@@ -264,6 +265,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
+
+        pipelineAction?.Invoke(pipeline);
 
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
     }

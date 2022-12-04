@@ -13,12 +13,18 @@ public class ColorspaceFilter : BaseFilter
         _desiredPixelFormat = desiredPixelFormat;
     }
 
-    public override FrameState NextState(FrameState currentState) =>
-        currentState with
+    public override FrameState NextState(FrameState currentState)
+    {
+        FrameState nextState = currentState with { FrameDataLocation = FrameDataLocation.Software };
+
+        if (!_videoStream.ColorParams.IsUnknown && _desiredPixelFormat.BitDepth == 10 ||
+            _desiredPixelFormat.BitDepth == 8)
         {
-            PixelFormat = Some(_desiredPixelFormat),
-            FrameDataLocation = FrameDataLocation.Software
-        };
+            nextState = nextState with { PixelFormat = Some(_desiredPixelFormat) };
+        }
+
+        return nextState;
+    }
 
     public override string Filter
     {
@@ -35,8 +41,8 @@ public class ColorspaceFilter : BaseFilter
             string colorspace = _desiredPixelFormat.BitDepth switch
             {
                 _ when cp.IsUnknown => "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709",
-                10 when !cp.IsUnknown => $"colorspace={inputOverrides}all=bt709:format=yuv420p10",
-                8 when !cp.IsUnknown => $"colorspace={inputOverrides}all=bt709:format=yuv420p",
+                10 or 8 when !cp.IsUnknown =>
+                    $"colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
                 _ => string.Empty
             };
 

@@ -12,6 +12,9 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Filter;
+using ErsatzTV.FFmpeg.Filter.Cuda;
+using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Runtime;
 using FluentAssertions;
@@ -221,7 +224,7 @@ public class TranscodingTests
             }
         }
 
-        string name = GetStringSha256Hash($"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}");
+        string name = GetStringSha256Hash($"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{subtitle}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -473,6 +476,25 @@ public class TranscodingTests
             File.Copy(sourceFile, srtFile, true);
         }
 
+        void PipelineAction(FFmpegPipeline pipeline)
+        {
+            // validate pipeline matches expectations (at a high level)
+
+            ComplexFilter complexFilter = pipeline.PipelineSteps.OfType<ComplexFilter>().First();
+            var aggregateSteps = complexFilter.PipelineSteps.Concat(pipeline.PipelineSteps).ToList();
+
+            bool hasSubtitleFilters = aggregateSteps.Any(
+                s => s is SubtitlesFilter or OverlaySubtitleFilter or OverlaySubtitleCudaFilter
+                    or OverlaySubtitleQsvFilter);
+            
+            hasSubtitleFilters.Should().Be(subtitle != Subtitle.None);
+
+            bool hasWatermarkFilters = aggregateSteps.Any(
+                s => s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
+
+            hasWatermarkFilters.Should().Be(watermark != Watermark.None);
+        };
+
         Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
@@ -514,7 +536,8 @@ public class TranscodingTests
             TimeSpan.FromSeconds(5),
             0,
             None,
-            false);
+            false,
+            PipelineAction);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
