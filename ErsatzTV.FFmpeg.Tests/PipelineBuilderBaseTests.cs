@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
-using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
 using LanguageExt;
@@ -16,7 +15,7 @@ using static LanguageExt.Prelude;
 namespace ErsatzTV.FFmpeg.Tests;
 
 [TestFixture]
-public class PipelineGeneratorTests
+public class PipelineBuilderBaseTests
 {
     private readonly ILogger _logger = new Mock<ILogger>().Object;
 
@@ -26,7 +25,19 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+            {
+                new(
+                    0,
+                    VideoFormat.H264,
+                    new PixelFormatYuv420P(),
+                    ColorParams.Default,
+                    new FrameSize(1920, 1080),
+                    "1:1",
+                    "16:9",
+                    "24",
+                    false,
+                    ScanKind.Progressive)
+            });
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
@@ -73,9 +84,7 @@ public class PipelineGeneratorTests
             Option<int>.None,
             Option<int>.None);
 
-        var builder = new PipelineBuilder(
-            new Mock<IRuntimeInfo>().Object,
-            new DefaultHardwareCapabilities(),
+        var builder = new SoftwarePipelineBuilder(
             videoInputFile,
             audioInputFile,
             None,
@@ -90,7 +99,7 @@ public class PipelineGeneratorTests
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
         command.Should().Be(
-            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:a aac -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
@@ -99,7 +108,19 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+            {
+                new(
+                    0,
+                    VideoFormat.H264,
+                    new PixelFormatYuv420P(),
+                    ColorParams.Default,
+                    new FrameSize(1920, 1080),
+                    "1:1",
+                    "16:9",
+                    "24",
+                    false,
+                    ScanKind.Progressive)
+            });
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
@@ -146,9 +167,7 @@ public class PipelineGeneratorTests
             Option<int>.None,
             Option<int>.None);
 
-        var builder = new PipelineBuilder(
-            new Mock<IRuntimeInfo>().Object,
-            new DefaultHardwareCapabilities(),
+        var builder = new SoftwarePipelineBuilder(
             videoInputFile,
             audioInputFile,
             None,
@@ -163,7 +182,7 @@ public class PipelineGeneratorTests
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
         command.Should().Be(
-            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:a aac -ac 6 -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -ac 6 -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
     [Test]
@@ -172,9 +191,7 @@ public class PipelineGeneratorTests
         var resolution = new FrameSize(1920, 1080);
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(
-            new Mock<IRuntimeInfo>().Object,
-            new DefaultHardwareCapabilities(),
+        var builder = new SoftwarePipelineBuilder(
             None,
             None,
             None,
@@ -198,7 +215,19 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+            {
+                new(
+                    0,
+                    VideoFormat.H264,
+                    new PixelFormatYuv420P(),
+                    ColorParams.Default,
+                    new FrameSize(1920, 1080),
+                    "1:1",
+                    "16:9",
+                    "24",
+                    false,
+                    ScanKind.Interlaced)
+            });
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
@@ -245,9 +274,7 @@ public class PipelineGeneratorTests
             Option<int>.None,
             Option<int>.None);
 
-        var builder = new PipelineBuilder(
-            new Mock<IRuntimeInfo>().Object,
-            new DefaultHardwareCapabilities(),
+        var builder = new SoftwarePipelineBuilder(
             videoInputFile,
             audioInputFile,
             None,
@@ -273,7 +300,19 @@ public class PipelineGeneratorTests
         var videoInputFile = new VideoInputFile(
             "/tmp/whatever.mkv",
             new List<VideoStream>
-                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), ColorParams.Default, new FrameSize(1920, 1080), "1:1", "16:9", "24", false) });
+            {
+                new(
+                    0,
+                    VideoFormat.H264,
+                    new PixelFormatYuv420P(),
+                    ColorParams.Default,
+                    new FrameSize(1920, 1080),
+                    "1:1",
+                    "16:9",
+                    "24",
+                    false,
+                    ScanKind.Progressive)
+            });
 
         Option<AudioInputFile> audioInputFile = Option<AudioInputFile>.None;
 
@@ -310,9 +349,7 @@ public class PipelineGeneratorTests
             Option<int>.None,
             Option<int>.None);
 
-        var builder = new PipelineBuilder(
-            new Mock<IRuntimeInfo>().Object,
-            new DefaultHardwareCapabilities(),
+        var builder = new SoftwarePipelineBuilder(
             videoInputFile,
             audioInputFile,
             None,
@@ -341,12 +378,20 @@ public class PipelineGeneratorTests
             "/test/input/file.png",
             new List<VideoStream>
             {
-                new(0, string.Empty, Option<IPixelFormat>.None, ColorParams.Default, FrameSize.Unknown, string.Empty, string.Empty, Option<string>.None, true)
+                new(
+                    0,
+                    string.Empty,
+                    Option<IPixelFormat>.None,
+                    ColorParams.Default,
+                    FrameSize.Unknown,
+                    string.Empty,
+                    string.Empty,
+                    Option<string>.None,
+                    true,
+                    ScanKind.Progressive)
             });
 
-        var pipelineBuilder = new PipelineBuilder(
-            new Mock<IRuntimeInfo>().Object,
-            new DefaultHardwareCapabilities(),
+        var pipelineBuilder = new SoftwarePipelineBuilder(
             videoInputFile,
             Option<AudioInputFile>.None,
             Option<WatermarkInputFile>.None,

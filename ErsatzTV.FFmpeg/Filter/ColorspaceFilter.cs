@@ -6,19 +6,23 @@ public class ColorspaceFilter : BaseFilter
 {
     private readonly VideoStream _videoStream;
     private readonly IPixelFormat _desiredPixelFormat;
+    private readonly FrameDataLocation _nextDataLocation;
 
-    public ColorspaceFilter(VideoStream videoStream, IPixelFormat desiredPixelFormat)
+    public ColorspaceFilter(
+        VideoStream videoStream,
+        IPixelFormat desiredPixelFormat,
+        FrameDataLocation nextDataLocation = FrameDataLocation.Software)
     {
         _videoStream = videoStream;
         _desiredPixelFormat = desiredPixelFormat;
+        _nextDataLocation = nextDataLocation;
     }
 
     public override FrameState NextState(FrameState currentState)
     {
-        FrameState nextState = currentState with { FrameDataLocation = FrameDataLocation.Software };
+        FrameState nextState = currentState with { FrameDataLocation = _nextDataLocation };
 
-        if (!_videoStream.ColorParams.IsUnknown && _desiredPixelFormat.BitDepth == 10 ||
-            _desiredPixelFormat.BitDepth == 8)
+        if (!_videoStream.ColorParams.IsUnknown && _desiredPixelFormat.BitDepth is 10 or 8)
         {
             nextState = nextState with { PixelFormat = Some(_desiredPixelFormat) };
         }

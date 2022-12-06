@@ -18,7 +18,8 @@ public record VideoStream(
     string SampleAspectRatio,
     string DisplayAspectRatio,
     Option<string> FrameRate,
-    bool StillImage) : MediaStream(
+    bool StillImage,
+    ScanKind ScanKind) : MediaStream(
     Index,
     Codec,
     StreamKind.Video)

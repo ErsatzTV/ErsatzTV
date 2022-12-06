@@ -1,0 +1,605 @@
+using System.Diagnostics;
+using ErsatzTV.FFmpeg.Decoder;
+using ErsatzTV.FFmpeg.Encoder;
+using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Filter;
+using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.Option.Metadata;
+using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.Protocol;
+using Microsoft.Extensions.Logging;
+
+namespace ErsatzTV.FFmpeg.Pipeline;
+
+public abstract class PipelineBuilderBase : IPipelineBuilder
+{
+    private readonly Option<VideoInputFile> _videoInputFile;
+    private readonly Option<AudioInputFile> _audioInputFile;
+    private readonly Option<WatermarkInputFile> _watermarkInputFile;
+    private readonly Option<SubtitleInputFile> _subtitleInputFile;
+    private readonly string _reportsFolder;
+    private readonly string _fontsFolder;
+    private readonly ILogger _logger;
+
+    protected PipelineBuilderBase(
+        Option<VideoInputFile> videoInputFile,
+        Option<AudioInputFile> audioInputFile,
+        Option<WatermarkInputFile> watermarkInputFile,
+        Option<SubtitleInputFile> subtitleInputFile,
+        string reportsFolder,
+        string fontsFolder,
+        ILogger logger)
+    {
+        _videoInputFile = videoInputFile;
+        _audioInputFile = audioInputFile;
+        _watermarkInputFile = watermarkInputFile;
+        _subtitleInputFile = subtitleInputFile;
+        _reportsFolder = reportsFolder;
+        _fontsFolder = fontsFolder;
+        _logger = logger;
+    }
+
+    public FFmpegPipeline Resize(string outputFile, FrameSize scaledSize)
+    {
+        var pipelineSteps = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new HideBannerOption(),
+            new NoStatsOption(),
+            new LoglevelErrorOption()
+        };
+
+        IPipelineFilterStep scaleStep = new ScaleImageFilter(scaledSize);
+        _videoInputFile.Iter(f => f.FilterSteps.Add(scaleStep));
+
+        pipelineSteps.Add(new VideoFilter(new[] { scaleStep }));
+        pipelineSteps.Add(scaleStep);
+        pipelineSteps.Add(new FileNameOutputOption(outputFile));
+
+        return new FFmpegPipeline(pipelineSteps);
+    }
+
+    public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
+    {
+        var pipelineSteps = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new HideBannerOption(),
+            new NoStatsOption(),
+            new LoglevelErrorOption(),
+            new StandardFormatFlags(),
+            new NoDemuxDecodeDelayOutputOption(),
+            new FastStartOutputOption(),
+            new ClosedGopOutputOption()
+        };
+        
+        concatInputFile.AddOption(new ConcatInputFormat());
+        concatInputFile.AddOption(new RealtimeInputOption());
+        concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
+
+        foreach (int threadCount in ffmpegState.ThreadCount)
+        {
+            pipelineSteps.Insert(0, new ThreadCountOption(threadCount));
+        }
+
+        pipelineSteps.Add(new NoSceneDetectOutputOption(0));
+        pipelineSteps.Add(new EncoderCopyAll());
+
+        if (ffmpegState.DoNotMapMetadata)
+        {
+            pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+        }
+
+        pipelineSteps.AddRange(
+            ffmpegState.MetadataServiceProvider.Map(sp => new MetadataServiceProviderOutputOption(sp)));
+
+        pipelineSteps.AddRange(ffmpegState.MetadataServiceName.Map(sn => new MetadataServiceNameOutputOption(sn)));
+
+        pipelineSteps.Add(new OutputFormatMpegTs());
+        pipelineSteps.Add(new PipeProtocol());
+
+        if (ffmpegState.SaveReport)
+        {
+            pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
+        }
+
+        return new FFmpegPipeline(pipelineSteps);
+    }
+
+    public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
+    {
+        var pipelineSteps = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new HideBannerOption(),
+            new NoStatsOption(),
+            new LoglevelErrorOption(),
+            new StandardFormatFlags(),
+            new NoDemuxDecodeDelayOutputOption(),
+            new FastStartOutputOption(),
+            new ClosedGopOutputOption()
+        };
+
+        Debug.Assert(_videoInputFile.IsSome, "Pipeline builder requires exactly one video input file");
+        VideoInputFile videoInputFile = _videoInputFile.Head();
+
+        var allVideoStreams = _videoInputFile.SelectMany(f => f.VideoStreams).ToList();
+        Debug.Assert(allVideoStreams.Count == 1, "Pipeline builder requires exactly one video stream");
+        VideoStream videoStream = allVideoStreams.Head();
+
+        var context = new PipelineContext(
+            HasWatermark: _watermarkInputFile.IsSome,
+            HasSubtitleOverlay: _subtitleInputFile.Map(s => s is { IsImageBased: true, Copy: false }).IfNone(false),
+            HasSubtitleText: _subtitleInputFile.Map(s => s is { IsImageBased: false }).IfNone(false),
+            ShouldDeinterlace: desiredState.Deinterlaced,
+            Is10BitOutput: desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10);
+
+        SetThreadCount(ffmpegState, desiredState, pipelineSteps);
+        SetSceneDetect(videoStream, desiredState, pipelineSteps);
+        SetFFReport(ffmpegState, pipelineSteps);
+        SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
+        SetTimeLimit(ffmpegState, pipelineSteps);
+
+        FilterChain filterChain = FilterChain.Empty;
+        
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            pipelineSteps.Add(new EncoderCopyVideo());
+        }
+        else
+        {
+            filterChain = BuildVideoPipeline(
+                videoInputFile,
+                videoStream,
+                ffmpegState,
+                desiredState,
+                context,
+                pipelineSteps);
+        }
+
+        if (_audioInputFile.IsNone)
+        {
+            pipelineSteps.Add(new EncoderCopyAudio());
+        }
+        else
+        {
+            foreach (AudioInputFile audioInputFile in _audioInputFile)
+            {
+                BuildAudioPipeline(audioInputFile, pipelineSteps);
+            }
+        }
+        
+        SetDoNotMapMetadata(ffmpegState, pipelineSteps);
+        SetMetadataServiceProvider(ffmpegState, pipelineSteps);
+        SetMetadataServiceName(ffmpegState, pipelineSteps);
+        SetMetadataAudioLanguage(ffmpegState, pipelineSteps);
+        SetOutputFormat(ffmpegState, desiredState, pipelineSteps, videoStream);
+
+        var complexFilter = new NewComplexFilter(
+            _videoInputFile,
+            _audioInputFile,
+            _watermarkInputFile,
+            _subtitleInputFile,
+            filterChain);
+
+        pipelineSteps.Add(complexFilter);
+
+        return new FFmpegPipeline(pipelineSteps);
+    }
+
+    protected Option<IDecoder> LogUnknownDecoder(
+        HardwareAccelerationMode hardwareAccelerationMode,
+        string videoFormat,
+        string pixelFormat)
+    {
+        _logger.LogWarning(
+            "Unable to determine decoder for {AccelMode} - {VideoFormat} - {PixelFormat}; may have playback issues",
+            hardwareAccelerationMode,
+            videoFormat,
+            pixelFormat);
+        return Option<IDecoder>.None;
+    }
+
+    protected Option<IEncoder> LogUnknownEncoder(HardwareAccelerationMode hardwareAccelerationMode, string videoFormat)
+    {
+        _logger.LogWarning(
+            "Unable to determine video encoder for {AccelMode} - {VideoFormat}; may have playback issues",
+            hardwareAccelerationMode,
+            videoFormat);
+        return Option<IEncoder>.None;
+    }
+
+    private static void SetOutputFormat(
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        List<IPipelineStep> pipelineSteps,
+        VideoStream videoStream)
+    {
+        switch (ffmpegState.OutputFormat)
+        {
+            case OutputFormatKind.MpegTs:
+                pipelineSteps.Add(new OutputFormatMpegTs());
+                pipelineSteps.Add(new PipeProtocol());
+                break;
+            case OutputFormatKind.Hls:
+                foreach (string playlistPath in ffmpegState.HlsPlaylistPath)
+                {
+                    foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
+                    {
+                        pipelineSteps.Add(
+                            new OutputFormatHls(
+                                desiredState,
+                                videoStream.FrameRate,
+                                segmentTemplate,
+                                playlistPath));
+                    }
+                }
+
+                break;
+        }
+    }
+
+    private static void SetMetadataAudioLanguage(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
+    {
+        foreach (string desiredAudioLanguage in ffmpegState.MetadataAudioLanguage)
+        {
+            pipelineSteps.Add(new MetadataAudioLanguageOutputOption(desiredAudioLanguage));
+        }
+    }
+
+    private static void SetMetadataServiceName(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
+    {
+        foreach (string desiredServiceName in ffmpegState.MetadataServiceName)
+        {
+            pipelineSteps.Add(new MetadataServiceNameOutputOption(desiredServiceName));
+        }
+    }
+
+    private static void SetMetadataServiceProvider(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
+    {
+        foreach (string desiredServiceProvider in ffmpegState.MetadataServiceProvider)
+        {
+            pipelineSteps.Add(new MetadataServiceProviderOutputOption(desiredServiceProvider));
+        }
+    }
+
+    private static void SetDoNotMapMetadata(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
+    {
+        if (ffmpegState.DoNotMapMetadata)
+        {
+            pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+        }
+    }
+
+    private void BuildAudioPipeline(AudioInputFile audioInputFile, IList<IPipelineStep> pipelineSteps)
+    {
+        // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want
+        foreach (IEncoder step in AvailableEncoders.ForAudioFormat(audioInputFile.DesiredState, _logger))
+        {
+            pipelineSteps.Add(step);
+        }
+        
+        SetAudioChannels(audioInputFile, pipelineSteps);
+        SetAudioBitrate(audioInputFile, pipelineSteps);
+        SetAudioBufferSize(audioInputFile, pipelineSteps);
+        SetAudioSampleRate(audioInputFile, pipelineSteps);
+        SetAudioLoudness(audioInputFile);
+        SetAudioPad(audioInputFile);
+    }
+
+    private void SetAudioPad(AudioInputFile audioInputFile)
+    {
+        foreach (TimeSpan desiredDuration in audioInputFile.DesiredState.AudioDuration)
+        {
+            _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter(desiredDuration)));
+        }
+    }
+
+    private void SetAudioLoudness(AudioInputFile audioInputFile)
+    {
+        if (audioInputFile.DesiredState.NormalizeLoudness)
+        {
+            _audioInputFile.Iter(f => f.FilterSteps.Add(new NormalizeLoudnessFilter()));
+        }
+    }
+
+    private static void SetAudioSampleRate(AudioInputFile audioInputFile, IList<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredSampleRate in audioInputFile.DesiredState.AudioSampleRate)
+        {
+            pipelineSteps.Add(new AudioSampleRateOutputOption(desiredSampleRate));
+        }
+    }
+
+    private static void SetAudioBufferSize(AudioInputFile audioInputFile, IList<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredBufferSize in audioInputFile.DesiredState.AudioBufferSize)
+        {
+            pipelineSteps.Add(new AudioBufferSizeOutputOption(desiredBufferSize));
+        }
+    }
+
+    private static void SetAudioBitrate(AudioInputFile audioInputFile, IList<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredBitrate in audioInputFile.DesiredState.AudioBitrate)
+        {
+            pipelineSteps.Add(new AudioBitrateOutputOption(desiredBitrate));
+        }
+    }
+
+    private static void SetAudioChannels(AudioInputFile audioInputFile, IList<IPipelineStep> pipelineSteps)
+    {
+        foreach (AudioStream audioStream in audioInputFile.AudioStreams.HeadOrNone())
+        {
+            foreach (int desiredAudioChannels in audioInputFile.DesiredState.AudioChannels)
+            {
+                pipelineSteps.Add(
+                    new AudioChannelsOutputOption(
+                        audioInputFile.DesiredState.AudioFormat,
+                        audioStream.Channels,
+                        desiredAudioChannels));
+            }
+        }
+    }
+
+    protected abstract FFmpegState SetAccelState(
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        PipelineContext context,
+        ICollection<IPipelineStep> pipelineSteps);
+
+    private FilterChain BuildVideoPipeline(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        PipelineContext context,
+        ICollection<IPipelineStep> pipelineSteps)
+    {
+        if (_subtitleInputFile.Map(s => s.Copy) == Some(true))
+        {
+            pipelineSteps.Add(new EncoderCopySubtitle());
+        }
+
+        ffmpegState = SetAccelState(videoStream, ffmpegState, desiredState, context, pipelineSteps);
+
+        SetDecoder(videoInputFile, videoStream, ffmpegState, context, pipelineSteps);
+
+        SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
+        SetRealtimeInput(videoInputFile, desiredState);
+        SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);
+        SetFrameRateOutput(desiredState, pipelineSteps);
+        SetVideoTrackTimescaleOutput(desiredState, pipelineSteps);
+        SetVideoBitrateOutput(desiredState, pipelineSteps);
+        SetVideoBufferSizeOutput(desiredState, pipelineSteps);
+        
+        FilterChain filterChain = SetVideoFilters(
+            videoInputFile,
+            videoStream,
+            _watermarkInputFile,
+            _subtitleInputFile,
+            context,
+            ffmpegState,
+            desiredState,
+            _fontsFolder,
+            pipelineSteps);
+
+        SetOutputTsOffset(ffmpegState, desiredState, pipelineSteps);
+
+        return filterChain;
+    }
+
+    protected abstract void SetDecoder(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        PipelineContext context,
+        ICollection<IPipelineStep> pipelineSteps);
+    
+    protected Option<IDecoder> GetSoftwareDecoder(VideoStream videoStream) =>
+        videoStream.Codec switch
+        {
+            VideoFormat.Hevc => new DecoderHevc(),
+            VideoFormat.H264 => new DecoderH264(),
+            VideoFormat.Mpeg1Video => new DecoderMpeg1Video(),
+            VideoFormat.Mpeg2Video => new DecoderMpeg2Video(),
+            VideoFormat.Vc1 => new DecoderVc1(),
+            VideoFormat.MsMpeg4V2 => new DecoderMsMpeg4V2(),
+            VideoFormat.MsMpeg4V3 => new DecoderMsMpeg4V3(),
+            VideoFormat.Mpeg4 => new DecoderMpeg4(),
+            VideoFormat.Vp9 => new DecoderVp9(),
+
+            VideoFormat.Undetermined => new DecoderImplicit(),
+            VideoFormat.Copy => new DecoderImplicit(),
+            VideoFormat.GeneratedImage => new DecoderImplicit(),
+
+            _ => LogUnknownDecoder(
+                HardwareAccelerationMode.None,
+                videoStream.Codec,
+                videoStream.PixelFormat.Match(pf => pf.Name, () => string.Empty))
+        };
+    
+    protected Option<IEncoder> GetSoftwareEncoder(FrameState currentState, FrameState desiredState) =>
+        desiredState.VideoFormat switch
+        {
+            VideoFormat.Hevc => new EncoderLibx265(
+                currentState with { FrameDataLocation = FrameDataLocation.Software }),
+            VideoFormat.H264 => new EncoderLibx264(),
+            VideoFormat.Mpeg2Video => new EncoderMpeg2Video(),
+
+            VideoFormat.Copy => new EncoderCopyVideo(),
+            VideoFormat.Undetermined => new EncoderImplicitVideo(),
+
+            _ => LogUnknownEncoder(HardwareAccelerationMode.None, desiredState.VideoFormat)
+        };
+
+    protected abstract FilterChain SetVideoFilters(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        Option<WatermarkInputFile> watermarkInputFile,
+        Option<SubtitleInputFile> subtitleInputFile,
+        PipelineContext context,
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        string fontsFolder,
+        ICollection<IPipelineStep> pipelineSteps);
+
+    private static void SetOutputTsOffset(FFmpegState ffmpegState, FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
+    {
+        if (ffmpegState.PtsOffset > 0)
+        {
+            foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
+            {
+                pipelineSteps.Add(new OutputTsOffsetOption(ffmpegState.PtsOffset, videoTrackTimeScale));
+            }
+        }
+    }
+
+    private static void SetVideoBufferSizeOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredBufferSize in desiredState.VideoBufferSize)
+        {
+            pipelineSteps.Add(new VideoBufferSizeOutputOption(desiredBufferSize));
+        }
+    }
+
+    private static void SetVideoBitrateOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredBitrate in desiredState.VideoBitrate)
+        {
+            pipelineSteps.Add(new VideoBitrateOutputOption(desiredBitrate));
+        }
+    }
+
+    private static void SetVideoTrackTimescaleOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredTimeScale in desiredState.VideoTrackTimeScale)
+        {
+            pipelineSteps.Add(new VideoTrackTimescaleOutputOption(desiredTimeScale));
+        }
+    }
+
+    private static void SetFrameRateOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
+    {
+        foreach (int desiredFrameRate in desiredState.FrameRate)
+        {
+            pipelineSteps.Add(new FrameRateOutputOption(desiredFrameRate));
+        }
+    }
+
+    private void SetInfiniteLoop(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        FrameState desiredState)
+    {
+        if (desiredState.InfiniteLoop)
+        {
+            _audioInputFile.Iter(
+                a => a.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode)));
+
+            if (!videoStream.StillImage)
+            {
+                videoInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
+            }
+        }
+    }
+
+    private void SetRealtimeInput(VideoInputFile videoInputFile, FrameState desiredState)
+    {
+        if (desiredState.Realtime)
+        {
+            _audioInputFile.Iter(a => a.AddOption(new RealtimeInputOption()));
+            videoInputFile.AddOption(new RealtimeInputOption());
+        }
+    }
+
+    private static void SetStillImageInfiniteLoop(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState)
+    {
+        if (videoStream.StillImage)
+        {
+            videoInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
+        }
+    }
+
+    private void SetThreadCount(FFmpegState ffmpegState, FrameState desiredState, IList<IPipelineStep> pipelineSteps)
+    {
+        if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
+        {
+            _logger.LogInformation(
+                "Forcing {Threads} ffmpeg thread due to buggy combination of stream seek and realtime output",
+                1);
+
+            pipelineSteps.Insert(0, new ThreadCountOption(1));
+        }
+        else
+        {
+            foreach (int threadCount in ffmpegState.ThreadCount)
+            {
+                pipelineSteps.Insert(0, new ThreadCountOption(threadCount));
+            }
+        }
+    }
+
+    private static void SetSceneDetect(
+        // ReSharper disable once SuggestBaseTypeForParameter
+        VideoStream videoStream,
+        FrameState desiredState,
+        ICollection<IPipelineStep> pipelineSteps)
+    {
+        // -sc_threshold 0 is unsupported with mpeg2video
+        if (videoStream.Codec == VideoFormat.Mpeg2Video || desiredState.VideoFormat == VideoFormat.Mpeg2Video)
+        {
+            pipelineSteps.Add(new NoSceneDetectOutputOption(1_000_000_000));
+        }
+        else
+        {
+            pipelineSteps.Add(new NoSceneDetectOutputOption(0));
+        }
+    }
+    
+    private void SetFFReport(FFmpegState ffmpegState, ICollection<IPipelineStep> pipelineSteps)
+    {
+        if (ffmpegState.SaveReport)
+        {
+            pipelineSteps.Add(new FFReportVariable(_reportsFolder, None));
+        }
+    }
+    
+    private void SetStreamSeek(
+        FFmpegState ffmpegState,
+        VideoInputFile videoInputFile,
+        PipelineContext context,
+        ICollection<IPipelineStep> pipelineSteps)
+    {
+        foreach (TimeSpan desiredStart in ffmpegState.Start.Filter(s => s > TimeSpan.Zero))
+        {
+            var option = new StreamSeekInputOption(desiredStart);
+            _audioInputFile.Iter(a => a.AddOption(option));
+            videoInputFile.AddOption(option);
+
+            // need to seek text subtitle files
+            if (context.HasSubtitleText)
+            {
+                pipelineSteps.Add(new StreamSeekFilterOption(desiredStart));
+            }
+        }
+    }
+    
+    private static void SetTimeLimit(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
+    {
+        pipelineSteps.AddRange(ffmpegState.Finish.Map(finish => new TimeLimitOutputOption(finish)));
+    }
+
+    protected record PipelineContext(
+        bool HasWatermark,
+        bool HasSubtitleOverlay,
+        bool HasSubtitleText,
+        bool ShouldDeinterlace,
+        bool Is10BitOutput);
+}

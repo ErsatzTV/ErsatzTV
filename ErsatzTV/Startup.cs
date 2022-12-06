@@ -34,6 +34,7 @@ using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
@@ -460,6 +461,7 @@ public class Startup
                 MultiEpisodeShuffleCollectionEnumeratorFactory>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
+        services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();
         services.AddScoped<FFmpegProcessService>();
 
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();

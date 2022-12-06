@@ -9,6 +9,7 @@ using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 using ErsatzTV.FFmpeg.Option.Metadata;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Protocol;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
@@ -16,7 +17,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg;
 
-public class PipelineBuilder
+public class PipelineBuilder : IPipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly string _fontsFolder;
@@ -121,7 +122,7 @@ public class PipelineBuilder
         return new FFmpegPipeline(_pipelineSteps);
     }
 
-    public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
+    public virtual FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
         Option<IPixelFormat> originalDesiredPixelFormat = desiredState.PixelFormat;
         bool is10BitOutput = desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;

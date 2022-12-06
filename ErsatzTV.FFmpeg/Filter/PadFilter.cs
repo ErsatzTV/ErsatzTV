@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿using ErsatzTV.FFmpeg.Format;
+
+namespace ErsatzTV.FFmpeg.Filter;
 
 public class PadFilter : BaseFilter
 {
