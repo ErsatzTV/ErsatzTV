@@ -1,11 +1,11 @@
 ﻿namespace ErsatzTV.FFmpeg.Format;
 
-public class PixelFormatNv12 : IPixelFormat
+public class PixelFormatQsv : IPixelFormat
 {
-    public PixelFormatNv12(string name) => Name = name;
+    public PixelFormatQsv(string name) => Name = name;
 
     public string Name { get; }
 
-    public string FFmpegName => "nv12";
+    public string FFmpegName => "qsv";
     public int BitDepth => throw new NotSupportedException("This is probably an issue");
 }

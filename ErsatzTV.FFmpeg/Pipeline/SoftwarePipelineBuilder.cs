@@ -227,8 +227,20 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                     subtitle.FilterSteps.Add(scaleFilter);
                 }
 
-                var subtitlesFilter = new OverlaySubtitleFilter();
-                subtitleOverlayFilterSteps.Add(subtitlesFilter);
+                foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+                {
+                    IPixelFormat pf = desiredPixelFormat;
+                    if (desiredPixelFormat is PixelFormatNv12 nv12)
+                    {
+                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                        {
+                            pf = availablePixelFormat;
+                        }
+                    }
+
+                    var subtitlesFilter = new OverlaySubtitleFilter(pf);
+                    subtitleOverlayFilterSteps.Add(subtitlesFilter);
+                }
             }
         }
     }

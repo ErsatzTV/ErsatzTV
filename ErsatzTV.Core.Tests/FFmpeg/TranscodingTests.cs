@@ -16,6 +16,7 @@ using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.Filter.Vaapi;
+using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Runtime;
@@ -90,15 +91,15 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            Watermark.PermanentOpaqueScaled,
-            Watermark.PermanentOpaqueActualSize,
-            Watermark.PermanentTransparentScaled,
-            Watermark.PermanentTransparentActualSize
+            // Watermark.PermanentOpaqueScaled,
+            // Watermark.PermanentOpaqueActualSize,
+            // Watermark.PermanentTransparentScaled,
+            // Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
-            Subtitle.None,
+            // Subtitle.None,
             Subtitle.Picture,
             Subtitle.Text
         };
@@ -106,13 +107,13 @@ public class TranscodingTests
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
-            Padding.WithPadding
+            // Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            VideoScanKind.Interlaced
+            // VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
@@ -211,9 +212,9 @@ public class TranscodingTests
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
     {
@@ -588,43 +589,95 @@ public class TranscodingTests
         };
 
         var sb = new StringBuilder();
-        CommandResult result;
         var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        string tempFile = Path.GetTempFileName();
         try
         {
-            result = await process
-                .WithStandardOutputPipe(PipeTarget.ToStream(Stream.Null))
-                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
-                .ExecuteAsync(timeoutSignal.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            Assert.Fail($"Transcode failure (timeout): ffmpeg {process.Arguments}");
-            return;
-        }
+            CommandResult result;
 
-        var error = sb.ToString();
-        bool isUnsupported = unsupportedMessages.Any(error.Contains);
-
-        if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
-        {
-            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
-            Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
-        }
-        else if (error.Contains("Impossible to convert between"))
-        {
-            var arguments = string.Join(
-                ' ',
-                process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
-
-            Assert.Fail($"Transcode failure: ffmpeg {arguments}");
-        }
-        else
-        {
-            result.ExitCode.Should().Be(0, error + Environment.NewLine + process.Arguments);
-            if (result.ExitCode == 0)
+            try
             {
-                Console.WriteLine(process.Arguments);
+                result = await process
+                    .WithStandardOutputPipe(PipeTarget.ToFile(tempFile))
+                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
+                    .ExecuteAsync(timeoutSignal.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                Assert.Fail($"Transcode failure (timeout): ffmpeg {arguments}");
+                return;
+            }
+
+            var error = sb.ToString();
+            bool isUnsupported = unsupportedMessages.Any(error.Contains);
+
+            if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
+            {
+                result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
+                Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
+            }
+            else if (error.Contains("Impossible to convert between"))
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                Assert.Fail($"Transcode failure: ffmpeg {arguments}");
+            }
+            else
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                result.ExitCode.Should().Be(0, error + Environment.NewLine + arguments);
+                if (result.ExitCode == 0)
+                {
+                    Console.WriteLine(process.Arguments);
+                }
+            }
+            
+            // additional checks on resulting file
+            await localStatisticsProvider.RefreshStatistics(
+                ExecutableName("ffmpeg"),
+                ExecutableName("ffprobe"),
+                new Movie
+                {
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = tempFile }
+                            }
+                        }
+                    }
+                });
+
+            // verify de-interlace
+            v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
+            
+            foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
+            {
+                // verify pixel format
+                videoStream.PixelFormat.Should().Be(
+                    profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
+                
+                // verify resolution
+                v.Height.Should().Be(profileResolution.Height);
+                v.Width.Should().Be(profileResolution.Width);
+            }
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
             }
         }
     }

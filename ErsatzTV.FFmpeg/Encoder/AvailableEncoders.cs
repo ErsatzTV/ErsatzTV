@@ -33,20 +33,10 @@ public static class AvailableEncoders
 
             (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
                     VideoFormat.Hevc,
-                    desiredState.PixelFormat) =>
-                new EncoderHevcQsv(
-                    currentState,
-                    maybeWatermarkInputFile,
-                    maybeSubtitleInputFile,
-                    ffmpegState.QsvExtraHardwareFrames),
+                    desiredState.PixelFormat) => new EncoderHevcQsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.H264) when hardwareCapabilities.CanEncode(
                     VideoFormat.H264,
-                    desiredState.PixelFormat) =>
-                new EncoderH264Qsv(
-                    currentState,
-                    maybeWatermarkInputFile,
-                    maybeSubtitleInputFile,
-                    ffmpegState.QsvExtraHardwareFrames),
+                    desiredState.PixelFormat) => new EncoderH264Qsv(),
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
                     VideoFormat.Hevc,
