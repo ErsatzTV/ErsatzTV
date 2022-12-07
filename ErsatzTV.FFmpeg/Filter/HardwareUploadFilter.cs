@@ -14,7 +14,7 @@ public class HardwareUploadFilter : BaseFilter
         HardwareAccelerationMode.None => string.Empty,
         HardwareAccelerationMode.Nvenc => "hwupload_cuda",
         HardwareAccelerationMode.Qsv => $"hwupload=extra_hw_frames={_ffmpegState.QsvExtraHardwareFrames}",
-        HardwareAccelerationMode.Vaapi => "format=nv12|vaapi,hwupload",
+        HardwareAccelerationMode.Vaapi => "format=nv12|p010le|vaapi,hwupload",
         _ => "hwupload"
     };
 

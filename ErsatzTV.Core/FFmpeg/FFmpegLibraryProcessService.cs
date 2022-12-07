@@ -256,7 +256,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
-            VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -396,7 +395,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             None,
             subtitleInputFile,
-            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -425,7 +423,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
-            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -465,7 +462,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
-            Option<string>.None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);

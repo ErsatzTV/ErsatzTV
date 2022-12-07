@@ -40,18 +40,10 @@ public static class AvailableEncoders
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
                     VideoFormat.Hevc,
-                    desiredState.PixelFormat) =>
-                new EncoderHevcVaapi(
-                    currentState,
-                    maybeWatermarkInputFile,
-                    maybeSubtitleInputFile),
+                    desiredState.PixelFormat) => new EncoderHevcVaapi(),
             (HardwareAccelerationMode.Vaapi, VideoFormat.H264) when hardwareCapabilities.CanEncode(
                     VideoFormat.H264,
-                    desiredState.PixelFormat) =>
-                new EncoderH264Vaapi(
-                    currentState,
-                    maybeWatermarkInputFile,
-                    maybeSubtitleInputFile),
+                    desiredState.PixelFormat) => new EncoderH264Vaapi(),
 
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
                 VideoFormat.Hevc,

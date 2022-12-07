@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Pipeline;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
@@ -6,6 +7,7 @@ public class NewComplexFilter : IPipelineStep
 {
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
+    private readonly PipelineContext _pipelineContext;
     private readonly FilterChain _filterChain;
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
@@ -17,12 +19,14 @@ public class NewComplexFilter : IPipelineStep
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<SubtitleInputFile> maybeSubtitleInputFile,
+        PipelineContext pipelineContext,
         FilterChain filterChain)
     {
         _maybeVideoInputFile = maybeVideoInputFile;
         _maybeAudioInputFile = maybeAudioInputFile;
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
         _maybeSubtitleInputFile = maybeSubtitleInputFile;
+        _pipelineContext = pipelineContext;
         _filterChain = filterChain;
 
         _outputOptions = new List<string>();
@@ -69,7 +73,10 @@ public class NewComplexFilter : IPipelineStep
 
         foreach ((string path, _) in _maybeAudioInputFile)
         {
-            if (!distinctPaths.Contains(path))
+            if (!distinctPaths.Contains(path) ||
+                // use audio as a separate input with vaapi/qsv
+                _pipelineContext.HardwareAccelerationMode is HardwareAccelerationMode.Vaapi
+                    or HardwareAccelerationMode.Qsv)
             {
                 distinctPaths.Add(path);
             }
@@ -192,7 +199,7 @@ public class NewComplexFilter : IPipelineStep
 
         foreach (AudioInputFile audioInputFile in _maybeAudioInputFile)
         {
-            int inputIndex = distinctPaths.IndexOf(audioInputFile.Path);
+            int inputIndex = distinctPaths.LastIndexOf(audioInputFile.Path);
             foreach ((int index, _, _) in audioInputFile.Streams)
             {
                 audioLabel = $"{inputIndex}:{index}";

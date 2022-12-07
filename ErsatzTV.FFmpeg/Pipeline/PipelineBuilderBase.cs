@@ -14,6 +14,7 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public abstract class PipelineBuilderBase : IPipelineBuilder
 {
+    private readonly HardwareAccelerationMode _hardwareAccelerationMode;
     private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly Option<WatermarkInputFile> _watermarkInputFile;
@@ -23,6 +24,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     private readonly ILogger _logger;
 
     protected PipelineBuilderBase(
+        HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
@@ -31,6 +33,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         string fontsFolder,
         ILogger logger)
     {
+        _hardwareAccelerationMode = hardwareAccelerationMode;
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
         _watermarkInputFile = watermarkInputFile;
@@ -129,6 +132,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         VideoStream videoStream = allVideoStreams.Head();
 
         var context = new PipelineContext(
+            HardwareAccelerationMode: _hardwareAccelerationMode,
             HasWatermark: _watermarkInputFile.IsSome,
             HasSubtitleOverlay: _subtitleInputFile.Map(s => s is { IsImageBased: true, Copy: false }).IfNone(false),
             HasSubtitleText: _subtitleInputFile.Map(s => s is { IsImageBased: false }).IfNone(false),
@@ -181,6 +185,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _audioInputFile,
             _watermarkInputFile,
             _subtitleInputFile,
+            context,
             filterChain);
 
         pipelineSteps.Add(complexFilter);
@@ -595,11 +600,4 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         pipelineSteps.AddRange(ffmpegState.Finish.Map(finish => new TimeLimitOutputOption(finish)));
     }
-
-    protected record PipelineContext(
-        bool HasWatermark,
-        bool HasSubtitleOverlay,
-        bool HasSubtitleText,
-        bool ShouldDeinterlace,
-        bool Is10BitOutput);
 }

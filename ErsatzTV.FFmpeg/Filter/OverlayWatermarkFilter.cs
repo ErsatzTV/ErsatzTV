@@ -38,6 +38,7 @@ public class OverlayWatermarkFilter : BaseFilter
 
             return _watermarkState.Location switch
             {
+                // TODO: can these be pre-calculated (and used with accelerated overlay filters)
                 WatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
                 WatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
                 WatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",

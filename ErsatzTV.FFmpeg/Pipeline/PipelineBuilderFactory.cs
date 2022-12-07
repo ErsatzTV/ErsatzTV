@@ -26,13 +26,23 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
-        Option<string> qsvDevice,
         string reportsFolder,
         string fontsFolder,
         string ffmpegPath) => hardwareAccelerationMode switch
     {
         HardwareAccelerationMode.Nvenc => new NvidiaPipelineBuilder(
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hardwareAccelerationMode),
+            hardwareAccelerationMode,
+            videoInputFile,
+            audioInputFile,
+            watermarkInputFile,
+            subtitleInputFile,
+            reportsFolder,
+            fontsFolder,
+            _logger),
+        HardwareAccelerationMode.Vaapi => new VaapiPipelineBuilder(
+            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hardwareAccelerationMode),
+            hardwareAccelerationMode,
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
@@ -42,15 +52,16 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
             _logger),
         HardwareAccelerationMode.Qsv => new QsvPipelineBuilder(
             await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hardwareAccelerationMode),
+            hardwareAccelerationMode,
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
-            qsvDevice,
             reportsFolder,
             fontsFolder,
             _logger),
         _ => new SoftwarePipelineBuilder(
+            hardwareAccelerationMode,
             videoInputFile,
             audioInputFile,
             watermarkInputFile,

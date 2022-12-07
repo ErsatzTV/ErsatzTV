@@ -8,7 +8,6 @@ public interface IPipelineBuilderFactory
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
-        Option<string> qsvDevice,
         string reportsFolder,
         string fontsFolder,
         string ffmpegPath);

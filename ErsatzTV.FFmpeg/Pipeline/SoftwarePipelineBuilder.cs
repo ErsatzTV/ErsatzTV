@@ -13,6 +13,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     private readonly ILogger _logger;
 
     public SoftwarePipelineBuilder(
+        HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
@@ -20,6 +21,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
+        hardwareAccelerationMode,
         videoInputFile,
         audioInputFile,
         watermarkInputFile,
@@ -186,7 +188,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
 
             if (watermark.DesiredState.Opacity != 100)
             {
-                watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState, context.Is10BitOutput));
+                watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState));
             }
 
             foreach (List<WatermarkFadePoint> fadePoints in watermark.DesiredState.MaybeFadePoints)

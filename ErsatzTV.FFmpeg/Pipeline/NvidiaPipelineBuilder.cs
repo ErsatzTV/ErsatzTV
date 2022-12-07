@@ -20,6 +20,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
     public NvidiaPipelineBuilder(
         IHardwareCapabilities hardwareCapabilities,
+        HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
@@ -27,6 +28,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
+        hardwareAccelerationMode,
         videoInputFile,
         audioInputFile,
         watermarkInputFile,
@@ -319,7 +321,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
             if (watermark.DesiredState.Opacity != 100)
             {
-                watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState, context.Is10BitOutput));
+                watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState));
             }
 
             IPixelFormat pixelFormat = context.Is10BitOutput

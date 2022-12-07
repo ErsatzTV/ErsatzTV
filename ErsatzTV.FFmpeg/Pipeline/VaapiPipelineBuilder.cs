@@ -1,10 +1,9 @@
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
-using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder;
-using ErsatzTV.FFmpeg.Encoder.Qsv;
+using ErsatzTV.FFmpeg.Encoder.Vaapi;
 using ErsatzTV.FFmpeg.Filter;
-using ErsatzTV.FFmpeg.Filter.Qsv;
+using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
@@ -13,12 +12,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Pipeline;
 
-public class QsvPipelineBuilder : SoftwarePipelineBuilder
+public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 {
     private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
 
-    public QsvPipelineBuilder(
+    public VaapiPipelineBuilder(
         IHardwareCapabilities hardwareCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
@@ -51,11 +50,13 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         bool canDecode = _hardwareCapabilities.CanDecode(videoStream.Codec, videoStream.PixelFormat);
         bool canEncode = _hardwareCapabilities.CanEncode(desiredState.VideoFormat, desiredState.PixelFormat);
 
-        pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice));
-        
-        // 10-bit hevc/h264 qsv decoders have issues, so use software
-        if (canDecode && videoStream.Codec is VideoFormat.Hevc or VideoFormat.H264 &&
-            videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10)
+        foreach (string vaapiDevice in ffmpegState.VaapiDevice)
+        {
+            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice));
+        }
+
+        // use software decoding with an extensive pipeline
+        if (context.HasSubtitleOverlay && context.HasWatermark)
         {
             canDecode = false;
         }
@@ -64,10 +65,10 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         return ffmpegState with
         {
             DecoderHardwareAccelerationMode = canDecode
-                ? HardwareAccelerationMode.Qsv
+                ? HardwareAccelerationMode.Vaapi
                 : HardwareAccelerationMode.None,
             EncoderHardwareAccelerationMode = canEncode
-                ? HardwareAccelerationMode.Qsv
+                ? HardwareAccelerationMode.Vaapi
                 : HardwareAccelerationMode.None
         };
     }
@@ -81,11 +82,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     {
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
-            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new DecoderHevcQsv(),
-            (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new DecoderH264Qsv(),
-            (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video) => new DecoderMpeg2Qsv(),
-            (HardwareAccelerationMode.Qsv, VideoFormat.Vc1) => new DecoderVc1Qsv(),
-            (HardwareAccelerationMode.Qsv, VideoFormat.Vp9) => new DecoderVp9Qsv(),
+            (HardwareAccelerationMode.Vaapi, _) => new DecoderVaapi(),
 
             _ => GetSoftwareDecoder(videoStream)
         };
@@ -114,14 +111,12 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             ScaledSize = videoStream.FrameSize,
             PaddedSize = videoStream.FrameSize,
-            
-            // consider hardware frames to be wrapped in nv12
-            PixelFormat = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv
-                ? videoStream.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
-                : videoStream.PixelFormat,
-            
+
+            PixelFormat = videoStream.PixelFormat,
+
             IsAnamorphic = videoStream.IsAnamorphic,
-            FrameDataLocation = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv
+
+            FrameDataLocation = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi
                 ? FrameDataLocation.Hardware
                 : FrameDataLocation.Software
         };
@@ -135,26 +130,41 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // _logger.LogDebug("After decode: {PixelFormat}", currentState.PixelFormat);
+
         currentState = SetDeinterlace(videoInputFile, context, ffmpegState, currentState);
         // _logger.LogDebug("After deinterlace: {PixelFormat}", currentState.PixelFormat);
+
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         // _logger.LogDebug("After scale: {PixelFormat}", currentState.PixelFormat);
+
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
 
-        // need to download for any sort of overlay
-        if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-            (context.HasSubtitleOverlay || context.HasWatermark))
+        // need to upload for hardware overlay
+        bool forceSoftwareOverlay = context.HasSubtitleOverlay && context.HasWatermark;
+
+        if (currentState.FrameDataLocation == FrameDataLocation.Software && context.HasSubtitleOverlay &&
+            !forceSoftwareOverlay)
         {
+            var hardwareUpload = new HardwareUploadVaapiFilter(true);
+            currentState = hardwareUpload.NextState(currentState);
+            videoInputFile.FilterSteps.Add(hardwareUpload);
+        }
+        else if(currentState.FrameDataLocation == FrameDataLocation.Hardware &&
+                (!context.HasSubtitleOverlay || forceSoftwareOverlay) &&
+                context.HasWatermark)
+        {
+            // download for watermark (or forced software subtitle)
             var hardwareDownload = new HardwareDownloadFilter(currentState);
             currentState = hardwareDownload.NextState(currentState);
             videoInputFile.FilterSteps.Add(hardwareDownload);
         }
-        
+
         currentState = SetSubtitle(
             videoInputFile,
             subtitleInputFile,
             context,
+            forceSoftwareOverlay,
             ffmpegState,
             currentState,
             desiredState,
@@ -176,8 +186,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
-                    (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
-                    (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(),
 
                     (_, _) => GetSoftwareEncoder(currentState, desiredState)
                 };
@@ -228,22 +238,10 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 }
             }
 
-            IPixelFormat formatForDownload = pixelFormat;
-            
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(videoStream, format, currentState.FrameDataLocation);
-
-                // force nv12 if we're still in hardware
-                if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
-                {
-                    if (formatForDownload is not PixelFormatNv12)
-                    {
-                        formatForDownload = new PixelFormatNv12(pixelFormat.Name);
-                    }
-                }
-
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
             }
@@ -257,7 +255,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
 
                     var hardwareDownload =
-                        new HardwareDownloadFilter(currentState with { PixelFormat = Some(formatForDownload) });
+                        new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
                     currentState = hardwareDownload.NextState(currentState);
                     result.Add(hardwareDownload);
                 }
@@ -270,24 +268,27 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     currentState.PixelFormat.Map(f => f.FFmpegName),
                     format.FFmpegName);
 
-                // remind qsv that it uses qsv
-                if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-                    result.Count == 1 && result[0] is ColorspaceFilter colorspace)
+                // NV12 is 8-bit
+                if (format is PixelFormatYuv420P)
                 {
-                    if (colorspace.Filter.StartsWith("setparams="))
-                    {
-                        result.Insert(0, new QsvFormatFilter(new PixelFormatQsv(format.Name)));
-                    }
+                    format = new PixelFormatNv12(format.Name);
                 }
 
-                // qsv encoders don't like yuv420p
-                format = format switch
+                if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    PixelFormatYuv420P => new PixelFormatNv12(PixelFormat.YUV420P),
-                    _ => format
-                };
+                    result.Add(new VaapiFormatFilter(format));
+                }
+                else
+                {
+                    result.Add(new PixelFormatFilter(format));
+                }
+            }
 
-                pipelineSteps.Add(new PixelFormatOutputOption(format));
+            if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi &&
+                currentState.FrameDataLocation == FrameDataLocation.Software)
+            {
+                bool setFormat = result.All(f => f is not VaapiFormatFilter && f is not PixelFormatFilter);
+                result.Add(new HardwareUploadVaapiFilter(setFormat));
             }
         }
 
@@ -331,11 +332,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState));
             }
 
-            IPixelFormat pixelFormat = context.Is10BitOutput
-                ? new PixelFormatNv12(FFmpegFormat.P010LE)
-                : new PixelFormatNv12(FFmpegFormat.YUVA420P);
-
-            watermark.FilterSteps.Add(new PixelFormatFilter(pixelFormat));
+            watermark.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 
             foreach (List<WatermarkFadePoint> fadePoints in watermark.DesiredState.MaybeFadePoints)
             {
@@ -370,6 +367,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         VideoInputFile videoInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         PipelineContext context,
+        bool forceSoftwareOverlay,
         FFmpegState ffmpegState,
         FrameState currentState,
         FrameState desiredState,
@@ -403,24 +401,46 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             }
             else if (context.HasSubtitleOverlay)
             {
-                IPixelFormat pixelFormat = new PixelFormatYuva420P();
-
-                var pixelFormatFilter = new PixelFormatFilter(pixelFormat);
+                var pixelFormatFilter = new PixelFormatFilter(new PixelFormatArgb());
                 subtitle.FilterSteps.Add(pixelFormatFilter);
 
-                foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+                if (forceSoftwareOverlay)
                 {
-                    IPixelFormat pf = desiredPixelFormat;
-                    if (desiredPixelFormat is PixelFormatNv12 nv12)
+                    foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
                     {
-                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                        IPixelFormat pf = pixelFormat;
+                        if (pixelFormat is PixelFormatNv12 nv12)
                         {
-                            pf = availablePixelFormat;
+                            foreach (IPixelFormat format in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                            {
+                                pf = format;
+                            }
                         }
+                        
+                        var subtitlesFilter = new OverlaySubtitleFilter(pf);
+                        subtitleOverlayFilterSteps.Add(subtitlesFilter);
                     }
-                    
-                    var subtitlesFilter = new OverlaySubtitleFilter(pf);
+                }
+                else
+                {
+                    var subtitleHardwareUpload = new HardwareUploadVaapiFilter(false);
+                    subtitle.FilterSteps.Add(subtitleHardwareUpload);
+
+                    // always scale - shouldn't really be needed outside of transcoding tests, which use picture subtitles
+                    // that are too big
+                    var scaleFilter = new SubtitleScaleVaapiFilter(desiredState.PaddedSize);
+                    subtitle.FilterSteps.Add(scaleFilter);
+
+                    var subtitlesFilter = new OverlaySubtitleVaapiFilter();
                     subtitleOverlayFilterSteps.Add(subtitlesFilter);
+                }
+
+                if (context.HasWatermark && !forceSoftwareOverlay)
+                {
+                    // download for watermark
+                    var hardwareDownload = new HardwareDownloadFilter(currentState);
+                    currentState = hardwareDownload.NextState(currentState);
+                    subtitleOverlayFilterSteps.Add(hardwareDownload);
                 }
             }
         }
@@ -456,11 +476,12 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     {
         IPipelineFilterStep scaleStep;
         
-        if (currentState.ScaledSize != desiredState.ScaledSize && ffmpegState is
+        if ((currentState.ScaledSize != desiredState.ScaledSize && ffmpegState is
             {
                 DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
                 EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-            } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false })
+            } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false }) ||
+            ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.Vaapi)
         {
             scaleStep = new ScaleFilter(
                 currentState,
@@ -470,7 +491,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
         else
         {
-            scaleStep = new ScaleQsvFilter(
+            scaleStep = new ScaleVaapiFilter(
                 currentState with
                 {
                     PixelFormat = //context.HasWatermark ||
@@ -486,9 +507,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                         : Option<IPixelFormat>.None
                 },
                 desiredState.ScaledSize,
-                ffmpegState.QsvExtraHardwareFrames,
-                videoStream.IsAnamorphicEdgeCase,
-                videoStream.SampleAspectRatio);
+                desiredState.PaddedSize,
+                videoStream.IsAnamorphicEdgeCase);
         }
 
         if (!string.IsNullOrWhiteSpace(scaleStep.Filter))
@@ -508,9 +528,18 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     {
         if (context.ShouldDeinterlace)
         {
-            var filter = new DeinterlaceQsvFilter(currentState, ffmpegState.QsvExtraHardwareFrames);
-            currentState = filter.NextState(currentState);
-            videoInputFile.FilterSteps.Add(filter);
+            if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+            {
+                var filter = new DeinterlaceVaapiFilter(currentState);
+                currentState = filter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(filter);
+            }
+            else
+            {
+                var filter = new YadifFilter(currentState);
+                currentState = filter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(filter);
+            }
         }
 
         return currentState;

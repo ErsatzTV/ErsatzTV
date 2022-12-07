@@ -697,8 +697,7 @@ public class PipelineBuilder : IPipelineBuilder
 
                 if (watermarkInputFile.DesiredState.Opacity != 100)
                 {
-                    watermarkInputFile.FilterSteps.Add(
-                        new WatermarkOpacityFilter(watermarkInputFile.DesiredState, is10BitOutput));
+                    watermarkInputFile.FilterSteps.Add(new WatermarkOpacityFilter(watermarkInputFile.DesiredState));
                 }
 
                 foreach (List<WatermarkFadePoint> fadePoints in watermarkInputFile.DesiredState.MaybeFadePoints)

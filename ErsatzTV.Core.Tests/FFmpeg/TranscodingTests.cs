@@ -213,8 +213,8 @@ public class TranscodingTests
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+        // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
     {
@@ -524,7 +524,10 @@ public class TranscodingTests
             bool hasSubtitleFilters =
                 filterChain.VideoFilterSteps.Any(s => s is SubtitlesFilter) ||
                 filterChain.SubtitleOverlayFilterSteps.Any(
-                    s => s is OverlaySubtitleFilter or OverlaySubtitleCudaFilter or OverlaySubtitleQsvFilter);
+                    s => s is OverlaySubtitleFilter
+                        or OverlaySubtitleCudaFilter
+                        or OverlaySubtitleQsvFilter
+                        or OverlaySubtitleVaapiFilter);
     
             hasSubtitleFilters.Should().Be(subtitle != Subtitle.None);
 

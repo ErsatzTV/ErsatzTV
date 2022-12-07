@@ -85,6 +85,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
             None,
@@ -168,6 +169,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
             None,
@@ -192,6 +194,7 @@ public class PipelineBuilderBaseTests
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
         var builder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
             None,
             None,
             None,
@@ -275,6 +278,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
             None,
@@ -350,6 +354,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
             None,
@@ -392,6 +397,7 @@ public class PipelineBuilderBaseTests
             });
 
         var pipelineBuilder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
             videoInputFile,
             Option<AudioInputFile>.None,
             Option<WatermarkInputFile>.None,
