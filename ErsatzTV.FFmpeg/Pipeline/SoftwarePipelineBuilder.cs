@@ -73,7 +73,9 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         {
             PixelFormat = videoStream.PixelFormat,
             FrameDataLocation = FrameDataLocation.Software,
-            IsAnamorphic = videoStream.IsAnamorphic
+            IsAnamorphic = videoStream.IsAnamorphic,
+            ScaledSize = videoStream.FrameSize,
+            PaddedSize = videoStream.FrameSize
         };
         
         SetDeinterlace(videoInputFile, context, currentState);
