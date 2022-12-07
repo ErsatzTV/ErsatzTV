@@ -192,12 +192,25 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                 watermark.FilterSteps.AddRange(fadePoints.Map(fp => new WatermarkFadeFilter(fp)));
             }
 
-            var watermarkFilter = new OverlayWatermarkFilter(
-                watermark.DesiredState,
-                desiredState.PaddedSize,
-                videoStream.SquarePixelFrameSize(currentState.PaddedSize),
-                _logger);
-            watermarkOverlayFilterSteps.Add(watermarkFilter);
+            foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+            {
+                IPixelFormat pf = desiredPixelFormat;
+                if (desiredPixelFormat is PixelFormatNv12 nv12)
+                {
+                    foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                    {
+                        pf = availablePixelFormat;
+                    }
+                }
+
+                var watermarkFilter = new OverlayWatermarkFilter(
+                    watermark.DesiredState,
+                    desiredState.PaddedSize,
+                    videoStream.SquarePixelFrameSize(currentState.PaddedSize),
+                    pf,
+                    _logger);
+                watermarkOverlayFilterSteps.Add(watermarkFilter);
+            }
         }
     }
 

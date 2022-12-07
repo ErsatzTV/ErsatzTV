@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Qsv;
+using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -19,6 +20,11 @@ public static class AvailableWatermarkOverlayFilters
                 new OverlayWatermarkCudaFilter(watermarkState, resolution, squarePixelFrameSize, logger),
             HardwareAccelerationMode.Qsv =>
                 new OverlayWatermarkQsvFilter(watermarkState, resolution, squarePixelFrameSize, logger),
-            _ => new OverlayWatermarkFilter(watermarkState, resolution, squarePixelFrameSize, logger)
+            _ => new OverlayWatermarkFilter(
+                watermarkState,
+                resolution,
+                squarePixelFrameSize,
+                new PixelFormatYuv420P(),
+                logger)
         };
 }

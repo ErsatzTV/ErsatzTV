@@ -91,15 +91,15 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            // Watermark.PermanentOpaqueScaled,
-            // Watermark.PermanentOpaqueActualSize,
-            // Watermark.PermanentTransparentScaled,
-            // Watermark.PermanentTransparentActualSize
+            Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueActualSize,
+            Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
-            // Subtitle.None,
+            Subtitle.None,
             Subtitle.Picture,
             Subtitle.Text
         };
@@ -107,13 +107,13 @@ public class TranscodingTests
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
-            // Padding.WithPadding
+            Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            // VideoScanKind.Interlaced
+            VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
@@ -662,15 +662,24 @@ public class TranscodingTests
             // verify de-interlace
             v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
             
+            // verify resolution
+            v.Height.Should().Be(profileResolution.Height);
+            v.Width.Should().Be(profileResolution.Width);
+
             foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
             {
                 // verify pixel format
                 videoStream.PixelFormat.Should().Be(
                     profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
                 
-                // verify resolution
-                v.Height.Should().Be(profileResolution.Height);
-                v.Width.Should().Be(profileResolution.Width);
+                // verify colors
+                var colorParams = new ColorParams(
+                    videoStream.ColorRange,
+                    videoStream.ColorSpace,
+                    videoStream.ColorTransfer,
+                    videoStream.ColorPrimaries);
+
+                colorParams.IsBt709.Should().BeTrue($"{colorParams}");
             }
         }
         finally

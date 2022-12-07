@@ -1,11 +1,9 @@
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
-using ErsatzTV.FFmpeg.Decoder.Cuvid;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Filter;
-using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
@@ -336,7 +334,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             IPixelFormat pixelFormat = context.Is10BitOutput
                 ? new PixelFormatNv12(FFmpegFormat.P010LE)
-                : new PixelFormatNv12(FFmpegFormat.YUV420P);
+                : new PixelFormatNv12(FFmpegFormat.YUVA420P);
 
             watermark.FilterSteps.Add(new PixelFormatFilter(pixelFormat));
 
@@ -345,17 +343,25 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 watermark.FilterSteps.AddRange(fadePoints.Map(fp => new WatermarkFadeFilter(fp)));
             }
 
-            watermark.FilterSteps.Add(
-                new HardwareUploadQsvFilter(
-                    currentState with { FrameDataLocation = FrameDataLocation.Software },
-                    ffmpegState));
+            foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+            {
+                IPixelFormat pf = desiredPixelFormat;
+                if (desiredPixelFormat is PixelFormatNv12 nv12)
+                {
+                    foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                    {
+                        pf = availablePixelFormat;
+                    }
+                }
 
-            var watermarkFilter = new OverlayWatermarkQsvFilter(
-                watermark.DesiredState,
-                desiredState.PaddedSize,
-                videoStream.SquarePixelFrameSize(currentState.PaddedSize),
-                _logger);
-            watermarkOverlayFilterSteps.Add(watermarkFilter);
+                var watermarkFilter = new OverlayWatermarkFilter(
+                    watermark.DesiredState,
+                    desiredState.PaddedSize,
+                    videoStream.SquarePixelFrameSize(currentState.PaddedSize),
+                    pf,
+                    _logger);
+                watermarkOverlayFilterSteps.Add(watermarkFilter);
+            }
         }
 
         return currentState;
@@ -471,7 +477,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     PixelFormat = //context.HasWatermark ||
                                   //context.HasSubtitleOverlay ||
                                   // (desiredState.ScaledSize != desiredState.PaddedSize) ||
-                                  context.HasSubtitleText ||
+                                  // context.HasSubtitleText ||
                                   ffmpegState is
                                   {
                                       DecoderHardwareAccelerationMode: HardwareAccelerationMode.Nvenc,
