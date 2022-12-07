@@ -24,8 +24,7 @@ public class WatermarkOpacityFilterTests
                 50,
                 50,
                 75,
-                false),
-            false);
+                false));
 
         filter.Filter.Should().Be("colorchannelmixer=aa=0.75");
     }
@@ -43,8 +42,7 @@ public class WatermarkOpacityFilterTests
                 50,
                 50,
                 75,
-                false),
-            false);
+                false));
 
         filter.Filter.Should().Be("colorchannelmixer=aa=0.75");
     }
