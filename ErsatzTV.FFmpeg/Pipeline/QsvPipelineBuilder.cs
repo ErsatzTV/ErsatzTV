@@ -174,12 +174,12 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
         {
             Option<IEncoder> maybeEncoder =
-                (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat, context.Is10BitOutput) switch
+                (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
-                    (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, _) => new EncoderHevcQsv(),
-                    (HardwareAccelerationMode.Qsv, VideoFormat.H264, false) => new EncoderH264Qsv(),
+                    (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
+                    (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(),
 
-                    (_, _, _) => GetSoftwareEncoder(currentState, desiredState)
+                    (_, _) => GetSoftwareEncoder(currentState, desiredState)
                 };
 
             foreach (IEncoder encoder in maybeEncoder)
