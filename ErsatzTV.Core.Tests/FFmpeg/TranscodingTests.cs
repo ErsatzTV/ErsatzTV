@@ -212,8 +212,8 @@ public class TranscodingTests
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+        // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -493,6 +493,21 @@ public class TranscodingTests
 
             NewComplexFilter complexFilter = pipeline.PipelineSteps.OfType<NewComplexFilter>().First();
             FilterChain filterChain = complexFilter.FilterChain;
+
+            if (profileBitDepth == FFmpegProfileBitDepth.TenBit)
+                // process.Arguments.Contains("=nv12") &&
+                // !process.Arguments.Contains("format=nv12,format=p010le[") &&
+                // !process.Arguments.Contains("hwdownload,format=nv12,subtitle") &&
+                // !process.Arguments.Contains("format=nv12,hwupload_cuda[st]") &&
+                // !process.Arguments.Contains("format=nv12,hwupload_cuda[wm]"))
+            {
+                var videoFilters = string.Join(",", filterChain.VideoFilterSteps.Map(f => f.Filter));
+                var pixelFormatFilters = string.Join(",", filterChain.PixelFormatFilterSteps.Map(f => f.Filter));
+                if (videoFilters.Contains("nv12") || (pixelFormatFilters.Contains("nv12") && !pixelFormatFilters.EndsWith("format=nv12,format=p010le")))
+                {
+                    // Assert.Fail("10-bit shouldn't use NV12!");
+                }
+            }
 
             bool hasDeinterlaceFilter = filterChain.VideoFilterSteps.Any(
                 s => s is YadifFilter or YadifCudaFilter or DeinterlaceQsvFilter or DeinterlaceVaapiFilter);

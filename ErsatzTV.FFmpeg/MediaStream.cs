@@ -24,6 +24,8 @@ public record VideoStream(
     Codec,
     StreamKind.Video)
 {
+    public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
+    
     public bool IsAnamorphic
     {
         get

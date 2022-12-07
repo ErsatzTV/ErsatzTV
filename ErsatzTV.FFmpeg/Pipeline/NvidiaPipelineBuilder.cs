@@ -121,8 +121,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             ScaledSize = videoStream.FrameSize,
             PaddedSize = videoStream.FrameSize,
             
-            // consider hardware frames to be wrapped in nv12
-            PixelFormat = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc
+            PixelFormat = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc && videoStream.BitDepth == 8
                 ? videoStream.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
                 : videoStream.PixelFormat,
             
@@ -132,21 +131,51 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 : FrameDataLocation.Software
         };
 
-        // easier to use nv12 for overlay
-        if (context.HasSubtitleOverlay || context.HasWatermark)
-        {
-            IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(
-                context.Is10BitOutput ? new PixelFormatYuv420P10Le() : new PixelFormatYuv420P());
-            desiredState = desiredState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
-        }
+        // if (context.HasSubtitleOverlay || context.HasWatermark)
+        // {
+        //     IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(
+        //         context.Is10BitOutput ? new PixelFormatYuv420P10Le() : new PixelFormatYuv420P());
+        //     desiredState = desiredState with { PixelFormat = Some(pixelFormat) };
+        // }
 
         currentState = SetDeinterlace(videoInputFile, context, currentState);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
 
+        if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark)
+        {
+            Option<IPixelFormat> desiredPixelFormat = Some((IPixelFormat)new PixelFormatYuv420P());
+
+            if (desiredPixelFormat != currentState.PixelFormat)
+            {
+                if (currentState.FrameDataLocation == FrameDataLocation.Software)
+                {
+                    foreach (IPixelFormat pixelFormat in desiredPixelFormat)
+                    {
+                        var filter = new PixelFormatFilter(pixelFormat);
+                        currentState = filter.NextState(currentState);
+                        videoInputFile.FilterSteps.Add(filter);
+                    }
+                }
+                else
+                {
+                    foreach (IPixelFormat pixelFormat in desiredPixelFormat)
+                    {
+                        var filter = new ScaleCudaFilter(
+                            currentState with { PixelFormat = Some(pixelFormat) },
+                            currentState.ScaledSize,
+                            currentState.PaddedSize,
+                            false);
+                        currentState = filter.NextState(currentState);
+                        videoInputFile.FilterSteps.Add(filter);
+                    }
+                }
+            }
+        }
+
         // need to upload for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Software &&
-            (context.HasSubtitleOverlay || context.HasWatermark))
+            currentState.BitDepth == 8 && (context.HasSubtitleOverlay || context.HasWatermark))
         {
             var hardwareUpload = new HardwareUploadCudaFilter(currentState);
             currentState = hardwareUpload.NextState(currentState);
@@ -237,34 +266,43 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(videoStream, format, currentState.FrameDataLocation);
 
-                // force nv12 if we're still in hardware
-                if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
+                // force nv12 if we're still 8-bit and in hardware
+                if (currentState.FrameDataLocation == FrameDataLocation.Hardware && currentState.BitDepth == 8)
                 {
-                    if (formatForDownload is not PixelFormatNv12)
-                    {
-                        formatForDownload = new PixelFormatNv12(pixelFormat.Name);
-                    }
+                    // if (formatForDownload is not PixelFormatNv12)
+                    // {
+                        // formatForDownload = new PixelFormatNv12(pixelFormat.Name);
+                    // }
                 }
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
             }
-
+            
             if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
             {
                 _logger.LogDebug("Using software encoder");
                 
-                if (context.HasSubtitleOverlay || context.HasWatermark ||
+                if ((context.HasSubtitleOverlay || context.HasWatermark) &&
                     currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
                     _logger.LogDebug(
-                        "HasSubtitleOverlay || HasWatermark || FrameDataLocation == FrameDataLocation.Hardware");
-                    
-                    var hardwareDownload = new CudaHardwareDownloadFilter(Some(formatForDownload));
+                        "HasSubtitleOverlay || HasWatermark && FrameDataLocation == FrameDataLocation.Hardware");
+
+                    var hardwareDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat);
                     currentState = hardwareDownload.NextState(currentState);
                     result.Add(hardwareDownload);
                 }
             }
+            // else
+            // {
+            //     if (currentState.FrameDataLocation == FrameDataLocation.Software)
+            //     {
+            //         var hardwareUpload = new HardwareUploadCudaFilter(currentState);
+            //         currentState = hardwareUpload.NextState(currentState);
+            //         result.Add(hardwareUpload);
+            //     }
+            // }
 
             if (currentState.PixelFormat.Map(f => f.FFmpegName) != format.FFmpegName)
             {
@@ -324,11 +362,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState));
             }
 
-            IPixelFormat pixelFormat = context.Is10BitOutput
-                ? new PixelFormatNv12(FFmpegFormat.P010LE)
-                : new PixelFormatNv12(FFmpegFormat.YUV420P);
-
-            watermark.FilterSteps.Add(new PixelFormatFilter(pixelFormat));
+            watermark.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 
             foreach (List<WatermarkFadePoint> fadePoints in watermark.DesiredState.MaybeFadePoints)
             {
@@ -393,29 +427,54 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             }
             else if (context.HasSubtitleOverlay)
             {
-                IPixelFormat pixelFormat = context.Is10BitOutput
-                    ? new PixelFormatNv12(FFmpegFormat.P010LE)
-                    : new PixelFormatNv12(FFmpegFormat.YUV420P);
-
-                var pixelFormatFilter = new PixelFormatFilter(pixelFormat);
+                var pixelFormatFilter = new PixelFormatFilter(new PixelFormatYuva420P());
                 subtitle.FilterSteps.Add(pixelFormatFilter);
 
-                var subtitleHardwareUpload = new HardwareUploadCudaFilter(
-                    currentState with { FrameDataLocation = FrameDataLocation.Software });
-                subtitle.FilterSteps.Add(subtitleHardwareUpload);
-                
-                // only scale if scaling or padding was used for main video stream
-                if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                if (currentState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 8)
                 {
-                    var scaleFilter = new SubtitleScaleNppFilter(
-                        currentState,
-                        desiredState.ScaledSize,
-                        desiredState.PaddedSize);
-                    subtitle.FilterSteps.Add(scaleFilter);
-                }
+                    var subtitleHardwareUpload = new HardwareUploadCudaFilter(
+                        currentState with { FrameDataLocation = FrameDataLocation.Software });
+                    subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
-                var subtitlesFilter = new OverlaySubtitleCudaFilter();
-                subtitleOverlayFilterSteps.Add(subtitlesFilter);
+                    // only scale if scaling or padding was used for main video stream
+                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                    {
+                        var scaleFilter = new SubtitleScaleNppFilter(
+                            currentState,
+                            desiredState.ScaledSize,
+                            desiredState.PaddedSize);
+                        subtitle.FilterSteps.Add(scaleFilter);
+                    }
+
+                    var subtitlesFilter = new OverlaySubtitleCudaFilter();
+                    subtitleOverlayFilterSteps.Add(subtitlesFilter);
+                }
+                else
+                {
+                    if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
+                    {
+                        var cudaDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat);
+                        currentState = cudaDownload.NextState(currentState);
+                        videoInputFile.FilterSteps.Add(cudaDownload);
+                    }
+                    
+                    // only scale if scaling or padding was used for main video stream
+                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                    {
+                        var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
+                        subtitle.FilterSteps.Add(scaleFilter);
+                    }
+
+                    var subtitlesFilter =
+                        new OverlaySubtitleFilter(desiredState.PixelFormat.IfNone(new PixelFormatYuv420P()));
+                    subtitleOverlayFilterSteps.Add(subtitlesFilter);
+
+                    // overlay produces YUVA420P10, so we need to strip the alpha
+                    if (currentState.BitDepth == 10)
+                    {
+                        subtitleOverlayFilterSteps.Add(new PixelFormatFilter(new PixelFormatYuv420P10Le()));
+                    }
+                }
             }
         }
 
@@ -465,7 +524,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             scaleStep = new ScaleCudaFilter(
                 currentState with
                 {
-                    PixelFormat = context.HasWatermark ||
+                    PixelFormat = !context.Is10BitOutput && (context.HasWatermark ||
                                   context.HasSubtitleOverlay ||
                                   context.ShouldDeinterlace ||
                                   (desiredState.ScaledSize != desiredState.PaddedSize) ||
@@ -474,7 +533,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                                   {
                                       DecoderHardwareAccelerationMode: HardwareAccelerationMode.Nvenc,
                                       EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-                                  }
+                                  })
                         ? desiredState.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
                         : Option<IPixelFormat>.None
                 },
