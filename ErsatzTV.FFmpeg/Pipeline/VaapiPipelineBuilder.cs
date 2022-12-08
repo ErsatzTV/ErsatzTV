@@ -83,7 +83,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
             (HardwareAccelerationMode.Vaapi, _) => new DecoderVaapi(),
-
             _ => GetSoftwareDecoder(videoStream)
         };
 

@@ -47,7 +47,7 @@ public static class AvailableEncoders
 
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) when hardwareCapabilities.CanEncode(
                 VideoFormat.Hevc,
-                desiredState.PixelFormat) => new EncoderHevcVideoToolbox(),
+                desiredState.PixelFormat) => new EncoderHevcVideoToolbox(desiredState.BitDepth),
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) when hardwareCapabilities.CanEncode(
                 VideoFormat.H264,
                 desiredState.PixelFormat) => new EncoderH264VideoToolbox(),

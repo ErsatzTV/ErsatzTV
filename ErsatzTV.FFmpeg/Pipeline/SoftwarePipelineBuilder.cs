@@ -57,6 +57,14 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         }
     }
 
+    protected virtual Option<IEncoder> GetEncoder(
+        FFmpegState ffmpegState,
+        FrameState currentState,
+        FrameState desiredState)
+    {
+        return GetSoftwareEncoder(currentState, desiredState);
+    }
+
     protected override FilterChain SetVideoFilters(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
@@ -97,7 +105,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
         {
-            foreach (IEncoder encoder in GetSoftwareEncoder(currentState, desiredState))
+            foreach (IEncoder encoder in GetEncoder(ffmpegState, currentState, desiredState))
             {
                 pipelineSteps.Add(encoder);
                 videoInputFile.FilterSteps.Add(encoder);
@@ -119,7 +127,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             pixelFormatFilterSteps);
     }
 
-    private List<IPipelineFilterStep> SetPixelFormat(
+    protected virtual List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
         FrameState currentState,

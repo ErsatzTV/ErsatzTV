@@ -140,7 +140,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             Is10BitOutput: desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10);
 
         SetThreadCount(ffmpegState, desiredState, pipelineSteps);
-        SetSceneDetect(videoStream, desiredState, pipelineSteps);
+        SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
         SetTimeLimit(ffmpegState, pipelineSteps);
@@ -554,11 +554,13 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     private static void SetSceneDetect(
         // ReSharper disable once SuggestBaseTypeForParameter
         VideoStream videoStream,
+        FFmpegState ffmpegState,
         FrameState desiredState,
         ICollection<IPipelineStep> pipelineSteps)
     {
         // -sc_threshold 0 is unsupported with mpeg2video
-        if (videoStream.Codec == VideoFormat.Mpeg2Video || desiredState.VideoFormat == VideoFormat.Mpeg2Video)
+        if (videoStream.Codec == VideoFormat.Mpeg2Video || desiredState.VideoFormat == VideoFormat.Mpeg2Video ||
+            ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox)
         {
             pipelineSteps.Add(new NoSceneDetectOutputOption(1_000_000_000));
         }
