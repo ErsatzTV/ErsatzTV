@@ -6,15 +6,18 @@ public class ColorspaceFilter : BaseFilter
 {
     private readonly VideoStream _videoStream;
     private readonly IPixelFormat _desiredPixelFormat;
+    private readonly bool _forceInputOverrides;
     private readonly FrameDataLocation _nextDataLocation;
 
     public ColorspaceFilter(
         VideoStream videoStream,
         IPixelFormat desiredPixelFormat,
+        bool forceInputOverrides = false,
         FrameDataLocation nextDataLocation = FrameDataLocation.Software)
     {
         _videoStream = videoStream;
         _desiredPixelFormat = desiredPixelFormat;
+        _forceInputOverrides = forceInputOverrides;
         _nextDataLocation = nextDataLocation;
     }
 
@@ -36,10 +39,12 @@ public class ColorspaceFilter : BaseFilter
         {
             string inputOverrides = string.Empty;
             ColorParams cp = _videoStream.ColorParams;
-            if (cp.IsMixed)
+            if (cp.IsMixed || _forceInputOverrides)
             {
+                string range = string.IsNullOrWhiteSpace(cp.ColorRange) ? "tv" : cp.ColorRange;
+
                 inputOverrides =
-                    $"irange={cp.ColorRange}:ispace={cp.ColorSpace}:itrc={cp.ColorTransfer}:iprimaries={cp.ColorPrimaries}:";
+                    $"irange={range}:ispace={cp.ColorSpace}:itrc={cp.ColorTransfer}:iprimaries={cp.ColorPrimaries}:";
             }
 
             string colorspace = _desiredPixelFormat.BitDepth switch
