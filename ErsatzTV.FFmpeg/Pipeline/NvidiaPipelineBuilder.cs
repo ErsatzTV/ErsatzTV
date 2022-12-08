@@ -259,21 +259,10 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 }
             }
 
-            IPixelFormat formatForDownload = pixelFormat;
-            
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(videoStream, format, currentState.FrameDataLocation);
-
-                // force nv12 if we're still 8-bit and in hardware
-                if (currentState.FrameDataLocation == FrameDataLocation.Hardware && currentState.BitDepth == 8)
-                {
-                    // if (formatForDownload is not PixelFormatNv12)
-                    // {
-                        // formatForDownload = new PixelFormatNv12(pixelFormat.Name);
-                    // }
-                }
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
@@ -294,15 +283,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     result.Add(hardwareDownload);
                 }
             }
-            // else
-            // {
-            //     if (currentState.FrameDataLocation == FrameDataLocation.Software)
-            //     {
-            //         var hardwareUpload = new HardwareUploadCudaFilter(currentState);
-            //         currentState = hardwareUpload.NextState(currentState);
-            //         result.Add(hardwareUpload);
-            //     }
-            // }
 
             if (currentState.PixelFormat.Map(f => f.FFmpegName) != format.FFmpegName)
             {
@@ -319,6 +299,14 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 {
                     pipelineSteps.Add(new PixelFormatOutputOption(format));
                 }
+            }
+
+            if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
+                ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
+            {
+                var hardwareDownload = new CudaHardwareDownloadFilter(Some(format));
+                currentState = hardwareDownload.NextState(currentState);
+                result.Add(hardwareDownload);
             }
         }
 
@@ -555,9 +543,18 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     {
         if (context.ShouldDeinterlace)
         {
-            var filter = new YadifCudaFilter(currentState);
-            currentState = filter.NextState(currentState);
-            videoInputFile.FilterSteps.Add(filter);
+            if (currentState.FrameDataLocation == FrameDataLocation.Software)
+            {
+                var filter = new YadifFilter(currentState);
+                currentState = filter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(filter);
+            }
+            else
+            {
+                var filter = new YadifCudaFilter(currentState);
+                currentState = filter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(filter);
+            }
         }
 
         return currentState;
