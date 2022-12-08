@@ -17,6 +17,8 @@ public class ComplexFilter : IPipelineStep
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly FrameSize _resolution;
     private readonly List<string> _outputOptions;
+    private readonly List<IPipelineStep> _pipelineSteps;
+    private readonly IList<string> _arguments;
 
     public ComplexFilter(
         FrameState currentState,
@@ -42,16 +44,21 @@ public class ComplexFilter : IPipelineStep
         _logger = logger;
 
         _outputOptions = new List<string>();
+        _pipelineSteps = new List<IPipelineStep>();
+
+        _arguments = Arguments();
     }
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
-    public IList<string> FilterOptions => Arguments();
+    public IList<string> FilterOptions => _arguments;
     public IList<string> OutputOptions => _outputOptions;
+    public IList<IPipelineStep> PipelineSteps => _pipelineSteps;
+
     public FrameState NextState(FrameState currentState) => currentState;
 
-    private IList<string> Arguments()
+    private List<string> Arguments()
     {
         var state = _currentState;
         
@@ -172,6 +179,8 @@ public class ComplexFilter : IPipelineStep
 
                     if (overlayFilter.Filter != string.Empty)
                     {
+                        _pipelineSteps.Add(overlayFilter);
+                        
                         state = overlayFilter.NextState(state);
 
                         string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex)
@@ -188,7 +197,9 @@ public class ComplexFilter : IPipelineStep
                              HardwareAccelerationMode.VideoToolbox &&
                              state.VideoFormat == VideoFormat.Hevc))
                         {
-                            uploadDownloadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
+                            var hardwareUpload = new HardwareUploadFilter(_ffmpegState);
+                            _pipelineSteps.Add(hardwareUpload);
+                            uploadDownloadFilter = hardwareUpload.Filter;
                             state = state with { FrameDataLocation = FrameDataLocation.Hardware };
                         }
 
@@ -197,7 +208,9 @@ public class ComplexFilter : IPipelineStep
                             _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.VideoToolbox &&
                             _ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.Amf)
                         {
-                            uploadDownloadFilter = new HardwareDownloadFilter(state).Filter;
+                            var hardwareDownload = new HardwareDownloadFilter(state);
+                            _pipelineSteps.Add(hardwareDownload);
+                            uploadDownloadFilter = hardwareDownload.Filter;
                             state = state with { FrameDataLocation = FrameDataLocation.Software };
                         }
 
@@ -241,6 +254,7 @@ public class ComplexFilter : IPipelineStep
                 {
                     IPipelineFilterStep overlayFilter = AvailableSubtitleOverlayFilters.ForAcceleration(
                         _ffmpegState.EncoderHardwareAccelerationMode);
+                    _pipelineSteps.Add(overlayFilter);
                     state = overlayFilter.NextState(state);
                     filter = overlayFilter.Filter;
                 }
@@ -248,6 +262,7 @@ public class ComplexFilter : IPipelineStep
                 {
                     subtitleLabel = string.Empty;
                     var subtitlesFilter = new SubtitlesFilter(_fontsDir, subtitleInputFile);
+                    _pipelineSteps.Add(subtitlesFilter);
                     state = subtitlesFilter.NextState(state);
                     filter = subtitlesFilter.Filter;
                 }
@@ -265,7 +280,9 @@ public class ComplexFilter : IPipelineStep
                         || _ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
                         state.VideoFormat == VideoFormat.Hevc)
                     {
-                        uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
+                        var hardwareUpload = new HardwareUploadFilter(_ffmpegState);
+                        _pipelineSteps.Add(hardwareUpload);
+                        uploadFilter = hardwareUpload.Filter;
                         if (!string.IsNullOrWhiteSpace(uploadFilter))
                         {
                             state = state with { FrameDataLocation = FrameDataLocation.Hardware };
@@ -300,7 +317,9 @@ public class ComplexFilter : IPipelineStep
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
-                filter = new ColorspaceFilter(videoStream, pixelFormat).Filter;
+                var colorspace = new ColorspaceFilter(videoStream, pixelFormat);
+                _pipelineSteps.Add(colorspace);
+                filter = colorspace.Filter;
             }
 
             if (state.PixelFormat.Map(f => f.FFmpegName) != pixelFormat.FFmpegName)

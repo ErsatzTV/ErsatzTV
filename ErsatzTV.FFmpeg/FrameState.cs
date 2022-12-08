@@ -18,4 +18,5 @@ public record FrameState(
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
 {
     public string FFmpegAspectRatio => PaddedSize.Width == 640 ? "4/3" : "16/9";
+    public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 }

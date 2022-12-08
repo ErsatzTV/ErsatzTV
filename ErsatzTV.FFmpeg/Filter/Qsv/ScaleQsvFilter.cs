@@ -78,15 +78,39 @@ public class ScaleQsvFilter : BaseFilter
                 return $"format={initialPixelFormat},hwupload=extra_hw_frames={_extraHardwareFrames},{scale}";
             }
 
-            return $"format={initialPixelFormat},hwupload=extra_hw_frames={_extraHardwareFrames}";
+            return string.Empty;
         }
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState with
+    public override FrameState NextState(FrameState currentState)
     {
-        ScaledSize = _scaledSize,
-        PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Hardware,
-        IsAnamorphic = false // this filter always outputs square pixels
-    };
+        FrameState result = currentState with
+        {
+            ScaledSize = _scaledSize,
+            PaddedSize = _scaledSize,
+            FrameDataLocation = FrameDataLocation.Hardware,
+            IsAnamorphic = false // this filter always outputs square pixels
+        };
+
+        if (_currentState.PixelFormat.IsNone &&
+            _currentState.FrameDataLocation == FrameDataLocation.Software &&
+            currentState.PixelFormat.Map(pf => pf is not PixelFormatNv12).IfNone(false))
+        {
+            // wrap in nv12
+            result = result with
+            {
+                PixelFormat = currentState.PixelFormat
+                    .Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
+            };
+        }
+        else
+        {
+            foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+            {
+                result = result with { PixelFormat = Some(pixelFormat) };
+            }
+        }
+
+        return result;
+    }
 }

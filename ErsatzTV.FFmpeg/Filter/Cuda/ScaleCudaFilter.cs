@@ -78,11 +78,21 @@ public class ScaleCudaFilter : BaseFilter
         }
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState with
+    public override FrameState NextState(FrameState currentState)
     {
-        ScaledSize = _scaledSize,
-        PaddedSize = _scaledSize,
-        FrameDataLocation = FrameDataLocation.Hardware,
-        IsAnamorphic = false // this filter always outputs square pixels
-    };
+        FrameState result = currentState with
+        {
+            ScaledSize = _scaledSize,
+            PaddedSize = _scaledSize,
+            FrameDataLocation = FrameDataLocation.Hardware,
+            IsAnamorphic = false // this filter always outputs square pixels
+        };
+        
+        foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+        {
+            result = result with { PixelFormat = Some(pixelFormat) };
+        }
+
+        return result;
+    }
 }
