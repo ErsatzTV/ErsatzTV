@@ -190,6 +190,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
         
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
+            videoInputFile,
             videoStream,
             desiredState.PixelFormat,
             ffmpegState,
@@ -207,6 +208,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     }
     
     private List<IPipelineFilterStep> SetPixelFormat(
+        VideoInputFile videoInputFile,
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
         FFmpegState ffmpegState,
@@ -233,7 +235,15 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
-                var colorspace = new ColorspaceFilter(videoStream, format, currentState.FrameDataLocation);
+
+                // vpp_qsv seems to strip color info, so if we use that at all, force overriding input color info
+                bool forceInputOverrides = videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter);
+
+                var colorspace = new ColorspaceFilter(
+                    videoStream,
+                    format,
+                    forceInputOverrides,
+                    currentState.FrameDataLocation);
 
                 // force nv12 if we're still in hardware
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
