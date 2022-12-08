@@ -21,7 +21,7 @@ public static class AvailableDecoders
             {
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc, _)
                     when hardwareCapabilities.CanDecode(VideoFormat.Hevc, currentState.PixelFormat) =>
-                    new DecoderHevcCuvid(ffmpegState),
+                    new DecoderHevcCuvid(ffmpegState.EncoderHardwareAccelerationMode),
 
                 // nvenc doesn't support hardware decoding of 10-bit content
                 (HardwareAccelerationMode.Nvenc, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE)
@@ -33,15 +33,15 @@ public static class AvailableDecoders
 
                 (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _)
                     when hardwareCapabilities.CanDecode(VideoFormat.H264, currentState.PixelFormat) =>
-                    new DecoderH264Cuvid(ffmpegState),
+                    new DecoderH264Cuvid(ffmpegState.EncoderHardwareAccelerationMode),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(
-                    ffmpegState,
+                    ffmpegState.EncoderHardwareAccelerationMode,
                     desiredState.Deinterlaced),
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(ffmpegState),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(ffmpegState.EncoderHardwareAccelerationMode),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9, _)
                     when hardwareCapabilities.CanDecode(VideoFormat.Vp9, currentState.PixelFormat) =>
-                    new DecoderVp9Cuvid(ffmpegState),
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4, _) => new DecoderMpeg4Cuvid(ffmpegState),
+                    new DecoderVp9Cuvid(ffmpegState.EncoderHardwareAccelerationMode),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4, _) => new DecoderMpeg4Cuvid(ffmpegState.EncoderHardwareAccelerationMode),
 
                 // hevc_qsv decoder sometimes causes green lines with 10-bit content
                 (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, PixelFormat.YUV420P10LE) => new DecoderHevc(),

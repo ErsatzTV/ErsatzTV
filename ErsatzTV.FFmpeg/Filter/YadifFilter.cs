@@ -6,6 +6,7 @@ public class YadifFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
+    // TODO: accept frame data location instead of current state
     public YadifFilter(FrameState currentState) => _currentState = currentState;
 
     public override string Filter

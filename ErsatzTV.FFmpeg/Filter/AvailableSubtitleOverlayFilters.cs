@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Qsv;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
@@ -10,6 +11,6 @@ public static class AvailableSubtitleOverlayFilters
         {
             HardwareAccelerationMode.Nvenc => new OverlaySubtitleCudaFilter(),
             HardwareAccelerationMode.Qsv => new OverlaySubtitleQsvFilter(),
-            _ => new OverlaySubtitleFilter()
+            _ => new OverlaySubtitleFilter(new PixelFormatYuv420P())
         };
 }

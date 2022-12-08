@@ -12,6 +12,12 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Filter;
+using ErsatzTV.FFmpeg.Filter.Cuda;
+using ErsatzTV.FFmpeg.Filter.Qsv;
+using ErsatzTV.FFmpeg.Filter.Vaapi;
+using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Runtime;
 using FluentAssertions;
@@ -221,7 +227,7 @@ public class TranscodingTests
             }
         }
 
-        string name = GetStringSha256Hash($"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}");
+        string name = GetStringSha256Hash($"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{subtitle}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -229,9 +235,9 @@ public class TranscodingTests
             string resolution = padding == Padding.WithPadding ? "1920x1060" : "1920x1080";
 
             string videoFilter = videoScanKind == VideoScanKind.Interlaced
-                ? "-vf tinterlace=interleave_top,fieldorder=tff"
+                ? "-vf interlace=scan=tff:lowpass=complex"
                 : string.Empty;
-            string flags = videoScanKind == VideoScanKind.Interlaced ? "-flags +ildct+ilme" : string.Empty;
+            string flags = videoScanKind == VideoScanKind.Interlaced ? "-field_order tt -flags +ildct+ilme" : string.Empty;
 
             string args =
                 $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
@@ -266,7 +272,7 @@ public class TranscodingTests
                         StartInfo = new ProcessStartInfo
                         {
                             FileName = ExecutableName("mkvmerge"),
-                            Arguments = $"-o {tempFileName} {sourceFile} {subPath}"
+                            Arguments = $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}"
                         }
                     };
 
@@ -288,6 +294,8 @@ public class TranscodingTests
                     }
 
                     p2.ExitCode.Should().Be(0);
+
+                    await SetInterlacedFlag(tempFileName, sourceFile, file, videoScanKind == VideoScanKind.Interlaced);
 
                     File.Move(tempFileName, file, true);
                     break;
@@ -318,11 +326,10 @@ public class TranscodingTests
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             new Mock<ITempFilePool>().Object,
-            new FakeNvidiaCapabilitiesFactory(),
-            // new HardwareCapabilitiesFactory(
-            //     new MemoryCache(new MemoryCacheOptions()),
-            //     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
-            new RuntimeInfo(),
+            new PipelineBuilderFactory(
+                new RuntimeInfo(),
+                new FakeNvidiaCapabilitiesFactory(),
+                LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var v = new MediaVersion
@@ -366,6 +373,11 @@ public class TranscodingTests
                     }
                 }
             });
+
+        if (videoScanKind == VideoScanKind.Interlaced)
+        {
+            v.VideoScanKind.Should().Be(VideoScanKind.Interlaced, file);
+        }
 
         var subtitleStreams = v.Streams
             .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
@@ -427,7 +439,8 @@ public class TranscodingTests
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
                     Opacity = 100,
-                    Size = WatermarkSize.Scaled
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 15
                 };
                 break;
             case Watermark.PermanentOpaqueActualSize:
@@ -445,7 +458,8 @@ public class TranscodingTests
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
                     Opacity = 80,
-                    Size = WatermarkSize.Scaled
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 15
                 };
                 break;
             case Watermark.PermanentTransparentActualSize:
@@ -472,6 +486,71 @@ public class TranscodingTests
             Directory.CreateDirectory(FileSystemLayout.SubtitleCacheFolder);
             File.Copy(sourceFile, srtFile, true);
         }
+
+        void PipelineAction(FFmpegPipeline pipeline)
+        {
+            // validate pipeline matches expectations (at a high level)
+
+            NewComplexFilter complexFilter = pipeline.PipelineSteps.OfType<NewComplexFilter>().First();
+            FilterChain filterChain = complexFilter.FilterChain;
+
+            if (profileBitDepth == FFmpegProfileBitDepth.TenBit)
+                // process.Arguments.Contains("=nv12") &&
+                // !process.Arguments.Contains("format=nv12,format=p010le[") &&
+                // !process.Arguments.Contains("hwdownload,format=nv12,subtitle") &&
+                // !process.Arguments.Contains("format=nv12,hwupload_cuda[st]") &&
+                // !process.Arguments.Contains("format=nv12,hwupload_cuda[wm]"))
+            {
+                var videoFilters = string.Join(",", filterChain.VideoFilterSteps.Map(f => f.Filter));
+                var pixelFormatFilters = string.Join(",", filterChain.PixelFormatFilterSteps.Map(f => f.Filter));
+                if (videoFilters.Contains("nv12") || (pixelFormatFilters.Contains("nv12") && !pixelFormatFilters.EndsWith("format=nv12,format=p010le")))
+                {
+                    // Assert.Fail("10-bit shouldn't use NV12!");
+                }
+            }
+
+            bool hasDeinterlaceFilter = filterChain.VideoFilterSteps.Any(
+                s => s is YadifFilter or YadifCudaFilter or DeinterlaceQsvFilter or DeinterlaceVaapiFilter);
+
+            hasDeinterlaceFilter.Should().Be(videoScanKind == VideoScanKind.Interlaced);
+
+            bool hasScaling = filterChain.VideoFilterSteps.Filter(
+                    s => s is ScaleFilter or ScaleCudaFilter or ScaleQsvFilter or ScaleVaapiFilter)
+                .Filter(s => s is not ScaleCudaFilter cuda || !cuda.Filter.Contains("scale_cuda=format="))
+                .Any();
+
+            // TODO: sometimes scaling is used for pixel format, so this is harder to assert the absence
+            if (profileResolution.Width != 1920)
+            {
+                hasScaling.Should().BeTrue();
+            }
+
+            // TODO: bit depth
+
+            bool hasPadding = filterChain.VideoFilterSteps.Any(s => s is PadFilter);
+
+            // TODO: optimize out padding
+            // hasPadding.Should().Be(padding == Padding.WithPadding);
+            if (padding == Padding.WithPadding)
+            {
+                hasPadding.Should().BeTrue();
+            }
+
+            bool hasSubtitleFilters =
+                filterChain.VideoFilterSteps.Any(s => s is SubtitlesFilter) ||
+                filterChain.SubtitleOverlayFilterSteps.Any(
+                    s => s is OverlaySubtitleFilter
+                        or OverlaySubtitleCudaFilter
+                        or OverlaySubtitleQsvFilter
+                        or OverlaySubtitleVaapiFilter);
+    
+            hasSubtitleFilters.Should().Be(subtitle != Subtitle.None);
+
+            bool hasWatermarkFilters = filterChain.WatermarkOverlayFilterSteps.Any(
+                s => s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
+
+            hasWatermarkFilters.Should().Be(watermark != Watermark.None);
+        };
 
         Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
@@ -514,7 +593,8 @@ public class TranscodingTests
             TimeSpan.FromSeconds(5),
             0,
             None,
-            false);
+            false,
+            PipelineAction);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
@@ -527,41 +607,137 @@ public class TranscodingTests
         };
 
         var sb = new StringBuilder();
-        CommandResult result;
         var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        string tempFile = Path.GetTempFileName();
         try
         {
-            result = await process
-                .WithStandardOutputPipe(PipeTarget.ToStream(Stream.Null))
-                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
-                .ExecuteAsync(timeoutSignal.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            Assert.Fail($"Transcode failure (timeout): ffmpeg {process.Arguments}");
-            return;
-        }
+            CommandResult result;
 
-        var error = sb.ToString();
-        bool isUnsupported = unsupportedMessages.Any(error.Contains);
-
-        if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
-        {
-            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
-            Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
-        }
-        else if (error.Contains("Impossible to convert between"))
-        {
-            Assert.Fail($"Transcode failure: ffmpeg {process.Arguments}");
-        }
-        else
-        {
-            result.ExitCode.Should().Be(0, error + Environment.NewLine + process.Arguments);
-            if (result.ExitCode == 0)
+            try
             {
-                Console.WriteLine(process.Arguments);
+                result = await process
+                    .WithStandardOutputPipe(PipeTarget.ToFile(tempFile))
+                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
+                    .ExecuteAsync(timeoutSignal.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                Assert.Fail($"Transcode failure (timeout): ffmpeg {arguments}");
+                return;
+            }
+
+            var error = sb.ToString();
+            bool isUnsupported = unsupportedMessages.Any(error.Contains);
+
+            if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
+            {
+                result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
+                Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
+            }
+            else if (error.Contains("Impossible to convert between"))
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                Assert.Fail($"Transcode failure: ffmpeg {arguments}");
+            }
+            else
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                result.ExitCode.Should().Be(0, error + Environment.NewLine + arguments);
+                if (result.ExitCode == 0)
+                {
+                    Console.WriteLine(process.Arguments);
+                }
+            }
+            
+            // additional checks on resulting file
+            await localStatisticsProvider.RefreshStatistics(
+                ExecutableName("ffmpeg"),
+                ExecutableName("ffprobe"),
+                new Movie
+                {
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = tempFile }
+                            }
+                        }
+                    }
+                });
+
+            // verify de-interlace
+            v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
+            
+            // verify resolution
+            v.Height.Should().Be(profileResolution.Height);
+            v.Width.Should().Be(profileResolution.Width);
+
+            foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
+            {
+                // verify pixel format
+                videoStream.PixelFormat.Should().Be(
+                    profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
+                
+                // verify colors
+                var colorParams = new ColorParams(
+                    videoStream.ColorRange,
+                    videoStream.ColorSpace,
+                    videoStream.ColorTransfer,
+                    videoStream.ColorPrimaries);
+
+                colorParams.IsBt709.Should().BeTrue($"{colorParams}");
             }
         }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
+    }
+
+    private static async Task SetInterlacedFlag(string tempFileName, string sourceFile, string file, bool interlaced)
+    {
+        var p = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = ExecutableName("mkvpropedit"),
+                Arguments = $"{tempFileName} --edit track:v1 --set interlaced={(interlaced ? '1' : '0')}",
+            }
+        };
+
+        p.Start();
+        await p.WaitForExitAsync();
+        // ReSharper disable once MethodHasAsyncOverload
+        p.WaitForExit();
+        if (p.ExitCode != 0)
+        {
+            if (File.Exists(sourceFile))
+            {
+                File.Delete(sourceFile);
+            }
+
+            if (File.Exists(file))
+            {
+                File.Delete(file);
+            }
+        }
+
+        p.ExitCode.Should().Be(0);
     }
 
     private static string GetStringSha256Hash(string text)

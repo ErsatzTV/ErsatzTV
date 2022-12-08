@@ -9,6 +9,7 @@ using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 using ErsatzTV.FFmpeg.Option.Metadata;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Protocol;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
@@ -16,7 +17,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg;
 
-public class PipelineBuilder
+public class PipelineBuilder : IPipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly string _fontsFolder;
@@ -121,9 +122,10 @@ public class PipelineBuilder
         return new FFmpegPipeline(_pipelineSteps);
     }
 
-    public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
+    public virtual FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
-        var originalDesiredPixelFormat = desiredState.PixelFormat;
+        Option<IPixelFormat> originalDesiredPixelFormat = desiredState.PixelFormat;
+        bool is10BitOutput = desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
         
         if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
         {
@@ -253,18 +255,20 @@ public class PipelineBuilder
                     }
                 }
 
-                // nvenc requires yuv420p background with yuva420p overlay
-                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc && hasOverlay)
+                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc && hasOverlay &&
+                    is10BitOutput)
                 {
-                    desiredState = desiredState with { PixelFormat = new PixelFormatYuv420P() };
-                }
-
-                // qsv should stay nv12
-                if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv && hasOverlay)
-                {
-                    IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P());
+                    IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P10Le());
                     desiredState = desiredState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
                 }
+
+                //
+                // // qsv should stay nv12
+                // if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv && hasOverlay)
+                // {
+                //     IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P());
+                //     desiredState = desiredState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
+                // }
 
                 foreach (string desiredVaapiDriver in ffmpegState.VaapiDriver)
                 {
@@ -597,7 +601,7 @@ public class PipelineBuilder
                         _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
                     }
 
-                    var pixelFormatFilter = new SubtitlePixelFormatFilter(ffmpegState);
+                    var pixelFormatFilter = new SubtitlePixelFormatFilter(ffmpegState, is10BitOutput);
                     subtitleInputFile.FilterSteps.Add(pixelFormatFilter);
 
                     subtitleInputFile.FilterSteps.Add(new SubtitleHardwareUploadFilter(currentState, ffmpegState));
@@ -669,7 +673,7 @@ public class PipelineBuilder
                 }
 
                 watermarkInputFile.FilterSteps.Add(
-                    new WatermarkPixelFormatFilter(ffmpegState, watermarkInputFile.DesiredState));
+                    new WatermarkPixelFormatFilter(ffmpegState, watermarkInputFile.DesiredState, is10BitOutput));
 
                 foreach (VideoStream watermarkStream in watermarkInputFile.VideoStreams)
                 {

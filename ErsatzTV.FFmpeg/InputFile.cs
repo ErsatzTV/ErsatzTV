@@ -23,7 +23,8 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
             string.Empty,
             string.Empty,
             Option<string>.None,
-            false)
+            false,
+            ScanKind.Unknown)
     })
 {
     public void AddOption(IInputOption option)

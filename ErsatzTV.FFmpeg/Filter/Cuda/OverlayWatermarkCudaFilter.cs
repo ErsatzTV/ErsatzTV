@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.State;
+﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Filter.Cuda;
@@ -13,6 +14,7 @@ public class OverlayWatermarkCudaFilter : OverlayWatermarkFilter
         watermarkState,
         resolution,
         squarePixelFrameSize,
+        new PixelFormatUnknown(),
         logger)
     {
     }

@@ -18,11 +18,14 @@ public record VideoStream(
     string SampleAspectRatio,
     string DisplayAspectRatio,
     Option<string> FrameRate,
-    bool StillImage) : MediaStream(
+    bool StillImage,
+    ScanKind ScanKind) : MediaStream(
     Index,
     Codec,
     StreamKind.Video)
 {
+    public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
+    
     public bool IsAnamorphic
     {
         get

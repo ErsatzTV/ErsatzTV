@@ -74,10 +74,10 @@ public class ScaleVaapiFilter : BaseFilter
 
             if (!string.IsNullOrWhiteSpace(scale))
             {
-                return $"format=nv12|vaapi,hwupload,{scale}";
+                return $"format=nv12|p010le|vaapi,hwupload,{scale}";
             }
 
-            return "format=nv12|vaapi,hwupload";
+            return string.Empty;
         }
     }
 

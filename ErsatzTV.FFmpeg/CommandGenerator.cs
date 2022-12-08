@@ -2,6 +2,7 @@
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 
 namespace ErsatzTV.FFmpeg;
 
@@ -39,7 +40,10 @@ public static class CommandGenerator
 
         foreach (AudioInputFile audioInputFile in maybeAudioInputFile)
         {
-            if (!includedPaths.Contains(audioInputFile.Path))
+            bool isVaapiOrQsv =
+                pipelineSteps.Any(s => s is VaapiHardwareAccelerationOption or QsvHardwareAccelerationOption);
+            
+            if (!includedPaths.Contains(audioInputFile.Path) || isVaapiOrQsv)
             {
                 includedPaths.Add(audioInputFile.Path);
 
