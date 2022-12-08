@@ -121,8 +121,9 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
                     pixelFormat.FFmpegName);
 
                 //result.Add(new PixelFormatFilter(pixelFormat));
-                pipelineSteps.Add(new PixelFormatOutputOption(pixelFormat));
             }
+
+            pipelineSteps.Add(new PixelFormatOutputOption(pixelFormat));
         }
 
         return result;
