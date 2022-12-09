@@ -70,6 +70,16 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
             reportsFolder,
             fontsFolder,
             _logger),
+        HardwareAccelerationMode.Amf => new AmfPipelineBuilder(
+            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hardwareAccelerationMode),
+            hardwareAccelerationMode,
+            videoInputFile,
+            audioInputFile,
+            watermarkInputFile,
+            subtitleInputFile,
+            reportsFolder,
+            fontsFolder,
+            _logger),
         _ => new SoftwarePipelineBuilder(
             hardwareAccelerationMode,
             videoInputFile,
