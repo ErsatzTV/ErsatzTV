@@ -27,6 +27,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath),
+            HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
 
