@@ -2,6 +2,7 @@ using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Vaapi;
+using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
@@ -47,16 +48,27 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        bool canDecode = _hardwareCapabilities.CanDecode(videoStream.Codec, videoStream.PixelFormat);
-        bool canEncode = _hardwareCapabilities.CanEncode(desiredState.VideoFormat, desiredState.PixelFormat);
+        bool canDecode = _hardwareCapabilities.CanDecode(
+            videoStream.Codec,
+            desiredState.VideoProfile,
+            videoStream.PixelFormat);
+        bool canEncode = _hardwareCapabilities.CanEncode(
+            desiredState.VideoFormat,
+            desiredState.VideoProfile,
+            desiredState.PixelFormat);
 
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
-            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice));
+            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, canDecode));
+
+            foreach (string driverName in ffmpegState.VaapiDriver)
+            {
+                pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
+            }
         }
 
         // use software decoding with an extensive pipeline
-        if (context.HasSubtitleOverlay && context.HasWatermark)
+        if (context is { HasSubtitleOverlay: true, HasWatermark: true })
         {
             canDecode = false;
         }
@@ -136,11 +148,11 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         // _logger.LogDebug("After scale: {PixelFormat}", currentState.PixelFormat);
 
-        currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
+        currentState = SetPad(videoInputFile, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
 
         // need to upload for hardware overlay
-        bool forceSoftwareOverlay = context.HasSubtitleOverlay && context.HasWatermark;
+        bool forceSoftwareOverlay = context is { HasSubtitleOverlay: true, HasWatermark: true };
 
         if (currentState.FrameDataLocation == FrameDataLocation.Software && context.HasSubtitleOverlay &&
             !forceSoftwareOverlay)
@@ -164,7 +176,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             subtitleInputFile,
             context,
             forceSoftwareOverlay,
-            ffmpegState,
             currentState,
             desiredState,
             fontsFolder,
@@ -174,7 +185,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             videoStream,
             watermarkInputFile,
             context,
-            ffmpegState,
             desiredState,
             currentState,
             watermarkOverlayFilterSteps);
@@ -202,9 +212,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             videoStream,
             desiredState.PixelFormat,
             ffmpegState,
-            currentState,
-            context,
-            pipelineSteps);
+            currentState);
 
         return new FilterChain(
             videoInputFile.FilterSteps,
@@ -219,9 +227,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
         FFmpegState ffmpegState,
-        FrameState currentState,
-        PipelineContext context,
-        ICollection<IPipelineStep> pipelineSteps)
+        FrameState currentState)
     {
         var result = new List<IPipelineFilterStep>();
 
@@ -298,7 +304,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         VideoStream videoStream,
         Option<WatermarkInputFile> watermarkInputFile,
         PipelineContext context,
-        FFmpegState ffmpegState,
         FrameState desiredState,
         FrameState currentState,
         List<IPipelineFilterStep> watermarkOverlayFilterSteps)
@@ -367,7 +372,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         Option<SubtitleInputFile> subtitleInputFile,
         PipelineContext context,
         bool forceSoftwareOverlay,
-        FFmpegState ffmpegState,
         FrameState currentState,
         FrameState desiredState,
         string fontsFolder,
@@ -449,7 +453,6 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
     private static FrameState SetPad(
         VideoInputFile videoInputFile,
-        VideoStream videoStream,
         FrameState desiredState,
         FrameState currentState)
     {

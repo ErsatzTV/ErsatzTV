@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This can help if your card only supports e.g. h264 encoding, normalizing to 8 bits will allow the hardware encoder to be used
 - Extract font attachments after extracting text subtitles
   - This should improve SubStation Alpha subtitle rendering
+- Detect VAAPI capabilities and fallback to software decoding/encoding as needed
 - Add audio stream selector scripts for episodes and movies
   - This will let you customize which audio stream is selected for playback
   - Episodes are passed the following data:

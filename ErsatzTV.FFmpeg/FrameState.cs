@@ -6,6 +6,7 @@ public record FrameState(
     bool Realtime,
     bool InfiniteLoop,
     string VideoFormat,
+    string VideoProfile,
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,

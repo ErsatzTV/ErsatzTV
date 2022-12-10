@@ -48,8 +48,14 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        bool canDecode = _hardwareCapabilities.CanDecode(videoStream.Codec, videoStream.PixelFormat);
-        bool canEncode = _hardwareCapabilities.CanEncode(desiredState.VideoFormat, desiredState.PixelFormat);
+        bool canDecode = _hardwareCapabilities.CanDecode(
+            videoStream.Codec,
+            desiredState.VideoProfile,
+            videoStream.PixelFormat);
+        bool canEncode = _hardwareCapabilities.CanEncode(
+            desiredState.VideoFormat,
+            desiredState.VideoProfile,
+            desiredState.PixelFormat);
 
         // mpeg2_cuvid seems to have issues when yadif_cuda is used, so just use software decoding
         if (context.ShouldDeinterlace && videoStream.Codec == VideoFormat.Mpeg2Video)
