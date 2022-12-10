@@ -13,7 +13,7 @@
       <PackageReference Include="LanguageExt.Core" Version="4.4.0" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
       <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
       <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
