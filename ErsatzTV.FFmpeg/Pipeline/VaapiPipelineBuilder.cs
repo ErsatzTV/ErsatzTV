@@ -58,7 +58,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
-            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice));
+            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, canDecode));
         }
 
         // use software decoding with an extensive pipeline

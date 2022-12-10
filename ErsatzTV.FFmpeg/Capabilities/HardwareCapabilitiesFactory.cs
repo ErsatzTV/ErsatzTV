@@ -42,13 +42,12 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
     {
         try
         {
-            if (vaapiDriver.IsNone || vaapiDevice.IsNone)
+            if (vaapiDevice.IsNone)
             {
                 // this shouldn't really happen
 
                 _logger.LogError(
-                    "Cannot detect VAAPI capabilities without driver or device {Driver} {Device}",
-                    vaapiDriver,
+                    "Cannot detect VAAPI capabilities without device {Device}",
                     vaapiDevice);
 
                 return new NoHardwareCapabilities();
@@ -60,11 +59,20 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint> profileEntrypoints))
             {
-                return new VaapiHardwareCapabilities(profileEntrypoints);
+                return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }
 
-            // TODO: if vainfo doesn't exist, return default capabilities
-            
+            BufferedCommandResult whichResult = await Cli.Wrap("which")
+                .WithArguments("vainfo")
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync(Encoding.UTF8);
+
+            if (whichResult.ExitCode != 0)
+            {
+                _logger.LogWarning("Unable to determine VAAPI capabilities; please install vainfo");
+                return new DefaultHardwareCapabilities();
+            }
+
             BufferedCommandResult result = await Cli.Wrap("vainfo")
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteBufferedAsync(Encoding.UTF8);
@@ -92,7 +100,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                     driver,
                     device);
                 _memoryCache.Set(cacheKey, profileEntrypoints);
-                return new VaapiHardwareCapabilities(profileEntrypoints);
+                return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }
         }
         catch
