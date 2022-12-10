@@ -72,8 +72,16 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 _logger.LogWarning("Unable to determine VAAPI capabilities; please install vainfo");
                 return new DefaultHardwareCapabilities();
             }
+            
+            var envVars = new Dictionary<string, string?>();
+            foreach (string libvaDriverName in vaapiDriver)
+            {
+                envVars.Add("LIBVA_DRIVER_NAME", libvaDriverName);
+            }
 
             BufferedCommandResult result = await Cli.Wrap("vainfo")
+                .WithArguments($"--display drm --device {device}")
+                .WithEnvironmentVariables(envVars)
                 .WithValidation(CommandResultValidation.None)
                 .ExecuteBufferedAsync(Encoding.UTF8);
 
