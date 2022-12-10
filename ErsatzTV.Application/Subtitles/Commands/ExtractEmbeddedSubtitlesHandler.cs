@@ -109,31 +109,31 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Filter(pi => pi.Start <= until)
                 .ToListAsync(cancellationToken);
 
-            // TODO: support other media kinds (movies, other videos, etc)
-
             var mediaItemIds = playoutItems.Map(pi => pi.MediaItemId).ToList();
 
-            // filter for subtitles that need extraction
-            List<int> unextractedMediaItemIds =
-                await GetUnextractedMediaItemIds(dbContext, mediaItemIds, cancellationToken);
+            // filter for items with text subtitles or font attachments
+            List<int> mediaItemIdsWithTextSubtitles =
+                await GetMediaItemIdsWithTextSubtitles(dbContext, mediaItemIds, cancellationToken);
 
-            if (unextractedMediaItemIds.Any())
+            if (mediaItemIdsWithTextSubtitles.Any())
             {
                 _logger.LogDebug(
-                    "Found media items {MediaItemIds} with text subtitles to extract for playouts {PlayoutIds}",
-                    unextractedMediaItemIds,
+                    "Checking media items {MediaItemIds} for text subtitles or fonts to extract for playouts {PlayoutIds}",
+                    mediaItemIdsWithTextSubtitles,
                     playoutIdsToCheck);
             }
             else
             {
-                _logger.LogDebug("Found no text subtitles to extract for playouts {PlayoutIds}", playoutIdsToCheck);
+                _logger.LogDebug(
+                    "Found no text subtitles or fonts to extract for playouts {PlayoutIds}",
+                    playoutIdsToCheck);
             }
 
             // sort by start time
             var toUpdate = playoutItems
                 .Filter(pi => pi.Finish >= DateTime.UtcNow)
                 .DistinctBy(pi => pi.MediaItemId)
-                .Filter(pi => unextractedMediaItemIds.Contains(pi.MediaItemId))
+                .Filter(pi => mediaItemIdsWithTextSubtitles.Contains(pi.MediaItemId))
                 .OrderBy(pi => pi.StartOffset)
                 .Map(pi => pi.MediaItemId)
                 .ToList();
@@ -145,13 +145,12 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     return Unit.Default;
                 }
 
-                PlayoutItem pi = playoutItems.Find(pi => pi.MediaItemId == mediaItemId);
-                _logger.LogDebug("Extracting subtitles for item with start time {StartTime}", pi?.StartOffset);
-
                 // extract subtitles and fonts for each item and update db
                 await ExtractSubtitles(dbContext, mediaItemId, ffmpegPath, cancellationToken);
-                // await ExtractFonts(dbContext, episodeId, ffmpegPath, cancellationToken);
+                await ExtractFonts(dbContext, mediaItemId, ffmpegPath, cancellationToken);
             }
+
+            _logger.LogDebug("Done checking playouts {PlayoutIds} for text subtitles to extract", playoutIdsToCheck);
 
             return Unit.Default;
         }
@@ -161,7 +160,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         }
     }
 
-    private async Task<List<int>> GetUnextractedMediaItemIds(
+    private async Task<List<int>> GetMediaItemIdsWithTextSubtitles(
         TvContext dbContext,
         List<int> mediaItemIds,
         CancellationToken cancellationToken)
@@ -174,7 +173,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Filter(em => mediaItemIds.Contains(em.EpisodeId))
                 .Filter(
                     em => em.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded && s.IsExtracted == false &&
+                        s => s.SubtitleKind == SubtitleKind.Embedded &&
                              s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle"))
                 .Map(em => em.EpisodeId)
                 .ToListAsync(cancellationToken);
@@ -184,7 +183,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Filter(mm => mediaItemIds.Contains(mm.MovieId))
                 .Filter(
                     mm => mm.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded && s.IsExtracted == false &&
+                        s => s.SubtitleKind == SubtitleKind.Embedded &&
                              s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle"))
                 .Map(mm => mm.MovieId)
                 .ToListAsync(cancellationToken);
@@ -194,7 +193,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Filter(mm => mediaItemIds.Contains(mm.MusicVideoId))
                 .Filter(
                     mm => mm.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded && s.IsExtracted == false &&
+                        s => s.SubtitleKind == SubtitleKind.Embedded &&
                              s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle"))
                 .Map(mm => mm.MusicVideoId)
                 .ToListAsync(cancellationToken);
@@ -204,7 +203,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Filter(ovm => mediaItemIds.Contains(ovm.OtherVideoId))
                 .Filter(
                     ovm => ovm.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded && s.IsExtracted == false &&
+                        s => s.SubtitleKind == SubtitleKind.Embedded &&
                              s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle"))
                 .Map(ovm => ovm.OtherVideoId)
                 .ToListAsync(cancellationToken);
@@ -218,40 +217,13 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         return result;
     }
 
-    private async Task<Unit> ExtractSubtitles(
+    private async Task ExtractSubtitles(
         TvContext dbContext,
         int mediaItemId,
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
-        Option<MediaItem> maybeMediaItem = await dbContext.MediaItems
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as Episode).EpisodeMetadata)
-            .ThenInclude(em => em.Subtitles)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as Movie).MovieMetadata)
-            .ThenInclude(em => em.Subtitles)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
-            .ThenInclude(em => em.Subtitles)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
-            .ThenInclude(em => em.Subtitles)
-            .SelectOneAsync(e => e.Id, e => e.Id == mediaItemId);
-
-        foreach (MediaItem mediaItem in maybeMediaItem)
+        foreach (MediaItem mediaItem in await GetMediaItem(dbContext, mediaItemId))
         {
             foreach (List<Subtitle> allSubtitles in GetSubtitles(mediaItem))
             {
@@ -271,6 +243,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     {
                         subtitlesToExtract.Add(new SubtitleToExtract(subtitle, path));
                     }
+                }
+
+                if (subtitlesToExtract.Count == 0)
+                {
+                    continue;
                 }
 
                 string mediaItemPath = await GetMediaItemPath(mediaItem);
@@ -316,9 +293,35 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 }
             }
         }
-
-        return Unit.Default;
     }
+
+    private static async Task<Option<MediaItem>> GetMediaItem(TvContext dbContext, int mediaItemId) =>
+        await dbContext.MediaItems
+            .Include(mi => (mi as Episode).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as Episode).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(mi => (mi as Episode).EpisodeMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .Include(mi => (mi as Movie).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as Movie).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(mi => (mi as Movie).MovieMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .Include(mi => (mi as MusicVideo).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as MusicVideo).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .Include(mi => (mi as OtherVideo).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as OtherVideo).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(mi => (mi as OtherVideo).OtherVideoMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .SelectOneAsync(e => e.Id, e => e.Id == mediaItemId);
 
     private static Option<List<Subtitle>> GetSubtitles(MediaItem mediaItem) =>
         mediaItem switch
@@ -330,44 +333,64 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             _ => None
         };
 
-    private async Task<Unit> ExtractFonts(
+    private async Task ExtractFonts(
         TvContext dbContext,
         int mediaItemId,
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
-        Option<Episode> maybeEpisode = await dbContext.Episodes
-            .Include(e => e.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(e => e.MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(e => e.EpisodeMetadata)
-            .ThenInclude(em => em.Subtitles)
-            .SelectOneAsync(e => e.Id, e => e.Id == mediaItemId);
-
-        foreach (Episode episode in maybeEpisode)
+        foreach (MediaItem mediaItem in await GetMediaItem(dbContext, mediaItemId))
         {
-            string mediaItemPath = episode.GetHeadVersion().MediaFiles.Head().Path;
+            MediaVersion headVersion = mediaItem.GetHeadVersion();
+            var attachments = headVersion.Streams
+                .Filter(s => s.MediaStreamKind == MediaStreamKind.Attachment)
+                .OrderBy(s => s.Index)
+                .ToList();
 
-            var arguments = $"-nostdin -hide_banner -dump_attachment:t \"\" -i \"{mediaItemPath}\" -y";
+            for (var attachmentIndex = 0; attachmentIndex < attachments.Count; attachmentIndex++)
+            {
+                MediaStream fontStream = attachments[attachmentIndex];
 
-            BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
-                .WithWorkingDirectory(FileSystemLayout.FontsCacheFolder)
-                .WithArguments(arguments)
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync(cancellationToken);
+                if (!(fontStream.MimeType ?? string.Empty).Contains("font") &&
+                    !(fontStream.MimeType ?? string.Empty).Contains("opentype"))
+                {
+                    // not a font
+                    continue;
+                }
 
-            // if (result.ExitCode == 0)
-            // {
-            //     _logger.LogDebug("Successfully extracted attached fonts");
-            // }
-            // else
-            // {
-            //     _logger.LogError("Failed to extract attached fonts. {Error}", result.StandardError);
-            // }
+                string fullOutputPath = Path.Combine(FileSystemLayout.FontsCacheFolder, fontStream.FileName);
+                if (_localFileSystem.FileExists(fullOutputPath))
+                {
+                    // already extracted
+                    continue;
+                }
+
+                string mediaItemPath = await GetMediaItemPath(mediaItem);
+
+                var arguments =
+                    $"-nostdin -hide_banner -dump_attachment:t:{attachmentIndex} \"\" -i \"{mediaItemPath}\" -y";
+
+                BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+                    .WithWorkingDirectory(FileSystemLayout.FontsCacheFolder)
+                    .WithArguments(arguments)
+                    .WithValidation(CommandResultValidation.None)
+                    .ExecuteBufferedAsync(cancellationToken);
+
+                // ffmpeg seems to return exit code 1 in all cases when dumping an attachment
+                // so ignore it and check success a different way
+                if (_localFileSystem.FileExists(fullOutputPath))
+                {
+                    _logger.LogDebug("Successfully extracted font {Font}", fontStream.FileName);
+                }
+                else
+                {
+                    _logger.LogError(
+                        "Failed to extract attached font {Font}. {Error}",
+                        fontStream.FileName,
+                        result.StandardError);
+                }
+            }
         }
-
-        return Unit.Default;
     }
 
     private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>
@@ -442,6 +465,4 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
     }
 
     private record SubtitleToExtract(Subtitle Subtitle, string OutputPath);
-
-    private record FontToExtract(MediaStream Stream, string OutputPath);
 }
