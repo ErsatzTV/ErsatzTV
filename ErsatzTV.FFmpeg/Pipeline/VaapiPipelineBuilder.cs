@@ -47,8 +47,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        bool canDecode = _hardwareCapabilities.CanDecode(videoStream.Codec, videoStream.PixelFormat);
-        bool canEncode = _hardwareCapabilities.CanEncode(desiredState.VideoFormat, desiredState.PixelFormat);
+        bool canDecode = _hardwareCapabilities.CanDecode(
+            videoStream.Codec,
+            desiredState.VideoProfile,
+            videoStream.PixelFormat);
+        bool canEncode = _hardwareCapabilities.CanEncode(
+            desiredState.VideoFormat,
+            desiredState.VideoProfile,
+            desiredState.PixelFormat);
 
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {

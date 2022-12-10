@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.FFmpeg.Capabilities.Vaapi;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -11,6 +12,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 {
     private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
+    private const string VaapiCacheKeyFormat = "ffmpeg.hardware.vaapi.{0}.{1}";
     private readonly ILogger<HardwareCapabilitiesFactory> _logger;
 
     private readonly IMemoryCache _memoryCache;
@@ -23,13 +25,86 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     public async Task<IHardwareCapabilities> GetHardwareCapabilities(
         string ffmpegPath,
-        HardwareAccelerationMode hardwareAccelerationMode) =>
+        HardwareAccelerationMode hardwareAccelerationMode,
+        Option<string> vaapiDriver,
+        Option<string> vaapiDevice) =>
         hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath),
+            HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
+
+    private async Task<IHardwareCapabilities> GetVaapiCapabilities(
+        Option<string> vaapiDriver,
+        Option<string> vaapiDevice)
+    {
+        try
+        {
+            if (vaapiDriver.IsNone || vaapiDevice.IsNone)
+            {
+                // this shouldn't really happen
+
+                _logger.LogError(
+                    "Cannot detect VAAPI capabilities without driver or device {Driver} {Device}",
+                    vaapiDriver,
+                    vaapiDevice);
+
+                return new NoHardwareCapabilities();
+            }
+
+            string driver = vaapiDriver.IfNone(string.Empty);
+            string device = vaapiDevice.IfNone(string.Empty);
+            var cacheKey = string.Format(VaapiCacheKeyFormat, driver, device);
+
+            if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint> profileEntrypoints))
+            {
+                return new VaapiHardwareCapabilities(profileEntrypoints);
+            }
+
+            // TODO: if vainfo doesn't exist, return default capabilities
+            
+            BufferedCommandResult result = await Cli.Wrap("vainfo")
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync(Encoding.UTF8);
+
+            profileEntrypoints = new List<VaapiProfileEntrypoint>();
+
+            foreach (string line in result.StandardOutput.Split("\n"))
+            {
+                const string PROFILE_ENTRYPOINT_PATTERN = @"(VAProfile\w*).*(VAEntrypoint\w*)";
+                Match match = Regex.Match(line, PROFILE_ENTRYPOINT_PATTERN);
+                if (match.Success)
+                {
+                    profileEntrypoints.Add(
+                        new VaapiProfileEntrypoint(
+                            match.Groups[1].Value.Trim(),
+                            match.Groups[2].Value.Trim()));
+                }
+            }
+
+            if (profileEntrypoints.Any())
+            {
+                _logger.LogWarning(
+                    "Detected {Count} VAAPI profile entrypoints for using {Driver} {Device}",
+                    profileEntrypoints.Count,
+                    driver,
+                    device);
+                _memoryCache.Set(cacheKey, profileEntrypoints);
+                return new VaapiHardwareCapabilities(profileEntrypoints);
+            }
+        }
+        catch
+        {
+            // ignored
+        }
+
+        _logger.LogWarning(
+            "Error detecting VAAPI capabilities; some hardware accelerated features will be unavailable");
+
+        return new NoHardwareCapabilities();
+    }
 
     private async Task<IHardwareCapabilities> GetNvidiaCapabilities(string ffmpegPath)
     {

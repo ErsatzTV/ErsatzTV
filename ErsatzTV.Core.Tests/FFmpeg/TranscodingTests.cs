@@ -785,7 +785,9 @@ public class TranscodingTests
     {
         public Task<IHardwareCapabilities> GetHardwareCapabilities(
             string ffmpegPath,
-            HardwareAccelerationMode hardwareAccelerationMode) =>
+            HardwareAccelerationMode hardwareAccelerationMode,
+            Option<string> vaapiDriver,
+            Option<string> vaapiDevice) =>
             Task.FromResult<IHardwareCapabilities>(new NvidiaHardwareCapabilities(61, string.Empty));
     }
 

@@ -218,6 +218,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.RealtimeOutput,
             false, // TODO: fallback filler needs to loop
             videoFormat,
+            videoStream.Profile,
             Optional(desiredPixelFormat),
             ffmpegVideoStream.SquarePixelFrameSize(
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height)),
@@ -256,6 +257,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -317,6 +320,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.RealtimeOutput,
             false,
             GetVideoFormat(playbackSettings),
+            VideoProfile.Main,
             new PixelFormatYuv420P(),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
@@ -395,6 +399,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             None,
             subtitleInputFile,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
@@ -419,6 +425,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,
+            None,
+            None,
             None,
             None,
             None,
@@ -459,6 +467,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
             HardwareAccelerationMode.None,
             videoInputFile,
+            None,
+            None,
             None,
             None,
             None,
