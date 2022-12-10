@@ -35,6 +35,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 public class TranscodingTests
 {
     private static readonly ILoggerFactory LoggerFactory;
+    private static readonly MemoryCache _memoryCache;
 
     static TranscodingTests()
     {
@@ -44,6 +45,8 @@ public class TranscodingTests
             .CreateLogger();
 
         LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+
+        _memoryCache = new MemoryCache(new MemoryCacheOptions());
     }
 
     [Test]
@@ -213,10 +216,10 @@ public class TranscodingTests
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
+        // [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
     {
         if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
         {
@@ -318,7 +321,7 @@ public class TranscodingTests
             imageCache.Object,
             new Mock<ITempFilePool>().Object,
             new Mock<IClient>().Object,
-            new MemoryCache(new MemoryCacheOptions()),
+            _memoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -330,7 +333,7 @@ public class TranscodingTests
                 new RuntimeInfo(),
                 //new FakeNvidiaCapabilitiesFactory(),
                 new HardwareCapabilitiesFactory(
-                    new MemoryCache(new MemoryCacheOptions()),
+                    _memoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
@@ -785,7 +788,9 @@ public class TranscodingTests
     {
         public Task<IHardwareCapabilities> GetHardwareCapabilities(
             string ffmpegPath,
-            HardwareAccelerationMode hardwareAccelerationMode) =>
+            HardwareAccelerationMode hardwareAccelerationMode,
+            Option<string> vaapiDriver,
+            Option<string> vaapiDevice) =>
             Task.FromResult<IHardwareCapabilities>(new NvidiaHardwareCapabilities(61, string.Empty));
     }
 
