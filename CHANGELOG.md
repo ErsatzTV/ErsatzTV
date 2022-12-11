@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.0-beta] - 2022-12-11
 ### Fixed
 - Fix removing Jellyfin and Emby libraries that have been deleted from the source media server
 - Fix `Work-Ahead HLS Segmenter Limit` setting to properly limit number of channels that can work-ahead at once
@@ -1434,7 +1436,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.0-beta...HEAD
+[0.7.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...v0.7.0-beta
 [0.6.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.8-beta...v0.6.9-beta
 [0.6.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.7-beta...v0.6.8-beta
 [0.6.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...v0.6.7-beta
