@@ -1,6 +1,6 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal-arm32v7 AS dotnet-runtime
+﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-focal-arm32v7 AS dotnet-runtime
 
-FROM linuxserver/ffmpeg:arm32v7-latest AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:5.1.2-arm AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev \
     tzdata \
@@ -9,7 +9,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     libgdiplus
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:6.0-focal-amd64 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0-focal-arm32v7 AS build
 RUN apt-get update && apt-get install -y ca-certificates
 RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
@@ -36,7 +36,7 @@ COPY ErsatzTV.FFmpeg/. ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
 WORKDIR /source/ErsatzTV
 ARG INFO_VERSION="unknown"
-RUN dotnet publish ErsatzTV.csproj --framework net6.0 -c release -o /app --runtime linux-arm --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.csproj --framework net7.0 -c release -o /app --runtime linux-arm --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
           
 # final stage/image
 FROM runtime-base

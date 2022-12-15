@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <NoWarn>VSTHRD200</NoWarn>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
@@ -13,10 +13,10 @@
       <PackageReference Include="LanguageExt.Core" Version="4.4.0" />
       <PackageReference Include="LanguageExt.Transformers" Version="4.4.0" />
       <PackageReference Include="MediatR" Version="11.1.0" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="2.2.1" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27">
         <PrivateAssets>all</PrivateAssets>

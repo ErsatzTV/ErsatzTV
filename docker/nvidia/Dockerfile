@@ -1,5 +1,5 @@
 ﻿# https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 RUN apt-get update && apt-get install -y ca-certificates
 RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
@@ -29,7 +29,7 @@ ARG INFO_VERSION="unknown"
 RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM jasongdove/ffmpeg:5.1-nvidia2004 AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:5.1.2-nvidia AS runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
