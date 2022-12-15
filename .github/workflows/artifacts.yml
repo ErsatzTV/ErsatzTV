@@ -81,7 +81,7 @@ jobs:
 
       - name: Build
         shell: bash
-        run: dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+        run: dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
       - name: Bundle
         shell: bash
@@ -210,11 +210,11 @@ jobs:
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
 
           # Build everything
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net6.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+            dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net7.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           fi
 
           # Download ffmpeg
