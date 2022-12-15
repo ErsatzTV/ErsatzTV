@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-focal-arm64v8 AS dotnet-runtime
 
-FROM linuxserver/ffmpeg:arm64v8-latest AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:5.1.2-arm64 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev \
     tzdata \
@@ -9,7 +9,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     libgdiplus
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0-focal-arm64v8 AS build
 RUN apt-get update && apt-get install -y ca-certificates
 RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
