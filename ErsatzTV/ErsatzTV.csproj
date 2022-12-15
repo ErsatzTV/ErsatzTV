@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <SpaRoot>client-app\</SpaRoot>
         <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
         <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
@@ -60,9 +60,9 @@
       <PackageReference Include="Markdig" Version="0.30.4" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.11" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.11" /> 
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.1" /> 
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.1">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -70,7 +70,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.1.4" />
+      <PackageReference Include="MudBlazor" Version="6.1.5" />
       <PackageReference Include="NaturalSort.Extension" Version="4.0.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="11.1.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
