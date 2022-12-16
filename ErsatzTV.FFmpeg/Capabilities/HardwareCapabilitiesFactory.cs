@@ -57,7 +57,8 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             string device = vaapiDevice.IfNone(string.Empty);
             var cacheKey = string.Format(VaapiCacheKeyFormat, driver, device);
 
-            if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint> profileEntrypoints))
+            if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
+                profileEntrypoints is not null)
             {
                 return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }
@@ -111,9 +112,12 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignored
+            _logger.LogWarning(
+                ex,
+                "Error detecting VAAPI capabilities; some hardware accelerated features will be unavailable");
+            return new NoHardwareCapabilities();
         }
 
         _logger.LogWarning(
