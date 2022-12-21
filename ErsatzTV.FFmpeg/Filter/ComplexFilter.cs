@@ -317,7 +317,7 @@ public class ComplexFilter : IPipelineStep
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
-                var colorspace = new ColorspaceFilter(videoStream, pixelFormat);
+                var colorspace = new ColorspaceFilter(_currentState, videoStream, pixelFormat);
                 _pipelineSteps.Add(colorspace);
                 filter = colorspace.Filter;
             }

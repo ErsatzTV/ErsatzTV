@@ -35,7 +35,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 public class TranscodingTests
 {
     private static readonly ILoggerFactory LoggerFactory;
-    private static readonly MemoryCache _memoryCache;
+    private static readonly MemoryCache MemoryCache;
 
     static TranscodingTests()
     {
@@ -46,7 +46,7 @@ public class TranscodingTests
 
         LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
 
-        _memoryCache = new MemoryCache(new MemoryCacheOptions());
+        MemoryCache = new MemoryCache(new MemoryCacheOptions());
     }
 
     [Test]
@@ -61,7 +61,13 @@ public class TranscodingTests
         Assert.Pass();
     }
 
-    public record InputFormat(string Encoder, string PixelFormat);
+    public record InputFormat(
+        string Encoder,
+        string PixelFormat,
+        string ColorRange = "tv",
+        string ColorSpace = "bt709",
+        string ColorTransfer = "bt709",
+        string ColorPrimaries = "bt709");
 
     public enum Padding
     {
@@ -93,45 +99,47 @@ public class TranscodingTests
     {
         public static Watermark[] Watermarks =
         {
-            Watermark.None,
+            // Watermark.None,
             Watermark.PermanentOpaqueScaled,
-            Watermark.PermanentOpaqueActualSize,
-            Watermark.PermanentTransparentScaled,
-            Watermark.PermanentTransparentActualSize
+            // Watermark.PermanentOpaqueActualSize,
+            // Watermark.PermanentTransparentScaled,
+            // Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
-            Subtitle.None,
-            Subtitle.Picture,
+            // Subtitle.None,
+            // Subtitle.Picture,
             Subtitle.Text
         };
 
         public static Padding[] Paddings =
         {
-            Padding.NoPadding,
+            // Padding.NoPadding,
             Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            VideoScanKind.Interlaced
+            // VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
         {
-            new("libx264", "yuv420p"),
+            // example format that requires colorspace filter
+            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
+
             // new("libx264", "yuvj420p"),
-            new("libx264", "yuv420p10le"),
+            // new("libx264", "yuv420p10le"),
             // new("libx264", "yuv444p10le"),
 
             // new("mpeg1video", "yuv420p"),
             //
             // new("mpeg2video", "yuv420p"),
 
-            new("libx265", "yuv420p"),
-            new("libx265", "yuv420p10le"),
+            // new("libx265", "yuv420p"),
+            // new("libx265", "yuv420p10le"),
 
             // new("mpeg4", "yuv420p"),
             //
@@ -148,14 +156,14 @@ public class TranscodingTests
 
         public static Resolution[] Resolutions =
         {
-            new() { Width = 1920, Height = 1080 },
+            // new() { Width = 1920, Height = 1080 },
             new() { Width = 1280, Height = 720 }
         };
 
         public static FFmpegProfileBitDepth[] BitDepths =
         {
             FFmpegProfileBitDepth.EightBit,
-            FFmpegProfileBitDepth.TenBit
+            // FFmpegProfileBitDepth.TenBit
         };
 
         public static HardwareAccelerationKind[] NoAcceleration =
@@ -166,7 +174,7 @@ public class TranscodingTests
         public static FFmpegProfileVideoFormat[] VideoFormats =
         {
             FFmpegProfileVideoFormat.H264,
-            FFmpegProfileVideoFormat.Hevc
+            // FFmpegProfileVideoFormat.Hevc
         };
 
         public static HardwareAccelerationKind[] NvidiaAcceleration =
@@ -215,8 +223,8 @@ public class TranscodingTests
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+        // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -230,7 +238,7 @@ public class TranscodingTests
             }
         }
 
-        string name = GetStringSha256Hash($"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{subtitle}");
+        string name = GetStringSha256Hash($"{inputFormat}_{videoScanKind}_{padding}_{subtitle}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -242,8 +250,24 @@ public class TranscodingTests
                 : string.Empty;
             string flags = videoScanKind == VideoScanKind.Interlaced ? "-field_order tt -flags +ildct+ilme" : string.Empty;
 
+            string colorRange = !string.IsNullOrWhiteSpace(inputFormat.ColorRange)
+                ? $" -color_range {inputFormat.ColorRange}"
+                : string.Empty;
+
+            string colorSpace = !string.IsNullOrWhiteSpace(inputFormat.ColorSpace)
+                ? $" -colorspace {inputFormat.ColorSpace}"
+                : string.Empty;
+
+            string colorTransfer = !string.IsNullOrWhiteSpace(inputFormat.ColorTransfer)
+                ? $" -color_trc {inputFormat.ColorTransfer}"
+                : string.Empty;
+
+            string colorPrimaries = !string.IsNullOrWhiteSpace(inputFormat.ColorPrimaries)
+                ? $" -color_primaries {inputFormat.ColorPrimaries}"
+                : string.Empty;
+            
             string args =
-                $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
+                $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder}{colorRange}{colorSpace}{colorTransfer}{colorPrimaries} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
             var p1 = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -321,7 +345,7 @@ public class TranscodingTests
             imageCache.Object,
             new Mock<ITempFilePool>().Object,
             new Mock<IClient>().Object,
-            _memoryCache,
+            MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -333,7 +357,7 @@ public class TranscodingTests
                 new RuntimeInfo(),
                 //new FakeNvidiaCapabilitiesFactory(),
                 new HardwareCapabilitiesFactory(
-                    _memoryCache,
+                    MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
