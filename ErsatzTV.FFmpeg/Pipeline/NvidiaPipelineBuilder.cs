@@ -181,7 +181,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         // need to upload for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Software &&
-            currentState.BitDepth == 8 && (context.HasSubtitleOverlay || context.HasWatermark))
+            currentState.BitDepth == 8 && context.HasSubtitleText == false
+            && (context.HasSubtitleOverlay || context.HasWatermark))
         {
             var hardwareUpload = new HardwareUploadCudaFilter(currentState);
             currentState = hardwareUpload.NextState(currentState);
