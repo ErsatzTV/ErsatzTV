@@ -181,7 +181,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         // need to upload for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Software &&
-            currentState.BitDepth == 8 && (context.HasSubtitleOverlay || context.HasWatermark))
+            currentState.BitDepth == 8 && context.HasSubtitleText == false
+            && (context.HasSubtitleOverlay || context.HasWatermark))
         {
             var hardwareUpload = new HardwareUploadCudaFilter(currentState);
             currentState = hardwareUpload.NextState(currentState);
@@ -268,7 +269,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
-                var colorspace = new ColorspaceFilter(videoStream, format, false, currentState.FrameDataLocation);
+                var colorspace = new ColorspaceFilter(currentState, videoStream, format, false, currentState.FrameDataLocation);
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);

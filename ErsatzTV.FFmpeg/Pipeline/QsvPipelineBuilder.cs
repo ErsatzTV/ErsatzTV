@@ -246,6 +246,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 bool forceInputOverrides = videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter);
 
                 var colorspace = new ColorspaceFilter(
+                    currentState,
                     videoStream,
                     format,
                     forceInputOverrides,
