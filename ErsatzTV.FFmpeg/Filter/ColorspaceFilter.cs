@@ -4,17 +4,20 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class ColorspaceFilter : BaseFilter
 {
+    private readonly FrameState _currentState;
     private readonly VideoStream _videoStream;
     private readonly IPixelFormat _desiredPixelFormat;
     private readonly bool _forceInputOverrides;
     private readonly FrameDataLocation _nextDataLocation;
 
     public ColorspaceFilter(
+        FrameState currentState,
         VideoStream videoStream,
         IPixelFormat desiredPixelFormat,
         bool forceInputOverrides = false,
         FrameDataLocation nextDataLocation = FrameDataLocation.Software)
     {
+        _currentState = currentState;
         _videoStream = videoStream;
         _desiredPixelFormat = desiredPixelFormat;
         _forceInputOverrides = forceInputOverrides;
@@ -37,6 +40,12 @@ public class ColorspaceFilter : BaseFilter
     {
         get
         {
+            string hwdownload = string.Empty;
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
+            {
+                hwdownload = "hwdownload";
+            }
+
             string inputOverrides = string.Empty;
             ColorParams cp = _videoStream.ColorParams;
             if (cp.IsMixed || _forceInputOverrides)
@@ -57,7 +66,7 @@ public class ColorspaceFilter : BaseFilter
             {
                 _ when cp.IsUnknown => "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709",
                 10 or 8 when !cp.IsUnknown =>
-                    $"colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
+                    $"{hwdownload},colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
                 _ => string.Empty
             };
 

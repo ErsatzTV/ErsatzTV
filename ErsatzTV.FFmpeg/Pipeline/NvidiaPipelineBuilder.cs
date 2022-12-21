@@ -268,7 +268,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
-                var colorspace = new ColorspaceFilter(videoStream, format, false, currentState.FrameDataLocation);
+                var colorspace = new ColorspaceFilter(currentState, videoStream, format, false, currentState.FrameDataLocation);
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
