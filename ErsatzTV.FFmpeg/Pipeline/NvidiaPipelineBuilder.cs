@@ -269,7 +269,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
-                var colorspace = new ColorspaceFilter(currentState, videoStream, format, false, currentState.FrameDataLocation);
+                var colorspace = new ColorspaceFilter(currentState, videoStream, format, false);
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
@@ -300,7 +300,15 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    result.Add(new CudaFormatFilter(format));
+                    if (!pipelineSteps.OfType<IPipelineFilterStep>().Any() && result is [ColorspaceFilter colorspace] &&
+                        !colorspace.Filter.StartsWith("setparams="))
+                    {
+                        result.Add(new CudaFormatFilter(format));
+                    }
+                    else
+                    {
+                        pipelineSteps.Add(new PixelFormatOutputOption(format));
+                    }
                 }
                 else
                 {

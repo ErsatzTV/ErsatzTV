@@ -249,8 +249,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     currentState,
                     videoStream,
                     format,
-                    forceInputOverrides,
-                    currentState.FrameDataLocation);
+                    forceInputOverrides);
 
                 // force nv12 if we're still in hardware
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
@@ -289,7 +288,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
                 // remind qsv that it uses qsv
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-                    result.Count == 1 && result[0] is ColorspaceFilter colorspace)
+                    result is [ColorspaceFilter colorspace])
                 {
                     if (colorspace.Filter.StartsWith("setparams="))
                     {
