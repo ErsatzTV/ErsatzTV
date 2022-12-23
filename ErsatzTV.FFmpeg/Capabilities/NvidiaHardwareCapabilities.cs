@@ -14,7 +14,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         _model = model;
     }
 
-    public bool CanDecode(string videoFormat, string videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
@@ -36,7 +36,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         };
     }
 
-    public bool CanEncode(string videoFormat, string videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 

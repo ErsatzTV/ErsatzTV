@@ -15,11 +15,11 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
         _logger = logger;
     }
 
-    public bool CanDecode(string videoFormat, string videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        bool result = (videoFormat, videoProfile.ToLowerInvariant()) switch
+        bool result = (videoFormat, videoProfile.IfNone(string.Empty).ToLowerInvariant()) switch
         {
             // no hardware decoding of 10-bit h264
             (VideoFormat.H264, _) when bitDepth == 10 => false,
@@ -86,7 +86,7 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
         return result;
     }
 
-    public bool CanEncode(string videoFormat, string videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 

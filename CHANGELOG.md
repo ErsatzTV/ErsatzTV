@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
-- Fix some transcoding failures caused by the colorspace filter  
+- Fix many transcoding failures caused by the colorspace filter
+- Fix song playback with VAAPI
 
 ### Changed
 - Upgrade to dotnet 7

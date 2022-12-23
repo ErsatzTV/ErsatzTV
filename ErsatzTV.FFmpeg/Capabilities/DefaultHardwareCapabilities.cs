@@ -4,9 +4,9 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class DefaultHardwareCapabilities : IHardwareCapabilities
 {
-    public bool CanDecode(string videoFormat, string videoProfile, Option<IPixelFormat> maybePixelFormat) => true;
+    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat) => true;
 
-    public bool CanEncode(string videoFormat, string videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
