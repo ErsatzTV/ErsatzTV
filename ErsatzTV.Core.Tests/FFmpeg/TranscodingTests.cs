@@ -201,6 +201,14 @@ public class TranscodingTests
         {
             HardwareAccelerationKind.Qsv
         };
+
+        public static HardwareAccelerationKind[] LinuxTestAccelerations =
+        {
+            HardwareAccelerationKind.None,
+            HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Qsv
+        };
     }
 
     [Test]
@@ -222,8 +230,9 @@ public class TranscodingTests
             Subtitle subtitle,
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.LinuxTestAccelerations))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)

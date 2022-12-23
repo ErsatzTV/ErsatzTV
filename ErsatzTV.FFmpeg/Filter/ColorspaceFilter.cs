@@ -73,8 +73,10 @@ public class ColorspaceFilter : BaseFilter
             string colorspace = _desiredPixelFormat.BitDepth switch
             {
                 _ when cp.IsUnknown => "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709",
-                10 or 8 when !cp.IsUnknown =>
-                    $"{hwdownload}colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
+                10 when !cp.IsUnknown =>
+                    $"{hwdownload}colorspace={inputOverrides}all=bt709:format=yuv420p10",
+                8 when !cp.IsUnknown =>
+                    $"{hwdownload}colorspace={inputOverrides}all=bt709:format=yuv420p",
                 _ => string.Empty
             };
 
