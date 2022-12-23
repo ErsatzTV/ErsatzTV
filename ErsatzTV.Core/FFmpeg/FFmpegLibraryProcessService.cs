@@ -218,7 +218,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.RealtimeOutput,
             false, // TODO: fallback filler needs to loop
             videoFormat,
-            videoStream.Profile,
+            Optional(videoStream.Profile),
             Optional(desiredPixelFormat),
             ffmpegVideoStream.SquarePixelFrameSize(
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height)),

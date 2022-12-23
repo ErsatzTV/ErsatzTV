@@ -103,7 +103,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             if (profileEntrypoints.Any())
             {
-                _logger.LogWarning(
+                _logger.LogInformation(
                     "Detected {Count} VAAPI profile entrypoints for using {Driver} {Device}",
                     profileEntrypoints.Count,
                     driver,

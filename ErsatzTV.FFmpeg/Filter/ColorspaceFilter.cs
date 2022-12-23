@@ -43,7 +43,7 @@ public class ColorspaceFilter : BaseFilter
             string hwdownload = string.Empty;
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
-                hwdownload = "hwdownload";
+                hwdownload = "hwdownload,";
             }
 
             string inputOverrides = string.Empty;
@@ -66,7 +66,7 @@ public class ColorspaceFilter : BaseFilter
             {
                 _ when cp.IsUnknown => "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709",
                 10 or 8 when !cp.IsUnknown =>
-                    $"{hwdownload},colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
+                    $"{hwdownload}colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
                 _ => string.Empty
             };
 
