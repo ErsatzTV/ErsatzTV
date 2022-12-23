@@ -250,8 +250,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     currentState,
                     videoStream,
                     format,
-                    false,
-                    currentState.FrameDataLocation);
+                    false);
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
             }

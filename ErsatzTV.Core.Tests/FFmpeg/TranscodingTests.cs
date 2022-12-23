@@ -99,30 +99,30 @@ public class TranscodingTests
     {
         public static Watermark[] Watermarks =
         {
-            // Watermark.None,
+            Watermark.None,
             Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
-            // Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentScaled,
             // Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
-            // Subtitle.None,
-            // Subtitle.Picture,
+            Subtitle.None,
+            Subtitle.Picture,
             Subtitle.Text
         };
 
         public static Padding[] Paddings =
         {
-            // Padding.NoPadding,
+            Padding.NoPadding,
             Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            // VideoScanKind.Interlaced
+            VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
@@ -131,15 +131,15 @@ public class TranscodingTests
             new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
 
             // new("libx264", "yuvj420p"),
-            // new("libx264", "yuv420p10le"),
+            new("libx264", "yuv420p10le"),
             // new("libx264", "yuv444p10le"),
 
             // new("mpeg1video", "yuv420p"),
             //
             // new("mpeg2video", "yuv420p"),
 
-            // new("libx265", "yuv420p"),
-            // new("libx265", "yuv420p10le"),
+            new("libx265", "yuv420p"),
+            new("libx265", "yuv420p10le"),
 
             // new("mpeg4", "yuv420p"),
             //
@@ -156,14 +156,14 @@ public class TranscodingTests
 
         public static Resolution[] Resolutions =
         {
-            // new() { Width = 1920, Height = 1080 },
+            new() { Width = 1920, Height = 1080 },
             new() { Width = 1280, Height = 720 }
         };
 
         public static FFmpegProfileBitDepth[] BitDepths =
         {
             FFmpegProfileBitDepth.EightBit,
-            // FFmpegProfileBitDepth.TenBit
+            FFmpegProfileBitDepth.TenBit
         };
 
         public static HardwareAccelerationKind[] NoAcceleration =
@@ -201,6 +201,14 @@ public class TranscodingTests
         {
             HardwareAccelerationKind.Qsv
         };
+
+        public static HardwareAccelerationKind[] LinuxTestAccelerations =
+        {
+            HardwareAccelerationKind.None,
+            HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Qsv
+        };
     }
 
     [Test]
@@ -222,8 +230,9 @@ public class TranscodingTests
             Subtitle subtitle,
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.LinuxTestAccelerations))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)

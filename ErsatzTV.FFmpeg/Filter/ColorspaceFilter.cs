@@ -8,29 +8,30 @@ public class ColorspaceFilter : BaseFilter
     private readonly VideoStream _videoStream;
     private readonly IPixelFormat _desiredPixelFormat;
     private readonly bool _forceInputOverrides;
-    private readonly FrameDataLocation _nextDataLocation;
 
     public ColorspaceFilter(
         FrameState currentState,
         VideoStream videoStream,
         IPixelFormat desiredPixelFormat,
-        bool forceInputOverrides = false,
-        FrameDataLocation nextDataLocation = FrameDataLocation.Software)
+        bool forceInputOverrides = false)
     {
         _currentState = currentState;
         _videoStream = videoStream;
         _desiredPixelFormat = desiredPixelFormat;
         _forceInputOverrides = forceInputOverrides;
-        _nextDataLocation = nextDataLocation;
     }
 
     public override FrameState NextState(FrameState currentState)
     {
-        FrameState nextState = currentState with { FrameDataLocation = _nextDataLocation };
+        FrameState nextState = currentState;
 
         if (!_videoStream.ColorParams.IsUnknown && _desiredPixelFormat.BitDepth is 10 or 8)
         {
-            nextState = nextState with { PixelFormat = Some(_desiredPixelFormat) };
+            nextState = nextState with
+            {
+                FrameDataLocation = FrameDataLocation.Software,
+                PixelFormat = Some(_desiredPixelFormat)
+            };
         }
 
         return nextState;
@@ -43,7 +44,14 @@ public class ColorspaceFilter : BaseFilter
             string hwdownload = string.Empty;
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
-                hwdownload = "hwdownload";
+                hwdownload = "hwdownload,";
+                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                {
+                    if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
+                    {
+                        hwdownload = $"hwdownload,format={pixelFormat.FFmpegName},";
+                    }
+                }
             }
 
             string inputOverrides = string.Empty;
@@ -65,8 +73,10 @@ public class ColorspaceFilter : BaseFilter
             string colorspace = _desiredPixelFormat.BitDepth switch
             {
                 _ when cp.IsUnknown => "setparams=range=tv:colorspace=bt709:color_trc=bt709:color_primaries=bt709",
-                10 or 8 when !cp.IsUnknown =>
-                    $"{hwdownload},colorspace={inputOverrides}all=bt709:format={_desiredPixelFormat.FFmpegName}",
+                10 when !cp.IsUnknown =>
+                    $"{hwdownload}colorspace={inputOverrides}all=bt709:format=yuv420p10",
+                8 when !cp.IsUnknown =>
+                    $"{hwdownload}colorspace={inputOverrides}all=bt709:format=yuv420p",
                 _ => string.Empty
             };
 
