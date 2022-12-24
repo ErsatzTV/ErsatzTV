@@ -82,7 +82,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
 
                 var lastScan = new DateTimeOffset(libraryPath.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
                 DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-                if (forceScan || nextScan < DateTimeOffset.Now)
+                if (forceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
                 {
                     scanned = true;
 
@@ -220,7 +220,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
 
     private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
         _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
-            .FilterT(lri => lri > 0)
+            .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
     private record RequestParameters(

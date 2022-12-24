@@ -231,7 +231,7 @@
         _tunerCount = await _mediator.Send(new GetHDHRTunerCount(), _cts.Token);
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
         _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
-        _scannerSuccess = _libraryRefreshInterval > 0;
+        _scannerSuccess = _libraryRefreshInterval is >= 0 and < 1_000_000;
         _playoutSettings = await _mediator.Send(new GetPlayoutSettings(), _cts.Token);
         _playoutSuccess = _playoutSettings.DaysToBuild > 0;
         _generalSettings = await _mediator.Send(new GetGeneralSettings(), _cts.Token);
@@ -241,7 +241,11 @@
 
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
 
-    private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval <= 0 ? "Library refresh interval must be greater than zero" : null;
+    private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval switch {
+        <= -1 => "Library refresh interval must be 0 (do not refresh) or greater than zero",
+        > 1_000_000 => "Library refresh interval must be less than 1,000,000. Use 0 to disable automatic refresh",
+        _ => null
+        };
 
     private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Days to build must be greater than zero" : null;
 

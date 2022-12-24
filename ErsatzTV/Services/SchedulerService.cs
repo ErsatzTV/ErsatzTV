@@ -93,7 +93,7 @@ public class SchedulerService : BackgroundService
         {
             await DeleteOrphanedArtwork(cancellationToken);
             await BuildPlayouts(cancellationToken);
-#if !DEBUG_NO_SYNC            
+#if !DEBUG_NO_SYNC
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
             await ScanJellyfinMediaSources(cancellationToken);
