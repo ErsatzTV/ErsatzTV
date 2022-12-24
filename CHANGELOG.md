@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Upgrade to dotnet 7
 - Upgrade all docker images to ubuntu jammy and ffmpeg 5.1.2
+- Limit library scan interval between 0 and 1,000,000
+  - 0 means do not automatically scan libraries
+  - 1 to 999,999 means scan if it has been that many hours since the last scan
 
 ## [0.7.0-beta] - 2022-12-11
 ### Fixed
