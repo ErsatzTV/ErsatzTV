@@ -243,7 +243,7 @@
 
     private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval switch {
         <= -1 => "Library refresh interval must be 0 (do not refresh) or greater than zero",
-        > 1_000_000 => "Library refresh interval must be less than 1,000,000. Use 0 to disable automatic refresh",
+        >= 1_000_000 => "Library refresh interval must be less than 1,000,000. Use 0 to disable automatic refresh",
         _ => null
         };
 
