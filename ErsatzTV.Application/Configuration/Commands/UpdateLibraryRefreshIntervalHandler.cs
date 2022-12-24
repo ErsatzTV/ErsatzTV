@@ -24,8 +24,8 @@ public class UpdateLibraryRefreshIntervalHandler :
 
     private static Task<Validation<BaseError, Unit>> Validate(UpdateLibraryRefreshInterval request) =>
         Optional(request.LibraryRefreshInterval)
-            .Where(lri => lri > 0)
+            .Where(lri => lri is >= 0 and < 1_000_000)
             .Map(_ => Unit.Default)
-            .ToValidation<BaseError>("Tuner count must be greater than zero")
+            .ToValidation<BaseError>("Library refresh interval must be zero or greated")
             .AsTask();
 }
