@@ -130,6 +130,9 @@ public class TranscodingTests
             // example format that requires colorspace filter
             new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
 
+            // example format that requires setparams filter
+            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+
             // new("libx264", "yuvj420p"),
             new("libx264", "yuv420p10le"),
             // new("libx264", "yuv444p10le"),
