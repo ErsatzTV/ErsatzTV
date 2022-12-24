@@ -300,13 +300,14 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    bool noPipelineFilters = !pipelineSteps.OfType<IPipelineFilterStep>().Any();
-                    bool softwareColorspace = result is [ColorspaceFilter colorspace] &&
-                                              !colorspace.Filter.StartsWith("setparams=");
+                    bool noPipelineFilters = !pipelineSteps
+                        .Filter(ps => ps is not IEncoder)
+                        .OfType<IPipelineFilterStep>().Any();
+                    bool hasColorspace = result is [ColorspaceFilter];
 
                     bool softwareDecoder = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.None;
                     
-                    if (softwareDecoder || (noPipelineFilters && softwareColorspace))
+                    if (softwareDecoder || (noPipelineFilters && hasColorspace))
                     {
                         result.Add(new CudaFormatFilter(format));
                     }
