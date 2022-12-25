@@ -306,8 +306,12 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     bool hasColorspace = result is [ColorspaceFilter];
 
                     bool softwareDecoder = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.None;
-                    
-                    if (softwareDecoder || (noPipelineFilters && hasColorspace))
+                    bool hardwareDecoder = !softwareDecoder;
+                    bool hardwareEncoder =
+                        ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc;
+
+                    if (softwareDecoder || (noPipelineFilters && hasColorspace) ||
+                        (hardwareDecoder && hardwareEncoder && noPipelineFilters))
                     {
                         result.Add(new CudaFormatFilter(format));
                     }
