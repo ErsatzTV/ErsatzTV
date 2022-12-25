@@ -31,6 +31,9 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
             
             // no hardware decoding of 10-bit h264
             VideoFormat.H264 when bitDepth == 10 => false,
+            
+            // generated images are decoded into software
+            VideoFormat.GeneratedImage => false,
 
             _ => true
         };

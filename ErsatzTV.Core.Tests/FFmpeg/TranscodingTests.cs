@@ -100,78 +100,73 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            Watermark.PermanentOpaqueScaled,
+            // Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
-            Watermark.PermanentTransparentScaled,
+            // Watermark.PermanentTransparentScaled,
             // Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
             Subtitle.None,
-            Subtitle.Picture,
-            Subtitle.Text
+            // Subtitle.Picture,
+            // Subtitle.Text
         };
 
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
-            Padding.WithPadding
+            // Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            VideoScanKind.Interlaced
+            // VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
         {
-            // example format that requires colorspace filter
-            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
-
-            // example format that requires setparams filter
-            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
-
-            // new("libx264", "yuvj420p"),
-            new("libx264", "yuv420p10le"),
-            // new("libx264", "yuv444p10le"),
-
-            // new("mpeg1video", "yuv420p"),
+            // // example format that requires colorspace filter
+            // new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             //
-            // new("mpeg2video", "yuv420p"),
-
+            // // example format that requires setparams filter
+            // new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            //
+            // // new("libx264", "yuvj420p"),
+            // new("libx264", "yuv420p10le"),
+            // // new("libx264", "yuv444p10le"),
+            //
+            // // new("mpeg1video", "yuv420p"),
+            // //
+            // // new("mpeg2video", "yuv420p"),
+            //
             new("libx265", "yuv420p"),
-            new("libx265", "yuv420p10le"),
-
-            // new("mpeg4", "yuv420p"),
+            // new("libx265", "yuv420p10le"),
             //
-            // new("libvpx-vp9", "yuv420p"),
+            // // new("mpeg4", "yuv420p"),
+            // //
+            // // new("libvpx-vp9", "yuv420p"),
+            // //
+            // // // new("libaom-av1", "yuv420p")
+            // // // av1    yuv420p10le    51
+            // //
+            // // new("msmpeg4v2", "yuv420p"),
+            // // new("msmpeg4v3", "yuv420p")
             //
-            // // new("libaom-av1", "yuv420p")
-            // // av1    yuv420p10le    51
-            //
-            // new("msmpeg4v2", "yuv420p"),
-            // new("msmpeg4v3", "yuv420p")
-
-            // wmv3    yuv420p    1
+            // // wmv3    yuv420p    1
         };
 
         public static Resolution[] Resolutions =
         {
             new() { Width = 1920, Height = 1080 },
-            new() { Width = 1280, Height = 720 }
+            // new() { Width = 1280, Height = 720 }
         };
 
         public static FFmpegProfileBitDepth[] BitDepths =
         {
             FFmpegProfileBitDepth.EightBit,
-            FFmpegProfileBitDepth.TenBit
-        };
-
-        public static HardwareAccelerationKind[] NoAcceleration =
-        {
-            HardwareAccelerationKind.None
+            // FFmpegProfileBitDepth.TenBit
         };
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
@@ -180,43 +175,24 @@ public class TranscodingTests
             // FFmpegProfileVideoFormat.Hevc
         };
 
-        public static HardwareAccelerationKind[] NvidiaAcceleration =
+        public static HardwareAccelerationKind[] TestAccelerations =
         {
-            HardwareAccelerationKind.Nvenc
-        };
-
-        public static HardwareAccelerationKind[] VaapiAcceleration =
-        {
-            HardwareAccelerationKind.Vaapi
-        };
-
-        public static HardwareAccelerationKind[] VideoToolboxAcceleration =
-        {
-            HardwareAccelerationKind.VideoToolbox
-        };
-
-        public static HardwareAccelerationKind[] AmfAcceleration =
-        {
-            HardwareAccelerationKind.Amf
-        };
-
-        public static HardwareAccelerationKind[] QsvAcceleration =
-        {
-            HardwareAccelerationKind.Qsv
-        };
-
-        public static HardwareAccelerationKind[] LinuxTestAccelerations =
-        {
-            HardwareAccelerationKind.None,
+            // HardwareAccelerationKind.None,
             HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv
+            // HardwareAccelerationKind.Vaapi,
+            // HardwareAccelerationKind.Qsv,
+            // HardwareAccelerationKind.VideoToolbox,
+            // HardwareAccelerationKind.Amf
         };
+
+        public static string[] FilesToTest => new[] { string.Empty };
     }
 
     [Test]
     [Combinatorial]
     public async Task Transcode(
+            [ValueSource(typeof(TestData), nameof(TestData.FilesToTest))]
+            string fileToTest,
             [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
             InputFormat inputFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
@@ -233,111 +209,26 @@ public class TranscodingTests
             Subtitle subtitle,
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
-            [ValueSource(typeof(TestData), nameof(TestData.LinuxTestAccelerations))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.AmfAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))] HardwareAccelerationKind profileAcceleration)
     {
-        if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
+        string file = fileToTest;
+        if (string.IsNullOrWhiteSpace(file))
         {
-            if (videoScanKind == VideoScanKind.Interlaced)
+            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
             {
-                Assert.Inconclusive($"{inputFormat.Encoder} does not support interlaced content");
-                return;
-            }
-        }
-
-        string name = GetStringSha256Hash($"{inputFormat}_{videoScanKind}_{padding}_{subtitle}");
-
-        string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
-        if (!File.Exists(file))
-        {
-            string resolution = padding == Padding.WithPadding ? "1920x1060" : "1920x1080";
-
-            string videoFilter = videoScanKind == VideoScanKind.Interlaced
-                ? "-vf interlace=scan=tff:lowpass=complex"
-                : string.Empty;
-            string flags = videoScanKind == VideoScanKind.Interlaced ? "-field_order tt -flags +ildct+ilme" : string.Empty;
-
-            string colorRange = !string.IsNullOrWhiteSpace(inputFormat.ColorRange)
-                ? $" -color_range {inputFormat.ColorRange}"
-                : string.Empty;
-
-            string colorSpace = !string.IsNullOrWhiteSpace(inputFormat.ColorSpace)
-                ? $" -colorspace {inputFormat.ColorSpace}"
-                : string.Empty;
-
-            string colorTransfer = !string.IsNullOrWhiteSpace(inputFormat.ColorTransfer)
-                ? $" -color_trc {inputFormat.ColorTransfer}"
-                : string.Empty;
-
-            string colorPrimaries = !string.IsNullOrWhiteSpace(inputFormat.ColorPrimaries)
-                ? $" -color_primaries {inputFormat.ColorPrimaries}"
-                : string.Empty;
-            
-            string args =
-                $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder}{colorRange}{colorSpace}{colorTransfer}{colorPrimaries} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
-            var p1 = new Process
-            {
-                StartInfo = new ProcessStartInfo
+                if (videoScanKind == VideoScanKind.Interlaced)
                 {
-                    FileName = ExecutableName("ffmpeg"),
-                    Arguments = args
+                    Assert.Inconclusive($"{inputFormat.Encoder} does not support interlaced content");
+                    return;
                 }
-            };
+            }
 
-            p1.Start();
-            await p1.WaitForExitAsync();
-            // ReSharper disable once MethodHasAsyncOverload
-            p1.WaitForExit();
-            p1.ExitCode.Should().Be(0);
+            string name = GetStringSha256Hash($"{inputFormat}_{videoScanKind}_{padding}_{subtitle}");
 
-            switch (subtitle)
+            file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
+            if (!File.Exists(file))
             {
-                case Subtitle.Text or Subtitle.Picture:
-                    string sourceFile = Path.GetTempFileName() + ".mkv";
-                    File.Move(file, sourceFile, true);
-
-                    string tempFileName = Path.GetTempFileName() + ".mkv";
-                    string subPath = Path.Combine(
-                        TestContext.CurrentContext.TestDirectory,
-                        "Resources",
-                        subtitle == Subtitle.Picture ? "test.sup" : "test.srt");
-                    var p2 = new Process
-                    {
-                        StartInfo = new ProcessStartInfo
-                        {
-                            FileName = ExecutableName("mkvmerge"),
-                            Arguments = $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}"
-                        }
-                    };
-
-                    p2.Start();
-                    await p2.WaitForExitAsync();
-                    // ReSharper disable once MethodHasAsyncOverload
-                    p2.WaitForExit();
-                    if (p2.ExitCode != 0)
-                    {
-                        if (File.Exists(sourceFile))
-                        {
-                            File.Delete(sourceFile);
-                        }
-
-                        if (File.Exists(file))
-                        {
-                            File.Delete(file);
-                        }
-                    }
-
-                    p2.ExitCode.Should().Be(0);
-
-                    await SetInterlacedFlag(tempFileName, sourceFile, file, videoScanKind == VideoScanKind.Interlaced);
-
-                    File.Move(tempFileName, file, true);
-                    break;
+                await GenerateTestFile(inputFormat, padding, videoScanKind, subtitle, file);
             }
         }
 
@@ -427,23 +318,26 @@ public class TranscodingTests
 
         var subtitles = new List<Domain.Subtitle>();
 
-        foreach (MediaStream stream in subtitleStreams)
+        if (subtitle != Subtitle.None)
         {
-            var s = new Domain.Subtitle
+            foreach (MediaStream stream in subtitleStreams)
             {
-                Codec = stream.Codec,
-                Default = stream.Default,
-                Forced = stream.Forced,
-                Language = stream.Language,
-                StreamIndex = stream.Index,
-                SubtitleKind = SubtitleKind.Embedded,
-                DateAdded = DateTime.UtcNow,
-                DateUpdated = DateTime.UtcNow,
-                Path = "test.srt",
-                IsExtracted = true
-            };
+                var s = new Domain.Subtitle
+                {
+                    Codec = stream.Codec,
+                    Default = stream.Default,
+                    Forced = stream.Forced,
+                    Language = stream.Language,
+                    StreamIndex = stream.Index,
+                    SubtitleKind = SubtitleKind.Embedded,
+                    DateAdded = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    Path = "test.srt",
+                    IsExtracted = true
+                };
 
-            subtitles.Add(s);
+                subtitles.Add(s);
+            }
         }
 
         DateTimeOffset now = DateTimeOffset.Now;
@@ -592,7 +486,7 @@ public class TranscodingTests
                 s => s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
 
             hasWatermarkFilters.Should().Be(watermark != Watermark.None);
-        };
+        }
 
         Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
@@ -755,6 +649,100 @@ public class TranscodingTests
         }
     }
 
+    private static async Task GenerateTestFile(
+        InputFormat inputFormat,
+        Padding padding,
+        VideoScanKind videoScanKind,
+        Subtitle subtitle,
+        string file)
+    {
+        string resolution = padding == Padding.WithPadding ? "1920x1060" : "1920x1080";
+
+        string videoFilter = videoScanKind == VideoScanKind.Interlaced
+            ? "-vf interlace=scan=tff:lowpass=complex"
+            : string.Empty;
+        string flags = videoScanKind == VideoScanKind.Interlaced ? "-field_order tt -flags +ildct+ilme" : string.Empty;
+
+        string colorRange = !string.IsNullOrWhiteSpace(inputFormat.ColorRange)
+            ? $" -color_range {inputFormat.ColorRange}"
+            : string.Empty;
+
+        string colorSpace = !string.IsNullOrWhiteSpace(inputFormat.ColorSpace)
+            ? $" -colorspace {inputFormat.ColorSpace}"
+            : string.Empty;
+
+        string colorTransfer = !string.IsNullOrWhiteSpace(inputFormat.ColorTransfer)
+            ? $" -color_trc {inputFormat.ColorTransfer}"
+            : string.Empty;
+
+        string colorPrimaries = !string.IsNullOrWhiteSpace(inputFormat.ColorPrimaries)
+            ? $" -color_primaries {inputFormat.ColorPrimaries}"
+            : string.Empty;
+
+        string args =
+            $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder}{colorRange}{colorSpace}{colorTransfer}{colorPrimaries} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
+        var p1 = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = ExecutableName("ffmpeg"),
+                Arguments = args
+            }
+        };
+
+        p1.Start();
+        await p1.WaitForExitAsync();
+        // ReSharper disable once MethodHasAsyncOverload
+        p1.WaitForExit();
+        p1.ExitCode.Should().Be(0);
+
+        switch (subtitle)
+        {
+            case Subtitle.Text or Subtitle.Picture:
+                string sourceFile = Path.GetTempFileName() + ".mkv";
+                File.Move(file, sourceFile, true);
+
+                string tempFileName = Path.GetTempFileName() + ".mkv";
+                string subPath = Path.Combine(
+                    TestContext.CurrentContext.TestDirectory,
+                    "Resources",
+                    subtitle == Subtitle.Picture ? "test.sup" : "test.srt");
+                var p2 = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = ExecutableName("mkvmerge"),
+                        Arguments =
+                            $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}"
+                    }
+                };
+
+                p2.Start();
+                await p2.WaitForExitAsync();
+                // ReSharper disable once MethodHasAsyncOverload
+                p2.WaitForExit();
+                if (p2.ExitCode != 0)
+                {
+                    if (File.Exists(sourceFile))
+                    {
+                        File.Delete(sourceFile);
+                    }
+
+                    if (File.Exists(file))
+                    {
+                        File.Delete(file);
+                    }
+                }
+
+                p2.ExitCode.Should().Be(0);
+
+                await SetInterlacedFlag(tempFileName, sourceFile, file, videoScanKind == VideoScanKind.Interlaced);
+
+                File.Move(tempFileName, file, true);
+                break;
+        }
+    }
+
     private static async Task SetInterlacedFlag(string tempFileName, string sourceFile, string file, bool interlaced)
     {
         var p = new Process
@@ -818,16 +806,6 @@ public class TranscodingTests
             string preferredSubtitleLanguage,
             ChannelSubtitleMode subtitleMode) =>
             subtitles.HeadOrNone().AsTask();
-    }
-
-    private class FakeNvidiaCapabilitiesFactory : IHardwareCapabilitiesFactory
-    {
-        public Task<IHardwareCapabilities> GetHardwareCapabilities(
-            string ffmpegPath,
-            HardwareAccelerationMode hardwareAccelerationMode,
-            Option<string> vaapiDriver,
-            Option<string> vaapiDevice) =>
-            Task.FromResult<IHardwareCapabilities>(new NvidiaHardwareCapabilities(61, string.Empty));
     }
 
     private static string ExecutableName(string baseName) =>
