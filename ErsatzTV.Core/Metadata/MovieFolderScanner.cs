@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -81,7 +82,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     {
         try
         {
-            List<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
+            ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
             
             decimal progressSpread = progressMax - progressMin;
 

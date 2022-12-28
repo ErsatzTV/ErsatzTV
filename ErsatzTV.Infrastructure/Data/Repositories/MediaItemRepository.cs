@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Immutable;
+using System.Globalization;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -82,7 +83,7 @@ public class MediaItemRepository : IMediaItemRepository
         return ids;
     }
 
-    public async Task<List<string>> GetAllTrashedItems(LibraryPath libraryPath)
+    public async Task<ImmutableHashSet<string>> GetAllTrashedItems(LibraryPath libraryPath)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<string>(
@@ -92,7 +93,7 @@ public class MediaItemRepository : IMediaItemRepository
                 INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
                 WHERE M.State IN (1,2) AND M.LibraryPathId = @LibraryPathId",
                 new { LibraryPathId = libraryPath.Id })
-            .Map(list => list.ToList());
+            .Map(list => list.ToImmutableHashSet());
     }
 
     public async Task<Unit> FlagNormal(MediaItem mediaItem)
