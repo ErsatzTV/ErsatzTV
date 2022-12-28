@@ -18,6 +18,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly IClient _client;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -64,6 +65,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _searchRepository = searchRepository;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _mediator = mediator;
         _client = client;
         _logger = logger;
@@ -79,6 +81,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     {
         try
         {
+            List<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
+            
             decimal progressSpread = progressMax - progressMin;
 
             var foldersCompleted = 0;
@@ -133,16 +137,26 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .Filter(f => f.Path == movieFolder)
                     .HeadOrNone();
 
-                // skip folder if etag matches
-                if (await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag)
+                bool etagMatches = await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag; 
+                if (etagMatches)
                 {
-                    continue;
+                    if (allFiles.Any(allTrashedItems.Contains))
+                    {
+                        _logger.LogDebug("Previously trashed items are now present in folder {Folder}", movieFolder);
+                    }
+                    else
+                    {
+                        // etag matches and no trashed items are now present, continue to next folder
+                        continue;
+                    }
                 }
-
-                _logger.LogDebug(
-                    "UPDATE: Etag has changed for folder {Folder}",
-                    movieFolder);
-
+                else
+                {
+                    _logger.LogDebug(
+                        "UPDATE: Etag has changed for folder {Folder}",
+                        movieFolder);
+                }
+                
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     // TODO: figure out how to rebuild playlists

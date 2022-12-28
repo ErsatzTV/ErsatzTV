@@ -82,6 +82,19 @@ public class MediaItemRepository : IMediaItemRepository
         return ids;
     }
 
+    public async Task<List<string>> GetAllTrashedItems(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
+                @"SELECT MF.Path
+                FROM MediaItem M
+                INNER JOIN MediaVersion MV on M.Id = COALESCE(MovieId, MusicVideoId, OtherVideoId, SongId, EpisodeId)
+                INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
+                WHERE M.State IN (1,2) AND M.LibraryPathId = @LibraryPathId",
+                new { LibraryPathId = libraryPath.Id })
+            .Map(list => list.ToList());
+    }
+
     public async Task<Unit> FlagNormal(MediaItem mediaItem)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
