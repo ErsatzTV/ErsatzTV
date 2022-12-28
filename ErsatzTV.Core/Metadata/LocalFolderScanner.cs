@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -13,37 +14,37 @@ namespace ErsatzTV.Core.Metadata;
 
 public abstract class LocalFolderScanner
 {
-    public static readonly List<string> VideoFileExtensions = new()
+    public static readonly ImmutableHashSet<string> VideoFileExtensions = new[]
     {
         ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
         ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts", ".webm"
-    };
+    }.ToImmutableHashSet();
 
-    public static readonly List<string> AudioFileExtensions = new()
+    public static readonly ImmutableHashSet<string> AudioFileExtensions = new[]
     {
         ".aac", ".alac", ".dff", ".dsf", ".flac", ".mp3", ".m4a", ".ogg", ".opus", ".oga", ".ogx", ".spx", ".wav",
         ".wma"
-    };
+    }.ToImmutableHashSet();
 
-    public static readonly List<string> ImageFileExtensions = new()
+    public static readonly ImmutableHashSet<string> ImageFileExtensions = new[]
     {
         "jpg", "jpeg", "png", "gif", "tbn"
-    };
+    }.ToImmutableHashSet();
 
-    public static readonly List<string> ExtraFiles = new()
+    public static readonly ImmutableHashSet<string> ExtraFiles = new[]
     {
         "behindthescenes", "deleted", "featurette",
         "interview", "scene", "short", "trailer", "other"
-    };
+    }.ToImmutableHashSet();
 
-    public static readonly List<string> ExtraDirectories = new List<string>
+    public static readonly ImmutableHashSet<string> ExtraDirectories = new List<string>
         {
             "behind the scenes", "deleted scenes", "featurettes",
             "interviews", "scenes", "shorts", "trailers", "other",
             "extras", "specials"
         }
         .Map(s => $"{Path.DirectorySeparatorChar}{s}{Path.DirectorySeparatorChar}")
-        .ToList();
+        .ToImmutableHashSet();
 
     private readonly IClient _client;
     private readonly IFFmpegProcessService _ffmpegProcessService;
