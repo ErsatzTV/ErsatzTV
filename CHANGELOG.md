@@ -1,4 +1,4 @@
-﻿# Changelog
+﻿ Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix many transcoding failures caused by the colorspace filter
 - Fix song playback with VAAPI and NVENC
+- Fix edge case where some local movies would not automatically be restored from trash
 
 ### Changed
 - Upgrade to dotnet 7
