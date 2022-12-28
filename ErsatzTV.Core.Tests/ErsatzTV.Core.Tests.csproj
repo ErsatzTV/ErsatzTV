@@ -8,7 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="Bugsnag" Version="3.1.0" />
-      <PackageReference Include="CliWrap" Version="3.5.0" />
+      <PackageReference Include="CliWrap" Version="3.6.0" />
       <PackageReference Include="FluentAssertions" Version="6.8.0" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.0" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
