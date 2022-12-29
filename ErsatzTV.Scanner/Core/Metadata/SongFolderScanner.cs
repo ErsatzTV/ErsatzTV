@@ -166,6 +166,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                                 _fallbackMetadataProvider,
                                 new List<int> { result.Item.Id });
                         }
+
+                        _searchIndex.Commit();
                     }
                 }
 

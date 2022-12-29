@@ -185,6 +185,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                                 _searchRepository,
                                 _fallbackMetadataProvider,
                                 new List<int> { result.Item.Id });
+
+                            _searchIndex.Commit();
                         }
 
                         await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);

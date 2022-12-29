@@ -118,6 +118,17 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
                 foreach (MediaItemScanResult<Show> result in maybeShow.RightToSeq())
                 {
+                    // add show to search index right away
+                    if (result.IsAdded || result.IsUpdated)
+                    {
+                        await _searchIndex.RebuildItems(
+                            _searchRepository,
+                            _fallbackMetadataProvider,
+                            new List<int> { result.Item.Id });
+
+                        _searchIndex.Commit();
+                    }
+
                     Either<BaseError, Unit> scanResult = await ScanSeasons(
                         libraryPath,
                         ffmpegPath,
@@ -129,14 +140,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
                     {
                         return error;
-                    }
-
-                    if (result.IsAdded || result.IsUpdated)
-                    {
-                        await _searchIndex.RebuildItems(
-                            _searchRepository,
-                            _fallbackMetadataProvider,
-                            new List<int> { result.Item.Id });
                     }
                 }
             }
@@ -255,6 +258,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         _searchRepository,
                         _fallbackMetadataProvider,
                         new List<int> { season.Id });
+
+                    // commit after each season
+                    _searchIndex.Commit();
                 }
             }
         }

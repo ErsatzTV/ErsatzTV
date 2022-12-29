@@ -170,6 +170,8 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                                 _searchRepository,
                                 _fallbackMetadataProvider,
                                 new List<int> { result.Item.Id });
+
+                            _searchIndex.Commit();
                         }
                     }
                 }

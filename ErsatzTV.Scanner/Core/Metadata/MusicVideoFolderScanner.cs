@@ -128,6 +128,16 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
                 foreach (MediaItemScanResult<Artist> result in maybeArtist.RightToSeq())
                 {
+                    if (result.IsAdded || result.IsUpdated)
+                    {
+                        await _searchIndex.RebuildItems(
+                            _searchRepository,
+                            _fallbackMetadataProvider,
+                            new List<int> { result.Item.Id });
+
+                        _searchIndex.Commit();
+                    }
+
                     Either<BaseError, Unit> scanResult = await ScanMusicVideos(
                         libraryPath,
                         ffmpegPath,
@@ -139,14 +149,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
                     {
                         return error;
-                    }
-
-                    if (result.IsAdded || result.IsUpdated)
-                    {
-                        await _searchIndex.RebuildItems(
-                            _searchRepository,
-                            _fallbackMetadataProvider,
-                            new List<int> { result.Item.Id });
                     }
                 }
             }
@@ -343,6 +345,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                             _searchRepository,
                             _fallbackMetadataProvider,
                             new List<int> { result.Item.Id });
+
+                        _searchIndex.Commit();
                     }
                 }
             }
