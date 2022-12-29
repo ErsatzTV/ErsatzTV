@@ -416,8 +416,6 @@ public class Startup
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();
-        services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
-        services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
         services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
         services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();

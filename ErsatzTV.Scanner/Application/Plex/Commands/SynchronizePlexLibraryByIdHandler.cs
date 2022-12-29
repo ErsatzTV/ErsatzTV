@@ -1,19 +1,15 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Application.Plex;
+namespace ErsatzTV.Scanner.Application.Plex;
 
-public class
-    SynchronizePlexLibraryByIdHandler : IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>,
-        IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
+public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlexLibraryById, Either<BaseError, string>>
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IEntityLocker _entityLocker;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizePlexLibraryByIdHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
@@ -28,7 +24,6 @@ public class
         IPlexMovieLibraryScanner plexMovieLibraryScanner,
         IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
         ILibraryRepository libraryRepository,
-        IEntityLocker entityLocker,
         ILogger<SynchronizePlexLibraryByIdHandler> logger)
     {
         _mediaSourceRepository = mediaSourceRepository;
@@ -37,20 +32,12 @@ public class
         _plexMovieLibraryScanner = plexMovieLibraryScanner;
         _plexTelevisionLibraryScanner = plexTelevisionLibraryScanner;
         _libraryRepository = libraryRepository;
-        _entityLocker = entityLocker;
         _logger = logger;
     }
 
-    public Task<Either<BaseError, string>> Handle(
-        ForceSynchronizePlexLibraryById request,
-        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
-
-    public Task<Either<BaseError, string>> Handle(
-        SynchronizePlexLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
-
-    private async Task<Either<BaseError, string>>
-        HandleImpl(ISynchronizePlexLibraryById request, CancellationToken cancellationToken)
+    public async Task<Either<BaseError, string>> Handle(
+        SynchronizePlexLibraryById request,
+        CancellationToken cancellationToken)
     {
         Validation<BaseError, RequestParameters> validation = await Validate(request);
         return await validation.Match(
@@ -62,59 +49,52 @@ public class
         RequestParameters parameters,
         CancellationToken cancellationToken)
     {
-        try
+        var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
         {
-            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-            if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+            Either<BaseError, Unit> result = parameters.Library.MediaKind switch
             {
-                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
-                {
-                    LibraryMediaKind.Movies =>
-                        await _plexMovieLibraryScanner.ScanLibrary(
-                            parameters.ConnectionParameters.ActiveConnection,
-                            parameters.ConnectionParameters.PlexServerAuthToken,
-                            parameters.Library,
-                            parameters.FFmpegPath,
-                            parameters.FFprobePath,
-                            parameters.DeepScan,
-                            cancellationToken),
-                    LibraryMediaKind.Shows =>
-                        await _plexTelevisionLibraryScanner.ScanLibrary(
-                            parameters.ConnectionParameters.ActiveConnection,
-                            parameters.ConnectionParameters.PlexServerAuthToken,
-                            parameters.Library,
-                            parameters.FFmpegPath,
-                            parameters.FFprobePath,
-                            parameters.DeepScan,
-                            cancellationToken),
-                    _ => Unit.Default
-                };
+                LibraryMediaKind.Movies =>
+                    await _plexMovieLibraryScanner.ScanLibrary(
+                        parameters.ConnectionParameters.ActiveConnection,
+                        parameters.ConnectionParameters.PlexServerAuthToken,
+                        parameters.Library,
+                        parameters.FFmpegPath,
+                        parameters.FFprobePath,
+                        parameters.DeepScan,
+                        cancellationToken),
+                LibraryMediaKind.Shows =>
+                    await _plexTelevisionLibraryScanner.ScanLibrary(
+                        parameters.ConnectionParameters.ActiveConnection,
+                        parameters.ConnectionParameters.PlexServerAuthToken,
+                        parameters.Library,
+                        parameters.FFmpegPath,
+                        parameters.FFprobePath,
+                        parameters.DeepScan,
+                        cancellationToken),
+                _ => Unit.Default
+            };
 
-                if (result.IsRight)
-                {
-                    parameters.Library.LastScan = DateTime.UtcNow;
-                    await _libraryRepository.UpdateLastScan(parameters.Library);
-                }
-
-                return result.Map(_ => parameters.Library.Name);
-            }
-            else
+            if (result.IsRight)
             {
-                _logger.LogDebug(
-                    "Skipping unforced scan of plex media library {Name}",
-                    parameters.Library.Name);
+                parameters.Library.LastScan = DateTime.UtcNow;
+                await _libraryRepository.UpdateLastScan(parameters.Library);
             }
 
-            return parameters.Library.Name;
+            return result.Map(_ => parameters.Library.Name);
         }
-        finally
+        else
         {
-            _entityLocker.UnlockLibrary(parameters.Library.Id);
+            _logger.LogDebug(
+                "Skipping unforced scan of plex media library {Name}",
+                parameters.Library.Name);
         }
+
+        return parameters.Library.Name;
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
+    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexLibraryById request) =>
         (await ValidateConnection(request), await PlexLibraryMustExist(request),
             await ValidateLibraryRefreshInterval(), await ValidateFFmpegPath(), await ValidateFFprobePath())
         .Apply(
@@ -130,13 +110,13 @@ public class
                 ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
-        ISynchronizePlexLibraryById request) =>
+        SynchronizePlexLibraryById request) =>
         PlexMediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveToken);
 
     private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
-        ISynchronizePlexLibraryById request) =>
+        SynchronizePlexLibraryById request) =>
         _mediaSourceRepository.GetPlexByLibraryId(request.PlexLibraryId)
             .Map(
                 v => v.ToValidation<BaseError>(
@@ -161,7 +141,7 @@ public class
     }
 
     private Task<Validation<BaseError, PlexLibrary>> PlexLibraryMustExist(
-        ISynchronizePlexLibraryById request) =>
+        SynchronizePlexLibraryById request) =>
         _mediaSourceRepository.GetPlexLibrary(request.PlexLibraryId)
             .Map(v => v.ToValidation<BaseError>($"Plex library {request.PlexLibraryId} does not exist."));
 
@@ -195,6 +175,6 @@ public class
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {
-        public PlexServerAuthToken PlexServerAuthToken { get; set; }
+        public PlexServerAuthToken? PlexServerAuthToken { get; set; }
     }
 }

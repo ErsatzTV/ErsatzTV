@@ -178,6 +178,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                         _searchRepository,
                         _fallbackMetadataProvider,
                         new List<int> { result.Item.Id });
+
+                    _searchIndex.Commit();
                 }
             }
         }

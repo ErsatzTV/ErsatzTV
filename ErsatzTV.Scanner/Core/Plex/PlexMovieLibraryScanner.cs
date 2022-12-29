@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -6,10 +7,10 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
-using MediatR;
+using ErsatzTV.Core.Plex;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Plex;
+namespace ErsatzTV.Scanner.Core.Plex;
 
 public class PlexMovieLibraryScanner :
     MediaServerMovieLibraryScanner<PlexConnectionParameters, PlexLibrary, PlexMovie, PlexItemEtag>,
@@ -340,8 +341,8 @@ public class PlexMovieLibraryScanner :
     }
 
     private async Task<bool> UpdateArtworkIfNeeded(
-        Domain.Metadata existingMetadata,
-        Domain.Metadata incomingMetadata,
+        ErsatzTV.Core.Domain.Metadata existingMetadata,
+        ErsatzTV.Core.Domain.Metadata incomingMetadata,
         ArtworkKind artworkKind)
     {
         if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)

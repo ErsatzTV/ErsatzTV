@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Plex;
+namespace ErsatzTV.Scanner.Core.Plex;
 
 public abstract class PlexLibraryScanner
 {
@@ -16,8 +16,8 @@ public abstract class PlexLibraryScanner
     }
 
     protected async Task<bool> UpdateArtworkIfNeeded(
-        Domain.Metadata existingMetadata,
-        Domain.Metadata incomingMetadata,
+        ErsatzTV.Core.Domain.Metadata existingMetadata,
+        ErsatzTV.Core.Domain.Metadata incomingMetadata,
         ArtworkKind artworkKind)
     {
         if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)

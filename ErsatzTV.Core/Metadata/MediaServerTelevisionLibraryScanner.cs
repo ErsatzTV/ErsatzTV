@@ -204,6 +204,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                         _searchRepository,
                         _fallbackMetadataProvider,
                         new List<int> { result.Item.Id });
+
+                    _searchIndex.Commit();
                 }
             }
         }

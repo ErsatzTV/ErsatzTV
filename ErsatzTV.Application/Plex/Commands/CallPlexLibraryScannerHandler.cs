@@ -8,29 +8,29 @@ using Newtonsoft.Json;
 using Serilog;
 using Serilog.Formatting.Compact.Reader;
 
-namespace ErsatzTV.Application.MediaSources;
+namespace ErsatzTV.Application.Plex;
 
-public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
-    IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
+public class CallPlexLibraryScannerHandler : IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>,
+    IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
 {
     private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
 
-    public CallLocalLibraryScannerHandler(IMediator mediator, IRuntimeInfo runtimeInfo)
+    public CallPlexLibraryScannerHandler(IMediator mediator, IRuntimeInfo runtimeInfo)
     {
         _mediator = mediator;
         _runtimeInfo = runtimeInfo;
     }
 
-    Task<Either<BaseError, string>> IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>.Handle(
-        ForceScanLocalLibrary request,
+    Task<Either<BaseError, string>> IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>.Handle(
+        ForceSynchronizePlexLibraryById request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    Task<Either<BaseError, string>> IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>.Handle(
-        ScanLocalLibraryIfNeeded request,
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>.Handle(
+        SynchronizePlexLibraryByIdIfNeeded request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    private async Task<Either<BaseError, string>> Handle(IScanLocalLibrary request, CancellationToken cancellationToken)
+    private async Task<Either<BaseError, string>> Handle(ISynchronizePlexLibraryById request, CancellationToken cancellationToken)
     {
         Validation<BaseError, string> validation = Validate();
         return await validation.Match(
@@ -40,20 +40,25 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
 
     private async Task<Either<BaseError, string>> PerformScan(
         string scanner,
-        IScanLocalLibrary request,
+        ISynchronizePlexLibraryById request,
         CancellationToken cancellationToken)
     {
         try
         {
             var arguments = new List<string>
             {
-                "--local",
-                request.LibraryId.ToString()
+                "--plex",
+                request.PlexLibraryId.ToString()
             };
 
             if (request.ForceScan)
             {
                 arguments.Add("--force");
+            }
+
+            if (request.DeepScan)
+            {
+                arguments.Add("--deep");
             }
 
             using var forcefulCts = new CancellationTokenSource();
@@ -74,7 +79,7 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
                 return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
             }
 
-            // TODO: return local library name?
+            // TODO: return plex library name?
             return string.Empty;
         }
         catch (OperationCanceledException)

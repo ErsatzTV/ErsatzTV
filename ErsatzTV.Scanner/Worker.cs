@@ -3,6 +3,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Scanner.Application.MediaSources;
+using ErsatzTV.Scanner.Application.Plex;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -34,6 +35,15 @@ public class Worker : IHostedService
             Arity = ArgumentArity.Zero
         };
 
+        var deepOption = new System.CommandLine.Option<bool>(
+            name: "--deep",
+            description: "Deep scan",
+            parseArgument: _ => true)
+        {
+            AllowMultipleArgumentsPerToken = true,
+            Arity = ArgumentArity.Zero
+        };
+        
         var localOption = new System.CommandLine.Option<int?>(
             name: "--local",
             description: "The local library id to scan");
@@ -52,6 +62,7 @@ public class Worker : IHostedService
 
         var rootCommand = new RootCommand();
         rootCommand.AddOption(forceOption);
+        rootCommand.AddOption(deepOption);
         rootCommand.AddOption(localOption);
         rootCommand.AddOption(plexOption);
         rootCommand.AddOption(embyOption);
@@ -61,12 +72,13 @@ public class Worker : IHostedService
             async context =>
             {
                 bool force = context.ParseResult.GetValueForOption(forceOption);
+                bool deep = context.ParseResult.GetValueForOption(deepOption);
                 int? local = context.ParseResult.GetValueForOption(localOption);
                 int? plex = context.ParseResult.GetValueForOption(plexOption);
                 int? emby = context.ParseResult.GetValueForOption(embyOption);
                 int? jellyfin = context.ParseResult.GetValueForOption(jellyfinOption);
                 CancellationToken token = context.GetCancellationToken();
-                await Handle(force, local, plex, emby, jellyfin, token);
+                await Handle(force, deep, local, plex, emby, jellyfin, token);
             });
 
         // need to strip program name (head) from command line args
@@ -82,6 +94,7 @@ public class Worker : IHostedService
 
     private async Task Handle(
         bool forceOption,
+        bool deepOption,
         int? localLibraryId,
         int? plexLibraryId,
         int? embyLibraryId,
@@ -102,13 +115,13 @@ public class Worker : IHostedService
 
         if (localLibraryId is not null)
         {
-            _logger.LogInformation("Scanning local library {Id}", localLibraryId);
             var scanLocalLibrary = new ScanLocalLibrary(localLibraryId.Value, forceOption);
             await mediator.Send(scanLocalLibrary, cancellationToken);
         }
         else if (plexLibraryId is not null)
         {
-            _logger.LogInformation("Scanning plex library {Id}", plexLibraryId);
+            var scanPlexLibrary = new SynchronizePlexLibraryById(plexLibraryId.Value, forceOption, deepOption);
+            await mediator.Send(scanPlexLibrary, cancellationToken);
         }
         else if (embyLibraryId is not null)
         {

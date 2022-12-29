@@ -6,25 +6,25 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Scripting;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Metadata.Nfo;
-using ErsatzTV.FFmpeg.Capabilities;
-using ErsatzTV.FFmpeg.Pipeline;
+using ErsatzTV.Core.Plex;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Images;
+using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
-using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Scanner.Core.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Metadata;
+using ErsatzTV.Scanner.Core.Plex;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -92,6 +92,7 @@ public class Program
 
                     services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
                     services.AddScoped<IMetadataRepository, MetadataRepository>();
+                    services.AddScoped<IMediaSourceRepository, MediaSourceRepository>();
                     services.AddScoped<IMediaItemRepository, MediaItemRepository>();
                     services.AddScoped<IMovieRepository, MovieRepository>();
                     services.AddScoped<ITelevisionRepository, TelevisionRepository>();
@@ -107,7 +108,6 @@ public class Program
                     services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
                     services.AddScoped<ILocalSubtitlesProvider, LocalSubtitlesProvider>();
                     services.AddScoped<IImageCache, ImageCache>();
-                    services.AddSingleton<ITempFilePool, TempFilePool>();
                     services.AddScoped<ILocalFileSystem, LocalFileSystem>();
                     services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
                     services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
@@ -122,7 +122,17 @@ public class Program
                     services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
                     services.AddScoped<IFFmpegPngService, FFmpegPngService>();
                     services.AddScoped<IRuntimeInfo, RuntimeInfo>();
+                    
+                    services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
+                    services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
+                    services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
+                    services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
+                    services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
+                    services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
+                    services.AddScoped<PlexEtag>();
 
+                    services.AddSingleton<ITempFilePool, TempFilePool>();
+                    services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
                     services.AddSingleton<ISearchIndex, SearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
                     // TODO: real bugsnag?

@@ -65,6 +65,7 @@ public class WorkerService : BackgroundService
                             Either<BaseError, string> scanResult = await mediator.Send(
                                 scanLocalLibrary,
                                 cancellationToken);
+
                             scanResult.BiIter(
                                 name => _logger.LogDebug(
                                     "Done scanning local library {Library}",
@@ -78,7 +79,6 @@ public class WorkerService : BackgroundService
                             {
                                 entityLocker.UnlockLibrary(scanLocalLibrary.LibraryId);
                             }
-
                             break;
                         case RebuildSearchIndex rebuildSearchIndex:
                             await mediator.Send(rebuildSearchIndex, cancellationToken);
