@@ -22,6 +22,7 @@ using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

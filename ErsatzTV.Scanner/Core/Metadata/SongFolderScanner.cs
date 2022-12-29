@@ -1,49 +1,49 @@
 ﻿using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
-using MediatR;
+using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
-public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
+public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
-    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
-    private readonly ILogger<OtherVideoFolderScanner> _logger;
+    private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ICachingSearchRepository _searchRepository;
+    private readonly ISongRepository _songRepository;
 
-    public OtherVideoFolderScanner(
+    public SongFolderScanner(
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
-        ILocalSubtitlesProvider localSubtitlesProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         IMediator mediator,
         ISearchIndex searchIndex,
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        IOtherVideoRepository otherVideoRepository,
+        ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
-        ILogger<OtherVideoFolderScanner> logger) : base(
+        ILogger<SongFolderScanner> logger) : base(
         localFileSystem,
         localStatisticsProvider,
         metadataRepository,
@@ -56,12 +56,11 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     {
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
-        _localSubtitlesProvider = localSubtitlesProvider;
         _mediator = mediator;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _fallbackMetadataProvider = fallbackMetadataProvider;
-        _otherVideoRepository = otherVideoRepository;
+        _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _client = client;
         _logger = logger;
@@ -69,8 +68,8 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
-        string ffmpegPath,
         string ffprobePath,
+        string ffmpegPath,
         decimal progressMin,
         decimal progressMax,
         CancellationToken cancellationToken)
@@ -81,17 +80,15 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
             var foldersCompleted = 0;
 
-            var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
-            if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
+            if (ShouldIncludeFolder(libraryPath.Path))
             {
                 folderQueue.Enqueue(libraryPath.Path);
             }
 
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
                          .Filter(ShouldIncludeFolder)
-                         .Filter(allFolders.Add)
                          .OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
@@ -109,27 +106,26 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
                     cancellationToken);
 
-                string otherVideoFolder = folderQueue.Dequeue();
+                string songFolder = folderQueue.Dequeue();
                 foldersCompleted++;
 
-                var filesForEtag = _localFileSystem.ListFiles(otherVideoFolder).ToList();
+                var filesForEtag = _localFileSystem.ListFiles(songFolder).ToList();
 
                 var allFiles = filesForEtag
-                    .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                    .Filter(f => AudioFileExtensions.Contains(Path.GetExtension(f)))
                     .Filter(f => !Path.GetFileName(f).StartsWith("._"))
                     .ToList();
 
-                foreach (string subdirectory in _localFileSystem.ListSubdirectories(otherVideoFolder)
+                foreach (string subdirectory in _localFileSystem.ListSubdirectories(songFolder)
                              .Filter(ShouldIncludeFolder)
-                             .Filter(allFolders.Add)
                              .OrderBy(identity))
                 {
                     folderQueue.Enqueue(subdirectory);
                 }
 
-                string etag = FolderEtag.Calculate(otherVideoFolder, _localFileSystem);
+                string etag = FolderEtag.Calculate(songFolder, _localFileSystem);
                 Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                    .Filter(f => f.Path == otherVideoFolder)
+                    .Filter(f => f.Path == songFolder)
                     .HeadOrNone();
 
                 // skip folder if etag matches
@@ -141,26 +137,26 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
                 _logger.LogDebug(
                     "UPDATE: Etag has changed for folder {Folder}",
-                    otherVideoFolder);
+                    songFolder);
 
                 var hasErrors = false;
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
-                    Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
+                    Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
-                        .BindT(UpdateMetadata)
-                        .BindT(UpdateSubtitles)
+                        .BindT(video => UpdateMetadata(video, ffprobePath))
+                        .BindT(video => UpdateThumbnail(video, ffmpegPath, cancellationToken))
                         .BindT(FlagNormal);
 
-                    foreach (BaseError error in maybeVideo.LeftToSeq())
+                    foreach (BaseError error in maybeSong.LeftToSeq())
                     {
-                        _logger.LogWarning("Error processing other video at {Path}: {Error}", file, error.Value);
+                        _logger.LogWarning("Error processing song at {Path}: {Error}", file, error.Value);
                         hasErrors = true;
                     }
 
-                    foreach (MediaItemScanResult<OtherVideo> result in maybeVideo.RightToSeq())
+                    foreach (MediaItemScanResult<Song> result in maybeSong.RightToSeq())
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
@@ -175,23 +171,23 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 // only do this once per folder and only if all files processed successfully
                 if (!hasErrors)
                 {
-                    await _libraryRepository.SetEtag(libraryPath, knownFolder, otherVideoFolder, etag);
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, songFolder, etag);
                 }
             }
 
-            foreach (string path in await _otherVideoRepository.FindOtherVideoPaths(libraryPath))
+            foreach (string path in await _songRepository.FindSongPaths(libraryPath))
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Flagging missing other video at {Path}", path);
-                    List<int> otherVideoIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, otherVideoIds);
+                    _logger.LogInformation("Flagging missing song at {Path}", path);
+                    List<int> songIds = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, songIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
-                    List<int> otherVideoIds = await _otherVideoRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(otherVideoIds);
+                    List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
+                    await _searchIndex.RemoveItems(songIds);
                 }
             }
 
@@ -209,44 +205,28 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateMetadata(
-        MediaItemScanResult<OtherVideo> result)
+    private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateMetadata(
+        MediaItemScanResult<Song> result,
+        string ffprobePath)
     {
         try
         {
-            OtherVideo otherVideo = result.Item;
-            string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
+            Song song = result.Item;
+            string path = song.GetHeadVersion().MediaFiles.Head().Path;
 
-            Option<string> maybeNfoFile = new List<string> { Path.ChangeExtension(path, "nfo") }
-                .Filter(_localFileSystem.FileExists)
-                .HeadOrNone();
+            bool shouldUpdate = Optional(song.SongMetadata).Flatten().HeadOrNone().Match(
+                m => m.MetadataKind == MetadataKind.Fallback ||
+                     m.DateUpdated != _localFileSystem.GetLastWriteTime(path),
+                true);
 
-            if (maybeNfoFile.IsNone)
+            if (shouldUpdate)
             {
-                if (!Optional(otherVideo.OtherVideoMetadata).Flatten().Any())
-                {
-                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                    if (await _localMetadataProvider.RefreshFallbackMetadata(otherVideo))
-                    {
-                        result.IsUpdated = true;
-                    }
-                }
-            }
+                song.SongMetadata ??= new List<SongMetadata>();
 
-            foreach (string nfoFile in maybeNfoFile)
-            {
-                bool shouldUpdate = Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone().Match(
-                    m => m.MetadataKind == MetadataKind.Fallback ||
-                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                    true);
-
-                if (shouldUpdate)
+                _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
+                if (await _localMetadataProvider.RefreshTagMetadata(song, ffprobePath))
                 {
-                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                    if (await _localMetadataProvider.RefreshSidecarMetadata(otherVideo, nfoFile))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
             }
 
@@ -259,18 +239,82 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateSubtitles(
-        MediaItemScanResult<OtherVideo> result)
+    private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
+        MediaItemScanResult<Song> result,
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
+            // reload the song from the database at this point
+            if (result.IsAdded)
+            {
+                LibraryPath libraryPath = result.Item.LibraryPath;
+                string path = result.Item.GetHeadVersion().MediaFiles.Head().Path;
+                foreach (MediaItemScanResult<Song> s in (await _songRepository.GetOrAdd(libraryPath, path))
+                         .RightToSeq())
+                {
+                    result.Item = s.Item;
+                }
+            }
+
+            Song song = result.Item;
+            Option<string> maybeThumbnail = LocateThumbnail(song);
+            if (maybeThumbnail.IsNone)
+            {
+                await ExtractEmbeddedArtwork(song, ffmpegPath, cancellationToken);
+            }
+
+
+            foreach (string thumbnailFile in maybeThumbnail)
+            {
+                SongMetadata metadata = song.SongMetadata.Head();
+                await RefreshArtwork(
+                    thumbnailFile,
+                    metadata,
+                    ArtworkKind.Thumbnail,
+                    ffmpegPath,
+                    None,
+                    cancellationToken);
+            }
+
             return result;
         }
         catch (Exception ex)
         {
             _client.Notify(ex);
             return BaseError.New(ex.ToString());
+        }
+    }
+
+    private Option<string> LocateThumbnail(Song song)
+    {
+        string path = song.MediaVersions.Head().MediaFiles.Head().Path;
+        Option<DirectoryInfo> parent = Optional(Directory.GetParent(path));
+
+        return parent.Map(
+            di =>
+            {
+                string coverPath = Path.Combine(di.FullName, "cover.jpg");
+                return ImageFileExtensions
+                    .Map(ext => Path.ChangeExtension(coverPath, ext))
+                    .Filter(f => _localFileSystem.FileExists(f))
+                    .HeadOrNone();
+            }).Flatten();
+    }
+
+    private async Task ExtractEmbeddedArtwork(Song song, string ffmpegPath, CancellationToken cancellationToken)
+    {
+        Option<MediaStream> maybeArtworkStream = Optional(song.GetHeadVersion().Streams.Find(ms => ms.AttachedPic));
+        foreach (MediaStream artworkStream in maybeArtworkStream)
+        {
+            await RefreshArtwork(
+                song.GetHeadVersion().MediaFiles.Head().Path,
+                song.SongMetadata.Head(),
+                ArtworkKind.Thumbnail,
+                ffmpegPath,
+                artworkStream.Index,
+                cancellationToken);
         }
     }
 }

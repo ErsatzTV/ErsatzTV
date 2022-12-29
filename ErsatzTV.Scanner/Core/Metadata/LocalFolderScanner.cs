@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Bugsnag;
 using CliWrap;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
@@ -8,9 +9,10 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public abstract class LocalFolderScanner
 {
@@ -127,7 +129,7 @@ public abstract class LocalFolderScanner
 
     protected async Task<bool> RefreshArtwork(
         string artworkFile,
-        Domain.Metadata metadata,
+        ErsatzTV.Core.Domain.Metadata metadata,
         ArtworkKind artworkKind,
         Option<string> ffmpegPath,
         Option<int> attachedPicIndex,

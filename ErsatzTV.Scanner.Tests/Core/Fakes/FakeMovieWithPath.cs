@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
 
-namespace ErsatzTV.Core.Tests.Fakes;
+namespace ErsatzTV.Scanner.Tests.Core.Fakes;
 
 public class FakeMovieWithPath : MediaItemScanResult<Movie>
 {

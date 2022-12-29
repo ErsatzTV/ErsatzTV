@@ -416,11 +416,6 @@ public class Startup
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();
-        services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
-        services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
-        services.AddScoped<IMusicVideoFolderScanner, MusicVideoFolderScanner>();
-        services.AddScoped<IOtherVideoFolderScanner, OtherVideoFolderScanner>();
-        services.AddScoped<ISongFolderScanner, SongFolderScanner>();
         services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
         services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();

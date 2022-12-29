@@ -1,4 +1,5 @@
 ﻿using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -7,10 +8,10 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
-using MediatR;
+using ErsatzTV.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
