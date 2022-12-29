@@ -2,8 +2,10 @@
 using System.Runtime.InteropServices;
 using CliWrap;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog;
 using Serilog.Formatting.Compact.Reader;
 
@@ -12,11 +14,16 @@ namespace ErsatzTV.Application.MediaSources;
 public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
     IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
 {
+    private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
     private readonly ILogger<CallLocalLibraryScannerHandler> _logger;
 
-    public CallLocalLibraryScannerHandler(IRuntimeInfo runtimeInfo, ILogger<CallLocalLibraryScannerHandler> logger)
+    public CallLocalLibraryScannerHandler(
+        IMediator mediator,
+        IRuntimeInfo runtimeInfo,
+        ILogger<CallLocalLibraryScannerHandler> logger)
     {
+        _mediator = mediator;
         _runtimeInfo = runtimeInfo;
         _logger = logger;
     }
@@ -42,14 +49,6 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
         IScanLocalLibrary request,
         CancellationToken cancellationToken)
     {
-        void ProcessOutput(string s)
-        {
-            if (!string.IsNullOrWhiteSpace(s))
-            {
-                // _logger.LogDebug("Scanner output: {Output}", s);
-            }
-        }
-
         CommandResult process = await Cli.Wrap(scanner)
             .WithArguments(
                 new[]
@@ -59,7 +58,7 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
                 })
             .WithValidation(CommandResultValidation.None)
             .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogOutput))
-            .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessOutput))
+            .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessProgressOutput))
             .ExecuteAsync(cancellationToken);
         
         if (process.ExitCode != 0)
@@ -71,7 +70,7 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
         return string.Empty;
     }
 
-    private void ProcessLogOutput(string s)
+    private static void ProcessLogOutput(string s)
     {
         if (!string.IsNullOrWhiteSpace(s))
         {
@@ -82,6 +81,22 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
             catch
             {
                 Console.WriteLine(s);
+            }
+        }
+    }
+
+    private async Task ProcessProgressOutput(string s)
+    {
+        if (!string.IsNullOrWhiteSpace(s))
+        {
+            try
+            {
+                LibraryScanProgress libraryScanProgress = JsonConvert.DeserializeObject<LibraryScanProgress>(s);
+                await _mediator.Publish(libraryScanProgress);
+            }
+            catch
+            {
+                // do nothing
             }
         }
     }

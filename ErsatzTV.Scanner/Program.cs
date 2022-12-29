@@ -4,7 +4,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -20,7 +19,6 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Images;
-using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
@@ -134,9 +132,6 @@ public class Program
                     services.AddSingleton<ISearchIndex, SearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
                     
-                    // TODO: does this locker even work for scanning?
-                    services.AddSingleton<IEntityLocker, EntityLocker>();
-
                     services.AddMediatR(typeof(Worker).Assembly);
                     services.AddMemoryCache();
                     

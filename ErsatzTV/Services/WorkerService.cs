@@ -7,6 +7,7 @@ using ErsatzTV.Application.MediaSources;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
 namespace ErsatzTV.Services;
@@ -45,6 +46,7 @@ public class WorkerService : BackgroundService
                 try
                 {
                     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                    IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
 
                     switch (request)
                     {
@@ -71,6 +73,12 @@ public class WorkerService : BackgroundService
                                     "Unable to scan local library {LibraryId}: {Error}",
                                     scanLocalLibrary.LibraryId,
                                     error.Value));
+
+                            if (entityLocker.IsLibraryLocked(scanLocalLibrary.LibraryId))
+                            {
+                                entityLocker.UnlockLibrary(scanLocalLibrary.LibraryId);
+                            }
+
                             break;
                         case RebuildSearchIndex rebuildSearchIndex:
                             await mediator.Send(rebuildSearchIndex, cancellationToken);
