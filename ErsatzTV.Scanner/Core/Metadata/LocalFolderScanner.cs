@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -49,7 +50,7 @@ public abstract class LocalFolderScanner
         .ToImmutableHashSet();
 
     private readonly IClient _client;
-    private readonly IFFmpegProcessService _ffmpegProcessService;
+    private readonly IFFmpegPngService _ffmpegPngService;
 
     private readonly IImageCache _imageCache;
 
@@ -66,7 +67,7 @@ public abstract class LocalFolderScanner
         IMetadataRepository metadataRepository,
         IMediaItemRepository mediaItemRepository,
         IImageCache imageCache,
-        IFFmpegProcessService ffmpegProcessService,
+        IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger logger)
@@ -76,7 +77,7 @@ public abstract class LocalFolderScanner
         _metadataRepository = metadataRepository;
         _mediaItemRepository = mediaItemRepository;
         _imageCache = imageCache;
-        _ffmpegProcessService = ffmpegProcessService;
+        _ffmpegPngService = ffmpegPngService;
         _tempFilePool = tempFilePool;
         _client = client;
         _logger = logger;
@@ -170,7 +171,7 @@ public abstract class LocalFolderScanner
                         {
                             // extract attached pic (and convert to png)
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            Command process = _ffmpegProcessService.ExtractAttachedPicAsPng(
+                            Command process = _ffmpegPngService.ExtractAttachedPicAsPng(
                                 path,
                                 artworkFile,
                                 picIndex,
@@ -184,7 +185,7 @@ public abstract class LocalFolderScanner
                         {
                             // no attached pic index means convert to png
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            Command process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                            Command process = _ffmpegPngService.ConvertToPng(path, artworkFile, tempName);
 
                             await process.ExecuteAsync(cancellationToken);
 

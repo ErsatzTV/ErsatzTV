@@ -22,6 +22,8 @@ using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Scanner.Core.FFmpeg;
+using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -118,20 +120,13 @@ public class Program
                     services.AddScoped<IMusicVideoNfoReader, MusicVideoNfoReader>();
                     services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
                     services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
-                    services.AddScoped<IScriptEngine, ScriptEngine>();
-                    services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
-                    services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
-                    services.AddScoped<IStreamSelectorRepository, StreamSelectorRepository>();
-                    services.AddScoped<FFmpegProcessService>();
-                    // TODO: real bugsnag?
-                    services.AddScoped<IClient, BugsnagNoopClient>();
-                    services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();
+                    services.AddScoped<IFFmpegPngService, FFmpegPngService>();
                     services.AddScoped<IRuntimeInfo, RuntimeInfo>();
-                    services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
 
-                    services.AddSingleton<FFmpegPlaybackSettingsCalculator>();
                     services.AddSingleton<ISearchIndex, SearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
+                    // TODO: real bugsnag?
+                    services.AddSingleton<IClient>(_ => new BugsnagNoopClient());
                     
                     services.AddMediatR(typeof(Worker).Assembly);
                     services.AddMemoryCache();

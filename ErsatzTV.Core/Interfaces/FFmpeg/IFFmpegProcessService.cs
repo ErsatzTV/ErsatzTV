@@ -57,10 +57,6 @@ public interface IFFmpegProcessService
 
     Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
 
-    Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
-
-    Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
-
     Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
         string ffprobePath,

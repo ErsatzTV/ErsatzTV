@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
 using Seq = LanguageExt.Seq;
 
@@ -44,7 +45,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
-        IFFmpegProcessService ffmpegProcessService,
+        IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<MovieFolderScanner> logger)
@@ -54,7 +55,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             metadataRepository,
             mediaItemRepository,
             imageCache,
-            ffmpegProcessService,
+            ffmpegPngService,
             tempFilePool,
             client,
             logger)

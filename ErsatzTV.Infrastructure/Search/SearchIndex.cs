@@ -191,7 +191,7 @@ public sealed class SearchIndex : ISearchIndex
             return new SearchResult(new List<SearchItem>(), 0);
         }
 
-        using DirectoryReader reader = _writer.GetReader(true);
+        using var reader = DirectoryReader.Open(_directory);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
         using var analyzer = new StandardAnalyzer(AppLuceneVersion);

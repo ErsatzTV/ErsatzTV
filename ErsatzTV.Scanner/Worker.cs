@@ -72,7 +72,7 @@ public class Worker : IHostedService
         IConfigElementRepository configElementRepository =
             scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
         ISearchIndex searchIndex = scope.ServiceProvider.GetRequiredService<ISearchIndex>();
-        
+
         await searchIndex.Initialize(localFileSystem, configElementRepository);
 
         if (localLibraryId is not null)

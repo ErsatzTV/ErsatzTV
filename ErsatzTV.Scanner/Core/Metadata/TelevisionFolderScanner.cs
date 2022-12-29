@@ -9,6 +9,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -42,7 +43,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
-        IFFmpegProcessService ffmpegProcessService,
+        IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<TelevisionFolderScanner> logger) : base(
@@ -51,7 +52,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         metadataRepository,
         mediaItemRepository,
         imageCache,
-        ffmpegProcessService,
+        ffmpegPngService,
         tempFilePool,
         client,
         logger)
