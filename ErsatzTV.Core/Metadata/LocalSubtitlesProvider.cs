@@ -59,6 +59,14 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             _ => None
         };
 
+        if (maybeMetadata.IsNone)
+        {
+            _logger.LogError(
+                "Failed to update subtitles; unable to load metadata for media item type {Type}",
+                mediaItem
+                    .GetType().Name);
+        }
+
         foreach (Domain.Metadata metadata in maybeMetadata)
         {
             MediaVersion version = mediaItem.GetHeadVersion();
@@ -69,7 +77,13 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
             string mediaItemPath = await localPath.IfNoneAsync(() => mediaItem.GetHeadVersion().MediaFiles.Head().Path);
             subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItemPath, saveFullPath));
-            return await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            bool updateResult = await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            if (!updateResult)
+            {
+                _logger.LogError("Failed to save {Count} subtitles to database", subtitles.Count);
+            }
+
+            return updateResult;
         }
 
         return false;
