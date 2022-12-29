@@ -8,10 +8,9 @@ using ErsatzTV.Core.Metadata;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Application.MediaSources;
+namespace ErsatzTV.Scanner.Application.MediaSources;
 
-public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
-    IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
+public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<BaseError, string>>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IEntityLocker _entityLocker;
@@ -48,15 +47,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
         _logger = logger;
     }
 
-    Task<Either<BaseError, string>> IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>.Handle(
-        ForceScanLocalLibrary request,
-        CancellationToken cancellationToken) => Handle(request, cancellationToken);
-
-    Task<Either<BaseError, string>> IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>.Handle(
-        ScanLocalLibraryIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request, cancellationToken);
-
-    private Task<Either<BaseError, string>> Handle(IScanLocalLibrary request, CancellationToken cancellationToken) =>
+    public Task<Either<BaseError, string>> Handle(ScanLocalLibrary request, CancellationToken cancellationToken) =>
         Validate(request)
             .MapT(parameters => PerformScan(parameters, cancellationToken).Map(_ => parameters.LocalLibrary.Name))
             .Bind(v => v.ToEitherAsync());
@@ -167,7 +158,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
         }
     }
 
-    private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request)
+    private async Task<Validation<BaseError, RequestParameters>> Validate(ScanLocalLibrary request)
     {
         Validation<BaseError, LocalLibrary> libraryResult = await LocalLibraryMustExist(request);
         Validation<BaseError, string> ffprobePathResult = await ValidateFFprobePath();
@@ -198,10 +189,9 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
         }
     }
 
-    private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
-        IScanLocalLibrary request) =>
+    private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(ScanLocalLibrary request) =>
         _libraryRepository.Get(request.LibraryId)
-            .Map(maybeLibrary => maybeLibrary.Map(ms => ms as LocalLibrary))
+            .Map(maybeLibrary => maybeLibrary.OfType<LocalLibrary>().HeadOrNone())
             .Map(v => v.ToValidation<BaseError>($"Local library {request.LibraryId} does not exist."));
 
     private Task<Validation<BaseError, string>> ValidateFFprobePath() =>

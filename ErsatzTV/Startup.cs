@@ -261,16 +261,6 @@ public class Startup
         SqlMapper.AddTypeHandler(new GuidHandler());
         SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
-        var logConnectionString = $"Data Source={FileSystemLayout.LogDatabasePath}";
-
-        services.AddDbContext<LogContext>(
-            options => options.UseSqlite(logConnectionString),
-            ServiceLifetime.Scoped,
-            ServiceLifetime.Singleton);
-
-        services.AddDbContextFactory<LogContext>(
-            options => options.UseSqlite(logConnectionString));
-
         services.AddMediatR(typeof(GetAllChannels).Assembly);
 
         services.AddRefitClient<IPlexTvApi>()
