@@ -49,25 +49,44 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
         IScanLocalLibrary request,
         CancellationToken cancellationToken)
     {
-        CommandResult process = await Cli.Wrap(scanner)
-            .WithArguments(
-                new[]
-                {
-                    "--local",
-                    request.LibraryId.ToString()
-                })
-            .WithValidation(CommandResultValidation.None)
-            .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogOutput))
-            .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessProgressOutput))
-            .ExecuteAsync(cancellationToken);
-        
-        if (process.ExitCode != 0)
+        try
         {
-            return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
-        }
+            var arguments = new List<string>
+            {
+                "--local",
+                request.LibraryId.ToString()
+            };
 
-        // TODO: return local library name?
-        return string.Empty;
+            if (request.ForceScan)
+            {
+                arguments.Add("--force");
+            }
+
+            using var forcefulCts = new CancellationTokenSource();
+
+            await using CancellationTokenRegistration link = cancellationToken.Register(
+                () => forcefulCts.CancelAfter(TimeSpan.FromSeconds(10))
+            );
+
+            CommandResult process = await Cli.Wrap(scanner)
+                .WithArguments(arguments)
+                .WithValidation(CommandResultValidation.None)
+                .WithStandardErrorPipe(PipeTarget.ToDelegate(ProcessLogOutput))
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(ProcessProgressOutput))
+                .ExecuteAsync(forcefulCts.Token, cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
+            }
+
+            // TODO: return local library name?
+            return string.Empty;
+        }
+        catch (OperationCanceledException)
+        {
+            return string.Empty;
+        }
     }
 
     private static void ProcessLogOutput(string s)

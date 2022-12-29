@@ -1,5 +1,4 @@
 using System.CommandLine;
-using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -26,6 +25,15 @@ public class Worker : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        var forceOption = new System.CommandLine.Option<bool>(
+            name: "--force",
+            description: "Force scanning",
+            parseArgument: _ => true)
+        {
+            AllowMultipleArgumentsPerToken = true,
+            Arity = ArgumentArity.Zero
+        };
+
         var localOption = new System.CommandLine.Option<int?>(
             name: "--local",
             description: "The local library id to scan");
@@ -43,12 +51,23 @@ public class Worker : IHostedService
             description: "The jellyfin library id to scan");
 
         var rootCommand = new RootCommand();
+        rootCommand.AddOption(forceOption);
         rootCommand.AddOption(localOption);
         rootCommand.AddOption(plexOption);
         rootCommand.AddOption(embyOption);
         rootCommand.AddOption(jellyfinOption);
 
-        rootCommand.SetHandler(Handle, localOption, plexOption, embyOption, jellyfinOption);
+        rootCommand.SetHandler(
+            async context =>
+            {
+                bool force = context.ParseResult.GetValueForOption(forceOption);
+                int? local = context.ParseResult.GetValueForOption(localOption);
+                int? plex = context.ParseResult.GetValueForOption(plexOption);
+                int? emby = context.ParseResult.GetValueForOption(embyOption);
+                int? jellyfin = context.ParseResult.GetValueForOption(jellyfinOption);
+                CancellationToken token = context.GetCancellationToken();
+                await Handle(force, local, plex, emby, jellyfin, token);
+            });
 
         // need to strip program name (head) from command line args
         await rootCommand.InvokeAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
@@ -61,13 +80,19 @@ public class Worker : IHostedService
         return Task.CompletedTask;
     }
 
-    private async Task Handle(int? localLibraryId, int? plexLibraryId, int? embyLibraryId, int? jellyfinLibraryId)
+    private async Task Handle(
+        bool forceOption,
+        int? localLibraryId,
+        int? plexLibraryId,
+        int? embyLibraryId,
+        int? jellyfinLibraryId,
+        CancellationToken cancellationToken)
     {
 #if !DEBUG_NO_SYNC
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
 
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        
+
         ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
         IConfigElementRepository configElementRepository =
             scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
@@ -78,8 +103,8 @@ public class Worker : IHostedService
         if (localLibraryId is not null)
         {
             _logger.LogInformation("Scanning local library {Id}", localLibraryId);
-            var scanLocalLibrary = new ScanLocalLibrary(localLibraryId.Value, true); // TODO: force scan
-            await mediator.Send(scanLocalLibrary, CancellationToken.None); // TODO: cancellation
+            var scanLocalLibrary = new ScanLocalLibrary(localLibraryId.Value, forceOption);
+            await mediator.Send(scanLocalLibrary, cancellationToken);
         }
         else if (plexLibraryId is not null)
         {
