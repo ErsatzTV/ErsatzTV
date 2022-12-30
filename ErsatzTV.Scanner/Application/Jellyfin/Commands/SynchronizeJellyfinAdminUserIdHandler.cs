@@ -98,6 +98,6 @@ public class
         JellyfinMediaSource JellyfinMediaSource,
         JellyfinConnection ActiveConnection)
     {
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; init; }
     }
 }

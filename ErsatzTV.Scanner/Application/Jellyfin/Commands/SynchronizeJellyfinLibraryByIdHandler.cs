@@ -92,7 +92,7 @@ public class SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<Synchronize
                 parameters.Library.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(parameters.Library);
 
-                // need to call get libraries to find library that contains collections (boxsets)                
+                // need to call get libraries to find library that contains collections (box sets)                
                 await _jellyfinApiClient.GetLibraries(
                     parameters.ConnectionParameters.ActiveConnection.Address,
                     parameters.ConnectionParameters.ApiKey);
@@ -164,7 +164,7 @@ public class SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<Synchronize
         JellyfinMediaSource jellyfinMediaSource)
     {
         Option<JellyfinConnection> maybeConnection = jellyfinMediaSource.Connections.HeadOrNone();
-        return maybeConnection.Map(connection => new ConnectionParameters(jellyfinMediaSource, connection))
+        return maybeConnection.Map(connection => new ConnectionParameters(connection))
             .ToValidation<BaseError>("Jellyfin media source requires an active connection");
     }
 
@@ -210,10 +210,8 @@ public class SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<Synchronize
         string FFmpegPath,
         string FFprobePath);
 
-    private record ConnectionParameters(
-        JellyfinMediaSource JellyfinMediaSource,
-        JellyfinConnection ActiveConnection)
+    private record ConnectionParameters(JellyfinConnection ActiveConnection)
     {
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; init; }
     }
 }

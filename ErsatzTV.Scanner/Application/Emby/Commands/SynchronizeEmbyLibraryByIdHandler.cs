@@ -87,7 +87,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                 parameters.Library.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(parameters.Library);
 
-                // need to call get libraries to find library that contains collections (boxsets)                
+                // need to call get libraries to find library that contains collections (box sets)                
                 await _embyApiClient.GetLibraries(
                     parameters.ConnectionParameters.ActiveConnection.Address,
                     parameters.ConnectionParameters.ApiKey);
@@ -159,7 +159,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         EmbyMediaSource embyMediaSource)
     {
         Option<EmbyConnection> maybeConnection = embyMediaSource.Connections.HeadOrNone();
-        return maybeConnection.Map(connection => new ConnectionParameters(embyMediaSource, connection))
+        return maybeConnection.Map(connection => new ConnectionParameters(connection))
             .ToValidation<BaseError>("Emby media source requires an active connection");
     }
 
@@ -205,10 +205,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         string FFmpegPath,
         string FFprobePath);
 
-    private record ConnectionParameters(
-        EmbyMediaSource EmbyMediaSource,
-        EmbyConnection ActiveConnection)
+    private record ConnectionParameters(EmbyConnection ActiveConnection)
     {
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; init; }
     }
 }
