@@ -26,6 +26,7 @@ COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
 COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
+COPY ErsatzTV.Scanner/*.csproj ./ErsatzTV.Scanner/
 RUN dotnet restore -r linux-arm64 ErsatzTV/
 
 # copy everything else and build app
@@ -34,8 +35,12 @@ COPY ErsatzTV.Application/. ./ErsatzTV.Application/
 COPY ErsatzTV.Core/. ./ErsatzTV.Core/
 COPY ErsatzTV.FFmpeg/. ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
-WORKDIR /source/ErsatzTV
+COPY ErsatzTV.Scanner/. ./ErsatzTV.Scanner/
+WORKDIR /source/ErsatzTV.Scanner
 ARG INFO_VERSION="unknown"
+RUN dotnet publish ErsatzTV.Scanner.csproj --framework net7.0 -c release -o /app --runtime linux-arm64 --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
+WORKDIR /source/ErsatzTV
+RUN sed -i '/Scanner/d' ErsatzTV.csproj
 RUN dotnet publish ErsatzTV.csproj --framework net7.0 -c release -o /app --runtime linux-arm64 --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
           
 # final stage/image
