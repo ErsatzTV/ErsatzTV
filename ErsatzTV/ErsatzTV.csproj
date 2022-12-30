@@ -109,7 +109,8 @@
       <EmbeddedResource Include="Resources\ErsatzTV.png" />
       <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
       <EmbeddedResource Include="Resources\Templates\_default.ass.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_musicVideos.ass.sbntxt" />
+      <EmbeddedResource Include="Resources\Templates\_ArtistTitle_LeftMiddle.sbntxt" />
+      <EmbeddedResource Include="Resources\Templates\_ArtistTitleAlbum_CenterTop.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>

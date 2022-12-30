@@ -31,7 +31,13 @@ public class ResourceExtractorService : IHostedService
 
         await ExtractTemplateResource(
             assembly,
-            "_musicVideos.ass.sbntxt",
+            "_ArtistTitle_LeftMiddle.sbntxt",
+            FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            cancellationToken);
+
+        await ExtractTemplateResource(
+            assembly,
+            "_ArtistTitleAlbum_CenterTop.sbntxt",
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
             cancellationToken);
 

@@ -1,0 +1,44 @@
+[Script Info]
+ScriptType: v4.00+
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+YCbCr Matrix: None
+PlayResX: {{ resolution.width }}
+PlayResY: {{ resolution.height }}
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: RoboR,Roboto-Regular.ttf,{{ resolution.height // 20.0 }},&HFFFFFF,&HFFFFFF,&H444444,&H00000000,0,0,0,0,70,100,0,0,1,1,3,4,10,10,10,1
+
+[Events]
+{{~ _margin3_p = resolution.width * 0.03 | math.round ~}}
+{{~ _margin5_p = resolution.height * 0.05 | math.round ~}}
+{{~ _seek_s = stream_seek.total_seconds | math.round ~}}
+{{~ _duration_s = duration.total_seconds | math.round ~}}
+{{~ _min_interval_s = 60 ~}}
+{{~ if (_duration_s | math.minus _seek_s) > _min_interval_s ~}}
+{{~ _first_start_ts = timespan.from_seconds (_seek_s | math.plus 9) ~}}
+{{~ _first_end_ts = timespan.from_seconds (_seek_s | math.plus 16) ~}}
+{{~ end ~}}
+{{~ _last_start_ts = timespan.from_seconds (_duration_s | math.minus 16) ~}}
+{{~ _last_end_ts = timespan.from_seconds (_duration_s | math.minus 9) ~}}
+{{~ if all_artists | array.size == 0 ~}}
+{{~ capture _artists_t ~}}{{~ artist ~}}{{~ end ~}}
+{{~ else ~}}
+{{~ capture _artists_t ~}}{{~ all_artists | array.join " | " ~}}{{~ end ~}}
+{{~ end ~}}
+{{~ capture _fancy_title_t ~}}{%{{\b1}{\fscy150}{\1c&HC2C1BF&}}%}{{~ title ~}}{{~ end ~}}
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,{{ _first_start_ts }}.00,{{ _first_end_ts }}.00,RoboR,,{{ _margin3_p }},{{ _margin3_p }},{{ _margin5_p }},,{\fad(1800, 1200)}{{ _fancy_title_t }}
+Dialogue: 0,{{ _first_start_ts }}.00,{{ _first_end_ts }}.00,RoboR,,{{ _margin3_p }},{{ _margin3_p }},{{ _margin5_p }},,{\fad(1200, 1800)}{{ _artists_t }}
+{{~ _interval_s = 300 ~}}
+{{~ _display_time_s = 7 ~}}
+{{~ i = (_seek_s | math.plus _interval_s) ~}}
+{{~ while i < (_duration_s | math.minus _min_interval_s) ~}}
+{{~ _start_ts = timespan.from_seconds i ~}}
+{{~ _end_ts = timespan.from_seconds (i | math.plus _display_time_s) ~}}
+Dialogue: 0,{{ _start_ts }}.00,{{ _end_ts }}.00,RoboR,,{{ _margin3_p }},{{ _margin3_p }},{{ _margin5_p }},,{\fad(1200, 1200)}{{ _artists_t }}\N{{ title }}
+{{~ i += _interval_s ~}}
+{{~ end ~}}
+Dialogue: 0,{{ _last_start_ts }}.00,{{ _last_end_ts }}.00,RoboR,,{{ _margin3_p }},{{ _margin3_p }},{{ _margin5_p }},,{\fad(1800, 1200)}{{ _fancy_title_t }}
+Dialogue: 0,{{ _last_start_ts }}.00,{{ _last_end_ts }}.00,RoboR,,{{ _margin3_p }},{{ _margin3_p }},{{ _margin5_p }},,{\fad(1200, 1800)}{{ _artists_t }}
