@@ -4,8 +4,6 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using Microsoft.Extensions.Logging;
@@ -28,9 +26,6 @@ public class PlexMovieLibraryScanner :
         IPlexServerApiClient plexServerApiClient,
         IMovieRepository movieRepository,
         IMetadataRepository metadataRepository,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexMovieRepository plexMovieRepository,
@@ -44,9 +39,6 @@ public class PlexMovieLibraryScanner :
             localSubtitlesProvider,
             localFileSystem,
             mediator,
-            searchIndex,
-            searchRepository,
-            fallbackMetadataProvider,
             logger)
     {
         _plexServerApiClient = plexServerApiClient;

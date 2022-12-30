@@ -3,8 +3,6 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -24,9 +22,6 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IEmbyApiClient embyApiClient,
         IMediaSourceRepository mediaSourceRepository,
         IEmbyTelevisionRepository televisionRepository,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -37,9 +32,6 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
-            searchRepository,
-            searchIndex,
-            fallbackMetadataProvider,
             mediator,
             logger)
     {
