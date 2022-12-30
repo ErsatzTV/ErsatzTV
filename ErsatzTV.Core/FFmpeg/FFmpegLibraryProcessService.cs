@@ -481,12 +481,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
     }
 
-    public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
-        _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
-
-    public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
-        _ffmpegProcessService.ExtractAttachedPicAsPng(ffmpegPath, inputFile, streamIndex, outputFile);
-
     public Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
         string ffprobePath,

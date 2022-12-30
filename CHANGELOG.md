@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix many transcoding failures caused by the colorspace filter
 - Fix song playback with VAAPI and NVENC
 - Fix edge case where some local movies would not automatically be restored from trash
+- Fix synchronizing Jellyfin and Emby collection items
 
 ### Changed
 - Upgrade to dotnet 7
@@ -15,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Limit library scan interval between 0 and 1,000,000
   - 0 means do not automatically scan libraries
   - 1 to 999,999 means scan if it has been that many hours since the last scan
+- Use new `ErsatzTV.Scanner` process for scanning all libraries
+  - This should reduce the ongoing memory footprint
 
 ## [0.7.0-beta] - 2022-12-11
 ### Fixed

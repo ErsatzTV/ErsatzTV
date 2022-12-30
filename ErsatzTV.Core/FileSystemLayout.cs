@@ -19,7 +19,6 @@ public static class FileSystemLayout
 
     public static readonly string DatabasePath = Path.Combine(AppDataFolder, "ersatztv.sqlite3");
 
-    public static readonly string LogDatabasePath = Path.Combine(AppDataFolder, "logs.sqlite3");
     public static readonly string LogFilePath = Path.Combine(LogsFolder, "ersatztv.log");
 
     public static readonly string LegacyImageCacheFolder = Path.Combine(AppDataFolder, "cache", "images");

@@ -48,8 +48,7 @@ public class Program
             .MinimumLevel.ControlledBy(LoggingLevelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
-            .WriteTo.SQLite(FileSystemLayout.LogDatabasePath, retentionPeriod: TimeSpan.FromDays(1))
-            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day)
+            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day, shared: true)
             .CreateLogger();
 
         try

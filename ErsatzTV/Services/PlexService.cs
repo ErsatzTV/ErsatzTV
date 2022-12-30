@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
 namespace ErsatzTV.Services;
@@ -153,6 +154,7 @@ public class PlexService : BackgroundService
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
 
         Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
@@ -161,5 +163,10 @@ public class PlexService : BackgroundService
                 "Unable to synchronize plex library {LibraryId}: {Error}",
                 request.PlexLibraryId,
                 error.Value));
+        
+        if (entityLocker.IsLibraryLocked(request.PlexLibraryId))
+        {
+            entityLocker.UnlockLibrary(request.PlexLibraryId);
+        }
     }
 }
