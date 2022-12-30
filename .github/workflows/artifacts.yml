@@ -82,7 +82,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+          sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
           dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
