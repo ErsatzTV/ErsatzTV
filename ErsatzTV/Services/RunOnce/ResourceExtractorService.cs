@@ -29,6 +29,18 @@ public class ResourceExtractorService : IHostedService
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
             cancellationToken);
 
+        await ExtractTemplateResource(
+            assembly,
+            "_ArtistTitle_LeftMiddle.sbntxt",
+            FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            cancellationToken);
+
+        await ExtractTemplateResource(
+            assembly,
+            "_ArtistTitleAlbum_CenterTop.sbntxt",
+            FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            cancellationToken);
+
         await ExtractScriptResource(
             assembly,
             "_threePartEpisodes.js",
@@ -62,7 +74,7 @@ public class ResourceExtractorService : IHostedService
 
     private static async Task ExtractFontResource(Assembly assembly, string name, CancellationToken cancellationToken)
     {
-        await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.{name}");
+        await using Stream resource = assembly.GetManifestResourceStream($"ErsatzTV.Resources.Fonts.{name}");
         if (resource != null)
         {
             await using FileStream fs = File.Create(Path.Combine(FileSystemLayout.ResourcesCacheFolder, name));
