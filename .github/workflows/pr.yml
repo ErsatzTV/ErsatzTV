@@ -24,7 +24,9 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: |
+          sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+          dotnet build --configuration Release --no-restore
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal
