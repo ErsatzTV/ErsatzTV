@@ -23,10 +23,16 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
 
+      - name: Prep project file
+        run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+        if: ${{ matrix.os != 'macos-latest' }}
+      
+      - name: Prep project file Mac
+        run: sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+        if: ${{ matrix.os == 'macos-latest' }}
+
       - name: Build
-        run: |
-          sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-          dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal
