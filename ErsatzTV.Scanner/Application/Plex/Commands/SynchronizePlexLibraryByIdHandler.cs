@@ -86,6 +86,11 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
                 await _libraryRepository.UpdateLastScan(parameters.Library);
             }
 
+            foreach (BaseError error in result.LeftToSeq())
+            {
+                _logger.LogError("Error synchronizing plex library: {Error}", error);
+            }
+
             return result.Map(_ => parameters.Library.Name);
         }
 

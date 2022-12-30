@@ -67,6 +67,6 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
 
     private record ConnectionParameters(EmbyConnection ActiveConnection)
     {
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; init; }
     }
 }

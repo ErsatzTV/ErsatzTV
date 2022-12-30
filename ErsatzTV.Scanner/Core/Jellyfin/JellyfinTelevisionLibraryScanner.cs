@@ -1,13 +1,14 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Jellyfin;
+namespace ErsatzTV.Scanner.Core.Jellyfin;
 
 public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<JellyfinConnectionParameters,
     JellyfinLibrary,

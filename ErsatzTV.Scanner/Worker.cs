@@ -1,5 +1,6 @@
 using System.CommandLine;
 using ErsatzTV.Scanner.Application.Emby;
+using ErsatzTV.Scanner.Application.Jellyfin;
 using ErsatzTV.Scanner.Application.MediaSources;
 using ErsatzTV.Scanner.Application.Plex;
 using Microsoft.Extensions.DependencyInjection;
@@ -121,7 +122,8 @@ public class Worker : IHostedService
         }
         else if (jellyfinLibraryId is not null)
         {
-            _logger.LogInformation("Scanning jellyfin library {Id}", jellyfinLibraryId);
+            var scanJellyfinLibrary = new SynchronizeJellyfinLibraryById(jellyfinLibraryId.Value, forceOption);
+            await mediator.Send(scanJellyfinLibrary, cancellationToken);
         }
         else
         {

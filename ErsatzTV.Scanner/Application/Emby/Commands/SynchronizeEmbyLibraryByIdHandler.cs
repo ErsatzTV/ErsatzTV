@@ -103,6 +103,11 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                         parameters.Library.MediaSourceId,
                         error.Value));
             }
+            
+            foreach (BaseError error in result.LeftToSeq())
+            {
+                _logger.LogError("Error synchronizing emby library: {Error}", error);
+            }
 
             return result.Map(_ => parameters.Library.Name);
         }

@@ -1,35 +1,28 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Jellyfin;
+namespace ErsatzTV.Scanner.Core.Jellyfin;
 
 public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 {
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly IJellyfinApiClient _jellyfinApiClient;
+    private readonly IMediator _mediator;
     private readonly IJellyfinCollectionRepository _jellyfinCollectionRepository;
     private readonly ILogger<JellyfinCollectionScanner> _logger;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     public JellyfinCollectionScanner(
+        IMediator mediator,
         IJellyfinCollectionRepository jellyfinCollectionRepository,
         IJellyfinApiClient jellyfinApiClient,
-        ICachingSearchRepository searchRepository,
-        ISearchIndex searchIndex,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<JellyfinCollectionScanner> logger)
     {
+        _mediator = mediator;
         _jellyfinCollectionRepository = jellyfinCollectionRepository;
         _jellyfinApiClient = jellyfinApiClient;
-        _searchRepository = searchRepository;
-        _searchIndex = searchIndex;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -52,12 +45,12 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
                 Option<JellyfinCollection> maybeExisting = existingCollections.Find(c => c.ItemId == collection.ItemId);
 
-                // skip if unchanged (etag)
-                if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) == collection.Etag)
-                {
-                    _logger.LogDebug("Jellyfin collection {Name} is unchanged", collection.Name);
-                    continue;
-                }
+                // // skip if unchanged (etag)
+                // if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) == collection.Etag)
+                // {
+                //     _logger.LogDebug("Jellyfin collection {Name} is unchanged", collection.Name);
+                //     continue;
+                // }
 
                 // add if new
                 if (maybeExisting.IsNone)
@@ -67,7 +60,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
                 }
                 else
                 {
-                    _logger.LogDebug("Jellyfin collection {Name} has been updated", collection.Name);
+                    _logger.LogDebug("Updating Jellyfin collection {Name}", collection.Name);
                 }
 
                 await SyncCollectionItems(address, apiKey, mediaSourceId, collection);
@@ -118,11 +111,11 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
             _logger.LogDebug("Jellyfin collection {Name} contains {Count} items", collection.Name, addedIds.Count);
 
-            var changedIds = removedIds.Except(addedIds).ToList();
-            changedIds.AddRange(addedIds.Except(removedIds));
+            int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
 
-            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, changedIds);
-            _searchIndex.Commit();
+            await _mediator.Publish(
+                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),
+                CancellationToken.None);
         }
         catch (Exception ex)
         {

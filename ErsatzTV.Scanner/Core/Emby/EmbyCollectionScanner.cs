@@ -41,13 +41,13 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
 
                 Option<EmbyCollection> maybeExisting = existingCollections.Find(c => c.ItemId == collection.ItemId);
 
-                // skip if unchanged (etag)
-                if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                    collection.Etag)
-                {
-                    _logger.LogDebug("Emby collection {Name} is unchanged", collection.Name);
-                    continue;
-                }
+                // // skip if unchanged (etag)
+                // if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                //     collection.Etag)
+                // {
+                //     _logger.LogDebug("Emby collection {Name} is unchanged", collection.Name);
+                //     continue;
+                // }
 
                 // add if new
                 if (maybeExisting.IsNone)
@@ -102,8 +102,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
 
             _logger.LogDebug("Emby collection {Name} contains {Count} items", collection.Name, addedIds.Count);
 
-            var changedIds = removedIds.Except(addedIds).ToList();
-            changedIds.AddRange(addedIds.Except(removedIds));
+            int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
 
             await _mediator.Publish(
                 new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),

@@ -4,10 +4,10 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 
-namespace ErsatzTV.Application.Jellyfin;
+namespace ErsatzTV.Scanner.Application.Jellyfin;
 
-public class SynchronizeJellyfinCollectionsHandler :
-    IRequestHandler<SynchronizeJellyfinCollections, Either<BaseError, Unit>>
+public class
+    SynchronizeJellyfinCollectionsHandler : IRequestHandler<SynchronizeJellyfinCollections, Either<BaseError, Unit>>
 {
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
@@ -72,6 +72,6 @@ public class SynchronizeJellyfinCollectionsHandler :
         JellyfinMediaSource JellyfinMediaSource,
         JellyfinConnection ActiveConnection)
     {
-        public string ApiKey { get; set; }
+        public string? ApiKey { get; init; }
     }
 }
