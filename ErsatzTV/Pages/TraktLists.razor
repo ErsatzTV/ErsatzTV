@@ -94,7 +94,7 @@
         InvokeAsync(async () =>
         {
             StateHasChanged();
-            if (!_locker.IsTraktLocked())
+            if (_traktListsTable != null && !_locker.IsTraktLocked())
             {
                 await _traktListsTable.ReloadServerData();
             }
@@ -115,11 +115,15 @@
             var parameters = new DialogParameters { { "EntityType", "Trakt List" }, { "EntityName", traktList.Name } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Trakt List", parameters, options);
+            IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Trakt List", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled)
             {
                 await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
+            }
+            else
+            {
+                _locker.UnlockTrakt();
             }
         }
     }
@@ -137,11 +141,15 @@
         if (_locker.LockTrakt())
         {
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-            IDialogReference dialog = _dialog.Show<AddTraktListDialog>("Add Trakt List", options);
+            IDialogReference dialog = await _dialog.ShowAsync<AddTraktListDialog>("Add Trakt List", options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is string url)
             {
                 await _workerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
+            }
+            else
+            {
+                _locker.UnlockTrakt();
             }
         }
     }

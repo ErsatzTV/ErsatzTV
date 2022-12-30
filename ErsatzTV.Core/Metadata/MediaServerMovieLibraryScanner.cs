@@ -1,10 +1,10 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Collections.Immutable;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -16,32 +16,23 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     where TMovie : Movie
     where TEtag : MediaServerItemEtag
 {
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     protected MediaServerMovieLibraryScanner(
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalFileSystem localFileSystem,
         IMediator mediator,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger logger)
     {
         _localStatisticsProvider = localStatisticsProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localFileSystem = localFileSystem;
         _mediator = mediator;
-        _searchIndex = searchIndex;
-        _searchRepository = searchRepository;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -85,10 +76,6 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         {
             return new ScanCanceled();
         }
-        finally
-        {
-            _searchIndex.Commit();
-        }
     }
 
     private async Task<Either<BaseError, Unit>> ScanLibrary(
@@ -104,7 +91,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         CancellationToken cancellationToken)
     {
         var incomingItemIds = new List<string>();
-        List<TEtag> existingMovies = await movieRepository.GetExistingMovies(library);
+        IReadOnlyDictionary<string, TEtag> existingMovies = (await movieRepository.GetExistingMovies(library))
+            .ToImmutableDictionary(e => e.MediaServerItemId, e => e);
 
         await foreach (TMovie incoming in movieEntries.WithCancellation(cancellationToken))
         {
@@ -116,7 +104,14 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             incomingItemIds.Add(MediaServerItemId(incoming));
 
             decimal percentCompletion = Math.Clamp((decimal)incomingItemIds.Count / totalMovieCount, 0, 1);
-            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
+            await _mediator.Publish(
+                new ScannerProgressUpdate(
+                    library.Id,
+                    library.Name,
+                    percentCompletion,
+                    Array.Empty<int>(),
+                    Array.Empty<int>()),
+                cancellationToken);
 
             string localPath = getLocalPath(incoming);
 
@@ -172,20 +167,33 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(
-                        _searchRepository,
-                        _fallbackMetadataProvider,
-                        new List<int> { result.Item.Id });
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            library.Id,
+                            null,
+                            null,
+                            new[] { result.Item.Id },
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
             }
         }
 
         // trash movies that are no longer present on the media server
-        var fileNotFoundItemIds = existingMovies.Map(m => m.MediaServerItemId).Except(incomingItemIds).ToList();
+        var fileNotFoundItemIds = existingMovies.Keys.Except(incomingItemIds).ToList();
         List<int> ids = await movieRepository.FlagFileNotFound(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
+            cancellationToken);
 
-        await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(
+                library.Id,
+                library.Name,
+                0,
+                Array.Empty<int>(),
+                Array.Empty<int>()),
+            cancellationToken);
 
         return Unit.Default;
     }
@@ -215,7 +223,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     private async Task<bool> ShouldScanItem(
         IMediaServerMovieRepository<TLibrary, TMovie, TEtag> movieRepository,
         TLibrary library,
-        List<TEtag> existingMovies,
+        IReadOnlyDictionary<string, TEtag> existingMovies,
         TMovie incoming,
         string localPath,
         bool deepScan)
@@ -226,10 +234,13 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             return true;
         }
 
-        Option<TEtag> maybeExisting =
-            existingMovies.Find(m => m.MediaServerItemId == MediaServerItemId(incoming));
-        string existingEtag = await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty);
-        MediaItemState existingState = await maybeExisting.Map(e => e.State).IfNoneAsync(MediaItemState.Normal);
+        string existingEtag = string.Empty;
+        MediaItemState existingState = MediaItemState.Normal;
+        if (existingMovies.TryGetValue(MediaServerItemId(incoming), out TEtag existingEntry))
+        {
+            existingEtag = existingEntry.Etag;
+            existingState = existingEntry.State;
+        }
 
         if (existingState is MediaItemState.Unavailable or MediaItemState.FileNotFound &&
             existingEtag == MediaServerEtag(incoming))
@@ -248,14 +259,16 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             {
                 foreach (int id in await movieRepository.FlagUnavailable(library, incoming))
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { id });
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
+                        CancellationToken.None);
                 }
             }
 
             return false;
         }
 
-        if (maybeExisting.IsNone)
+        if (existingEntry is null)
         {
             _logger.LogDebug("INSERT: new movie {Movie}", incoming.MovieMetadata.Head().Title);
         }

@@ -165,12 +165,15 @@
         var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteCollection(collection.Id), _cts.Token);
-            await _collectionsTable.ReloadServerData();
+            if (_collectionsTable != null)
+            {
+                await _collectionsTable.ReloadServerData();
+            }
         }
     }
 
@@ -179,12 +182,15 @@
         var parameters = new DialogParameters { { "EntityType", "multi collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Multi Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Multi Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteMultiCollection(collection.Id), _cts.Token);
-            await _multiCollectionsTable.ReloadServerData();
+            if (_multiCollectionsTable != null)
+            {
+                await _multiCollectionsTable.ReloadServerData();
+            }
         }
     }
 
@@ -193,12 +199,15 @@
         var parameters = new DialogParameters { { "EntityType", "smart collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Smart Collection", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteSmartCollection(collection.Id), _cts.Token);
-            await _smartCollectionsTable.ReloadServerData();
+            if (_smartCollectionsTable != null)
+            {
+                await _smartCollectionsTable.ReloadServerData();
+            }
         }
     }
 

@@ -1,0 +1,61 @@
+﻿using System.Threading.Channels;
+using ErsatzTV.Application.Libraries;
+using ErsatzTV.Core;
+using ErsatzTV.FFmpeg.Runtime;
+
+namespace ErsatzTV.Application.Plex;
+
+public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler,
+    IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>,
+    IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
+{
+    public CallPlexLibraryScannerHandler(
+        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
+        IMediator mediator,
+        IRuntimeInfo runtimeInfo)
+        : base(channel, mediator, runtimeInfo)
+    {
+    }
+
+    Task<Either<BaseError, string>> IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>.Handle(
+        ForceSynchronizePlexLibraryById request,
+        CancellationToken cancellationToken) => Handle(request, cancellationToken);
+
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>.Handle(
+        SynchronizePlexLibraryByIdIfNeeded request,
+        CancellationToken cancellationToken) => Handle(request, cancellationToken);
+
+    private async Task<Either<BaseError, string>> Handle(
+        ISynchronizePlexLibraryById request,
+        CancellationToken cancellationToken)
+    {
+        Validation<BaseError, string> validation = Validate();
+        return await validation.Match(
+            scanner => PerformScan(scanner, request, cancellationToken),
+            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+    }
+
+    private async Task<Either<BaseError, string>> PerformScan(
+        string scanner,
+        ISynchronizePlexLibraryById request,
+        CancellationToken cancellationToken)
+    {
+        var arguments = new List<string>
+        {
+            "--plex",
+            request.PlexLibraryId.ToString()
+        };
+
+        if (request.ForceScan)
+        {
+            arguments.Add("--force");
+        }
+
+        if (request.DeepScan)
+        {
+            arguments.Add("--deep");
+        }
+
+        return await base.PerformScan(scanner, arguments, cancellationToken);
+    }
+}

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <SpaRoot>client-app\</SpaRoot>
         <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
         <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
@@ -53,31 +53,30 @@
     
     <ItemGroup>
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
-      <PackageReference Include="FluentValidation" Version="11.2.2" />
+      <PackageReference Include="FluentValidation" Version="11.4.0" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.2.2" />
       <PackageReference Include="HtmlSanitizer" Version="8.0.601" />
-      <PackageReference Include="LanguageExt.Core" Version="4.2.9" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.0" />
       <PackageReference Include="Markdig" Version="0.30.4" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.10" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.10" /> 
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.10">
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.1" /> 
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.1">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.3.48">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.0.17" />
+      <PackageReference Include="MudBlazor" Version="6.1.6" />
       <PackageReference Include="NaturalSort.Extension" Version="4.0.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="11.1.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
       <PackageReference Include="Serilog" Version="2.12.0" />
-      <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
+      <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
-      <PackageReference Include="Serilog.Sinks.SQLite" Version="6.0.1" />
       <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
       <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
       <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
@@ -94,6 +93,7 @@
       <ProjectReference Include="..\ErsatzTV.Application\ErsatzTV.Application.csproj" />
       <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
       <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
+      <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />
     </ItemGroup>
 
     <ItemGroup>

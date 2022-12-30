@@ -3,11 +3,10 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.FFmpeg;
-using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
-using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
@@ -18,27 +17,24 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
-    private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
-    private readonly IRuntimeInfo _runtimeInfo;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
+    private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
 
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
         FFmpegPlaybackSettingsCalculator playbackSettingsCalculator,
         IFFmpegStreamSelector ffmpegStreamSelector,
         ITempFilePool tempFilePool,
-        IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
-        IRuntimeInfo runtimeInfo,
+        IPipelineBuilderFactory pipelineBuilderFactory,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
         _playbackSettingsCalculator = playbackSettingsCalculator;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _tempFilePool = tempFilePool;
-        _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
-        _runtimeInfo = runtimeInfo;
+        _pipelineBuilderFactory = pipelineBuilderFactory;
         _logger = logger;
     }
 
@@ -70,7 +66,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         TimeSpan outPoint,
         long ptsOffset,
         Option<int> targetFramerate,
-        bool disableWatermarks)
+        bool disableWatermarks,
+        Action<FFmpegPipeline> pipelineAction)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
         Option<MediaStream> maybeAudioStream =
@@ -147,11 +144,17 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoStream.Index,
             videoStream.Codec,
             AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger),
+            new ColorParams(
+                videoStream.ColorRange,
+                videoStream.ColorSpace,
+                videoStream.ColorTransfer,
+                videoStream.ColorPrimaries),
             new FrameSize(videoVersion.Width, videoVersion.Height),
             videoVersion.SampleAspectRatio,
             videoVersion.DisplayAspectRatio,
             videoVersion.RFrameRate,
-            videoPath != audioPath); // still image when paths are different
+            videoPath != audioPath, // still image when paths are different
+            videoVersion.VideoScanKind == VideoScanKind.Progressive ? ScanKind.Progressive : ScanKind.Interlaced);
 
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
@@ -208,14 +211,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             : Option<string>.None;
 
         // normalize songs to yuv420p
-        Option<IPixelFormat> desiredPixelFormat =
-            videoPath == audioPath ? ffmpegVideoStream.PixelFormat : new PixelFormatYuv420P();
+        IPixelFormat desiredPixelFormat =
+            videoPath == audioPath ? playbackSettings.PixelFormat : new PixelFormatYuv420P();
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             false, // TODO: fallback filler needs to loop
             videoFormat,
-            desiredPixelFormat,
+            Optional(videoStream.Profile),
+            Optional(desiredPixelFormat),
             ffmpegVideoStream.SquarePixelFrameSize(
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
@@ -247,18 +251,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
-        var pipelineBuilder = new PipelineBuilder(
-            _runtimeInfo,
-            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hwAccel),
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            hwAccel,
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            _logger);
+            ffmpegPath);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
+
+        pipelineAction?.Invoke(pipeline);
 
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
     }
@@ -313,6 +320,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.RealtimeOutput,
             false,
             GetVideoFormat(playbackSettings),
+            VideoProfile.Main,
             new PixelFormatYuv420P(),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
@@ -343,11 +351,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             0,
             VideoFormat.GeneratedImage,
             new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
+            ColorParams.Default,
             new FrameSize(videoVersion.Width, videoVersion.Height),
             videoVersion.SampleAspectRatio,
             videoVersion.DisplayAspectRatio,
             None,
-            true);
+            true,
+            ScanKind.Progressive);
 
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
@@ -383,17 +393,18 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         _logger.LogDebug("FFmpeg desired error state {FrameState}", desiredState);
 
-        var pipelineBuilder = new PipelineBuilder(
-            _runtimeInfo,
-            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, hwAccel),
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            hwAccel,
             videoInputFile,
             audioInputFile,
             None,
             subtitleInputFile,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            _logger);
-
+            ffmpegPath);
+        
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, pipeline);
@@ -412,17 +423,18 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
             resolution);
 
-        var pipelineBuilder = new PipelineBuilder(
-            _runtimeInfo,
-            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            HardwareAccelerationMode.None,
+            None,
+            None,
             None,
             None,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            _logger);
-
+            ffmpegPath);
+        
         FFmpegPipeline pipeline = pipelineBuilder.Concat(
             concatInputFile,
             FFmpegState.Concat(saveReports, channel.Name));
@@ -437,29 +449,37 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
-            new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, string.Empty, string.Empty, None, true) });
+            new List<VideoStream>
+            {
+                new(
+                    0,
+                    string.Empty,
+                    None,
+                    ColorParams.Default,
+                    FrameSize.Unknown,
+                    string.Empty,
+                    string.Empty,
+                    None,
+                    true,
+                    ScanKind.Progressive)
+            });
 
-        var pipelineBuilder = new PipelineBuilder(
-            _runtimeInfo,
-            await _hardwareCapabilitiesFactory.GetHardwareCapabilities(ffmpegPath, HardwareAccelerationMode.None),
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            HardwareAccelerationMode.None,
             videoInputFile,
+            None,
+            None,
             None,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
-            _logger);
+            ffmpegPath);
 
         FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));
 
         return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
     }
-
-    public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
-        _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
-
-    public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
-        _ffmpegProcessService.ExtractAttachedPicAsPng(ffmpegPath, inputFile, streamIndex, outputFile);
 
     public Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
@@ -517,11 +537,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                     options.ImageStreamIndex.IfNone(0),
                                     "unknown",
                                     new PixelFormatUnknown(),
+                                    ColorParams.Default,
                                     new FrameSize(1, 1),
                                     string.Empty,
                                     string.Empty,
                                     Option<string>.None,
-                                    !options.IsAnimated)
+                                    !options.IsAnimated,
+                                    ScanKind.Progressive)
                             },
                             new WatermarkState(
                                 maybeFadePoints.Map(
@@ -568,10 +590,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool log = true)
     {
         IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
-        IEnumerable<string> loggedVideoFilters =
-            videoInputFile.Map(f => f.FilterSteps.Map(vf => vf.GetType().Name)).Flatten();
         IEnumerable<string> loggedAudioFilters =
             audioInputFile.Map(f => f.FilterSteps.Map(af => af.GetType().Name)).Flatten();
+        IEnumerable<string> loggedVideoFilters =
+            videoInputFile.Map(f => f.FilterSteps.Map(vf => vf.GetType().Name)).Flatten();
 
         if (log)
         {

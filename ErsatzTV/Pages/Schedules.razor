@@ -113,7 +113,10 @@
     private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
     {
         _selectedSchedule = schedule;
-        await _detailTable.ReloadServerData();
+        if (_selectedSchedule != null && _detailTable != null)
+        {
+            await _detailTable.ReloadServerData();
+        }
     }
 
     private async Task DeleteSchedule(ProgramScheduleViewModel programSchedule)
@@ -121,12 +124,15 @@
         var parameters = new DialogParameters { { "EntityType", "schedule" }, { "EntityName", programSchedule.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Schedule", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Schedule", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteProgramSchedule(programSchedule.Id), _cts.Token);
-            await _table.ReloadServerData();
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
             if (_selectedSchedule == programSchedule)
             {
                 _selectedSchedule = null;

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
@@ -15,14 +16,14 @@ public interface ISearchIndex : IDisposable
     Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        List<int> itemIds);
+        IEnumerable<int> itemIds);
 
     Task<Unit> UpdateItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         List<MediaItem> items);
 
-    Task<Unit> RemoveItems(List<int> ids);
-    Task<SearchResult> Search(string query, int skip, int limit, string searchField = "");
+    Task<Unit> RemoveItems(IEnumerable<int> ids);
+    SearchResult Search(IClient client, string query, int skip, int limit, string searchField = "");
     void Commit();
 }

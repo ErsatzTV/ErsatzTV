@@ -4,5 +4,7 @@ public interface IHardwareCapabilitiesFactory
 {
     Task<IHardwareCapabilities> GetHardwareCapabilities(
         string ffmpegPath,
-        HardwareAccelerationMode hardwareAccelerationMode);
+        HardwareAccelerationMode hardwareAccelerationMode,
+        Option<string> vaapiDriver,
+        Option<string> vaapiDevice);
 }

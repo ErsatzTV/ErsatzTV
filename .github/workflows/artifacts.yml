@@ -47,9 +47,9 @@ jobs:
           submodules: true
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -81,7 +81,10 @@ jobs:
 
       - name: Build
         shell: bash
-        run: dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+        run: |
+          sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
       - name: Bundle
         shell: bash
@@ -130,8 +133,8 @@ jobs:
           rm -r ErsatzTV.app
 
       - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
-        if: ${{ inputs.release_version == 'develop' }}
+        uses: asfernandes/delete-release-assets@update-libraries-and-node
+        if: ${{ inputs.release_tag == 'develop' }}
         with:
           token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}
@@ -174,9 +177,9 @@ jobs:
           fetch-depth: 0
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -210,11 +213,13 @@ jobs:
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
 
           # Build everything
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net6.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+            dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net7.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           fi
 
           # Download ffmpeg
@@ -237,8 +242,8 @@ jobs:
           AC_PASSWORD: ${{ secrets.ac_password }}
 
       - name: Delete old release assets
-        uses: mknejp/delete-release-assets@v1
-        if: ${{ inputs.release_version == 'develop' }}
+        uses: asfernandes/delete-release-assets@update-libraries-and-node
+        if: ${{ inputs.release_tag == 'develop' }}
         with:
           token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}

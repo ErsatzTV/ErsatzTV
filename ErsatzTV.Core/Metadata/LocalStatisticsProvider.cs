@@ -82,7 +82,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
     }
 
-    public async Task<Either<BaseError, Dictionary<string, string>>> GetFormatTags(
+    public async Task<Either<BaseError, Dictionary<string, string>>> GetSongTags(
         string ffprobePath,
         MediaItem mediaItem)
     {
@@ -90,55 +90,109 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         {
             string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
             Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, mediaItemPath);
-            return maybeProbe.Match(
-                ffprobe =>
+            foreach (BaseError error in maybeProbe.LeftToSeq())
+            {
+                return error;
+            }
+
+            Option<FFprobeTags> maybeFormatTags = maybeProbe.RightToSeq()
+                .Map(p => p?.format?.tags ?? FFprobeTags.Empty)
+                .HeadOrNone();
+
+            Option<FFprobeTags> maybeAudioTags = maybeProbe.RightToSeq()
+                .Bind(p => p.streams.Filter(s => s.codec_type == "audio").HeadOrNone())
+                .Map(s => s.tags ?? FFprobeTags.Empty)
+                .HeadOrNone();
+
+            foreach (FFprobeTags formatTags in maybeFormatTags)
+            foreach (FFprobeTags audioTags in maybeAudioTags)
+            {
+                var result = new Dictionary<string, string>();
+
+                // album
+                if (!string.IsNullOrWhiteSpace(formatTags.album))
                 {
-                    var result = new Dictionary<string, string>();
+                    result.Add(MetadataSongTag.Album, formatTags.album);
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.album))
+                {
+                    result.Add(MetadataSongTag.Album, audioTags.album);
+                }
 
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.album))
+                // album artist
+                if (!string.IsNullOrWhiteSpace(formatTags.albumArtist))
+                {
+                    result.Add(MetadataSongTag.AlbumArtist, formatTags.albumArtist);
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.albumArtist))
+                {
+                    result.Add(MetadataSongTag.AlbumArtist, audioTags.albumArtist);
+                }
+
+                // artist
+                if (!string.IsNullOrWhiteSpace(formatTags.artist))
+                {
+                    result.Add(MetadataSongTag.Artist, formatTags.artist);
+
+                    // if no album artist is present, use the track artist
+                    if (!result.ContainsKey(MetadataSongTag.AlbumArtist))
                     {
-                        result.Add(MetadataFormatTag.Album, ffprobe.format.tags.album);
+                        result.Add(MetadataSongTag.AlbumArtist, formatTags.artist);
                     }
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.artist))
+                {
+                    result.Add(MetadataSongTag.Artist, audioTags.artist);
 
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.albumArtist))
+                    // if no album artist is present, use the track artist
+                    if (!result.ContainsKey(MetadataSongTag.AlbumArtist))
                     {
-                        result.Add(MetadataFormatTag.AlbumArtist, ffprobe.format.tags.albumArtist);
+                        result.Add(MetadataSongTag.AlbumArtist, audioTags.artist);
                     }
+                }
 
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.artist))
-                    {
-                        result.Add(MetadataFormatTag.Artist, ffprobe.format.tags.artist);
+                // date
+                if (!string.IsNullOrWhiteSpace(formatTags.date))
+                {
+                    result.Add(MetadataSongTag.Date, formatTags.date);
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.date))
+                {
+                    result.Add(MetadataSongTag.Date, audioTags.date);
+                }
 
-                        // if no album artist is present, use the track artist
-                        if (!result.ContainsKey(MetadataFormatTag.AlbumArtist))
-                        {
-                            result.Add(MetadataFormatTag.AlbumArtist, ffprobe.format.tags.artist);
-                        }
-                    }
+                // genre
+                if (!string.IsNullOrWhiteSpace(formatTags.genre))
+                {
+                    result.Add(MetadataSongTag.Genre, formatTags.genre);
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.genre))
+                {
+                    result.Add(MetadataSongTag.Genre, audioTags.genre);
+                }
 
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.date))
-                    {
-                        result.Add(MetadataFormatTag.Date, ffprobe.format.tags.date);
-                    }
+                // title
+                if (!string.IsNullOrWhiteSpace(formatTags.title))
+                {
+                    result.Add(MetadataSongTag.Title, formatTags.title);
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.title))
+                {
+                    result.Add(MetadataSongTag.Title, audioTags.title);
+                }
 
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.genre))
-                    {
-                        result.Add(MetadataFormatTag.Genre, ffprobe.format.tags.genre);
-                    }
+                // track
+                if (!string.IsNullOrWhiteSpace(formatTags.track))
+                {
+                    result.Add(MetadataSongTag.Track, formatTags.track);
+                }
+                else if (!string.IsNullOrWhiteSpace(audioTags.track))
+                {
+                    result.Add(MetadataSongTag.Track, audioTags.track);
+                }
 
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.title))
-                    {
-                        result.Add(MetadataFormatTag.Title, ffprobe.format.tags.title);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.track))
-                    {
-                        result.Add(MetadataFormatTag.Track, ffprobe.format.tags.track);
-                    }
-
-                    return Right<BaseError, Dictionary<string, string>>(result);
-                },
-                Left<BaseError, Dictionary<string, string>>);
+                return result;
+            }
         }
         catch (Exception ex)
         {
@@ -146,6 +200,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
+
+        return BaseError.New("BUG - this should never happen");
     }
 
     private async Task<bool> ApplyVersionUpdate(MediaItem mediaItem, MediaVersion version, string filePath)
@@ -343,7 +399,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                             Index = videoStream.index,
                             Codec = videoStream.codec_name,
                             Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant(),
-                            PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant()
+                            PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant(),
+                            ColorRange = (videoStream.color_range ?? string.Empty).ToLowerInvariant(),
+                            ColorSpace = (videoStream.color_space ?? string.Empty).ToLowerInvariant(),
+                            ColorTransfer = (videoStream.color_transfer ?? string.Empty).ToLowerInvariant(),
+                            ColorPrimaries = (videoStream.color_primaries ?? string.Empty).ToLowerInvariant()
                         };
 
                         if (int.TryParse(videoStream.bits_per_raw_sample, out int bitsPerRawSample))
@@ -467,21 +527,9 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     // ReSharper disable InconsistentNaming
     public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams, List<FFprobeChapter> chapters);
 
-    public record FFprobeFormat(string duration, FFprobeFormatTags tags);
+    public record FFprobeFormat(string duration, FFprobeTags tags);
 
     public record FFprobeDisposition(int @default, int forced, int attached_pic);
-
-    public record FFprobeTags(string language, string title, string filename, string mimetype);
-
-    public record FFprobeFormatTags(
-        string title,
-        string artist,
-        [property: JsonProperty(PropertyName = "album_artist")]
-        string albumArtist,
-        string album,
-        string track,
-        string genre,
-        string date);
 
     public record FFprobeStream(
         int index,
@@ -494,6 +542,10 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         string sample_aspect_ratio,
         string display_aspect_ratio,
         string pix_fmt,
+        string color_range,
+        string color_space,
+        string color_transfer,
+        string color_primaries,
         string field_order,
         string r_frame_rate,
         string bits_per_raw_sample,
@@ -505,5 +557,21 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         string start_time,
         string end_time,
         FFprobeTags tags);
+
+    public record FFprobeTags(
+        string language,
+        string title,
+        string filename,
+        string mimetype,
+        string artist,
+        [property: JsonProperty(PropertyName = "album_artist")]
+        string albumArtist,
+        string album,
+        string track,
+        string genre,
+        string date)
+    {
+        public static readonly FFprobeTags Empty = new(null, null, null, null, null, null, null, null, null, null);
+    }
     // ReSharper restore InconsistentNaming
 }

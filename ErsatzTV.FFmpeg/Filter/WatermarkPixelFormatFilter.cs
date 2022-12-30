@@ -6,11 +6,13 @@ public class WatermarkPixelFormatFilter : BaseFilter
 {
     private readonly FFmpegState _ffmpegState;
     private readonly WatermarkState _watermarkState;
+    private readonly bool _is10BitOutput;
 
-    public WatermarkPixelFormatFilter(FFmpegState ffmpegState, WatermarkState watermarkState)
+    public WatermarkPixelFormatFilter(FFmpegState ffmpegState, WatermarkState watermarkState, bool is10BitOutput)
     {
         _ffmpegState = ffmpegState;
         _watermarkState = watermarkState;
+        _is10BitOutput = is10BitOutput;
     }
 
     public override string Filter
@@ -21,6 +23,7 @@ public class WatermarkPixelFormatFilter : BaseFilter
 
             Option<string> maybeFormat = _ffmpegState.EncoderHardwareAccelerationMode switch
             {
+                HardwareAccelerationMode.Nvenc when _is10BitOutput => "nv12",
                 HardwareAccelerationMode.Nvenc => "yuva420p",
                 HardwareAccelerationMode.Qsv => "yuva420p",
                 _ when _watermarkState.Opacity != 100 || hasFadePoints =>

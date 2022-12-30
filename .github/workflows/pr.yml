@@ -13,15 +13,23 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
         run: dotnet restore
+
+      - name: Prep project file
+        run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+        if: ${{ matrix.os != 'macos-latest' }}
+      
+      - name: Prep project file Mac
+        run: sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+        if: ${{ matrix.os == 'macos-latest' }}
 
       - name: Build
         run: dotnet build --configuration Release --no-restore

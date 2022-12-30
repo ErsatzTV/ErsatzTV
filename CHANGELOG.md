@@ -1,10 +1,38 @@
-﻿# Changelog
+﻿ Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix many transcoding failures caused by the colorspace filter
+- Fix song playback with VAAPI and NVENC
+- Fix edge case where some local movies would not automatically be restored from trash
+- Fix synchronizing Jellyfin and Emby collection items
+
+### Changed
+- Upgrade to dotnet 7
+- Upgrade all docker images to ubuntu jammy and ffmpeg 5.1.2
+- Limit library scan interval between 0 and 1,000,000
+  - 0 means do not automatically scan libraries
+  - 1 to 999,999 means scan if it has been that many hours since the last scan
+- Use new `ErsatzTV.Scanner` process for scanning all libraries
+  - This should reduce the ongoing memory footprint
+
+## [0.7.0-beta] - 2022-12-11
+### Fixed
+- Fix removing Jellyfin and Emby libraries that have been deleted from the source media server
+- Fix `Work-Ahead HLS Segmenter Limit` setting to properly limit number of channels that can work-ahead at once
+- Include base path value in generated channel playlist (M3U) and channel guide (XMLTV) links
+- Fix parsing song metadata from OGG audio files
+- Properly unlock/re-enable trakt list operations after an operation is canceled
+
 ### Added
+- Add (required) bit depth normalization option to ffmpeg profile
+  - This can help if your card only supports e.g. h264 encoding, normalizing to 8 bits will allow the hardware encoder to be used
+- Extract font attachments after extracting text subtitles
+  - This should improve SubStation Alpha subtitle rendering
+- Detect VAAPI capabilities and fallback to software decoding/encoding as needed
 - Add audio stream selector scripts for episodes and movies
   - This will let you customize which audio stream is selected for playback
   - Episodes are passed the following data:
@@ -38,6 +66,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - `isForced`: bool indicating whether the stream is flagged as forced
         - `language`: the stream's language
         - `title`: the stream's title
+- Add new fields to search index
+  - `video_codec`: the video codec
+  - `video_bit_depth`: the number of bits in the video stream's pixel format, e.g. 8 or 10
+  - `video_dynamic_range`: the video's dynamic range, either `sdr` or `hdr`
 
 ### Changed
 - Change `Multi-Episode Shuffle` scripting system to use Javascript instead of Lua
@@ -1418,7 +1450,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.0-beta...HEAD
+[0.7.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...v0.7.0-beta
 [0.6.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.8-beta...v0.6.9-beta
 [0.6.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.7-beta...v0.6.8-beta
 [0.6.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.6-beta...v0.6.7-beta

@@ -91,7 +91,7 @@
         var parameters = new DialogParameters { { "EntityType", "watermark" }, { "EntityName", watermark.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Watermark", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Watermark", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
@@ -105,7 +105,7 @@
         var parameters = new DialogParameters { { "WatermarkId", watermark.Id } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<CopyWatermarkDialog>("Copy Watermark", parameters, options);
+        IDialogReference dialog = await _dialog.ShowAsync<CopyWatermarkDialog>("Copy Watermark", parameters, options);
         DialogResult dialogResult = await dialog.Result;
         if (!dialogResult.Cancelled && dialogResult.Data is WatermarkViewModel data)
         {

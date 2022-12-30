@@ -34,6 +34,7 @@ using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
@@ -107,11 +108,11 @@ public class Startup
                 configuration.AppVersion = Assembly.GetEntryAssembly()
                     ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown";
-                configuration.AutoNotify = false;
+                configuration.AutoNotify = true;
 
                 configuration.NotifyReleaseStages = new[] { "public", "develop" };
 
-#if DEBUG
+#if DEBUG || DEBUG_NO_SYNC
                 configuration.ReleaseStage = "develop";
 #else
                     // effectively "disable" by tweaking app config
@@ -260,16 +261,6 @@ public class Startup
         SqlMapper.AddTypeHandler(new GuidHandler());
         SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
-        var logConnectionString = $"Data Source={FileSystemLayout.LogDatabasePath}";
-
-        services.AddDbContext<LogContext>(
-            options => options.UseSqlite(logConnectionString),
-            ServiceLifetime.Scoped,
-            ServiceLifetime.Singleton);
-
-        services.AddDbContextFactory<LogContext>(
-            options => options.UseSqlite(logConnectionString));
-
         services.AddMediatR(typeof(GetAllChannels).Assembly);
 
         services.AddRefitClient<IPlexTvApi>()
@@ -288,7 +279,17 @@ public class Startup
         string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
         if (!string.IsNullOrWhiteSpace(baseUrl))
         {
-            app.UsePathBase(baseUrl);
+            try
+            {
+                app.UsePathBase(baseUrl);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    ex,
+                    "Failed to configure ETV_BASE_URL; please check syntax and include leading slash e.g. `/etv`: {BaseUrl}",
+                    baseUrl);
+            }
         }
 
         app.UseCors("AllowAll");
@@ -377,6 +378,7 @@ public class Startup
         AddChannel<IEmbyBackgroundServiceRequest>(services);
         AddChannel<IFFmpegWorkerRequest>(services);
         AddChannel<ISubtitleWorkerRequest>(services);
+        AddChannel<ISearchIndexBackgroundServiceRequest>(services);
 
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
@@ -415,28 +417,15 @@ public class Startup
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();
-        services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
-        services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
-        services.AddScoped<IMusicVideoFolderScanner, MusicVideoFolderScanner>();
-        services.AddScoped<IOtherVideoFolderScanner, OtherVideoFolderScanner>();
-        services.AddScoped<ISongFolderScanner, SongFolderScanner>();
-        services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
-        services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
         services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
         services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
-        services.AddScoped<IJellyfinMovieLibraryScanner, JellyfinMovieLibraryScanner>();
-        services.AddScoped<IJellyfinTelevisionLibraryScanner, JellyfinTelevisionLibraryScanner>();
-        services.AddScoped<IJellyfinCollectionScanner, JellyfinCollectionScanner>();
         services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
         services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
         services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
         services.AddScoped<IJellyfinCollectionRepository, JellyfinCollectionRepository>();
         services.AddScoped<IJellyfinMovieRepository, JellyfinMovieRepository>();
         services.AddScoped<IEmbyApiClient, EmbyApiClient>();
-        services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
-        services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
-        services.AddScoped<IEmbyCollectionScanner, EmbyCollectionScanner>();
         services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
         services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
         services.AddScoped<IEmbyCollectionRepository, EmbyCollectionRepository>();
@@ -450,6 +439,7 @@ public class Startup
                 MultiEpisodeShuffleCollectionEnumeratorFactory>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
+        services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();
         services.AddScoped<FFmpegProcessService>();
 
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
@@ -497,6 +487,7 @@ public class Startup
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
+        services.AddHostedService<SearchIndexService>();
     }
 
     private void AddChannel<TMessageType>(IServiceCollection services)

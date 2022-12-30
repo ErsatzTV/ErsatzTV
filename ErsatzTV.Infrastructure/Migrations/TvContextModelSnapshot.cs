@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.9");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.10");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -548,6 +548,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("AudioSampleRate")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("BitDepth")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool?>("DeinterlaceVideo")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -959,6 +962,18 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Codec")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorPrimaries")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorRange")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorSpace")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ColorTransfer")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Default")

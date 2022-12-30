@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.State;
+﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Filter;
@@ -7,6 +8,7 @@ public class OverlayWatermarkFilter : BaseFilter
 {
     private readonly FrameSize _resolution;
     private readonly FrameSize _squarePixelFrameSize;
+    private readonly IPixelFormat _outputPixelFormat;
     private readonly ILogger _logger;
     private readonly WatermarkState _watermarkState;
 
@@ -14,15 +16,17 @@ public class OverlayWatermarkFilter : BaseFilter
         WatermarkState watermarkState,
         FrameSize resolution,
         FrameSize squarePixelFrameSize,
+        IPixelFormat outputPixelFormat,
         ILogger logger)
     {
         _watermarkState = watermarkState;
         _resolution = resolution;
         _squarePixelFrameSize = squarePixelFrameSize;
+        _outputPixelFormat = outputPixelFormat;
         _logger = logger;
     }
 
-    public override string Filter => $"overlay={Position}";
+    public override string Filter => $"overlay={Position}:format={(_outputPixelFormat.BitDepth == 10 ? '1' : '0')}";
 
     protected string Position
     {
@@ -34,6 +38,7 @@ public class OverlayWatermarkFilter : BaseFilter
 
             return _watermarkState.Location switch
             {
+                // TODO: can these be pre-calculated (and used with accelerated overlay filters)
                 WatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
                 WatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
                 WatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",
@@ -46,7 +51,8 @@ public class OverlayWatermarkFilter : BaseFilter
         }
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { FrameDataLocation = FrameDataLocation.Software };
 
     private WatermarkMargins NormalMargins()
     {

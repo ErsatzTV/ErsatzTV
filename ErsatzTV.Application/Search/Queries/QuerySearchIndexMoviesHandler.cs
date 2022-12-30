@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using Bugsnag;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -11,13 +12,16 @@ public class QuerySearchIndexMoviesHandler : IRequestHandler<QuerySearchIndexMov
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
     public QuerySearchIndexMoviesHandler(
+        IClient client,
         ISearchIndex searchIndex,
         IMovieRepository movieRepository,
         IMediaSourceRepository mediaSourceRepository)
     {
+        _client = client;
         _searchIndex = searchIndex;
         _movieRepository = movieRepository;
         _mediaSourceRepository = mediaSourceRepository;
@@ -27,7 +31,8 @@ public class QuerySearchIndexMoviesHandler : IRequestHandler<QuerySearchIndexMov
         QuerySearchIndexMovies request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = await _searchIndex.Search(
+        SearchResult searchResult = _searchIndex.Search(
+            _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);

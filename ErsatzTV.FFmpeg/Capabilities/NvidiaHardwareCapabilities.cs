@@ -14,7 +14,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         _model = model;
     }
 
-    public bool CanDecode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
+    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
@@ -28,12 +28,18 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
 
             // some second gen maxwell can decode vp9, otherwise pascal is required
             VideoFormat.Vp9 => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
+            
+            // no hardware decoding of 10-bit h264
+            VideoFormat.H264 when bitDepth == 10 => false,
+            
+            // generated images are decoded into software
+            VideoFormat.GeneratedImage => false,
 
             _ => true
         };
     }
 
-    public bool CanEncode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
+    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 

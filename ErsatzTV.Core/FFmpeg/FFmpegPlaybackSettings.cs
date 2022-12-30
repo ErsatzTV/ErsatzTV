@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -14,6 +15,7 @@ public class FFmpegPlaybackSettings
     public Option<IDisplaySize> ScaledSize { get; set; }
     public bool PadToDesiredResolution { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
+    public IPixelFormat PixelFormat { get; set; }
     public Option<int> VideoBitrate { get; set; }
     public Option<int> VideoBufferSize { get; set; }
     public Option<int> AudioBitrate { get; set; }

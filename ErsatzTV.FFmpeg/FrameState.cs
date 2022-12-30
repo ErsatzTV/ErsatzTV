@@ -6,6 +6,7 @@ public record FrameState(
     bool Realtime,
     bool InfiniteLoop,
     string VideoFormat,
+    Option<string> VideoProfile,
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,
@@ -18,4 +19,5 @@ public record FrameState(
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
 {
     public string FFmpegAspectRatio => PaddedSize.Width == 640 ? "4/3" : "16/9";
+    public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 }

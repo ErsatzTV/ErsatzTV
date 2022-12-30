@@ -3,8 +3,7 @@ using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -19,31 +18,22 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEpisode : Episode
     where TEtag : MediaServerItemEtag
 {
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     protected MediaServerTelevisionLibraryScanner(
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalFileSystem localFileSystem,
-        ICachingSearchRepository searchRepository,
-        ISearchIndex searchIndex,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IMediator mediator,
         ILogger logger)
     {
         _localStatisticsProvider = localStatisticsProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localFileSystem = localFileSystem;
-        _searchRepository = searchRepository;
-        _searchIndex = searchIndex;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _mediator = mediator;
         _logger = logger;
     }
@@ -90,10 +80,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         {
             return new ScanCanceled();
         }
-        finally
-        {
-            _searchIndex.Commit();
-        }
     }
 
     protected abstract Task<Either<BaseError, int>> CountShowLibraryItems(
@@ -136,7 +122,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             incomingItemIds.Add(MediaServerItemId(incoming));
 
             decimal percentCompletion = Math.Clamp((decimal)incomingItemIds.Count / totalShowCount, 0, 1);
-            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
+            await _mediator.Publish(
+                new ScannerProgressUpdate(
+                    library.Id,
+                    library.Name,
+                    percentCompletion,
+                    Array.Empty<int>(),
+                    Array.Empty<int>()),
+                cancellationToken);
 
             Either<BaseError, MediaItemScanResult<TShow>> maybeShow = await televisionRepository
                 .GetOrAdd(library, incoming)
@@ -200,10 +193,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(
-                        _searchRepository,
-                        _fallbackMetadataProvider,
-                        new List<int> { result.Item.Id });
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            library.Id,
+                            null,
+                            null,
+                            new[] { result.Item.Id },
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
             }
         }
@@ -211,9 +208,18 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash shows that are no longer present on the media server
         var fileNotFoundItemIds = existingShows.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundShows(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
+            cancellationToken);
 
-        await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(
+                library.Id,
+                library.Name,
+                0,
+                Array.Empty<int>(),
+                Array.Empty<int>()),
+            cancellationToken);
 
         return Unit.Default;
     }
@@ -365,10 +371,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(
-                        _searchRepository,
-                        _fallbackMetadataProvider,
-                        new List<int> { result.Item.Id });
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            library.Id,
+                            null,
+                            null,
+                            new[] { result.Item.Id },
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
             }
         }
@@ -376,7 +386,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash seasons that are no longer present on the media server
         var fileNotFoundItemIds = existingSeasons.Map(s => s.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundSeasons(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
+            cancellationToken);
 
         return Unit.Default;
     }
@@ -471,10 +483,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.RebuildItems(
-                        _searchRepository,
-                        _fallbackMetadataProvider,
-                        new List<int> { result.Item.Id });
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            library.Id,
+                            null,
+                            null,
+                            new[] { result.Item.Id },
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
             }
         }
@@ -482,7 +498,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         // trash episodes that are no longer present on the media server
         var fileNotFoundItemIds = existingEpisodes.Map(m => m.MediaServerItemId).Except(incomingItemIds).ToList();
         List<int> ids = await televisionRepository.FlagFileNotFoundEpisodes(library, fileNotFoundItemIds);
-        await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(library.Id, null, null, ids.ToArray(), Array.Empty<int>()),
+            cancellationToken);
 
         return Unit.Default;
     }
@@ -524,7 +542,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             {
                 foreach (int id in await televisionRepository.FlagUnavailable(library, incoming))
                 {
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, new List<int> { id });
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
+                        CancellationToken.None);
                 }
             }
 

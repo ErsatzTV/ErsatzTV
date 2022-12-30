@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.Core.Interfaces.FFmpeg;
@@ -36,7 +37,8 @@ public interface IFFmpegProcessService
         TimeSpan outPoint,
         long ptsOffset,
         Option<int> targetFramerate,
-        bool disableWatermarks);
+        bool disableWatermarks,
+        Action<FFmpegPipeline> pipelineAction);
 
     Task<Command> ForError(
         string ffmpegPath,
@@ -54,10 +56,6 @@ public interface IFFmpegProcessService
     Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
     Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
-
-    Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
-
-    Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
 
     Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.State;
+﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Filter.Qsv;
@@ -13,11 +14,13 @@ public class OverlayWatermarkQsvFilter : OverlayWatermarkFilter
         watermarkState,
         resolution,
         squarePixelFrameSize,
+        new PixelFormatUnknown(),
         logger)
     {
     }
 
     public override string Filter => $"overlay_qsv={Position}";
 
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { FrameDataLocation = FrameDataLocation.Hardware };
 }

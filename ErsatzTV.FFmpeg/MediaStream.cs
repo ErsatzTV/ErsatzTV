@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using ErsatzTV.FFmpeg.Format;
+﻿using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg;
 
@@ -14,15 +13,19 @@ public record VideoStream(
     int Index,
     string Codec,
     Option<IPixelFormat> PixelFormat,
+    ColorParams ColorParams,
     FrameSize FrameSize,
     string SampleAspectRatio,
     string DisplayAspectRatio,
     Option<string> FrameRate,
-    bool StillImage) : MediaStream(
+    bool StillImage,
+    ScanKind ScanKind) : MediaStream(
     Index,
     Codec,
     StreamKind.Video)
 {
+    public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
+    
     public bool IsAnamorphic
     {
         get

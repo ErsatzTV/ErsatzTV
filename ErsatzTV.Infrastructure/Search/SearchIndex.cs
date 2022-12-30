@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -6,6 +7,8 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
+using ErsatzTV.FFmpeg;
+using ErsatzTV.FFmpeg.Format;
 using LanguageExt.UnsafeValueAccess;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Core;
@@ -20,6 +23,7 @@ using Lucene.Net.Store;
 using Lucene.Net.Util;
 using Microsoft.Extensions.Logging;
 using Directory = System.IO.Directory;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
@@ -56,6 +60,8 @@ public sealed class SearchIndex : ISearchIndex
     private const string ShowGenreField = "show_genre";
     private const string ShowTagField = "show_tag";
     private const string MetadataKindField = "metadata_kind";
+    private const string VideoCodecField = "video_codec";
+    private const string VideoDynamicRange = "video_dynamic_range";
 
     internal const string MinutesField = "minutes";
     internal const string HeightField = "height";
@@ -64,6 +70,7 @@ public sealed class SearchIndex : ISearchIndex
     internal const string EpisodeNumberField = "episode_number";
     internal const string AddedDateField = "added_date";
     internal const string ReleaseDateField = "release_date";
+    internal const string VideoBitDepthField = "video_bit_depth";
 
     public const string MovieType = "movie";
     public const string ShowType = "show";
@@ -73,7 +80,7 @@ public sealed class SearchIndex : ISearchIndex
     public const string EpisodeType = "episode";
     public const string OtherVideoType = "other_video";
     public const string SongType = "song";
-
+    
     private readonly List<CultureInfo> _cultureInfos;
 
     private readonly ILogger<SearchIndex> _logger;
@@ -89,7 +96,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 33;
+    public int Version => 34;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -157,7 +164,7 @@ public sealed class SearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public Task<Unit> RemoveItems(List<int> ids)
+    public Task<Unit> RemoveItems(IEnumerable<int> ids)
     {
         foreach (int id in ids)
         {
@@ -167,11 +174,21 @@ public sealed class SearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
+    public SearchResult Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
     {
+        var metadata = new Dictionary<string, string>
+        {
+            { "searchQuery", searchQuery },
+            { "skip", skip.ToString() },
+            { "limit", limit.ToString() },
+            { "searchField", searchField }
+        };
+
+        client.Breadcrumbs.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
+        
         if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
         {
-            return new SearchResult(new List<SearchItem>(), 0).AsTask();
+            return new SearchResult(new List<SearchItem>(), 0);
         }
 
         using DirectoryReader reader = _writer.GetReader(true);
@@ -208,7 +225,7 @@ public sealed class SearchIndex : ISearchIndex
             searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
         }
 
-        return searchResult.AsTask();
+        return searchResult;
     }
 
     public void Commit() => _writer.Commit();
@@ -238,7 +255,7 @@ public sealed class SearchIndex : ISearchIndex
     public async Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        List<int> itemIds)
+        IEnumerable<int> itemIds)
     {
         foreach (int id in itemIds)
         {
@@ -382,14 +399,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 await AddLanguages(searchRepository, doc, movie.MediaVersions);
 
-                foreach (MediaVersion version in movie.MediaVersions.HeadOrNone())
-                {
-                    doc.Add(
-                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
-
-                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
-                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
-                }
+                AddStatistics(doc, movie.MediaVersions);
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                 {
@@ -752,14 +762,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
 
-                foreach (MediaVersion version in musicVideo.MediaVersions.HeadOrNone())
-                {
-                    doc.Add(
-                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
-
-                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
-                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
-                }
+                AddStatistics(doc, musicVideo.MediaVersions);
 
                 if (metadata.ReleaseDate.HasValue)
                 {
@@ -891,14 +894,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);
 
-                foreach (MediaVersion version in episode.MediaVersions.HeadOrNone())
-                {
-                    doc.Add(
-                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
-
-                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
-                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
-                }
+                AddStatistics(doc, episode.MediaVersions);
 
                 if (metadata.ReleaseDate.HasValue)
                 {
@@ -988,14 +984,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
 
-                foreach (MediaVersion version in otherVideo.MediaVersions.HeadOrNone())
-                {
-                    doc.Add(
-                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
-
-                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
-                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
-                }
+                AddStatistics(doc, otherVideo.MediaVersions);
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                 {
@@ -1089,11 +1078,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 await AddLanguages(searchRepository, doc, song.MediaVersions);
 
-                foreach (MediaVersion version in song.MediaVersions.HeadOrNone())
-                {
-                    doc.Add(
-                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
-                }
+                AddStatistics(doc, song.MediaVersions);
 
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
@@ -1151,6 +1136,42 @@ public sealed class SearchIndex : ISearchIndex
         }
 
         return query;
+    }
+    
+    private void AddStatistics(Document doc, List<MediaVersion> mediaVersions)
+    {
+        foreach (MediaVersion version in mediaVersions)
+        {
+            doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+            if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video))
+            {
+                doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
+            }
+
+            foreach (MediaStream videoStream in version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
+            {
+                doc.Add(new StringField(VideoCodecField, videoStream.Codec, Field.Store.NO));
+
+                Option<IPixelFormat> maybePixelFormat =
+                    AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, null);
+                foreach (IPixelFormat pixelFormat in maybePixelFormat)
+                {
+                    doc.Add(new Int32Field(VideoBitDepthField, pixelFormat.BitDepth, Field.Store.NO));
+                }
+
+                var colorParams = new ColorParams(
+                    videoStream.ColorRange,
+                    videoStream.ColorSpace,
+                    videoStream.ColorTransfer,
+                    videoStream.ColorPrimaries);
+
+                string dynamicRange = colorParams.IsHdr ? "hdr" : "sdr";
+
+                doc.Add(new TextField(VideoDynamicRange, dynamicRange, Field.Store.NO));
+            }
+        }
     }
 
     private static void AddMetadataGuids(Metadata metadata, Document doc)

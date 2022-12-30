@@ -20,6 +20,7 @@
 
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -143,6 +144,13 @@ public class FFmpegPlaybackSettingsCalculator
                             _ => null
                         };
                 }
+
+                result.PixelFormat = ffmpegProfile.BitDepth switch
+                {
+                    FFmpegProfileBitDepth.TenBit => new PixelFormatYuv420P10Le(),
+                    _ => new PixelFormatYuv420P()
+                    // _ => new PixelFormatYuv420P10Le()
+                };
 
                 result.AudioFormat = ffmpegProfile.AudioFormat;
                 result.AudioBitrate = ffmpegProfile.AudioBitrate;

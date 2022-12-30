@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Immutable;
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Interfaces.Repositories;
@@ -10,4 +11,5 @@ public interface IMediaItemRepository
     Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path);
     Task<Unit> FlagNormal(MediaItem mediaItem);
     Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds);
+    Task<ImmutableHashSet<string>> GetAllTrashedItems(LibraryPath libraryPath);
 }
