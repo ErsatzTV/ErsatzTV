@@ -1,35 +1,28 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Emby;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Emby;
+namespace ErsatzTV.Scanner.Core.Emby;
 
 public class EmbyCollectionScanner : IEmbyCollectionScanner
 {
     private readonly IEmbyApiClient _embyApiClient;
+    private readonly IMediator _mediator;
     private readonly IEmbyCollectionRepository _embyCollectionRepository;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<EmbyCollectionScanner> _logger;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     public EmbyCollectionScanner(
+        IMediator mediator,
         IEmbyCollectionRepository embyCollectionRepository,
         IEmbyApiClient embyApiClient,
-        ICachingSearchRepository searchRepository,
-        ISearchIndex searchIndex,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<EmbyCollectionScanner> logger)
     {
+        _mediator = mediator;
         _embyCollectionRepository = embyCollectionRepository;
         _embyApiClient = embyApiClient;
-        _searchRepository = searchRepository;
-        _searchIndex = searchIndex;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -112,8 +105,9 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             var changedIds = removedIds.Except(addedIds).ToList();
             changedIds.AddRange(addedIds.Except(removedIds));
 
-            await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, changedIds);
-            _searchIndex.Commit();
+            await _mediator.Publish(
+                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), Array.Empty<int>()),
+                CancellationToken.None);
         }
         catch (Exception ex)
         {

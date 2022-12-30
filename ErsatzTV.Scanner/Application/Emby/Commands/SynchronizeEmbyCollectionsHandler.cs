@@ -4,7 +4,7 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 
-namespace ErsatzTV.Application.Emby;
+namespace ErsatzTV.Scanner.Application.Emby;
 
 public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmbyCollections, Either<BaseError, Unit>>
 {
@@ -21,7 +21,6 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
         _embySecretStore = embySecretStore;
         _scanner = scanner;
     }
-
 
     public async Task<Either<BaseError, Unit>> Handle(
         SynchronizeEmbyCollections request,

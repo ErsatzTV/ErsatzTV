@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Plex;
 using Microsoft.Extensions.Logging;
 
@@ -12,12 +13,14 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizePlexLibraryByIdHandler> _logger;
+    private readonly IMediator _mediator;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
 
     public SynchronizePlexLibraryByIdHandler(
+        IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IConfigElementRepository configElementRepository,
         IPlexSecretStore plexSecretStore,
@@ -26,6 +29,7 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
         ILibraryRepository libraryRepository,
         ILogger<SynchronizePlexLibraryByIdHandler> logger)
     {
+        _mediator = mediator;
         _mediaSourceRepository = mediaSourceRepository;
         _configElementRepository = configElementRepository;
         _plexSecretStore = plexSecretStore;
@@ -84,12 +88,20 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
 
             return result.Map(_ => parameters.Library.Name);
         }
-        else
-        {
-            _logger.LogDebug(
-                "Skipping unforced scan of plex media library {Name}",
-                parameters.Library.Name);
-        }
+
+        _logger.LogDebug(
+            "Skipping unforced scan of plex media library {Name}",
+            parameters.Library.Name);
+            
+        // send an empty progress update for the library name
+        await _mediator.Publish(
+            new ScannerProgressUpdate(
+                parameters.Library.Id,
+                parameters.Library.Name,
+                0,
+                Array.Empty<int>(),
+                Array.Empty<int>()),
+            cancellationToken);
 
         return parameters.Library.Name;
     }

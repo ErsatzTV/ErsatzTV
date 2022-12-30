@@ -1,4 +1,5 @@
 using System.CommandLine;
+using ErsatzTV.Scanner.Application.Emby;
 using ErsatzTV.Scanner.Application.MediaSources;
 using ErsatzTV.Scanner.Application.Plex;
 using Microsoft.Extensions.DependencyInjection;
@@ -115,7 +116,8 @@ public class Worker : IHostedService
         }
         else if (embyLibraryId is not null)
         {
-            _logger.LogInformation("Scanning emby library {Id}", embyLibraryId);
+            var scanEmbyLibrary = new SynchronizeEmbyLibraryById(embyLibraryId.Value, forceOption);
+            await mediator.Send(scanEmbyLibrary, cancellationToken);
         }
         else if (jellyfinLibraryId is not null)
         {

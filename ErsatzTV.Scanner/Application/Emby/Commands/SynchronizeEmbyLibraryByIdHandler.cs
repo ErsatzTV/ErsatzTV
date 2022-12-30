@@ -1,62 +1,51 @@
-﻿using System.Threading.Channels;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
-using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.MediaSources;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Application.Emby;
+namespace ErsatzTV.Scanner.Application.Emby;
 
-public class SynchronizeEmbyLibraryByIdHandler :
-    IRequestHandler<ForceSynchronizeEmbyLibraryById, Either<BaseError, string>>,
-    IRequestHandler<SynchronizeEmbyLibraryByIdIfNeeded, Either<BaseError, string>>
+public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmbyLibraryById, Either<BaseError, string>>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IEmbyMovieLibraryScanner _embyMovieLibraryScanner;
 
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
-    private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel;
-    private readonly IEntityLocker _entityLocker;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeEmbyLibraryByIdHandler> _logger;
 
+    private readonly IEmbyApiClient _embyApiClient;
+    private readonly IMediator _mediator;
     private readonly IMediaSourceRepository _mediaSourceRepository;
 
     public SynchronizeEmbyLibraryByIdHandler(
+        IEmbyApiClient embyApiClient,
+        IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IEmbySecretStore embySecretStore,
         IEmbyMovieLibraryScanner embyMovieLibraryScanner,
         IEmbyTelevisionLibraryScanner embyTelevisionLibraryScanner,
         ILibraryRepository libraryRepository,
-        IEntityLocker entityLocker,
         IConfigElementRepository configElementRepository,
-        ChannelWriter<IEmbyBackgroundServiceRequest> embyWorkerChannel,
         ILogger<SynchronizeEmbyLibraryByIdHandler> logger)
     {
+        _embyApiClient = embyApiClient;
+        _mediator = mediator;
         _mediaSourceRepository = mediaSourceRepository;
         _embySecretStore = embySecretStore;
         _embyMovieLibraryScanner = embyMovieLibraryScanner;
         _embyTelevisionLibraryScanner = embyTelevisionLibraryScanner;
         _libraryRepository = libraryRepository;
-        _entityLocker = entityLocker;
         _configElementRepository = configElementRepository;
-        _embyWorkerChannel = embyWorkerChannel;
         _logger = logger;
     }
 
-    public Task<Either<BaseError, string>> Handle(
-        ForceSynchronizeEmbyLibraryById request,
-        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
-
-    public Task<Either<BaseError, string>> Handle(
-        SynchronizeEmbyLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
-
-    private async Task<Either<BaseError, string>>
-        HandleImpl(ISynchronizeEmbyLibraryById request, CancellationToken cancellationToken)
+    public async Task<Either<BaseError, string>>
+        Handle(SynchronizeEmbyLibraryById request, CancellationToken cancellationToken)
     {
         Validation<BaseError, RequestParameters> validation = await Validate(request);
         return await validation.Match(
@@ -68,60 +57,73 @@ public class SynchronizeEmbyLibraryByIdHandler :
         RequestParameters parameters,
         CancellationToken cancellationToken)
     {
-        try
+        var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
         {
-            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-            if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+            Either<BaseError, Unit> result = parameters.Library.MediaKind switch
             {
-                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
-                {
-                    LibraryMediaKind.Movies =>
-                        await _embyMovieLibraryScanner.ScanLibrary(
-                            parameters.ConnectionParameters.ActiveConnection.Address,
-                            parameters.ConnectionParameters.ApiKey,
-                            parameters.Library,
-                            parameters.FFmpegPath,
-                            parameters.FFprobePath,
-                            cancellationToken),
-                    LibraryMediaKind.Shows =>
-                        await _embyTelevisionLibraryScanner.ScanLibrary(
-                            parameters.ConnectionParameters.ActiveConnection.Address,
-                            parameters.ConnectionParameters.ApiKey,
-                            parameters.Library,
-                            parameters.FFmpegPath,
-                            parameters.FFprobePath,
-                            cancellationToken),
-                    _ => Unit.Default
-                };
+                LibraryMediaKind.Movies =>
+                    await _embyMovieLibraryScanner.ScanLibrary(
+                        parameters.ConnectionParameters.ActiveConnection.Address,
+                        parameters.ConnectionParameters.ApiKey,
+                        parameters.Library,
+                        parameters.FFmpegPath,
+                        parameters.FFprobePath,
+                        cancellationToken),
+                LibraryMediaKind.Shows =>
+                    await _embyTelevisionLibraryScanner.ScanLibrary(
+                        parameters.ConnectionParameters.ActiveConnection.Address,
+                        parameters.ConnectionParameters.ApiKey,
+                        parameters.Library,
+                        parameters.FFmpegPath,
+                        parameters.FFprobePath,
+                        cancellationToken),
+                _ => Unit.Default
+            };
 
-                if (result.IsRight)
-                {
-                    parameters.Library.LastScan = DateTime.UtcNow;
-                    await _libraryRepository.UpdateLastScan(parameters.Library);
-
-                    await _embyWorkerChannel.WriteAsync(
-                        new SynchronizeEmbyCollections(parameters.Library.MediaSourceId),
-                        cancellationToken);
-                }
-
-                return result.Map(_ => parameters.Library.Name);
-            }
-            else
+            if (result.IsRight)
             {
-                _logger.LogDebug("Skipping unforced scan of emby media library {Name}", parameters.Library.Name);
+                parameters.Library.LastScan = DateTime.UtcNow;
+                await _libraryRepository.UpdateLastScan(parameters.Library);
+
+                // need to call get libraries to find library that contains collections (boxsets)                
+                await _embyApiClient.GetLibraries(
+                    parameters.ConnectionParameters.ActiveConnection.Address,
+                    parameters.ConnectionParameters.ApiKey);
+
+                Either<BaseError, Unit> collectionResult = await _mediator.Send(
+                    new SynchronizeEmbyCollections(parameters.Library.MediaSourceId),
+                    cancellationToken);
+
+                collectionResult.BiIter(
+                    _ => _logger.LogDebug("Done synchronizing emby collections"),
+                    error => _logger.LogWarning(
+                        "Unable to synchronize emby collections for source {MediaSourceId}: {Error}",
+                        parameters.Library.MediaSourceId,
+                        error.Value));
             }
 
-            return parameters.Library.Name;
+            return result.Map(_ => parameters.Library.Name);
         }
-        finally
-        {
-            _entityLocker.UnlockLibrary(parameters.Library.Id);
-        }
+
+        _logger.LogDebug("Skipping unforced scan of emby media library {Name}", parameters.Library.Name);
+
+        // send an empty progress update for the library name
+        await _mediator.Publish(
+            new ScannerProgressUpdate(
+                parameters.Library.Id,
+                parameters.Library.Name,
+                0,
+                Array.Empty<int>(),
+                Array.Empty<int>()),
+            cancellationToken);
+
+        return parameters.Library.Name;
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(
-        ISynchronizeEmbyLibraryById request) =>
+        SynchronizeEmbyLibraryById request) =>
         (await ValidateConnection(request), await EmbyLibraryMustExist(request),
             await ValidateLibraryRefreshInterval(), await ValidateFFmpegPath(), await ValidateFFprobePath())
         .Apply(
@@ -136,13 +138,13 @@ public class SynchronizeEmbyLibraryByIdHandler :
                 ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
-        ISynchronizeEmbyLibraryById request) =>
+        SynchronizeEmbyLibraryById request) =>
         EmbyMediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
 
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist(
-        ISynchronizeEmbyLibraryById request) =>
+        SynchronizeEmbyLibraryById request) =>
         _mediaSourceRepository.GetEmbyByLibraryId(request.EmbyLibraryId)
             .Map(
                 v => v.ToValidation<BaseError>(
@@ -167,7 +169,7 @@ public class SynchronizeEmbyLibraryByIdHandler :
     }
 
     private Task<Validation<BaseError, EmbyLibrary>> EmbyLibraryMustExist(
-        ISynchronizeEmbyLibraryById request) =>
+        SynchronizeEmbyLibraryById request) =>
         _mediaSourceRepository.GetEmbyLibrary(request.EmbyLibraryId)
             .Map(v => v.ToValidation<BaseError>($"Emby library {request.EmbyLibraryId} does not exist."));
 

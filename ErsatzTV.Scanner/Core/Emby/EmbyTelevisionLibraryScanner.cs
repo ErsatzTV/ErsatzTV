@@ -1,13 +1,14 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Emby;
+namespace ErsatzTV.Scanner.Core.Emby;
 
 public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<EmbyConnectionParameters, EmbyLibrary,
     EmbyShow, EmbySeason, EmbyEpisode,

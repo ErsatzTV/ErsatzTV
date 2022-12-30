@@ -1,7 +1,9 @@
 ﻿using Bugsnag;
 using Bugsnag.Payload;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -17,10 +19,12 @@ using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
+using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Scanner.Core.Emby;
 using ErsatzTV.Scanner.Core.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Metadata;
@@ -130,9 +134,19 @@ public class Program
                     services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
                     services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
                     services.AddScoped<PlexEtag>();
+                    
+                    services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
+                    services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
+                    services.AddScoped<IEmbyCollectionScanner, EmbyCollectionScanner>();
+                    services.AddScoped<IEmbyApiClient, EmbyApiClient>();
+                    services.AddScoped<IEmbyCollectionRepository, EmbyCollectionRepository>();
+                    services.AddScoped<IEmbyMovieRepository, EmbyMovieRepository>();
+                    services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
+                    services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
 
                     services.AddSingleton<ITempFilePool, TempFilePool>();
                     services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
+                    services.AddSingleton<IEmbySecretStore, EmbySecretStore>();
                     services.AddSingleton<ISearchIndex, SearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
                     // TODO: real bugsnag?
