@@ -1,7 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading.Channels;
 using CliWrap;
+using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
 using Newtonsoft.Json;
@@ -13,11 +16,17 @@ namespace ErsatzTV.Application.MediaSources;
 public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
     IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
 {
+    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
     private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
+    private string _libraryName;
 
-    public CallLocalLibraryScannerHandler(IMediator mediator, IRuntimeInfo runtimeInfo)
+    public CallLocalLibraryScannerHandler(
+        ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
+        IMediator mediator,
+        IRuntimeInfo runtimeInfo)
     {
+        _channel = channel;
         _mediator = mediator;
         _runtimeInfo = runtimeInfo;
     }
@@ -73,14 +82,13 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
             {
                 return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
             }
-
-            // TODO: return local library name?
-            return string.Empty;
         }
         catch (OperationCanceledException)
         {
-            return string.Empty;
+            // do nothing
         }
+
+        return _libraryName ?? string.Empty;
     }
 
     private static void ProcessLogOutput(string s)
@@ -104,12 +112,39 @@ public class CallLocalLibraryScannerHandler : IRequestHandler<ForceScanLocalLibr
         {
             try
             {
-                LibraryScanProgress libraryScanProgress = JsonConvert.DeserializeObject<LibraryScanProgress>(s);
-                await _mediator.Publish(libraryScanProgress);
+                ScannerProgressUpdate progressUpdate = JsonConvert.DeserializeObject<ScannerProgressUpdate>(s);
+                if (progressUpdate != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(progressUpdate.LibraryName))
+                    {
+                        _libraryName = progressUpdate.LibraryName;
+                    }
+
+                    if (progressUpdate.PercentComplete is not null)
+                    {
+                        var progress = new LibraryScanProgress(
+                            progressUpdate.LibraryId,
+                            progressUpdate.PercentComplete.Value);
+
+                        await _mediator.Publish(progress);
+                    }
+
+                    if (progressUpdate.ItemsToReindex.Length > 0)
+                    {
+                        var reindex = new ReindexMediaItems(progressUpdate.ItemsToReindex);
+                        await _channel.WriteAsync(reindex);
+                    }
+
+                    if (progressUpdate.ItemsToRemove.Length > 0)
+                    {
+                        var remove = new RemoveMediaItems(progressUpdate.ItemsToRemove);
+                        await _channel.WriteAsync(remove);
+                    }
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // do nothing
+                Log.Logger.Warning(ex, "Unable to process scanner progress update");
             }
         }
     }

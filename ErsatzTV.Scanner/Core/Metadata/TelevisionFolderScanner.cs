@@ -6,8 +6,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
     private readonly IClient _client;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -25,8 +23,6 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
     public TelevisionFolderScanner(
@@ -34,12 +30,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         ITelevisionRepository televisionRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
@@ -60,11 +53,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _localFileSystem = localFileSystem;
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _metadataRepository = metadataRepository;
-        _searchIndex = searchIndex;
-        _searchRepository = searchRepository;
         _libraryRepository = libraryRepository;
         _mediator = mediator;
         _client = client;
@@ -97,7 +87,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
                 decimal percentCompletion = (decimal)allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
                 await _mediator.Publish(
-                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        progressMin + percentCompletion * progressSpread,
+                        Array.Empty<int>(),
+                        Array.Empty<int>()),
                     cancellationToken);
 
                 Either<BaseError, MediaItemScanResult<Show>> maybeShow =
@@ -121,12 +116,14 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     // add show to search index right away
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(
-                            _searchRepository,
-                            _fallbackMetadataProvider,
-                            new List<int> { result.Item.Id });
-
-                        _searchIndex.Commit();
+                        await _mediator.Publish(
+                            new ScannerProgressUpdate(
+                                libraryPath.LibraryId,
+                                null,
+                                null,
+                                new[] { result.Item.Id },
+                                Array.Empty<int>()),
+                            cancellationToken);
                     }
 
                     Either<BaseError, Unit> scanResult = await ScanSeasons(
@@ -151,7 +148,14 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     _logger.LogInformation("Flagging missing episode at {Path}", path);
 
                     List<int> episodeIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, episodeIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            episodeIds.ToArray(),
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
@@ -164,17 +168,20 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
             List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
-            await _searchIndex.RemoveItems(ids);
+            await _mediator.Publish(
+                new ScannerProgressUpdate(
+                    libraryPath.LibraryId,
+                    null,
+                    null,
+                    Array.Empty<int>(),
+                    ids.ToArray()),
+                cancellationToken);
 
             return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             return new ScanCanceled();
-        }
-        finally
-        {
-            _searchIndex.Commit();
         }
     }
 
@@ -254,13 +261,15 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
 
                     season.Show = show;
-                    await _searchIndex.RebuildItems(
-                        _searchRepository,
-                        _fallbackMetadataProvider,
-                        new List<int> { season.Id });
 
-                    // commit after each season
-                    _searchIndex.Commit();
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            new[] { season.Id },
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
             }
         }
@@ -306,10 +315,14 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             foreach (Episode episode in maybeEpisode.RightToSeq())
             {
-                await _searchIndex.RebuildItems(
-                    _searchRepository,
-                    _fallbackMetadataProvider,
-                    new List<int> { episode.Id });
+                await _mediator.Publish(
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        null,
+                        new[] { episode.Id },
+                        Array.Empty<int>()),
+                    cancellationToken);
             }
         }
 

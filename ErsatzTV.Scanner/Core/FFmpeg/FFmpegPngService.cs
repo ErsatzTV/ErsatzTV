@@ -7,8 +7,6 @@ public class FFmpegPngService : IFFmpegPngService
 {
     public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
     {
-        Serilog.Log.Information("ConvertToPng");
-        
         string[] arguments = {
             "-threads", "1",
             "-nostdin",
@@ -25,8 +23,6 @@ public class FFmpegPngService : IFFmpegPngService
 
     public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile)
     {
-        Serilog.Log.Information("ExtractAttachedAsPng");
-
         string[] arguments = {
             "-threads", "1",
             "-nostdin",

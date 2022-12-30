@@ -6,8 +6,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 {
     private readonly IArtistRepository _artistRepository;
     private readonly IClient _client;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -26,8 +24,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IMusicVideoRepository _musicVideoRepository;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     public MusicVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -36,9 +32,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         ILocalSubtitlesProvider localSubtitlesProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IArtistRepository artistRepository,
         IMusicVideoRepository musicVideoRepository,
         ILibraryRepository libraryRepository,
@@ -61,9 +54,6 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
-        _searchIndex = searchIndex;
-        _searchRepository = searchRepository;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _artistRepository = artistRepository;
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
@@ -99,7 +89,12 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
                 decimal percentCompletion = (decimal)allArtistFolders.IndexOf(artistFolder) / allArtistFolders.Count;
                 await _mediator.Publish(
-                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        progressMin + percentCompletion * progressSpread,
+                        Array.Empty<int>(),
+                        Array.Empty<int>()),
                     cancellationToken);
 
                 Either<BaseError, MediaItemScanResult<Artist>> maybeArtist =
@@ -130,12 +125,14 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(
-                            _searchRepository,
-                            _fallbackMetadataProvider,
-                            new List<int> { result.Item.Id });
-
-                        _searchIndex.Commit();
+                        await _mediator.Publish(
+                            new ScannerProgressUpdate(
+                                libraryPath.LibraryId,
+                                null,
+                                null,
+                                new[] { result.Item.Id },
+                                Array.Empty<int>()),
+                            cancellationToken);
                     }
 
                     Either<BaseError, Unit> scanResult = await ScanMusicVideos(
@@ -157,7 +154,14 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             {
                 _logger.LogInformation("Removing improperly named music video at {Path}", path);
                 List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                await _searchIndex.RemoveItems(musicVideoIds);
+                await _mediator.Publish(
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        null,
+                        Array.Empty<int>(),
+                        musicVideoIds.ToArray()),
+                    cancellationToken);
             }
 
             foreach (string path in await _musicVideoRepository.FindMusicVideoPaths(libraryPath))
@@ -166,30 +170,47 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     _logger.LogInformation("Flagging missing music video at {Path}", path);
                     List<int> musicVideoIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, musicVideoIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            musicVideoIds.ToArray(),
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(musicVideoIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            Array.Empty<int>(),
+                            musicVideoIds.ToArray()),
+                        cancellationToken);
                 }
             }
 
             await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             List<int> artistIds = await _artistRepository.DeleteEmptyArtists(libraryPath);
-            await _searchIndex.RemoveItems(artistIds);
+            await _mediator.Publish(
+                new ScannerProgressUpdate(
+                    libraryPath.LibraryId,
+                    null,
+                    null,
+                    Array.Empty<int>(),
+                    artistIds.ToArray()),
+                cancellationToken);
 
             return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             return new ScanCanceled();
-        }
-        finally
-        {
-            _searchIndex.Commit();
         }
     }
 
@@ -341,12 +362,14 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.RebuildItems(
-                            _searchRepository,
-                            _fallbackMetadataProvider,
-                            new List<int> { result.Item.Id });
-
-                        _searchIndex.Commit();
+                        await _mediator.Publish(
+                            new ScannerProgressUpdate(
+                                libraryPath.LibraryId,
+                                null,
+                                null,
+                                new[] { result.Item.Id },
+                                Array.Empty<int>()),
+                            cancellationToken);
                     }
                 }
             }

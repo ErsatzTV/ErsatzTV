@@ -6,8 +6,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
 {
     private readonly IClient _client;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -25,8 +23,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly ILogger<OtherVideoFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IOtherVideoRepository _otherVideoRepository;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     public OtherVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -36,9 +32,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         IMediator mediator,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IOtherVideoRepository otherVideoRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -60,9 +53,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _localMetadataProvider = localMetadataProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _mediator = mediator;
-        _searchIndex = searchIndex;
-        _searchRepository = searchRepository;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
         _client = client;
@@ -108,7 +98,12 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
                 await _mediator.Publish(
-                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        progressMin + percentCompletion * progressSpread,
+                        Array.Empty<int>(),
+                        Array.Empty<int>()),
                     cancellationToken);
 
                 string otherVideoFolder = folderQueue.Dequeue();
@@ -166,12 +161,14 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(
-                                _searchRepository,
-                                _fallbackMetadataProvider,
-                                new List<int> { result.Item.Id });
-
-                            _searchIndex.Commit();
+                            await _mediator.Publish(
+                                new ScannerProgressUpdate(
+                                    libraryPath.LibraryId,
+                                    null,
+                                    null,
+                                    new[] { result.Item.Id },
+                                    Array.Empty<int>()),
+                                cancellationToken);
                         }
                     }
                 }
@@ -189,13 +186,27 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 {
                     _logger.LogInformation("Flagging missing other video at {Path}", path);
                     List<int> otherVideoIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, otherVideoIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            otherVideoIds.ToArray(),
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> otherVideoIds = await _otherVideoRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(otherVideoIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            Array.Empty<int>(),
+                            otherVideoIds.ToArray()),
+                        cancellationToken);
                 }
             }
 
@@ -206,10 +217,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             return new ScanCanceled();
-        }
-        finally
-        {
-            _searchIndex.Commit();
         }
     }
 

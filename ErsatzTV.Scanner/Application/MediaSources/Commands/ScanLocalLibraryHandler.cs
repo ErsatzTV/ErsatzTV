@@ -3,7 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.MediaSources;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 
@@ -123,8 +123,14 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                 }
             }
 
-            // TODO: handle this by printing progress to stdout
-            await _mediator.Publish(new LibraryScanProgress(libraryPath.LibraryId, progressMax), cancellationToken);
+            await _mediator.Publish(
+                new ScannerProgressUpdate(
+                    libraryPath.LibraryId,
+                    localLibrary.Name,
+                    progressMax,
+                    Array.Empty<int>(),
+                    Array.Empty<int>()),
+                cancellationToken);
         }
 
         sw.Stop();
@@ -143,8 +149,9 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                 localLibrary.Name);
         }
 
-        // TODO: handle this by printing progress to stdout
-        await _mediator.Publish(new LibraryScanProgress(localLibrary.Id, 0), cancellationToken);
+        await _mediator.Publish(
+            new ScannerProgressUpdate(localLibrary.Id, localLibrary.Name, 0, Array.Empty<int>(), Array.Empty<int>()),
+            cancellationToken);
 
         return Unit.Default;
     }

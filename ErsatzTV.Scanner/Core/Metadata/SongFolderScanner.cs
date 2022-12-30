@@ -7,8 +7,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
@@ -18,14 +17,11 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
     private readonly ISongRepository _songRepository;
 
     public SongFolderScanner(
@@ -35,9 +31,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         IMediator mediator,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
@@ -58,9 +51,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _mediator = mediator;
-        _searchIndex = searchIndex;
-        _searchRepository = searchRepository;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
         _client = client;
@@ -104,7 +94,12 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
                 await _mediator.Publish(
-                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        progressMin + percentCompletion * progressSpread,
+                        Array.Empty<int>(),
+                        Array.Empty<int>()),
                     cancellationToken);
 
                 string songFolder = folderQueue.Dequeue();
@@ -161,13 +156,15 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(
-                                _searchRepository,
-                                _fallbackMetadataProvider,
-                                new List<int> { result.Item.Id });
+                            await _mediator.Publish(
+                                new ScannerProgressUpdate(
+                                    libraryPath.LibraryId,
+                                    null,
+                                    null,
+                                    new[] { result.Item.Id },
+                                    Array.Empty<int>()),
+                                cancellationToken);
                         }
-
-                        _searchIndex.Commit();
                     }
                 }
 
@@ -184,13 +181,27 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 {
                     _logger.LogInformation("Flagging missing song at {Path}", path);
                     List<int> songIds = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, songIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            songIds.ToArray(),
+                            Array.Empty<int>()),
+                        cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(songIds);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(
+                            libraryPath.LibraryId,
+                            null,
+                            null,
+                            Array.Empty<int>(),
+                            songIds.ToArray()),
+                        cancellationToken);
                 }
             }
 
@@ -201,10 +212,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             return new ScanCanceled();
-        }
-        finally
-        {
-            _searchIndex.Commit();
         }
     }
 

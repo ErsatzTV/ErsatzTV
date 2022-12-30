@@ -7,8 +7,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Repositories.Caching;
-using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
@@ -19,7 +18,6 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
     private readonly IClient _client;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
@@ -28,8 +26,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IMovieRepository _movieRepository;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ICachingSearchRepository _searchRepository;
 
     public MovieFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -39,9 +35,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
-        ISearchIndex searchIndex,
-        ICachingSearchRepository searchRepository,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
@@ -64,9 +57,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _movieRepository = movieRepository;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localMetadataProvider = localMetadataProvider;
-        _searchIndex = searchIndex;
-        _searchRepository = searchRepository;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _libraryRepository = libraryRepository;
         _mediaItemRepository = mediaItemRepository;
         _mediator = mediator;
@@ -107,7 +97,12 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
                 decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
                 await _mediator.Publish(
-                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                    new ScannerProgressUpdate(
+                        libraryPath.LibraryId,
+                        null,
+                        progressMin + percentCompletion * progressSpread,
+                        Array.Empty<int>(),
+                        Array.Empty<int>()),
                     cancellationToken);
 
                 string movieFolder = folderQueue.Dequeue();
@@ -123,6 +118,11 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                             e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
 
+                string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
+                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
+                    .Filter(f => f.Path == movieFolder)
+                    .HeadOrNone();
+
                 if (allFiles.Count == 0)
                 {
                     foreach (string subdirectory in _localFileSystem.ListSubdirectories(movieFolder)
@@ -132,13 +132,14 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                         folderQueue.Enqueue(subdirectory);
                     }
 
+                    // store etag for now-empty folders
+                    if (knownFolder.IsSome)
+                    {
+                        await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
+                    }
+
                     continue;
                 }
-
-                string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
-                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                    .Filter(f => f.Path == movieFolder)
-                    .HeadOrNone();
 
                 bool etagMatches = await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag; 
                 if (etagMatches)
@@ -159,7 +160,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                         "UPDATE: Etag has changed for folder {Folder}",
                         movieFolder);
                 }
-                
+
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     // TODO: figure out how to rebuild playlists
@@ -181,12 +182,14 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
-                            await _searchIndex.RebuildItems(
-                                _searchRepository,
-                                _fallbackMetadataProvider,
-                                new List<int> { result.Item.Id });
-
-                            _searchIndex.Commit();
+                            await _mediator.Publish(
+                                new ScannerProgressUpdate(
+                                    libraryPath.LibraryId,
+                                    null,
+                                    null,
+                                    new[] { result.Item.Id },
+                                    Array.Empty<int>()),
+                                cancellationToken);
                         }
 
                         await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
@@ -200,13 +203,17 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                 {
                     _logger.LogInformation("Flagging missing movie at {Path}", path);
                     List<int> ids = await FlagFileNotFound(libraryPath, path);
-                    await _searchIndex.RebuildItems(_searchRepository, _fallbackMetadataProvider, ids);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(libraryPath.LibraryId, null, null, ids.ToArray(), Array.Empty<int>()),
+                        cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(ids);
+                    await _mediator.Publish(
+                        new ScannerProgressUpdate(libraryPath.LibraryId, null, null, Array.Empty<int>(), ids.ToArray()),
+                        cancellationToken);
                 }
             }
 
@@ -216,10 +223,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             return new ScanCanceled();
-        }
-        finally
-        {
-            _searchIndex.Commit();
         }
     }
 

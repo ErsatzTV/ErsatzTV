@@ -1,7 +1,4 @@
 using System.CommandLine;
-using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Scanner.Application.MediaSources;
 using ErsatzTV.Scanner.Application.Plex;
 using Microsoft.Extensions.DependencyInjection;
@@ -105,13 +102,6 @@ public class Worker : IHostedService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
 
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
-        IConfigElementRepository configElementRepository =
-            scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
-        ISearchIndex searchIndex = scope.ServiceProvider.GetRequiredService<ISearchIndex>();
-
-        await searchIndex.Initialize(localFileSystem, configElementRepository);
 
         if (localLibraryId is not null)
         {

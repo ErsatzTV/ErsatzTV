@@ -378,6 +378,7 @@ public class Startup
         AddChannel<IEmbyBackgroundServiceRequest>(services);
         AddChannel<IFFmpegWorkerRequest>(services);
         AddChannel<ISubtitleWorkerRequest>(services);
+        AddChannel<ISearchIndexBackgroundServiceRequest>(services);
 
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
@@ -492,6 +493,7 @@ public class Startup
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
+        services.AddHostedService<SearchIndexService>();
     }
 
     private void AddChannel<TMessageType>(IServiceCollection services)

@@ -164,7 +164,7 @@ public sealed class SearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public Task<Unit> RemoveItems(List<int> ids)
+    public Task<Unit> RemoveItems(IEnumerable<int> ids)
     {
         foreach (int id in ids)
         {
@@ -191,7 +191,7 @@ public sealed class SearchIndex : ISearchIndex
             return new SearchResult(new List<SearchItem>(), 0);
         }
 
-        using var reader = DirectoryReader.Open(_directory);
+        using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
         using var analyzer = new StandardAnalyzer(AppLuceneVersion);
@@ -255,7 +255,7 @@ public sealed class SearchIndex : ISearchIndex
     public async Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        List<int> itemIds)
+        IEnumerable<int> itemIds)
     {
         foreach (int id in itemIds)
         {
