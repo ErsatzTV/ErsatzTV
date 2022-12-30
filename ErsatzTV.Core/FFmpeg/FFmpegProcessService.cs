@@ -64,39 +64,6 @@ public class FFmpegProcessService
             .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
     }
 
-    public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
-    {
-        Process process = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
-            .WithThreads(1)
-            .WithQuiet()
-            .WithInput(inputFile)
-            .WithOutputFormat("apng", outputFile)
-            .Build();
-
-        return Cli.Wrap(process.StartInfo.FileName)
-            .WithArguments(process.StartInfo.ArgumentList)
-            .WithValidation(CommandResultValidation.None)
-            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
-            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
-    }
-
-    public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile)
-    {
-        Process process = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
-            .WithThreads(1)
-            .WithQuiet()
-            .WithInput(inputFile)
-            .WithMap($"0:{streamIndex}")
-            .WithOutputFormat("apng", outputFile)
-            .Build();
-
-        return Cli.Wrap(process.StartInfo.FileName)
-            .WithArguments(process.StartInfo.ArgumentList)
-            .WithValidation(CommandResultValidation.None)
-            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
-            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
-    }
-
     public async Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
         string ffprobePath,

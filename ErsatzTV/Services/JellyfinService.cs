@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
 namespace ErsatzTV.Services;
@@ -58,11 +59,6 @@ public class JellyfinService : BackgroundService
                             break;
                         case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
                             requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
-                            break;
-                        case SynchronizeJellyfinCollections synchronizeJellyfinCollections:
-                            requestTask = SynchronizeJellyfinCollections(
-                                synchronizeJellyfinCollections,
-                                cancellationToken);
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
@@ -159,6 +155,7 @@ public class JellyfinService : BackgroundService
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
 
         Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
@@ -167,21 +164,10 @@ public class JellyfinService : BackgroundService
                 "Unable to synchronize jellyfin library {LibraryId}: {Error}",
                 request.JellyfinLibraryId,
                 error.Value));
-    }
-
-    private async Task SynchronizeJellyfinCollections(
-        SynchronizeJellyfinCollections request,
-        CancellationToken cancellationToken)
-    {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
-        result.BiIter(
-            _ => _logger.LogDebug("Done synchronizing jellyfin collections"),
-            error => _logger.LogWarning(
-                "Unable to synchronize jellyfin collections for source {MediaSourceId}: {Error}",
-                request.JellyfinMediaSourceId,
-                error.Value));
+        
+        if (entityLocker.IsLibraryLocked(request.JellyfinLibraryId))
+        {
+            entityLocker.UnlockLibrary(request.JellyfinLibraryId);
+        }
     }
 }

@@ -77,7 +77,6 @@
       <PackageReference Include="Serilog" Version="2.12.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
-      <PackageReference Include="Serilog.Sinks.SQLite" Version="6.0.1" />
       <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
       <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
       <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
@@ -94,6 +93,7 @@
       <ProjectReference Include="..\ErsatzTV.Application\ErsatzTV.Application.csproj" />
       <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
       <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
+      <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />
     </ItemGroup>
 
     <ItemGroup>

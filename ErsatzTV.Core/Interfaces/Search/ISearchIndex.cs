@@ -16,14 +16,14 @@ public interface ISearchIndex : IDisposable
     Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        List<int> itemIds);
+        IEnumerable<int> itemIds);
 
     Task<Unit> UpdateItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         List<MediaItem> items);
 
-    Task<Unit> RemoveItems(List<int> ids);
+    Task<Unit> RemoveItems(IEnumerable<int> ids);
     SearchResult Search(IClient client, string query, int skip, int limit, string searchField = "");
     void Commit();
 }

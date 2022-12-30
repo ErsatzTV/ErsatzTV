@@ -164,7 +164,7 @@ public sealed class SearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public Task<Unit> RemoveItems(List<int> ids)
+    public Task<Unit> RemoveItems(IEnumerable<int> ids)
     {
         foreach (int id in ids)
         {
@@ -255,7 +255,7 @@ public sealed class SearchIndex : ISearchIndex
     public async Task<Unit> RebuildItems(
         ICachingSearchRepository searchRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
-        List<int> itemIds)
+        IEnumerable<int> itemIds)
     {
         foreach (int id in itemIds)
         {

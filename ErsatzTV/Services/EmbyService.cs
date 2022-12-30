@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
 namespace ErsatzTV.Services;
@@ -58,9 +59,6 @@ public class EmbyService : BackgroundService
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
-                        case SynchronizeEmbyCollections synchronizeEmbyCollections:
-                            requestTask = SynchronizeEmbyCollections(synchronizeEmbyCollections, cancellationToken);
-                            break;
                     }
 
                     await requestTask;
@@ -132,6 +130,7 @@ public class EmbyService : BackgroundService
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
 
         Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
@@ -140,21 +139,10 @@ public class EmbyService : BackgroundService
                 "Unable to synchronize emby library {LibraryId}: {Error}",
                 request.EmbyLibraryId,
                 error.Value));
-    }
-
-    private async Task SynchronizeEmbyCollections(
-        SynchronizeEmbyCollections request,
-        CancellationToken cancellationToken)
-    {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
-        result.BiIter(
-            _ => _logger.LogDebug("Done synchronizing emby collections"),
-            error => _logger.LogWarning(
-                "Unable to synchronize emby collections for source {MediaSourceId}: {Error}",
-                request.EmbyMediaSourceId,
-                error.Value));
+        
+        if (entityLocker.IsLibraryLocked(request.EmbyLibraryId))
+        {
+            entityLocker.UnlockLibrary(request.EmbyLibraryId);
+        }
     }
 }
