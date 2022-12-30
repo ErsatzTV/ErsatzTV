@@ -98,6 +98,8 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Resources\background.png" />
+      <EmbeddedResource Include="Resources\Fonts\OPTIKabel-Heavy.otf" />
+      <EmbeddedResource Include="Resources\Fonts\Roboto-Regular.ttf" />
       <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.js" />
       <EmbeddedResource Include="Resources\Scripts\_episode.js" />
       <EmbeddedResource Include="Resources\Scripts\_movie.js" />
@@ -105,10 +107,10 @@
       <EmbeddedResource Include="Resources\song_background_2.png" />
       <EmbeddedResource Include="Resources\song_background_3.png" />
       <EmbeddedResource Include="Resources\ErsatzTV.png" />
-      <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
-      <EmbeddedResource Include="Resources\OPTIKabel-Heavy.otf" />
       <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
       <EmbeddedResource Include="Resources\Templates\_default.ass.sbntxt" />
+      <EmbeddedResource Include="Resources\Templates\_ArtistTitle_LeftMiddle.sbntxt" />
+      <EmbeddedResource Include="Resources\Templates\_ArtistTitleAlbum_CenterTop.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>
