@@ -37,10 +37,10 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
             hardwareAccelerationMode,
             vaapiDriver,
             vaapiDevice);
-        
+
         return hardwareAccelerationMode switch
         {
-            HardwareAccelerationMode.Nvenc => new NvidiaPipelineBuilder(
+            HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -50,7 +50,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
-            HardwareAccelerationMode.Vaapi => new VaapiPipelineBuilder(
+            HardwareAccelerationMode.Vaapi when capabilities is not NoHardwareCapabilities => new VaapiPipelineBuilder(
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -91,7 +91,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
             _ => new SoftwarePipelineBuilder(
-                hardwareAccelerationMode,
+                HardwareAccelerationMode.None,
                 videoInputFile,
                 audioInputFile,
                 watermarkInputFile,
