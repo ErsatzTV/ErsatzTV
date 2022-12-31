@@ -443,7 +443,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     }
 
     public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
-        _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
+        _ffmpegProcessService.WrapSegmenter(ffmpegPath, channel);
 
     public async Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
     {

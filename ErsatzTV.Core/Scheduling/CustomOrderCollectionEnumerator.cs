@@ -5,7 +5,6 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
 {
-    private readonly Collection _collection;
     private readonly IList<MediaItem> _sortedMediaItems;
 
     public CustomOrderCollectionEnumerator(
@@ -13,8 +12,6 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state)
     {
-        _collection = collection;
-
         // TODO: this will break if we allow shows and seasons
         _sortedMediaItems = collection.CollectionItems
             .OrderBy(ci => ci.CustomIndex)

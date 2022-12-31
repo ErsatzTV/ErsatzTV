@@ -40,11 +40,11 @@ public class FFmpegProcessService
         _logger = logger;
     }
 
-    public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
+    public Command WrapSegmenter(string ffmpegPath, Channel channel)
     {
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
 
-        Process process = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
+        Process process = new FFmpegProcessBuilder(ffmpegPath)
             .WithThreads(1)
             .WithQuiet()
             .WithFormatFlags(playbackSettings.FormatFlags)
@@ -130,7 +130,7 @@ public class FFmpegProcessService
                 false,
                 Option<int>.None);
 
-            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
