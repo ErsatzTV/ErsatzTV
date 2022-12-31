@@ -4,14 +4,20 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MetadataRepository : IMetadataRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<MetadataRepository> _logger;
 
-    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<MetadataRepository> logger)
+    {
+        _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<bool> RemoveActor(Actor actor)
     {
@@ -483,6 +489,11 @@ public class MetadataRepository : IMetadataRepository
 
     public async Task<bool> UpdateSubtitles(Metadata metadata, List<Subtitle> subtitles)
     {
+        _logger.LogDebug(
+            "Updating {Count} subtitles; metadata is {Metadata}",
+            subtitles.Count,
+            metadata.GetType().Name);
+        
         int metadataId = metadata.Id;
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -508,6 +519,10 @@ public class MetadataRepository : IMetadataRepository
             _ => None
         };
 
+        _logger.LogDebug(
+            "Existing metadata is {Metadata}",
+            await maybeMetadata.Map(m => m.GetType().Name).IfNoneAsync("[none]"));
+
         foreach (Metadata existing in maybeMetadata)
         {
             var toAdd = subtitles.Filter(s => existing.Subtitles.All(es => es.StreamIndex != s.StreamIndex)).ToList();
@@ -515,6 +530,12 @@ public class MetadataRepository : IMetadataRepository
                 .ToList();
             var toUpdate = subtitles.Except(toAdd).ToList();
 
+            _logger.LogDebug(
+                "Subtitles to add: {ToAdd}, to remove: {ToRemove}, to update: {ToUpdate}",
+                toAdd.Count,
+                toRemove.Count,
+                toUpdate.Count);
+            
             if (toAdd.Any() || toRemove.Any() || toUpdate.Any())
             {
                 // add
@@ -538,14 +559,20 @@ public class MetadataRepository : IMetadataRepository
                     existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
                 }
 
-                return await dbContext.SaveChangesAsync() > 0;
+                int count = await dbContext.SaveChangesAsync();
+
+                _logger.LogDebug("Subtitles update changed {Count} records in the db", count);
+
+                return count > 0;
             }
 
             // nothing to do
+            _logger.LogDebug("Subtitle update requires no database changes");
             return true;
         }
 
         // no metadata
+        _logger.LogDebug("Subtitle update failure due to missing metadata");
         return false;
     }
 
