@@ -153,8 +153,7 @@ public class FFmpegProcessService
                     videoStream,
                     None,
                     videoPath,
-                    None,
-                    playbackSettings.VideoFormat)
+                    None)
                 .WithOutputFormat("apng", outputFile)
                 .Build();
 

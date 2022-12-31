@@ -146,7 +146,6 @@ internal class FFmpegProcessBuilder
         bool boxBlur)
     {
         _complexFilterBuilder = _complexFilterBuilder
-            .WithInputCodec(codec)
             .WithInputPixelFormat(pixelFormat)
             .WithBoxBlur(boxBlur);
 
@@ -223,11 +222,8 @@ internal class FFmpegProcessBuilder
         MediaStream videoStream,
         Option<MediaStream> maybeAudioStream,
         string videoPath,
-        Option<string> audioPath,
-        FFmpegProfileVideoFormat videoFormat)
+        Option<string> audioPath)
     {
-        _complexFilterBuilder = _complexFilterBuilder.WithVideoFormat(videoFormat);
-
         int videoStreamIndex = videoStream.Index;
         Option<int> maybeIndex = maybeAudioStream.Map(ms => ms.Index);
 
