@@ -5,14 +5,16 @@ using System.Text.RegularExpressions;
 using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class LocalStatisticsProvider : ILocalStatisticsProvider
 {

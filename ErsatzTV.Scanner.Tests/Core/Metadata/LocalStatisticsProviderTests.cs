@@ -2,13 +2,13 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
-namespace ErsatzTV.Core.Tests.Metadata;
+namespace ErsatzTV.Scanner.Tests.Core.Metadata;
 
 [TestFixture]
 public class LocalStatisticsProviderTests
@@ -25,7 +25,19 @@ public class LocalStatisticsProviderTests
             new Mock<ILogger<LocalStatisticsProvider>>().Object);
 
         var input = new LocalStatisticsProvider.FFprobe(
-            new LocalStatisticsProvider.FFprobeFormat("123.45", null),
+            new LocalStatisticsProvider.FFprobeFormat(
+                "123.45",
+                new LocalStatisticsProvider.FFprobeTags(
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty)),
             new List<LocalStatisticsProvider.FFprobeStream>(),
             new List<LocalStatisticsProvider.FFprobeChapter>());
 

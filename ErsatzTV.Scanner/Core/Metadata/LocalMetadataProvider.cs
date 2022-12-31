@@ -1,13 +1,16 @@
 ﻿using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Metadata.Nfo;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class LocalMetadataProvider : ILocalMetadataProvider
 {
@@ -81,12 +84,12 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
         foreach (ShowMetadata metadata in maybeMetadata)
         {
-            metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+            metadata.SortTitle = SortTitle.GetSortTitle(metadata.Title);
             return metadata;
         }
 
         ShowMetadata fallbackMetadata = _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder);
-        fallbackMetadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(fallbackMetadata.Title);
+        fallbackMetadata.SortTitle = SortTitle.GetSortTitle(fallbackMetadata.Title);
         return fallbackMetadata;
     }
 
@@ -101,12 +104,12 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
         foreach (ArtistMetadata metadata in maybeMetadata)
         {
-            metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+            metadata.SortTitle = SortTitle.GetSortTitle(metadata.Title);
             return metadata;
         }
 
         ArtistMetadata fallbackMetadata = _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder);
-        fallbackMetadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(fallbackMetadata.Title);
+        fallbackMetadata.SortTitle = SortTitle.GetSortTitle(fallbackMetadata.Title);
         return fallbackMetadata;
     }
 
@@ -384,7 +387,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         foreach (EpisodeMetadata metadata in toAdd)
         {
             metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
             metadata.EpisodeId = episode.Id;
             metadata.Episode = episode;
@@ -415,7 +418,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 existing.ReleaseDate = metadata.ReleaseDate;
                 existing.Year = metadata.Year;
                 existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                    ? SortTitle.GetSortTitle(metadata.Title)
                     : metadata.SortTitle;
 
                 updated = await UpdateMetadataCollections(
@@ -515,7 +518,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.ReleaseDate = metadata.ReleaseDate;
             existing.Year = metadata.Year;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
 
             bool updated = await UpdateMetadataCollections(
@@ -590,7 +593,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.MovieId = movie.Id;
         movie.MovieMetadata = new List<MovieMetadata> { metadata };
@@ -620,7 +623,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.ReleaseDate = metadata.ReleaseDate;
             existing.Year = metadata.Year;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
 
             bool updated = await UpdateMetadataCollections(
@@ -655,7 +658,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.ShowId = show.Id;
         show.ShowMetadata = new List<ShowMetadata> { metadata };
@@ -680,7 +683,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.DateUpdated = metadata.DateUpdated;
             existing.MetadataKind = metadata.MetadataKind;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
 
             var updated = false;
@@ -749,7 +752,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.ArtistId = artist.Id;
         artist.ArtistMetadata = new List<ArtistMetadata> { metadata };
@@ -778,7 +781,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.OriginalTitle = metadata.OriginalTitle;
             existing.ReleaseDate = metadata.ReleaseDate;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
 
             bool updated = await UpdateMetadataCollections(
@@ -815,7 +818,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.MusicVideoId = musicVideo.Id;
         musicVideo.MusicVideoMetadata = new List<MusicVideoMetadata> { metadata };
@@ -845,7 +848,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.ReleaseDate = metadata.ReleaseDate;
             existing.Year = metadata.Year;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
             existing.OriginalTitle = metadata.OriginalTitle;
 
@@ -921,7 +924,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.OtherVideoId = otherVideo.Id;
         otherVideo.OtherVideoMetadata = new List<OtherVideoMetadata> { metadata };
@@ -949,7 +952,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             existing.DateUpdated = metadata.DateUpdated;
             existing.MetadataKind = metadata.MetadataKind;
             existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                ? SortTitle.GetSortTitle(metadata.Title)
                 : metadata.SortTitle;
             existing.OriginalTitle = metadata.OriginalTitle;
 
@@ -965,7 +968,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
 
         metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            ? SortTitle.GetSortTitle(metadata.Title)
             : metadata.SortTitle;
         metadata.SongId = song.Id;
         song.SongMetadata = new List<SongMetadata> { metadata };
@@ -1087,7 +1090,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     DateAdded = dateAdded,
                     DateUpdated = dateUpdated,
                     Title = nfo.Title,
-                    SortTitle = _fallbackMetadataProvider.GetSortTitle(nfo.Title),
+                    SortTitle = SortTitle.GetSortTitle(nfo.Title),
                     EpisodeNumber = nfo.Episode,
                     Year = GetYear(0, nfo.Aired),
                     ReleaseDate = GetAired(0, nfo.Aired),
@@ -1300,7 +1303,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         Func<T, Tag, Task<bool>> addTag,
         Func<T, Studio, Task<bool>> addStudio,
         Func<T, Actor, Task<bool>> addActor)
-        where T : Domain.Metadata
+        where T : ErsatzTV.Core.Domain.Metadata
     {
         var updated = false;
 

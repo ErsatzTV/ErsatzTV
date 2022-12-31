@@ -1,8 +1,9 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Metadata;
+namespace ErsatzTV.Scanner.Core.Interfaces.Metadata;
 
-public interface IMusicVideoFolderScanner
+public interface IOtherVideoFolderScanner
 {
     Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,

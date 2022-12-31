@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bugsnag;
 using CliWrap;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
@@ -20,6 +21,7 @@ using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Runtime;
+using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -28,7 +30,7 @@ using NUnit.Framework;
 using Serilog;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
-namespace ErsatzTV.Core.Tests.FFmpeg;
+namespace ErsatzTV.Scanner.Tests.Core.FFmpeg;
 
 [TestFixture]
 [Explicit]
@@ -316,13 +318,13 @@ public class TranscodingTests
             .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
             .ToList();
 
-        var subtitles = new List<Domain.Subtitle>();
+        var subtitles = new List<ErsatzTV.Core.Domain.Subtitle>();
 
         if (subtitle != Subtitle.None)
         {
             foreach (MediaStream stream in subtitleStreams)
             {
-                var s = new Domain.Subtitle
+                var s = new ErsatzTV.Core.Domain.Subtitle
                 {
                     Codec = stream.Codec,
                     Default = stream.Default,
@@ -800,8 +802,8 @@ public class TranscodingTests
             string preferredAudioTitle) =>
             Optional(version.MediaVersion.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
 
-        public Task<Option<Domain.Subtitle>> SelectSubtitleStream(
-            List<Domain.Subtitle> subtitles,
+        public Task<Option<ErsatzTV.Core.Domain.Subtitle>> SelectSubtitleStream(
+            List<ErsatzTV.Core.Domain.Subtitle> subtitles,
             Channel channel,
             string preferredSubtitleLanguage,
             ChannelSubtitleMode subtitleMode) =>

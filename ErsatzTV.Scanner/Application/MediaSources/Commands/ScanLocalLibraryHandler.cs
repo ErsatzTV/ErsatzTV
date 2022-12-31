@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 

@@ -410,9 +410,7 @@ public class Startup
         services.AddScoped<IMetadataRepository, MetadataRepository>();
         services.AddScoped<IArtworkRepository, ArtworkRepository>();
         services.AddScoped<IFFmpegLocator, FFmpegLocator>();
-        services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
         services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
-        services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();

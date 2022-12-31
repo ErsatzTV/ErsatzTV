@@ -1,13 +1,14 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Metadata;
+namespace ErsatzTV.Scanner.Core.Interfaces.Metadata;
 
-public interface ITelevisionFolderScanner
+public interface ISongFolderScanner
 {
     Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
-        string ffmpegPath,
         string ffprobePath,
+        string ffmpegPath,
         decimal progressMin,
         decimal progressMax,
         CancellationToken cancellationToken);

@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
-using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Emby.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -13,17 +13,14 @@ namespace ErsatzTV.Infrastructure.Emby;
 public class EmbyApiClient : IEmbyApiClient
 {
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<EmbyApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
 
     public EmbyApiClient(
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IMemoryCache memoryCache,
         IEmbyPathReplacementService embyPathReplacementService,
         ILogger<EmbyApiClient> logger)
     {
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _memoryCache = memoryCache;
         _embyPathReplacementService = embyPathReplacementService;
         _logger = logger;
@@ -375,7 +372,7 @@ public class EmbyApiClient : IEmbyApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = item.Name,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+            SortTitle = SortTitle.GetSortTitle(item.Name),
             Plot = item.Overview,
             Year = item.ProductionYear,
             Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
@@ -500,7 +497,7 @@ public class EmbyApiClient : IEmbyApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = item.Name,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+            SortTitle = SortTitle.GetSortTitle(item.Name),
             Plot = item.Overview,
             Year = item.ProductionYear,
             Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
@@ -572,7 +569,7 @@ public class EmbyApiClient : IEmbyApiClient
             {
                 MetadataKind = MetadataKind.External,
                 Title = item.Name,
-                SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                SortTitle = SortTitle.GetSortTitle(item.Name),
                 Year = item.ProductionYear,
                 DateAdded = dateAdded,
                 Artwork = new List<Artwork>(),
@@ -691,7 +688,7 @@ public class EmbyApiClient : IEmbyApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = item.Name,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+            SortTitle = SortTitle.GetSortTitle(item.Name),
             Plot = item.Overview,
             Year = item.ProductionYear,
             DateAdded = dateAdded,
