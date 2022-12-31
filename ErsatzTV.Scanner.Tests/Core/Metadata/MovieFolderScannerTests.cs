@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
 using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;

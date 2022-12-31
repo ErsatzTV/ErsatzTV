@@ -13,7 +13,6 @@ public interface IMetadataRepository
     Task<bool> Update(Domain.Metadata metadata);
     Task<bool> Add(Domain.Metadata metadata);
     Task<bool> UpdateLocalStatistics(MediaItem mediaItem, MediaVersion incoming, bool updateVersion = true);
-    Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming);
     Task<Unit> UpdateArtworkPath(Artwork artwork);
     Task<Unit> AddArtwork(Domain.Metadata metadata, Artwork artwork);
     Task<Unit> RemoveArtwork(Domain.Metadata metadata, ArtworkKind artworkKind);

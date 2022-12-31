@@ -97,7 +97,6 @@ public static class CommandGenerator
 
         foreach (IPipelineStep step in sortedSteps)
         {
-            
             arguments.AddRange(step.OutputOptions);
         }
 

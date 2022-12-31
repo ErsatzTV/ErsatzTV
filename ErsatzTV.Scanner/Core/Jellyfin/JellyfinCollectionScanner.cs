@@ -58,10 +58,6 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
                     _logger.LogDebug("Jellyfin collection {Name} is new", collection.Name);
                     await _jellyfinCollectionRepository.AddCollection(collection);
                 }
-                else
-                {
-                    _logger.LogDebug("Updating Jellyfin collection {Name}", collection.Name);
-                }
 
                 await SyncCollectionItems(address, apiKey, mediaSourceId, collection);
 

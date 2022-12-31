@@ -40,30 +40,6 @@ public class FFmpegProcessService
         _logger = logger;
     }
 
-    public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
-    {
-        FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
-
-        Process process = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
-            .WithThreads(1)
-            .WithQuiet()
-            .WithFormatFlags(playbackSettings.FormatFlags)
-            .WithRealtimeOutput(true)
-            .WithInput($"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter")
-            .WithMap("0")
-            .WithCopyCodec()
-            .WithMetadata(channel, None)
-            .WithFormat("mpegts")
-            .WithPipe()
-            .Build();
-
-        return Cli.Wrap(process.StartInfo.FileName)
-            .WithArguments(process.StartInfo.ArgumentList)
-            .WithValidation(CommandResultValidation.None)
-            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
-            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
-    }
-
     public async Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
         string ffprobePath,
@@ -130,11 +106,11 @@ public class FFmpegProcessService
                 false,
                 Option<int>.None);
 
-            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
-                .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur)
+                .WithSongInput(videoPath, videoStream.PixelFormat, boxBlur)
                 .WithWatermark(watermarkOptions, None, channel.FFmpegProfile.Resolution)
                 .WithSubtitleFile(subtitleFile);
 
@@ -153,8 +129,7 @@ public class FFmpegProcessService
                     videoStream,
                     None,
                     videoPath,
-                    None,
-                    playbackSettings.VideoFormat)
+                    None)
                 .WithOutputFormat("apng", outputFile)
                 .Build();
 

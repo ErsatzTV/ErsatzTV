@@ -442,8 +442,37 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
     }
 
-    public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
-        _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
+    public async Task<Command> WrapSegmenter(
+        string ffmpegPath,
+        bool saveReports,
+        Channel channel,
+        string scheme,
+        string host)
+    {
+        var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
+
+        var concatInputFile = new ConcatInputFile(
+            $"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter",
+            resolution);
+
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            HardwareAccelerationMode.None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            ffmpegPath);
+
+        FFmpegPipeline pipeline = pipelineBuilder.WrapSegmenter(
+            concatInputFile,
+            FFmpegState.Concat(saveReports, channel.Name));
+
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
+    }
 
     public async Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
     {

@@ -30,7 +30,7 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
             .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
             .Map(result => result.IfNone(false));
 
-        Command process = _ffmpegProcessService.WrapSegmenter(
+        Command process = await _ffmpegProcessService.WrapSegmenter(
             ffmpegPath,
             saveReports,
             channel,

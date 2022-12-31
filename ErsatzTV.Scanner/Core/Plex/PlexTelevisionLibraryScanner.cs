@@ -6,6 +6,8 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
+using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
