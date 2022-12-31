@@ -40,8 +40,7 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler,
     {
         var arguments = new List<string>
         {
-            "scan",
-            "--local", request.LibraryId.ToString()
+            "scan-local", request.LibraryId.ToString()
         };
 
         if (request.ForceScan)

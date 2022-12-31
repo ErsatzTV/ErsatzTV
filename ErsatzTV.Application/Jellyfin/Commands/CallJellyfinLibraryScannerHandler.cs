@@ -42,8 +42,7 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler,
     {
         var arguments = new List<string>
         {
-            "scan",
-            "--jellyfin", request.JellyfinLibraryId.ToString()
+            "scan-jellyfin", request.JellyfinLibraryId.ToString()
         };
 
         if (request.ForceScan)

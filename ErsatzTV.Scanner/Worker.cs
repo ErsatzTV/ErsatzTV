@@ -57,90 +57,111 @@ public class Worker : BackgroundService
             Arity = ArgumentArity.Zero
         };
         
-        var localOption = new System.CommandLine.Option<int?>(
-            name: "--local",
-            description: "The local library id to scan");
-
-        var plexOption = new System.CommandLine.Option<int?>(
-            name: "--plex",
-            description: "The plex library id to scan");
-
-        var embyOption = new System.CommandLine.Option<int?>(
-            name: "--emby",
-            description: "The emby library id to scan");
-
-        var jellyfinOption = new System.CommandLine.Option<int?>(
-            name: "--jellyfin",
-            description: "The jellyfin library id to scan");
+        var libraryIdArgument = new Argument<int>("library-id", "The library id to scan");
         
-        var scanCommand = new Command("scan", "Scan a library");
+        var scanLocalCommand = new Command("scan-local", "Scan a local library");
+        scanLocalCommand.AddArgument(libraryIdArgument);
+        scanLocalCommand.AddOption(forceOption);
 
-        scanCommand.AddOption(forceOption);
-        scanCommand.AddOption(deepOption);
-        scanCommand.AddOption(localOption);
-        scanCommand.AddOption(plexOption);
-        scanCommand.AddOption(embyOption);
-        scanCommand.AddOption(jellyfinOption);
+        var scanPlexCommand = new Command("scan-plex", "Scan a Plex library");
+        scanPlexCommand.AddArgument(libraryIdArgument);
+        scanPlexCommand.AddOption(forceOption);
+        scanPlexCommand.AddOption(deepOption);
 
-        scanCommand.SetHandler(
+        var scanEmbyCommand = new Command("scan-emby", "Scan an Emby library");
+        scanEmbyCommand.AddArgument(libraryIdArgument);
+        scanEmbyCommand.AddOption(forceOption);
+
+        var scanJellyfinCommand = new Command("scan-jellyfin", "Scan a Jellyfin library");
+        scanJellyfinCommand.AddArgument(libraryIdArgument);
+        scanJellyfinCommand.AddOption(forceOption);
+        
+        scanLocalCommand.SetHandler(
             async context =>
             {
-                bool force = context.ParseResult.GetValueForOption(forceOption);
-                bool deep = context.ParseResult.GetValueForOption(deepOption);
-                int? local = context.ParseResult.GetValueForOption(localOption);
-                int? plex = context.ParseResult.GetValueForOption(plexOption);
-                int? emby = context.ParseResult.GetValueForOption(embyOption);
-                int? jellyfin = context.ParseResult.GetValueForOption(jellyfinOption);
-                CancellationToken token = context.GetCancellationToken();
-                await HandleScan(force, deep, local, plex, emby, jellyfin, token);
+                if (IsScanningEnabled())
+                {
+                    bool force = context.ParseResult.GetValueForOption(forceOption);
+                    int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new ScanLocalLibrary(libraryId, force);
+                    await mediator.Send(scan, context.GetCancellationToken());
+                }
+            });
+        
+        scanPlexCommand.SetHandler(
+            async context =>
+            {
+                if (IsScanningEnabled())
+                {
+                    bool force = context.ParseResult.GetValueForOption(forceOption);
+                    bool deep = context.ParseResult.GetValueForOption(deepOption);
+                    int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new SynchronizePlexLibraryById(libraryId, force, deep);
+                    await mediator.Send(scan, context.GetCancellationToken());
+                }
+            });
+        
+        scanEmbyCommand.SetHandler(
+            async context =>
+            {
+                if (IsScanningEnabled())
+                {
+                    bool force = context.ParseResult.GetValueForOption(forceOption);
+                    int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new SynchronizeEmbyLibraryById(libraryId, force);
+                    await mediator.Send(scan, context.GetCancellationToken());
+                }
+            });
+        
+        scanJellyfinCommand.SetHandler(
+            async context =>
+            {
+                if (IsScanningEnabled())
+                {
+                    bool force = context.ParseResult.GetValueForOption(forceOption);
+                    int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new SynchronizeJellyfinLibraryById(libraryId, force);
+                    await mediator.Send(scan, context.GetCancellationToken());
+                }
             });
 
         var rootCommand = new RootCommand();
-        rootCommand.AddCommand(scanCommand);
+        rootCommand.AddCommand(scanLocalCommand);
+        rootCommand.AddCommand(scanPlexCommand);
+        rootCommand.AddCommand(scanEmbyCommand);
+        rootCommand.AddCommand(scanJellyfinCommand);
 
         return rootCommand;
     }
 
-    private async Task HandleScan(
-        bool forceOption,
-        bool deepOption,
-        int? localLibraryId,
-        int? plexLibraryId,
-        int? embyLibraryId,
-        int? jellyfinLibraryId,
-        CancellationToken cancellationToken)
-    {
 #if !DEBUG_NO_SYNC
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-
-        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        if (localLibraryId is not null)
-        {
-            var scanLocalLibrary = new ScanLocalLibrary(localLibraryId.Value, forceOption);
-            await mediator.Send(scanLocalLibrary, cancellationToken);
-        }
-        else if (plexLibraryId is not null)
-        {
-            var scanPlexLibrary = new SynchronizePlexLibraryById(plexLibraryId.Value, forceOption, deepOption);
-            await mediator.Send(scanPlexLibrary, cancellationToken);
-        }
-        else if (embyLibraryId is not null)
-        {
-            var scanEmbyLibrary = new SynchronizeEmbyLibraryById(embyLibraryId.Value, forceOption);
-            await mediator.Send(scanEmbyLibrary, cancellationToken);
-        }
-        else if (jellyfinLibraryId is not null)
-        {
-            var scanJellyfinLibrary = new SynchronizeJellyfinLibraryById(jellyfinLibraryId.Value, forceOption);
-            await mediator.Send(scanJellyfinLibrary, cancellationToken);
-        }
-        else
-        {
-            _logger.LogError("No library ids were specified; nothing to scan.");
-        }
-#else
-        _logger.LogInformation("Library scanning is disabled via DEBUG_NO_SYNC...");
-#endif
+    private bool IsScanningEnabled()
+    {
+        // don't want to flag the logger as unused (only used when sync is disabled)
+        ILogger<Worker> _ = _logger;
+        return true;
     }
+#else
+    private bool IsScanningEnabled()
+    {
+        _logger.LogInformation("Scanning is disabled via DEBUG_NO_SYNC");
+        return false;
+    }
+#endif
 }
