@@ -213,6 +213,31 @@ public class PipelineBuilderBaseTests
         command.Should().Be(
             "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
+    
+    [Test]
+    public void Wrap_Segmenter_Test()
+    {
+        var resolution = new FrameSize(1920, 1080);
+        var concatInputFile = new ConcatInputFile("http://localhost:8080/iptv/channel/1.m3u8?mode=segmenter", resolution);
+
+        var builder = new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.None,
+            None,
+            None,
+            None,
+            None,
+            "",
+            "",
+            _logger);
+        FFmpegPipeline result = builder.WrapSegmenter(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
+
+        result.PipelineSteps.Should().HaveCountGreaterThan(0);
+
+        string command = PrintCommand(None, None, None, concatInputFile, result);
+
+        command.Should().Be(
+            "-nostdin -threads 1 -hide_banner -loglevel error -nostats -fflags +genpts+discardcorrupt+igndts -re -i http://localhost:8080/iptv/channel/1.m3u8?mode=segmenter -map 0 -c copy -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts pipe:1");
+    }
 
     [Test]
     public void HlsDirect_Test()

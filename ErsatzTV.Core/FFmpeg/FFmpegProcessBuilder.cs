@@ -43,50 +43,6 @@ internal class FFmpegProcessBuilder
         return this;
     }
 
-    public FFmpegProcessBuilder WithRealtimeOutput(bool realtimeOutput)
-    {
-        if (realtimeOutput)
-        {
-            if (!_arguments.Contains("-re"))
-            {
-                _arguments.Add("-re");
-            }
-        }
-        else
-        {
-            _arguments.RemoveAll(s => s == "-re");
-        }
-
-        return this;
-    }
-
-    public FFmpegProcessBuilder WithPipe()
-    {
-        _arguments.Add("pipe:1");
-        return this;
-    }
-
-    public FFmpegProcessBuilder WithInput(string input)
-    {
-        _arguments.Add("-i");
-        _arguments.Add(input);
-        return this;
-    }
-
-    public FFmpegProcessBuilder WithMap(string map)
-    {
-        _arguments.Add("-map");
-        _arguments.Add(map);
-        return this;
-    }
-
-    public FFmpegProcessBuilder WithCopyCodec()
-    {
-        _arguments.Add("-c");
-        _arguments.Add("copy");
-        return this;
-    }
-
     public FFmpegProcessBuilder WithWatermark(
         Option<WatermarkOptions> watermarkOptions,
         Option<List<FadePoint>> maybeFadePoints,
@@ -141,7 +97,6 @@ internal class FFmpegProcessBuilder
 
     public FFmpegProcessBuilder WithSongInput(
         string videoPath,
-        Option<string> codec,
         Option<string> pixelFormat,
         bool boxBlur)
     {
@@ -155,43 +110,10 @@ internal class FFmpegProcessBuilder
         return this;
     }
 
-    public FFmpegProcessBuilder WithMetadata(Channel channel, Option<MediaStream> maybeAudioStream)
-    {
-        if (channel.StreamingMode == StreamingMode.TransportStream)
-        {
-            _arguments.AddRange(new[] { "-map_metadata", "-1" });
-        }
-
-        foreach (MediaStream audioStream in maybeAudioStream)
-        {
-            if (!string.IsNullOrWhiteSpace(audioStream.Language))
-            {
-                _arguments.AddRange(new[] { "-metadata:s:a:0", $"language={audioStream.Language}" });
-            }
-        }
-
-        var arguments = new List<string>
-        {
-            "-metadata", "service_provider=\"ErsatzTV\"",
-            "-metadata", $"service_name=\"{channel.Name}\""
-        };
-
-        _arguments.AddRange(arguments);
-
-        return this;
-    }
-
     public FFmpegProcessBuilder WithFormatFlags(IEnumerable<string> formatFlags)
     {
         _arguments.Add("-fflags");
         _arguments.Add(string.Join(string.Empty, formatFlags));
-        return this;
-    }
-
-    public FFmpegProcessBuilder WithFormat(string format)
-    {
-        _arguments.Add("-f");
-        _arguments.Add($"{format}");
         return this;
     }
 

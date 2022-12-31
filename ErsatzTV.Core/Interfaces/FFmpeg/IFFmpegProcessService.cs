@@ -53,7 +53,7 @@ public interface IFFmpegProcessService
 
     Task<Command> ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
-    Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Task<Command> WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
     Task<Command> ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
 
