@@ -429,7 +429,7 @@ public class TranscodingTests
         {
             // validate pipeline matches expectations (at a high level)
 
-            NewComplexFilter complexFilter = pipeline.PipelineSteps.OfType<NewComplexFilter>().First();
+            ComplexFilter complexFilter = pipeline.PipelineSteps.OfType<ComplexFilter>().First();
             FilterChain filterChain = complexFilter.FilterChain;
 
             if (profileBitDepth == FFmpegProfileBitDepth.TenBit)

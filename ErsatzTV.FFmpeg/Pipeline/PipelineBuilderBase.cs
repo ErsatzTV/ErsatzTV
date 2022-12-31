@@ -180,7 +180,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetMetadataAudioLanguage(ffmpegState, pipelineSteps);
         SetOutputFormat(ffmpegState, desiredState, pipelineSteps, videoStream);
 
-        var complexFilter = new NewComplexFilter(
+        var complexFilter = new ComplexFilter(
             _videoInputFile,
             _audioInputFile,
             _watermarkInputFile,
