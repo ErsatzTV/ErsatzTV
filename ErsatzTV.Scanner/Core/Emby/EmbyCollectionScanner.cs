@@ -55,10 +55,6 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
                     _logger.LogDebug("Emby collection {Name} is new", collection.Name);
                     await _embyCollectionRepository.AddCollection(collection);
                 }
-                else
-                {
-                    _logger.LogDebug("Emby collection {Name} has been updated", collection.Name);
-                }
 
                 await SyncCollectionItems(address, apiKey, collection);
 
