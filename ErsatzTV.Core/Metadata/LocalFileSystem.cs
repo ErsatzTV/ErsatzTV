@@ -94,7 +94,7 @@ public class LocalFileSystem : ILocalFileSystem
 
     public IEnumerable<string> ListFiles(string folder, string searchPattern)
     {
-        if (Directory.Exists(folder))
+        if (folder is not null && Directory.Exists(folder))
         {
             try
             {

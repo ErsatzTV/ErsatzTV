@@ -1,14 +1,16 @@
 ﻿using System.Collections.Immutable;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
-using MediatR;
+using ErsatzTV.Core.Metadata;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLibrary, TMovie, TEtag>
     where TConnectionParameters : MediaServerConnectionParameters
@@ -236,7 +238,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
         string existingEtag = string.Empty;
         MediaItemState existingState = MediaItemState.Normal;
-        if (existingMovies.TryGetValue(MediaServerItemId(incoming), out TEtag existingEntry))
+        if (existingMovies.TryGetValue(MediaServerItemId(incoming), out TEtag? existingEntry))
         {
             existingEtag = existingEntry.Etag;
             existingState = existingEntry.State;

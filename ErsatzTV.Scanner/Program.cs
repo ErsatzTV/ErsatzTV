@@ -30,6 +30,7 @@ using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Scanner.Core.Emby;
 using ErsatzTV.Scanner.Core.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Jellyfin;
 using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Core.Plex;

@@ -1,14 +1,14 @@
 ﻿using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Metadata;
-using ErsatzTV.Core.Tests.Fakes;
+using ErsatzTV.Scanner.Core.Metadata;
+using ErsatzTV.Scanner.Tests.Core.Fakes;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
-namespace ErsatzTV.Core.Tests.Metadata;
+namespace ErsatzTV.Scanner.Tests.Core.Metadata;
 
 [TestFixture]
 public class LocalSubtitlesProviderTests

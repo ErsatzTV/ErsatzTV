@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Metadata;
+namespace ErsatzTV.Scanner.Core.Interfaces.Metadata;
 
 public interface ILocalSubtitlesProvider
 {

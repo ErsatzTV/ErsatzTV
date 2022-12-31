@@ -3,9 +3,10 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 {
@@ -50,12 +51,12 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             return false;
         }
 
-        Option<Domain.Metadata> maybeMetadata = mediaItem switch
+        Option<ErsatzTV.Core.Domain.Metadata> maybeMetadata = mediaItem switch
         {
-            Episode e => e.EpisodeMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            Movie m => m.MovieMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            MusicVideo mv => mv.MusicVideoMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            OtherVideo ov => ov.OtherVideoMetadata.OfType<Domain.Metadata>().HeadOrNone(),
+            Episode e => e.EpisodeMetadata.OfType<ErsatzTV.Core.Domain.Metadata>().HeadOrNone(),
+            Movie m => m.MovieMetadata.OfType<ErsatzTV.Core.Domain.Metadata>().HeadOrNone(),
+            MusicVideo mv => mv.MusicVideoMetadata.OfType<ErsatzTV.Core.Domain.Metadata>().HeadOrNone(),
+            OtherVideo ov => ov.OtherVideoMetadata.OfType<ErsatzTV.Core.Domain.Metadata>().HeadOrNone(),
             _ => None
         };
 
@@ -67,7 +68,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                     .GetType().Name);
         }
 
-        foreach (Domain.Metadata metadata in maybeMetadata)
+        foreach (ErsatzTV.Core.Domain.Metadata metadata in maybeMetadata)
         {
             MediaVersion version = mediaItem.GetHeadVersion();
             var subtitleStreams = version.Streams
@@ -96,7 +97,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
     {
         var result = new List<Subtitle>();
 
-        string folder = Path.GetDirectoryName(mediaItemPath);
+        string? folder = Path.GetDirectoryName(mediaItemPath);
         string withoutExtension = Path.GetFileNameWithoutExtension(mediaItemPath);
         foreach (string file in _localFileSystem.ListFiles(folder, $"{withoutExtension}*"))
         {
