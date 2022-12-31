@@ -1,25 +1,18 @@
-﻿using System.Xml.Serialization;
+﻿namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
-
-[XmlRoot("artist")]
 public class ArtistNfo
 {
-    [XmlElement("name")]
-    public string Name { get; set; }
+    public ArtistNfo()
+    {
+        Genres = new List<string>();
+        Styles = new List<string>();
+        Moods = new List<string>();
+    }
 
-    [XmlElement("disambiguation")]
-    public string Disambiguation { get; set; }
-
-    [XmlElement("genre")]
-    public List<string> Genres { get; set; }
-
-    [XmlElement("style")]
-    public List<string> Styles { get; set; }
-
-    [XmlElement("mood")]
-    public List<string> Moods { get; set; }
-
-    [XmlElement("biography")]
-    public string Biography { get; set; }
+    public string? Name { get; set; }
+    public string? Disambiguation { get; set; }
+    public List<string> Genres { get; }
+    public List<string> Styles { get; }
+    public List<string> Moods { get; }
+    public string? Biography { get; set; }
 }

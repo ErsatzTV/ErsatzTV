@@ -3,7 +3,7 @@ using ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 namespace ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
 
-public interface ITvShowNfoReader
+public interface IShowNfoReader
 {
-    Task<Either<BaseError, TvShowNfo>> ReadFromFile(string fileName);
+    Task<Either<BaseError, ShowNfo>> ReadFromFile(string fileName);
 }

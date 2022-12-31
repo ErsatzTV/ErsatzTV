@@ -34,7 +34,7 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
 
     internal async Task<Either<BaseError, MusicVideoNfo>> Read(Stream input)
     {
-        MusicVideoNfo nfo = null;
+        MusicVideoNfo? nfo = null;
 
         try
         {
@@ -50,13 +50,7 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "musicvideo":
-                                nfo = new MusicVideoNfo
-                                {
-                                    Artists = new List<string>(),
-                                    Genres = new List<string>(),
-                                    Tags = new List<string>(),
-                                    Studios = new List<string>()
-                                };
+                                nfo = new MusicVideoNfo();
                                 break;
                             case "artist":
                                 await ReadStringContent(

@@ -127,7 +127,7 @@ public class Program
                     services.AddScoped<IMovieNfoReader, MovieNfoReader>();
                     services.AddScoped<IArtistNfoReader, ArtistNfoReader>();
                     services.AddScoped<IMusicVideoNfoReader, MusicVideoNfoReader>();
-                    services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
+                    services.AddScoped<IShowNfoReader, ShowNfoReader>();
                     services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
                     services.AddScoped<IFFmpegPngService, FFmpegPngService>();
                     services.AddScoped<IRuntimeInfo, RuntimeInfo>();

@@ -1,15 +1,8 @@
-﻿using System.Xml.Serialization;
-
-namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
+﻿namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 public class UniqueIdNfo
 {
-    [XmlAttribute("default")]
     public bool Default { get; set; }
-
-    [XmlAttribute("type")]
-    public string Type { get; set; }
-
-    [XmlText]
-    public string Guid { get; set; }
+    public string? Type { get; set; }
+    public string? Guid { get; set; }
 }

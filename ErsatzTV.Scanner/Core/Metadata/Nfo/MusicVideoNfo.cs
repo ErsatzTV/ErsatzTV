@@ -1,37 +1,23 @@
-﻿using System.Xml.Serialization;
+﻿namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
-
-[XmlRoot("musicvideo")]
 public class MusicVideoNfo
 {
-    [XmlElement("artist")]
-    public List<string> Artists { get; set; }
+    public MusicVideoNfo()
+    {
+        Artists = new List<string>();
+        Genres = new List<string>();
+        Tags = new List<string>();
+        Studios = new List<string>();
+    }
 
-    [XmlElement("title")]
-    public string Title { get; set; }
-
-    [XmlElement("album")]
-    public string Album { get; set; }
-
-    [XmlElement("plot")]
-    public string Plot { get; set; }
-
-    [XmlElement("track")]
+    public List<string> Artists { get; }
+    public string? Title { get; set; }
+    public string? Album { get; set; }
+    public string? Plot { get; set; }
     public int Track { get; set; }
-
-    [XmlElement("aired")]
     public Option<DateTime> Aired { get; set; }
-
-    [XmlElement("year")]
     public int Year { get; set; }
-
-    [XmlElement("genre")]
-    public List<string> Genres { get; set; }
-
-    [XmlElement("tag")]
-    public List<string> Tags { get; set; }
-
-    [XmlElement("studio")]
-    public List<string> Studios { get; set; }
+    public List<string> Genres { get; }
+    public List<string> Tags { get; }
+    public List<string> Studios { get; }
 }

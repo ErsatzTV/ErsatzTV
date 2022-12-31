@@ -34,7 +34,7 @@ public class ArtistNfoReader : NfoReader<ArtistNfo>, IArtistNfoReader
 
     internal async Task<Either<BaseError, ArtistNfo>> Read(Stream input)
     {
-        ArtistNfo nfo = null;
+        ArtistNfo? nfo = null;
 
         try
         {
@@ -50,12 +50,7 @@ public class ArtistNfoReader : NfoReader<ArtistNfo>, IArtistNfoReader
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "artist":
-                                nfo = new ArtistNfo
-                                {
-                                    Genres = new List<string>(),
-                                    Styles = new List<string>(),
-                                    Moods = new List<string>()
-                                };
+                                nfo = new ArtistNfo();
                                 break;
                             case "name":
                                 await ReadStringContent(reader, nfo, (artist, name) => artist.Name = name);

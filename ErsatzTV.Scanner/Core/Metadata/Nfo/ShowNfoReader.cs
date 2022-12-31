@@ -8,22 +8,22 @@ using Microsoft.IO;
 
 namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-public class TvShowNfoReader : NfoReader<TvShowNfo>, ITvShowNfoReader
+public class ShowNfoReader : NfoReader<ShowNfo>, IShowNfoReader
 {
     private readonly IClient _client;
-    private readonly ILogger<TvShowNfoReader> _logger;
+    private readonly ILogger<ShowNfoReader> _logger;
 
-    public TvShowNfoReader(
+    public ShowNfoReader(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         IClient client,
-        ILogger<TvShowNfoReader> logger)
+        ILogger<ShowNfoReader> logger)
         : base(recyclableMemoryStreamManager, logger)
     {
         _client = client;
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, TvShowNfo>> ReadFromFile(string fileName)
+    public async Task<Either<BaseError, ShowNfo>> ReadFromFile(string fileName)
     {
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
@@ -32,9 +32,9 @@ public class TvShowNfoReader : NfoReader<TvShowNfo>, ITvShowNfoReader
         }
     }
 
-    internal async Task<Either<BaseError, TvShowNfo>> Read(Stream input)
+    internal async Task<Either<BaseError, ShowNfo>> Read(Stream input)
     {
-        TvShowNfo nfo = null;
+        ShowNfo? nfo = null;
 
         try
         {
@@ -50,14 +50,7 @@ public class TvShowNfoReader : NfoReader<TvShowNfo>, ITvShowNfoReader
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "tvshow":
-                                nfo = new TvShowNfo
-                                {
-                                    Genres = new List<string>(),
-                                    Tags = new List<string>(),
-                                    Studios = new List<string>(),
-                                    Actors = new List<ActorNfo>(),
-                                    UniqueIds = new List<UniqueIdNfo>()
-                                };
+                                nfo = new ShowNfo();
                                 break;
                             case "title":
                                 await ReadStringContent(reader, nfo, (show, title) => show.Title = title);

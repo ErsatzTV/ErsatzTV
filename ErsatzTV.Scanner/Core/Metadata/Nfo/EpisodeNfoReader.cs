@@ -8,7 +8,7 @@ using Microsoft.IO;
 
 namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
+public class EpisodeNfoReader : NfoReader<EpisodeNfo>, IEpisodeNfoReader
 {
     private readonly IClient _client;
     private readonly ILogger<EpisodeNfoReader> _logger;
@@ -23,7 +23,7 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, List<TvShowEpisodeNfo>>> ReadFromFile(string fileName)
+    public async Task<Either<BaseError, List<EpisodeNfo>>> ReadFromFile(string fileName)
     {
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
@@ -32,14 +32,14 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
         }
     }
 
-    internal async Task<Either<BaseError, List<TvShowEpisodeNfo>>> Read(Stream input)
+    internal async Task<Either<BaseError, List<EpisodeNfo>>> Read(Stream input)
     {
-        var result = new List<TvShowEpisodeNfo>();
+        var result = new List<EpisodeNfo>();
 
         try
         {
             using var reader = XmlReader.Create(input, Settings);
-            TvShowEpisodeNfo nfo = null;
+            EpisodeNfo? nfo = null;
 
             while (await reader.ReadAsync())
             {
@@ -49,13 +49,7 @@ public class EpisodeNfoReader : NfoReader<TvShowEpisodeNfo>, IEpisodeNfoReader
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "episodedetails":
-                                nfo = new TvShowEpisodeNfo
-                                {
-                                    UniqueIds = new List<UniqueIdNfo>(),
-                                    Actors = new List<ActorNfo>(),
-                                    Writers = new List<string>(),
-                                    Directors = new List<string>()
-                                };
+                                nfo = new EpisodeNfo();
                                 // immediately add so we have something to return if we encounter invalid characters
                                 result.Add(nfo);
                                 break;

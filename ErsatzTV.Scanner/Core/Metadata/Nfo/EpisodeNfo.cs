@@ -1,29 +1,22 @@
 ﻿namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-public class OtherVideoNfo
+public class EpisodeNfo
 {
-    public OtherVideoNfo()
+    public EpisodeNfo()
     {
-        Genres = new List<string>();
-        Tags = new List<string>();
-        Studios = new List<string>();
         Actors = new List<ActorNfo>();
         Writers = new List<string>();
         Directors = new List<string>();
         UniqueIds = new List<UniqueIdNfo>();
     }
 
+    public string? ShowTitle { get; set; }
     public string? Title { get; set; }
-    public string? SortTitle { get; set; }
-    public string? Outline { get; set; }
-    public int Year { get; set; }
+    public int Episode { get; set; }
+    public int Season { get; set; }
     public string? ContentRating { get; set; }
-    public Option<DateTime> Premiered { get; set; }
+    public Option<DateTime> Aired { get; set; }
     public string? Plot { get; set; }
-    public string? Tagline { get; set; }
-    public List<string> Genres { get; }
-    public List<string> Tags { get; }
-    public List<string> Studios { get; }
     public List<ActorNfo> Actors { get; }
     public List<string> Writers { get; }
     public List<string> Directors { get; }

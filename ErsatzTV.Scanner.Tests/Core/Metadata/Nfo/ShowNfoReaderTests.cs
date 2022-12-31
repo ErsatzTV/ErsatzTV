@@ -11,15 +11,15 @@ using NUnit.Framework;
 namespace ErsatzTV.Scanner.Tests.Core.Metadata.Nfo;
 
 [TestFixture]
-public class TvShowNfoReaderTests
+public class ShowNfoReaderTests
 {
     [SetUp]
-    public void SetUp() => _tvShowNfoReader = new TvShowNfoReader(
+    public void SetUp() => _showNfoReader = new ShowNfoReader(
         new RecyclableMemoryStreamManager(),
         new Mock<IClient>().Object,
-        new NullLogger<TvShowNfoReader>());
+        new NullLogger<ShowNfoReader>());
 
-    private TvShowNfoReader _tvShowNfoReader;
+    private ShowNfoReader _showNfoReader;
 
     [Test]
     public async Task ParsingNfo_Should_Return_Error()
@@ -27,7 +27,7 @@ public class TvShowNfoReaderTests
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsLeft.Should().BeTrue();
     }
@@ -37,7 +37,7 @@ public class TvShowNfoReaderTests
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<tvshow></tvshow>"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
     }
@@ -50,7 +50,7 @@ public class TvShowNfoReaderTests
                 @"<tvshow></tvshow>
 https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
     }
@@ -134,11 +134,11 @@ https://www.themoviedb.org/movie/11-star-wars"));
     <dateadded>2021-03-12 06:15:51</dateadded>
 </tvshow>"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
 
-        foreach (TvShowNfo nfo in result.RightToSeq())
+        foreach (ShowNfo nfo in result.RightToSeq())
         {
             nfo.Title.Should().Be("WandaVision");
             nfo.Year.Should().Be(2021);
@@ -182,10 +182,10 @@ https://www.themoviedb.org/movie/11-star-wars"));
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"<tvshow><outline>Test Outline</outline></tvshow>"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (TvShowNfo nfo in result.RightToSeq())
+        foreach (ShowNfo nfo in result.RightToSeq())
         {
             nfo.Outline.Should().Be("Test Outline");
         }
@@ -197,10 +197,10 @@ https://www.themoviedb.org/movie/11-star-wars"));
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"<tvshow><tagline>Test Tagline</tagline></tvshow>"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (TvShowNfo nfo in result.RightToSeq())
+        foreach (ShowNfo nfo in result.RightToSeq())
         {
             nfo.Tagline.Should().Be("Test Tagline");
         }
@@ -211,10 +211,10 @@ https://www.themoviedb.org/movie/11-star-wars"));
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<tvshow><tag>Test Tag</tag></tvshow>"));
 
-        Either<BaseError, TvShowNfo> result = await _tvShowNfoReader.Read(stream);
+        Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (TvShowNfo nfo in result.RightToSeq())
+        foreach (ShowNfo nfo in result.RightToSeq())
         {
             nfo.Tags.Should().BeEquivalentTo(new List<string> { "Test Tag" });
         }

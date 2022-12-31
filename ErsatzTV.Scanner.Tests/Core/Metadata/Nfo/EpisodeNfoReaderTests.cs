@@ -46,10 +46,10 @@ public class EpisodeNfoReaderTests
 <episodedetails>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
         }
@@ -75,10 +75,10 @@ public class EpisodeNfoReaderTests
   <season>1</season>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(2);
             list.All(nfo => nfo.ShowTitle == "show").Should().BeTrue();
@@ -100,10 +100,10 @@ public class EpisodeNfoReaderTests
   <uniqueid default=""false"" type=""imdb"">tt54321</uniqueid>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
             list[0].UniqueIds.Count.Should().Be(2);
@@ -123,10 +123,10 @@ public class EpisodeNfoReaderTests
   <mpaa/>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
             list[0].ContentRating.Should().BeNullOrEmpty();
@@ -147,10 +147,10 @@ public class EpisodeNfoReaderTests
   <mpaa>US:Something / US:SomethingElse</mpaa>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(2);
             list.Count(nfo => nfo.ContentRating == "US:Something").Should().Be(1);
@@ -169,10 +169,10 @@ public class EpisodeNfoReaderTests
   <plot/>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
             list[0].Plot.Should().BeNullOrEmpty();
@@ -190,10 +190,10 @@ public class EpisodeNfoReaderTests
   <plot>Some Plot</plot>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
             list[0].Plot.Should().Be("Some Plot");
@@ -220,10 +220,10 @@ public class EpisodeNfoReaderTests
   </actor>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
             list[0].Actors.Count.Should().Be(2);
@@ -249,10 +249,10 @@ public class EpisodeNfoReaderTests
   <credits>Writer 3</credits>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(2);
             list.Count(nfo => nfo.Writers.Count == 1 && nfo.Writers[0] == "Writer 1").Should().Be(1);
@@ -276,10 +276,10 @@ public class EpisodeNfoReaderTests
   <director>Director 3</director>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(2);
             list.Count(nfo => nfo.Directors.Count == 1 && nfo.Directors[0] == "Director 1").Should().Be(1);
@@ -380,11 +380,11 @@ public class EpisodeNfoReaderTests
     <dateadded>2021-02-02 11:57:44</dateadded>
 </episodedetails>"));
 
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
 
-        foreach (TvShowEpisodeNfo nfo in result.RightToSeq().Flatten())
+        foreach (EpisodeNfo nfo in result.RightToSeq().Flatten())
         {
             nfo.ShowTitle.Should().Be("WandaVision");
             nfo.Title.Should().Be("Filmed Before a Live Studio Audience");
@@ -434,10 +434,10 @@ public class EpisodeNfoReaderTests
             "Resources",
             "Nfo",
             "EpisodeInvalidCharacters.nfo");
-        Either<BaseError, List<TvShowEpisodeNfo>> result = await _episodeNfoReader.ReadFromFile(sourceFile);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.ReadFromFile(sourceFile);
 
         result.IsRight.Should().BeTrue();
-        foreach (List<TvShowEpisodeNfo> list in result.RightToSeq())
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
             list.Count.Should().Be(1);
             list[0].Title.Should().Be("Test Title");

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
@@ -7,24 +6,9 @@ using Microsoft.IO;
 
 namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-public abstract class NfoReader<T>
+public abstract class NfoReader<T> : NfoReaderBase
 {
-    private static readonly byte[] Buffer = new byte[8 * 1024 * 1024];
-    private static readonly Regex Pattern = new(@"[\p{C}-[\r\n\t]]+");
-
-    protected static readonly XmlReaderSettings Settings =
-        new()
-        {
-            Async = true,
-            ConformanceLevel = ConformanceLevel.Fragment,
-            ValidationType = ValidationType.None,
-            CheckCharacters = false,
-            IgnoreProcessingInstructions = true,
-            IgnoreComments = true
-        };
-
     private readonly ILogger _logger;
-
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
     protected NfoReader(RecyclableMemoryStreamManager recyclableMemoryStreamManager, ILogger logger)
@@ -47,11 +31,11 @@ public abstract class NfoReader<T>
         return ms;
     }
 
-    protected async Task ReadStringContent(XmlReader reader, T nfo, Action<T, string> action)
+    protected async Task ReadStringContent(XmlReader reader, T? nfo, Action<T, string> action)
     {
         try
         {
-            if (nfo != null)
+            if (nfo is not null)
             {
                 string result = await reader.ReadElementContentAsStringAsync();
                 action(nfo, result);
@@ -63,11 +47,11 @@ public abstract class NfoReader<T>
         }
     }
 
-    protected async Task ReadIntContent(XmlReader reader, T nfo, Action<T, int> action)
+    protected async Task ReadIntContent(XmlReader reader, T? nfo, Action<T, int> action)
     {
         try
         {
-            if (nfo != null && int.TryParse(await reader.ReadElementContentAsStringAsync(), out int result))
+            if (nfo is not null && int.TryParse(await reader.ReadElementContentAsStringAsync(), out int result))
             {
                 action(nfo, result);
             }
@@ -78,11 +62,11 @@ public abstract class NfoReader<T>
         }
     }
 
-    protected async Task ReadDateTimeContent(XmlReader reader, T nfo, Action<T, DateTime> action)
+    protected async Task ReadDateTimeContent(XmlReader reader, T? nfo, Action<T, DateTime> action)
     {
         try
         {
-            if (nfo != null && DateTime.TryParse(await reader.ReadElementContentAsStringAsync(), out DateTime result))
+            if (nfo is not null && DateTime.TryParse(await reader.ReadElementContentAsStringAsync(), out DateTime result))
             {
                 action(nfo, result);
             }
@@ -93,35 +77,35 @@ public abstract class NfoReader<T>
         }
     }
 
-    protected void ReadActor(XmlReader reader, T nfo, Action<T, ActorNfo> action)
+    protected void ReadActor(XmlReader reader, T? nfo, Action<T, ActorNfo> action)
     {
         try
         {
-            if (nfo != null)
+            if (nfo is not null)
             {
                 var actor = new ActorNfo();
                 var element = (XElement)XNode.ReadFrom(reader);
 
-                XElement name = element.Element("name");
-                if (name != null)
+                XElement? name = element.Element("name");
+                if (name is not null)
                 {
                     actor.Name = name.Value;
                 }
 
-                XElement role = element.Element("role");
-                if (role != null)
+                XElement? role = element.Element("role");
+                if (role is not null)
                 {
                     actor.Role = role.Value;
                 }
 
-                XElement order = element.Element("order");
-                if (order != null && int.TryParse(order.Value, out int orderValue))
+                XElement? order = element.Element("order");
+                if (order is not null && int.TryParse(order.Value, out int orderValue))
                 {
                     actor.Order = orderValue;
                 }
 
-                XElement thumb = element.Element("thumb");
-                if (thumb != null)
+                XElement? thumb = element.Element("thumb");
+                if (thumb is not null)
                 {
                     actor.Thumb = thumb.Value;
                 }
@@ -135,11 +119,11 @@ public abstract class NfoReader<T>
         }
     }
 
-    protected async Task ReadUniqueId(XmlReader reader, T nfo, Action<T, UniqueIdNfo> action)
+    protected async Task ReadUniqueId(XmlReader reader, T? nfo, Action<T, UniqueIdNfo> action)
     {
         try
         {
-            if (nfo != null)
+            if (nfo is not null)
             {
                 var uniqueId = new UniqueIdNfo();
                 reader.MoveToAttribute("default");

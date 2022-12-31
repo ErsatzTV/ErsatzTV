@@ -34,7 +34,7 @@ public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
 
     internal async Task<Either<BaseError, MovieNfo>> Read(Stream input)
     {
-        MovieNfo nfo = null;
+        MovieNfo? nfo = null;
 
         try
         {
@@ -50,16 +50,7 @@ public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "movie":
-                                nfo = new MovieNfo
-                                {
-                                    Genres = new List<string>(),
-                                    Tags = new List<string>(),
-                                    Studios = new List<string>(),
-                                    Actors = new List<ActorNfo>(),
-                                    Writers = new List<string>(),
-                                    Directors = new List<string>(),
-                                    UniqueIds = new List<UniqueIdNfo>()
-                                };
+                                nfo = new MovieNfo();
                                 break;
                             case "title":
                                 await ReadStringContent(reader, nfo, (movie, title) => movie.Title = title);

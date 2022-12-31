@@ -31,7 +31,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISongRepository _songRepository;
     private readonly ITelevisionRepository _televisionRepository;
-    private readonly ITvShowNfoReader _tvShowNfoReader;
+    private readonly IShowNfoReader _showNfoReader;
 
     public LocalMetadataProvider(
         IMetadataRepository metadataRepository,
@@ -47,7 +47,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         IEpisodeNfoReader episodeNfoReader,
         IArtistNfoReader artistNfoReader,
         IMusicVideoNfoReader musicVideoNfoReader,
-        ITvShowNfoReader tvShowNfoReader,
+        IShowNfoReader showNfoReader,
         IOtherVideoNfoReader otherVideoNfoReader,
         ILocalStatisticsProvider localStatisticsProvider,
         IClient client,
@@ -66,7 +66,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _episodeNfoReader = episodeNfoReader;
         _artistNfoReader = artistNfoReader;
         _musicVideoNfoReader = musicVideoNfoReader;
-        _tvShowNfoReader = tvShowNfoReader;
+        _showNfoReader = showNfoReader;
         _otherVideoNfoReader = otherVideoNfoReader;
         _localStatisticsProvider = localStatisticsProvider;
         _client = client;
@@ -980,7 +980,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            Either<BaseError, TvShowNfo> maybeNfo = await _tvShowNfoReader.ReadFromFile(nfoFileName);
+            Either<BaseError, ShowNfo> maybeNfo = await _showNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -989,7 +989,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     error.ToString());
             }
 
-            foreach (TvShowNfo nfo in maybeNfo.RightToSeq())
+            foreach (ShowNfo nfo in maybeNfo.RightToSeq())
             {
                 DateTime dateAdded = DateTime.UtcNow;
                 DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
@@ -1069,7 +1069,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     {
         try
         {
-            Either<BaseError, List<TvShowEpisodeNfo>> maybeNfo = await _episodeNfoReader.ReadFromFile(nfoFileName);
+            Either<BaseError, List<EpisodeNfo>> maybeNfo = await _episodeNfoReader.ReadFromFile(nfoFileName);
             foreach (BaseError error in maybeNfo.LeftToSeq())
             {
                 _logger.LogInformation(
@@ -1079,7 +1079,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             }
 
             var result = new List<EpisodeMetadata>();
-            foreach (TvShowEpisodeNfo nfo in maybeNfo.RightToSeq().Flatten())
+            foreach (EpisodeNfo nfo in maybeNfo.RightToSeq().Flatten())
             {
                 DateTime dateAdded = DateTime.UtcNow;
                 DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
@@ -1172,7 +1172,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     ReleaseDate = releaseDate,
                     Plot = nfo.Plot,
                     Outline = nfo.Outline,
-                    Tagline = nfo.Tagline,
+                    // Tagline = nfo.Tagline,
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                     Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),

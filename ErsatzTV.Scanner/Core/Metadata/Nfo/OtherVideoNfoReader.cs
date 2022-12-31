@@ -34,7 +34,7 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
 
     internal async Task<Either<BaseError, OtherVideoNfo>> Read(Stream input)
     {
-        OtherVideoNfo nfo = null;
+        OtherVideoNfo? nfo = null;
 
         try
         {
@@ -50,16 +50,7 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "movie":
-                                nfo = new OtherVideoNfo
-                                {
-                                    Genres = new List<string>(),
-                                    Tags = new List<string>(),
-                                    Studios = new List<string>(),
-                                    Actors = new List<ActorNfo>(),
-                                    Writers = new List<string>(),
-                                    Directors = new List<string>(),
-                                    UniqueIds = new List<UniqueIdNfo>()
-                                };
+                                nfo = new OtherVideoNfo();
                                 break;
                             case "title":
                                 await ReadStringContent(reader, nfo, (movie, title) => movie.Title = title);
