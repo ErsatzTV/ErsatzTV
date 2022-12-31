@@ -42,8 +42,8 @@ public class CallEmbyLibraryScannerHandler : CallLibraryScannerHandler,
     {
         var arguments = new List<string>
         {
-            "--emby",
-            request.EmbyLibraryId.ToString()
+            "scan",
+            "--emby", request.EmbyLibraryId.ToString()
         };
 
         if (request.ForceScan)

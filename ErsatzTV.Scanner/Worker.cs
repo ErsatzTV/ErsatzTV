@@ -6,24 +6,38 @@ using ErsatzTV.Scanner.Application.Plex;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 namespace ErsatzTV.Scanner;
 
-public class Worker : IHostedService
+public class Worker : BackgroundService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly ILogger<Worker> _logger;
 
-    public Worker(IServiceScopeFactory serviceScopeFactory, IHostApplicationLifetime appLifetime, ILogger<Worker> logger)
+    public Worker(
+        IServiceScopeFactory serviceScopeFactory,
+        IHostApplicationLifetime appLifetime,
+        ILogger<Worker> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _appLifetime = appLifetime;
         _logger = logger;
     }
+    
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        RootCommand rootCommand = ConfigureCommandLine();
+        
+        // need to strip program name (head) from command line args
+        string[] arguments = Environment.GetCommandLineArgs().Skip(1).ToArray();
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+        await rootCommand.InvokeAsync(arguments);
+
+        _appLifetime.StopApplication();
+    }
+
+    private RootCommand ConfigureCommandLine()
     {
         var forceOption = new System.CommandLine.Option<bool>(
             name: "--force",
@@ -58,16 +72,17 @@ public class Worker : IHostedService
         var jellyfinOption = new System.CommandLine.Option<int?>(
             name: "--jellyfin",
             description: "The jellyfin library id to scan");
+        
+        var scanCommand = new Command("scan", "Scan a library");
 
-        var rootCommand = new RootCommand();
-        rootCommand.AddOption(forceOption);
-        rootCommand.AddOption(deepOption);
-        rootCommand.AddOption(localOption);
-        rootCommand.AddOption(plexOption);
-        rootCommand.AddOption(embyOption);
-        rootCommand.AddOption(jellyfinOption);
+        scanCommand.AddOption(forceOption);
+        scanCommand.AddOption(deepOption);
+        scanCommand.AddOption(localOption);
+        scanCommand.AddOption(plexOption);
+        scanCommand.AddOption(embyOption);
+        scanCommand.AddOption(jellyfinOption);
 
-        rootCommand.SetHandler(
+        scanCommand.SetHandler(
             async context =>
             {
                 bool force = context.ParseResult.GetValueForOption(forceOption);
@@ -77,21 +92,16 @@ public class Worker : IHostedService
                 int? emby = context.ParseResult.GetValueForOption(embyOption);
                 int? jellyfin = context.ParseResult.GetValueForOption(jellyfinOption);
                 CancellationToken token = context.GetCancellationToken();
-                await Handle(force, deep, local, plex, emby, jellyfin, token);
+                await HandleScan(force, deep, local, plex, emby, jellyfin, token);
             });
 
-        // need to strip program name (head) from command line args
-        await rootCommand.InvokeAsync(Environment.GetCommandLineArgs().Skip(1).ToArray());
+        var rootCommand = new RootCommand();
+        rootCommand.AddCommand(scanCommand);
 
-        _appLifetime.StopApplication();
+        return rootCommand;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    private async Task Handle(
+    private async Task HandleScan(
         bool forceOption,
         bool deepOption,
         int? localLibraryId,
@@ -127,10 +137,10 @@ public class Worker : IHostedService
         }
         else
         {
-            Log.Logger.Error("No library ids were specified; nothing to scan.");
+            _logger.LogError("No library ids were specified; nothing to scan.");
         }
 #else
-        Log.Logger.Information("Library scanning is disabled...");
+        _logger.LogInformation("Library scanning is disabled via DEBUG_NO_SYNC...");
 #endif
     }
 }
