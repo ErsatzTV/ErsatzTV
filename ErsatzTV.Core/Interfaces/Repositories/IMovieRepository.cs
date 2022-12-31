@@ -18,5 +18,4 @@ public interface IMovieRepository
     Task<bool> UpdateSortTitle(MovieMetadata movieMetadata);
     Task<bool> AddDirector(MovieMetadata metadata, Director director);
     Task<bool> AddWriter(MovieMetadata metadata, Writer writer);
-    Task<Unit> UpdatePath(int mediaFileId, string path);
 }

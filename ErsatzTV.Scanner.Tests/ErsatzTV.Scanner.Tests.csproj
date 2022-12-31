@@ -23,4 +23,16 @@
       <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="Resources\Nfo\ArtistInvalidCharacters1.nfo">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Resources\Nfo\ArtistInvalidCharacters2.nfo">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Resources\Nfo\EpisodeInvalidCharacters.nfo">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>

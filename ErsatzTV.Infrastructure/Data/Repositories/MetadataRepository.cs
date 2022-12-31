@@ -239,20 +239,6 @@ public class MetadataRepository : IMetadataRepository
             () => Task.FromResult(false));
     }
 
-    public async Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaVersion SET
-                  DateUpdated = @DateUpdated
-                  WHERE Id = @MediaVersionId",
-            new
-            {
-                incoming.DateUpdated,
-                MediaVersionId = mediaVersionId
-            }).Map(result => result > 0);
-    }
-
     public async Task<Unit> UpdateArtworkPath(Artwork artwork)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

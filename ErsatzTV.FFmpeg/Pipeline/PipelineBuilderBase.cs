@@ -110,6 +110,31 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return new FFmpegPipeline(pipelineSteps);
     }
 
+    public FFmpegPipeline WrapSegmenter(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
+    {
+        var pipelineSteps = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new ThreadCountOption(1),
+            new HideBannerOption(),
+            new LoglevelErrorOption(),
+            new NoStatsOption(),
+            new StandardFormatFlags(),
+            new MapAllStreamsOutputOption(),
+            new EncoderCopyAll()
+        };
+
+        concatInputFile.AddOption(new RealtimeInputOption());
+
+        SetMetadataServiceProvider(ffmpegState, pipelineSteps);
+        SetMetadataServiceName(ffmpegState, pipelineSteps);
+
+        pipelineSteps.Add(new OutputFormatMpegTs(initialDiscontinuity: false));
+        pipelineSteps.Add(new PipeProtocol());
+
+        return new FFmpegPipeline(pipelineSteps);
+    }
+
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
         var pipelineSteps = new List<IPipelineStep>
@@ -180,7 +205,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetMetadataAudioLanguage(ffmpegState, pipelineSteps);
         SetOutputFormat(ffmpegState, desiredState, pipelineSteps, videoStream);
 
-        var complexFilter = new NewComplexFilter(
+        var complexFilter = new ComplexFilter(
             _videoInputFile,
             _audioInputFile,
             _watermarkInputFile,
@@ -193,7 +218,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return new FFmpegPipeline(pipelineSteps);
     }
 
-    protected Option<IDecoder> LogUnknownDecoder(
+    private Option<IDecoder> LogUnknownDecoder(
         HardwareAccelerationMode hardwareAccelerationMode,
         string videoFormat,
         string pixelFormat)
@@ -206,7 +231,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return Option<IDecoder>.None;
     }
 
-    protected Option<IEncoder> LogUnknownEncoder(HardwareAccelerationMode hardwareAccelerationMode, string videoFormat)
+    private Option<IEncoder> LogUnknownEncoder(HardwareAccelerationMode hardwareAccelerationMode, string videoFormat)
     {
         _logger.LogWarning(
             "Unable to determine video encoder for {AccelMode} - {VideoFormat}; may have playback issues",

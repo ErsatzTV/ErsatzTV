@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Jellyfin;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -12,19 +13,16 @@ namespace ErsatzTV.Infrastructure.Jellyfin;
 
 public class JellyfinApiClient : IJellyfinApiClient
 {
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILogger<JellyfinApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
 
     public JellyfinApiClient(
         IMemoryCache memoryCache,
-        IFallbackMetadataProvider fallbackMetadataProvider,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
         ILogger<JellyfinApiClient> logger)
     {
         _memoryCache = memoryCache;
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
         _logger = logger;
     }
@@ -433,7 +431,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = item.Name,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+            SortTitle = SortTitle.GetSortTitle(item.Name),
             Plot = item.Overview,
             Year = item.ProductionYear,
             Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
@@ -558,7 +556,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = item.Name,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+            SortTitle = SortTitle.GetSortTitle(item.Name),
             Plot = item.Overview,
             Year = item.ProductionYear,
             Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
@@ -630,7 +628,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             {
                 MetadataKind = MetadataKind.External,
                 Title = item.Name,
-                SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                SortTitle = SortTitle.GetSortTitle(item.Name),
                 Year = item.ProductionYear,
                 DateAdded = dateAdded,
                 Artwork = new List<Artwork>(),
@@ -773,7 +771,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = item.Name,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+            SortTitle = SortTitle.GetSortTitle(item.Name),
             Plot = item.Overview,
             Year = item.ProductionYear,
             DateAdded = dateAdded,

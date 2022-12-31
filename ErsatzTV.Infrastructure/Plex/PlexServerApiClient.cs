@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
 using Microsoft.Extensions.Logging;
@@ -12,16 +13,11 @@ namespace ErsatzTV.Infrastructure.Plex;
 
 public class PlexServerApiClient : IPlexServerApiClient
 {
-    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<PlexServerApiClient> _logger;
     private readonly PlexEtag _plexEtag;
 
-    public PlexServerApiClient(
-        IFallbackMetadataProvider fallbackMetadataProvider,
-        PlexEtag plexEtag,
-        ILogger<PlexServerApiClient> logger)
+    public PlexServerApiClient(PlexEtag plexEtag, ILogger<PlexServerApiClient> logger)
     {
-        _fallbackMetadataProvider = fallbackMetadataProvider;
         _plexEtag = plexEtag;
         _logger = logger;
     }
@@ -454,7 +450,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = response.Title,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+            SortTitle = SortTitle.GetSortTitle(response.Title),
             Plot = response.Summary,
             Year = response.Year,
             Tagline = response.Tagline,
@@ -638,7 +634,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = response.Title,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+            SortTitle = SortTitle.GetSortTitle(response.Title),
             Plot = response.Summary,
             Year = response.Year,
             Tagline = response.Tagline,
@@ -734,7 +730,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = response.Title,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+            SortTitle = SortTitle.GetSortTitle(response.Title),
             Year = response.Year,
             DateAdded = dateAdded,
             DateUpdated = lastWriteTime,
@@ -851,7 +847,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             MetadataKind = MetadataKind.External,
             Title = response.Title,
-            SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+            SortTitle = SortTitle.GetSortTitle(response.Title),
             EpisodeNumber = response.Index,
             Plot = response.Summary,
             Year = response.Year,

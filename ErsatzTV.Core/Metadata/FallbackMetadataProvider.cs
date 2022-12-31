@@ -125,36 +125,6 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
         return GetSongMetadata(path, metadata);
     }
 
-    public string GetSortTitle(string title)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            return title;
-        }
-
-        if (title.StartsWith("the ", StringComparison.OrdinalIgnoreCase))
-        {
-            return title.Substring(4);
-        }
-
-        if (title.StartsWith("a ", StringComparison.OrdinalIgnoreCase))
-        {
-            return title.Substring(2);
-        }
-
-        if (title.StartsWith("an ", StringComparison.OrdinalIgnoreCase))
-        {
-            return title.Substring(3);
-        }
-
-        if (title.StartsWith("Æ"))
-        {
-            return title.Replace("Æ", "E");
-        }
-
-        return title;
-    }
-
     private List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
     {
         var result = new List<EpisodeMetadata>();

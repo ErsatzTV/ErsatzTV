@@ -42,8 +42,7 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler,
     {
         var arguments = new List<string>
         {
-            "--plex",
-            request.PlexLibraryId.ToString()
+            "scan-plex", request.PlexLibraryId.ToString()
         };
 
         if (request.ForceScan)

@@ -219,14 +219,6 @@ public class MovieRepository : IMovieRepository
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<Unit> UpdatePath(int mediaFileId, string path)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
-            new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
-    }
-
     private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
         TvContext dbContext,
         int libraryPathId,
