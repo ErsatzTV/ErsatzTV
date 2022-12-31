@@ -1,28 +1,29 @@
 ﻿using System.Xml;
 using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 
-namespace ErsatzTV.Core.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReader
+public class TvShowNfoReader : NfoReader<TvShowNfo>, ITvShowNfoReader
 {
     private readonly IClient _client;
-    private readonly ILogger<OtherVideoNfoReader> _logger;
+    private readonly ILogger<TvShowNfoReader> _logger;
 
-    public OtherVideoNfoReader(
+    public TvShowNfoReader(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         IClient client,
-        ILogger<OtherVideoNfoReader> logger)
+        ILogger<TvShowNfoReader> logger)
         : base(recyclableMemoryStreamManager, logger)
     {
         _client = client;
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, OtherVideoNfo>> ReadFromFile(string fileName)
+    public async Task<Either<BaseError, TvShowNfo>> ReadFromFile(string fileName)
     {
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
@@ -31,9 +32,9 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
         }
     }
 
-    internal async Task<Either<BaseError, OtherVideoNfo>> Read(Stream input)
+    internal async Task<Either<BaseError, TvShowNfo>> Read(Stream input)
     {
-        OtherVideoNfo nfo = null;
+        TvShowNfo nfo = null;
 
         try
         {
@@ -48,74 +49,60 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                     case XmlNodeType.Element:
                         switch (reader.Name.ToLowerInvariant())
                         {
-                            case "movie":
-                                nfo = new OtherVideoNfo
+                            case "tvshow":
+                                nfo = new TvShowNfo
                                 {
                                     Genres = new List<string>(),
                                     Tags = new List<string>(),
                                     Studios = new List<string>(),
                                     Actors = new List<ActorNfo>(),
-                                    Writers = new List<string>(),
-                                    Directors = new List<string>(),
                                     UniqueIds = new List<UniqueIdNfo>()
                                 };
                                 break;
                             case "title":
-                                await ReadStringContent(reader, nfo, (movie, title) => movie.Title = title);
-                                break;
-                            case "sorttitle":
-                                await ReadStringContent(reader, nfo, (movie, sortTitle) => movie.SortTitle = sortTitle);
-                                break;
-                            case "outline":
-                                await ReadStringContent(reader, nfo, (movie, outline) => movie.Outline = outline);
+                                await ReadStringContent(reader, nfo, (show, title) => show.Title = title);
                                 break;
                             case "year":
-                                await ReadIntContent(reader, nfo, (movie, year) => movie.Year = year);
+                                await ReadIntContent(reader, nfo, (show, year) => show.Year = year);
+                                break;
+                            case "plot":
+                                await ReadStringContent(reader, nfo, (show, plot) => show.Plot = plot);
+                                break;
+                            case "outline":
+                                await ReadStringContent(reader, nfo, (show, outline) => show.Outline = outline);
+                                break;
+                            case "tagline":
+                                await ReadStringContent(reader, nfo, (show, tagline) => show.Tagline = tagline);
                                 break;
                             case "mpaa":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (movie, contentRating) => movie.ContentRating = contentRating);
+                                    (show, contentRating) => show.ContentRating = contentRating);
                                 break;
                             case "premiered":
-                                await ReadDateTimeContent(
-                                    reader,
-                                    nfo,
-                                    (movie, premiered) => movie.Premiered = premiered);
-                                break;
-                            case "plot":
-                                await ReadStringContent(reader, nfo, (movie, plot) => movie.Plot = plot);
+                                await ReadDateTimeContent(reader, nfo, (show, premiered) => show.Premiered = premiered);
                                 break;
                             case "genre":
-                                await ReadStringContent(reader, nfo, (movie, genre) => movie.Genres.Add(genre));
+                                await ReadStringContent(reader, nfo, (show, genre) => show.Genres.Add(genre));
                                 break;
                             case "tag":
-                                await ReadStringContent(reader, nfo, (movie, tag) => movie.Tags.Add(tag));
+                                await ReadStringContent(reader, nfo, (show, tag) => show.Tags.Add(tag));
                                 break;
                             case "studio":
-                                await ReadStringContent(reader, nfo, (movie, studio) => movie.Studios.Add(studio));
+                                await ReadStringContent(reader, nfo, (show, studio) => show.Studios.Add(studio));
                                 break;
                             case "actor":
-                                ReadActor(reader, nfo, (movie, actor) => movie.Actors.Add(actor));
-                                break;
-                            case "credits":
-                                await ReadStringContent(reader, nfo, (movie, writer) => movie.Writers.Add(writer));
-                                break;
-                            case "director":
-                                await ReadStringContent(
-                                    reader,
-                                    nfo,
-                                    (movie, director) => movie.Directors.Add(director));
+                                ReadActor(reader, nfo, (episode, actor) => episode.Actors.Add(actor));
                                 break;
                             case "uniqueid":
-                                await ReadUniqueId(reader, nfo, (movie, uniqueid) => movie.UniqueIds.Add(uniqueid));
+                                await ReadUniqueId(reader, nfo, (episode, uniqueid) => episode.UniqueIds.Add(uniqueid));
                                 break;
                         }
 
                         break;
                     case XmlNodeType.EndElement:
-                        if (reader.Name == "movie")
+                        if (reader.Name == "tvshow")
                         {
                             done = true;
                         }

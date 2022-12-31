@@ -1,11 +1,12 @@
 ﻿using System.Xml;
 using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 
-namespace ErsatzTV.Core.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 public class ArtistNfoReader : NfoReader<ArtistNfo>, IArtistNfoReader
 {

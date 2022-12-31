@@ -2,7 +2,7 @@
 using System.Text;
 using ErsatzTV.Core.Interfaces.Metadata;
 
-namespace ErsatzTV.Core.Metadata;
+namespace ErsatzTV.Scanner.Core.Metadata;
 
 public static class FolderEtag
 {

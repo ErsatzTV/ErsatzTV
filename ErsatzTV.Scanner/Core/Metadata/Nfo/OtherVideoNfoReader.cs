@@ -1,28 +1,29 @@
 ﻿using System.Xml;
 using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.Interfaces.Metadata.Nfo;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 
-namespace ErsatzTV.Core.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
-public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
+public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReader
 {
     private readonly IClient _client;
-    private readonly ILogger<MovieNfoReader> _logger;
+    private readonly ILogger<OtherVideoNfoReader> _logger;
 
-    public MovieNfoReader(
+    public OtherVideoNfoReader(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         IClient client,
-        ILogger<MovieNfoReader> logger)
+        ILogger<OtherVideoNfoReader> logger)
         : base(recyclableMemoryStreamManager, logger)
     {
         _client = client;
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, MovieNfo>> ReadFromFile(string fileName)
+    public async Task<Either<BaseError, OtherVideoNfo>> ReadFromFile(string fileName)
     {
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
@@ -31,9 +32,9 @@ public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
         }
     }
 
-    internal async Task<Either<BaseError, MovieNfo>> Read(Stream input)
+    internal async Task<Either<BaseError, OtherVideoNfo>> Read(Stream input)
     {
-        MovieNfo nfo = null;
+        OtherVideoNfo nfo = null;
 
         try
         {
@@ -49,7 +50,7 @@ public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
                         switch (reader.Name.ToLowerInvariant())
                         {
                             case "movie":
-                                nfo = new MovieNfo
+                                nfo = new OtherVideoNfo
                                 {
                                     Genres = new List<string>(),
                                     Tags = new List<string>(),

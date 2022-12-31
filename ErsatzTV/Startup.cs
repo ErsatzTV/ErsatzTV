@@ -19,7 +19,6 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
@@ -29,7 +28,6 @@ using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Core.Metadata.Nfo;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Trakt;
@@ -452,12 +450,6 @@ public class Startup
             });
         services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
         services.AddScoped<IEmbySecretStore, EmbySecretStore>();
-        services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
-        services.AddScoped<IMovieNfoReader, MovieNfoReader>();
-        services.AddScoped<IArtistNfoReader, ArtistNfoReader>();
-        services.AddScoped<IMusicVideoNfoReader, MusicVideoNfoReader>();
-        services.AddScoped<ITvShowNfoReader, TvShowNfoReader>();
-        services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
         services.AddScoped<IScriptEngine, ScriptEngine>();
 
         services.AddScoped<PlexEtag>();

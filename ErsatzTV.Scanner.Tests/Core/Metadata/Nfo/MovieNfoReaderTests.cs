@@ -1,24 +1,25 @@
 ﻿using System.Text;
 using Bugsnag;
-using ErsatzTV.Core.Metadata.Nfo;
+using ErsatzTV.Core;
+using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IO;
 using Moq;
 using NUnit.Framework;
 
-namespace ErsatzTV.Core.Tests.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Tests.Core.Metadata.Nfo;
 
 [TestFixture]
-public class OtherVideoNfoReaderTests
+public class MovieNfoReaderTests
 {
     [SetUp]
-    public void SetUp() => _otherVideoNfoReader = new OtherVideoNfoReader(
+    public void SetUp() => _movieNfoReader = new MovieNfoReader(
         new RecyclableMemoryStreamManager(),
         new Mock<IClient>().Object,
-        new NullLogger<OtherVideoNfoReader>());
+        new NullLogger<MovieNfoReader>());
 
-    private OtherVideoNfoReader _otherVideoNfoReader;
+    private MovieNfoReader _movieNfoReader;
 
     [Test]
     public async Task ParsingNfo_Should_Return_Error()
@@ -26,7 +27,7 @@ public class OtherVideoNfoReaderTests
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
 
         result.IsLeft.Should().BeTrue();
     }
@@ -36,7 +37,7 @@ public class OtherVideoNfoReaderTests
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<movie></movie>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
     }
@@ -49,7 +50,7 @@ public class OtherVideoNfoReaderTests
                 @"<movie></movie>
 https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
     }
@@ -167,11 +168,11 @@ https://www.themoviedb.org/movie/11-star-wars"));
     <dateadded>2021-03-26 11:35:50</dateadded>
 </movie>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
 
-        foreach (OtherVideoNfo nfo in result.RightToSeq())
+        foreach (MovieNfo nfo in result.RightToSeq())
         {
             nfo.Title.Should().Be("Zack Snyder's Justice League");
             nfo.SortTitle.Should().Be("Justice League 2");
@@ -226,10 +227,10 @@ https://www.themoviedb.org/movie/11-star-wars"));
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<movie><tag>Test Tag</tag></movie>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (OtherVideoNfo nfo in result.RightToSeq())
+        foreach (MovieNfo nfo in result.RightToSeq())
         {
             nfo.Tags.Should().BeEquivalentTo(new List<string> { "Test Tag" });
         }
@@ -241,10 +242,10 @@ https://www.themoviedb.org/movie/11-star-wars"));
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"<movie><outline>Test Outline</outline></movie>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
 
         result.IsRight.Should().BeTrue();
-        foreach (OtherVideoNfo nfo in result.RightToSeq())
+        foreach (MovieNfo nfo in result.RightToSeq())
         {
             nfo.Outline.Should().Be("Test Outline");
         }

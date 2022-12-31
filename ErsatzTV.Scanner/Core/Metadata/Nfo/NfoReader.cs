@@ -5,7 +5,7 @@ using System.Xml.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 
-namespace ErsatzTV.Core.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 public abstract class NfoReader<T>
 {

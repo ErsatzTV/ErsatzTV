@@ -1,13 +1,14 @@
 ﻿using System.Text;
 using Bugsnag;
-using ErsatzTV.Core.Metadata.Nfo;
+using ErsatzTV.Core;
+using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IO;
 using Moq;
 using NUnit.Framework;
 
-namespace ErsatzTV.Core.Tests.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Tests.Core.Metadata.Nfo;
 
 [TestFixture]
 public class MusicVideoNfoReaderTests

@@ -239,9 +239,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             return BaseError.New($"FFprobe at {ffprobePath} exited with code {probe.ExitCode}");
         }
 
-        FFprobe ffprobe = JsonConvert.DeserializeObject<FFprobe>(probe.StandardOutput);
-
-        if (ffprobe != null)
+        FFprobe? ffprobe = JsonConvert.DeserializeObject<FFprobe>(probe.StandardOutput);
+        if (ffprobe is not null)
         {
             const string PATTERN = @"\[SAR\s+([0-9]+:[0-9]+)\s+DAR\s+([0-9]+:[0-9]+)\]";
             Match match = Regex.Match(probe.StandardError, PATTERN);
@@ -256,9 +255,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     ffprobe.streams.Add(replacement);
                 }
             }
+
+            return ffprobe;
         }
 
-        return ffprobe;
+        return BaseError.New("Unable to deserialize ffprobe output");
     }
 
     private async Task AnalyzeDuration(string ffmpegPath, string path, MediaVersion version)

@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace ErsatzTV.Core.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 [XmlRoot("tvshow")]
 public class TvShowNfo

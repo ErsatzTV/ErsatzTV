@@ -1,9 +1,9 @@
 ﻿using System.Xml.Serialization;
 
-namespace ErsatzTV.Core.Metadata.Nfo;
+namespace ErsatzTV.Scanner.Core.Metadata.Nfo;
 
 [XmlRoot("movie")]
-public class OtherVideoNfo
+public class MovieNfo
 {
     [XmlElement("title")]
     public string Title { get; set; }
