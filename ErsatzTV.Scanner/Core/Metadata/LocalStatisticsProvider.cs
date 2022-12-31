@@ -248,11 +248,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 string sar = match.Groups[1].Value;
                 string dar = match.Groups[2].Value;
-                foreach (FFprobeStream stream in ffprobe.streams.Where(s => s.codec_type == "video").ToList())
+                foreach (FFprobeStream stream in Optional(ffprobe.streams?.Where(s => s.codec_type == "video")).Flatten())
                 {
                     FFprobeStream replacement = stream with { sample_aspect_ratio = sar, display_aspect_ratio = dar };
-                    ffprobe.streams.Remove(stream);
-                    ffprobe.streams.Add(replacement);
+                    ffprobe.streams?.Remove(stream);
+                    ffprobe.streams?.Add(replacement);
                 }
             }
 
@@ -325,7 +325,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
     internal MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
         Optional(probeOutput)
-            .Filter(json => json?.format != null && json.streams != null)
+            .Filter(json => json is { format: { }, streams: { } })
             .ToValidation<BaseError>("Unable to parse ffprobe output")
             .ToEither<FFprobe>()
             .Match(
@@ -340,7 +340,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     };
 
                     if (double.TryParse(
-                            json.format.duration,
+                            json.format?.duration,
                             NumberStyles.Number,
                             CultureInfo.InvariantCulture,
                             out double duration))
@@ -383,7 +383,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
+                    FFprobeStream? videoStream = json.streams?.FirstOrDefault(s => s.codec_type == "video");
                     if (videoStream != null)
                     {
                         version.SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.sample_aspect_ratio)
@@ -468,7 +468,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    foreach (FFprobeChapter probedChapter in json.chapters)
+                    foreach (FFprobeChapter probedChapter in Optional(json.chapters).Flatten())
                     {
                         if (double.TryParse(
                                 probedChapter.start_time,
@@ -487,7 +487,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                                 ChapterId = probedChapter.id,
                                 StartTime = TimeSpan.FromSeconds(startTime),
                                 EndTime = TimeSpan.FromSeconds(endTime),
-                                Title = probedChapter?.tags?.title
+                                Title = probedChapter.tags?.title
                             };
 
                             version.Chapters.Add(chapter);
@@ -519,60 +519,60 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     Chapters = new List<MediaChapter>()
                 });
 
-    private VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
+    private VideoScanKind ScanKindFromFieldOrder(string? fieldOrder) =>
         fieldOrder?.ToLowerInvariant() switch
         {
-            var x when x == "tt" || x == "bb" || x == "tb" || x == "bt" => VideoScanKind.Interlaced,
+            "tt" or "bb" or "tb" or "bt" => VideoScanKind.Interlaced,
             "progressive" => VideoScanKind.Progressive,
             _ => VideoScanKind.Unknown
         };
 
     // ReSharper disable InconsistentNaming
-    public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams, List<FFprobeChapter> chapters);
+    public record FFprobe(FFprobeFormat? format, List<FFprobeStream>? streams, List<FFprobeChapter>? chapters);
 
-    public record FFprobeFormat(string duration, FFprobeTags tags);
+    public record FFprobeFormat(string duration, FFprobeTags? tags);
 
     public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
     public record FFprobeStream(
         int index,
-        string codec_name,
-        string profile,
-        string codec_type,
+        string? codec_name,
+        string? profile,
+        string? codec_type,
         int channels,
         int width,
         int height,
-        string sample_aspect_ratio,
-        string display_aspect_ratio,
-        string pix_fmt,
-        string color_range,
-        string color_space,
-        string color_transfer,
-        string color_primaries,
-        string field_order,
-        string r_frame_rate,
-        string bits_per_raw_sample,
-        FFprobeDisposition disposition,
-        FFprobeTags tags);
+        string? sample_aspect_ratio,
+        string? display_aspect_ratio,
+        string? pix_fmt,
+        string? color_range,
+        string? color_space,
+        string? color_transfer,
+        string? color_primaries,
+        string? field_order,
+        string? r_frame_rate,
+        string? bits_per_raw_sample,
+        FFprobeDisposition? disposition,
+        FFprobeTags? tags);
 
     public record FFprobeChapter(
         long id,
-        string start_time,
-        string end_time,
-        FFprobeTags tags);
+        string? start_time,
+        string? end_time,
+        FFprobeTags? tags);
 
     public record FFprobeTags(
-        string language,
-        string title,
-        string filename,
-        string mimetype,
-        string artist,
+        string? language,
+        string? title,
+        string? filename,
+        string? mimetype,
+        string? artist,
         [property: JsonProperty(PropertyName = "album_artist")]
-        string albumArtist,
-        string album,
-        string track,
-        string genre,
-        string date)
+        string? albumArtist,
+        string? album,
+        string? track,
+        string? genre,
+        string? date)
     {
         public static readonly FFprobeTags Empty = new(null, null, null, null, null, null, null, null, null, null);
     }
