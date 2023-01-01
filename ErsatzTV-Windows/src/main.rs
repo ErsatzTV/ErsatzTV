@@ -2,11 +2,14 @@
 
 use special_folder::SpecialFolder;
 use std::fs;
+use std::os::windows::process::CommandExt;
 use std::process::Child;
 use std::process::Command;
 use std::process::Stdio;
-use {std::sync::mpsc, tray_item::TrayItem};
 use windows::Win32::System::Console;
+use {std::sync::mpsc, tray_item::TrayItem};
+
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 enum Message {
     Exit,
@@ -71,6 +74,7 @@ fn main() {
                     Some(etv) => {
                         child = Some(
                             Command::new(etv)
+                                .creation_flags(CREATE_NO_WINDOW)
                                 .stdin(Stdio::null())
                                 .stdout(Stdio::null())
                                 .stderr(Stdio::null())
