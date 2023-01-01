@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix song playback with VAAPI and NVENC
 - Fix edge case where some local movies would not automatically be restored from trash
 - Fix synchronizing Jellyfin and Emby collection items
+- Fix saving some external subtitle records to database 
 
 ### Changed
 - Upgrade to dotnet 7

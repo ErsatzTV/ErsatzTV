@@ -248,7 +248,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 string sar = match.Groups[1].Value;
                 string dar = match.Groups[2].Value;
-                foreach (FFprobeStream stream in Optional(ffprobe.streams?.Where(s => s.codec_type == "video")).Flatten())
+                foreach (FFprobeStream stream in Optional(ffprobe.streams?.Where(s => s.codec_type == "video").ToList())
+                             .Flatten())
                 {
                     FFprobeStream replacement = stream with { sample_aspect_ratio = sar, display_aspect_ratio = dar };
                     ffprobe.streams?.Remove(stream);
