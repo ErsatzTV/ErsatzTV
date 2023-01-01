@@ -94,7 +94,10 @@ fn main() {
                     None => {}
                     Some(mut child) => {
                         unsafe {
-                            Console::GenerateConsoleCtrlEvent(Console::CTRL_C_EVENT, 0);
+                            if Console::AttachConsole(child.id()) == true
+                            {
+                                Console::GenerateConsoleCtrlEvent(Console::CTRL_C_EVENT, 0);
+                            }
                         }
                         child.wait().unwrap();
                     }
