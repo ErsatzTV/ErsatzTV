@@ -90,9 +90,3 @@ jobs:
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal
-
-      - name: Build Mac
-        shell: bash
-        run: |
-          brew install coreutils
-          scripts/macOS/bundle.sh
