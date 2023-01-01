@@ -489,10 +489,10 @@ public class MetadataRepository : IMetadataRepository
 
     public async Task<bool> UpdateSubtitles(Metadata metadata, List<Subtitle> subtitles)
     {
-        _logger.LogDebug(
-            "Updating {Count} subtitles; metadata is {Metadata}",
-            subtitles.Count,
-            metadata.GetType().Name);
+        // _logger.LogDebug(
+        //     "Updating {Count} subtitles; metadata is {Metadata}",
+        //     subtitles.Count,
+        //     metadata.GetType().Name);
         
         int metadataId = metadata.Id;
 
@@ -519,9 +519,9 @@ public class MetadataRepository : IMetadataRepository
             _ => None
         };
 
-        _logger.LogDebug(
-            "Existing metadata is {Metadata}",
-            await maybeMetadata.Map(m => m.GetType().Name).IfNoneAsync("[none]"));
+        // _logger.LogDebug(
+        //     "Existing metadata is {Metadata}",
+        //     await maybeMetadata.Map(m => m.GetType().Name).IfNoneAsync("[none]"));
 
         foreach (Metadata existing in maybeMetadata)
         {
@@ -530,11 +530,11 @@ public class MetadataRepository : IMetadataRepository
                 .ToList();
             var toUpdate = subtitles.Except(toAdd).ToList();
 
-            _logger.LogDebug(
-                "Subtitles to add: {ToAdd}, to remove: {ToRemove}, to update: {ToUpdate}",
-                toAdd.Count,
-                toRemove.Count,
-                toUpdate.Count);
+            // _logger.LogDebug(
+            //     "Subtitles to add: {ToAdd}, to remove: {ToRemove}, to update: {ToUpdate}",
+            //     toAdd.Count,
+            //     toRemove.Count,
+            //     toUpdate.Count);
             
             if (toAdd.Any() || toRemove.Any() || toUpdate.Any())
             {
@@ -557,22 +557,24 @@ public class MetadataRepository : IMetadataRepository
                     existingSubtitle.Language = incomingSubtitle.Language;
                     existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
                     existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+
+                    dbContext.Entry(existingSubtitle).State = EntityState.Modified;
                 }
 
                 int count = await dbContext.SaveChangesAsync();
 
-                _logger.LogDebug("Subtitles update changed {Count} records in the db", count);
+                // _logger.LogDebug("Subtitles update changed {Count} records in the db", count);
 
                 return count > 0;
             }
 
             // nothing to do
-            _logger.LogDebug("Subtitle update requires no database changes");
+            // _logger.LogDebug("Subtitle update requires no database changes");
             return true;
         }
 
         // no metadata
-        _logger.LogDebug("Subtitle update failure due to missing metadata");
+        // _logger.LogDebug("Subtitle update failure due to missing metadata");
         return false;
     }
 
