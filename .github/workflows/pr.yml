@@ -35,7 +35,7 @@ jobs:
 
       - name: Build Windows
         run: |
-          cd ErsatzTV.Windows
+          cd ErsatzTV-Windows
           cargo build --release --all-features
   build_and_test_linux:
     runs-on: ubuntu-latest
@@ -67,6 +67,9 @@ jobs:
     steps:
       - name: Get the sources
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
 
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
