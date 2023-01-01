@@ -186,6 +186,12 @@ jobs:
         with:
           node-version: '14'
 
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+        if: ${{ matrix.kind == 'windows' }}
+
       - name: Cache NPM dependencies
         uses: bahmutov/npm-install@v1.4.5
         with:
@@ -219,7 +225,8 @@ jobs:
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net7.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+            cd ErsatzTV-Windows && cargo build --release --all-features
+            mv ErsatzTV-Windows/target/release/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe" 
           fi
 
           # Download ffmpeg

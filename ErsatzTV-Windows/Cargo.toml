@@ -1,0 +1,19 @@
+[package]
+name = "ersatztv_windows"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tray-item = { git = "https://github.com/olback/tray-item-rs" }
+special-folder = { git = "https://github.com/masinc/special-folder-rs" }
+process_path = "0.1.4"
+
+[dependencies.windows]
+version = "0.43.0"
+features = [
+    "Win32_System_Console",
+    "Win32_Foundation"
+]
+
+[build-dependencies]
+windres = "*"
