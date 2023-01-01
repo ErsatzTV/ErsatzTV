@@ -225,8 +225,9 @@ jobs:
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            cd ErsatzTV-Windows && cargo build --release --all-features
-            mv ErsatzTV-Windows/target/release/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe" 
+            cargo build --manifest-path=ErsatzTV-Windows/Cargo.toml --release --all-features
+            ls -l ErsatzTV-Windows/target/release
+            mv ErsatzTV-Windows/target/release/ersatztv_windows.exe "$release_name/ErsatzTV-Windows.exe"
           fi
 
           # Download ffmpeg
