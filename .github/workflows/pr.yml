@@ -2,12 +2,43 @@
 on:
   pull_request:
 jobs:
-  build_and_test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ windows-latest, ubuntu-latest, macos-latest ]
+  build_and_test_windows:
+    runs-on: windows-latest
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Clean
+        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Prep project file
+        run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+
+      - name: Build Windows
+        run: |
+          cd ErsatzTV.Windows
+          cargo build --release --all-features
+  build_and_test_linux:
+    runs-on: ubuntu-latest
     steps:
       - name: Get the sources
         uses: actions/checkout@v3
@@ -25,14 +56,40 @@ jobs:
 
       - name: Prep project file
         run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-        if: ${{ matrix.os != 'macos-latest' }}
-      
-      - name: Prep project file Mac
-        run: sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-        if: ${{ matrix.os == 'macos-latest' }}
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal
+  build_and_test_mac:
+    runs-on: macos-latest
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Clean
+        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Prep project file
+        run: sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+
+      - name: Build Mac
+        shell: bash
+        run: |
+          brew install coreutils
+          scripts/macOS/bundle.sh
