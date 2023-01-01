@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use special_folder::SpecialFolder;
 use std::fs;
 use std::process::Child;
