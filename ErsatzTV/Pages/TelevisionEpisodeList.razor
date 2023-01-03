@@ -216,7 +216,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
         {
             await _mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId), _cts.Token);
             _navigationManager.NavigateTo($"media/collections/{collection.Id}");
@@ -231,7 +231,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
+        if (!result.Canceled && result.Data is ProgramScheduleViewModel schedule)
         {
             await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"schedules/{schedule.Id}/items");
@@ -245,7 +245,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
         {
             var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
             Either<BaseError, Unit> addResult = await _mediator.Send(request, _cts.Token);

@@ -93,7 +93,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Watermark", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await _mediator.Send(new DeleteWatermark(watermark.Id), _cts.Token);
             await LoadWatermarksAsync();
@@ -107,7 +107,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<CopyWatermarkDialog>("Copy Watermark", parameters, options);
         DialogResult dialogResult = await dialog.Result;
-        if (!dialogResult.Cancelled && dialogResult.Data is WatermarkViewModel data)
+        if (!dialogResult.Canceled && dialogResult.Data is WatermarkViewModel data)
         {
             _navigationManager.NavigateTo($"/watermarks/{data.Id}");
         }

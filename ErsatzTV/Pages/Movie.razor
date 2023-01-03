@@ -246,7 +246,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
         {
             await _mediator.Send(new AddMovieToCollection(collection.Id, MovieId), _cts.Token);
             _navigationManager.NavigateTo($"media/collections/{collection.Id}");

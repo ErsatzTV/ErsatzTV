@@ -484,7 +484,7 @@
 
         IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var request = new DeleteItemsFromDatabase(
                 movieIds.Append(showIds)
@@ -564,7 +564,7 @@
 
         IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await Mediator.Send(request, CancellationToken);
             await RefreshData();
@@ -581,7 +581,7 @@
 
         IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await Mediator.Send(new EmptyTrash(), CancellationToken);
             await RefreshData();

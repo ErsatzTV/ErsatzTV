@@ -117,7 +117,7 @@
 
             IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Trakt List", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled)
+            if (!result.Canceled)
             {
                 await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
             }
@@ -143,7 +143,7 @@
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
             IDialogReference dialog = await _dialog.ShowAsync<AddTraktListDialog>("Add Trakt List", options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is string url)
+            if (!result.Canceled && result.Data is string url)
             {
                 await _workerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
             }
