@@ -70,7 +70,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.1.6" />
+      <PackageReference Include="MudBlazor" Version="6.1.7" />
       <PackageReference Include="NaturalSort.Extension" Version="4.0.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="11.1.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
