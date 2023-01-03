@@ -22,6 +22,7 @@ fn main() {
 
     tray.add_menu_item("Launch Web UI", || {
         let _ = Command::new("cmd")
+            .creation_flags(CREATE_NO_WINDOW)
             .arg("/C")
             .arg("start")
             .arg("http://localhost:8409")
@@ -30,7 +31,7 @@ fn main() {
             .stderr(Stdio::null())
             .spawn();
     })
-    .unwrap();
+        .unwrap();
 
     tray.add_menu_item("Show Logs", || {
         let path = SpecialFolder::LocalApplicationData
@@ -43,6 +44,7 @@ fn main() {
             Some(folder) => {
                 fs::create_dir_all(folder).unwrap();
                 let _ = Command::new("cmd")
+                    .creation_flags(CREATE_NO_WINDOW)
                     .arg("/C")
                     .arg("start")
                     .arg(folder)
@@ -53,14 +55,14 @@ fn main() {
             }
         }
     })
-    .unwrap();
+        .unwrap();
 
     tray.inner_mut().add_separator().unwrap();
 
     tray.add_menu_item("Exit", move || {
         tx.send(Message::Exit).unwrap();
     })
-    .unwrap();
+        .unwrap();
 
     let path = process_path::get_executable_path();
     let mut child: Option<Child> = None;
