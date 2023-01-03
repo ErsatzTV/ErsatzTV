@@ -167,7 +167,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await _mediator.Send(new DeleteCollection(collection.Id), _cts.Token);
             if (_collectionsTable != null)
@@ -184,7 +184,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Multi Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await _mediator.Send(new DeleteMultiCollection(collection.Id), _cts.Token);
             if (_multiCollectionsTable != null)
@@ -201,7 +201,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await _mediator.Send(new DeleteSmartCollection(collection.Id), _cts.Token);
             if (_smartCollectionsTable != null)

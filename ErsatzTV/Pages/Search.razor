@@ -368,7 +368,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddMovieToCollection(collection.Id, movie.MovieId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -389,7 +389,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddShowToCollection(collection.Id, show.TelevisionShowId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -410,7 +410,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -431,7 +431,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -452,7 +452,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -473,7 +473,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddOtherVideoToCollection(collection.Id, otherVideo.OtherVideoId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -494,7 +494,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddSongToCollection(collection.Id, song.SongId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
@@ -618,7 +618,7 @@
 
         IDialogReference dialog = Dialog.Show<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is SmartCollectionViewModel collection)
+        if (!result.Canceled && result.Data is SmartCollectionViewModel collection)
         {
             var request = new UpdateSmartCollection(
                 collection.Id,

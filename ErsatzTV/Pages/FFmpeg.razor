@@ -87,7 +87,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete FFmpeg Profile", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await _mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id), _cts.Token);
             await LoadFFmpegProfilesAsync(_cts.Token);
@@ -101,7 +101,7 @@
 
         IDialogReference dialog = await _dialog.ShowAsync<CopyFFmpegProfileDialog>("Copy FFmpeg Profile", parameters, options);
         DialogResult dialogResult = await dialog.Result;
-        if (!dialogResult.Cancelled && dialogResult.Data is FFmpegProfileViewModel data)
+        if (!dialogResult.Canceled && dialogResult.Data is FFmpegProfileViewModel data)
         {
             _navigationManager.NavigateTo($"ffmpeg/{data.Id}");
         }

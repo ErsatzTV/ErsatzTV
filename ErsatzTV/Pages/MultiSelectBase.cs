@@ -114,7 +114,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
         {
             var request = new AddItemsToCollection(
                 collection.Id,
@@ -155,7 +155,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
             parameters,
             options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             var itemIds = SelectedItems.Map(vm => vm.MediaItemId).ToList();
 

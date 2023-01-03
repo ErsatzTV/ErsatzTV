@@ -138,7 +138,7 @@
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);

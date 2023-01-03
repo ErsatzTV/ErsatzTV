@@ -121,7 +121,7 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
         IDialogReference dialog = await _dialog.ShowAsync<DisconnectRemoteMediaSourceDialog>($"Disconnect {Name}", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             if (_locker.LockRemoteMediaSource<TMediaSource>())
             {
