@@ -106,7 +106,7 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
         IDialogReference dialog = await _dialog.ShowAsync<SignOutOfPlexDialog>("Sign out of Plex", options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             if (_locker.LockPlex())
             {

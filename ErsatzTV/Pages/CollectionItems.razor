@@ -464,7 +464,7 @@
 
         IDialogReference dialog = Dialog.Show<RemoveFromCollectionDialog>("Remove From Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Canceled)
         {
             await Mediator.Send(request, CancellationToken);
             await RefreshData();
