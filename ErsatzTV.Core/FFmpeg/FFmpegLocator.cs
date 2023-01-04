@@ -51,7 +51,7 @@ public class FFmpegLocator : IFFmpegLocator
             ? $"{executableBase}.exe"
             : executableBase;
 
-        string processFileName = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+        string processFileName = Environment.ProcessPath ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(processFileName))
         {
             string localFileName = Path.Combine(Path.GetDirectoryName(processFileName) ?? string.Empty, executable);

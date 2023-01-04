@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
 using CliWrap;
@@ -9,6 +8,7 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
 using Newtonsoft.Json;
 using Serilog;
+using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
 
 namespace ErsatzTV.Application.Libraries;
@@ -69,7 +69,17 @@ public abstract class CallLibraryScannerHandler
         {
             try
             {
-                Log.Write(LogEventReader.ReadFromString(s));
+                // make a new log event to force using local time
+                // because the compact json writer used by the scanner
+                // writes in UTC
+                LogEvent logEvent = LogEventReader.ReadFromString(s);
+                Log.Write(
+                    new LogEvent(
+                        logEvent.Timestamp.ToLocalTime(),
+                        logEvent.Level,
+                        logEvent.Exception,
+                        logEvent.MessageTemplate,
+                        logEvent.Properties.Map(pair => new LogEventProperty(pair.Key, pair.Value))));
             }
             catch
             {
@@ -127,7 +137,7 @@ public abstract class CallLibraryScannerHandler
             ? "ErsatzTV.Scanner.exe"
             : "ErsatzTV.Scanner";
         
-        string processFileName = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+        string processFileName = Environment.ProcessPath ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(processFileName))
         {
             string localFileName = Path.Combine(Path.GetDirectoryName(processFileName) ?? string.Empty, executable);
