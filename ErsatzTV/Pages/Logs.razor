@@ -1,0 +1,109 @@
+﻿@page "/system/logs"
+@using ErsatzTV.Application.Logs
+@using ErsatzTV.Application.Configuration
+@implements IDisposable
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable FixedHeader="true"
+              @bind-RowsPerPage="@_rowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<LogEntryViewModel>>>(ServerReload))"
+              Dense="true"
+              @ref="_table">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Logs</MudText>
+            <MudSpacer/>
+            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel T="LogEntryViewModel" SortLabel="Timestamp">
+                    Timestamp
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel T="LogEntryViewModel" SortLabel="Level">
+                    Level
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>Message</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
+            <MudTd DataLabel="Level">@context.Level</MudTd>
+            <MudTd DataLabel="Message">@context.Message</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No matching records found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudText>Loading...</MudText>
+        </LoadingContent>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    private MudTable<LogEntryViewModel> _table;
+    private int _rowsPerPage;
+    private string _searchString;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync() => _rowsPerPage =
+        await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.LogsPageSize), _cts.Token)
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+
+    private async Task<TableData<LogEntryViewModel>> ServerReload(TableState state)
+    {
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.LogsPageSize, state.PageSize.ToString()), _cts.Token);
+
+        PagedLogEntriesViewModel data;
+
+        switch (state.SortLabel?.ToLowerInvariant())
+        {
+            case "timestamp":
+                data = await Mediator.Send(new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
+                {
+                    SortExpression = le => le.Timestamp,
+                    SortDescending = state.SortDirection == SortDirection.None
+                        ? Option<bool>.None
+                        : state.SortDirection == SortDirection.Descending
+                }, _cts.Token);
+                break;
+            case "level":
+                data = await Mediator.Send(new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
+                {
+                    SortExpression = le => le.Level,
+                    SortDescending = state.SortDirection == SortDirection.None
+                        ? Option<bool>.None
+                        : state.SortDirection == SortDirection.Descending
+                }, _cts.Token);
+                break;
+            default:
+                data = await Mediator.Send(new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
+                {
+                    SortDescending = Option<bool>.None
+                }, _cts.Token);
+                break;
+        }
+
+        return new TableData<LogEntryViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+    
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table.ReloadServerData();
+    }
+
+}

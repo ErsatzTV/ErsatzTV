@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
@@ -13,7 +12,7 @@ public class Program
 
     static Program()
     {
-        string executablePath = Process.GetCurrentProcess().MainModule.FileName;
+        string executablePath = Environment.ProcessPath ?? string.Empty;
         string executable = Path.GetFileNameWithoutExtension(executablePath);
 
         IConfigurationBuilder builder = new ConfigurationBuilder();
@@ -48,7 +47,7 @@ public class Program
             .MinimumLevel.ControlledBy(LoggingLevelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
-            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day, shared: true)
+            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         try
