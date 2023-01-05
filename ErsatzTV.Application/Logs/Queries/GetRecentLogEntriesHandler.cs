@@ -56,7 +56,8 @@ public class GetRecentLogEntriesHandler : IRequestHandler<GetRecentLogEntries, P
 
     private static IEnumerable<string> ReadFrom(string file)
     {
-        using StreamReader reader = File.OpenText(file);
+        using FileStream fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(fs);
         while (reader.ReadLine() is { } line)
         {
             yield return line;
