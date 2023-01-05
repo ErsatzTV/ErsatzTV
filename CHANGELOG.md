@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.2-beta] - 2023-01-05
 ### Fixed
 - Fix VAAPI encoding in docker by switching to non-free driver
 
@@ -1461,7 +1463,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.1-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...HEAD
+[0.7.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.1-beta...v0.7.2-beta
 [0.7.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.0-beta...v0.7.1-beta
 [0.7.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...v0.7.0-beta
 [0.6.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.8-beta...v0.6.9-beta
