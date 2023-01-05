@@ -21,14 +21,14 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.33">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Refit" Version="6.3.2" />
       <PackageReference Include="Refit.Newtonsoft.Json" Version="6.3.2" />
       <PackageReference Include="Refit.Xml" Version="6.3.2" />
-      <PackageReference Include="Scriban.Signed" Version="5.5.1" />
+      <PackageReference Include="Scriban.Signed" Version="5.5.2" />
     </ItemGroup>
 
     <ItemGroup>
