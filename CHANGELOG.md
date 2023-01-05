@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Rewrite log page to read directly from log files instead of sqlite
 
 ## [0.7.1-beta] - 2023-01-03
 ### Added
