@@ -57,7 +57,7 @@ jobs:
           node-version: '14'
 
       - name: Cache NPM dependencies
-        uses: bahmutov/npm-install@v1.4.5
+        uses: bahmutov/npm-install@v1.8.28
         with:
           working-directory: ErsatzTV/client-app
 
@@ -193,7 +193,7 @@ jobs:
         if: ${{ matrix.kind == 'windows' }}
 
       - name: Cache NPM dependencies
-        uses: bahmutov/npm-install@v1.4.5
+        uses: bahmutov/npm-install@v1.8.28
         with:
           working-directory: ErsatzTV/client-app
 
