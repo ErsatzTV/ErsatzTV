@@ -39,12 +39,6 @@ public class FFmpegPlaybackSettingsCalculator
         "+igndts"
     };
 
-    public FFmpegPlaybackSettings ConcatSettings => new()
-    {
-        ThreadCount = 1,
-        FormatFlags = CommonFormatFlags
-    };
-
     public FFmpegPlaybackSettings CalculateSettings(
         StreamingMode streamingMode,
         FFmpegProfile ffmpegProfile,
@@ -181,7 +175,8 @@ public class FFmpegPlaybackSettingsCalculator
         bool hlsRealtime) =>
         new()
         {
-            HardwareAcceleration = ffmpegProfile.HardwareAcceleration,
+            // HardwareAcceleration = ffmpegProfile.HardwareAcceleration,
+            HardwareAcceleration = HardwareAccelerationKind.None,
             FormatFlags = CommonFormatFlags,
             VideoFormat = ffmpegProfile.VideoFormat,
             VideoBitrate = ffmpegProfile.VideoBitrate,
