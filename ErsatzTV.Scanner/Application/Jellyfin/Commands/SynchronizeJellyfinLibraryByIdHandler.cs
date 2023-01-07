@@ -8,7 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Application.Jellyfin;
 
-public class SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<SynchronizeJellyfinLibraryById, Either<BaseError, string>>
+public class
+    SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<SynchronizeJellyfinLibraryById, Either<BaseError, string>>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IJellyfinMovieLibraryScanner _jellyfinMovieLibraryScanner;
@@ -62,10 +63,16 @@ public class SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<Synchronize
         if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
         {
             // need the jellyfin admin user id for now
-            await _mediator.Send(
+            Either<BaseError, Unit> syncAdminResult = await _mediator.Send(
                 new SynchronizeJellyfinAdminUserId(parameters.Library.MediaSourceId),
                 cancellationToken);
-            
+
+            foreach (BaseError error in syncAdminResult.LeftToSeq())
+            {
+                _logger.LogError("Error synchronizing jellyfin admin user id: {Error}", error);
+                return error;
+            }
+
             Either<BaseError, Unit> result = parameters.Library.MediaKind switch
             {
                 LibraryMediaKind.Movies =>
@@ -118,7 +125,7 @@ public class SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<Synchronize
         }
 
         _logger.LogDebug("Skipping unforced scan of jellyfin media library {Name}", parameters.Library.Name);
-        
+
         // send an empty progress update for the library name
         await _mediator.Publish(
             new ScannerProgressUpdate(
