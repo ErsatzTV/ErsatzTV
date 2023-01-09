@@ -15,6 +15,8 @@
 <MudTable Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
     <ToolBarContent>
         <MudText Typo="Typo.h6">@_channelName Alternate Schedules</MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.subtitle1" Class="mr-3">In priority order from top to bottom</MudText>
     </ToolBarContent>
     <ColGroup>
         <col/>
