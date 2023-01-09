@@ -543,7 +543,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -639,7 +640,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -783,7 +785,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -885,7 +888,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -996,7 +1000,8 @@ public class PlayoutBuilderTests
                     InFlood = true
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1100,7 +1105,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1208,7 +1214,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1321,7 +1328,8 @@ public class PlayoutBuilderTests
                     MultipleRemaining = 2
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1423,7 +1431,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1536,7 +1545,8 @@ public class PlayoutBuilderTests
                     DurationFinish = HoursAfterMidnight(3).UtcDateTime
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1660,7 +1670,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1776,7 +1787,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -1852,7 +1864,8 @@ public class PlayoutBuilderTests
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -2049,7 +2062,8 @@ public class PlayoutBuilderTests
                 },
 
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             playout.ProgramScheduleAnchors.Add(
@@ -2437,7 +2451,8 @@ public class PlayoutBuilderTests
                     InFlood = true
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -2548,7 +2563,8 @@ public class PlayoutBuilderTests
                     MultipleRemaining = 2
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -2659,7 +2675,8 @@ public class PlayoutBuilderTests
                     DurationFinish = HoursAfterMidnight(3).UtcDateTime
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-                Items = new List<PlayoutItem>()
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -2768,7 +2785,8 @@ public class PlayoutBuilderTests
             ProgramSchedule = new ProgramSchedule { Items = items },
             Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
             Items = new List<PlayoutItem>(),
-            ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>()
+            ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
+            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
         };
 
         return new TestData(builder, playout);

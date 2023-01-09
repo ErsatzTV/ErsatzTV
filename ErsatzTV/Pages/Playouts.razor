@@ -33,7 +33,7 @@
             </MudTh>
             <MudTh>
                 <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => x.ProgramSchedule.Name)">
-                    Schedule
+                    Default Schedule
                 </MudTableSortLabel>
             </MudTh>
             @* <MudTh>Playout Type</MudTh> *@
@@ -45,6 +45,11 @@
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
                 <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Alternate Schedules">
+                        <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
+                                       Link="@($"playouts/{context.PlayoutId}/alternate-schedules")">
+                        </MudIconButton>
+                    </MudTooltip>
                     <MudTooltip Text="Reset Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                        OnClick="@(_ => ResetPlayout(context))">
@@ -168,7 +173,7 @@
             }
         }
     }
-
+    
     private async Task ResetPlayout(PlayoutNameViewModel playout)
     {
         await _mediator.Send(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);

@@ -10,6 +10,16 @@ internal static class Mapper
             playoutItem.StartOffset,
             GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
 
+    internal static PlayoutAlternateScheduleViewModel ProjectToViewModel(
+        ProgramScheduleAlternate programScheduleAlternate) =>
+        new(
+            programScheduleAlternate.Id,
+            programScheduleAlternate.Index,
+            programScheduleAlternate.ProgramScheduleId,
+            programScheduleAlternate.DaysOfWeek,
+            programScheduleAlternate.DaysOfMonth,
+            programScheduleAlternate.MonthsOfYear);
+
     private static string GetDisplayTitle(PlayoutItem playoutItem)
     {
         switch (playoutItem.MediaItem)

@@ -10,6 +10,11 @@ public class PlayoutConfiguration : IEntityTypeConfiguration<Playout>
     {
         builder.ToTable("Playout");
 
+        builder.HasMany(p => p.ProgramScheduleAlternates)
+            .WithOne(a => a.Playout)
+            .HasForeignKey(a => a.PlayoutId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(p => p.Items)
             .WithOne(pi => pi.Playout)
             .HasForeignKey(pi => pi.PlayoutId)
