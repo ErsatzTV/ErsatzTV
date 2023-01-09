@@ -203,7 +203,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             parameters.Start,
             parameters.Finish,
             parameters.CollectionMediaItems,
-            playout.ProgramSchedule.RandomStartPoint);
+            true);
 
         return playout;
     }
@@ -237,11 +237,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(playout);
         if (!collectionMediaItems.Any())
         {
-            _logger.LogWarning(
-                "Playout {Playout} schedule {Schedule} has no items",
-                playout.Channel.Name,
-                playout.ProgramSchedule.Name);
-
+            _logger.LogWarning("Playout {Playout} has no items", playout.Channel.Name);
             return None;
         }
 
@@ -365,13 +361,21 @@ public class PlayoutBuilder : IPlayoutBuilder
         bool saveAnchorDate,
         bool randomStartPoint)
     {
-        var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
+        ProgramSchedule activeSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
+            playout.ProgramSchedule,
+            playout.ProgramScheduleAlternates,
+            playoutStart);
+
+        // random start points are disabled in some scenarios, so ensure it's enabled and active
+        randomStartPoint = randomStartPoint && activeSchedule.RandomStartPoint;
+        
+        var sortedScheduleItems = activeSchedule.Items.OrderBy(i => i.Index).ToList();
         CollectionEnumeratorState scheduleItemsEnumeratorState =
             playout.Anchor?.ScheduleItemsEnumeratorState ?? new CollectionEnumeratorState
                 { Seed = Random.Next(), Index = 0 };
-        IScheduleItemsEnumerator scheduleItemsEnumerator = playout.ProgramSchedule.ShuffleScheduleItems
-            ? new ShuffledScheduleItemsEnumerator(playout.ProgramSchedule.Items, scheduleItemsEnumeratorState)
-            : new OrderedScheduleItemsEnumerator(playout.ProgramSchedule.Items, scheduleItemsEnumeratorState);
+        IScheduleItemsEnumerator scheduleItemsEnumerator = activeSchedule.ShuffleScheduleItems
+            ? new ShuffledScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState)
+            : new OrderedScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState);
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
         foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
         {
@@ -381,7 +385,13 @@ public class PlayoutBuilder : IPlayoutBuilder
             PlaybackOrder playbackOrder = maybeScheduleItem
                 .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
             IMediaCollectionEnumerator enumerator =
-                await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder, randomStartPoint);
+                await GetMediaCollectionEnumerator(
+                    playout,
+                    activeSchedule,
+                    collectionKey,
+                    mediaItems,
+                    playbackOrder,
+                    randomStartPoint);
             collectionEnumerators.Add(collectionKey, enumerator);
         }
 
@@ -533,7 +543,11 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         // build program schedule anchors
-        playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators, saveAnchorDate);
+        playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(
+            playout,
+            activeSchedule,
+            collectionEnumerators,
+            saveAnchorDate);
 
         return playout;
     }
@@ -541,6 +555,8 @@ public class PlayoutBuilder : IPlayoutBuilder
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(Playout playout)
     {
         var collectionKeys = playout.ProgramSchedule.Items
+            .Append(playout.ProgramScheduleAlternates.Bind(psa => psa.ProgramSchedule.Items))
+            .DistinctBy(i => i.Id)
             .SelectMany(CollectionKeysForItem)
             .Distinct()
             .ToList();
@@ -640,6 +656,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private static List<PlayoutProgramScheduleAnchor> BuildProgramScheduleAnchors(
         Playout playout,
+        ProgramSchedule activeSchedule,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         bool saveAnchorDate)
     {
@@ -665,8 +682,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                 {
                     Playout = playout,
                     PlayoutId = playout.Id,
-                    ProgramSchedule = playout.ProgramSchedule,
-                    ProgramScheduleId = playout.ProgramScheduleId,
+                    ProgramSchedule = activeSchedule,
+                    ProgramScheduleId = activeSchedule.Id,
                     CollectionType = collectionKey.CollectionType,
                     CollectionId = collectionKey.CollectionId,
                     MultiCollectionId = collectionKey.MultiCollectionId,
@@ -694,6 +711,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private async Task<IMediaCollectionEnumerator> GetMediaCollectionEnumerator(
         Playout playout,
+        ProgramSchedule activeSchedule,
         CollectionKey collectionKey,
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder,
@@ -702,7 +720,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
             .OrderByDescending(a => a.AnchorDate ?? DateTime.MaxValue)
             .FirstOrDefault(
-                a => a.ProgramScheduleId == playout.ProgramScheduleId
+                a => a.ProgramScheduleId == activeSchedule.Id
                      && a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
@@ -757,7 +775,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 return new ShuffleInOrderCollectionEnumerator(
                     await GetCollectionItemsForShuffleInOrder(collectionKey),
                     state,
-                    playout.ProgramSchedule.RandomStartPoint);
+                    activeSchedule.RandomStartPoint);
             case PlaybackOrder.MultiEpisodeShuffle when
                 collectionKey.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow &&
                 collectionKey.MediaItemId.HasValue:
@@ -795,7 +813,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             case PlaybackOrder.MultiEpisodeShuffle:
             case PlaybackOrder.Shuffle:
                 return new ShuffledMediaCollectionEnumerator(
-                    await GetGroupedMediaItemsForShuffle(playout, mediaItems, collectionKey),
+                    await GetGroupedMediaItemsForShuffle(activeSchedule, mediaItems, collectionKey),
                     state);
             default:
                 // TODO: handle this error case differently?
@@ -804,7 +822,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     }
 
     private async Task<List<GroupedMediaItem>> GetGroupedMediaItemsForShuffle(
-        Playout playout,
+        ProgramSchedule activeSchedule,
         List<MediaItem> mediaItems,
         CollectionKey collectionKey)
     {
@@ -816,10 +834,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             return MultiCollectionGrouper.GroupMediaItems(collections);
         }
 
-        return playout.ProgramSchedule.KeepMultiPartEpisodesTogether
-            ? MultiPartEpisodeGrouper.GroupMediaItems(
-                mediaItems,
-                playout.ProgramSchedule.TreatCollectionsAsShows)
+        return activeSchedule.KeepMultiPartEpisodesTogether
+            ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, activeSchedule.TreatCollectionsAsShows)
             : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
     }
 
