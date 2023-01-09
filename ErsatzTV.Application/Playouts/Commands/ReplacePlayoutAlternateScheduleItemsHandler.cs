@@ -44,8 +44,33 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
 
             foreach (Playout playout in maybePlayout)
             {
-                ProgramSchedule existingDefault = playout.ProgramSchedule;
+                var existingScheduleMap = new Dictionary<DateTimeOffset, ProgramSchedule>();
+                var daysToCheck = new List<DateTimeOffset>();
                 
+                Option<PlayoutItem> maybeLastPlayoutItem = await dbContext.PlayoutItems
+                    .Filter(pi => pi.PlayoutId == request.PlayoutId)
+                    .OrderByDescending(pi => pi.Start)
+                    .FirstOrDefaultAsync(cancellationToken)
+                    .Map(Optional);
+
+                foreach (PlayoutItem lastPlayoutItem in maybeLastPlayoutItem)
+                {
+                    DateTimeOffset start = DateTimeOffset.Now;
+                    daysToCheck = Enumerable.Range(0, (lastPlayoutItem.StartOffset - start).Days + 1)
+                        .Select(d => start.AddDays(d))
+                        .ToList();
+
+                    foreach (DateTimeOffset dayToCheck in daysToCheck)
+                    {
+                        ProgramSchedule schedule = PlayoutScheduleSelector.GetProgramScheduleFor(
+                            playout.ProgramSchedule,
+                            playout.ProgramScheduleAlternates,
+                            dayToCheck);
+
+                        existingScheduleMap.Add(dayToCheck, schedule);
+                    }
+                }
+
                 // exclude highest index
                 int maxIndex = request.Items.Map(x => x.Index).Max();
                 ReplacePlayoutAlternateSchedule highest = request.Items.First(x => x.Index == maxIndex);
@@ -93,39 +118,24 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 }
 
                 await dbContext.SaveChangesAsync(cancellationToken);
-                
-                Option<PlayoutItem> maybePlayoutItem = await dbContext.PlayoutItems
-                    .Filter(pi => pi.PlayoutId == request.PlayoutId)
-                    .OrderByDescending(pi => pi.Start)
-                    .FirstOrDefaultAsync(cancellationToken)
-                    .Map(Optional);
 
-                foreach (PlayoutItem playoutItem in maybePlayoutItem)
+                foreach (PlayoutItem _ in maybeLastPlayoutItem)
                 {
-                    DateTimeOffset start = DateTimeOffset.Now;
-                    var daysToCheck = Enumerable.Range(0, (playoutItem.StartOffset - start).Days + 1)
-                        .Select(d => start.AddDays(d))
-                        .ToList();
-
                     foreach (DateTimeOffset dayToCheck in daysToCheck)
                     {
-                        ProgramSchedule oldSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
-                            existingDefault,
-                            existing,
-                            dayToCheck);
-
-                        ProgramSchedule newSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
+                        ProgramSchedule schedule = PlayoutScheduleSelector.GetProgramScheduleFor(
                             playout.ProgramSchedule,
                             playout.ProgramScheduleAlternates,
                             dayToCheck);
 
-                        if (oldSchedule.Id != newSchedule.Id)
+                        if (existingScheduleMap.TryGetValue(dayToCheck, out ProgramSchedule existingValue) &&
+                            existingValue.Id != schedule.Id)
                         {
                             _logger.LogInformation(
                                 "Alternate schedule change detected for day {Day}, schedule {One} => {Two}; will refresh playout",
                                 dayToCheck,
-                                oldSchedule.Name,
-                                newSchedule.Name);
+                                existingValue.Name,
+                                schedule.Name);
 
                             await _channel.WriteAsync(
                                 new BuildPlayout(request.PlayoutId, PlayoutBuildMode.Refresh),
