@@ -10,4 +10,5 @@ public class ProgramSchedule
     public bool RandomStartPoint { get; set; }
     public List<ProgramScheduleItem> Items { get; set; }
     public List<Playout> Playouts { get; set; }
+    public List<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
 }
