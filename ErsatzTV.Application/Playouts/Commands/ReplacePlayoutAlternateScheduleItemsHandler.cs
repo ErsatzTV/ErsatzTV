@@ -1,8 +1,11 @@
+using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -10,10 +13,17 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
     IRequestHandler<ReplacePlayoutAlternateScheduleItems, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+    private readonly ILogger<ReplacePlayoutAlternateScheduleItemsHandler> _logger;
 
-    public ReplacePlayoutAlternateScheduleItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    public ReplacePlayoutAlternateScheduleItemsHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ChannelWriter<IBackgroundServiceRequest> channel,
+        ILogger<ReplacePlayoutAlternateScheduleItemsHandler> logger)
     {
         _dbContextFactory = dbContextFactory;
+        _channel = channel;
+        _logger = logger;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -27,16 +37,20 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             Option<Playout> maybePlayout = await dbContext.Playouts
+                .Include(p => p.ProgramSchedule)
                 .Include(p => p.ProgramScheduleAlternates)
+                .ThenInclude(p => p.ProgramSchedule)
                 .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
 
             foreach (Playout playout in maybePlayout)
             {
+                ProgramSchedule existingDefault = playout.ProgramSchedule;
+                
                 // exclude highest index
                 int maxIndex = request.Items.Map(x => x.Index).Max();
                 ReplacePlayoutAlternateSchedule highest = request.Items.First(x => x.Index == maxIndex);
 
-                List<ProgramScheduleAlternate> existing = playout.ProgramScheduleAlternates;
+                ProgramScheduleAlternate[] existing = playout.ProgramScheduleAlternates.ToArray();
 
                 var incoming = request.Items.Except(new[] { highest }).ToList();
 
@@ -79,11 +93,49 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                 }
 
                 await dbContext.SaveChangesAsync(cancellationToken);
+                
+                Option<PlayoutItem> maybePlayoutItem = await dbContext.PlayoutItems
+                    .Filter(pi => pi.PlayoutId == request.PlayoutId)
+                    .OrderByDescending(pi => pi.Start)
+                    .FirstOrDefaultAsync(cancellationToken)
+                    .Map(Optional);
+
+                foreach (PlayoutItem playoutItem in maybePlayoutItem)
+                {
+                    DateTimeOffset start = DateTimeOffset.Now;
+                    var daysToCheck = Enumerable.Range(0, (playoutItem.StartOffset - start).Days + 1)
+                        .Select(d => start.AddDays(d))
+                        .ToList();
+
+                    foreach (DateTimeOffset dayToCheck in daysToCheck)
+                    {
+                        ProgramSchedule oldSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
+                            existingDefault,
+                            existing,
+                            dayToCheck);
+
+                        ProgramSchedule newSchedule = PlayoutScheduleSelector.GetProgramScheduleFor(
+                            playout.ProgramSchedule,
+                            playout.ProgramScheduleAlternates,
+                            dayToCheck);
+
+                        if (oldSchedule.Id != newSchedule.Id)
+                        {
+                            _logger.LogInformation(
+                                "Alternate schedule change detected for day {Day}, schedule {One} => {Two}; will refresh playout",
+                                dayToCheck,
+                                oldSchedule.Name,
+                                newSchedule.Name);
+
+                            await _channel.WriteAsync(
+                                new BuildPlayout(request.PlayoutId, PlayoutBuildMode.Refresh),
+                                cancellationToken);
+
+                            break;
+                        }
+                    }
+                }
             }
-            
-            // TODO: should playout be rebuilt? need logic to only do that when needed
-            // maybe get min playout item, get max playout item, find range of days
-            // compare schedules in range (existing) vs schedules in range (incoming)
             
             return Unit.Default;
         }
