@@ -737,17 +737,18 @@ public class PlayoutBuilder : IPlayoutBuilder
                       (anchor.EnumeratorState = new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 }),
             () => new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
 
-        if (await _mediaCollectionRepository.IsCustomPlaybackOrder(collectionKey.CollectionId ?? 0))
-        {
-            Option<Collection> collectionWithItems =
-                await _mediaCollectionRepository.GetCollectionWithCollectionItemsUntracked(
-                    collectionKey.CollectionId ?? 0);
+        int collectionId = collectionKey.CollectionId ?? 0;
 
-            if (collectionKey.CollectionType == ProgramScheduleItemCollectionType.Collection &&
-                collectionWithItems.IsSome)
+        if (collectionKey.CollectionType == ProgramScheduleItemCollectionType.Collection &&
+            await _mediaCollectionRepository.IsCustomPlaybackOrder(collectionId))
+        {
+            Option<Collection> maybeCollectionWithItems =
+                await _mediaCollectionRepository.GetCollectionWithCollectionItemsUntracked(collectionId);
+
+            foreach (Collection collectionWithItems in maybeCollectionWithItems)
             {
                 return new CustomOrderCollectionEnumerator(
-                    collectionWithItems.ValueUnsafe(),
+                    collectionWithItems,
                     mediaItems,
                     state);
             }

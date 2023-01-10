@@ -375,7 +375,6 @@ public class Startup
         AddChannel<IJellyfinBackgroundServiceRequest>(services);
         AddChannel<IEmbyBackgroundServiceRequest>(services);
         AddChannel<IFFmpegWorkerRequest>(services);
-        AddChannel<ISubtitleWorkerRequest>(services);
         AddChannel<ISearchIndexBackgroundServiceRequest>(services);
 
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
@@ -470,7 +469,6 @@ public class Startup
         services.AddHostedService<EmbyService>();
         services.AddHostedService<JellyfinService>();
         services.AddHostedService<PlexService>();
-        services.AddHostedService<SubtitleWorkerService>();
 #endif
         services.AddHostedService<FFmpegLocatorService>();
         services.AddHostedService<WorkerService>();

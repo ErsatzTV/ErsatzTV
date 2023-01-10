@@ -6,6 +6,7 @@ using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaSources;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Search;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
@@ -95,6 +96,9 @@ public class WorkerService : BackgroundService
                             break;
                         case MatchTraktListItems matchTraktListItems:
                             await mediator.Send(matchTraktListItems, cancellationToken);
+                            break;
+                        case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:
+                            await mediator.Send(extractEmbeddedSubtitles, cancellationToken);
                             break;
                     }
                 }
