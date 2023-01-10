@@ -185,8 +185,9 @@ public sealed class SearchIndex : ISearchIndex
         };
 
         client.Breadcrumbs.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
-        
-        if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
+
+        if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)) ||
+            _writer.MaxDoc == 0)
         {
             return new SearchResult(new List<SearchItem>(), 0);
         }
