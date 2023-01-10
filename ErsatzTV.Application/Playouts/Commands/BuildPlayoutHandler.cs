@@ -17,7 +17,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
-    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IPlayoutBuilder _playoutBuilder;
 
     public BuildPlayoutHandler(
@@ -25,13 +25,13 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IDbContextFactory<TvContext> dbContextFactory,
         IPlayoutBuilder playoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
-        ChannelWriter<ISubtitleWorkerRequest> ffmpegWorkerChannel)
+        ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
-        _ffmpegWorkerChannel = ffmpegWorkerChannel;
+        _workerChannel = workerChannel;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(BuildPlayout request, CancellationToken cancellationToken)
@@ -56,7 +56,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
             }
 
-            await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
+            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
         }
         catch (Exception ex)
         {

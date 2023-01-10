@@ -15,13 +15,13 @@ namespace ErsatzTV.Application.Channels;
 public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseError, ChannelViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public UpdateChannelHandler(
-        ChannelWriter<ISubtitleWorkerRequest> ffmpegWorkerChannel,
+        ChannelWriter<IBackgroundServiceRequest> workerChannel,
         IDbContextFactory<TvContext> dbContextFactory)
     {
-        _ffmpegWorkerChannel = ffmpegWorkerChannel;
+        _workerChannel = workerChannel;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -85,7 +85,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
 
             foreach (Playout playout in maybePlayout)
             {
-                await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
+                await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
             }
         }
 

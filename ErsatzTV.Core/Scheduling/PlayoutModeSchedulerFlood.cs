@@ -91,15 +91,18 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                     AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
                 // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
-                DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
-                if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
+                if (playoutItems.Count > 0)
                 {
-                    _logger.LogWarning(
-                        "Filler prediction failure: predicted {PredictedDuration} doesn't match actual {ActualDuration}",
-                        itemEndTimeWithFiller,
-                        actualEndTime);
+                    DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
+                    if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
+                    {
+                        _logger.LogWarning(
+                            "Filler prediction failure: predicted {PredictedDuration} doesn't match actual {ActualDuration}",
+                            itemEndTimeWithFiller,
+                            actualEndTime);
 
-                    // _logger.LogWarning("Playout items: {@PlayoutItems}", playoutItems);
+                        // _logger.LogWarning("Playout items: {@PlayoutItems}", playoutItems);
+                    }
                 }
 
                 nextState = nextState with
