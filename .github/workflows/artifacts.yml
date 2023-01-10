@@ -133,7 +133,7 @@ jobs:
           rm -r ErsatzTV.app
 
       - name: Delete old release assets
-        uses: jasongdove/delete-release-assets@paginate-releases
+        uses: mknejp/delete-release-assets@v1
         if: ${{ inputs.release_tag == 'develop' }}
         with:
           token: ${{ secrets.gh_token }}
@@ -250,7 +250,7 @@ jobs:
           AC_PASSWORD: ${{ secrets.ac_password }}
 
       - name: Delete old release assets
-        uses: jasongdove/delete-release-assets@paginate-releases
+        uses: mknejp/delete-release-assets@v1
         if: ${{ inputs.release_tag == 'develop' }}
         with:
           token: ${{ secrets.gh_token }}
