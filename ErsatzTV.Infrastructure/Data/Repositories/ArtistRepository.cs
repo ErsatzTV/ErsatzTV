@@ -160,14 +160,4 @@ public class ArtistRepository : IArtistRepository
             .Filter(mv => mv.ArtistId == artistId)
             .ToListAsync();
     }
-
-    public async Task<List<Artist>> GetAllArtists()
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Artists
-            .AsNoTracking()
-            .Include(a => a.ArtistMetadata)
-            .ThenInclude(am => am.Artwork)
-            .ToListAsync();
-    }
 }

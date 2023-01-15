@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix schedule editor crashing due to bad music video artist data
+
 ### Changed
 - Always use software pipeline for error display
   - This ensures errors will display even when hardware acceleration is misconfigured
