@@ -19,5 +19,4 @@ public interface IArtistRepository
     Task<bool> AddStyle(ArtistMetadata metadata, Style style);
     Task<bool> AddMood(ArtistMetadata metadata, Mood mood);
     Task<List<MusicVideo>> GetArtistItems(int artistId);
-    Task<List<Artist>> GetAllArtists();
 }
