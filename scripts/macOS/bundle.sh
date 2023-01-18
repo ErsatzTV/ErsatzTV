@@ -19,4 +19,5 @@ cp -R "$REPO_ROOT/ErsatzTV-macOS/build/Release/ErsatzTV-macOS.app" "$APP_NAME"
 cp -a "$PUBLISH_OUTPUT_DIRECTORY" "$APP_NAME/Contents/MacOS"
 
 chmod +x "$APP_NAME/Contents/MacOS/ErsatzTV"
+chmod +x "$APP_NAME/Contents/MacOS/ErsatzTV.Scanner"
 chmod +x "$APP_NAME/Contents/MacOS/ErsatzTV-macOS"
