@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix schedule editor crashing due to bad music video artist data
 - Fix bug where playouts would not maintain smart collection progress on schedules that use multiple smart collections
+- Fix library scanning on osx-arm64
 
 ### Changed
 - Always use software pipeline for error display
