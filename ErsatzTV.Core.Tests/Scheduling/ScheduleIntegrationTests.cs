@@ -3,12 +3,17 @@ using Dapper;
 using Destructurama;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
+using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Extensions;
+using ErsatzTV.Infrastructure.Search;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +33,7 @@ public class ScheduleIntegrationTests
     public ScheduleIntegrationTests()
     {
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information()
+            .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
             .WriteTo.Console()
@@ -37,7 +42,123 @@ public class ScheduleIntegrationTests
     }
 
     [Test]
-    public async Task Test()
+    public async Task TestExistingData()
+    {
+        const string DB_FILE_NAME = "/tmp/whatever.sqlite3";
+        const int PLAYOUT_ID = 39;
+
+        var start = new DateTimeOffset(2023, 1, 18, 11, 0, 0, TimeSpan.FromHours(-5));
+        DateTimeOffset finish = start.AddDays(2);
+
+        IServiceCollection services = new ServiceCollection()
+            .AddLogging();
+
+        var connectionString = $"Data Source={DB_FILE_NAME};foreign keys=true;";
+
+        services.AddDbContext<TvContext>(
+            options => options.UseSqlite(
+                connectionString,
+                o =>
+                {
+                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                }),
+            ServiceLifetime.Scoped,
+            ServiceLifetime.Singleton);
+
+        services.AddDbContextFactory<TvContext>(
+            options => options.UseSqlite(
+                connectionString,
+                o =>
+                {
+                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                }));
+        
+        SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
+        SqlMapper.AddTypeHandler(new GuidHandler());
+        SqlMapper.AddTypeHandler(new TimeSpanHandler());
+
+        services.AddSingleton((Func<IServiceProvider, ILoggerFactory>)(_ => new SerilogLoggerFactory()));
+        
+        services.AddScoped<ISearchRepository, SearchRepository>();
+        services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
+        services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
+        services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
+
+        services.AddSingleton<ISearchIndex, SearchIndex>();
+
+        services.AddSingleton(_ => new Mock<IClient>().Object);
+
+        ServiceProvider provider = services.BuildServiceProvider();
+
+        IDbContextFactory<TvContext> factory = provider.GetRequiredService<IDbContextFactory<TvContext>>();
+
+        ILogger<ScheduleIntegrationTests> logger = provider.GetRequiredService<ILogger<ScheduleIntegrationTests>>();
+        logger.LogInformation("Database is at {File}", DB_FILE_NAME);
+
+        await using TvContext dbContext = await factory.CreateDbContextAsync(CancellationToken.None);
+        await dbContext.Database.MigrateAsync(CancellationToken.None);
+        await DbInitializer.Initialize(dbContext, CancellationToken.None);
+
+        ISearchIndex searchIndex = provider.GetRequiredService<ISearchIndex>();
+        await searchIndex.Initialize(
+            new LocalFileSystem(
+                provider.GetRequiredService<IClient>(),
+                provider.GetRequiredService<ILogger<LocalFileSystem>>()),
+            provider.GetRequiredService<IConfigElementRepository>());
+
+        await searchIndex.Rebuild(
+            provider.GetRequiredService<ICachingSearchRepository>(),
+            provider.GetRequiredService<IFallbackMetadataProvider>());
+        
+        var builder = new PlayoutBuilder(
+            new ConfigElementRepository(factory),
+            new MediaCollectionRepository(new Mock<IClient>().Object, searchIndex, factory),
+            new TelevisionRepository(factory),
+            new ArtistRepository(factory),
+            new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,
+            new Mock<ILocalFileSystem>().Object,
+            provider.GetRequiredService<ILogger<PlayoutBuilder>>());
+
+        {
+            await using TvContext context = await factory.CreateDbContextAsync();
+
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Playout playout = maybePlayout.ValueUnsafe();
+
+            await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            await context.SaveChangesAsync();
+        }
+
+        for (var i = 1; i <= (24 * 1); i++)
+        {
+            await using TvContext context = await factory.CreateDbContextAsync();
+            
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Playout playout = maybePlayout.ValueUnsafe();
+
+            await builder.Build(playout, PlayoutBuildMode.Continue, start.AddHours(i), finish.AddHours(i));
+
+            await context.SaveChangesAsync();
+        }
+        
+        for (var i = 25; i <= 26; i++)
+        {
+            await using TvContext context = await factory.CreateDbContextAsync();
+            
+            Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
+            Playout playout = maybePlayout.ValueUnsafe();
+
+            await builder.Build(playout, PlayoutBuildMode.Continue, start.AddHours(i), finish.AddHours(i));
+
+            await context.SaveChangesAsync();
+        }
+    }
+
+    [Test]
+    public async Task TestMockData()
     {
         string dbFileName = Path.GetTempFileName() + ".sqlite3";
 
@@ -221,8 +342,41 @@ public class ScheduleIntegrationTests
         return await dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.Items)
+            
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.Collection)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.MediaItem)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.PreRollFiller)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.MidRollFiller)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.PostRollFiller)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.TailFiller)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.FallbackFiller)
+            
+            .Include(p => p.ProgramScheduleAnchors)
+            .ThenInclude(a => a.EnumeratorState)
             .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(a => a.MediaItem)
+            
             .Include(p => p.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)

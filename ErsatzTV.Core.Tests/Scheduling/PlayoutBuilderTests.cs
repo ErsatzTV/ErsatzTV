@@ -2380,6 +2380,91 @@ public class PlayoutBuilderTests
             // the continue anchor should have the same seed as the most recent (last) checkpoint from the first run
             firstSeedValue.Should().Be(secondSeedValue);
         }
+        
+        [Test]
+        public async Task ShuffleFlood_MultipleSmartCollections_Should_MaintainRandomSeed()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
+                TestMovie(2, TimeSpan.FromHours(1), DateTime.Today.AddHours(1)),
+                TestMovie(3, TimeSpan.FromHours(1), DateTime.Today.AddHours(3))
+            };
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForSmartCollectionItems(mediaItems, PlaybackOrder.Shuffle);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(6);
+            result.ProgramScheduleAnchors.Count.Should().Be(2);
+            PlayoutProgramScheduleAnchor primaryAnchor = result.ProgramScheduleAnchors.First(a => a.SmartCollectionId == 1);
+            primaryAnchor.EnumeratorState.Seed.Should().BeGreaterThan(0);
+            primaryAnchor.EnumeratorState.Index.Should().Be(0);
+
+            int firstSeedValue = primaryAnchor.EnumeratorState.Seed;
+
+            DateTimeOffset start2 = HoursAfterMidnight(0);
+            DateTimeOffset finish2 = start2 + TimeSpan.FromHours(6);
+
+            Playout result2 = await builder.Build(result, PlayoutBuildMode.Continue, start2, finish2);
+
+            primaryAnchor = result2.ProgramScheduleAnchors.First(a => a.SmartCollectionId == 1);
+            int secondSeedValue = primaryAnchor.EnumeratorState.Seed;
+
+            firstSeedValue.Should().Be(secondSeedValue);
+
+            primaryAnchor.EnumeratorState.Index.Should().Be(0);
+        }
+        
+        [Test]
+        public async Task ShuffleFlood_MultipleSmartCollections_Should_MaintainRandomSeed_MultipleDays()
+        {
+            var mediaItems = new List<MediaItem>();
+            for (int i = 1; i <= 100; i++)
+            {
+                mediaItems.Add(TestMovie(i, TimeSpan.FromMinutes(55), DateTime.Today.AddHours(i)));
+            }
+
+            (PlayoutBuilder builder, Playout playout) =
+                TestDataFloodForSmartCollectionItems(mediaItems, PlaybackOrder.Shuffle);
+            DateTimeOffset start = HoursAfterMidnight(0).AddSeconds(5);
+            DateTimeOffset finish = start + TimeSpan.FromDays(2);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+            result.Items.Count.Should().Be(53);
+            result.ProgramScheduleAnchors.Count.Should().Be(4);
+
+            result.ProgramScheduleAnchors.All(x => x.AnchorDate is not null).Should().BeTrue();
+            PlayoutProgramScheduleAnchor lastCheckpoint = result.ProgramScheduleAnchors
+                .Filter(psa => psa.SmartCollectionId == 1)
+                .OrderByDescending(a => a.AnchorDate ?? DateTime.MinValue)
+                .First();
+            lastCheckpoint.EnumeratorState.Seed.Should().BeGreaterThan(0);
+            lastCheckpoint.EnumeratorState.Index.Should().Be(53);
+            
+            int firstSeedValue = lastCheckpoint.EnumeratorState.Seed;
+
+            for (var i = 1; i < 20; i++)
+            {
+                DateTimeOffset start2 = start.AddHours(i);
+                DateTimeOffset finish2 = start2 + TimeSpan.FromDays(2);
+
+                Playout result2 = await builder.Build(result, PlayoutBuildMode.Continue, start2, finish2);
+
+                PlayoutProgramScheduleAnchor continueAnchor =
+                    result2.ProgramScheduleAnchors
+                        .Filter(psa => psa.SmartCollectionId == 1)
+                        .First(x => x.AnchorDate is null);
+                int secondSeedValue = continueAnchor.EnumeratorState.Seed;
+
+                // the continue anchor should have the same seed as the most recent (last) checkpoint from the first run
+                firstSeedValue.Should().Be(secondSeedValue);
+            }
+        }
 
         [Test]
         public async Task FloodContent_Should_FloodWithFixedStartTime_FromAnchor()
@@ -2727,10 +2812,34 @@ public class PlayoutBuilderTests
         {
             Id = 1,
             Index = 1,
+            CollectionType = ProgramScheduleItemCollectionType.Collection,
             Collection = mediaCollection,
             CollectionId = mediaCollection.Id,
             StartTime = null,
-            PlaybackOrder = playbackOrder
+            PlaybackOrder = playbackOrder,
+        };
+
+    private static ProgramScheduleItem Flood(
+        SmartCollection smartCollection,
+        SmartCollection fillerCollection,
+        PlaybackOrder playbackOrder) =>
+        new ProgramScheduleItemFlood
+        {
+            Id = 1,
+            Index = 1,
+            CollectionType = ProgramScheduleItemCollectionType.SmartCollection,
+            SmartCollection = smartCollection,
+            SmartCollectionId = smartCollection.Id,
+            StartTime = null,
+            PlaybackOrder = playbackOrder,
+            FallbackFiller = new FillerPreset
+            {
+                Id = 1,
+                CollectionType = ProgramScheduleItemCollectionType.SmartCollection,
+                SmartCollection = fillerCollection,
+                SmartCollectionId = fillerCollection.Id,
+                FillerKind = FillerKind.Fallback
+            }
         };
 
     private static Movie TestMovie(int id, TimeSpan duration, DateTime aired) =>
@@ -2778,6 +2887,59 @@ public class PlayoutBuilderTests
             _logger);
 
         var items = new List<ProgramScheduleItem> { Flood(mediaCollection, playbackOrder) };
+
+        var playout = new Playout
+        {
+            Id = 1,
+            ProgramSchedule = new ProgramSchedule { Items = items },
+            Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+            Items = new List<PlayoutItem>(),
+            ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
+            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+        };
+
+        return new TestData(builder, playout);
+    }
+    
+    private TestData TestDataFloodForSmartCollectionItems(
+        List<MediaItem> mediaItems,
+        PlaybackOrder playbackOrder,
+        Mock<IConfigElementRepository> configMock = null)
+    {
+        var mediaCollection = new SmartCollection
+        {
+            Id = 1,
+            Query = "asdf"
+        };
+
+        var fillerCollection = new SmartCollection
+        {
+            Id = 2,
+            Query = "ghjk"
+        };
+
+        Mock<IConfigElementRepository> configRepo = configMock ?? new Mock<IConfigElementRepository>();
+
+        var collectionRepo = new FakeMediaCollectionRepository(
+            Map(
+                (mediaCollection.Id, mediaItems),
+                (fillerCollection.Id, mediaItems.Take(1).ToList())
+            )
+        );
+        var televisionRepo = new FakeTelevisionRepository();
+        var artistRepo = new Mock<IArtistRepository>();
+        var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+        var localFileSystem = new Mock<ILocalFileSystem>();
+        var builder = new PlayoutBuilder(
+            configRepo.Object,
+            collectionRepo,
+            televisionRepo,
+            artistRepo.Object,
+            factory.Object,
+            localFileSystem.Object,
+            _logger);
+
+        var items = new List<ProgramScheduleItem> { Flood(mediaCollection, fillerCollection, playbackOrder) };
 
         var playout = new Playout
         {
