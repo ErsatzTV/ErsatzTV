@@ -668,6 +668,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                 a => a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MediaItemId == collectionKey.MediaItemId
+                     && a.SmartCollectionId == collectionKey.SmartCollectionId
+                     && a.MultiCollectionId == collectionKey.MultiCollectionId
                      && a.AnchorDate is null);
 
             var maybeEnumeratorState = collectionEnumerators.ToDictionary(e => e.Key, e => e.Value.State);
@@ -727,15 +729,18 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
                      && a.MediaItemId == collectionKey.MediaItemId);
 
-        // foreach (PlayoutProgramScheduleAnchor anchor in maybeAnchor)
-        // {
-        //     _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
-        // }
+        CollectionEnumeratorState state = null;
 
-        CollectionEnumeratorState state = maybeAnchor.Match(
-            anchor => anchor.EnumeratorState ??
-                      (anchor.EnumeratorState = new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 }),
-            () => new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
+        foreach (PlayoutProgramScheduleAnchor anchor in maybeAnchor)
+        {
+            // _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
+
+            anchor.EnumeratorState ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+
+            state = anchor.EnumeratorState;
+        }
+
+        state ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
 
         int collectionId = collectionKey.CollectionId ?? 0;
 

@@ -106,7 +106,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(psi => psi.FallbackFiller)
             
             .Include(p => p.ProgramScheduleAnchors)
+            .ThenInclude(psa => psa.EnumeratorState)
+            .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(a => a.MediaItem)
+
             .Include(p => p.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
