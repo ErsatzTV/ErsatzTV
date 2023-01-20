@@ -10,23 +10,31 @@ public class MusicVideoMetadataConfiguration : IEntityTypeConfiguration<MusicVid
     {
         builder.ToTable("MusicVideoMetadata");
 
-        builder.HasMany(mm => mm.Artwork)
+        builder.HasMany(sm => sm.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Genres)
+        builder.HasMany(sm => sm.Genres)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Tags)
+        builder.HasMany(sm => sm.Tags)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Studios)
+        builder.HasMany(sm => sm.Studios)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mvm => mvm.Subtitles)
+        builder.HasMany(sm => sm.Actors)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Guids)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Subtitles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 

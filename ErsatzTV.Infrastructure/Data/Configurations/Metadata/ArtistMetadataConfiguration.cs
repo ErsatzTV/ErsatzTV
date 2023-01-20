@@ -18,6 +18,26 @@ public class ArtistMetadataConfiguration : IEntityTypeConfiguration<ArtistMetada
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(sm => sm.Tags)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(sm => sm.Studios)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(sm => sm.Actors)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Guids)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Subtitles)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+        
         builder.HasMany(sm => sm.Styles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

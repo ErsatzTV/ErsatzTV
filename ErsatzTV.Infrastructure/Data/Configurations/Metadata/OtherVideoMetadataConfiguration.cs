@@ -10,39 +10,39 @@ public class OtherVideoMetadataConfiguration : IEntityTypeConfiguration<OtherVid
     {
         builder.ToTable("OtherVideoMetadata");
 
-        builder.HasMany(ovm => ovm.Artwork)
+        builder.HasMany(sm => sm.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(ovm => ovm.Genres)
+        builder.HasMany(sm => sm.Genres)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(ovm => ovm.Tags)
+        builder.HasMany(sm => sm.Tags)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(ovm => ovm.Studios)
+        builder.HasMany(sm => sm.Studios)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(ovm => ovm.Actors)
+        builder.HasMany(sm => sm.Actors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(mm => mm.Guids)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Subtitles)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+        
         builder.HasMany(ovm => ovm.Directors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(ovm => ovm.Writers)
-            .WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(ovm => ovm.Guids)
-            .WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(ovm => ovm.Subtitles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
     }
