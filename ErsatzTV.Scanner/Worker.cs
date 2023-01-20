@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Diagnostics;
 using ErsatzTV.Scanner.Application.Emby;
 using ErsatzTV.Scanner.Application.Jellyfin;
 using ErsatzTV.Scanner.Application.MediaSources;
@@ -82,6 +83,8 @@ public class Worker : BackgroundService
                 if (IsScanningEnabled())
                 {
                     bool force = context.ParseResult.GetValueForOption(forceOption);
+                    SetProcessPriority(force);
+                    
                     int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
 
                     using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -98,6 +101,8 @@ public class Worker : BackgroundService
                 if (IsScanningEnabled())
                 {
                     bool force = context.ParseResult.GetValueForOption(forceOption);
+                    SetProcessPriority(force);
+
                     bool deep = context.ParseResult.GetValueForOption(deepOption);
                     int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
 
@@ -115,6 +120,8 @@ public class Worker : BackgroundService
                 if (IsScanningEnabled())
                 {
                     bool force = context.ParseResult.GetValueForOption(forceOption);
+                    SetProcessPriority(force);
+
                     int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
 
                     using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -131,6 +138,8 @@ public class Worker : BackgroundService
                 if (IsScanningEnabled())
                 {
                     bool force = context.ParseResult.GetValueForOption(forceOption);
+                    SetProcessPriority(force);
+
                     int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
 
                     using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -150,18 +159,33 @@ public class Worker : BackgroundService
         return rootCommand;
     }
 
-#if !DEBUG_NO_SYNC
     private bool IsScanningEnabled()
     {
+#if !DEBUG_NO_SYNC
         // don't want to flag the logger as unused (only used when sync is disabled)
         ILogger<Worker> _ = _logger;
         return true;
-    }
 #else
-    private bool IsScanningEnabled()
-    {
         _logger.LogInformation("Scanning is disabled via DEBUG_NO_SYNC");
         return false;
-    }
 #endif
+    }
+
+    private void SetProcessPriority(bool force)
+    {
+        if (force)
+        {
+            return;
+        }
+
+        try
+        {
+            using var process = Process.GetCurrentProcess();
+            process.PriorityClass = ProcessPriorityClass.Idle;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set scanner priority");
+        }
+    }
 }
