@@ -181,7 +181,7 @@ public class Worker : BackgroundService
         try
         {
             using var process = Process.GetCurrentProcess();
-            process.PriorityClass = ProcessPriorityClass.Idle;
+            process.PriorityClass = ProcessPriorityClass.BelowNormal;
         }
         catch (Exception ex)
         {
