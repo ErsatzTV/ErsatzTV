@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
@@ -160,11 +161,23 @@ public class JellyfinService : BackgroundService
         Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
             name => _logger.LogDebug("Done synchronizing jellyfin library {Name}", name),
-            error => _logger.LogWarning(
-                "Unable to synchronize jellyfin library {LibraryId}: {Error}",
-                request.JellyfinLibraryId,
-                error.Value));
-        
+            error =>
+            {
+                if (error is ScanIsNotRequired)
+                {
+                    _logger.LogDebug(
+                        "Scan is not required for jellyfin library {LibraryId} at this time",
+                        request.JellyfinLibraryId);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Unable to synchronize jellyfin library {LibraryId}: {Error}",
+                        request.JellyfinLibraryId,
+                        error.Value);
+                }
+            });
+
         if (entityLocker.IsLibraryLocked(request.JellyfinLibraryId))
         {
             entityLocker.UnlockLibrary(request.JellyfinLibraryId);

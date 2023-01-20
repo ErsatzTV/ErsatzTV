@@ -1,19 +1,25 @@
 ﻿using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaSources;
 
-public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler,
+public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLocalLibrary>,
     IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
     IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
 {
     public CallLocalLibraryScannerHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        IConfigElementRepository configElementRepository,
         ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
         IMediator mediator,
         IRuntimeInfo runtimeInfo)
-        : base(channel, mediator, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
     {
     }
 
@@ -27,10 +33,18 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler,
 
     private async Task<Either<BaseError, string>> Handle(IScanLocalLibrary request, CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = Validate();
+        Validation<BaseError, string> validation = await Validate(request);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
-            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+            error =>
+            {
+                foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
+                {
+                    return Task.FromResult<Either<BaseError, string>>(scanIsNotRequired);
+                }
+
+                return Task.FromResult<Either<BaseError, string>>(error.Join());
+            });
     }
 
     private async Task<Either<BaseError, string>> PerformScan(
@@ -49,5 +63,22 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler,
         }
 
         return await base.PerformScan(scanner, arguments, cancellationToken);
+    }
+
+    protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, IScanLocalLibrary request)
+    {
+        return await dbContext.LibraryPaths
+            .Filter(lp => lp.LibraryId == request.LibraryId)
+            .ToListAsync()
+            .Map(list => list.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc));
+    }
+
+    protected override bool ScanIsRequired(
+        DateTimeOffset lastScan,
+        int libraryRefreshInterval,
+        IScanLocalLibrary request)
+    {
+        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
+        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
     }
 }

@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
@@ -159,10 +160,22 @@ public class PlexService : BackgroundService
         Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
             name => _logger.LogDebug("Done synchronizing plex library {Name}", name),
-            error => _logger.LogWarning(
-                "Unable to synchronize plex library {LibraryId}: {Error}",
-                request.PlexLibraryId,
-                error.Value));
+            error =>
+            {
+                if (error is ScanIsNotRequired)
+                {
+                    _logger.LogDebug(
+                        "Scan is not required for plex library {LibraryId} at this time",
+                        request.PlexLibraryId);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Unable to synchronize plex library {LibraryId}: {Error}",
+                        request.PlexLibraryId,
+                        error.Value);
+                }
+            });
         
         if (entityLocker.IsLibraryLocked(request.PlexLibraryId))
         {
