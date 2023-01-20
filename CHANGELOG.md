@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Always use software pipeline for error display
   - This ensures errors will display even when hardware acceleration is misconfigured
 - Call scanner process only when scanning is required based on library refresh interval
+- Use idle priority for scanner process with unforced (automatic) library scans
 
 ## [0.7.2-beta] - 2023-01-05
 ### Fixed
