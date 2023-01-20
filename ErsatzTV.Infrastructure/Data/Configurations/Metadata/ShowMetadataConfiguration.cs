@@ -33,5 +33,9 @@ public class ShowMetadataConfiguration : IEntityTypeConfiguration<ShowMetadata>
         builder.HasMany(mm => mm.Guids)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Subtitles)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

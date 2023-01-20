@@ -10,31 +10,23 @@ public class MovieMetadataConfiguration : IEntityTypeConfiguration<MovieMetadata
     {
         builder.ToTable("MovieMetadata");
 
-        builder.HasMany(mm => mm.Artwork)
+        builder.HasMany(sm => sm.Artwork)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Genres)
+        builder.HasMany(sm => sm.Genres)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Tags)
+        builder.HasMany(sm => sm.Tags)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Studios)
+        builder.HasMany(sm => sm.Studios)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(mm => mm.Actors)
-            .WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(mm => mm.Directors)
-            .WithOne()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(mm => mm.Writers)
+        builder.HasMany(sm => sm.Actors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -43,6 +35,14 @@ public class MovieMetadataConfiguration : IEntityTypeConfiguration<MovieMetadata
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(mm => mm.Subtitles)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(mm => mm.Directors)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mm => mm.Writers)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
     }
