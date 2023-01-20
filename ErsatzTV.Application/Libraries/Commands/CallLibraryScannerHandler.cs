@@ -3,9 +3,14 @@ using System.Threading.Channels;
 using CliWrap;
 using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Serilog;
 using Serilog.Events;
@@ -13,18 +18,24 @@ using Serilog.Formatting.Compact.Reader;
 
 namespace ErsatzTV.Application.Libraries;
 
-public abstract class CallLibraryScannerHandler
+public abstract class CallLibraryScannerHandler<TRequest>
 {
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
     private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
     private string _libraryName;
 
     protected CallLibraryScannerHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        IConfigElementRepository configElementRepository,
         ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
         IMediator mediator,
         IRuntimeInfo runtimeInfo)
     {
+        _dbContextFactory = dbContextFactory;
+        _configElementRepository = configElementRepository;
         _channel = channel;
         _mediator = mediator;
         _runtimeInfo = runtimeInfo;
@@ -131,8 +142,25 @@ public abstract class CallLibraryScannerHandler
         }
     }
 
-    protected Validation<BaseError, string> Validate()
+    protected abstract Task<DateTimeOffset> GetLastScan(TvContext dbContext, TRequest request);
+    protected abstract bool ScanIsRequired(DateTimeOffset lastScan, int libraryRefreshInterval, TRequest request);
+
+    protected async Task<Validation<BaseError, string>> Validate(TRequest request)
     {
+        int libraryRefreshInterval = await _configElementRepository
+            .GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+            .IfNoneAsync(0);
+
+        libraryRefreshInterval = Math.Clamp(libraryRefreshInterval, 0, 999_999);
+        
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        
+        DateTimeOffset lastScan = await GetLastScan(dbContext, request);
+        if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
+        {
+            return new ScanIsNotRequired();
+        }
+
         string executable = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
             ? "ErsatzTV.Scanner.exe"
             : "ErsatzTV.Scanner";

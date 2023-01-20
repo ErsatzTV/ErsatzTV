@@ -4,6 +4,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
@@ -135,10 +136,22 @@ public class EmbyService : BackgroundService
         Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
             name => _logger.LogDebug("Done synchronizing emby library {Name}", name),
-            error => _logger.LogWarning(
-                "Unable to synchronize emby library {LibraryId}: {Error}",
-                request.EmbyLibraryId,
-                error.Value));
+            error =>
+            {
+                if (error is ScanIsNotRequired)
+                {
+                    _logger.LogDebug(
+                        "Scan is not required for emby library {LibraryId} at this time",
+                        request.EmbyLibraryId);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Unable to synchronize emby library {LibraryId}: {Error}",
+                        request.EmbyLibraryId,
+                        error.Value);
+                }
+            });
         
         if (entityLocker.IsLibraryLocked(request.EmbyLibraryId))
         {

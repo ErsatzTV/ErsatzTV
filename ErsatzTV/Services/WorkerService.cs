@@ -8,6 +8,7 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Search;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
@@ -71,10 +72,22 @@ public class WorkerService : BackgroundService
                                 name => _logger.LogDebug(
                                     "Done scanning local library {Library}",
                                     name),
-                                error => _logger.LogWarning(
-                                    "Unable to scan local library {LibraryId}: {Error}",
-                                    scanLocalLibrary.LibraryId,
-                                    error.Value));
+                                error =>
+                                {
+                                    if (error is ScanIsNotRequired)
+                                    {
+                                        _logger.LogDebug(
+                                            "Scan is not required for local library {LibraryId} at this time",
+                                            scanLocalLibrary.LibraryId);
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning(
+                                            "Unable to scan local library {LibraryId}: {Error}",
+                                            scanLocalLibrary.LibraryId,
+                                            error.Value);
+                                    }
+                                });
 
                             if (entityLocker.IsLibraryLocked(scanLocalLibrary.LibraryId))
                             {

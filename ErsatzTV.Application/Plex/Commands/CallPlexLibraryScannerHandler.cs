@@ -1,19 +1,26 @@
 ﻿using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Plex;
 
-public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler,
+public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchronizePlexLibraryById>,
     IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>,
     IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
 {
     public CallPlexLibraryScannerHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        IConfigElementRepository configElementRepository,
         ChannelWriter<ISearchIndexBackgroundServiceRequest> channel,
         IMediator mediator,
         IRuntimeInfo runtimeInfo)
-        : base(channel, mediator, runtimeInfo)
+        : base(dbContextFactory, configElementRepository, channel, mediator, runtimeInfo)
     {
     }
 
@@ -29,10 +36,18 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler,
         ISynchronizePlexLibraryById request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, string> validation = Validate();
+        Validation<BaseError, string> validation = await Validate(request);
         return await validation.Match(
             scanner => PerformScan(scanner, request, cancellationToken),
-            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+            error =>
+            {
+                foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
+                {
+                    return Task.FromResult<Either<BaseError, string>>(scanIsNotRequired);
+                }
+
+                return Task.FromResult<Either<BaseError, string>>(error.Join());
+            });
     }
 
     private async Task<Either<BaseError, string>> PerformScan(
@@ -56,5 +71,23 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler,
         }
 
         return await base.PerformScan(scanner, arguments, cancellationToken);
+    }
+
+    protected override async Task<DateTimeOffset> GetLastScan(
+        TvContext dbContext,
+        ISynchronizePlexLibraryById request)
+    {
+        return await dbContext.PlexLibraries
+            .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId)
+            .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
+    }
+
+    protected override bool ScanIsRequired(
+        DateTimeOffset lastScan,
+        int libraryRefreshInterval,
+        ISynchronizePlexLibraryById request)
+    {
+        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
+        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
     }
 }
