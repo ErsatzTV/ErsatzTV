@@ -67,10 +67,13 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
 
     protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, IScanLocalLibrary request)
     {
-        return await dbContext.LibraryPaths
+        var libraryPaths = await dbContext.LibraryPaths
             .Filter(lp => lp.LibraryId == request.LibraryId)
-            .ToListAsync()
-            .Map(list => list.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc));
+            .ToListAsync();
+        
+        return libraryPaths.Any()
+            ? libraryPaths.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc)
+            : SystemTime.MaxValueUtc;
     }
 
     protected override bool ScanIsRequired(
