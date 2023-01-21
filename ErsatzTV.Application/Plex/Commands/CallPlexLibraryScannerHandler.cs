@@ -87,6 +87,11 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         int libraryRefreshInterval,
         ISynchronizePlexLibraryById request)
     {
+        if (lastScan == SystemTime.MaxValueUtc)
+        {
+            return false;
+        }
+
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
         return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
     }
