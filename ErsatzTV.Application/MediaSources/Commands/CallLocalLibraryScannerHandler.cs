@@ -81,6 +81,11 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
         int libraryRefreshInterval,
         IScanLocalLibrary request)
     {
+        if (lastScan == SystemTime.MaxValueUtc)
+        {
+            return false;
+        }
+
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
         return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
     }
