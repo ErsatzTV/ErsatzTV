@@ -6,6 +6,8 @@ namespace ErsatzTV.Application.Maintenance;
 
 public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
 {
+    private static long _lastRelease;
+    
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ILogger<ReleaseMemoryHandler> _logger;
 
@@ -19,6 +21,12 @@ public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
 
     public Task<Unit> Handle(ReleaseMemory request, CancellationToken cancellationToken)
     {
+        if (!request.ForceAggressive && _lastRelease > request.RequestTime.Ticks)
+        {
+            // we've already released since the request was created, so don't bother
+            return Task.FromResult(Unit.Default);
+        }
+
         bool hasActiveWorkers = _ffmpegSegmenterService.SessionWorkers.Any() || FFmpegProcess.ProcessCount > 0;
         if (request.ForceAggressive || !hasActiveWorkers)
         {
@@ -35,6 +43,7 @@ public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
         GC.Collect();
 
         _logger.LogDebug("Completed garbage collection");
+        Interlocked.Exchange(ref _lastRelease, DateTimeOffset.Now.Ticks);
 
         return Task.FromResult(Unit.Default);
     }
