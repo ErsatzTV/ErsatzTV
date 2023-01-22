@@ -1,8 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Channels;
 using CliWrap;
 using CliWrap.Buffered;
 using CliWrap.Builders;
+using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -21,6 +23,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<ExtractEmbeddedSubtitlesHandler> _logger;
@@ -32,6 +35,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
         IEmbyPathReplacementService embyPathReplacementService,
+        ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ILogger<ExtractEmbeddedSubtitlesHandler> logger)
     {
         _dbContextFactory = dbContextFactory;
@@ -39,6 +43,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         _plexPathReplacementService = plexPathReplacementService;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
         _embyPathReplacementService = embyPathReplacementService;
+        _workerChannel = workerChannel;
         _logger = logger;
     }
 
@@ -49,7 +54,12 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, string> validation = await FFmpegPathMustExist(dbContext);
         return await validation.Match(
-            ffmpegPath => ExtractAll(dbContext, request, ffmpegPath, cancellationToken),
+            async ffmpegPath =>
+            {
+                Either<BaseError, Unit> result = await ExtractAll(dbContext, request, ffmpegPath, cancellationToken);
+                await _workerChannel.WriteAsync(new ReleaseMemory(false), cancellationToken);
+                return result;
+            },
             error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
     }
 
@@ -68,6 +78,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             // only check the requested playout if subtitles are enabled
             Option<Playout> requestedPlayout = await dbContext.Playouts
+                .AsNoTracking()
                 .Filter(
                     p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
                          p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != ChannelSubtitleMode.None))
@@ -79,6 +90,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             if (request.PlayoutId.IsNone)
             {
                 playoutIdsToCheck = dbContext.Playouts
+                    .AsNoTracking()
                     .Filter(
                         p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
                              p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != ChannelSubtitleMode.None))
@@ -104,6 +116,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             // find all playout items in the next hour
             List<PlayoutItem> playoutItems = await dbContext.PlayoutItems
+                .AsNoTracking()
                 .Filter(pi => playoutIdsToCheck.Contains(pi.PlayoutId))
                 .Filter(pi => pi.Finish >= DateTime.UtcNow)
                 .Filter(pi => pi.Start <= until)
@@ -170,6 +183,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         try
         {
             List<int> episodeIds = await dbContext.EpisodeMetadata
+                .AsNoTracking()
                 .Filter(em => mediaItemIds.Contains(em.EpisodeId))
                 .Filter(
                     em => em.Subtitles.Any(
@@ -180,6 +194,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             result.AddRange(episodeIds);
 
             List<int> movieIds = await dbContext.MovieMetadata
+                .AsNoTracking()
                 .Filter(mm => mediaItemIds.Contains(mm.MovieId))
                 .Filter(
                     mm => mm.Subtitles.Any(
@@ -190,6 +205,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             result.AddRange(movieIds);
 
             List<int> musicVideoIds = await dbContext.MusicVideoMetadata
+                .AsNoTracking()
                 .Filter(mm => mediaItemIds.Contains(mm.MusicVideoId))
                 .Filter(
                     mm => mm.Subtitles.Any(
@@ -200,6 +216,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             result.AddRange(musicVideoIds);
 
             List<int> otherVideoIds = await dbContext.OtherVideoMetadata
+                .AsNoTracking()
                 .Filter(ovm => mediaItemIds.Contains(ovm.OtherVideoId))
                 .Filter(
                     ovm => ovm.Subtitles.Any(
