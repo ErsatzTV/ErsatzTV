@@ -287,7 +287,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             startInfo.ArgumentList.Add("null");
             startInfo.ArgumentList.Add("-");
 
-            var probe = new Process
+            using var probe = new Process
             {
                 StartInfo = startInfo
             };

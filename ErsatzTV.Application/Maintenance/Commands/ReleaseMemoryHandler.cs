@@ -1,3 +1,4 @@
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;
 
@@ -18,21 +19,22 @@ public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
 
     public Task<Unit> Handle(ReleaseMemory request, CancellationToken cancellationToken)
     {
-        // TODO: check for active TS (legacy), HLS Direct streams
-
-        bool hasActiveWorkers = _ffmpegSegmenterService.SessionWorkers.Any();
+        bool hasActiveWorkers = _ffmpegSegmenterService.SessionWorkers.Any() || FFmpegProcess.ProcessCount > 0;
         if (request.ForceAggressive || !hasActiveWorkers)
         {
             _logger.LogDebug("Starting aggressive garbage collection");
             GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-            _logger.LogDebug("Completed aggressive garbage collection");
         }
         else
         {
             _logger.LogDebug("Starting garbage collection");
             GC.Collect(2, GCCollectionMode.Forced, blocking: false);
-            _logger.LogDebug("Completed garbage collection");
         }
+
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        _logger.LogDebug("Completed garbage collection");
 
         return Task.FromResult(Unit.Default);
     }

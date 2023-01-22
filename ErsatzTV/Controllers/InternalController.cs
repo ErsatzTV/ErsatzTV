@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CliWrap;
 using ErsatzTV.Application.Streaming;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,7 @@ public class InternalController : ControllerBase
                             Command command = processModel.Process;
 
                             _logger.LogInformation("ffmpeg arguments {FFmpegArguments}", command.Arguments);
-                            var process = new Process
+                            var process = new FFmpegProcess
                             {
                                 StartInfo = new ProcessStartInfo
                                 {

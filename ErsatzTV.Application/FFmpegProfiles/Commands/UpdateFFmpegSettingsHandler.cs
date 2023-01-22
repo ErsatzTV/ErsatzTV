@@ -52,7 +52,7 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             UseShellExecute = false
         };
 
-        var test = new Process
+        using var test = new Process
         {
             StartInfo = startInfo
         };

@@ -97,7 +97,7 @@ public class IptvController : ControllerBase
 
                         _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
                         _logger.LogInformation("ffmpeg arguments {FFmpegArguments}", command.Arguments);
-                        var process = new Process
+                        var process = new FFmpegProcess
                         {
                             StartInfo = new ProcessStartInfo
                             {
