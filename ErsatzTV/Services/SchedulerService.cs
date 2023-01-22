@@ -100,6 +100,8 @@ public class SchedulerService : BackgroundService
             await ScanEmbyMediaSources(cancellationToken);
 #endif
             await MatchTraktLists(cancellationToken);
+
+            await ReleaseMemory(cancellationToken);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -270,4 +272,7 @@ public class SchedulerService : BackgroundService
 
     private ValueTask DeleteOrphanedArtwork(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);
+
+    private ValueTask ReleaseMemory(CancellationToken cancellationToken) =>
+        _workerChannel.WriteAsync(new ReleaseMemory(false), cancellationToken);
 }

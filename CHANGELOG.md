@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Attempt to release memory periodically
+
 ### Fixed
 - Fix schedule editor crashing due to bad music video artist data
 - Fix bug where playouts would not maintain smart collection progress on schedules that use multiple smart collections
