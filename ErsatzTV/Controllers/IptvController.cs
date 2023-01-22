@@ -109,6 +109,7 @@ public class IptvController : ControllerBase
                                 CreateNoWindow = true
                             }
                         };
+                        HttpContext.Response.RegisterForDispose(process);
 
                         foreach ((string key, string value) in command.EnvironmentVariables)
                         {
