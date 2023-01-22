@@ -145,6 +145,7 @@ public class ArtworkController : ControllerBase
             Right: async r =>
             {
                 HttpClient client = _httpClientFactory.CreateClient();
+                HttpContext.Response.RegisterForDispose(client);
                 client.DefaultRequestHeaders.Add("X-Plex-Token", r.AuthToken);
 
                 var fullPath = new Uri(r.Uri, transcodePath);
@@ -152,6 +153,8 @@ public class ArtworkController : ControllerBase
                     fullPath,
                     HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
+                HttpContext.Response.RegisterForDispose(response);
+
                 Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
                 return new FileStreamResult(
@@ -170,12 +173,15 @@ public class ArtworkController : ControllerBase
             Right: async vm =>
             {
                 HttpClient client = _httpClientFactory.CreateClient();
+                HttpContext.Response.RegisterForDispose(client);
 
                 Url fullPath = JellyfinUrl.ForArtwork(vm.Address, path);
                 HttpResponseMessage response = await client.GetAsync(
                     fullPath,
                     HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
+                HttpContext.Response.RegisterForDispose(response);
+
                 Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
                 return new FileStreamResult(
@@ -194,12 +200,15 @@ public class ArtworkController : ControllerBase
             Right: async vm =>
             {
                 HttpClient client = _httpClientFactory.CreateClient();
+                HttpContext.Response.RegisterForDispose(client);
 
                 Url fullPath = EmbyUrl.ForArtwork(vm.Address, path);
                 HttpResponseMessage response = await client.GetAsync(
                     fullPath,
                     HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
+                HttpContext.Response.RegisterForDispose(response);
+
                 Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
                 return new FileStreamResult(

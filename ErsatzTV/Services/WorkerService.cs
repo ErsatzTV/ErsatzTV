@@ -113,6 +113,9 @@ public class WorkerService : BackgroundService
                         case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:
                             await mediator.Send(extractEmbeddedSubtitles, cancellationToken);
                             break;
+                        case ReleaseMemory aggressivelyReleaseMemory:
+                            await mediator.Send(aggressivelyReleaseMemory, cancellationToken);
+                            break;
                     }
                 }
                 catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)

@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Threading.Channels;
+using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -14,6 +16,7 @@ namespace ErsatzTV.Application.Streaming;
 public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<StartFFmpegSessionHandler> _logger;
@@ -24,13 +27,15 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         ILogger<StartFFmpegSessionHandler> logger,
         IServiceScopeFactory serviceScopeFactory,
         IFFmpegSegmenterService ffmpegSegmenterService,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _localFileSystem = localFileSystem;
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
+        _workerChannel = workerChannel;
     }
 
     public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
@@ -54,9 +59,14 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         // fire and forget worker
         _ = worker.Run(request.ChannelNumber, idleTimeout, cancellationToken)
             .ContinueWith(
-                _ => _ffmpegSegmenterService.SessionWorkers.TryRemove(
-                    request.ChannelNumber,
-                    out IHlsSessionWorker _),
+                _ =>
+                {
+                    _ffmpegSegmenterService.SessionWorkers.TryRemove(
+                        request.ChannelNumber,
+                        out IHlsSessionWorker _);
+
+                    _workerChannel.TryWrite(new ReleaseMemory(false));
+                },
                 TaskScheduler.Default);
 
         string playlistFileName = Path.Combine(
