@@ -151,6 +151,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error saving alternate schedule items");
             return BaseError.New(ex.Message);
         }
     }
