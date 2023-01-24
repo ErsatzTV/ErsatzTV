@@ -33,10 +33,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-11
             kind: macOS
             target: osx-x64
-          - os: macos-latest
+          - os: macos-11
             kind: macOS
             target: osx-arm64
     steps:

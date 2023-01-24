@@ -63,7 +63,7 @@ jobs:
       - name: Test
         run: dotnet test --no-restore --verbosity normal
   build_and_test_mac:
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
       - name: Get the sources
         uses: actions/checkout@v3
