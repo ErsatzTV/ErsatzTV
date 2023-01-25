@@ -6,13 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Attempt to release memory periodically
-- Add SSO support via OIDC
+- Add OpenID Connect (OIDC) support (e.g. Keycloak, Authelia, Auth0)
   - This only protects the management UI; all streaming endpoints will continue to allow anonymous access 
   - This can be configured with the following env vars (note the double underscore separator `__`)
     - `OIDC__AUTHORITY`
     - `OIDC__CLIENTID`
     - `OIDC__CLIENTSECRET`
-    - `OIDC__LOGOUTURI` (optional, needed for Auth0)
+    - `OIDC__LOGOUTURI` (optional, needed for Auth0, use `https://{auth0-domain}/v2/logout?client_id={auth0-client-id}` with proper values for domain and client-id)
+- Add *experimental* alternate schedule system
+  - This allows a single playout to dynamically select a schedule based on date criteria, for example:
+    - Weekday vs weekend schedules
+    - Summer vs fall schedules
+    - Shark week schedules
+  - Alternate schedules can be managed by clicking the calendar icon in the playout list
+  - Playouts contain a prioritized (top to bottom) list of alternate schedules
+  - Whenever a playout is built for a given day, ErsatzTV will check for a matching schedule from top to bottom
+  - A given day must match all alternate schedule parameters; wildcards (`*any*`) will always match
+    - Day of week
+    - Day of month
+    - Month
+  - The lowest priority (bottom) item will always match all parameters, and can be considered a "default" or "fallback" schedule 
 
 ### Fixed
 - Fix schedule editor crashing due to bad music video artist data
