@@ -2,12 +2,14 @@
 using ErsatzTV.Application.FFmpegProfiles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Api.FFmpegProfiles;
+using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
+[V2ApiActionFilter]
 public class FFmpegProfileController
 {
     private readonly IMediator _mediator;
@@ -28,10 +30,10 @@ public class FFmpegProfileController
         [Required] [FromBody]
         UpdateFFmpegProfile request) => await _mediator.Send(request);
 
-    [HttpGet("/api/ffmpeg/profiles/{id}")]
+    [HttpGet("/api/ffmpeg/profiles/{id:int}")]
     public async Task<Option<FFmpegFullProfileResponseModel>> GetOne(int id) =>
         await _mediator.Send(new GetFFmpegFullProfileByIdForApi(id));
 
-    [HttpDelete("/api/ffmpeg/delete/{id}")]
+    [HttpDelete("/api/ffmpeg/delete/{id:int}")]
     public async Task DeleteProfileAsync(int id) => await _mediator.Send(new DeleteFFmpegProfile(id));
 }

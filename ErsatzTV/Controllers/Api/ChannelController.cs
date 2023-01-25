@@ -1,11 +1,13 @@
 ﻿using ErsatzTV.Application.Channels;
 using ErsatzTV.Core.Api.Channels;
+using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers.Api;
 
 [ApiController]
+[V2ApiActionFilter]
 public class ChannelController
 {
     private readonly IMediator _mediator;
