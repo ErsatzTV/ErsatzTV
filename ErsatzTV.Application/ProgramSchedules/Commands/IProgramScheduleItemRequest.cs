@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -18,7 +18,9 @@ public interface IProgramScheduleItemRequest
     string CustomTitle { get; }
     GuideMode GuideMode { get; }
     int? PreRollFillerId { get; }
+    int? MidRollEnterFillerId { get; }
     int? MidRollFillerId { get; }
+    int? MidRollExitFillerId { get; }
     int? PostRollFillerId { get; }
     int? TailFillerId { get; }
     int? FallbackFillerId { get; }

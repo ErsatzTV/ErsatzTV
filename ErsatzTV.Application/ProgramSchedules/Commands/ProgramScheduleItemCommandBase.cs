@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
@@ -24,7 +24,9 @@ public abstract class ProgramScheduleItemCommandBase
         ProgramSchedule programSchedule)
     {
         var allFillerIds = Optional(item.PreRollFillerId)
+            .Append(Optional(item.MidRollEnterFillerId))
             .Append(Optional(item.MidRollFillerId))
+            .Append(Optional(item.MidRollExitFillerId))
             .Append(Optional(item.PostRollFillerId))
             .ToList();
 
@@ -175,7 +177,9 @@ public abstract class ProgramScheduleItemCommandBase
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,
+                MidRollEnterFillerId = item.MidRollEnterFillerId,
                 MidRollFillerId = item.MidRollFillerId,
+                MidRollExitFillerId = item.MidRollExitFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
@@ -199,7 +203,9 @@ public abstract class ProgramScheduleItemCommandBase
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,
+                MidRollEnterFillerId = item.MidRollEnterFillerId,
                 MidRollFillerId = item.MidRollFillerId,
+                MidRollExitFillerId= item.MidRollExitFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
@@ -224,7 +230,9 @@ public abstract class ProgramScheduleItemCommandBase
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,
+                MidRollEnterFillerId = item.MidRollEnterFillerId,
                 MidRollFillerId = item.MidRollFillerId,
+                MidRollExitFillerId= item.MidRollExitFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
@@ -250,7 +258,9 @@ public abstract class ProgramScheduleItemCommandBase
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,
+                MidRollEnterFillerId = item.MidRollEnterFillerId,
                 MidRollFillerId = item.MidRollFillerId,
+                MidRollExitFillerId= item.MidRollExitFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,

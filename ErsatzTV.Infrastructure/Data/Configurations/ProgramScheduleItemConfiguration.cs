@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -40,9 +40,21 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
+        builder.HasOne(i => i.MidRollEnterFiller)
+            .WithMany()
+            .HasForeignKey(i => i.MidRollEnterFillerId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
         builder.HasOne(i => i.MidRollFiller)
             .WithMany()
             .HasForeignKey(i => i.MidRollFillerId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        builder.HasOne(i => i.MidRollExitFiller)
+            .WithMany()
+            .HasForeignKey(i => i.MidRollExitFillerId)
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 

@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Application.Filler;
+using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core;
@@ -47,7 +47,7 @@ public class FillerPresetEditViewModel
 
     public int? Count
     {
-        get => FillerMode == FillerMode.Count ? _count : null;
+        get => FillerMode == FillerMode.Count ? FillerKind != FillerKind.MidRollExit && FillerKind != FillerKind.MidRollExit ? _count : 1 : null;
         set => _count = value;
     }
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ErsatzTV.Annotations;
 using ErsatzTV.Application.Filler;
@@ -60,7 +60,9 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public SmartCollectionViewModel SmartCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
     public FillerPresetViewModel PreRollFiller { get; set; }
+    public FillerPresetViewModel MidRollEnterFiller { get; set; }
     public FillerPresetViewModel MidRollFiller { get; set; }
+    public FillerPresetViewModel MidRollExitFiller { get; set; }
     public FillerPresetViewModel PostRollFiller { get; set; }
     public FillerPresetViewModel TailFiller { get; set; }
     public FillerPresetViewModel FallbackFiller { get; set; }

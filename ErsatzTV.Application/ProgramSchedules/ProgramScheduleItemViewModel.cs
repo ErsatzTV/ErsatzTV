@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Application.Filler;
+using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
@@ -21,7 +21,9 @@ public abstract record ProgramScheduleItemViewModel(
     string CustomTitle,
     GuideMode GuideMode,
     FillerPresetViewModel PreRollFiller,
+    FillerPresetViewModel MidRollEnterFiller,
     FillerPresetViewModel MidRollFiller,
+    FillerPresetViewModel MidRollExitFiller,
     FillerPresetViewModel PostRollFiller,
     FillerPresetViewModel TailFiller,
     FillerPresetViewModel FallbackFiller,

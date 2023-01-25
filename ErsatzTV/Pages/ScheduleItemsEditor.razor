@@ -1,4 +1,4 @@
-﻿@page "/schedules/{Id:int}/items"
+@page "/schedules/{Id:int}/items"
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
@@ -15,323 +15,343 @@
 @inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-<MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
-    </ToolBarContent>
-    <ColGroup>
-        <col/>
-        <col/>
-        <col/>
-        <col style="width: 60px;"/>
-        <col style="width: 60px;"/>
-        <col style="width: 60px;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Start Time</MudTh>
-        <MudTh>Collection</MudTh>
-        <MudTh>Playout Mode</MudTh>
-        <MudTh/>
-        <MudTh/>
-        <MudTh/>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Start Time">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Collection">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @context.CollectionName
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Playout Mode">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @context.PlayoutMode
-                @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
+    <MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col />
+            <col />
+            <col />
+            <col style="width: 60px;" />
+            <col style="width: 60px;" />
+            <col style="width: 60px;" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Start Time</MudTh>
+            <MudTh>Collection</MudTh>
+            <MudTh>Playout Mode</MudTh>
+            <MudTh />
+            <MudTh />
+            <MudTh />
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start Time">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Collection">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.CollectionName
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Playout Mode">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.PlayoutMode
+                    @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
+                    {
+                        @($" ({context.MultipleCount})")
+                    }
+                </MudText>
+            </MudTd>
+            <MudTd>
+                @if (!_schedule.ShuffleScheduleItems)
                 {
-                    @($" ({context.MultipleCount})")
-                }
-            </MudText>
-        </MudTd>
-        <MudTd>
-            @if (!_schedule.ShuffleScheduleItems)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
                                OnClick="@(_ => MoveItemUp(context))"
                                Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index >= context.Index))">
-                </MudIconButton>
-            }
-        </MudTd>
-        <MudTd>
-            @if (!_schedule.ShuffleScheduleItems)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                    </MudIconButton>
+                }
+            </MudTd>
+            <MudTd>
+                @if (!_schedule.ShuffleScheduleItems)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
                                OnClick="@(_ => MoveItemDown(context))"
                                Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index <= context.Index))">
+                    </MudIconButton>
+                }
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(_ => RemoveScheduleItem(context))">
                 </MudIconButton>
-            }
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                           OnClick="@(_ => RemoveScheduleItem(context))">
-            </MudIconButton>
-        </MudTd>
-    </RowTemplate>
-</MudTable>
-<MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
-    Add Schedule Item
-</MudButton>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
-    Save Changes
-</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
+        Add Schedule Item
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+        Save Changes
+    </MudButton>
 
-@if (_selectedItem is not null)
-{
-    <EditForm Model="_selectedItem">
-    <FluentValidator/>
-    <div style="display: flex; flex-direction: row;" class="mt-6">
-    <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
-        <MudCard>
-            <MudCardContent>
-                <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
-                    <MudSelectItem Value="StartType.Dynamic">Dynamic</MudSelectItem>
-                    @if (!_schedule.ShuffleScheduleItems)
-                    {
-                        <MudSelectItem Value="StartType.Fixed">Fixed</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
-                <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
-                    @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
-                    {
-                        <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
-                    }
-                </MudSelect>
-                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
-                {
-                    <MudSelect Class="mt-3"
-                               T="MediaCollectionViewModel"
-                               Label="Collection"
-                               @bind-value="_selectedItem.Collection">
-                        @foreach (MediaCollectionViewModel collection in _mediaCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
-                {
-                    <MudSelect Class="mt-3"
-                               T="MultiCollectionViewModel"
-                               Label="Multi Collection"
-                               @bind-value="_selectedItem.MultiCollection">
-                        @foreach (MultiCollectionViewModel collection in _multiCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
-                {
-                    <MudSelect Class="mt-3"
-                               T="SmartCollectionViewModel"
-                               Label="Smart Collection"
-                               @bind-value="_selectedItem.SmartCollection">
-                        @foreach (SmartCollectionViewModel collection in _smartCollections)
-                        {
-                            <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
-                {
-                    <MudSelect Class="mt-3"
-                               T="NamedMediaItemViewModel"
-                               Label="Television Show"
-                               @bind-value="_selectedItem.MediaItem">
-                        @foreach (NamedMediaItemViewModel show in _televisionShows)
-                        {
-                            <MudSelectItem Value="@show">@show.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
-                {
-                    <MudSelect Class="mt-3"
-                               T="NamedMediaItemViewModel"
-                               Label="Television Season"
-                               @bind-value="_selectedItem.MediaItem">
-                        @foreach (NamedMediaItemViewModel season in _televisionSeasons)
-                        {
-                            <MudSelectItem Value="@season">@season.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
-                {
-                    <MudSelect Class="mt-3"
-                               T="NamedMediaItemViewModel"
-                               Label="Artist"
-                               @bind-value="_selectedItem.MediaItem">
-                        @foreach (NamedMediaItemViewModel artist in _artists)
-                        {
-                            <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
-                    @switch (_selectedItem.CollectionType)
-                    {
-                        case ProgramScheduleItemCollectionType.MultiCollection:
-                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
-                            break;
-                        case ProgramScheduleItemCollectionType.Collection:
-                        case ProgramScheduleItemCollectionType.SmartCollection:
-                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
-                            break;
-                        case ProgramScheduleItemCollectionType.TelevisionShow:
-                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem>
-                            break;
-                        default:
-                            <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                            <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                            break;
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
-                    @if (!_schedule.ShuffleScheduleItems)
-                    {
-                        <MudSelectItem Value="PlayoutMode.Flood">Flood</MudSelectItem>
-                    }
-                    <MudSelectItem Value="PlayoutMode.One">One</MudSelectItem>
-                    <MudSelectItem Value="PlayoutMode.Multiple">Multiple</MudSelectItem>
-                    <MudSelectItem Value="PlayoutMode.Duration">Duration</MudSelectItem>
-                </MudSelect>
-                <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
-                <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
-                <MudSelect Class="mt-3" Label="Tail Mode" @bind-Value="@_selectedItem.TailMode" For="@(() => _selectedItem.TailMode)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)">
-                    <MudSelectItem Value="@TailMode.None">(none)</MudSelectItem>
-                    <MudSelectItem Value="@TailMode.Offline">Offline</MudSelectItem>
-                    <MudSelectItem Value="@TailMode.Filler">Filler</MudSelectItem>
-                </MudSelect>
-                <MudTextField Class="mt-3" Label="Custom Title" @bind-Value="@_selectedItem.CustomTitle" For="@(() => _selectedItem.CustomTitle)"/>
-                <MudSelect Class="mt-3" Label="Guide Mode" @bind-Value="@_selectedItem.GuideMode" For="@(() => _selectedItem.GuideMode)">
-                    <MudSelectItem Value="@GuideMode.Normal">Normal</MudSelectItem>
-                    <MudSelectItem Value="@GuideMode.Filler">Filler</MudSelectItem>
-                </MudSelect>
-            </MudCardContent>
-        </MudCard>
-    </div>
-    <div style="flex-grow: 1; max-width: 400px;">
-        <MudCard>
-            <MudCardContent>
-                <MudSelect T="FillerPresetViewModel"
-                           Label="Pre-Roll Filler"
-                           @bind-value="_selectedItem.PreRollFiller"
-                           Clearable="true">
-                    @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.PreRoll))
-                    {
-                        <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3"
-                           T="FillerPresetViewModel"
-                           Label="Mid-Roll Filler"
-                           @bind-value="_selectedItem.MidRollFiller"
-                           Clearable="true">
-                    @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.MidRoll))
-                    {
-                        <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3"
-                           T="FillerPresetViewModel"
-                           Label="Post-Roll Filler"
-                           @bind-value="_selectedItem.PostRollFiller"
-                           Clearable="true">
-                    @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.PostRoll))
-                    {
-                        <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3"
-                           T="FillerPresetViewModel"
-                           Label="Tail Filler"
-                           @bind-value="_selectedItem.TailFiller"
-                           Clearable="true">
-                    @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.Tail))
-                    {
-                        <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3"
-                           T="FillerPresetViewModel"
-                           Label="Fallback Filler"
-                           @bind-value="_selectedItem.FallbackFiller"
-                           Clearable="true">
-                    @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.Fallback))
-                    {
-                        <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudCardContent>
-        </MudCard>
-        <MudCard Class="mt-4">
-            <MudCardContent>
-                <MudSelect Label="Watermark" @bind-Value="@_selectedItem.Watermark" For="@(() => _selectedItem.Watermark)" Clearable="true">
-                    @foreach (WatermarkViewModel watermark in _watermarks)
-                    {
-                        <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3"
-                           Label="Preferred Audio Language"
-                           @bind-Value="_selectedItem.PreferredAudioLanguageCode"
-                           For="@(() => _selectedItem.PreferredAudioLanguageCode)"
-                           Clearable="true">
-                    <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                    @foreach (CultureInfo culture in _availableCultures)
-                    {
-                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudTextField Class="mt-3" Label="Preferred Audio Title" @bind-Value="@_selectedItem.PreferredAudioTitle" For="@(() => _selectedItem.PreferredAudioTitle)"/>
-                <MudSelect Class="mt-3"
-                           Label="Preferred Subtitle Language"
-                           @bind-Value="_selectedItem.PreferredSubtitleLanguageCode"
-                           For="@(() => _selectedItem.PreferredSubtitleLanguageCode)"
-                           Clearable="true">
-                    <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                    @foreach (CultureInfo culture in _availableCultures)
-                    {
-                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect T="ChannelSubtitleMode?" Class="mt-3" Label="Subtitle Mode" @bind-Value="_selectedItem.SubtitleMode" For="@(() => _selectedItem.SubtitleMode)" Clearable="true">
-                    <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
-                    <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
-                    <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
-                    <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
-                </MudSelect>
-            </MudCardContent>
-        </MudCard>
-    </div>
-    </div>
-    </EditForm>
-}
-</MudContainer>
+    @if (_selectedItem is not null)
+    {
+        <EditForm Model="_selectedItem">
+            <FluentValidator />
+            <div style="display: flex; flex-direction: row;" class="mt-6">
+                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
+                                <MudSelectItem Value="StartType.Dynamic">Dynamic</MudSelectItem>
+                                @if (!_schedule.ShuffleScheduleItems)
+                                {
+                                    <MudSelectItem Value="StartType.Fixed">Fixed</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)" />
+                            <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
+                                @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
+                                {
+                                    <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
+                                }
+                            </MudSelect>
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
+                            {
+                                <MudSelect Class="mt-3"
+                                   T="MediaCollectionViewModel"
+                                   Label="Collection"
+                                   @bind-value="_selectedItem.Collection">
+                                    @foreach (MediaCollectionViewModel collection in _mediaCollections)
+                                    {
+                                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                            {
+                                <MudSelect Class="mt-3"
+                                   T="MultiCollectionViewModel"
+                                   Label="Multi Collection"
+                                   @bind-value="_selectedItem.MultiCollection">
+                                    @foreach (MultiCollectionViewModel collection in _multiCollections)
+                                    {
+                                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+                            {
+                                <MudSelect Class="mt-3"
+                                   T="SmartCollectionViewModel"
+                                   Label="Smart Collection"
+                                   @bind-value="_selectedItem.SmartCollection">
+                                    @foreach (SmartCollectionViewModel collection in _smartCollections)
+                                    {
+                                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+                            {
+                                <MudSelect Class="mt-3"
+                                   T="NamedMediaItemViewModel"
+                                   Label="Television Show"
+                                   @bind-value="_selectedItem.MediaItem">
+                                    @foreach (NamedMediaItemViewModel show in _televisionShows)
+                                    {
+                                        <MudSelectItem Value="@show">@show.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+                            {
+                                <MudSelect Class="mt-3"
+                                   T="NamedMediaItemViewModel"
+                                   Label="Television Season"
+                                   @bind-value="_selectedItem.MediaItem">
+                                    @foreach (NamedMediaItemViewModel season in _televisionSeasons)
+                                    {
+                                        <MudSelectItem Value="@season">@season.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
+                            {
+                                <MudSelect Class="mt-3"
+                                   T="NamedMediaItemViewModel"
+                                   Label="Artist"
+                                   @bind-value="_selectedItem.MediaItem">
+                                    @foreach (NamedMediaItemViewModel artist in _artists)
+                                    {
+                                        <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
+                            <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
+                                @switch (_selectedItem.CollectionType)
+                                {
+                                    case ProgramScheduleItemCollectionType.MultiCollection:
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                        break;
+                                    case ProgramScheduleItemCollectionType.Collection:
+                                    case ProgramScheduleItemCollectionType.SmartCollection:
+                                        <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                        break;
+                                    case ProgramScheduleItemCollectionType.TelevisionShow:
+                                        <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem>
+                                        break;
+                                    default:
+                                        <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        break;
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
+                                @if (!_schedule.ShuffleScheduleItems)
+                                {
+                                    <MudSelectItem Value="PlayoutMode.Flood">Flood</MudSelectItem>
+                                }
+                                <MudSelectItem Value="PlayoutMode.One">One</MudSelectItem>
+                                <MudSelectItem Value="PlayoutMode.Multiple">Multiple</MudSelectItem>
+                                <MudSelectItem Value="PlayoutMode.Duration">Duration</MudSelectItem>
+                            </MudSelect>
+                            <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)" />
+                            <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)" />
+                            <MudSelect Class="mt-3" Label="Tail Mode" @bind-Value="@_selectedItem.TailMode" For="@(() => _selectedItem.TailMode)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)">
+                                <MudSelectItem Value="@TailMode.None">(none)</MudSelectItem>
+                                <MudSelectItem Value="@TailMode.Offline">Offline</MudSelectItem>
+                                <MudSelectItem Value="@TailMode.Filler">Filler</MudSelectItem>
+                            </MudSelect>
+                            <MudTextField Class="mt-3" Label="Custom Title" @bind-Value="@_selectedItem.CustomTitle" For="@(() => _selectedItem.CustomTitle)" />
+                            <MudSelect Class="mt-3" Label="Guide Mode" @bind-Value="@_selectedItem.GuideMode" For="@(() => _selectedItem.GuideMode)">
+                                <MudSelectItem Value="@GuideMode.Normal">Normal</MudSelectItem>
+                                <MudSelectItem Value="@GuideMode.Filler">Filler</MudSelectItem>
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
+                </div>
+                <div style="flex-grow: 1; max-width: 400px;">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudSelect T="FillerPresetViewModel"
+                                   Label="Pre-Roll Filler"
+                                   @bind-value="_selectedItem.PreRollFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.PreRoll))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   T="FillerPresetViewModel"
+                                   Label="Mid-Roll Enter Filler"
+                                   @bind-value="_selectedItem.MidRollEnterFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.MidRollEnter))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   T="FillerPresetViewModel"
+                                   Label="Mid-Roll Filler"
+                                   @bind-value="_selectedItem.MidRollFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.MidRoll))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   T="FillerPresetViewModel"
+                                   Label="Mid-Roll Exit Filler"
+                                   @bind-value="_selectedItem.MidRollExitFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.MidRollExit))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   T="FillerPresetViewModel"
+                                   Label="Post-Roll Filler"
+                                   @bind-value="_selectedItem.PostRollFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.PostRoll))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   T="FillerPresetViewModel"
+                                   Label="Tail Filler"
+                                   @bind-value="_selectedItem.TailFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.Tail))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   T="FillerPresetViewModel"
+                                   Label="Fallback Filler"
+                                   @bind-value="_selectedItem.FallbackFiller"
+                                   Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.Fallback))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
+                    <MudCard Class="mt-4">
+                        <MudCardContent>
+                            <MudSelect Label="Watermark" @bind-Value="@_selectedItem.Watermark" For="@(() => _selectedItem.Watermark)" Clearable="true">
+                                @foreach (WatermarkViewModel watermark in _watermarks)
+                                {
+                                    <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                   Label="Preferred Audio Language"
+                                   @bind-Value="_selectedItem.PreferredAudioLanguageCode"
+                                   For="@(() => _selectedItem.PreferredAudioLanguageCode)"
+                                   Clearable="true">
+                                <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                                @foreach (CultureInfo culture in _availableCultures)
+                                {
+                                    <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField Class="mt-3" Label="Preferred Audio Title" @bind-Value="@_selectedItem.PreferredAudioTitle" For="@(() => _selectedItem.PreferredAudioTitle)" />
+                            <MudSelect Class="mt-3"
+                                   Label="Preferred Subtitle Language"
+                                   @bind-Value="_selectedItem.PreferredSubtitleLanguageCode"
+                                   For="@(() => _selectedItem.PreferredSubtitleLanguageCode)"
+                                   Clearable="true">
+                                <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                                @foreach (CultureInfo culture in _availableCultures)
+                                {
+                                    <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect T="ChannelSubtitleMode?" Class="mt-3" Label="Subtitle Mode" @bind-Value="_selectedItem.SubtitleMode" For="@(() => _selectedItem.SubtitleMode)" Clearable="true">
+                                <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
+                                <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
+                                <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
+                                <MudSelectItem T="ChannelSubtitleMode?" Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
+                </div>
+            </div>
+        </EditForm>
+    }
+    </MudContainer>
 
-@code {
+    @code {
     private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
@@ -360,7 +380,7 @@
 
     private async Task LoadScheduleItems()
     {
-    // TODO: fix performance
+        // TODO: fix performance
         _mediaCollections = await _mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _multiCollections = await _mediator.Send(new GetAllMultiCollections(), _cts.Token)
@@ -392,11 +412,11 @@
         foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
         {
             _schedule = new ProgramScheduleItemsEditViewModel
-            {
-                Name = name,
-                ShuffleScheduleItems = shuffleScheduleItems,
-                Items = items.Map(ProjectToEditViewModel).ToList()
-            };
+                {
+                    Name = name,
+                    ShuffleScheduleItems = shuffleScheduleItems,
+                    Items = items.Map(ProjectToEditViewModel).ToList()
+                };
 
             if (_schedule.Items.Count == 1)
             {
@@ -408,31 +428,33 @@
     private ProgramScheduleItemEditViewModel ProjectToEditViewModel(ProgramScheduleItemViewModel item)
     {
         var result = new ProgramScheduleItemEditViewModel
-        {
-            Id = item.Id,
-            Index = item.Index,
-            StartType = item.StartType,
-            StartTime = item.StartTime,
-            PlayoutMode = item.PlayoutMode,
-            CollectionType = item.CollectionType,
-            Collection = item.Collection,
-            MultiCollection = item.MultiCollection,
-            SmartCollection = item.SmartCollection,
-            MediaItem = item.MediaItem,
-            PlaybackOrder = item.PlaybackOrder,
-            CustomTitle = item.CustomTitle,
-            GuideMode = item.GuideMode,
-            PreRollFiller = item.PreRollFiller,
-            MidRollFiller = item.MidRollFiller,
-            PostRollFiller = item.PostRollFiller,
-            TailFiller = item.TailFiller,
-            FallbackFiller = item.FallbackFiller,
-            Watermark = item.Watermark,
-            PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
-            PreferredAudioTitle = item.PreferredAudioTitle,
-            PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
-            SubtitleMode = item.SubtitleMode
-        };
+            {
+                Id = item.Id,
+                Index = item.Index,
+                StartType = item.StartType,
+                StartTime = item.StartTime,
+                PlayoutMode = item.PlayoutMode,
+                CollectionType = item.CollectionType,
+                Collection = item.Collection,
+                MultiCollection = item.MultiCollection,
+                SmartCollection = item.SmartCollection,
+                MediaItem = item.MediaItem,
+                PlaybackOrder = item.PlaybackOrder,
+                CustomTitle = item.CustomTitle,
+                GuideMode = item.GuideMode,
+                PreRollFiller = item.PreRollFiller,
+                MidRollEnterFiller = item.MidRollEnterFiller,
+                MidRollFiller = item.MidRollFiller,
+                MidRollExitFiller = item.MidRollExitFiller,
+                PostRollFiller = item.PostRollFiller,
+                TailFiller = item.TailFiller,
+                FallbackFiller = item.FallbackFiller,
+                Watermark = item.Watermark,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredAudioTitle = item.PreferredAudioTitle,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
+            };
 
         switch (item)
         {
@@ -451,13 +473,13 @@
     private void AddScheduleItem()
     {
         var item = new ProgramScheduleItemEditViewModel
-        {
-            Index = _schedule.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
-            StartType = StartType.Dynamic,
-            PlayoutMode = PlayoutMode.One,
-            PlaybackOrder = PlaybackOrder.Shuffle,
-            CollectionType = ProgramScheduleItemCollectionType.Collection
-        };
+            {
+                Index = _schedule.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
+                StartType = StartType.Dynamic,
+                PlayoutMode = PlayoutMode.One,
+                PlaybackOrder = PlaybackOrder.Shuffle,
+                CollectionType = ProgramScheduleItemCollectionType.Collection
+            };
 
         _schedule.Items.Add(item);
         _selectedItem = item;
@@ -471,14 +493,14 @@
 
     private void MoveItemUp(ProgramScheduleItemEditViewModel item)
     {
-    // swap with lower index
+        // swap with lower index
         ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private void MoveItemDown(ProgramScheduleItemEditViewModel item)
     {
-    // swap with higher index
+        // swap with higher index
         ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
@@ -502,7 +524,9 @@
             item.CustomTitle,
             item.GuideMode,
             item.PreRollFiller?.Id,
+            item.MidRollEnterFiller?.Id,
             item.MidRollFiller?.Id,
+            item.MidRollExitFiller?.Id,
             item.PostRollFiller?.Id,
             item.TailFiller?.Id,
             item.FallbackFiller?.Id,

@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -47,8 +47,14 @@ internal static class Mapper
                     duration.PreRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.PreRollFiller)
                         : null,
+                    duration.MidRollEnterFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(duration.MidRollEnterFiller)
+                        : null,
                     duration.MidRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.MidRollFiller)
+                        : null,
+                    duration.MidRollExitFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(duration.MidRollExitFiller)
                         : null,
                     duration.PostRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.PostRollFiller)
@@ -95,8 +101,14 @@ internal static class Mapper
                     flood.PreRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.PreRollFiller)
                         : null,
+                    flood.MidRollEnterFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(flood.MidRollEnterFiller)
+                        : null,
                     flood.MidRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.MidRollFiller)
+                        : null,
+                    flood.MidRollExitFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(flood.MidRollExitFiller)
                         : null,
                     flood.PostRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.PostRollFiller)
@@ -144,8 +156,14 @@ internal static class Mapper
                     multiple.PreRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.PreRollFiller)
                         : null,
+                    multiple.MidRollEnterFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(multiple.MidRollEnterFiller)
+                        : null,
                     multiple.MidRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.MidRollFiller)
+                        : null,
+                    multiple.MidRollExitFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(multiple.MidRollExitFiller)
                         : null,
                     multiple.PostRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.PostRollFiller)
@@ -192,8 +210,14 @@ internal static class Mapper
                     one.PreRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.PreRollFiller)
                         : null,
+                    one.MidRollEnterFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(one.MidRollEnterFiller)
+                        : null,
                     one.MidRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.MidRollFiller)
+                        : null,
+                    one.MidRollExitFiller != null
+                        ? Filler.Mapper.ProjectToViewModel(one.MidRollExitFiller)
                         : null,
                     one.PostRollFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.PostRollFiller)

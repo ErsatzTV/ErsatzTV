@@ -1,4 +1,4 @@
-﻿@page "/media/filler/presets"
+@page "/media/filler/presets"
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Domain.Filler
@@ -37,7 +37,9 @@
                 @(
                                 context.FillerKind switch {
                                     FillerKind.PreRoll => "Pre-Roll",
+                                    FillerKind.MidRollEnter => "Mid-Roll Enter",
                                     FillerKind.MidRoll => "Mid-Roll",
+                                    FillerKind.MidRollExit => "Mid-Roll Exit",
                                     FillerKind.PostRoll => "Post-Roll",
                                     FillerKind.Fallback => "Fallback",
                                     FillerKind.Tail => "Tail",

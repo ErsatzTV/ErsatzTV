@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -907,9 +907,19 @@ public class PlayoutBuilder : IPlayoutBuilder
             result.Add(CollectionKey.ForFillerPreset(item.PreRollFiller));
         }
 
+        if (item.MidRollEnterFiller != null)
+        {
+            result.Add(CollectionKey.ForFillerPreset(item.MidRollEnterFiller));
+        }
+
         if (item.MidRollFiller != null)
         {
             result.Add(CollectionKey.ForFillerPreset(item.MidRollFiller));
+        }
+
+        if (item.MidRollExitFiller != null)
+        {
+            result.Add(CollectionKey.ForFillerPreset(item.MidRollExitFiller));
         }
 
         if (item.PostRollFiller != null)

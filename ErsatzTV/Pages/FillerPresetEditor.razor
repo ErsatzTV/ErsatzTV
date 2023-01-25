@@ -1,4 +1,4 @@
-﻿@page "/media/filler/presets/{Id:int}/edit"
+@page "/media/filler/presets/{Id:int}/edit"
 @page "/media/filler/presets/add"
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
@@ -23,20 +23,28 @@
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
                     <MudSelect Class="mt-3" Label="Filler Kind" @bind-Value="_model.FillerKind" For="@(() => _model.FillerKind)" Disabled="@IsEdit">
                         <MudSelectItem Value="@(FillerKind.PreRoll)">Pre-Roll</MudSelectItem>
+                        <MudSelectItem Value="@(FillerKind.MidRollEnter)">Mid-Roll-Enter</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.MidRoll)">Mid-Roll</MudSelectItem>
+                        <MudSelectItem Value="@(FillerKind.MidRollExit)">Mid-Roll-Exit</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.PostRoll)">Post-Roll</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.Tail)">Tail</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.Fallback)">Fallback</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3" Label="Filler Mode" @bind-Value="_model.FillerMode" For="@(() => _model.FillerMode)"
                                Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail)">
-                        <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
+                            @if (_model.FillerKind != FillerKind.MidRollEnter && _model.FillerKind != FillerKind.MidRollExit)
+                        {
+                            <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
+                        }
                         <MudSelectItem Value="@(FillerMode.Count)">Count</MudSelectItem>
-                        <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
+                        @if (_model.FillerKind != FillerKind.MidRollEnter && _model.FillerKind != FillerKind.MidRollExit)
+                        {
+                            <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
+                        }
                     </MudSelect>
                     <MudTimePicker Class="mt-3" Label="Filler Duration" @bind-Time="@_model.Duration" For="@(() => _model.Duration)" Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
-                    <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@(_model.FillerMode != FillerMode.Count)"/>
-                    <MudSelect Class="mt-3" Label="Filler Pad To Nearest Minute" @bind-Value="_model.PadToNearestMinute" For="@(() => _model.PadToNearestMinute)" Disabled="@(_model.FillerMode != FillerMode.Pad)">
+                    <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@(_model.FillerMode != FillerMode.Count || _model.FillerKind == FillerKind.MidRollEnter || _model.FillerKind == FillerKind.MidRollExit)"/>
+                        <MudSelect Class="mt-3" Label="Filler Pad To Nearest Minute" @bind-Value="_model.PadToNearestMinute" For="@(() => _model.PadToNearestMinute)" Disabled="@(_model.FillerMode != FillerMode.Pad || _model.FillerKind == FillerKind.MidRollEnter || _model.FillerKind == FillerKind.MidRollExit)">
                         <MudSelectItem T="int?" Value="5">5 (:00, :05, :10, :15, :20, etc)</MudSelectItem>
                         <MudSelectItem T="int?" Value="10">10 (:00, :10, :20, :30, :40, :50)</MudSelectItem>
                         <MudSelectItem T="int?" Value="15">15 (:00, :15, :30, :45)</MudSelectItem>
@@ -233,5 +241,4 @@
                 () => _navigationManager.NavigateTo("media/filler/presets"));
         }
     }
-
 }

@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -27,7 +27,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     )
     {
         DateTimeOffset startTime = GetStartTimeAfter(state, scheduleItem);
-        
+
         // filler should always stop at the hard stop
         if (hardStop < startTime)
         {
@@ -201,7 +201,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         List<MediaChapter> chapters)
     {
         var allFiller = Optional(scheduleItem.PreRollFiller)
+            .Append(Optional(scheduleItem.MidRollEnterFiller))
             .Append(Optional(scheduleItem.MidRollFiller))
+            .Append(Optional(scheduleItem.MidRollExitFiller))
             .Append(Optional(scheduleItem.PostRollFiller))
             .ToList();
 
@@ -216,7 +218,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         {
             switch (filler.FillerKind, filler.FillerMode)
             {
-                case (FillerKind.MidRoll, FillerMode.Duration) when filler.Duration.HasValue:
+                case (FillerKind.MidRollEnter, FillerMode.Duration) when filler.Duration.HasValue:
+                case (FillerKind.MidRollExit, _) when filler.Duration.HasValue:
+                case (FillerKind.MidRoll, _) when filler.Duration.HasValue:
                     IMediaCollectionEnumerator mrde = enumerators[CollectionKey.ForFillerPreset(filler)];
                     var mrdePeekOffset = 0;
                     for (var i = 0; i < chapters.Count - 1; i++)
@@ -243,7 +247,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     }
 
                     break;
-                case (FillerKind.MidRoll, FillerMode.Count) when filler.Count.HasValue:
+                case (FillerKind.MidRollEnter, FillerMode.Count) when filler.Count.HasValue:
+                case (FillerKind.MidRollExit, _) when filler.Count.HasValue:
+                case (FillerKind.MidRoll, _) when filler.Count.HasValue:
                     IMediaCollectionEnumerator mrce = enumerators[CollectionKey.ForFillerPreset(filler)];
                     var mrcePeekOffset = 0;
                     for (var i = 0; i < chapters.Count - 1; i++)
@@ -333,7 +339,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         var result = new List<PlayoutItem>();
 
         var allFiller = Optional(scheduleItem.PreRollFiller)
+            .Append(Optional(scheduleItem.MidRollEnterFiller))
             .Append(Optional(scheduleItem.MidRollFiller))
+            .Append(Optional(scheduleItem.MidRollExitFiller))
             .Append(Optional(scheduleItem.PostRollFiller))
             .ToList();
 
@@ -345,7 +353,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         List<MediaChapter> effectiveChapters = chapters;
-        if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll) || effectiveChapters.Count <= 1)
+        if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll && fp.FillerKind != FillerKind.MidRollEnter && fp.FillerKind != FillerKind.MidRollExit) || effectiveChapters.Count <= 1)
         {
             effectiveChapters = new List<MediaChapter>();
         }
@@ -396,6 +404,19 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             result.Add(playoutItem.ForChapter(effectiveChapters[i]));
                             if (i < effectiveChapters.Count - 1)
                             {
+                                foreach (FillerPreset fillerEnter in allFiller.Filter(
+                                    f => f.FillerKind == FillerKind.MidRollEnter && f.FillerMode != FillerMode.Pad))
+                                {
+                                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(fillerEnter)];
+                                    result.AddRange(
+                                       AddDurationFiller(
+                                           playoutBuilderState,
+                                           e3,
+                                           fillerEnter.Duration.Value,
+                                           FillerKind.MidRollEnter,
+                                           fillerEnter.AllowWatermarks));
+                                }
+
                                 result.AddRange(
                                     AddDurationFiller(
                                         playoutBuilderState,
@@ -403,6 +424,19 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         filler.Duration.Value,
                                         FillerKind.MidRoll,
                                         filler.AllowWatermarks));
+
+                                foreach (FillerPreset fillerExit in allFiller.Filter(
+                                    f => f.FillerKind == FillerKind.MidRollExit && f.FillerMode != FillerMode.Pad))
+                                {
+                                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(fillerExit)];
+                                    result.AddRange(
+                                       AddDurationFiller(
+                                           playoutBuilderState,
+                                           e3,
+                                           fillerExit.Duration.Value,
+                                           FillerKind.MidRollExit,
+                                           fillerExit.AllowWatermarks));
+                                }
                             }
                         }
 
@@ -414,13 +448,39 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             result.Add(playoutItem.ForChapter(effectiveChapters[i]));
                             if (i < effectiveChapters.Count - 1)
                             {
+                                foreach (FillerPreset fillerEnter in allFiller.Filter(
+                                    f => f.FillerKind == FillerKind.MidRollEnter && f.FillerMode != FillerMode.Pad))
+                                {
+                                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(fillerEnter)];
+                                    result.AddRange(
+                                       AddCountFiller(
+                                           playoutBuilderState,
+                                           e3,
+                                           fillerEnter.Count.Value,
+                                           FillerKind.MidRollEnter,
+                                           fillerEnter.AllowWatermarks));
+                                }
+
                                 result.AddRange(
-                                    AddCountFiller(
-                                        playoutBuilderState,
-                                        e2,
-                                        filler.Count.Value,
-                                        FillerKind.MidRoll,
-                                        filler.AllowWatermarks));
+                                AddCountFiller(
+                                    playoutBuilderState,
+                                    e2,
+                                    filler.Count.Value,
+                                    FillerKind.MidRoll,
+                                    filler.AllowWatermarks));
+
+                                foreach (FillerPreset fillerExit in allFiller.Filter(
+                                    f => f.FillerKind == FillerKind.MidRollExit && f.FillerMode != FillerMode.Pad))
+                                {
+                                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(fillerExit)];
+                                    result.AddRange(
+                                       AddCountFiller(
+                                           playoutBuilderState,
+                                           e3,
+                                           fillerExit.Count.Value,
+                                           FillerKind.MidRollExit,
+                                           fillerExit.AllowWatermarks));
+                                }
                             }
                         }
 

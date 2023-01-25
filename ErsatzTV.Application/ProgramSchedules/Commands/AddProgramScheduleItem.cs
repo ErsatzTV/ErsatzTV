@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -20,7 +20,9 @@ public record AddProgramScheduleItem(
     string CustomTitle,
     GuideMode GuideMode,
     int? PreRollFillerId,
+    int? MidRollEnterFillerId,
     int? MidRollFillerId,
+    int? MidRollExitFillerId,
     int? PostRollFillerId,
     int? TailFillerId,
     int? FallbackFillerId,

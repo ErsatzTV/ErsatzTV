@@ -1,4 +1,4 @@
-﻿using System.Threading.Channels;
+using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
@@ -75,7 +75,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.Items)
-            
+
             .Include(p => p.ProgramScheduleAlternates)
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
@@ -91,11 +91,15 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .Include(p => p.ProgramScheduleAlternates)
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
-            .ThenInclude(psi => psi.MidRollFiller)
+            .ThenInclude(psi => psi.MidRollEnterFiller)
             .Include(p => p.ProgramScheduleAlternates)
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.PostRollFiller)
+            .Include(p => p.ProgramScheduleAlternates)
+            .ThenInclude(a => a.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.MidRollExitFiller)
             .Include(p => p.ProgramScheduleAlternates)
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
@@ -104,7 +108,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.FallbackFiller)
-            
+
             .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(psa => psa.EnumeratorState)
             .Include(p => p.ProgramScheduleAnchors)
@@ -121,7 +125,13 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(psi => psi.PreRollFiller)
             .Include(p => p.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.MidRollEnterFiller)
+            .Include(p => p.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.MidRollFiller)
+            .Include(p => p.ProgramSchedule)
+            .ThenInclude(ps => ps.Items)
+            .ThenInclude(psi => psi.MidRollExitFiller)
             .Include(p => p.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.PostRollFiller)

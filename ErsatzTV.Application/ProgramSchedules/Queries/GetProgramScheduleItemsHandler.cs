@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +45,9 @@ public class GetProgramScheduleItemsHandler :
             .ThenInclude(i => (i as Artist).ArtistMetadata)
             .ThenInclude(am => am.Artwork)
             .Include(i => i.PreRollFiller)
+            .Include(i => i.MidRollEnterFiller)
             .Include(i => i.MidRollFiller)
+            .Include(i => i.MidRollExitFiller)
             .Include(i => i.PostRollFiller)
             .Include(i => i.TailFiller)
             .Include(i => i.FallbackFiller)

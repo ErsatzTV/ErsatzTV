@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain;
 
@@ -24,8 +24,12 @@ public abstract class ProgramScheduleItem
     public PlaybackOrder PlaybackOrder { get; set; }
     public int? PreRollFillerId { get; set; }
     public FillerPreset PreRollFiller { get; set; }
+    public int? MidRollEnterFillerId { get; set; }
+    public FillerPreset MidRollEnterFiller { get; set; }
     public int? MidRollFillerId { get; set; }
     public FillerPreset MidRollFiller { get; set; }
+    public int? MidRollExitFillerId { get; set; }
+    public FillerPreset MidRollExitFiller { get; set; }
     public int? PostRollFillerId { get; set; }
     public FillerPreset PostRollFiller { get; set; }
     public int? TailFillerId { get; set; }
