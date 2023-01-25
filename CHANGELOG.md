@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.3-beta] - 2023-01-25
 ### Added
 - Attempt to release memory periodically
 - Add OpenID Connect (OIDC) support (e.g. Keycloak, Authelia, Auth0)
@@ -38,7 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This ensures errors will display even when hardware acceleration is misconfigured
 - Call scanner process only when scanning is required based on library refresh interval
 - Use lower process priority for scanner process with unforced (automatic) library scans
-- Disable V2 UI by default
+- Disable V2 UI and APIs by default
   - V2 UI can be re-enabled by setting the env var `ETV_UI_V2` to any value
 
 ## [0.7.2-beta] - 2023-01-05
@@ -1499,7 +1501,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.3-beta...HEAD
+[0.7.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...v0.7.3-beta
 [0.7.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.1-beta...v0.7.2-beta
 [0.7.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.0-beta...v0.7.1-beta
 [0.7.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...v0.7.0-beta
