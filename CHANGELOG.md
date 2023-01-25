@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Attempt to release memory periodically
+- Add SSO support via OIDC
+  - This only protects the management UI; all streaming endpoints will continue to allow anonymous access 
+  - This can be configured with the following env vars (note the double underscore separator `__`)
+    - `OIDC__AUTHORITY`
+    - `OIDC__CLIENTID`
+    - `OIDC__CLIENTSECRET`
 
 ### Fixed
 - Fix schedule editor crashing due to bad music video artist data
@@ -18,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This ensures errors will display even when hardware acceleration is misconfigured
 - Call scanner process only when scanning is required based on library refresh interval
 - Use lower process priority for scanner process with unforced (automatic) library scans
+- Disable V2 UI by default
+  - V2 UI can be re-enabled by setting the env var `ETV_UI_V2` to any value
 
 ## [0.7.2-beta] - 2023-01-05
 ### Fixed
