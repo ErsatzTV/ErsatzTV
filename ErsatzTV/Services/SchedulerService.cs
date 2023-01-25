@@ -83,6 +83,11 @@ public class SchedulerService : BackgroundService
                     // do other work every hour (on the hour)
                     await DoWork(cancellationToken);
                 }
+                else if (roundedMinute % 30 == 0)
+                {
+                    // release memory every 30 minutes no matter what
+                    await ReleaseMemory(cancellationToken);
+                }
             }
         }
     }
