@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `OIDC__AUTHORITY`
     - `OIDC__CLIENTID`
     - `OIDC__CLIENTSECRET`
+    - `OIDC__LOGOUTURI` (optional, needed for Auth0)
 
 ### Fixed
 - Fix schedule editor crashing due to bad music video artist data
