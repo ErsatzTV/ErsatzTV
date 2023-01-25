@@ -60,6 +60,7 @@ using FluentValidation.AspNetCore;
 using Ganss.Xss;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
@@ -118,6 +119,43 @@ public class Startup
 #endif
             });
 
+        OidcHelper.Init(Configuration);
+
+        if (OidcHelper.IsEnabled)
+        {
+            services.AddAuthentication(
+                    options =>
+                    {
+                        options.DefaultScheme = "cookie";
+                        options.DefaultChallengeScheme = "oidc";
+                    })
+                .AddCookie("cookie", options =>
+                {
+                    options.CookieManager = new ChunkingCookieManager();
+
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SameSite = SameSiteMode.None;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                })
+                .AddOpenIdConnect(
+                    "oidc",
+                    options =>
+                    {
+                        options.Authority = OidcHelper.Authority;
+                        options.ClientId = OidcHelper.ClientId;
+                        options.ClientSecret = OidcHelper.ClientSecret;
+
+                        options.ResponseType = "code";
+                        options.UsePkce = true;
+                        options.ResponseMode = "query";
+
+                        options.SaveTokens = true;
+
+                        options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
+                        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+                    });
+        }
+
         services.AddCors(
             o => o.AddPolicy(
                 "AllowAll",
@@ -149,14 +187,23 @@ public class Startup
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Startup>();
 
-        if (!CurrentEnvironment.IsDevelopment())
+        string v2 = Environment.GetEnvironmentVariable("ETV_UI_V2");
+        if (!CurrentEnvironment.IsDevelopment() && !string.IsNullOrWhiteSpace(v2))
         {
             services.AddSpaStaticFiles(options => options.RootPath = "wwwroot/v2");
         }
 
         services.AddMemoryCache();
 
-        services.AddRazorPages();
+        services.AddRazorPages(
+            options =>
+            {
+                if (OidcHelper.IsEnabled)
+                {
+                    options.Conventions.AuthorizeFolder("/");
+                }
+            });
+
         services.AddServerSideBlazor();
 
         services.AddMudServices();
@@ -317,8 +364,15 @@ public class Startup
             });
 
         app.UseRouting();
+        
+        if (OidcHelper.IsEnabled)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+        }
 
-        if (!env.IsDevelopment())
+        string v2 = Environment.GetEnvironmentVariable("ETV_UI_V2");
+        if (!env.IsDevelopment() && !string.IsNullOrWhiteSpace(v2))
         {
             app.Map(
                 "/v2",
@@ -330,6 +384,13 @@ public class Startup
                     }
 
                     app2.UseRouting();
+
+                    if (OidcHelper.IsEnabled)
+                    {
+                        app.UseAuthentication();
+                        app.UseAuthorization();
+                    }
+                    
                     app2.UseEndpoints(e => e.MapFallbackToFile("index.html"));
                     app2.UseFileServer(
                         new FileServerOptions
