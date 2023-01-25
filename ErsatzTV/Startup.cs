@@ -61,10 +61,12 @@ using Ganss.Xss;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IO;
 using MudBlazor.Services;
 using Newtonsoft.Json;
@@ -129,14 +131,16 @@ public class Startup
                         options.DefaultScheme = "cookie";
                         options.DefaultChallengeScheme = "oidc";
                     })
-                .AddCookie("cookie", options =>
-                {
-                    options.CookieManager = new ChunkingCookieManager();
+                .AddCookie(
+                    "cookie",
+                    options =>
+                    {
+                        options.CookieManager = new ChunkingCookieManager();
 
-                    options.Cookie.HttpOnly = true;
-                    options.Cookie.SameSite = SameSiteMode.None;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                })
+                        options.Cookie.HttpOnly = true;
+                        options.Cookie.SameSite = SameSiteMode.None;
+                        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    })
                 .AddOpenIdConnect(
                     "oidc",
                     options =>
@@ -145,14 +149,33 @@ public class Startup
                         options.ClientId = OidcHelper.ClientId;
                         options.ClientSecret = OidcHelper.ClientSecret;
 
-                        options.ResponseType = "code";
+                        options.ResponseType = OpenIdConnectResponseType.Code;
                         options.UsePkce = true;
-                        options.ResponseMode = "query";
+                        options.ResponseMode = OpenIdConnectResponseMode.Query;
+
+                        options.Scope.Clear();
+                        options.Scope.Add("openid");
+
+                        options.CallbackPath = new PathString("/callback");
 
                         options.SaveTokens = true;
 
                         options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
                         options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+
+                        if (!string.IsNullOrWhiteSpace(OidcHelper.LogoutUri))
+                        {
+                            options.Events = new OpenIdConnectEvents
+                            {
+                                OnRedirectToIdentityProviderForSignOut = context =>
+                                {
+                                    context.Response.Redirect(OidcHelper.LogoutUri);
+                                    context.HandleResponse();
+
+                                    return Task.CompletedTask;
+                                }
+                            };
+                        }
                     });
         }
 
