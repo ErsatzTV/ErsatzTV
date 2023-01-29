@@ -187,6 +187,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 {
                     (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
                     (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(),
+                    (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video) => new EncoderMpeg2Qsv(),
 
                     (_, _) => GetSoftwareEncoder(currentState, desiredState)
                 };
@@ -241,7 +242,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             IPixelFormat formatForDownload = pixelFormat;
 
-            bool usesVppQsv = videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter);
+            bool usesVppQsv =
+                videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter);
 
             // if we have no filters, check whether we need to convert pixel format
             // since qsv doesn't seem to like doing that at the encoder

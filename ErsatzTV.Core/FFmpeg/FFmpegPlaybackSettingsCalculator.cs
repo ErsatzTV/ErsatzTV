@@ -141,9 +141,9 @@ public class FFmpegPlaybackSettingsCalculator
 
                 result.PixelFormat = ffmpegProfile.BitDepth switch
                 {
-                    FFmpegProfileBitDepth.TenBit => new PixelFormatYuv420P10Le(),
+                    FFmpegProfileBitDepth.TenBit when ffmpegProfile.VideoFormat != FFmpegProfileVideoFormat.Mpeg2Video
+                        => new PixelFormatYuv420P10Le(),
                     _ => new PixelFormatYuv420P()
-                    // _ => new PixelFormatYuv420P10Le()
                 };
 
                 result.AudioFormat = ffmpegProfile.AudioFormat;
