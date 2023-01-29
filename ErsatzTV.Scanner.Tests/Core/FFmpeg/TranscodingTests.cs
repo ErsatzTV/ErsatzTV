@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bugsnag;
 using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -102,41 +103,41 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            // Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
-            // Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentScaled,
             // Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
             Subtitle.None,
-            // Subtitle.Picture,
-            // Subtitle.Text
+            Subtitle.Picture,
+            Subtitle.Text
         };
 
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
-            // Padding.WithPadding
+            Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            // VideoScanKind.Interlaced
+            VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
         {
             // // example format that requires colorspace filter
-            // new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
+            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             //
             // // example format that requires setparams filter
-            // new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
             //
             // // new("libx264", "yuvj420p"),
-            // new("libx264", "yuv420p10le"),
+            new("libx264", "yuv420p10le"),
             // // new("libx264", "yuv444p10le"),
             //
             // // new("mpeg1video", "yuv420p"),
@@ -144,12 +145,13 @@ public class TranscodingTests
             // // new("mpeg2video", "yuv420p"),
             //
             new("libx265", "yuv420p"),
-            // new("libx265", "yuv420p10le"),
+            new("libx265", "yuv420p10le"),
             //
             // // new("mpeg4", "yuv420p"),
             // //
-            // // new("libvpx-vp9", "yuv420p"),
-            // //
+            new("libvpx-vp9", "yuv420p"),
+            new("libvpx-vp9", "yuv420p10le"),
+            //
             // // // new("libaom-av1", "yuv420p")
             // // // av1    yuv420p10le    51
             // //
@@ -162,26 +164,27 @@ public class TranscodingTests
         public static Resolution[] Resolutions =
         {
             new() { Width = 1920, Height = 1080 },
-            // new() { Width = 1280, Height = 720 }
+            new() { Width = 1280, Height = 720 }
         };
 
         public static FFmpegProfileBitDepth[] BitDepths =
         {
             FFmpegProfileBitDepth.EightBit,
-            // FFmpegProfileBitDepth.TenBit
+            FFmpegProfileBitDepth.TenBit
         };
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
         {
             FFmpegProfileVideoFormat.H264,
-            // FFmpegProfileVideoFormat.Hevc
+            FFmpegProfileVideoFormat.Hevc,
+            // FFmpegProfileVideoFormat.Mpeg2Video
         };
 
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
-            // HardwareAccelerationKind.Vaapi,
+            // HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Vaapi,
             // HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
@@ -216,11 +219,13 @@ public class TranscodingTests
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
         {
-            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
+            // some formats don't support interlaced content (mpeg1video, msmpeg4v2, msmpeg4v3)
+            // others (libx265, any 10-bit) are unlikely to have interlaced content, so don't bother testing
+            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3" or "libx265" || inputFormat.PixelFormat.Contains("10"))
             {
                 if (videoScanKind == VideoScanKind.Interlaced)
                 {
-                    Assert.Inconclusive($"{inputFormat.Encoder} does not support interlaced content");
+                    Assert.Inconclusive($"{inputFormat.Encoder}/{inputFormat.PixelFormat} does not support interlaced content");
                     return;
                 }
             }
@@ -518,7 +523,7 @@ public class TranscodingTests
             string.Empty,
             subtitleMode,
             now,
-            now + TimeSpan.FromSeconds(5),
+            now + TimeSpan.FromSeconds(3),
             now,
             Option<ChannelWatermark>.None,
             channelWatermark,
@@ -528,7 +533,7 @@ public class TranscodingTests
             false,
             FillerKind.None,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(3),
             0,
             None,
             false,
@@ -557,6 +562,12 @@ public class TranscodingTests
                     .WithStandardOutputPipe(PipeTarget.ToFile(tempFile))
                     .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
                     .ExecuteAsync(timeoutSignal.Token);
+
+                // var arguments = string.Join(
+                //     ' ',
+                //     process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+                //
+                // Log.Logger.Debug(arguments);
             }
             catch (OperationCanceledException)
             {
@@ -636,7 +647,9 @@ public class TranscodingTests
                     videoStream.ColorPrimaries);
 
                 // AMF doesn't seem to set this metadata properly
-                if (profileAcceleration != HardwareAccelerationKind.Amf)
+                // MPEG2Video doesn't always seem to set this properly
+                if (profileAcceleration != HardwareAccelerationKind.Amf &&
+                    profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video)
                 {
                     colorParams.IsBt709.Should().BeTrue($"{colorParams}");
                 }
@@ -709,20 +722,13 @@ public class TranscodingTests
                     TestContext.CurrentContext.TestDirectory,
                     "Resources",
                     subtitle == Subtitle.Picture ? "test.sup" : "test.srt");
-                var p2 = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = ExecutableName("mkvmerge"),
-                        Arguments =
-                            $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}"
-                    }
-                };
 
-                p2.Start();
-                await p2.WaitForExitAsync();
-                // ReSharper disable once MethodHasAsyncOverload
-                p2.WaitForExit();
+                BufferedCommandResult p2 = await new Command(ExecutableName("mkvmerge"))
+                    .WithArguments(
+                        $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}")
+                    .WithValidation(CommandResultValidation.None)
+                    .ExecuteBufferedAsync();
+                
                 if (p2.ExitCode != 0)
                 {
                     if (File.Exists(sourceFile))
