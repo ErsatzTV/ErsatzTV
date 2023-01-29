@@ -125,7 +125,7 @@ public class TranscodingTests
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            // VideoScanKind.Interlaced
+            VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
@@ -176,15 +176,16 @@ public class TranscodingTests
         public static FFmpegProfileVideoFormat[] VideoFormats =
         {
             FFmpegProfileVideoFormat.H264,
-            FFmpegProfileVideoFormat.Hevc
+            FFmpegProfileVideoFormat.Hevc,
+            // FFmpegProfileVideoFormat.Mpeg2Video
         };
 
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
             // HardwareAccelerationKind.Nvenc,
-            // HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.Vaapi,
+            // HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
@@ -218,11 +219,13 @@ public class TranscodingTests
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
         {
-            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
+            // some formats don't support interlaced content (mpeg1video, msmpeg4v2, msmpeg4v3)
+            // others (libx265, any 10-bit) are unlikely to have interlaced content, so don't bother testing
+            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3" or "libx265" || inputFormat.PixelFormat.Contains("10"))
             {
                 if (videoScanKind == VideoScanKind.Interlaced)
                 {
-                    Assert.Inconclusive($"{inputFormat.Encoder} does not support interlaced content");
+                    Assert.Inconclusive($"{inputFormat.Encoder}/{inputFormat.PixelFormat} does not support interlaced content");
                     return;
                 }
             }
@@ -520,7 +523,7 @@ public class TranscodingTests
             string.Empty,
             subtitleMode,
             now,
-            now + TimeSpan.FromSeconds(5),
+            now + TimeSpan.FromSeconds(3),
             now,
             Option<ChannelWatermark>.None,
             channelWatermark,
@@ -530,7 +533,7 @@ public class TranscodingTests
             false,
             FillerKind.None,
             TimeSpan.Zero,
-            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(3),
             0,
             None,
             false,
@@ -644,7 +647,9 @@ public class TranscodingTests
                     videoStream.ColorPrimaries);
 
                 // AMF doesn't seem to set this metadata properly
-                if (profileAcceleration != HardwareAccelerationKind.Amf)
+                // MPEG2Video doesn't always seem to set this properly
+                if (profileAcceleration != HardwareAccelerationKind.Amf &&
+                    profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video)
                 {
                     colorParams.IsBt709.Should().BeTrue($"{colorParams}");
                 }
