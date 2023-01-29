@@ -107,6 +107,10 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
                 _profileEntrypoints.Contains(
                     new VaapiProfileEntrypoint(VaapiProfile.HevcMain, VaapiEntrypoint.Encode)),
 
+            VideoFormat.Mpeg2Video =>
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Mpeg2Main, VaapiEntrypoint.Encode)),
+            
             _ => false
         };
         

@@ -90,5 +90,11 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
                 RuleFor(x => x.VideoFormat).Must(c => AmfFormats.Contains(c))
                     .WithMessage("Amf supports formats (h264, hevc)");
             });
+        
+        When(
+            x => x.VideoFormat == FFmpegProfileVideoFormat.Mpeg2Video,
+            () => RuleFor(x => x.BitDepth)
+                .Must(bd => bd is FFmpegProfileBitDepth.EightBit)
+                .WithMessage("Mpeg2Video does not support 10-bit content"));
     }
 }

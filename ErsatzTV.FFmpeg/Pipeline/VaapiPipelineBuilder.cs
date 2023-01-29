@@ -197,6 +197,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 {
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) => new EncoderMpeg2Vaapi(),
 
                     (_, _) => GetSoftwareEncoder(currentState, desiredState)
                 };

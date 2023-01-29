@@ -16,7 +16,12 @@ public class DecoderVaapi : DecoderBase
         FrameState nextState = base.NextState(currentState);
 
         return currentState.PixelFormat.Match(
-            pixelFormat => nextState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) },
+            pixelFormat =>
+            {
+                return pixelFormat.BitDepth == 8
+                    ? nextState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) }
+                    : nextState with { PixelFormat = new PixelFormatVaapi(pixelFormat.Name) };
+            },
             () => nextState);
     }
 }

@@ -36,7 +36,12 @@ public class
         p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;
         p.ResolutionId = update.ResolutionId;
         p.VideoFormat = update.VideoFormat;
-        p.BitDepth = update.BitDepth;
+        
+        // mpeg2video only supports 8-bit content
+        p.BitDepth = update.VideoFormat == FFmpegProfileVideoFormat.Mpeg2Video
+            ? FFmpegProfileBitDepth.EightBit
+            : update.BitDepth;
+        
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.AudioFormat = update.AudioFormat;
