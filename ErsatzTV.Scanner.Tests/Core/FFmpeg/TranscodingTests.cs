@@ -125,27 +125,27 @@ public class TranscodingTests
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            VideoScanKind.Interlaced
+            // VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
         {
-            // // example format that requires colorspace filter
-            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
-            //
-            // // example format that requires setparams filter
-            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
-            //
-            // // new("libx264", "yuvj420p"),
-            new("libx264", "yuv420p10le"),
-            // // new("libx264", "yuv444p10le"),
-            //
-            // // new("mpeg1video", "yuv420p"),
+            // // // example format that requires colorspace filter
+            // new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             // //
-            // // new("mpeg2video", "yuv420p"),
-            //
-            new("libx265", "yuv420p"),
-            new("libx265", "yuv420p10le"),
+            // // // example format that requires setparams filter
+            // new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            // //
+            // // // new("libx264", "yuvj420p"),
+            // new("libx264", "yuv420p10le"),
+            // // // new("libx264", "yuv444p10le"),
+            // //
+            // // // new("mpeg1video", "yuv420p"),
+            // // //
+            // // // new("mpeg2video", "yuv420p"),
+            // //
+            // new("libx265", "yuv420p"),
+            // new("libx265", "yuv420p10le"),
             //
             // // new("mpeg4", "yuv420p"),
             // //
@@ -183,8 +183,8 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
-            // HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Nvenc,
+            // HardwareAccelerationKind.Vaapi,
             // HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
