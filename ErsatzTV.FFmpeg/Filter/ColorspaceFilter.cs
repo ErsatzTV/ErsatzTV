@@ -65,9 +65,12 @@ public class ColorspaceFilter : BaseFilter
                 string primaries = string.IsNullOrWhiteSpace(cp.ColorPrimaries)
                     ? "bt709"
                     : cp.ColorPrimaries;
+                string space = string.IsNullOrWhiteSpace(cp.ColorSpace)
+                    ? "bt709"
+                    : cp.ColorSpace;
 
                 inputOverrides =
-                    $"irange={range}:ispace={cp.ColorSpace}:itrc={transfer}:iprimaries={primaries}:";
+                    $"irange={range}:ispace={space}:itrc={transfer}:iprimaries={primaries}:";
             }
 
             string colorspace = _desiredPixelFormat.BitDepth switch
