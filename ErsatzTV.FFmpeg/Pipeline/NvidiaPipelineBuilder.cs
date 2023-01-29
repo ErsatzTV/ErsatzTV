@@ -266,6 +266,13 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 }
             }
 
+            // vp9 seems to lose color metadata through the ffmpeg pipeline
+            // clearing color params will force it to be re-added
+            if (videoStream.Codec == "vp9")
+            {
+                videoStream = videoStream with { ColorParams = ColorParams.Unknown };
+            }
+
             if (!videoStream.ColorParams.IsBt709)
             {
                 _logger.LogDebug("Adding colorspace filter");
