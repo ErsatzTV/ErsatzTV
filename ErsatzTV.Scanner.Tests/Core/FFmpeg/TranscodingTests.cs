@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Bugsnag;
 using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -102,23 +103,23 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            // Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
-            // Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentScaled,
             // Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
         {
             Subtitle.None,
-            // Subtitle.Picture,
-            // Subtitle.Text
+            Subtitle.Picture,
+            Subtitle.Text
         };
 
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
-            // Padding.WithPadding
+            Padding.WithPadding
         };
 
         public static VideoScanKind[] VideoScanKinds =
@@ -130,13 +131,13 @@ public class TranscodingTests
         public static InputFormat[] InputFormats =
         {
             // // example format that requires colorspace filter
-            // new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
+            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             //
             // // example format that requires setparams filter
-            // new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
             //
             // // new("libx264", "yuvj420p"),
-            // new("libx264", "yuv420p10le"),
+            new("libx264", "yuv420p10le"),
             // // new("libx264", "yuv444p10le"),
             //
             // // new("mpeg1video", "yuv420p"),
@@ -144,12 +145,13 @@ public class TranscodingTests
             // // new("mpeg2video", "yuv420p"),
             //
             new("libx265", "yuv420p"),
-            // new("libx265", "yuv420p10le"),
+            new("libx265", "yuv420p10le"),
             //
             // // new("mpeg4", "yuv420p"),
             // //
-            // // new("libvpx-vp9", "yuv420p"),
-            // //
+            new("libvpx-vp9", "yuv420p"),
+            new("libvpx-vp9", "yuv420p10le"),
+            //
             // // // new("libaom-av1", "yuv420p")
             // // // av1    yuv420p10le    51
             // //
@@ -162,27 +164,27 @@ public class TranscodingTests
         public static Resolution[] Resolutions =
         {
             new() { Width = 1920, Height = 1080 },
-            // new() { Width = 1280, Height = 720 }
+            new() { Width = 1280, Height = 720 }
         };
 
         public static FFmpegProfileBitDepth[] BitDepths =
         {
             FFmpegProfileBitDepth.EightBit,
-            // FFmpegProfileBitDepth.TenBit
+            FFmpegProfileBitDepth.TenBit
         };
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
         {
             FFmpegProfileVideoFormat.H264,
-            // FFmpegProfileVideoFormat.Hevc
+            FFmpegProfileVideoFormat.Hevc
         };
 
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
+            // HardwareAccelerationKind.Nvenc,
             // HardwareAccelerationKind.Vaapi,
-            // HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
@@ -557,6 +559,12 @@ public class TranscodingTests
                     .WithStandardOutputPipe(PipeTarget.ToFile(tempFile))
                     .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
                     .ExecuteAsync(timeoutSignal.Token);
+
+                // var arguments = string.Join(
+                //     ' ',
+                //     process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+                //
+                // Log.Logger.Debug(arguments);
             }
             catch (OperationCanceledException)
             {
@@ -709,20 +717,13 @@ public class TranscodingTests
                     TestContext.CurrentContext.TestDirectory,
                     "Resources",
                     subtitle == Subtitle.Picture ? "test.sup" : "test.srt");
-                var p2 = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = ExecutableName("mkvmerge"),
-                        Arguments =
-                            $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}"
-                    }
-                };
 
-                p2.Start();
-                await p2.WaitForExitAsync();
-                // ReSharper disable once MethodHasAsyncOverload
-                p2.WaitForExit();
+                BufferedCommandResult p2 = await new Command(ExecutableName("mkvmerge"))
+                    .WithArguments(
+                        $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}")
+                    .WithValidation(CommandResultValidation.None)
+                    .ExecuteBufferedAsync();
+                
                 if (p2.ExitCode != 0)
                 {
                     if (File.Exists(sourceFile))
