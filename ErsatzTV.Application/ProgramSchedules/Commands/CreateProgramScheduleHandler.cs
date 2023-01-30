@@ -17,10 +17,10 @@ public class CreateProgramScheduleHandler :
         CreateProgramSchedule request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, ps => PersistProgramSchedule(dbContext, ps));
+        return await validation.Apply(ps => PersistProgramSchedule(dbContext, ps));
     }
 
     private static async Task<CreateProgramScheduleResult> PersistProgramSchedule(

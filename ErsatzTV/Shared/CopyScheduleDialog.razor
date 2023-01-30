@@ -1,0 +1,73 @@
+﻿@using ErsatzTV.Application.ProgramSchedules
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<CopyScheduleDialog> Logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText>
+                    Enter a name for the new Schedule
+                </MudText>
+            </MudContainer>
+            <MudTextField T="string" Label="New Schedule Name"
+                          @bind-Text="@_newName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Copy Schedule
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int ProgramScheduleId { get; set; }
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private string _newName;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newName);
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        Either<BaseError, ProgramScheduleViewModel> maybeResult =
+            await Mediator.Send(new CopyProgramSchedule(ProgramScheduleId, _newName), _cts.Token);
+
+        maybeResult.Match(
+            schedule => { MudDialog.Close(DialogResult.Ok(schedule)); },
+            error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error copying Schedule: {Error}", error.Value);
+                MudDialog.Close(DialogResult.Cancel());
+            });
+    }
+
+    private void Cancel(MouseEventArgs e) => MudDialog.Cancel();
+}

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add button to copy/clone schedule from schedules table
+
 ### Fixed
 - Fix many QSV pipeline bugs
 - Fix MPEG2 video format with QSV and VAAPI acceleration
