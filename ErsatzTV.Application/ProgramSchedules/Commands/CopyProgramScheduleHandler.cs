@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -38,44 +37,26 @@ public class
         CopyProgramSchedule request,
         CancellationToken cancellationToken)
     {
-        var clone = new ProgramSchedule();
-        await dbContext.AddAsync(clone, cancellationToken);
-
-        clone.Name = request.Name;
-        clone.RandomStartPoint = schedule.RandomStartPoint;
-        clone.ShuffleScheduleItems = schedule.ShuffleScheduleItems;
-        clone.TreatCollectionsAsShows = schedule.TreatCollectionsAsShows;
-        clone.KeepMultiPartEpisodesTogether = schedule.KeepMultiPartEpisodesTogether;
+        DetachEntity(dbContext, schedule);
+        schedule.Name = request.Name;
 
         // no playouts, no alternates
-        clone.Playouts = new List<Playout>();
-        clone.ProgramScheduleAlternates = new List<ProgramScheduleAlternate>();
+        schedule.Playouts = new List<Playout>();
+        schedule.ProgramScheduleAlternates = new List<ProgramScheduleAlternate>();
 
-        // clone all items
-        clone.Items = new List<ProgramScheduleItem>();
         foreach (ProgramScheduleItem item in schedule.Items)
         {
-            PropertyValues itemValues = dbContext.Entry(item).CurrentValues.Clone();
-            itemValues["Id"] = 0;
-
-            ProgramScheduleItem itemClone = item switch
-            {
-                ProgramScheduleItemFlood => new ProgramScheduleItemFlood(),
-                ProgramScheduleItemDuration => new ProgramScheduleItemDuration(),
-                ProgramScheduleItemMultiple => new ProgramScheduleItemMultiple(),
-                _ => new ProgramScheduleItemOne()
-            };
-
-            await dbContext.AddAsync(itemClone, cancellationToken);
-            dbContext.Entry(itemClone).CurrentValues.SetValues(itemValues);
-
-            itemClone.ProgramScheduleId = 0;
-            itemClone.ProgramSchedule = clone;
+            DetachEntity(dbContext, item);
+            item.ProgramScheduleId = 0;
+            item.ProgramSchedule = schedule;
         }
+
+        await dbContext.ProgramSchedules.AddAsync(schedule, cancellationToken);
+        await dbContext.ProgramScheduleItems.AddRangeAsync(schedule.Items, cancellationToken);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return ProjectToViewModel(clone);
+        return ProjectToViewModel(schedule);
     }
 
     private static async Task<Validation<BaseError, ProgramSchedule>> Validate(
@@ -109,5 +90,14 @@ public class
             .ToValidation<BaseError>("Schedule name must be unique");
 
         return (result1, result2).Apply((_, _) => request.Name);
+    }
+
+    private static void DetachEntity<T>(DbContext db, T entity) where T : class
+    {
+        db.Entry(entity).State = EntityState.Detached;
+        if (entity.GetType().GetProperty("Id") is not null)
+        {
+            entity.GetType().GetProperty("Id")!.SetValue(entity, 0);
+        }
     }
 }
