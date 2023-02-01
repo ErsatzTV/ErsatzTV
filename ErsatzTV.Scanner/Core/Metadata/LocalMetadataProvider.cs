@@ -168,6 +168,25 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         Option<OtherVideoMetadata> maybeMetadata = await LoadOtherVideoMetadata(nfoFileName);
         foreach (OtherVideoMetadata metadata in maybeMetadata)
         {
+            // merge path-based tags with nfo tags
+            string? folder = Path.GetDirectoryName(nfoFileName);
+            if (folder != null)
+            {
+                string libraryPath = otherVideo.LibraryPath.Path;
+                string parent = Optional(Directory.GetParent(libraryPath)).Match(
+                    di => di.FullName,
+                    () => libraryPath);
+
+                string diff = Path.GetRelativePath(parent, folder);
+
+                var tags = diff.Split(Path.DirectorySeparatorChar)
+                    .Filter(t => metadata.Tags.Any(mt => mt.Name == t) == false)
+                    .Map(t => new Tag { Name = t })
+                    .ToList();
+
+                metadata.Tags.AddRange(tags);
+            }
+
             return await ApplyMetadataUpdate(otherVideo, metadata);
         }
 
@@ -1234,7 +1253,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
                     releaseDate = premiered;
                 }
-
+                
                 return new OtherVideoMetadata
                 {
                     MetadataKind = MetadataKind.Sidecar,
