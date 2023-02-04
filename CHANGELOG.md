@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix MPEG2 video format with QSV and VAAPI acceleration
 - Fix playback of content with undefined colorspace
 - Fix NVIDIA color normalization with VP9 sources
+- Fix fallback filler looping
 
 ### Changed
 - Merge generated `Other Video` folder tags with tags from sidecar NFO
