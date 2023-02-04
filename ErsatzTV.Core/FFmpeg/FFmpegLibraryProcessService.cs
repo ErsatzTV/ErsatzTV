@@ -216,7 +216,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
-            false, // TODO: fallback filler needs to loop
+            fillerKind == FillerKind.Fallback,
             videoFormat,
             Optional(videoStream.Profile),
             Optional(desiredPixelFormat),
