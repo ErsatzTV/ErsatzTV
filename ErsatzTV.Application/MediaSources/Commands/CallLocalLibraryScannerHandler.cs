@@ -71,9 +71,11 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
             .Filter(lp => lp.LibraryId == request.LibraryId)
             .ToListAsync();
         
-        return libraryPaths.Any()
+        var minDateTime = libraryPaths.Any()
             ? libraryPaths.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc)
             : SystemTime.MaxValueUtc;
+
+        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
     }
 
     protected override bool ScanIsRequired(
