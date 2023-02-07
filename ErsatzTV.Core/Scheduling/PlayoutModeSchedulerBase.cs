@@ -533,6 +533,11 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         ? remainingToFill
                         : remainingToFill / (effectiveChapters.Count - 1);
                     TimeSpan filled = TimeSpan.Zero;
+
+                    // remove post-roll to add after mid-roll/content
+                    var postRoll = result.Where(i => i.FillerKind == FillerKind.PostRoll).ToList();
+                    result.RemoveAll(i => i.FillerKind == FillerKind.PostRoll);
+                    
                     for (var i = 0; i < effectiveChapters.Count; i++)
                     {
                         result.Add(playoutItem.ForChapter(effectiveChapters[i]));
@@ -572,6 +577,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             }
                         }
                     }
+
+                    result.AddRange(postRoll);
 
                     break;
                 case FillerKind.PostRoll:
