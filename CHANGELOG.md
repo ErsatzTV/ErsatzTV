@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix NVIDIA color normalization with VP9 sources
 - Fix fallback filler looping
 - Fix bug where some libraries would never scan
+- Fix filler ordering so post-roll is properly scheduled after padded mid-roll
 
 ### Changed
 - Merge generated `Other Video` folder tags with tags from sidecar NFO
