@@ -17,7 +17,7 @@
     <ItemGroup>
       <PackageReference Include="CliWrap" Version="3.6.0" />
       <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-      <PackageReference Include="LanguageExt.Core" Version="4.4.0" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.2" />
       <PackageReference Include="MediatR" Version="11.1.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />

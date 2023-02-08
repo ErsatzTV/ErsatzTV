@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix fallback filler looping
 - Fix bug where some libraries would never scan
 - Fix filler ordering so post-roll is properly scheduled after padded mid-roll
+- Fix pre/post-roll filler padding when used with mid-roll
+  - This caused overlapping schedule items, fallback filler that was too long, etc.
 
 ### Changed
 - Merge generated `Other Video` folder tags with tags from sidecar NFO
