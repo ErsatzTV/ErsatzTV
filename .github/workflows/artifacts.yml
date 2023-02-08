@@ -203,7 +203,7 @@ jobs:
       - name: Install dependencies
         run: dotnet restore -r "${{ matrix.target }}"
 
-      - uses: suisei-cn/actions-download-file@v1
+      - uses: suisei-cn/actions-download-file@v1.3.0
         if: ${{ matrix.kind == 'windows' }}
         id: downloadffmpeg
         name: Download ffmpeg

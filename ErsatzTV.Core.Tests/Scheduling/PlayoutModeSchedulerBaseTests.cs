@@ -460,6 +460,110 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             playoutItems[4].MediaItemId.Should().Be(5);
             playoutItems[4].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(55));
         }
+        
+        [Test]
+        public void Should_Schedule_Padded_Post_Roll_After_Mid_Roll_Count()
+        {
+            // content 45 min, mid roll 5 min, post roll pad to 60
+            // content + mid = 50 min, post roll will add two 5 min items
+            // content + mid + post = 60 min
+            
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(45));
+            Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
+            Collection collectionThree = TwoItemCollection(5, 6, TimeSpan.FromMinutes(5));
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                TailFiller = null,
+                FallbackFiller = null,
+                MidRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.MidRoll,
+                    FillerMode = FillerMode.Count,
+                    Count = 1,
+                    CollectionId = 2,
+                    Collection = collectionTwo
+                },
+                PostRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.PostRoll,
+                    FillerMode = FillerMode.Pad,
+                    PadToNearestMinute = 60,
+                    CollectionId = 3,
+                    Collection = collectionThree
+                }
+            };
+
+            var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+                new List<ProgramScheduleItem> { scheduleItem },
+                new CollectionEnumeratorState());
+
+            var enumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var midRollFillerEnumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            var postRollFillerEnumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionThree.MediaItems,
+                new CollectionEnumeratorState());
+
+            PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
+                scheduleItem,
+                enumerator);
+
+            enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), midRollFillerEnumerator);
+            enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.PostRollFiller), postRollFillerEnumerator);
+
+            List<PlayoutItem> playoutItems = Scheduler()
+                .AddFiller(
+                    startState,
+                    enumerators,
+                    scheduleItem,
+                    new PlayoutItem
+                    {
+                        MediaItemId = 1,
+                        Start = startState.CurrentTime.UtcDateTime,
+                        Finish = startState.CurrentTime.AddHours(1).UtcDateTime
+                    },
+                    new List<MediaChapter>
+                    {
+                        new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
+                        new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
+                    });
+
+            playoutItems.Count.Should().Be(5);
+            
+            // content chapter 1
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+            
+            // mid-roll 1
+            playoutItems[1].MediaItemId.Should().Be(3);
+            playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
+            
+            // content chapter 2
+            playoutItems[2].MediaItemId.Should().Be(1);
+            playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
+
+            // post-roll 1
+            playoutItems[3].MediaItemId.Should().Be(5);
+            playoutItems[3].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(50));
+            
+            // post-roll 2
+            playoutItems[4].MediaItemId.Should().Be(6);
+            playoutItems[4].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(55));
+        }
     }
 
     [TestFixture]
