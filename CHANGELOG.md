@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Merge generated `Other Video` folder tags with tags from sidecar NFO
+- Prioritize audio streams that are flagged as "default" when multiple candidate streams are available
+  - For example, a video with a stereo commentary track and a stereo "default" track will now prefer the "default" track 
 
 ## [0.7.3-beta] - 2023-01-25
 ### Added
