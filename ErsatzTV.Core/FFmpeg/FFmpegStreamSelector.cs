@@ -233,7 +233,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         if (string.IsNullOrWhiteSpace(title))
         {
             _logger.LogDebug("No audio title has been specified; selecting stream with most channels");
-            return streams.OrderByDescending(s => s.Channels).Head();
+            return streams.OrderByDescending(s => s.Channels).ThenByDescending(s => s.Default).Head();
         }
 
         // prioritize matching titles
@@ -247,14 +247,14 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 matchingTitle.Count,
                 title);
 
-            return matchingTitle.OrderByDescending(s => s.Channels).Head();
+            return matchingTitle.OrderByDescending(s => s.Channels).ThenByDescending(s => s.Default).Head();
         }
 
         _logger.LogDebug(
             "Unable to find audio stream with preferred title {Title}; selecting stream with most channels",
             title);
 
-        return streams.OrderByDescending(s => s.Channels).Head();
+        return streams.OrderByDescending(s => s.Channels).ThenByDescending(s => s.Default).Head();
     }
 
     private async Task<Option<MediaStream>> SelectEpisodeAudioStream(
