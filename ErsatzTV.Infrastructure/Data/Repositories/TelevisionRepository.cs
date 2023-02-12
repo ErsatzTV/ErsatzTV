@@ -539,6 +539,13 @@ public class TelevisionRepository : ITelevisionRepository
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
+    public async Task<bool> AddGenre(EpisodeMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO Genre (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
+            new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);    }
+
     public async Task<bool> AddTag(Metadata metadata, Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

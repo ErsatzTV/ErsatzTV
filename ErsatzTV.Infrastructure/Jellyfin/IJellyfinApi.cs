@@ -111,7 +111,7 @@ public interface IJellyfinApi
         [Query]
         string parentId,
         [Query]
-        string fields = "Path,DateCreated,Etag,Overview,ProviderIds,People",
+        string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,People",
         [Query]
         string includeItemTypes = "Episode",
         [Query]

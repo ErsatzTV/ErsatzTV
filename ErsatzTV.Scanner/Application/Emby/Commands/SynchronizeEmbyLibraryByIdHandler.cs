@@ -70,6 +70,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                         parameters.Library,
                         parameters.FFmpegPath,
                         parameters.FFprobePath,
+                        parameters.DeepScan,
                         cancellationToken),
                 LibraryMediaKind.Shows =>
                     await _embyTelevisionLibraryScanner.ScanLibrary(
@@ -78,6 +79,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                         parameters.Library,
                         parameters.FFmpegPath,
                         parameters.FFprobePath,
+                        parameters.DeepScan,
                         cancellationToken),
                 _ => Unit.Default
             };
@@ -139,7 +141,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                     request.ForceScan,
                     libraryRefreshInterval,
                     ffmpegPath,
-                    ffprobePath
+                    ffprobePath,
+                    request.DeepScan
                 ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -203,7 +206,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         bool ForceScan,
         int LibraryRefreshInterval,
         string FFmpegPath,
-        string FFprobePath);
+        string FFprobePath,
+        bool DeepScan);
 
     private record ConnectionParameters(EmbyConnection ActiveConnection)
     {

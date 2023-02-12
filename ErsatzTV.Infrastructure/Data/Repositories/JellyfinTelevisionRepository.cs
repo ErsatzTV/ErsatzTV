@@ -128,7 +128,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<JellyfinEpisode>>> GetOrAdd(
         JellyfinLibrary library,
-        JellyfinEpisode item)
+        JellyfinEpisode item,
+        bool deepScan)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
@@ -162,7 +163,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         foreach (JellyfinEpisode jellyfinEpisode in maybeExisting)
         {
             var result = new MediaItemScanResult<JellyfinEpisode>(jellyfinEpisode) { IsAdded = false };
-            if (jellyfinEpisode.Etag != item.Etag)
+            if (jellyfinEpisode.Etag != item.Etag || deepScan)
             {
                 await UpdateEpisode(dbContext, jellyfinEpisode, item);
                 result.IsUpdated = true;
@@ -659,6 +660,36 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                      .ToList())
         {
             metadata.Guids.Add(guid);
+        }
+        
+        // genres
+        foreach (Genre genre in metadata.Genres
+                     .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Genres.Remove(genre);
+        }
+
+        foreach (Genre genre in incomingMetadata.Genres
+                     .Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Genres.Add(genre);
+        }
+        
+        // tags
+        foreach (Tag tag in metadata.Tags
+                     .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Tags.Remove(tag);
+        }
+
+        foreach (Tag tag in incomingMetadata.Tags
+                     .Filter(g => metadata.Tags.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Tags.Add(tag);
         }
 
         var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();

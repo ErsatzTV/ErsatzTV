@@ -10,5 +10,6 @@ public interface IJellyfinMovieLibraryScanner
         JellyfinLibrary library,
         string ffmpegPath,
         string ffprobePath,
+        bool deepScan,
         CancellationToken cancellationToken);
 }
