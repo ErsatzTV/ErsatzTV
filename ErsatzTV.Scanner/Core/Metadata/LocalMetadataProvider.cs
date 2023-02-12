@@ -443,8 +443,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 updated = await UpdateMetadataCollections(
                     existing,
                     metadata,
-                    (_, _) => Task.FromResult(false),
-                    (_, _) => Task.FromResult(false),
+                    _televisionRepository.AddGenre,
+                    _televisionRepository.AddTag,
                     (_, _) => Task.FromResult(false),
                     _televisionRepository.AddActor) || updated;
 

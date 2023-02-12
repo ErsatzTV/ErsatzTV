@@ -30,6 +30,7 @@ public interface ITelevisionRepository
     Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath);
     Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath);
     Task<bool> AddGenre(ShowMetadata metadata, Genre genre);
+    Task<bool> AddGenre(EpisodeMetadata metadata, Genre genre);
     Task<bool> AddTag(Domain.Metadata metadata, Tag tag);
     Task<bool> AddStudio(ShowMetadata metadata, Studio studio);
     Task<bool> AddActor(ShowMetadata metadata, Actor actor);
