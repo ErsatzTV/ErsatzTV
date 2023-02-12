@@ -183,7 +183,8 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> GetOrAdd(
         PlexLibrary library,
-        PlexEpisode item)
+        PlexEpisode item,
+        bool deepScan)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
@@ -219,6 +220,8 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (PlexEpisode plexEpisode in maybeExisting)
         {
             var result = new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
+            
+            // deepScan isn't needed here since we create our own plex etags
             if (plexEpisode.Etag != item.Etag)
             {
                 await UpdateEpisodePath(dbContext, plexEpisode, item);

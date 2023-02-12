@@ -89,7 +89,7 @@ public interface IEmbyApi
         string seasonId,
         [Query]
         string fields =
-            "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
+            "Path,Genres,Tags,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
         [Query]
         int startIndex = 0,
         [Query]

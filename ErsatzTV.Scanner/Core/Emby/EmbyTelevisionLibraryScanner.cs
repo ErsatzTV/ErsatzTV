@@ -50,6 +50,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         EmbyLibrary library,
         string ffmpegPath,
         string ffprobePath,
+        bool deepScan,
         CancellationToken cancellationToken)
     {
         List<EmbyPathReplacement> pathReplacements =
@@ -70,7 +71,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             GetLocalPath,
             ffmpegPath,
             ffprobePath,
-            false,
+            deepScan,
             cancellationToken);
     }
 

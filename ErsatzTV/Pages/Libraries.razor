@@ -55,7 +55,7 @@
                     }
                     else
                     {
-                        if (context is PlexLibraryViewModel)
+                        if (context is PlexLibraryViewModel or EmbyLibraryViewModel or JellyfinLibraryViewModel)
                         {
                             <MudTooltip Text="Deep Scan Library">
                                 <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
@@ -120,11 +120,11 @@
                     break;
                 case JellyfinLibraryViewModel:
                     await _jellyfinWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
-                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id), _cts.Token);
+                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case EmbyLibraryViewModel:
                     await _embyWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
-                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id), _cts.Token);
+                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), _cts.Token);
                     break;
             }
 

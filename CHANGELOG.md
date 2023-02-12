@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add button to copy/clone schedule from schedules table
+- Synchronize episode tags and genres from Jellyfin, Emby and Local show libraries
+- Add `Deep Scan` button to Jellyfin and Emby libraries
+  - This is now required to update some metadata for existing libraries, when targeted updates are not possible
+  - For example, if you already have tags and genres on your episodes in Jellyfin or Emby, you will need to deep scan each library to update that metadata on existing items in ErsatzTV
 
 ### Fixed
 - Fix many QSV pipeline bugs

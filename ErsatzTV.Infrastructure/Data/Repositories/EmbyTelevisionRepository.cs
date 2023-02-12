@@ -124,7 +124,8 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<EmbyEpisode>>> GetOrAdd(
         EmbyLibrary library,
-        EmbyEpisode item)
+        EmbyEpisode item,
+        bool deepScan)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<EmbyEpisode> maybeExisting = await dbContext.EmbyEpisodes
@@ -158,7 +159,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         foreach (EmbyEpisode embyEpisode in maybeExisting)
         {
             var result = new MediaItemScanResult<EmbyEpisode>(embyEpisode) { IsAdded = false };
-            if (embyEpisode.Etag != item.Etag)
+            if (embyEpisode.Etag != item.Etag || deepScan)
             {
                 await UpdateEpisode(dbContext, embyEpisode, item);
                 result.IsUpdated = true;
@@ -655,6 +656,36 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
                      .ToList())
         {
             metadata.Guids.Add(guid);
+        }
+
+        // genres
+        foreach (Genre genre in metadata.Genres
+                     .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Genres.Remove(genre);
+        }
+
+        foreach (Genre genre in incomingMetadata.Genres
+                     .Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Genres.Add(genre);
+        }
+        
+        // tags
+        foreach (Tag tag in metadata.Tags
+                     .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Tags.Remove(tag);
+        }
+
+        foreach (Tag tag in incomingMetadata.Tags
+                     .Filter(g => metadata.Tags.All(g2 => g2.Name != g.Name))
+                     .ToList())
+        {
+            metadata.Tags.Add(tag);
         }
 
         var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();

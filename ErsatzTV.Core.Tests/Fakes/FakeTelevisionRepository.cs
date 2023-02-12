@@ -59,6 +59,8 @@ public class FakeTelevisionRepository : ITelevisionRepository
     public Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
 
     public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
+    public Task<bool> AddGenre(EpisodeMetadata metadata, Genre genre) => throw new NotSupportedException();
+
     public Task<bool> AddTag(Domain.Metadata metadata, Tag tag) => throw new NotSupportedException();
 
     public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) => throw new NotSupportedException();
