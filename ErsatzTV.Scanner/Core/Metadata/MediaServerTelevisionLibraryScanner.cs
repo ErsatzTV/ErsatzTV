@@ -437,7 +437,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             incoming.SeasonId = season.Id;
 
             Either<BaseError, MediaItemScanResult<TEpisode>> maybeEpisode = await televisionRepository
-                .GetOrAdd(library, incoming)
+                .GetOrAdd(library, incoming, deepScan)
                 .MapT(
                     result =>
                     {

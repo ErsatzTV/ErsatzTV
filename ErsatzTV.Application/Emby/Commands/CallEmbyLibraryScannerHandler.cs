@@ -65,6 +65,11 @@ public class CallEmbyLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
             arguments.Add("--force");
         }
 
+        if (request.DeepScan)
+        {
+            arguments.Add("--deep");
+        }
+
         return await base.PerformScan(scanner, arguments, cancellationToken);
     }
 

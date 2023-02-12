@@ -89,6 +89,12 @@ public class EpisodeNfoReader : NfoReader<EpisodeNfo>, IEpisodeNfoReader
                             case "plot":
                                 await ReadStringContent(reader, nfo, (episode, plot) => episode.Plot = plot);
                                 break;
+                            case "genre":
+                                await ReadStringContent(reader, nfo, (episode, genre) => episode.Genres.Add(genre));
+                                break;
+                            case "tag":
+                                await ReadStringContent(reader, nfo, (episode, tag) => episode.Tags.Add(tag));
+                                break;
                             case "actor":
                                 ReadActor(reader, nfo, (episode, actor) => episode.Actors.Add(actor));
                                 break;

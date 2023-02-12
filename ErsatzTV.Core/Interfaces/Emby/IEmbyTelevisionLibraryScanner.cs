@@ -10,5 +10,6 @@ public interface IEmbyTelevisionLibraryScanner
         EmbyLibrary library,
         string ffmpegPath,
         string ffprobePath,
+        bool deepScan,
         CancellationToken cancellationToken);
 }

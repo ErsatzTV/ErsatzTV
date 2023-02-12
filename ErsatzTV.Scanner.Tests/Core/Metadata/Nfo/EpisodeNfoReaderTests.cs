@@ -289,6 +289,58 @@ public class EpisodeNfoReaderTests
                 .Should().Be(1);
         }
     }
+    
+    [Test]
+    public async Task Genres()
+    {
+        var stream = new MemoryStream(
+            Encoding.UTF8.GetBytes(
+                @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
+<!--created on whatever - comment-->
+<episodedetails>
+  <genre>Genre 1</genre>
+</episodedetails>
+<episodedetails>
+  <genre>Genre 2</genre>
+  <genre>Genre 3</genre>
+</episodedetails>"));
+
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+
+        result.IsRight.Should().BeTrue();
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
+        {
+            list.Count.Should().Be(2);
+            list.Count(nfo => nfo.Genres is ["Genre 1"]).Should().Be(1);
+            list.Count(nfo => nfo.Genres is ["Genre 2", "Genre 3"]).Should().Be(1);
+        }
+    }
+    
+    [Test]
+    public async Task Tags()
+    {
+        var stream = new MemoryStream(
+            Encoding.UTF8.GetBytes(
+                @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
+<!--created on whatever - comment-->
+<episodedetails>
+  <tag>Tag 1</tag>
+</episodedetails>
+<episodedetails>
+  <tag>Tag 2</tag>
+  <tag>Tag 3</tag>
+</episodedetails>"));
+
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+
+        result.IsRight.Should().BeTrue();
+        foreach (List<EpisodeNfo> list in result.RightToSeq())
+        {
+            list.Count.Should().Be(2);
+            list.Count(nfo => nfo.Tags is ["Tag 1"]).Should().Be(1);
+            list.Count(nfo => nfo.Tags is ["Tag 2", "Tag 3"]).Should().Be(1);
+        }
+    }
 
     [Test]
     public async Task FullSample_Should_Return_Nfo()

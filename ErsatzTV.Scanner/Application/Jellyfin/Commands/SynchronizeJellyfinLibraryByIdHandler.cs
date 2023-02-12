@@ -82,6 +82,7 @@ public class
                         parameters.Library,
                         parameters.FFmpegPath,
                         parameters.FFprobePath,
+                        parameters.DeepScan,
                         cancellationToken),
                 LibraryMediaKind.Shows =>
                     await _jellyfinTelevisionLibraryScanner.ScanLibrary(
@@ -90,6 +91,7 @@ public class
                         parameters.Library,
                         parameters.FFmpegPath,
                         parameters.FFprobePath,
+                        parameters.DeepScan,
                         cancellationToken),
                 _ => Unit.Default
             };
@@ -151,7 +153,8 @@ public class
                     request.ForceScan,
                     libraryRefreshInterval,
                     ffmpegPath,
-                    ffprobePath
+                    ffprobePath,
+                    request.DeepScan
                 ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -215,7 +218,8 @@ public class
         bool ForceScan,
         int LibraryRefreshInterval,
         string FFmpegPath,
-        string FFprobePath);
+        string FFprobePath,
+        bool DeepScan);
 
     private record ConnectionParameters(JellyfinConnection ActiveConnection)
     {

@@ -1120,8 +1120,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                         .ToList(),
                     Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
                     Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
-                    Genres = new List<Genre>(),
-                    Tags = new List<Tag>(),
+                    Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                    Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                     Studios = new List<Studio>(),
                     Artwork = new List<Artwork>()
                 };

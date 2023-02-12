@@ -50,6 +50,7 @@ public class EmbyMovieLibraryScanner :
         EmbyLibrary library,
         string ffmpegPath,
         string ffprobePath,
+        bool deepScan,
         CancellationToken cancellationToken)
     {
         List<EmbyPathReplacement> pathReplacements =
@@ -70,7 +71,7 @@ public class EmbyMovieLibraryScanner :
             GetLocalPath,
             ffmpegPath,
             ffprobePath,
-            false,
+            deepScan,
             cancellationToken);
     }
 

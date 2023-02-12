@@ -72,10 +72,12 @@ public class Worker : BackgroundService
         var scanEmbyCommand = new Command("scan-emby", "Scan an Emby library");
         scanEmbyCommand.AddArgument(libraryIdArgument);
         scanEmbyCommand.AddOption(forceOption);
+        scanEmbyCommand.AddOption(deepOption);
 
         var scanJellyfinCommand = new Command("scan-jellyfin", "Scan a Jellyfin library");
         scanJellyfinCommand.AddArgument(libraryIdArgument);
         scanJellyfinCommand.AddOption(forceOption);
+        scanJellyfinCommand.AddOption(deepOption);
         
         scanLocalCommand.SetHandler(
             async context =>
@@ -122,12 +124,13 @@ public class Worker : BackgroundService
                     bool force = context.ParseResult.GetValueForOption(forceOption);
                     SetProcessPriority(force);
 
+                    bool deep = context.ParseResult.GetValueForOption(deepOption);
                     int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
 
                     using IServiceScope scope = _serviceScopeFactory.CreateScope();
                     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                    var scan = new SynchronizeEmbyLibraryById(libraryId, force);
+                    var scan = new SynchronizeEmbyLibraryById(libraryId, force, deep);
                     await mediator.Send(scan, context.GetCancellationToken());
                 }
             });
@@ -140,12 +143,13 @@ public class Worker : BackgroundService
                     bool force = context.ParseResult.GetValueForOption(forceOption);
                     SetProcessPriority(force);
 
+                    bool deep = context.ParseResult.GetValueForOption(deepOption);
                     int libraryId = context.ParseResult.GetValueForArgument(libraryIdArgument);
 
                     using IServiceScope scope = _serviceScopeFactory.CreateScope();
                     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                    var scan = new SynchronizeJellyfinLibraryById(libraryId, force);
+                    var scan = new SynchronizeJellyfinLibraryById(libraryId, force, deep);
                     await mediator.Send(scan, context.GetCancellationToken());
                 }
             });

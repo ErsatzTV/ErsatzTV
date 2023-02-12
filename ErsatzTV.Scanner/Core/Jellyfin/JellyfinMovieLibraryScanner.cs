@@ -50,6 +50,7 @@ public class JellyfinMovieLibraryScanner :
         JellyfinLibrary library,
         string ffmpegPath,
         string ffprobePath,
+        bool deepScan,
         CancellationToken cancellationToken)
     {
         List<JellyfinPathReplacement> pathReplacements =
@@ -70,7 +71,7 @@ public class JellyfinMovieLibraryScanner :
             GetLocalPath,
             ffmpegPath,
             ffprobePath,
-            false,
+            deepScan,
             cancellationToken);
     }
 

@@ -14,7 +14,7 @@ public interface IMediaServerTelevisionRepository<in TLibrary, TShow, TSeason, T
     Task<List<TEtag>> GetExistingEpisodes(TLibrary library, TSeason season);
     Task<Either<BaseError, MediaItemScanResult<TShow>>> GetOrAdd(TLibrary library, TShow item);
     Task<Either<BaseError, MediaItemScanResult<TSeason>>> GetOrAdd(TLibrary library, TSeason item);
-    Task<Either<BaseError, MediaItemScanResult<TEpisode>>> GetOrAdd(TLibrary library, TEpisode item);
+    Task<Either<BaseError, MediaItemScanResult<TEpisode>>> GetOrAdd(TLibrary library, TEpisode item, bool deepScan);
     Task<Unit> SetEtag(TShow show, string etag);
     Task<Unit> SetEtag(TSeason season, string etag);
     Task<Unit> SetEtag(TEpisode episode, string etag);
