@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.4-beta] - 2023-02-12
 ### Added
 - Add button to copy/clone schedule from schedules table
 - Synchronize episode tags and genres from Jellyfin, Emby and Local show libraries
@@ -1523,8 +1525,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.3-beta...HEAD
-[0.7.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...v0.7.3-beta
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.4-beta...HEAD
+[0.7.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.3-beta...v0.7.4-beta
+[0.7.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...v0.7.3-beta
 [0.7.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.1-beta...v0.7.2-beta
 [0.7.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.0-beta...v0.7.1-beta
 [0.7.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.6.9-beta...v0.7.0-beta
