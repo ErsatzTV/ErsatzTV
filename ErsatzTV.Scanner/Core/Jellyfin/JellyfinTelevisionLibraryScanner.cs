@@ -28,6 +28,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         IJellyfinTelevisionRepository televisionRepository,
         IJellyfinPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
+        IMetadataRepository metadataRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         IMediator mediator,
@@ -36,6 +37,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
             localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
+            metadataRepository,
             mediator,
             logger)
     {

@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
 using CliWrap;
+using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Streaming;
+using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Flurl;
 
 namespace ErsatzTV.Controllers;
 
@@ -14,10 +17,15 @@ public class InternalController : ControllerBase
 {
     private readonly ILogger<InternalController> _logger;
     private readonly IMediator _mediator;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public InternalController(IMediator mediator, ILogger<InternalController> logger)
+    public InternalController(
+        IMediator mediator,
+        IHttpClientFactory httpClientFactory,
+        ILogger<InternalController> logger)
     {
         _mediator = mediator;
+        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -79,4 +87,22 @@ public class InternalController : ControllerBase
                             return BadRequest(error.Value);
                         }
                     ));
+
+    [HttpGet("/media/plex/{plexMediaSourceId:int}/{*path}")]
+    public async Task<IActionResult> GetPlexFanArt(
+        int plexMediaSourceId,
+        string path,
+        CancellationToken cancellationToken)
+    {
+        Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
+            await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId), cancellationToken);
+
+        return connectionParameters.Match<IActionResult>(
+            Left: _ => new NotFoundResult(),
+            Right: r =>
+            {
+                Url fullPath = new Uri(r.Uri, path).SetQueryParam("X-Plex-Token", r.AuthToken);
+                return new RedirectResult(fullPath.ToString());
+            });
+    }
 }

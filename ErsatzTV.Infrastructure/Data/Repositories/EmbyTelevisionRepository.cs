@@ -338,6 +338,29 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         return None;
     }
 
+    public async Task<Option<int>> FlagRemoteOnly(EmbyLibrary library, EmbyEpisode episode)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        episode.State = MediaItemState.RemoteOnly;
+
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT EmbyEpisode.Id FROM EmbyEpisode
+              INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+              WHERE EmbyEpisode.ItemId = @ItemId",
+            new { LibraryId = library.Id, episode.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 3 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
+    }
+
     private async Task UpdateShow(TvContext dbContext, EmbyShow existing, EmbyShow incoming)
     {
         // library path is used for search indexing later

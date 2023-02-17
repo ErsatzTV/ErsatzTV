@@ -19,6 +19,9 @@ public class PlexStreamResponse
     [XmlAttribute("languageCode")]
     public string LanguageCode { get; set; }
 
+    [XmlAttribute("title")]
+    public string Title { get; set; }
+
     [XmlAttribute("streamType")]
     public int StreamType { get; set; }
 
@@ -31,6 +34,12 @@ public class PlexStreamResponse
     [XmlAttribute("channels")]
     public int Channels { get; set; }
 
+    [XmlAttribute("width")]
+    public int Width { get; set; }
+
+    [XmlAttribute("height")]
+    public int Height { get; set; }
+
     [XmlAttribute("anamorphic")]
     public bool Anamorphic { get; set; }
 
@@ -40,6 +49,24 @@ public class PlexStreamResponse
     [XmlAttribute("scanType")]
     public string ScanType { get; set; }
 
+    [XmlAttribute("frameRate")]
+    public string FrameRate { get; set; }
+
+    [XmlAttribute("bitDepth")]
+    public int BitDepth { get; set; }
+
+    [XmlAttribute("colorRange")]
+    public string ColorRange { get; set; }
+
+    [XmlAttribute("colorSpace")]
+    public string ColorSpace { get; set; }
+
+    [XmlAttribute("colorTrc")]
+    public string ColorTrc { get; set; }
+    
+    [XmlAttribute("colorPrimaries")]
+    public string ColorPrimaries { get; set; }
+    
     [XmlAttribute("displayTitle")]
     public string DisplayTitle { get; set; }
 

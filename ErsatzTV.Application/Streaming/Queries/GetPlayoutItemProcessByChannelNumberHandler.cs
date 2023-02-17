@@ -1,4 +1,5 @@
 ﻿using CliWrap;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -126,7 +127,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.Watermark)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
-            .BindT(ValidatePlayoutItemPath);
+            .BindT(item => ValidatePlayoutItemPath(dbContext, item));
 
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
@@ -440,15 +441,20 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 DisableWatermarks = !fallbackPreset.AllowWatermarks
             };
 
-            return await ValidatePlayoutItemPath(playoutItem);
+            return await ValidatePlayoutItemPath(dbContext, playoutItem);
         }
 
         return new UnableToLocatePlayoutItem();
     }
 
-    private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(PlayoutItem playoutItem)
+    private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(TvContext dbContext, PlayoutItem playoutItem)
     {
-        string path = await GetPlayoutItemPath(playoutItem);
+        string path = await GetPlayoutItemPath(dbContext, playoutItem);
+
+        if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
+        {
+            return new PlayoutItemWithPath(playoutItem, path);
+        }
 
         if (_localFileSystem.FileExists(path))
         {
@@ -458,11 +464,34 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return new PlayoutItemDoesNotExistOnDisk(path);
     }
 
-    private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem)
+    private async Task<string> GetPlayoutItemPath(TvContext dbContext, PlayoutItem playoutItem)
     {
         MediaVersion version = playoutItem.MediaItem.GetHeadVersion();
 
         MediaFile file = version.MediaFiles.Head();
+
+        if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
+        {
+            switch (file)
+            {
+                case PlexMediaFile pmf:
+                    Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
+                            @"SELECT PMS.Id FROM PlexMediaSource PMS
+                          INNER JOIN Library L on PMS.Id = L.MediaSourceId
+                          INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
+                          WHERE LP.Id = @LibraryPathId",
+                            new { playoutItem.MediaItem.LibraryPathId })
+                        .Map(Optional);
+                        
+                    foreach (int plexMediaSourceId in maybeId)
+                    {
+                        return $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}";
+                    }
+
+                    break;
+            }
+        }
+
         string path = file.Path;
         return playoutItem.MediaItem switch
         {

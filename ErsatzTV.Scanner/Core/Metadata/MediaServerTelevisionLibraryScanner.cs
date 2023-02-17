@@ -21,6 +21,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEtag : MediaServerItemEtag
 {
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger _logger;
@@ -30,15 +31,19 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalFileSystem localFileSystem,
+        IMetadataRepository metadataRepository,
         IMediator mediator,
         ILogger logger)
     {
         _localStatisticsProvider = localStatisticsProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localFileSystem = localFileSystem;
+        _metadataRepository = metadataRepository;
         _mediator = mediator;
         _logger = logger;
     }
+
+    protected virtual bool ServerSupportsRemoteStreaming => false;
 
     protected async Task<Either<BaseError, Unit>> ScanLibrary(
         IMediaServerTelevisionRepository<TLibrary, TShow, TSeason, TEpisode, TEtag> televisionRepository,
@@ -268,6 +273,12 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TEpisode incoming,
         bool deepScan);
 
+    protected virtual Task<Option<MediaVersion>> GetMediaServerStatistics(
+        TConnectionParameters connectionParameters,
+        TLibrary library,
+        MediaItemScanResult<TEpisode> result,
+        TEpisode incoming) => Task.FromResult(Option<MediaVersion>.None);
+
     protected abstract Task<Either<BaseError, MediaItemScanResult<TShow>>> UpdateMetadata(
         MediaItemScanResult<TShow> result,
         ShowMetadata fullMetadata);
@@ -279,7 +290,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     protected abstract Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateMetadata(
         MediaItemScanResult<TEpisode> result,
         EpisodeMetadata fullMetadata);
-
+    
     private async Task<Either<BaseError, Unit>> ScanSeasons(
         IMediaServerTelevisionRepository<TLibrary, TShow, TSeason, TEpisode, TEtag> televisionRepository,
         TLibrary library,
@@ -445,7 +456,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                         return result;
                     })
                 .BindT(existing => UpdateMetadata(connectionParameters, library, existing, incoming, deepScan))
-                .BindT(existing => UpdateStatistics(existing, incoming, ffmpegPath, ffprobePath))
+                .BindT(existing => UpdateStatistics(connectionParameters, library, existing, incoming, ffmpegPath, ffprobePath))
                 .BindT(UpdateSubtitles);
 
             if (maybeEpisode.IsLeft)
@@ -470,6 +481,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                 if (_localFileSystem.FileExists(result.LocalPath))
                 {
                     if (await televisionRepository.FlagNormal(library, result.Item))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+                else if (ServerSupportsRemoteStreaming)
+                {
+                    Option<int> flagResult = await televisionRepository.FlagRemoteOnly(library, result.Item);
+                    if (flagResult.IsSome)
                     {
                         result.IsUpdated = true;
                     }
@@ -542,11 +561,23 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             // don't scan, but mark as unavailable
             if (!_localFileSystem.FileExists(localPath))
             {
-                foreach (int id in await televisionRepository.FlagUnavailable(library, incoming))
+                if (ServerSupportsRemoteStreaming)
                 {
-                    await _mediator.Publish(
-                        new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
-                        CancellationToken.None);
+                    foreach (int id in await televisionRepository.FlagRemoteOnly(library, incoming))
+                    {
+                        await _mediator.Publish(
+                            new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
+                            CancellationToken.None);
+                    }
+                }
+                else
+                {
+                    foreach (int id in await televisionRepository.FlagUnavailable(library, incoming))
+                    {
+                        await _mediator.Publish(
+                            new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
+                            CancellationToken.None);
+                    }
                 }
             }
 
@@ -640,6 +671,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateStatistics(
+        TConnectionParameters connectionParameters,
+        TLibrary library,
         MediaItemScanResult<TEpisode> result,
         TEpisode incoming,
         string ffmpegPath,
@@ -672,6 +705,22 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                 foreach (bool _ in refreshResult.RightToSeq())
                 {
                     result.IsUpdated = true;
+                }
+            }
+            else
+            {
+                Option<MediaVersion> maybeMediaVersion = await GetMediaServerStatistics(
+                    connectionParameters,
+                    library,
+                    result,
+                    incoming);
+
+                foreach (MediaVersion mediaVersion in maybeMediaVersion)
+                {
+                    if (await _metadataRepository.UpdateStatistics(result.Item, mediaVersion))
+                    {
+                        result.IsUpdated = true;
+                    }
                 }
             }
         }

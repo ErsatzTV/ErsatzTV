@@ -140,10 +140,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
             playbackSettings.NormalizeLoudness);
 
+        IPixelFormat pixelFormat = await AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger)
+            .IfNoneAsync(() => new PixelFormatUnknown(videoStream.BitsPerRawSample > 0 ? videoStream.BitsPerRawSample : 8));
+        
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
             videoStream.Codec,
-            AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger),
+            Some(pixelFormat),
             new ColorParams(
                 videoStream.ColorRange,
                 videoStream.ColorSpace,

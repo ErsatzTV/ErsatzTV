@@ -20,7 +20,7 @@ public class PlexMediaResponse<T>
     public int Height { get; set; }
 
     [XmlAttribute("aspectRatio")]
-    public double AspectRatio { get; set; }
+    public string AspectRatio { get; set; }
 
     [XmlAttribute("audioChannels")]
     public int AudioChannels { get; set; }

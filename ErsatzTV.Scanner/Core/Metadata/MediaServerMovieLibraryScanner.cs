@@ -339,6 +339,10 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                     result.IsUpdated = true;
                 }
             }
+            else
+            {
+                _logger.LogDebug("File does not exist; here's where we should update statistics from plex");
+            }
         }
 
         return result;

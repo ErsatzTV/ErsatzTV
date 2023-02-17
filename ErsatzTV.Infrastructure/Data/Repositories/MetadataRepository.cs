@@ -119,7 +119,7 @@ public class MetadataRepository : IMetadataRepository
         return await dbContext.SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> UpdateLocalStatistics(
+    public async Task<bool> UpdateStatistics(
         MediaItem mediaItem,
         MediaVersion incoming,
         bool updateVersion = true)
