@@ -165,6 +165,13 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         bool deepScan) =>
         Task.FromResult(Option<EpisodeMetadata>.None);
 
+    protected override Task<Option<Tuple<EpisodeMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyEpisode> result,
+        EmbyEpisode incoming,
+        bool deepScan) => Task.FromResult(Option<Tuple<EpisodeMetadata, MediaVersion>>.None);
+
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> UpdateMetadata(
         MediaItemScanResult<EmbyShow> result,
         ShowMetadata fullMetadata) =>

@@ -54,6 +54,7 @@ public class PlexTelevisionLibraryScanner :
     }
 
     protected override bool ServerSupportsRemoteStreaming => true;
+    protected override bool ServerReturnsStatisticsWithMetadata => true;
 
     public async Task<Either<BaseError, Unit>> ScanLibrary(
         PlexConnection connection,
@@ -284,6 +285,30 @@ public class PlexTelevisionLibraryScanner :
         }
 
         return maybeVersion.ToOption();
+    }
+
+    protected override async Task<Option<Tuple<EpisodeMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
+        PlexConnectionParameters connectionParameters,
+        PlexLibrary library,
+        MediaItemScanResult<PlexEpisode> result,
+        PlexEpisode incoming,
+        bool deepScan)
+    {
+        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Plex Metadata and Statistics", result.LocalPath);
+
+        Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeResult =
+            await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
+                library,
+                incoming.Key.Split("/").Last(),
+                connectionParameters.Connection,
+                connectionParameters.Token);
+
+        foreach (BaseError error in maybeResult.LeftToSeq())
+        {
+            _logger.LogWarning("Failed to get episode metadata and statistics from Plex: {Error}", error.ToString());
+        }
+
+        return maybeResult.ToOption();
     }
 
     protected override async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> UpdateMetadata(

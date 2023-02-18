@@ -44,6 +44,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     }
 
     protected virtual bool ServerSupportsRemoteStreaming => false;
+    protected virtual bool ServerReturnsStatisticsWithMetadata => false;
 
     protected async Task<Either<BaseError, Unit>> ScanLibrary(
         IMediaServerTelevisionRepository<TLibrary, TShow, TSeason, TEpisode, TEtag> televisionRepository,
@@ -279,6 +280,13 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         MediaItemScanResult<TEpisode> result,
         TEpisode incoming) => Task.FromResult(Option<MediaVersion>.None);
 
+    protected abstract Task<Option<Tuple<EpisodeMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
+        TConnectionParameters connectionParameters,
+        TLibrary library,
+        MediaItemScanResult<TEpisode> result,
+        TEpisode incoming,
+        bool deepScan);
+
     protected abstract Task<Either<BaseError, MediaItemScanResult<TShow>>> UpdateMetadata(
         MediaItemScanResult<TShow> result,
         ShowMetadata fullMetadata);
@@ -447,17 +455,50 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
             incoming.SeasonId = season.Id;
 
-            Either<BaseError, MediaItemScanResult<TEpisode>> maybeEpisode = await televisionRepository
-                .GetOrAdd(library, incoming, deepScan)
-                .MapT(
-                    result =>
-                    {
-                        result.LocalPath = localPath;
-                        return result;
-                    })
-                .BindT(existing => UpdateMetadata(connectionParameters, library, existing, incoming, deepScan))
-                .BindT(existing => UpdateStatistics(connectionParameters, library, existing, incoming, ffmpegPath, ffprobePath))
-                .BindT(UpdateSubtitles);
+            Either<BaseError, MediaItemScanResult<TEpisode>> maybeEpisode;
+
+            if (ServerReturnsStatisticsWithMetadata)
+            {
+                maybeEpisode = await televisionRepository
+                    .GetOrAdd(library, incoming, deepScan)
+                    .MapT(
+                        result =>
+                        {
+                            result.LocalPath = localPath;
+                            return result;
+                        })
+                    .BindT(
+                        existing => UpdateMetadataAndStatistics(
+                            connectionParameters,
+                            library,
+                            existing,
+                            incoming,
+                            deepScan))
+                    .BindT(UpdateSubtitles);
+            }
+            else
+            {
+                maybeEpisode = await televisionRepository
+                    .GetOrAdd(library, incoming, deepScan)
+                    .MapT(
+                        result =>
+                        {
+                            result.LocalPath = localPath;
+                            return result;
+                        })
+                    .BindT(
+                        existing => UpdateMetadata(connectionParameters, library, existing, incoming, deepScan, None))
+                    .BindT(
+                        existing => UpdateStatistics(
+                            connectionParameters,
+                            library,
+                            existing,
+                            incoming,
+                            ffmpegPath,
+                            ffprobePath,
+                            None))
+                    .BindT(UpdateSubtitles);
+            }
 
             if (maybeEpisode.IsLeft)
             {
@@ -648,19 +689,77 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         return result;
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateMetadata(
+    private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateMetadataAndStatistics(
         TConnectionParameters connectionParameters,
         TLibrary library,
         MediaItemScanResult<TEpisode> result,
         TEpisode incoming,
         bool deepScan)
     {
-        foreach (EpisodeMetadata fullMetadata in await GetFullMetadata(
-                     connectionParameters,
-                     library,
-                     result,
-                     incoming,
-                     deepScan))
+        Option<Tuple<EpisodeMetadata, MediaVersion>> maybeMetadataAndStatistics = await GetFullMetadataAndStatistics(
+            connectionParameters,
+            library,
+            result,
+            incoming,
+            deepScan);
+
+        foreach ((EpisodeMetadata fullMetadata, MediaVersion mediaVersion) in maybeMetadataAndStatistics)
+        {
+            Either<BaseError, MediaItemScanResult<TEpisode>> metadataResult = await UpdateMetadata(
+                connectionParameters,
+                library,
+                result,
+                incoming,
+                deepScan,
+                fullMetadata);
+
+            foreach (BaseError error in metadataResult.LeftToSeq())
+            {
+                return error;
+            }
+
+            foreach (MediaItemScanResult<TEpisode> r in metadataResult.RightToSeq())
+            {
+                result = r;
+            }
+
+            Either<BaseError, MediaItemScanResult<TEpisode>> statisticsResult = await UpdateStatistics(
+                connectionParameters,
+                library,
+                result,
+                incoming,
+                string.Empty,
+                string.Empty,
+                mediaVersion);
+            
+            foreach (BaseError error in statisticsResult.LeftToSeq())
+            {
+                return error;
+            }
+            
+            foreach (MediaItemScanResult<TEpisode> r in metadataResult.RightToSeq())
+            {
+                result = r;
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateMetadata(
+        TConnectionParameters connectionParameters,
+        TLibrary library,
+        MediaItemScanResult<TEpisode> result,
+        TEpisode incoming,
+        bool deepScan,
+        Option<EpisodeMetadata> maybeFullMetadata)
+    {
+        if (maybeFullMetadata.IsNone)
+        {
+            maybeFullMetadata = await GetFullMetadata(connectionParameters, library, result, incoming, deepScan);
+        }
+
+        foreach (EpisodeMetadata fullMetadata in maybeFullMetadata)
         {
             // TODO: move some of this code into this scanner
             // will have to merge JF, Emby, Plex logic
@@ -676,7 +775,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         MediaItemScanResult<TEpisode> result,
         TEpisode incoming,
         string ffmpegPath,
-        string ffprobePath)
+        string ffprobePath,
+        Option<MediaVersion> maybeMediaVersion)
     {
         TEpisode existing = result.Item;
 
@@ -709,11 +809,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             }
             else
             {
-                Option<MediaVersion> maybeMediaVersion = await GetMediaServerStatistics(
-                    connectionParameters,
-                    library,
-                    result,
-                    incoming);
+                if (maybeMediaVersion.IsNone)
+                {
+                    maybeMediaVersion = await GetMediaServerStatistics(
+                        connectionParameters,
+                        library,
+                        result,
+                        incoming);
+                }
 
                 foreach (MediaVersion mediaVersion in maybeMediaVersion)
                 {

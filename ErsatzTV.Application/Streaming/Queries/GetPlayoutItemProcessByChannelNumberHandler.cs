@@ -447,9 +447,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return new UnableToLocatePlayoutItem();
     }
 
-    private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(TvContext dbContext, PlayoutItem playoutItem)
+    private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(
+        TvContext dbContext,
+        PlayoutItem playoutItem)
     {
-        string path = await GetPlayoutItemPath(dbContext, playoutItem);
+        string path = await GetPlayoutItemPath(playoutItem);
 
         if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
         {
@@ -461,36 +463,41 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             return new PlayoutItemWithPath(playoutItem, path);
         }
 
-        return new PlayoutItemDoesNotExistOnDisk(path);
-    }
-
-    private async Task<string> GetPlayoutItemPath(TvContext dbContext, PlayoutItem playoutItem)
-    {
-        MediaVersion version = playoutItem.MediaItem.GetHeadVersion();
-
-        MediaFile file = version.MediaFiles.Head();
-
         if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
         {
-            switch (file)
+            if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
             {
-                case PlexMediaFile pmf:
-                    Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
-                            @"SELECT PMS.Id FROM PlexMediaSource PMS
+                MediaFile file = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head();
+                switch (file)
+                {
+                    case PlexMediaFile pmf:
+                        Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
+                                @"SELECT PMS.Id FROM PlexMediaSource PMS
                           INNER JOIN Library L on PMS.Id = L.MediaSourceId
                           INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
                           WHERE LP.Id = @LibraryPathId",
-                            new { playoutItem.MediaItem.LibraryPathId })
-                        .Map(Optional);
-                        
-                    foreach (int plexMediaSourceId in maybeId)
-                    {
-                        return $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}";
-                    }
+                                new { playoutItem.MediaItem.LibraryPathId })
+                            .Map(Optional);
 
-                    break;
+                        foreach (int plexMediaSourceId in maybeId)
+                        {
+                            return new PlayoutItemWithPath(
+                                playoutItem,
+                                $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
+                        }
+
+                        break;
+                }
             }
         }
+
+        return new PlayoutItemDoesNotExistOnDisk(path);
+    }
+
+    private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem)
+    {
+        MediaVersion version = playoutItem.MediaItem.GetHeadVersion();
+        MediaFile file = version.MediaFiles.Head();
 
         string path = file.Path;
         return playoutItem.MediaItem switch
