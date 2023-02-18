@@ -167,6 +167,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                             library,
                             existing,
                             incoming,
+                            deepScan,
                             ffmpegPath,
                             ffprobePath,
                             None))
@@ -391,6 +392,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                 library,
                 result,
                 incoming,
+                deepScan,
                 string.Empty,
                 string.Empty,
                 mediaVersion);
@@ -437,13 +439,14 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         TLibrary library,
         MediaItemScanResult<TMovie> result,
         TMovie incoming,
+        bool deepScan,
         string ffmpegPath,
         string ffprobePath,
         Option<MediaVersion> maybeMediaVersion)
     {
         TMovie existing = result.Item;
 
-        if (result.IsAdded || MediaServerEtag(existing) != MediaServerEtag(incoming) ||
+        if (deepScan || result.IsAdded || MediaServerEtag(existing) != MediaServerEtag(incoming) ||
             existing.MediaVersions.Head().Streams.Count == 0)
         {
             if (maybeMediaVersion.IsNone && _localFileSystem.FileExists(result.LocalPath))
