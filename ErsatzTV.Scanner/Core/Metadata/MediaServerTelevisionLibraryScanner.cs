@@ -780,7 +780,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         if (result.IsAdded || MediaServerEtag(existing) != MediaServerEtag(incoming) ||
             existing.MediaVersions.Head().Streams.Count == 0)
         {
-            if (_localFileSystem.FileExists(result.LocalPath))
+            if (maybeMediaVersion.IsNone && _localFileSystem.FileExists(result.LocalPath))
             {
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", result.LocalPath);
                 Either<BaseError, bool> refreshResult =
