@@ -453,11 +453,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     {
         string path = await GetPlayoutItemPath(playoutItem);
 
-        if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
-        {
-            return new PlayoutItemWithPath(playoutItem, path);
-        }
-
         if (_localFileSystem.FileExists(path))
         {
             return new PlayoutItemWithPath(playoutItem, path);
@@ -465,29 +460,26 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
         {
-            if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
+            MediaFile file = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head();
+            switch (file)
             {
-                MediaFile file = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head();
-                switch (file)
-                {
-                    case PlexMediaFile pmf:
-                        Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
-                                @"SELECT PMS.Id FROM PlexMediaSource PMS
-                          INNER JOIN Library L on PMS.Id = L.MediaSourceId
-                          INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
-                          WHERE LP.Id = @LibraryPathId",
-                                new { playoutItem.MediaItem.LibraryPathId })
-                            .Map(Optional);
+                case PlexMediaFile pmf:
+                    Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
+                            @"SELECT PMS.Id FROM PlexMediaSource PMS
+                      INNER JOIN Library L on PMS.Id = L.MediaSourceId
+                      INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
+                      WHERE LP.Id = @LibraryPathId",
+                            new { playoutItem.MediaItem.LibraryPathId })
+                        .Map(Optional);
 
-                        foreach (int plexMediaSourceId in maybeId)
-                        {
-                            return new PlayoutItemWithPath(
-                                playoutItem,
-                                $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
-                        }
+                    foreach (int plexMediaSourceId in maybeId)
+                    {
+                        return new PlayoutItemWithPath(
+                            playoutItem,
+                            $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
+                    }
 
-                        break;
-                }
+                    break;
             }
         }
 

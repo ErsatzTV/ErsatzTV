@@ -291,8 +291,7 @@ public class PlexTelevisionLibraryScanner :
         PlexConnectionParameters connectionParameters,
         PlexLibrary library,
         MediaItemScanResult<PlexEpisode> result,
-        PlexEpisode incoming,
-        bool deepScan)
+        PlexEpisode incoming)
     {
         _logger.LogDebug("Refreshing {Attribute} for {Path}", "Plex Metadata and Statistics", result.LocalPath);
 

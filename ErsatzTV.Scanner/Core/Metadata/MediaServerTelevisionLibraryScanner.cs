@@ -284,8 +284,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TConnectionParameters connectionParameters,
         TLibrary library,
         MediaItemScanResult<TEpisode> result,
-        TEpisode incoming,
-        bool deepScan);
+        TEpisode incoming);
 
     protected abstract Task<Either<BaseError, MediaItemScanResult<TShow>>> UpdateMetadata(
         MediaItemScanResult<TShow> result,
@@ -602,8 +601,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             // don't scan, but mark as unavailable
             if (!_localFileSystem.FileExists(localPath))
             {
-                if (ServerSupportsRemoteStreaming)
-                {
+                if (ServerSupportsRemoteStreaming)                {
                     foreach (int id in await televisionRepository.FlagRemoteOnly(library, incoming))
                     {
                         await _mediator.Publish(
@@ -700,8 +698,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             connectionParameters,
             library,
             result,
-            incoming,
-            deepScan);
+            incoming);
 
         foreach ((EpisodeMetadata fullMetadata, MediaVersion mediaVersion) in maybeMetadataAndStatistics)
         {

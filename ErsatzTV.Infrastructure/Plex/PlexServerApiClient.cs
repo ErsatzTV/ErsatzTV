@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Globalization;
+using System.Xml.Serialization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -563,7 +564,9 @@ public class PlexServerApiClient : IPlexServerApiClient
                     Width = videoStream.Width,
                     Height = videoStream.Height,
                     RFrameRate = videoStream.FrameRate,
-                    DisplayAspectRatio =  media.AspectRatio ?? string.Empty,
+                    DisplayAspectRatio = media.AspectRatio == 0
+                        ? string.Empty
+                        : media.AspectRatio.ToString("0.00###", CultureInfo.InvariantCulture),
                     Chapters = new List<MediaChapter>() // TODO: `?includeChapters=1`
                 };
 

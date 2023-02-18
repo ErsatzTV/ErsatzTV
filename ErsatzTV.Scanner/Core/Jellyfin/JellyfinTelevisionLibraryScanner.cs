@@ -175,8 +175,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,
         MediaItemScanResult<JellyfinEpisode> result,
-        JellyfinEpisode incoming,
-        bool deepScan) => Task.FromResult(Option<Tuple<EpisodeMetadata, MediaVersion>>.None);
+        JellyfinEpisode incoming) => Task.FromResult(Option<Tuple<EpisodeMetadata, MediaVersion>>.None);
 
     protected override Task<Either<BaseError, MediaItemScanResult<JellyfinShow>>> UpdateMetadata(
         MediaItemScanResult<JellyfinShow> result,

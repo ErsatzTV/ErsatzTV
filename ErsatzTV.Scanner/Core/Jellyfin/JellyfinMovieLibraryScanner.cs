@@ -28,6 +28,7 @@ public class JellyfinMovieLibraryScanner :
         IJellyfinPathReplacementService pathReplacementService,
         IMediaSourceRepository mediaSourceRepository,
         ILocalFileSystem localFileSystem,
+        IMetadataRepository metadataRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<JellyfinMovieLibraryScanner> logger)
@@ -35,6 +36,7 @@ public class JellyfinMovieLibraryScanner :
             localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
+            metadataRepository,
             mediator,
             logger)
     {
@@ -105,6 +107,12 @@ public class JellyfinMovieLibraryScanner :
         JellyfinMovie incoming,
         bool deepScan) =>
         Task.FromResult<Option<MovieMetadata>>(None);
+
+    protected override Task<Option<Tuple<MovieMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
+        JellyfinConnectionParameters connectionParameters,
+        JellyfinLibrary library,
+        MediaItemScanResult<JellyfinMovie> result,
+        JellyfinMovie incoming) => Task.FromResult(Option<Tuple<MovieMetadata, MediaVersion>>.None);
 
     protected override Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> UpdateMetadata(
         MediaItemScanResult<JellyfinMovie> result,

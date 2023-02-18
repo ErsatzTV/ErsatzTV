@@ -141,7 +141,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.NormalizeLoudness);
 
         IPixelFormat pixelFormat = await AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger)
-            .IfNoneAsync(() => new PixelFormatUnknown(videoStream.BitsPerRawSample > 0 ? videoStream.BitsPerRawSample : 8));
+            .IfNoneAsync(
+                () =>
+                {
+                    return videoStream.BitsPerRawSample switch
+                    {
+                        8 => new PixelFormatYuv420P(),
+                        10 => new PixelFormatYuv420P10Le(),
+                        _ => new PixelFormatUnknown(videoStream.BitsPerRawSample)
+                    };
+                });
         
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
