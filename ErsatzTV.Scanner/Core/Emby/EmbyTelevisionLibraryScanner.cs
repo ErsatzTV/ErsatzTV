@@ -27,6 +27,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IEmbyTelevisionRepository televisionRepository,
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
+        IMetadataRepository metadataRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         IMediator mediator,
@@ -35,6 +36,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
+            metadataRepository,
             mediator,
             logger)
     {
@@ -162,6 +164,12 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         EmbyEpisode incoming,
         bool deepScan) =>
         Task.FromResult(Option<EpisodeMetadata>.None);
+
+    protected override Task<Option<Tuple<EpisodeMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyEpisode> result,
+        EmbyEpisode incoming) => Task.FromResult(Option<Tuple<EpisodeMetadata, MediaVersion>>.None);
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> UpdateMetadata(
         MediaItemScanResult<EmbyShow> result,

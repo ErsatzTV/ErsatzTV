@@ -25,4 +25,5 @@ public interface IMediaServerTelevisionRepository<in TLibrary, TShow, TSeason, T
     Task<List<int>> FlagFileNotFoundSeasons(TLibrary library, List<string> seasonItemIds);
     Task<List<int>> FlagFileNotFoundEpisodes(TLibrary library, List<string> episodeItemIds);
     Task<Option<int>> FlagUnavailable(TLibrary library, TEpisode episode);
+    Task<Option<int>> FlagRemoteOnly(TLibrary library, TEpisode episode);
 }

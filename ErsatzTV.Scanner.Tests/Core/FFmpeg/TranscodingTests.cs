@@ -283,7 +283,7 @@ public class TranscodingTests
 
         var metadataRepository = new Mock<IMetadataRepository>();
         metadataRepository
-            .Setup(r => r.UpdateLocalStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
+            .Setup(r => r.UpdateStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
             .Callback<MediaItem, MediaVersion, bool>(
                 (_, version, _) =>
                 {

@@ -214,7 +214,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
         version.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
 
-        return await _metadataRepository.UpdateLocalStatistics(mediaItem, version) && durationChange;
+        return await _metadataRepository.UpdateStatistics(mediaItem, version) && durationChange;
     }
 
     private async Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)

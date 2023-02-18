@@ -1,7 +1,7 @@
-﻿using System.Xml.Serialization;
+﻿using System.Globalization;
+using System.Xml.Serialization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
@@ -541,7 +541,8 @@ public class PlexServerApiClient : IPlexServerApiClient
 
     private Option<MediaVersion> ProjectToMediaVersion(PlexXmlMetadataResponse response)
     {
-        List<PlexStreamResponse> streams = response.Media.Head().Part.Head().Stream;
+        PlexMediaResponse<PlexXmlPartResponse> media = response.Media.Head();
+        List<PlexStreamResponse> streams = media.Part.Head().Stream;
         DateTime dateUpdated = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
         Option<PlexStreamResponse> maybeVideoStream = streams.Find(s => s.StreamType == 1);
         return maybeVideoStream.Map(
@@ -549,7 +550,9 @@ public class PlexServerApiClient : IPlexServerApiClient
             {
                 var version = new MediaVersion
                 {
-                    SampleAspectRatio = videoStream.PixelAspectRatio ?? "1:1",
+                    Duration = TimeSpan.FromMilliseconds(media.Duration),
+                    SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.PixelAspectRatio) ? "1:1"
+                        : videoStream.PixelAspectRatio,
                     VideoScanKind = videoStream.ScanType switch
                     {
                         "interlaced" => VideoScanKind.Interlaced,
@@ -557,21 +560,34 @@ public class PlexServerApiClient : IPlexServerApiClient
                         _ => VideoScanKind.Unknown
                     },
                     Streams = new List<MediaStream>(),
-                    DateUpdated = dateUpdated
+                    DateUpdated = dateUpdated,
+                    Width = videoStream.Width,
+                    Height = videoStream.Height,
+                    RFrameRate = videoStream.FrameRate,
+                    DisplayAspectRatio = media.AspectRatio == 0
+                        ? string.Empty
+                        : media.AspectRatio.ToString("0.00###", CultureInfo.InvariantCulture),
+                    Chapters = new List<MediaChapter>() // TODO: `?includeChapters=1`
                 };
 
                 version.Streams.Add(
                     new MediaStream
                     {
+                        MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Video,
                         Index = videoStream.Index,
                         Codec = videoStream.Codec,
                         Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
                         Default = videoStream.Default,
                         Language = videoStream.LanguageCode,
-                        Forced = videoStream.Forced
+                        Forced = videoStream.Forced,
+                        BitsPerRawSample = videoStream.BitDepth,
+                        ColorRange = (videoStream.ColorRange ?? string.Empty).ToLowerInvariant(),
+                        ColorSpace = (videoStream.ColorSpace ?? string.Empty).ToLowerInvariant(),
+                        ColorTransfer = (videoStream.ColorTrc ?? string.Empty).ToLowerInvariant(),
+                        ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
                     });
-
+                
                 foreach (PlexStreamResponse audioStream in streams.Filter(s => s.StreamType == 2))
                 {
                     var stream = new MediaStream
@@ -584,9 +600,10 @@ public class PlexServerApiClient : IPlexServerApiClient
                         Channels = audioStream.Channels,
                         Default = audioStream.Default,
                         Forced = audioStream.Forced,
-                        Language = audioStream.LanguageCode
+                        Language = audioStream.LanguageCode,
+                        Title = audioStream.Title ?? string.Empty
                     };
-
+                    
                     version.Streams.Add(stream);
                 }
 
