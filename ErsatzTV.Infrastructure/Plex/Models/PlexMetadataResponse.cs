@@ -75,4 +75,7 @@ public class PlexMetadataResponse
 
     [XmlElement("Collection")]
     public List<PlexCollectionResponse> Collection { get; set; }
+
+    [XmlElement("Chapter")]
+    public List<PlexChapterResponse> Chapters { get; set; }
 }
