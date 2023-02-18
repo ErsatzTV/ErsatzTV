@@ -567,7 +567,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                     DisplayAspectRatio = media.AspectRatio == 0
                         ? string.Empty
                         : media.AspectRatio.ToString("0.00###", CultureInfo.InvariantCulture),
-                    Chapters = new List<MediaChapter>() // TODO: `?includeChapters=1`
+                    Chapters = Optional(response.Chapters).Flatten().Map(ProjectToModel).ToList()
                 };
 
                 version.Streams.Add(
@@ -942,6 +942,14 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         return actor;
     }
+
+    private static MediaChapter ProjectToModel(PlexChapterResponse chapter) =>
+        new()
+        {
+            ChapterId = chapter.Index,
+            StartTime = TimeSpan.FromMilliseconds(chapter.StartTimeOffset),
+            EndTime = TimeSpan.FromMilliseconds(chapter.EndTimeOffset)
+        };
 
     private Option<string> NormalizeGuid(string guid)
     {

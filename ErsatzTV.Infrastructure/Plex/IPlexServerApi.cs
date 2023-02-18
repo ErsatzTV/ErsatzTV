@@ -36,7 +36,7 @@ public interface IPlexServerApi
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 
-    [Get("/library/metadata/{key}")]
+    [Get("/library/metadata/{key}?includeChapters=1")]
     [Headers("Accept: text/xml")]
     public Task<PlexXmlVideoMetadataResponseContainer>
         GetVideoMetadata(

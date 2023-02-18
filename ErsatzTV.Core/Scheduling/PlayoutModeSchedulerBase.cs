@@ -178,7 +178,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     protected static List<MediaChapter> ChaptersForMediaItem(MediaItem mediaItem)
     {
         MediaVersion version = mediaItem.GetHeadVersion();
-        return version.Chapters;
+        return Optional(version.Chapters).Flatten().OrderBy(c => c.StartTime).ToList();
     }
 
     protected void LogScheduledItem(
@@ -533,7 +533,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             remainingToFill,
                             FillerKind.MidRoll,
                             padFiller.AllowWatermarks));
-                    TimeSpan average = effectiveChapters.Count == 0
+                    TimeSpan average = effectiveChapters.Count <= 1
                         ? remainingToFill
                         : remainingToFill / (effectiveChapters.Count - 1);
                     TimeSpan filled = TimeSpan.Zero;
