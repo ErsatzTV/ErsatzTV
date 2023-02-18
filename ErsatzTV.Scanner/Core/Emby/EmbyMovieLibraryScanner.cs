@@ -28,6 +28,7 @@ public class EmbyMovieLibraryScanner :
         IEmbyMovieRepository embyMovieRepository,
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
+        IMetadataRepository metadataRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<EmbyMovieLibraryScanner> logger)
@@ -35,6 +36,7 @@ public class EmbyMovieLibraryScanner :
             localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
+            metadataRepository,
             mediator,
             logger)
     {
@@ -102,6 +104,12 @@ public class EmbyMovieLibraryScanner :
         EmbyMovie incoming,
         bool deepScan) =>
         Task.FromResult<Option<MovieMetadata>>(None);
+
+    protected override Task<Option<Tuple<MovieMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyMovie> result,
+        EmbyMovie incoming) => Task.FromResult(Option<Tuple<MovieMetadata, MediaVersion>>.None);
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> UpdateMetadata(
         MediaItemScanResult<EmbyMovie> result,

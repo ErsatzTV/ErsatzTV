@@ -66,6 +66,28 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         return None;
     }
 
+    public async Task<Option<int>> FlagRemoteOnly(EmbyLibrary library, EmbyMovie movie)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        movie.State = MediaItemState.RemoteOnly;
+
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT EmbyMovie.Id FROM EmbyMovie
+              INNER JOIN MediaItem MI ON MI.Id = EmbyMovie.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+              WHERE EmbyMovie.ItemId = @ItemId",
+            new { LibraryId = library.Id, movie.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;    }
+
     public async Task<List<int>> FlagFileNotFound(EmbyLibrary library, List<string> movieItemIds)
     {
         if (movieItemIds.Count == 0)

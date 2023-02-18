@@ -67,6 +67,28 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
         return None;
     }
 
+    public async Task<Option<int>> FlagRemoteOnly(JellyfinLibrary library, JellyfinMovie movie)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        movie.State = MediaItemState.RemoteOnly;
+
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT JellyfinMovie.Id FROM JellyfinMovie
+              INNER JOIN MediaItem MI ON MI.Id = JellyfinMovie.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+              WHERE JellyfinMovie.ItemId = @ItemId",
+            new { LibraryId = library.Id, movie.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 3 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;    }
+
     public async Task<List<int>> FlagFileNotFound(JellyfinLibrary library, List<string> movieItemIds)
     {
         if (movieItemIds.Count == 0)
