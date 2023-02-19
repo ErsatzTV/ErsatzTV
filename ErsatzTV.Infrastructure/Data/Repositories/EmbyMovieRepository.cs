@@ -113,7 +113,10 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         return ids;
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> GetOrAdd(EmbyLibrary library, EmbyMovie item)
+    public async Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> GetOrAdd(
+        EmbyLibrary library,
+        EmbyMovie item,
+        bool deepScan)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<EmbyMovie> maybeExisting = await dbContext.EmbyMovies
@@ -146,7 +149,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         foreach (EmbyMovie embyMovie in maybeExisting)
         {
             var result = new MediaItemScanResult<EmbyMovie>(embyMovie) { IsAdded = false };
-            if (embyMovie.Etag != item.Etag)
+            if (embyMovie.Etag != item.Etag || deepScan)
             {
                 await UpdateMovie(dbContext, embyMovie, item);
                 result.IsUpdated = true;

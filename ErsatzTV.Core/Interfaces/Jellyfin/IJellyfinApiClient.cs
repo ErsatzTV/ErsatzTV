@@ -40,4 +40,10 @@ public interface IJellyfinApiClient
         string parentId,
         string includeItemTypes,
         bool excludeFolders);
+
+    Task<Either<BaseError, MediaVersion>> GetPlaybackInfo(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string itemId);
 }

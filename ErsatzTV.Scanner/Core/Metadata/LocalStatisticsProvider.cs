@@ -257,7 +257,16 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 }
             }
 
-            return ffprobe;
+            // fix chapter ids to be something sensible
+            var maybeChapters = Optional(ffprobe.chapters).Flatten().ToList();
+            var newChapters = new List<FFprobeChapter>();
+            for (var index = 0; index < maybeChapters.Count; index++)
+            {
+                FFprobeChapter chapter = maybeChapters[index];
+                newChapters.Add(chapter with { id = index });
+            }
+
+            return ffprobe with { chapters = newChapters };
         }
 
         return BaseError.New("Unable to deserialize ffprobe output");

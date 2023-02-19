@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CliWrap;
+using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core;
@@ -17,15 +18,10 @@ public class InternalController : ControllerBase
 {
     private readonly ILogger<InternalController> _logger;
     private readonly IMediator _mediator;
-    private readonly IHttpClientFactory _httpClientFactory;
 
-    public InternalController(
-        IMediator mediator,
-        IHttpClientFactory httpClientFactory,
-        ILogger<InternalController> logger)
+    public InternalController(IMediator mediator, ILogger<InternalController> logger)
     {
         _mediator = mediator;
-        _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
 
@@ -89,7 +85,7 @@ public class InternalController : ControllerBase
                     ));
 
     [HttpGet("/media/plex/{plexMediaSourceId:int}/{*path}")]
-    public async Task<IActionResult> GetPlexFanArt(
+    public async Task<IActionResult> GetPlexMedia(
         int plexMediaSourceId,
         string path,
         CancellationToken cancellationToken)
@@ -101,7 +97,27 @@ public class InternalController : ControllerBase
             Left: _ => new NotFoundResult(),
             Right: r =>
             {
-                Url fullPath = new Uri(r.Uri, path).SetQueryParam("X-Plex-Token", r.AuthToken);
+                Url fullPath =  new Uri(r.Uri, path).SetQueryParam("X-Plex-Token", r.AuthToken);
+                return new RedirectResult(fullPath.ToString());
+            });
+    }
+
+    [HttpGet("/media/jellyfin/{*path}")]
+    public async Task<IActionResult> GetJellyfinMedia(string path, CancellationToken cancellationToken)
+    {
+        Either<BaseError, JellyfinConnectionParametersViewModel> connectionParameters =
+            await _mediator.Send(new GetJellyfinConnectionParameters(), cancellationToken);
+
+        return connectionParameters.Match<IActionResult>(
+            Left: _ => new NotFoundResult(),
+            Right: r =>
+            {
+                Url fullPath = Flurl.Url.Parse(r.Address)
+                    .AppendPathSegment("Videos")
+                    .AppendPathSegment(path)
+                    .AppendPathSegment("stream")
+                    .SetQueryParam("static", "true");
+
                 return new RedirectResult(fullPath.ToString());
             });
     }

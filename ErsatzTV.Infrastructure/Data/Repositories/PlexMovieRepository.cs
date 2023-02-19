@@ -113,7 +113,10 @@ public class PlexMovieRepository : IPlexMovieRepository
         return ids;
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> GetOrAdd(PlexLibrary library, PlexMovie item)
+    public async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> GetOrAdd(
+        PlexLibrary library,
+        PlexMovie item,
+        bool deepScan)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexMovie> maybeExisting = await dbContext.PlexMovies
@@ -148,7 +151,7 @@ public class PlexMovieRepository : IPlexMovieRepository
         foreach (PlexMovie plexMovie in maybeExisting)
         {
             var result = new MediaItemScanResult<PlexMovie>(plexMovie) { IsAdded = false };
-            if (plexMovie.Etag != item.Etag)
+            if (plexMovie.Etag != item.Etag || deepScan)
             {
                 await UpdateMoviePath(dbContext, plexMovie, item);
                 result.IsUpdated = true;
