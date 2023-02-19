@@ -51,7 +51,7 @@ public interface IJellyfinApi
         string parentId,
         [Query]
         string fields =
-            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating,ProviderIds",
+            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating,ProviderIds,Chapters",
         [Query]
         string includeItemTypes = "Movie",
         [Query]
@@ -111,7 +111,7 @@ public interface IJellyfinApi
         [Query]
         string parentId,
         [Query]
-        string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,People",
+        string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,People,Chapters",
         [Query]
         string includeItemTypes = "Episode",
         [Query]

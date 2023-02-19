@@ -412,10 +412,11 @@ public class JellyfinApiClient : IJellyfinApiClient
                 }
             }
 
+            var duration = TimeSpan.FromTicks(item.RunTimeTicks);
             var version = new MediaVersion
             {
                 Name = "Main",
-                Duration = TimeSpan.FromTicks(item.RunTimeTicks),
+                Duration = duration,
                 DateAdded = item.DateCreated.UtcDateTime,
                 MediaFiles = new List<MediaFile>
                 {
@@ -424,7 +425,8 @@ public class JellyfinApiClient : IJellyfinApiClient
                         Path = path
                     }
                 },
-                Streams = new List<MediaStream>()
+                Streams = new List<MediaStream>(),
+                Chapters = ProjectToModel(Optional(item.Chapters).Flatten(), duration)
             };
 
             MovieMetadata metadata = ProjectToMovieMetadata(item);
@@ -446,6 +448,29 @@ public class JellyfinApiClient : IJellyfinApiClient
             return None;
         }
     }
+
+    private static List<MediaChapter> ProjectToModel(
+        IEnumerable<JellyfinChapterResponse> jellyfinChapters,
+        TimeSpan duration)
+    {
+        var models = jellyfinChapters.Map(ProjectToModel).OrderBy(c => c.StartTime).ToList();
+
+        for (var index = 0; index < models.Count; index++)
+        {
+            MediaChapter model = models[index];
+            model.ChapterId = index;
+            model.EndTime = index == models.Count - 1 ? duration : models[index + 1].StartTime;
+        }
+
+        return models;
+    }
+
+    private static MediaChapter ProjectToModel(JellyfinChapterResponse chapterResponse) =>
+        new()
+        {
+            Title = chapterResponse.Name,
+            StartTime = TimeSpan.FromTicks(chapterResponse.StartPositionTicks)
+        };
 
     private MovieMetadata ProjectToMovieMetadata(JellyfinLibraryItemResponse item)
     {
@@ -752,10 +777,11 @@ public class JellyfinApiClient : IJellyfinApiClient
                 }
             }
 
+            var duration = TimeSpan.FromTicks(item.RunTimeTicks);
             var version = new MediaVersion
             {
                 Name = "Main",
-                Duration = TimeSpan.FromTicks(item.RunTimeTicks),
+                Duration = duration,
                 DateAdded = item.DateCreated.UtcDateTime,
                 MediaFiles = new List<MediaFile>
                 {
@@ -764,7 +790,8 @@ public class JellyfinApiClient : IJellyfinApiClient
                         Path = path
                     }
                 },
-                Streams = new List<MediaStream>()
+                Streams = new List<MediaStream>(),
+                Chapters = ProjectToModel(Optional(item.Chapters).Flatten(), duration)
             };
 
             EpisodeMetadata metadata = ProjectToEpisodeMetadata(item);
@@ -914,7 +941,6 @@ public class JellyfinApiClient : IJellyfinApiClient
                         ? videoStream.RealFrameRate.Value.ToString("0.00###", CultureInfo.InvariantCulture)
                         : string.Empty,
                     Chapters = new List<MediaChapter>()
-                    //Optional(response.Chapters).Flatten().Map(ProjectToModel).ToList()
                 };
 
                 version.Streams.Add(

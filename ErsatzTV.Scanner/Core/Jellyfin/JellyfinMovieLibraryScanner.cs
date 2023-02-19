@@ -138,6 +138,12 @@ public class JellyfinMovieLibraryScanner :
             _logger.LogWarning("Failed to get movie statistics from Jellyfin: {Error}", error.ToString());
         }
 
+        // chapters are pulled with metadata, not with statistics, but we need to save them here
+        foreach (MediaVersion version in maybeVersion.RightToSeq())
+        {
+            version.Chapters = result.Item.GetHeadVersion().Chapters;
+        }
+
         return maybeVersion.ToOption();
     }
 

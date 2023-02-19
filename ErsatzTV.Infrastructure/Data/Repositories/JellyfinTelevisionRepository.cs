@@ -139,6 +139,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             .ThenInclude(mv => mv.MediaFiles)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.Chapters)
             .Include(m => m.EpisodeMetadata)
             .ThenInclude(mm => mm.Artwork)
             .Include(m => m.EpisodeMetadata)

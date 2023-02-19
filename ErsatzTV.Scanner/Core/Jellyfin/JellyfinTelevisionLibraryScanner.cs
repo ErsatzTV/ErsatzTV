@@ -49,6 +49,8 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         _logger = logger;
     }
 
+    protected override bool ServerSupportsRemoteStreaming => true;
+
     public async Task<Either<BaseError, Unit>> ScanLibrary(
         string address,
         string apiKey,
@@ -197,6 +199,12 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         foreach (BaseError error in maybeVersion.LeftToSeq())
         {
             _logger.LogWarning("Failed to get episode statistics from Jellyfin: {Error}", error.ToString());
+        }
+        
+        // chapters are pulled with metadata, not with statistics, but we need to save them here
+        foreach (MediaVersion version in maybeVersion.RightToSeq())
+        {
+            version.Chapters = result.Item.GetHeadVersion().Chapters;
         }
 
         return maybeVersion.ToOption();
