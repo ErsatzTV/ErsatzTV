@@ -1,7 +1,7 @@
-﻿using ErsatzTV.Core;
+﻿using System.Globalization;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
@@ -242,6 +242,31 @@ public class JellyfinApiClient : IJellyfinApiClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting jellyfin library item count");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    public async Task<Either<BaseError, MediaVersion>> GetPlaybackInfo(
+        string address,
+        string apiKey,
+        JellyfinLibrary library,
+        string itemId)
+    {
+        try
+        {
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
+            {
+                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, userId, itemId);
+                Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
+                return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
+            }
+
+            return BaseError.New("Jellyfin admin user id is not available");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting jellyfin playback info");
             return BaseError.New(ex.Message);
         }
     }
@@ -832,5 +857,122 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
 
         return result;
+    }
+    
+    private Option<MediaVersion> ProjectToMediaVersion(JellyfinPlaybackInfoResponse response)
+    {
+        if (response.MediaSources is null || response.MediaSources.Count == 0)
+        {
+            _logger.LogWarning("Received empty playback info from Jellyfin");
+            return None;
+        }
+
+        JellyfinMediaSourceResponse mediaSource = response.MediaSources.Head();
+        IList<JellyfinMediaStreamResponse> streams = mediaSource.MediaStreams;
+        Option<JellyfinMediaStreamResponse> maybeVideoStream =
+            streams.Find(s => s.Type == JellyfinMediaStreamType.Video);
+        return maybeVideoStream.Map(
+            videoStream =>
+            {
+                int width = videoStream.Width ?? 1;
+                int height = videoStream.Height ?? 1;
+                
+                var isAnamorphic = false;
+                if (videoStream.IsAnamorphic.HasValue)
+                {
+                    isAnamorphic = videoStream.IsAnamorphic.Value;
+                }
+                else if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(":"))
+                {
+                    // if width/height != aspect ratio, is anamorphic
+                    double resolutionRatio = width / (double)height;
+                    
+                    string[] split = videoStream.AspectRatio.Split(":");
+                    var num = double.Parse(split[0]);
+                    var den = double.Parse(split[1]);
+                    double aspectRatio = num / den;
+
+                    isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;
+                }
+
+                var version = new MediaVersion
+                {
+                    Duration = TimeSpan.FromTicks(mediaSource.RunTimeTicks),
+                    SampleAspectRatio = isAnamorphic ? "0:0" : "1:1",
+                    DisplayAspectRatio = string.IsNullOrWhiteSpace(videoStream.AspectRatio)
+                        ? string.Empty
+                        : videoStream.AspectRatio,
+                    VideoScanKind = videoStream.IsInterlaced switch
+                    {
+                        true => VideoScanKind.Interlaced,
+                        false => VideoScanKind.Progressive
+                    },
+                    Streams = new List<MediaStream>(),
+                    Width = videoStream.Width ?? 1,
+                    Height = videoStream.Height ?? 1,
+                    RFrameRate = videoStream.RealFrameRate.HasValue
+                        ? videoStream.RealFrameRate.Value.ToString("0.00###", CultureInfo.InvariantCulture)
+                        : string.Empty,
+                    Chapters = new List<MediaChapter>()
+                    //Optional(response.Chapters).Flatten().Map(ProjectToModel).ToList()
+                };
+
+                version.Streams.Add(
+                    new MediaStream
+                    {
+                        MediaVersionId = version.Id,
+                        MediaStreamKind = MediaStreamKind.Video,
+                        Index = videoStream.Index,
+                        Codec = videoStream.Codec,
+                        Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
+                        Default = videoStream.IsDefault,
+                        Language = videoStream.Language,
+                        Forced = videoStream.IsForced,
+                        PixelFormat = videoStream.PixelFormat,
+                        ColorRange = (videoStream.ColorRange ?? string.Empty).ToLowerInvariant(),
+                        ColorSpace = (videoStream.ColorSpace ?? string.Empty).ToLowerInvariant(),
+                        ColorTransfer = (videoStream.ColorTransfer ?? string.Empty).ToLowerInvariant(),
+                        ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
+                    });
+
+                foreach (JellyfinMediaStreamResponse audioStream in streams.Filter(
+                             s => s.Type == JellyfinMediaStreamType.Audio))
+                {
+                    var stream = new MediaStream
+                    {
+                        MediaVersionId = version.Id,
+                        MediaStreamKind = MediaStreamKind.Audio,
+                        Index = audioStream.Index,
+                        Codec = audioStream.Codec,
+                        Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
+                        Channels = audioStream.Channels ?? 2,
+                        Default = audioStream.IsDefault,
+                        Forced = audioStream.IsForced,
+                        Language = audioStream.Language,
+                        Title = audioStream.Title ?? string.Empty
+                    };
+
+                    version.Streams.Add(stream);
+                }
+
+                foreach (JellyfinMediaStreamResponse subtitleStream in streams.Filter(
+                             s => s.Type == JellyfinMediaStreamType.Subtitle))
+                {
+                    var stream = new MediaStream
+                    {
+                        MediaVersionId = version.Id,
+                        MediaStreamKind = MediaStreamKind.Subtitle,
+                        Index = subtitleStream.Index,
+                        Codec = subtitleStream.Codec,
+                        Default = subtitleStream.IsDefault,
+                        Forced = subtitleStream.IsForced,
+                        Language = subtitleStream.Language
+                    };
+
+                    version.Streams.Add(stream);
+                }
+
+                return version;
+            });
     }
 }

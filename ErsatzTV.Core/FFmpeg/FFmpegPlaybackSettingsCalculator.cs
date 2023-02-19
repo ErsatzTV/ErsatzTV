@@ -86,7 +86,7 @@ public class FFmpegPlaybackSettingsCalculator
             case StreamingMode.TransportStream:
                 result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 
-                if (NeedToScale(ffmpegProfile, videoVersion))
+                if (NeedToScale(ffmpegProfile, videoVersion) && videoVersion.SampleAspectRatio != "0:0")
                 {
                     IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
                     if (!scaledSize.IsSameSizeAs(videoVersion))

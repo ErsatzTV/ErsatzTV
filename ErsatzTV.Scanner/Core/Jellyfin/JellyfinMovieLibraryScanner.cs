@@ -19,6 +19,7 @@ public class JellyfinMovieLibraryScanner :
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinMovieRepository _jellyfinMovieRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly ILogger<JellyfinMovieLibraryScanner> _logger;
     private readonly IJellyfinPathReplacementService _pathReplacementService;
 
     public JellyfinMovieLibraryScanner(
@@ -44,6 +45,7 @@ public class JellyfinMovieLibraryScanner :
         _jellyfinMovieRepository = jellyfinMovieRepository;
         _pathReplacementService = pathReplacementService;
         _mediaSourceRepository = mediaSourceRepository;
+        _logger = logger;
     }
 
     protected override bool ServerSupportsRemoteStreaming => true;
@@ -115,6 +117,29 @@ public class JellyfinMovieLibraryScanner :
         JellyfinLibrary library,
         MediaItemScanResult<JellyfinMovie> result,
         JellyfinMovie incoming) => Task.FromResult(Option<Tuple<MovieMetadata, MediaVersion>>.None);
+    
+    protected override async Task<Option<MediaVersion>> GetMediaServerStatistics(
+        JellyfinConnectionParameters connectionParameters,
+        JellyfinLibrary library,
+        MediaItemScanResult<JellyfinMovie> result,
+        JellyfinMovie incoming)
+    {
+        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Jellyfin Statistics", result.LocalPath);
+
+        Either<BaseError, MediaVersion> maybeVersion =
+            await _jellyfinApiClient.GetPlaybackInfo(
+                connectionParameters.Address,
+                connectionParameters.ApiKey,
+                library,
+                incoming.ItemId);
+
+        foreach (BaseError error in maybeVersion.LeftToSeq())
+        {
+            _logger.LogWarning("Failed to get movie statistics from Jellyfin: {Error}", error.ToString());
+        }
+
+        return maybeVersion.ToOption();
+    }
 
     protected override Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> UpdateMetadata(
         MediaItemScanResult<JellyfinMovie> result,
