@@ -46,6 +46,8 @@ public class JellyfinMovieLibraryScanner :
         _mediaSourceRepository = mediaSourceRepository;
     }
 
+    protected override bool ServerSupportsRemoteStreaming => true;
+
     public async Task<Either<BaseError, Unit>> ScanLibrary(
         string address,
         string apiKey,
