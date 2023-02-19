@@ -51,7 +51,7 @@ public interface IJellyfinApi
         string parentId,
         [Query]
         string fields =
-            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating,ProviderIds",
+            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating,ProviderIds,Chapters",
         [Query]
         string includeItemTypes = "Movie",
         [Query]
@@ -111,7 +111,7 @@ public interface IJellyfinApi
         [Query]
         string parentId,
         [Query]
-        string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,People",
+        string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,ProviderIds,People,Chapters",
         [Query]
         string includeItemTypes = "Episode",
         [Query]
@@ -158,4 +158,12 @@ public interface IJellyfinApi
         int startIndex = 0,
         [Query]
         int limit = 0);
+
+    [Get("/Items/{itemId}/PlaybackInfo")]
+    public Task<JellyfinPlaybackInfoResponse> GetPlaybackInfo(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string userId,
+        string itemId);
 }

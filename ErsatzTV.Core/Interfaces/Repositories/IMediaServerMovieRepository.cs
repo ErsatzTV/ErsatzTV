@@ -12,6 +12,6 @@ public interface IMediaServerMovieRepository<in TLibrary, TMovie, TEtag> where T
     Task<Option<int>> FlagUnavailable(TLibrary library, TMovie movie);
     Task<Option<int>> FlagRemoteOnly(TLibrary library, TMovie movie);
     Task<List<int>> FlagFileNotFound(TLibrary library, List<string> movieItemIds);
-    Task<Either<BaseError, MediaItemScanResult<TMovie>>> GetOrAdd(TLibrary library, TMovie item);
+    Task<Either<BaseError, MediaItemScanResult<TMovie>>> GetOrAdd(TLibrary library, TMovie item, bool deepScan);
     Task<Unit> SetEtag(TMovie movie, string etag);
 }

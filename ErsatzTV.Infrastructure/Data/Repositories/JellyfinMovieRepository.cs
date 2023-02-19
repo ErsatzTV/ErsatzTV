@@ -116,7 +116,8 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> GetOrAdd(
         JellyfinLibrary library,
-        JellyfinMovie item)
+        JellyfinMovie item,
+        bool deepScan)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
@@ -126,6 +127,8 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
             .ThenInclude(mv => mv.MediaFiles)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Genres)
             .Include(m => m.MovieMetadata)
@@ -149,7 +152,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
         foreach (JellyfinMovie jellyfinMovie in maybeExisting)
         {
             var result = new MediaItemScanResult<JellyfinMovie>(jellyfinMovie) { IsAdded = false };
-            if (jellyfinMovie.Etag != item.Etag)
+            if (jellyfinMovie.Etag != item.Etag || deepScan)
             {
                 await UpdateMovie(dbContext, jellyfinMovie, item);
                 result.IsUpdated = true;
@@ -339,6 +342,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
         version.Name = incomingVersion.Name;
         version.DateAdded = incomingVersion.DateAdded;
+        version.Chapters = incomingVersion.Chapters;
 
         // media file
         MediaFile file = version.MediaFiles.Head();

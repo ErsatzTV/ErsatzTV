@@ -133,7 +133,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             if (ServerReturnsStatisticsWithMetadata)
             {
                 maybeMovie = await movieRepository
-                    .GetOrAdd(library, incoming)
+                    .GetOrAdd(library, incoming, deepScan)
                     .MapT(
                         result =>
                         {
@@ -152,7 +152,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             else
             {
                 maybeMovie = await movieRepository
-                    .GetOrAdd(library, incoming)
+                    .GetOrAdd(library, incoming, deepScan)
                     .MapT(
                         result =>
                         {
@@ -308,7 +308,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             existingEtag == MediaServerEtag(incoming))
         {
             // skip scanning unavailable/file not found items that are unchanged and still don't exist locally
-            if (!_localFileSystem.FileExists(localPath))
+            if (!_localFileSystem.FileExists(localPath) && !ServerSupportsRemoteStreaming)
             {
                 return false;
             }

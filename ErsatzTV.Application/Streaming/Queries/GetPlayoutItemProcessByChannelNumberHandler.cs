@@ -453,34 +453,48 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     {
         string path = await GetPlayoutItemPath(playoutItem);
 
+        // check filesystem first
         if (_localFileSystem.FileExists(path))
         {
             return new PlayoutItemWithPath(playoutItem, path);
         }
 
-        if (playoutItem.MediaItem.State == MediaItemState.RemoteOnly)
+        // attempt to remotely stream plex
+        MediaFile file = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head();
+        switch (file)
         {
-            MediaFile file = playoutItem.MediaItem.GetHeadVersion().MediaFiles.Head();
-            switch (file)
-            {
-                case PlexMediaFile pmf:
-                    Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
-                            @"SELECT PMS.Id FROM PlexMediaSource PMS
-                      INNER JOIN Library L on PMS.Id = L.MediaSourceId
-                      INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
-                      WHERE LP.Id = @LibraryPathId",
-                            new { playoutItem.MediaItem.LibraryPathId })
-                        .Map(Optional);
+            case PlexMediaFile pmf:
+                Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
+                        @"SELECT PMS.Id FROM PlexMediaSource PMS
+                  INNER JOIN Library L on PMS.Id = L.MediaSourceId
+                  INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
+                  WHERE LP.Id = @LibraryPathId",
+                        new { playoutItem.MediaItem.LibraryPathId })
+                    .Map(Optional);
 
-                    foreach (int plexMediaSourceId in maybeId)
-                    {
-                        return new PlayoutItemWithPath(
-                            playoutItem,
-                            $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
-                    }
+                foreach (int plexMediaSourceId in maybeId)
+                {
+                    return new PlayoutItemWithPath(
+                        playoutItem,
+                        $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
+                }
 
-                    break;
-            }
+                break;
+        }
+        
+        // attempt to remotely stream jellyfin
+        Option<string> jellyfinItemId = playoutItem.MediaItem switch
+        {
+            JellyfinEpisode e => e.ItemId,
+            JellyfinMovie m => m.ItemId,
+            _ => None
+        };
+
+        foreach (string itemId in jellyfinItemId)
+        {
+            return new PlayoutItemWithPath(
+                playoutItem,
+                $"http://localhost:{Settings.ListenPort}/media/jellyfin/{itemId}");
         }
 
         return new PlayoutItemDoesNotExistOnDisk(path);
