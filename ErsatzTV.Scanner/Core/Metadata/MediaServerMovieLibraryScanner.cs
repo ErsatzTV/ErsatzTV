@@ -449,32 +449,32 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         if (deepScan || result.IsAdded || MediaServerEtag(existing) != MediaServerEtag(incoming) ||
             existing.MediaVersions.Head().Streams.Count == 0)
         {
-            if (maybeMediaVersion.IsNone && _localFileSystem.FileExists(result.LocalPath))
-            {
-                _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", result.LocalPath);
-                Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(
-                        ffmpegPath,
-                        ffprobePath,
-                        existing,
-                        result.LocalPath);
-
-                foreach (BaseError error in refreshResult.LeftToSeq())
-                {
-                    _logger.LogWarning(
-                        "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                        "Statistics",
-                        result.LocalPath,
-                        error.Value);
-                }
-
-                foreach (bool _ in refreshResult.RightToSeq())
-                {
-                    result.IsUpdated = true;
-                }
-            }
-            else
-            {
+            // if (maybeMediaVersion.IsNone && _localFileSystem.FileExists(result.LocalPath))
+            // {
+            //     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", result.LocalPath);
+            //     Either<BaseError, bool> refreshResult =
+            //         await _localStatisticsProvider.RefreshStatistics(
+            //             ffmpegPath,
+            //             ffprobePath,
+            //             existing,
+            //             result.LocalPath);
+            //
+            //     foreach (BaseError error in refreshResult.LeftToSeq())
+            //     {
+            //         _logger.LogWarning(
+            //             "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+            //             "Statistics",
+            //             result.LocalPath,
+            //             error.Value);
+            //     }
+            //
+            //     foreach (bool _ in refreshResult.RightToSeq())
+            //     {
+            //         result.IsUpdated = true;
+            //     }
+            // }
+            // else
+            // {
                 if (maybeMediaVersion.IsNone)
                 {
                     maybeMediaVersion = await GetMediaServerStatistics(
@@ -491,7 +491,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                         result.IsUpdated = true;
                     }
                 }
-            }
+            // }
         }
 
         return result;

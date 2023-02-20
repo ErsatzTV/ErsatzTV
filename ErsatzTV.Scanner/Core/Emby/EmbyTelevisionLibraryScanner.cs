@@ -19,6 +19,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
     private readonly IEmbyApiClient _embyApiClient;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IEmbyPathReplacementService _pathReplacementService;
+    private readonly ILogger<EmbyTelevisionLibraryScanner> _logger;
     private readonly IEmbyTelevisionRepository _televisionRepository;
 
     public EmbyTelevisionLibraryScanner(
@@ -44,7 +45,10 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         _mediaSourceRepository = mediaSourceRepository;
         _televisionRepository = televisionRepository;
         _pathReplacementService = pathReplacementService;
+        _logger = logger;
     }
+
+    protected override bool ServerSupportsRemoteStreaming => true;
 
     public async Task<Either<BaseError, Unit>> ScanLibrary(
         string address,
@@ -170,6 +174,37 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         EmbyLibrary library,
         MediaItemScanResult<EmbyEpisode> result,
         EmbyEpisode incoming) => Task.FromResult(Option<Tuple<EpisodeMetadata, MediaVersion>>.None);
+    
+    protected override async Task<Option<MediaVersion>> GetMediaServerStatistics(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyEpisode> result,
+        EmbyEpisode incoming)
+    {
+        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Emby Statistics", result.LocalPath);
+
+        Either<BaseError, MediaVersion> maybeVersion =
+            await _embyApiClient.GetPlaybackInfo(
+                connectionParameters.Address,
+                connectionParameters.ApiKey,
+                library,
+                incoming.ItemId);
+
+        foreach (BaseError error in maybeVersion.LeftToSeq())
+        {
+            _logger.LogWarning("Failed to get episode statistics from Emby: {Error}", error.ToString());
+        }
+
+        // chapters are pulled with metadata, not with statistics, but we need to save them here
+        foreach (MediaVersion version in maybeVersion.RightToSeq())
+        {
+            version.Chapters = result.Item.GetHeadVersion().Chapters;
+        }
+
+        return maybeVersion.ToOption();
+    }
+
+
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> UpdateMetadata(
         MediaItemScanResult<EmbyShow> result,

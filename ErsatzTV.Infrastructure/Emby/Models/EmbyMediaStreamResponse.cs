@@ -14,4 +14,12 @@ public class EmbyMediaStreamResponse
     public string Profile { get; set; }
     public string AspectRatio { get; set; }
     public int? Channels { get; set; }
+    public bool? IsAnamorphic { get; set; }
+    public string DisplayTitle { get; set; }
+    public string PixelFormat { get; set; }
+    public string ColorRange { get; set; }
+    public string ColorSpace { get; set; }
+    public string ColorTransfer { get; set; }
+    public string ColorPrimaries { get; set; }
+    public double? RealFrameRate { get; set; }
 }

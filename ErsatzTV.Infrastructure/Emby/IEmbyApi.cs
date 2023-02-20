@@ -40,7 +40,7 @@ public interface IEmbyApi
         string parentId,
         [Query]
         string fields =
-            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating,ProviderIds",
+            "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating,ProviderIds,Chapters",
         [Query]
         string includeItemTypes = "Movie",
         [Query]
@@ -89,7 +89,7 @@ public interface IEmbyApi
         string seasonId,
         [Query]
         string fields =
-            "Path,Genres,Tags,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
+            "Path,Genres,Tags,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People,Chapters",
         [Query]
         int startIndex = 0,
         [Query]
@@ -130,4 +130,11 @@ public interface IEmbyApi
         int startIndex = 0,
         [Query]
         int limit = 0);
+    
+    
+    [Get("/Items/{itemId}/PlaybackInfo")]
+    public Task<EmbyPlaybackInfoResponse> GetPlaybackInfo(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        string itemId);
 }
