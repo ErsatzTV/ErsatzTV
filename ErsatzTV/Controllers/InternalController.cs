@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using CliWrap;
+using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Streaming;
@@ -117,6 +118,27 @@ public class InternalController : ControllerBase
                     .AppendPathSegment(path)
                     .AppendPathSegment("stream")
                     .SetQueryParam("static", "true");
+
+                return new RedirectResult(fullPath.ToString());
+            });
+    }
+    
+    [HttpGet("/media/emby/{*path}")]
+    public async Task<IActionResult> GetEmbyMedia(string path, CancellationToken cancellationToken)
+    {
+        Either<BaseError, EmbyConnectionParametersViewModel> connectionParameters =
+            await _mediator.Send(new GetEmbyConnectionParameters(), cancellationToken);
+
+        return connectionParameters.Match<IActionResult>(
+            Left: _ => new NotFoundResult(),
+            Right: r =>
+            {
+                Url fullPath = Flurl.Url.Parse(r.Address)
+                    .AppendPathSegment("Videos")
+                    .AppendPathSegment(path)
+                    .AppendPathSegment("stream")
+                    .SetQueryParam("static", "true")
+                    .SetQueryParam("X-Emby-Token", r.ApiKey);
 
                 return new RedirectResult(fullPath.ToString());
             });

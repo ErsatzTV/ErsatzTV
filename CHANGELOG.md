@@ -8,14 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Align default docker image (no acceleration) with new images from [ErsatzTV-ffmpeg](https://github.com/jasongdove/ErsatzTV-ffmpeg)
 
 ### Changed
-- Plex libraries now retrieve all metadata and statistics from Plex; ffprobe is no longer used
-- Plex libraries now direct stream content from Plex when files are not found on ErsatzTV's file system
+- Plex, Jellyfin and Emby libraries now retrieve all metadata and statistics from the media server; ffprobe is no longer used
+- Plex, Jellyfin and Emby libraries now direct stream content when files are not found on ErsatzTV's file system
   - Content will still be normalized according to the Channel and FFmpeg Profile settings
   - Streaming from disk is preferred, so every playback attempt will first check the local file system
-- Jellyfin libraries will retrieve all metadata and statistics from Jellyfin when local files are unavailable
-- Jellyfin libraries now direct stream content from Jellyfin when files are not found on ErsatzTV's file system
-    - Content will still be normalized according to the Channel and FFmpeg Profile settings
-    - Streaming from disk is preferred, so every playback attempt will first check the local file system
 
 ## [0.7.4-beta] - 2023-02-12
 ### Added

@@ -34,4 +34,10 @@ public interface IEmbyApiClient
         string apiKey,
         string parentId,
         string includeItemTypes);
+
+    Task<Either<BaseError, MediaVersion>> GetPlaybackInfo(
+        string address,
+        string apiKey,
+        EmbyLibrary library,
+        string itemId);
 }

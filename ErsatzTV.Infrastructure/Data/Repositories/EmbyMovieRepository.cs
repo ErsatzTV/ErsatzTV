@@ -126,6 +126,8 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             .ThenInclude(mv => mv.MediaFiles)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MovieMetadata)
             .ThenInclude(mm => mm.Genres)
             .Include(m => m.MovieMetadata)
@@ -366,6 +368,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
         version.Name = incomingVersion.Name;
         version.DateAdded = incomingVersion.DateAdded;
+        version.Chapters = incomingVersion.Chapters;
 
         // media file
         MediaFile file = version.MediaFiles.Head();

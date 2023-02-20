@@ -14,7 +14,6 @@ public class EmbyLibraryItemResponse
     public int ProductionYear { get; set; }
     public EmbyProviderIdsResponse ProviderIds { get; set; }
     public string PremiereDate { get; set; }
-    public List<EmbyMediaStreamResponse> MediaStreams { get; set; }
     public List<EmbyMediaSourceResponse> MediaSources { get; set; }
     public string LocationType { get; set; }
     public string Overview { get; set; }
@@ -25,4 +24,5 @@ public class EmbyLibraryItemResponse
     public List<string> BackdropImageTags { get; set; }
     public int? IndexNumber { get; set; }
     public string Type { get; set; }
+    public IList<EmbyChapterResponse> Chapters { get; set; }
 }
