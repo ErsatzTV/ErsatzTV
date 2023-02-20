@@ -395,7 +395,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         ffmpegState = SetAccelState(videoStream, ffmpegState, desiredState, context, pipelineSteps);
 
-        SetDecoder(videoInputFile, videoStream, ffmpegState, context, pipelineSteps);
+        Option<IDecoder> maybeDecoder = SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
         SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
         SetRealtimeInput(videoInputFile, desiredState);
@@ -411,6 +411,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _watermarkInputFile,
             _subtitleInputFile,
             context,
+            maybeDecoder,
             ffmpegState,
             desiredState,
             _fontsFolder,
@@ -421,12 +422,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return filterChain;
     }
 
-    protected abstract void SetDecoder(
+    protected abstract Option<IDecoder> SetDecoder(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
-        PipelineContext context,
-        ICollection<IPipelineStep> pipelineSteps);
+        PipelineContext context);
     
     protected Option<IDecoder> GetSoftwareDecoder(VideoStream videoStream) =>
         videoStream.Codec switch
@@ -471,6 +471,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         PipelineContext context,
+        Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
         FrameState desiredState,
         string fontsFolder,

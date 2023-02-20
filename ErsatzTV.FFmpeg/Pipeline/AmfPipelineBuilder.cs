@@ -92,7 +92,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         {
             if (!videoStream.ColorParams.IsBt709)
             {
-                _logger.LogDebug("Adding colorspace filter");
+                // _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(currentState, videoStream, pixelFormat);
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);

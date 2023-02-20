@@ -85,12 +85,11 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         };
     }
 
-    protected override void SetDecoder(
+    protected override Option<IDecoder> SetDecoder(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
-        PipelineContext context,
-        ICollection<IPipelineStep> pipelineSteps)
+        PipelineContext context)
     {
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
@@ -101,7 +100,10 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         foreach (IDecoder decoder in maybeDecoder)
         {
             videoInputFile.AddOption(decoder);
+            return Some(decoder);
         }
+
+        return None;
     }
 
     protected override FilterChain SetVideoFilters(
@@ -110,6 +112,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         PipelineContext context,
+        Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
         FrameState desiredState,
         string fontsFolder,
@@ -122,15 +125,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         {
             ScaledSize = videoStream.FrameSize,
             PaddedSize = videoStream.FrameSize,
-
             PixelFormat = videoStream.PixelFormat,
-
             IsAnamorphic = videoStream.IsAnamorphic,
-
-            FrameDataLocation = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi
-                ? FrameDataLocation.Hardware
-                : FrameDataLocation.Software
         };
+        
+        foreach (IDecoder decoder in maybeDecoder)
+        {
+            currentState = decoder.NextState(currentState);
+        }
 
         // easier to use nv12 for overlay
         if (context.HasSubtitleOverlay || context.HasWatermark)
@@ -246,7 +248,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
             if (!videoStream.ColorParams.IsBt709)
             {
-                _logger.LogDebug("Adding colorspace filter");
+                // _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(
                     currentState,
                     videoStream,
