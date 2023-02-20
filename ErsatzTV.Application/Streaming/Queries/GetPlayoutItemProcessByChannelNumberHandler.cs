@@ -496,6 +496,21 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItem,
                 $"http://localhost:{Settings.ListenPort}/media/jellyfin/{itemId}");
         }
+        
+        // attempt to remotely stream emby
+        Option<string> embyItemId = playoutItem.MediaItem switch
+        {
+            EmbyEpisode e => e.ItemId,
+            EmbyMovie m => m.ItemId,
+            _ => None
+        };
+
+        foreach (string itemId in embyItemId)
+        {
+            return new PlayoutItemWithPath(
+                playoutItem,
+                $"http://localhost:{Settings.ListenPort}/media/emby/{itemId}");
+        }
 
         return new PlayoutItemDoesNotExistOnDisk(path);
     }

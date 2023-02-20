@@ -1,5 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -9,14 +11,17 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
     Either<BaseError, EmbyConnectionParametersViewModel>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IEmbySecretStore _embySecretStore;
     private readonly IMemoryCache _memoryCache;
 
     public GetEmbyConnectionParametersHandler(
         IMemoryCache memoryCache,
-        IMediaSourceRepository mediaSourceRepository)
+        IMediaSourceRepository mediaSourceRepository,
+        IEmbySecretStore embySecretStore)
     {
         _memoryCache = memoryCache;
         _mediaSourceRepository = mediaSourceRepository;
+        _embySecretStore = embySecretStore;
     }
 
     public async Task<Either<BaseError, EmbyConnectionParametersViewModel>> Handle(
@@ -30,7 +35,7 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
 
         Either<BaseError, EmbyConnectionParametersViewModel> maybeParameters =
             await Validate()
-                .MapT(cp => new EmbyConnectionParametersViewModel(cp.ActiveConnection.Address))
+                .MapT(cp => new EmbyConnectionParametersViewModel(cp.ActiveConnection.Address, cp.ApiKey))
                 .Map(v => v.ToEither<EmbyConnectionParametersViewModel>());
 
         return maybeParameters.Match(
@@ -44,7 +49,8 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
 
     private Task<Validation<BaseError, ConnectionParameters>> Validate() =>
         EmbyMediaSourceMustExist()
-            .BindT(MediaSourceMustHaveActiveConnection);
+            .BindT(MediaSourceMustHaveActiveConnection)
+            .BindT(MediaSourceMustHaveApiKey);
 
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist() =>
         _mediaSourceRepository.GetAllEmby().Map(list => list.HeadOrNone())
@@ -59,8 +65,21 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
         return maybeConnection.Map(connection => new ConnectionParameters(embyMediaSource, connection))
             .ToValidation<BaseError>("Emby media source requires an active connection");
     }
+    
+    private async Task<Validation<BaseError, ConnectionParameters>> MediaSourceMustHaveApiKey(
+        ConnectionParameters connectionParameters)
+    {
+        EmbySecrets secrets = await _embySecretStore.ReadSecrets();
+        return Optional(secrets.Address == connectionParameters.ActiveConnection.Address)
+            .Where(match => match)
+            .Map(_ => connectionParameters with { ApiKey = secrets.ApiKey })
+            .ToValidation<BaseError>("Emby media source requires an api key");
+    }
 
     private record ConnectionParameters(
         EmbyMediaSource EmbyMediaSource,
-        EmbyConnection ActiveConnection);
+        EmbyConnection ActiveConnection)
+    {
+        public string ApiKey { get; set; }
+    }
 }

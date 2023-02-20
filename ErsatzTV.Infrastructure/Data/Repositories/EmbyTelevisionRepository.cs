@@ -135,6 +135,8 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             .ThenInclude(mv => mv.MediaFiles)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.Chapters)
             .Include(m => m.EpisodeMetadata)
             .ThenInclude(mm => mm.Artwork)
             .Include(m => m.EpisodeMetadata)
@@ -724,6 +726,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
         version.Name = incomingVersion.Name;
         version.DateAdded = incomingVersion.DateAdded;
+        version.Chapters = incomingVersion.Chapters;
 
         // media file
         MediaFile file = version.MediaFiles.Head();

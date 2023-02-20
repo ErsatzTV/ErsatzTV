@@ -20,6 +20,7 @@ public class EmbyMovieLibraryScanner :
     private readonly IEmbyMovieRepository _embyMovieRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IEmbyPathReplacementService _pathReplacementService;
+    private readonly ILogger<EmbyMovieLibraryScanner> _logger;
 
     public EmbyMovieLibraryScanner(
         IEmbyApiClient embyApiClient,
@@ -44,7 +45,10 @@ public class EmbyMovieLibraryScanner :
         _mediaSourceRepository = mediaSourceRepository;
         _embyMovieRepository = embyMovieRepository;
         _pathReplacementService = pathReplacementService;
+        _logger = logger;
     }
+    
+    protected override bool ServerSupportsRemoteStreaming => true;
 
     public async Task<Either<BaseError, Unit>> ScanLibrary(
         string address,
@@ -110,6 +114,35 @@ public class EmbyMovieLibraryScanner :
         EmbyLibrary library,
         MediaItemScanResult<EmbyMovie> result,
         EmbyMovie incoming) => Task.FromResult(Option<Tuple<MovieMetadata, MediaVersion>>.None);
+    
+    protected override async Task<Option<MediaVersion>> GetMediaServerStatistics(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyMovie> result,
+        EmbyMovie incoming)
+    {
+        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Emby Statistics", result.LocalPath);
+
+        Either<BaseError, MediaVersion> maybeVersion =
+            await _embyApiClient.GetPlaybackInfo(
+                connectionParameters.Address,
+                connectionParameters.ApiKey,
+                library,
+                incoming.ItemId);
+
+        foreach (BaseError error in maybeVersion.LeftToSeq())
+        {
+            _logger.LogWarning("Failed to get movie statistics from Emby: {Error}", error.ToString());
+        }
+
+        // chapters are pulled with metadata, not with statistics, but we need to save them here
+        foreach (MediaVersion version in maybeVersion.RightToSeq())
+        {
+            version.Chapters = result.Item.GetHeadVersion().Chapters;
+        }
+
+        return maybeVersion.ToOption();
+    }
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> UpdateMetadata(
         MediaItemScanResult<EmbyMovie> result,
