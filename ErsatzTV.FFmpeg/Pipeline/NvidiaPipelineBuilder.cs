@@ -403,6 +403,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 videoStream.SquarePixelFrameSize(currentState.PaddedSize),
                 _logger);
             watermarkOverlayFilterSteps.Add(watermarkFilter);
+
+            currentState = watermarkFilter.NextState(currentState);
         }
 
         return currentState;
@@ -533,13 +535,18 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         IPipelineFilterStep scaleStep;
 
         bool needsToScale = currentState.ScaledSize != desiredState.ScaledSize;
+        if (!needsToScale)
+        {
+            return currentState;
+        }
+
         bool decodedToSoftware = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.None;
         bool softwareEncoder = ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None;
         bool noHardwareFilters = context is
             { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
         bool needsToPad = currentState.PaddedSize != desiredState.PaddedSize;
         
-        if ((needsToScale && softwareEncoder || needsToPad) && decodedToSoftware && noHardwareFilters)
+        if (decodedToSoftware && (needsToPad || noHardwareFilters && softwareEncoder))
         {
             scaleStep = new ScaleFilter(
                 currentState,
