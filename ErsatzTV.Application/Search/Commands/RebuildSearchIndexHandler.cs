@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Search;
 
-public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Unit>
+public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
@@ -35,7 +35,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
         _fallbackMetadataProvider = fallbackMetadataProvider;
     }
 
-    public async Task<Unit> Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
+    public async Task Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Initializing search index");
 
@@ -63,7 +63,5 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
         {
             _logger.LogInformation("Search index is already version {Version}", _searchIndex.Version);
         }
-
-        return Unit.Default;
     }
 }

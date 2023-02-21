@@ -78,12 +78,11 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         };
     }
 
-    protected override void SetDecoder(
+    protected override Option<IDecoder> SetDecoder(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
-        PipelineContext context,
-        ICollection<IPipelineStep> pipelineSteps)
+        PipelineContext context)
     {
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
@@ -99,7 +98,10 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         foreach (IDecoder decoder in maybeDecoder)
         {
             videoInputFile.AddOption(decoder);
+            return Some(decoder);
         }
+
+        return None;
     }
 
     protected override FilterChain SetVideoFilters(
@@ -108,6 +110,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         PipelineContext context,
+        Option<IDecoder> maybeDecoder,
         FFmpegState ffmpegState,
         FrameState desiredState,
         string fontsFolder,
@@ -126,11 +129,13 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 ? videoStream.PixelFormat.Map(pf => pf.BitDepth == 8 ? new PixelFormatNv12(pf.Name) : pf)
                 : videoStream.PixelFormat,
             
-            IsAnamorphic = videoStream.IsAnamorphic,
-            FrameDataLocation = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv
-                ? FrameDataLocation.Hardware
-                : FrameDataLocation.Software
+            IsAnamorphic = videoStream.IsAnamorphic
         };
+        
+        foreach (IDecoder decoder in maybeDecoder)
+        {
+            currentState = decoder.NextState(currentState);
+        }
 
         // easier to use nv12 for overlay
         if (context.HasSubtitleOverlay || context.HasWatermark)
@@ -294,7 +299,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             if (!videoStream.ColorParams.IsBt709 || usesVppQsv)
             {
-                _logger.LogDebug("Adding colorspace filter");
+                // _logger.LogDebug("Adding colorspace filter");
 
                 // force p010/nv12 if we're still in hardware
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)

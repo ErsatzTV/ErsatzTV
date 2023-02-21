@@ -58,7 +58,6 @@ using ErsatzTV.Services.RunOnce;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Ganss.Xss;
-using MediatR;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -329,7 +328,7 @@ public class Startup
         SqlMapper.AddTypeHandler(new GuidHandler());
         SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
-        services.AddMediatR(typeof(GetAllChannels).Assembly);
+        services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<GetAllChannels>());
 
         services.AddRefitClient<IPlexTvApi>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://plex.tv/api/v2"));

@@ -21,6 +21,11 @@ public class ScaleFilter : BaseFilter
     {
         get
         {
+            if (_currentState.ScaledSize == _scaledSize)
+            {
+                return string.Empty;
+            }
+
             string aspectRatio = string.Empty;
             if (_scaledSize != _paddedSize)
             {

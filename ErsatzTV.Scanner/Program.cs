@@ -166,8 +166,8 @@ public class Program
                     services.AddSingleton<RecyclableMemoryStreamManager>();
                     // TODO: real bugsnag?
                     services.AddSingleton<IClient>(_ => new BugsnagNoopClient());
-                    
-                    services.AddMediatR(typeof(Worker).Assembly);
+
+                    services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<Worker>());
                     services.AddMemoryCache();
                     
                     services.AddHostedService<Worker>();

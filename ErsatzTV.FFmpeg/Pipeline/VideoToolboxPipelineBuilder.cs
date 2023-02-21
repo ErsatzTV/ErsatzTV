@@ -68,12 +68,11 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
         };
     }
 
-    protected override void SetDecoder(
+    protected override Option<IDecoder> SetDecoder(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
-        PipelineContext context,
-        ICollection<IPipelineStep> pipelineSteps)
+        PipelineContext context)
     {
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
@@ -85,7 +84,10 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
         foreach (IDecoder decoder in maybeDecoder)
         {
             videoInputFile.AddOption(decoder);
+            return Some(decoder);
         }
+
+        return None;
     }
 
     protected override Option<IEncoder> GetEncoder(FFmpegState ffmpegState, FrameState currentState, FrameState desiredState)
@@ -113,7 +115,7 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
         {
             if (!videoStream.ColorParams.IsBt709)
             {
-                _logger.LogDebug("Adding colorspace filter");
+                // _logger.LogDebug("Adding colorspace filter");
                 var colorspace = new ColorspaceFilter(currentState, videoStream, pixelFormat);
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
