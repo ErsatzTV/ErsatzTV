@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Maintenance;
 
-public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
+public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory>
 {
     private static long _lastRelease;
     
@@ -19,12 +19,12 @@ public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
         _logger = logger;
     }
 
-    public Task<Unit> Handle(ReleaseMemory request, CancellationToken cancellationToken)
+    public Task Handle(ReleaseMemory request, CancellationToken cancellationToken)
     {
         if (!request.ForceAggressive && _lastRelease > request.RequestTime.Ticks)
         {
             // we've already released since the request was created, so don't bother
-            return Task.FromResult(Unit.Default);
+            return Task.CompletedTask;
         }
 
         bool hasActiveWorkers = _ffmpegSegmenterService.SessionWorkers.Any() || FFmpegProcess.ProcessCount > 0;
@@ -45,6 +45,6 @@ public class ReleaseMemoryHandler : IRequestHandler<ReleaseMemory, Unit>
         _logger.LogDebug("Completed garbage collection");
         Interlocked.Exchange(ref _lastRelease, DateTimeOffset.Now.Ticks);
 
-        return Task.FromResult(Unit.Default);
+        return Task.CompletedTask;
     }
 }

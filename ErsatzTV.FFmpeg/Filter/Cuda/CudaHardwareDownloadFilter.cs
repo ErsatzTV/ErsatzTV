@@ -4,16 +4,23 @@ namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
 public class CudaHardwareDownloadFilter : BaseFilter
 {
-    private readonly Option<IPixelFormat> _maybePixelFormat;
+    private readonly Option<IPixelFormat> _maybeCurrentPixelFormat;
+    private readonly Option<IPixelFormat> _maybeTargetPixelFormat;
 
-    public CudaHardwareDownloadFilter(Option<IPixelFormat> maybePixelFormat) => _maybePixelFormat = maybePixelFormat;
+    public CudaHardwareDownloadFilter(
+        Option<IPixelFormat> maybeCurrentPixelFormat,
+        Option<IPixelFormat> maybeTargetPixelFormat)
+    {
+        _maybeCurrentPixelFormat = maybeCurrentPixelFormat;
+        _maybeTargetPixelFormat = maybeTargetPixelFormat;
+    }
 
     public override string Filter
     {
         get
         {
             var hwdownload = "hwdownload";
-            foreach (IPixelFormat pixelFormat in _maybePixelFormat)
+            foreach (IPixelFormat pixelFormat in _maybeCurrentPixelFormat)
             {
                 if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
                 {
@@ -21,9 +28,19 @@ public class CudaHardwareDownloadFilter : BaseFilter
 
                     if (pixelFormat is PixelFormatNv12 nv12)
                     {
-                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                        if (_maybeTargetPixelFormat.IsNone)
                         {
-                            hwdownload += $",format={pf.FFmpegName}";
+                            foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                            {
+                                hwdownload += $",format={pf.FFmpegName}";
+                            }
+                        }
+                        else
+                        {
+                            foreach (IPixelFormat pf in _maybeTargetPixelFormat)
+                            {
+                                hwdownload += $",format={pf.FFmpegName}";
+                            }
                         }
                     }
                 }
@@ -39,8 +56,14 @@ public class CudaHardwareDownloadFilter : BaseFilter
         {
             FrameDataLocation = FrameDataLocation.Software
         };
-        
-        foreach (IPixelFormat pixelFormat in _maybePixelFormat)
+
+        foreach (IPixelFormat pixelFormat in _maybeTargetPixelFormat)
+        {
+            result = result with { PixelFormat = Some(pixelFormat) };
+            return result;
+        }
+
+        foreach (IPixelFormat pixelFormat in _maybeCurrentPixelFormat)
         {
             if (pixelFormat is PixelFormatNv12 nv12)
             {

@@ -2,16 +2,15 @@
 
 namespace ErsatzTV.Application.Configuration;
 
-public class SaveConfigElementByKeyHandler : IRequestHandler<SaveConfigElementByKey, Unit>
+public class SaveConfigElementByKeyHandler : IRequestHandler<SaveConfigElementByKey>
 {
     private readonly IConfigElementRepository _configElementRepository;
 
     public SaveConfigElementByKeyHandler(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    public async Task<Unit> Handle(SaveConfigElementByKey request, CancellationToken cancellationToken)
+    public async Task Handle(SaveConfigElementByKey request, CancellationToken cancellationToken)
     {
         await _configElementRepository.Upsert(request.Key, request.Value);
-        return Unit.Default;
     }
 }

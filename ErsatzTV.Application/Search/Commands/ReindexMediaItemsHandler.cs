@@ -4,7 +4,7 @@ using ErsatzTV.Core.Interfaces.Search;
 
 namespace ErsatzTV.Application.Search;
 
-public class ReindexMediaItemsHandler : IRequestHandler<ReindexMediaItems, Unit>
+public class ReindexMediaItemsHandler : IRequestHandler<ReindexMediaItems>
 {
     private readonly ICachingSearchRepository _cachingSearchRepository;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
@@ -20,10 +20,9 @@ public class ReindexMediaItemsHandler : IRequestHandler<ReindexMediaItems, Unit>
         _searchIndex = searchIndex;
     }
 
-    public async Task<Unit> Handle(ReindexMediaItems request, CancellationToken cancellationToken)
+    public async Task Handle(ReindexMediaItems request, CancellationToken cancellationToken)
     {
         await _searchIndex.RebuildItems(_cachingSearchRepository, _fallbackMetadataProvider, request.MediaItemIds);
         _searchIndex.Commit();
-        return Unit.Default;
     }
 }
