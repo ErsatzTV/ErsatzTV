@@ -15,12 +15,12 @@
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00016" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.2" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.3" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.3">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.2" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.3" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.5.22">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
