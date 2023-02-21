@@ -125,7 +125,7 @@ public class TranscodingTests
         public static VideoScanKind[] VideoScanKinds =
         {
             VideoScanKind.Progressive,
-            // VideoScanKind.Interlaced
+            VideoScanKind.Interlaced
         };
 
         public static InputFormat[] InputFormats =
@@ -147,15 +147,15 @@ public class TranscodingTests
             new("libx265", "yuv420p"),
             new("libx265", "yuv420p10le"),
             //
-            new("mpeg4", "yuv420p"),
+            // new("mpeg4", "yuv420p"),
             //
-            new("libvpx-vp9", "yuv420p"),
+            // new("libvpx-vp9", "yuv420p"),
             // new("libvpx-vp9", "yuv420p10le"),
             //
             // // // new("libaom-av1", "yuv420p")
             // // // av1    yuv420p10le    51
             // //
-            new("msmpeg4v2", "yuv420p"),
+            // new("msmpeg4v2", "yuv420p"),
             new("msmpeg4v3", "yuv420p")
             //
             // // wmv3    yuv420p    1
@@ -182,8 +182,8 @@ public class TranscodingTests
 
         public static HardwareAccelerationKind[] TestAccelerations =
         {
-            HardwareAccelerationKind.None,
-            // HardwareAccelerationKind.Nvenc,
+            // HardwareAccelerationKind.None,
+            HardwareAccelerationKind.Nvenc,
             // HardwareAccelerationKind.Vaapi,
             // HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
