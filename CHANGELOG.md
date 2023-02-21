@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Align default docker image (no acceleration) with new images from [ErsatzTV-ffmpeg](https://github.com/jasongdove/ErsatzTV-ffmpeg)
 - Fix some transcoding pipelines that use software decoders
+- Improve VAAPI encoder capability detection on newer hardware
 
 ### Changed
 - Plex, Jellyfin and Emby libraries now retrieve all metadata and statistics from the media server

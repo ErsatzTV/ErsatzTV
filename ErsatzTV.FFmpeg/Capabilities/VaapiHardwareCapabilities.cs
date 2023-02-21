@@ -97,19 +97,27 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             
             VideoFormat.H264 =>
                 _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.H264Main, VaapiEntrypoint.Encode)),
+                    new VaapiProfileEntrypoint(VaapiProfile.H264Main, VaapiEntrypoint.Encode)) ||
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.H264Main, VaapiEntrypoint.EncodeLowPower)),
 
             VideoFormat.Hevc when bitDepth == 10 =>
                 _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain10, VaapiEntrypoint.Encode)),
+                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain10, VaapiEntrypoint.Encode)) ||
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain10, VaapiEntrypoint.EncodeLowPower)),
 
             VideoFormat.Hevc =>
                 _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain, VaapiEntrypoint.Encode)),
+                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain, VaapiEntrypoint.Encode)) ||
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain, VaapiEntrypoint.EncodeLowPower)),
 
             VideoFormat.Mpeg2Video =>
                 _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.Mpeg2Main, VaapiEntrypoint.Encode)),
+                    new VaapiProfileEntrypoint(VaapiProfile.Mpeg2Main, VaapiEntrypoint.Encode)) ||
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Mpeg2Main, VaapiEntrypoint.EncodeLowPower)),
             
             _ => false
         };
