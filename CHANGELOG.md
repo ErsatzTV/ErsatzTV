@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Content will still be normalized according to the Channel and FFmpeg Profile settings
   - Streaming from disk is preferred, so every playback attempt will first check the local file system
 - Update Intel Media Driver in vaapi docker image
+- Search queries no longer remove duplicate results as this was causing incorrect behavior
 
 ## [0.7.4-beta] - 2023-02-12
 ### Added
