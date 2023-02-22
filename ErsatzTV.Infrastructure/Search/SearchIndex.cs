@@ -207,9 +207,10 @@ public sealed class SearchIndex : ISearchIndex
             : new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
         parser.AllowLeadingWildcard = true;
         Query query = ParseQuery(searchQuery, parser);
-        var filter = new DuplicateFilter(TitleAndYearField);
+        // TODO: figure out if this is actually needed
+        // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
-        TopFieldDocs topDocs = searcher.Search(query, filter, hitsLimit, sort, true, true);
+        TopFieldDocs topDocs = searcher.Search(query, null, hitsLimit, sort, true, true);
         IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip);
 
         if (limit > 0)
@@ -223,7 +224,7 @@ public sealed class SearchIndex : ISearchIndex
 
         if (limit > 0)
         {
-            searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
+            searchResult.PageMap = GetSearchPageMap(searcher, query, null, sort, limit);
         }
 
         return searchResult;
