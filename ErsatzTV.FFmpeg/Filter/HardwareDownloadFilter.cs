@@ -18,6 +18,14 @@ public class HardwareDownloadFilter : BaseFilter
                 hwdownload = "hwdownload";
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
+                    if (pixelFormat is PixelFormatVaapi)
+                    {
+                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(pixelFormat.Name, null))
+                        {
+                            return $"hwdownload,format=vaapi|{pf.FFmpegName}";
+                        }
+                    }
+                    
                     if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
                     {
                         hwdownload = $"hwdownload,format={pixelFormat.FFmpegName}";

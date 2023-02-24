@@ -183,9 +183,9 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
-            // HardwareAccelerationKind.Vaapi,
-            // HardwareAccelerationKind.Qsv,
+            // HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
