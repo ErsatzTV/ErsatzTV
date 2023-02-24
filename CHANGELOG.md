@@ -1,4 +1,4 @@
-﻿ Changelog
+﻿# Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Streaming from disk is preferred, so every playback attempt will first check the local file system
 - Use libvpl instead of libmfx to provide intel acceleration in vaapi docker images
 - Search queries no longer remove duplicate results as this was causing incorrect behavior
+- Prioritize audio streams that are flagged as "default" over number of audio channels
+    - For example, a video with a stereo commentary track and a mono "default" track will now prefer the "default" track
 
 ## [0.7.4-beta] - 2023-02-12
 ### Added
