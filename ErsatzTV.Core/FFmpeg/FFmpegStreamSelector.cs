@@ -199,7 +199,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
     private Option<MediaStream> DefaultSelectAudioStream(
         MediaVersion version,
-        List<string> preferredLanguageCodes,
+        IReadOnlyCollection<string> preferredLanguageCodes,
         string preferredAudioTitle)
     {
         var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
@@ -232,8 +232,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     {
         if (string.IsNullOrWhiteSpace(title))
         {
-            _logger.LogDebug("No audio title has been specified; selecting stream with most channels");
-            return streams.OrderByDescending(s => s.Channels).ThenByDescending(s => s.Default).Head();
+            return PrioritizeDefault(streams);
         }
 
         // prioritize matching titles
@@ -243,18 +242,31 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         if (matchingTitle.Any())
         {
             _logger.LogDebug(
-                "Found {Count} audio streams with preferred title {Title}; selecting stream with most channels",
+                "Found {Count} audio streams with preferred title {Title}",
                 matchingTitle.Count,
                 title);
 
-            return matchingTitle.OrderByDescending(s => s.Channels).ThenByDescending(s => s.Default).Head();
+            return PrioritizeDefault(streams);
+        }
+        
+        _logger.LogDebug("Unable to find audio stream with preferred title {Title}", title);
+
+        return PrioritizeDefault(streams);
+    }
+
+    private Option<MediaStream> PrioritizeDefault(IReadOnlyCollection<MediaStream> streams)
+    {
+        var sorted = streams.OrderByDescending(s => s.Channels).ToList();
+        Option<MediaStream> maybeDefault = Optional(sorted.Find(s => s.Default));
+        foreach (MediaStream stream in maybeDefault)
+        {
+            _logger.LogDebug("Found audio stream flagged as default");
+            return stream;
         }
 
-        _logger.LogDebug(
-            "Unable to find audio stream with preferred title {Title}; selecting stream with most channels",
-            title);
+        _logger.LogDebug("Unable to find default audio stream; selecting stream with most channels");
 
-        return streams.OrderByDescending(s => s.Channels).ThenByDescending(s => s.Default).Head();
+        return streams.HeadOrNone();
     }
 
     private async Task<Option<MediaStream>> SelectEpisodeAudioStream(
@@ -310,7 +322,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
         if (!_localFileSystem.FileExists(jsScriptPath))
         {
-            _logger.LogWarning("Unable to locate movie audio stream selector script; falling back to built-in logic");
+            _logger.LogInformation("Unable to locate movie audio stream selector script; falling back to built-in logic");
             return Option<MediaStream>.None;
         }
 
