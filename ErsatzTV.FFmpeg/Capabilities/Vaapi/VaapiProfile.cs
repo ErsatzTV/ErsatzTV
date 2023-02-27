@@ -14,4 +14,9 @@ public class VaapiProfile
     public const string Vc1Advanced = "VAProfileVC1Advanced";
     public const string HevcMain = "VAProfileHEVCMain";
     public const string HevcMain10 = "VAProfileHEVCMain10";
+    public const string Vp9Profile0 = "VAProfileVP9Profile0";
+    public const string Vp9Profile1 = "VAProfileVP9Profile1";
+    public const string Vp9Profile2 = "VAProfileVP9Profile2";
+    public const string Vp9Profile3 = "VAProfileVP9Profile3";
+    public const string Av1Profile0 = "VAProfileAV1Profile0";
 }

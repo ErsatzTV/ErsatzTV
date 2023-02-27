@@ -70,6 +70,26 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             (VideoFormat.Hevc, "main 10" or "2") =>
                 _profileEntrypoints.Contains(
                     new VaapiProfileEntrypoint(VaapiProfile.HevcMain10, VaapiEntrypoint.Decode)),
+            
+            (VideoFormat.Vp9, "profile 0" or "0") =>
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Vp9Profile0, VaapiEntrypoint.Decode)),
+
+            (VideoFormat.Vp9, "profile 1" or "1") =>
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Vp9Profile1, VaapiEntrypoint.Decode)),
+
+            (VideoFormat.Vp9, "profile 2" or "2") =>
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Vp9Profile2, VaapiEntrypoint.Decode)),
+            
+            (VideoFormat.Vp9, "profile 3" or "3") =>
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Vp9Profile3, VaapiEntrypoint.Decode)),
+            
+            (VideoFormat.Av1, "main" or "0") =>
+                _profileEntrypoints.Contains(
+                    new VaapiProfileEntrypoint(VaapiProfile.Av1Profile0, VaapiEntrypoint.Decode)),
 
             // fall back to software decoder
             _ => false
