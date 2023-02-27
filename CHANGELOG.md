@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Use VP9 and AV1 hardware-accelerated decoders with VAAPI when available
+
 ### Fixed
 - Align default docker image (no acceleration) with new images from [ErsatzTV-ffmpeg](https://github.com/jasongdove/ErsatzTV-ffmpeg)
 - Fix some transcoding pipelines that use software decoders
