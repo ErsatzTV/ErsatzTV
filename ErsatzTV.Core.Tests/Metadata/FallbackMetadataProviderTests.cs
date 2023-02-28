@@ -70,6 +70,30 @@ public class FallbackMetadataProviderTests
         // metadata.Season.Should().Be(season);
         metadata.Head().EpisodeNumber.Should().Be(episode);
     }
+    
+    [TestCase("Awesome Show - S01_BLAH.mkv", 0)]
+    [TestCase("Awesome Show - NO_EPISODE_NUMBER_HERE.mkv", 0)]
+    public void GetFallbackMetadata_ShouldHandleNonEpisodes(string path, int episode)
+    {
+        List<EpisodeMetadata> metadata = _fallbackMetadataProvider.GetFallbackMetadata(
+            new Episode
+            {
+                LibraryPath = new LibraryPath(),
+                MediaVersions = new List<MediaVersion>
+                {
+                    new()
+                    {
+                        MediaFiles = new List<MediaFile>
+                        {
+                            new() { Path = path }
+                        }
+                    }
+                }
+            });
+
+        metadata.Count.Should().Be(1);
+        metadata.Head().EpisodeNumber.Should().Be(episode);
+    }
 
     [Test]
     [TestCase("Awesome Show - s01e02-s01e03.mkv", 1, 2, 3)]
