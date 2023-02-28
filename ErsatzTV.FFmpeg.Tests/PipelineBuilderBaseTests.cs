@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
@@ -86,6 +87,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
@@ -171,6 +173,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
@@ -196,6 +199,7 @@ public class PipelineBuilderBaseTests
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
         var builder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             None,
             None,
@@ -221,6 +225,7 @@ public class PipelineBuilderBaseTests
         var concatInputFile = new ConcatInputFile("http://localhost:8080/iptv/channel/1.m3u8?mode=segmenter", resolution);
 
         var builder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             None,
             None,
@@ -306,6 +311,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
@@ -383,6 +389,7 @@ public class PipelineBuilderBaseTests
             Option<int>.None);
 
         var builder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             videoInputFile,
             audioInputFile,
@@ -426,6 +433,7 @@ public class PipelineBuilderBaseTests
             });
 
         var pipelineBuilder = new SoftwarePipelineBuilder(
+            new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
             videoInputFile,
             Option<AudioInputFile>.None,
@@ -462,5 +470,16 @@ public class PipelineBuilderBaseTests
         Console.WriteLine($"Generated command: ffmpeg {string.Join(" ", arguments)}");
 
         return command;
+    }
+    
+    public class DefaultFFmpegCapabilities : FFmpegCapabilities
+    {
+        public DefaultFFmpegCapabilities()
+            : base(
+                new System.Collections.Generic.HashSet<string>(),
+                new System.Collections.Generic.HashSet<string>(),
+                new System.Collections.Generic.HashSet<string>())
+        {
+        }
     }
 }

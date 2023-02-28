@@ -15,11 +15,11 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
         _logger = logger;
     }
 
-    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        bool result = (videoFormat, videoProfile.IfNone(string.Empty).ToLowerInvariant()) switch
+        bool isHardware = (videoFormat, videoProfile.IfNone(string.Empty).ToLowerInvariant()) switch
         {
             // no hardware decoding of 10-bit h264
             (VideoFormat.H264, _) when bitDepth == 10 => false,
@@ -95,22 +95,22 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             _ => false
         };
 
-        if (!result)
+        if (!isHardware)
         {
             _logger.LogDebug(
                 "VAAPI does not support decoding {Format}/{Profile}, will use software decoder",
                 videoFormat,
                 videoProfile);
         }
-        
-        return result;
+
+        return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
     }
 
-    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        bool result = videoFormat switch
+        bool isHardware = videoFormat switch
         {
             // vaapi cannot encode 10-bit h264
             VideoFormat.H264 when bitDepth == 10 => false,
@@ -142,7 +142,7 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             _ => false
         };
         
-        if (!result)
+        if (!isHardware)
         {
             _logger.LogDebug(
                 "VAAPI does not support encoding {Format} with bit depth {BitDepth}, will use software encoder",
@@ -150,6 +150,6 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
                 bitDepth);
         }
 
-        return result;
+        return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
     }
 }

@@ -4,29 +4,29 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class DefaultHardwareCapabilities : IHardwareCapabilities
 {
-    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
         return (videoFormat, bitDepth) switch
         {
             // 10-bit h264 decoding is likely not support by any hardware
-            (VideoFormat.H264, 10) => false,
+            (VideoFormat.H264, 10) => FFmpegCapability.Software,
 
-            _ => true
+            _ => FFmpegCapability.Hardware
         };
     }
 
-    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
         return (videoFormat, bitDepth) switch
         {
             // 10-bit h264 encoding is not support by any hardware
-            (VideoFormat.H264, 10) => false,
+            (VideoFormat.H264, 10) => FFmpegCapability.Software,
 
-            _ => true
+            _ => FFmpegCapability.Hardware
         };
     }
 }

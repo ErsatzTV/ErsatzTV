@@ -19,6 +19,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
     private readonly ILogger _logger;
 
     public VaapiPipelineBuilder(
+        IFFmpegCapabilities ffmpegCapabilities,
         IHardwareCapabilities hardwareCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
@@ -28,6 +29,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
+        ffmpegCapabilities,
         hardwareAccelerationMode,
         videoInputFile,
         audioInputFile,
@@ -48,18 +50,18 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        bool canDecode = _hardwareCapabilities.CanDecode(
+        FFmpegCapability decodeCapability = _hardwareCapabilities.CanDecode(
             videoStream.Codec,
             desiredState.VideoProfile,
             videoStream.PixelFormat);
-        bool canEncode = _hardwareCapabilities.CanEncode(
+        FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
 
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
-            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, canDecode));
+            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
 
             foreach (string driverName in ffmpegState.VaapiDriver)
             {
@@ -70,16 +72,16 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         // use software decoding with an extensive pipeline
         if (context is { HasSubtitleOverlay: true, HasWatermark: true })
         {
-            canDecode = false;
+            decodeCapability = FFmpegCapability.Software;
         }
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
         {
-            DecoderHardwareAccelerationMode = canDecode
+            DecoderHardwareAccelerationMode = decodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Vaapi
                 : HardwareAccelerationMode.None,
-            EncoderHardwareAccelerationMode = canEncode
+            EncoderHardwareAccelerationMode = encodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Vaapi
                 : HardwareAccelerationMode.None
         };
