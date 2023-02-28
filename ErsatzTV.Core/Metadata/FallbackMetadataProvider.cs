@@ -127,7 +127,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
     private List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
     {
-        var result = new List<EpisodeMetadata>();
+        var result = new List<EpisodeMetadata> { baseMetadata };
 
         try
         {
@@ -146,33 +146,12 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
                     string[] split = match.Groups[1].Value.Replace('e', '-').Split('-');
                     foreach (string ep in split)
                     {
-                        if (!int.TryParse(ep, out int episodeNumber))
+                        if (int.TryParse(ep, out int episodeNumber))
                         {
-                            continue;
+                            baseMetadata.EpisodeNumber = episodeNumber;
                         }
-
-                        var metadata = new EpisodeMetadata
-                        {
-                            MetadataKind = MetadataKind.Fallback,
-                            EpisodeNumber = episodeNumber,
-                            DateAdded = baseMetadata.DateAdded,
-                            DateUpdated = baseMetadata.DateAdded,
-                            Title = baseMetadata.Title,
-                            Actors = new List<Actor>(),
-                            Artwork = new List<Artwork>(),
-                            Directors = new List<Director>(),
-                            Genres = new List<Genre>(),
-                            Guids = new List<MetadataGuid>(),
-                            Studios = new List<Studio>(),
-                            Tags = new List<Tag>(),
-                            Writers = new List<Writer>()
-                        };
-
-                        result.Add(metadata);
                     }
                 }
-
-                return result;
             }
         }
         catch (Exception ex)

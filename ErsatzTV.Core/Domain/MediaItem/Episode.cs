@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Core.Domain;
 
-[DebuggerDisplay("{EpisodeMetadata[0].Title ?? \"[unknown episode]\"}")]
+[DebuggerDisplay("{EpisodeMetadata != null && EpisodeMetadata.Count > 0 ? EpisodeMetadata[0].Title : \"[unknown episode]\"}")]
 public class Episode : MediaItem
 {
     public int SeasonId { get; set; }
