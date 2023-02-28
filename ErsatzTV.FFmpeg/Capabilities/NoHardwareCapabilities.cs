@@ -4,9 +4,9 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class NoHardwareCapabilities : IHardwareCapabilities
 {
-    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat) =>
-        false;
+    public FFmpegCapability CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat) =>
+        FFmpegCapability.Software;
 
-    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat) =>
-        false;
+    public FFmpegCapability CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat) =>
+        FFmpegCapability.Software;
 }

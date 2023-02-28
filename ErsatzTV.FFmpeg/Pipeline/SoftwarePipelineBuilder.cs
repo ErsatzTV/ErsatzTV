@@ -1,3 +1,4 @@
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Filter;
@@ -13,6 +14,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     private readonly ILogger _logger;
 
     public SoftwarePipelineBuilder(
+        IFFmpegCapabilities ffmpegCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
@@ -21,6 +23,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
+        ffmpegCapabilities,
         hardwareAccelerationMode,
         videoInputFile,
         audioInputFile,

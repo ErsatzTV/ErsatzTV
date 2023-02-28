@@ -32,7 +32,10 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         string fontsFolder,
         string ffmpegPath)
     {
+        IFFmpegCapabilities ffmpegCapabilities = await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
+        
         IHardwareCapabilities capabilities = await _hardwareCapabilitiesFactory.GetHardwareCapabilities(
+            ffmpegCapabilities,
             ffmpegPath,
             hardwareAccelerationMode,
             vaapiDriver,
@@ -41,6 +44,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         return hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
+                ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -51,6 +55,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
             HardwareAccelerationMode.Vaapi when capabilities is not NoHardwareCapabilities => new VaapiPipelineBuilder(
+                ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -61,6 +66,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
             HardwareAccelerationMode.Qsv => new QsvPipelineBuilder(
+                ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -71,6 +77,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
             HardwareAccelerationMode.VideoToolbox => new VideoToolboxPipelineBuilder(
+                ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -81,6 +88,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
             HardwareAccelerationMode.Amf => new AmfPipelineBuilder(
+                ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
                 videoInputFile,
@@ -91,6 +99,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
             _ => new SoftwarePipelineBuilder(
+                ffmpegCapabilities,
                 HardwareAccelerationMode.None,
                 videoInputFile,
                 audioInputFile,

@@ -19,6 +19,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     private readonly ILogger _logger;
 
     public QsvPipelineBuilder(
+        IFFmpegCapabilities ffmpegCapabilities,
         IHardwareCapabilities hardwareCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
@@ -28,6 +29,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
+        ffmpegCapabilities,
         hardwareAccelerationMode,
         videoInputFile,
         audioInputFile,
@@ -48,31 +50,33 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        bool canDecode = _hardwareCapabilities.CanDecode(
+        FFmpegCapability decodeCapability = _hardwareCapabilities.CanDecode(
             videoStream.Codec,
             desiredState.VideoProfile,
             videoStream.PixelFormat);
-        bool canEncode = _hardwareCapabilities.CanEncode(
+        FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
 
         pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice));
+
+        bool isHevcOrH264 = videoStream.Codec is VideoFormat.Hevc or VideoFormat.H264;
+        bool is10Bit = videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
         
         // 10-bit hevc/h264 qsv decoders have issues, so use software
-        if (canDecode && videoStream.Codec is VideoFormat.Hevc or VideoFormat.H264 &&
-            videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10)
+        if (decodeCapability == FFmpegCapability.Hardware && isHevcOrH264 && is10Bit)
         {
-            canDecode = false;
+            decodeCapability = FFmpegCapability.Software;
         }
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
         {
-            DecoderHardwareAccelerationMode = canDecode
+            DecoderHardwareAccelerationMode = decodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Qsv
                 : HardwareAccelerationMode.None,
-            EncoderHardwareAccelerationMode = canEncode
+            EncoderHardwareAccelerationMode = encodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Qsv
                 : HardwareAccelerationMode.None
         };
@@ -91,6 +95,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video) => new DecoderMpeg2Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Vc1) => new DecoderVc1Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Vp9) => new DecoderVp9Qsv(),
+            (HardwareAccelerationMode.Qsv, VideoFormat.Av1) => new DecoderAv1Qsv(),
 
             _ => GetSoftwareDecoder(videoStream)
         };

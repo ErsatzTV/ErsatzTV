@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
@@ -13,6 +14,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
     private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
     private const string VaapiCacheKeyFormat = "ffmpeg.hardware.vaapi.{0}.{1}";
+    private const string FFmpegCapabilitiesCacheKeyFormat = "ffmpeg.{0}";
     private readonly ILogger<HardwareCapabilitiesFactory> _logger;
 
     private readonly IMemoryCache _memoryCache;
@@ -23,18 +25,62 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         _logger = logger;
     }
 
+    public async Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath)
+    {
+        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders");
+        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters");
+        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders");
+
+        return new FFmpegCapabilities(ffmpegDecoders, ffmpegFilters, ffmpegEncoders);
+    }
+
     public async Task<IHardwareCapabilities> GetHardwareCapabilities(
+        IFFmpegCapabilities ffmpegCapabilities,
         string ffmpegPath,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<string> vaapiDriver,
-        Option<string> vaapiDevice) =>
-        hardwareAccelerationMode switch
+        Option<string> vaapiDevice)
+    {
+        return hardwareAccelerationMode switch
         {
-            HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath),
+            HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
+    }
+
+    private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(string ffmpegPath, string capabilities)
+    {
+        var cacheKey = string.Format(FFmpegCapabilitiesCacheKeyFormat, capabilities);
+        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedDecoders) &&
+            cachedDecoders is not null)
+        {
+            return cachedDecoders;
+        }
+        
+        string[] arguments = { "-hide_banner", $"-{capabilities}" };
+
+        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
+            ? result.StandardError
+            : result.StandardOutput;
+
+        return output.Split("\n").Map(s => s.Trim())
+            .Bind(l => ParseFFmpegLine(l))
+            .ToImmutableHashSet();
+    }
+
+    private static Option<string> ParseFFmpegLine(string input)
+    {
+        const string PATTERN = @"^\s*?[A-Z\.]+\s+(\w+).*";
+        Match match = Regex.Match(input, PATTERN);
+        return match.Success ? match.Groups[1].Value : Option<string>.None;
+    }
 
     private async Task<IHardwareCapabilities> GetVaapiCapabilities(
         Option<string> vaapiDriver,
@@ -126,13 +172,19 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         return new NoHardwareCapabilities();
     }
 
-    private async Task<IHardwareCapabilities> GetNvidiaCapabilities(string ffmpegPath)
+    private async Task<IHardwareCapabilities> GetNvidiaCapabilities(
+        string ffmpegPath,
+        IFFmpegCapabilities ffmpegCapabilities)
     {
         if (_memoryCache.TryGetValue(ArchitectureCacheKey, out int cachedArchitecture)
             && _memoryCache.TryGetValue(ModelCacheKey, out string? cachedModel)
             && cachedModel is not null)
         {
-            return new NvidiaHardwareCapabilities(cachedArchitecture, cachedModel);
+            return new NvidiaHardwareCapabilities(
+                cachedArchitecture,
+                cachedModel,
+                ffmpegCapabilities,
+                _logger);
         }
 
         string[] arguments =
@@ -169,7 +221,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                     architecture);
                 _memoryCache.Set(ArchitectureCacheKey, architecture);
                 _memoryCache.Set(ModelCacheKey, model);
-                return new NvidiaHardwareCapabilities(architecture, model);
+                return new NvidiaHardwareCapabilities(architecture, model, ffmpegCapabilities, _logger);
             }
         }
 
