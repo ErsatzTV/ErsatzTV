@@ -1206,7 +1206,7 @@ public sealed class SearchIndex : ISearchIndex
         };
 
     private static string Title(Metadata metadata) =>
-        metadata.Title.Replace(' ', '_');
+        (metadata.Title ?? string.Empty).Replace(' ', '_');
 
     private static string GetJumpLetter(Metadata metadata)
     {

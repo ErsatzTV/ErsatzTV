@@ -127,7 +127,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
     private List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
     {
-        var result = new List<EpisodeMetadata>();
+        var result = new List<EpisodeMetadata> { baseMetadata };
 
         try
         {
@@ -141,38 +141,46 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
             if (matches.Count > 0)
             {
-                foreach (Match match in matches)
+                var episodeNumbers = matches.Bind(
+                        m => m.Groups[1].Value
+                            .Replace('e', '-')
+                            .Split('-')
+                            .Bind(ep => int.TryParse(ep, out int num) ? Some(num) : Option<int>.None))
+                    .ToList();
+
+                switch (episodeNumbers.Count)
                 {
-                    string[] split = match.Groups[1].Value.Replace('e', '-').Split('-');
-                    foreach (string ep in split)
-                    {
-                        if (!int.TryParse(ep, out int episodeNumber))
+                    case 0:
+                        break;
+                    case 1:
+                        baseMetadata.EpisodeNumber = episodeNumbers.Head();
+                        break;
+                    default:
+                        result.Clear();
+                        foreach (int episodeNumber in episodeNumbers)
                         {
-                            continue;
+                            var metadata = new EpisodeMetadata
+                            {
+                                MetadataKind = MetadataKind.Fallback,
+                                EpisodeNumber = episodeNumber,
+                                DateAdded = baseMetadata.DateAdded,
+                                DateUpdated = baseMetadata.DateAdded,
+                                Title = baseMetadata.Title,
+                                Actors = new List<Actor>(),
+                                Artwork = new List<Artwork>(),
+                                Directors = new List<Director>(),
+                                Genres = new List<Genre>(),
+                                Guids = new List<MetadataGuid>(),
+                                Studios = new List<Studio>(),
+                                Tags = new List<Tag>(),
+                                Writers = new List<Writer>()
+                            };
+
+                            result.Add(metadata);
                         }
 
-                        var metadata = new EpisodeMetadata
-                        {
-                            MetadataKind = MetadataKind.Fallback,
-                            EpisodeNumber = episodeNumber,
-                            DateAdded = baseMetadata.DateAdded,
-                            DateUpdated = baseMetadata.DateAdded,
-                            Title = baseMetadata.Title,
-                            Actors = new List<Actor>(),
-                            Artwork = new List<Artwork>(),
-                            Directors = new List<Director>(),
-                            Genres = new List<Genre>(),
-                            Guids = new List<MetadataGuid>(),
-                            Studios = new List<Studio>(),
-                            Tags = new List<Tag>(),
-                            Writers = new List<Writer>()
-                        };
-
-                        result.Add(metadata);
-                    }
+                        break;
                 }
-
-                return result;
             }
         }
         catch (Exception ex)
