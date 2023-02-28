@@ -1,4 +1,5 @@
 using ErsatzTV.FFmpeg.Format;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Capabilities;
 
@@ -7,18 +8,26 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
     private readonly int _architecture;
     private readonly List<string> _maxwellGm206 = new() { "GTX 750", "GTX 950", "GTX 960", "GTX 965M" };
     private readonly string _model;
+    private readonly IFFmpegCapabilities _ffmpegCapabilities;
+    private readonly ILogger _logger;
 
-    public NvidiaHardwareCapabilities(int architecture, string model)
+    public NvidiaHardwareCapabilities(
+        int architecture,
+        string model,
+        IFFmpegCapabilities ffmpegCapabilities,
+        ILogger logger)
     {
         _architecture = architecture;
         _model = model;
+        _ffmpegCapabilities = ffmpegCapabilities;
+        _logger = logger;
     }
 
-    public bool CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanDecode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        return videoFormat switch
+        bool isHardware = videoFormat switch
         {
             // some second gen maxwell can decode hevc, otherwise pascal is required
             VideoFormat.Hevc => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
@@ -38,18 +47,38 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
             
             VideoFormat.Mpeg4 => true,
             
+            // ampere is required for av1 decoding
+            VideoFormat.Av1 => _architecture >= 86,
+
             // generated images are decoded into software
             VideoFormat.GeneratedImage => false,
             
             _ => false
         };
+
+        if (isHardware)
+        {
+            return videoFormat switch
+            {
+                VideoFormat.Mpeg2Video => CheckHardwareCodec("mpeg2_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Mpeg4 => CheckHardwareCodec("mpeg4_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Vc1 => CheckHardwareCodec("vc1_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.H264 => CheckHardwareCodec("h264_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Hevc => CheckHardwareCodec("hevc_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Vp9 => CheckHardwareCodec("hevc_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Av1 => CheckHardwareCodec("av1_cuvid", _ffmpegCapabilities.HasDecoder),
+                _ => FFmpegCapability.Software
+            };
+        }
+
+        return FFmpegCapability.Software;
     }
 
-    public bool CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
-        return videoFormat switch
+        bool isHardware = videoFormat switch
         {
             // pascal is required to encode 10-bit hevc
             VideoFormat.Hevc when bitDepth == 10 => _architecture >= 60,
@@ -62,5 +91,18 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
 
             _ => true
         };
+
+        return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
+    }
+
+    private FFmpegCapability CheckHardwareCodec(string codec, Func<string, bool> check)
+    {
+        if (check(codec))
+        {
+            return FFmpegCapability.Hardware;
+        }
+
+        _logger.LogWarning("FFmpeg does not contain codec {Codec}; will fall back to software codec", codec);
+        return FFmpegCapability.Software;
     }
 }

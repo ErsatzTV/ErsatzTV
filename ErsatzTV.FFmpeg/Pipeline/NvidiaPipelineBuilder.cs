@@ -19,6 +19,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     private readonly ILogger _logger;
 
     public NvidiaPipelineBuilder(
+        IFFmpegCapabilities ffmpegCapabilities,
         IHardwareCapabilities hardwareCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
@@ -28,6 +29,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
+        ffmpegCapabilities,
         hardwareAccelerationMode,
         videoInputFile,
         audioInputFile,
@@ -48,11 +50,11 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        bool canDecode = _hardwareCapabilities.CanDecode(
+        FFmpegCapability decodeCapability = _hardwareCapabilities.CanDecode(
             videoStream.Codec,
             desiredState.VideoProfile,
             videoStream.PixelFormat);
-        bool canEncode = _hardwareCapabilities.CanEncode(
+        FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
@@ -60,10 +62,10 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         // mpeg2_cuvid seems to have issues when yadif_cuda is used, so just use software decoding
         if (context.ShouldDeinterlace && videoStream.Codec == VideoFormat.Mpeg2Video)
         {
-            canDecode = false;
+            decodeCapability = FFmpegCapability.Software;
         }
 
-        if (canDecode || canEncode)
+        if (decodeCapability == FFmpegCapability.Hardware || encodeCapability == FFmpegCapability.Hardware)
         {
             pipelineSteps.Add(new CudaHardwareAccelerationOption());
         }
@@ -71,10 +73,10 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
         {
-            DecoderHardwareAccelerationMode = canDecode
+            DecoderHardwareAccelerationMode = decodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Nvenc
                 : HardwareAccelerationMode.None,
-            EncoderHardwareAccelerationMode = canEncode
+            EncoderHardwareAccelerationMode = encodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Nvenc
                 : HardwareAccelerationMode.None
         };
@@ -97,6 +99,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9) => new DecoderVp9Cuvid(HardwareAccelerationMode.Nvenc),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4) =>
                 new DecoderMpeg4Cuvid(HardwareAccelerationMode.Nvenc),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Av1) =>
+                new DecoderAv1Cuvid(HardwareAccelerationMode.Nvenc),
 
             _ => GetSoftwareDecoder(videoStream)
         };

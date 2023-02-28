@@ -7,6 +7,4 @@ public class DecoderMpeg4Cuvid : CuvidDecoder
     }
 
     public override string Name => "mpeg4_cuvid";
-
-
 }

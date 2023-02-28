@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
@@ -14,6 +15,7 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public abstract class PipelineBuilderBase : IPipelineBuilder
 {
+    private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly HardwareAccelerationMode _hardwareAccelerationMode;
     private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
@@ -24,6 +26,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     private readonly ILogger _logger;
 
     protected PipelineBuilderBase(
+        IFFmpegCapabilities ffmpegCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
@@ -33,6 +36,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         string fontsFolder,
         ILogger logger)
     {
+        _ffmpegCapabilities = ffmpegCapabilities;
         _hardwareAccelerationMode = hardwareAccelerationMode;
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
@@ -218,7 +222,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return new FFmpegPipeline(pipelineSteps);
     }
 
-    private Option<IDecoder> LogUnknownDecoder(
+    private void LogUnknownDecoder(
         HardwareAccelerationMode hardwareAccelerationMode,
         string videoFormat,
         string pixelFormat)
@@ -228,7 +232,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             hardwareAccelerationMode,
             videoFormat,
             pixelFormat);
-        return Option<IDecoder>.None;
     }
 
     private Option<IEncoder> LogUnknownEncoder(HardwareAccelerationMode hardwareAccelerationMode, string videoFormat)
@@ -428,29 +431,20 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         FFmpegState ffmpegState,
         PipelineContext context);
     
-    protected Option<IDecoder> GetSoftwareDecoder(VideoStream videoStream) =>
-        videoStream.Codec switch
+    protected Option<IDecoder> GetSoftwareDecoder(VideoStream videoStream)
+    {
+        Option<IDecoder> maybeDecoder = _ffmpegCapabilities.SoftwareDecoderForVideoFormat(videoStream.Codec);
+        if (maybeDecoder.IsNone)
         {
-            VideoFormat.Hevc => new DecoderHevc(),
-            VideoFormat.H264 => new DecoderH264(),
-            VideoFormat.Mpeg1Video => new DecoderMpeg1Video(),
-            VideoFormat.Mpeg2Video => new DecoderMpeg2Video(),
-            VideoFormat.Vc1 => new DecoderVc1(),
-            VideoFormat.MsMpeg4V2 => new DecoderMsMpeg4V2(),
-            VideoFormat.MsMpeg4V3 => new DecoderMsMpeg4V3(),
-            VideoFormat.Mpeg4 => new DecoderMpeg4(),
-            VideoFormat.Vp9 => new DecoderVp9(),
-
-            VideoFormat.Undetermined => new DecoderImplicit(),
-            VideoFormat.Copy => new DecoderImplicit(),
-            VideoFormat.GeneratedImage => new DecoderImplicit(),
-
-            _ => LogUnknownDecoder(
+            LogUnknownDecoder(
                 HardwareAccelerationMode.None,
                 videoStream.Codec,
-                videoStream.PixelFormat.Match(pf => pf.Name, () => string.Empty))
-        };
-    
+                videoStream.PixelFormat.Match(pf => pf.Name, () => string.Empty));
+        }
+
+        return maybeDecoder;
+    }
+
     protected Option<IEncoder> GetSoftwareEncoder(FrameState currentState, FrameState desiredState) =>
         desiredState.VideoFormat switch
         {
