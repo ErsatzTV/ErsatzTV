@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix some transcoding pipelines that use software decoders
 - Improve VAAPI encoder capability detection on newer hardware
 - Fix trash page to properly display episodes with missing metadata or titles
+- Fix playback of content with yuv444p10le pixel format
 
 ### Changed
 - Upgrade all docker images and windows builds to ffmpeg 6.0
