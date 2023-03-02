@@ -95,6 +95,8 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
     }
 
+    public bool HevcBFrames => _architecture >= 75;
+
     private FFmpegCapability CheckHardwareCodec(string codec, Func<string, bool> check)
     {
         if (check(codec))
