@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix trash page to properly display episodes with missing metadata or titles
 
 ### Changed
+- Upgrade all docker images and windows builds to ffmpeg 6.0
 - Plex, Jellyfin and Emby libraries now retrieve all metadata and statistics from the media server
   - File systems will no longer be periodically scanned for libraries using these media sources
 - Plex, Jellyfin and Emby libraries now direct stream content when files are not found on ErsatzTV's file system

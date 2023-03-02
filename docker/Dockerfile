@@ -34,7 +34,7 @@ RUN sed -i '/Scanner/d' ErsatzTV.csproj
 RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM jasongdove/ersatztv-ffmpeg:5.1.2 AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:6.0 AS runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
