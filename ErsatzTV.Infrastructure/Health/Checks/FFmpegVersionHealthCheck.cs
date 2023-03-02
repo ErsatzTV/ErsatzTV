@@ -8,8 +8,8 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
-    private const string BundledVersion = "5.1";
-    private const string BundledVersionVaapi = "N-109960-g63a02a9a04";
+    private const string BundledVersion = "6.0";
+    private const string BundledVersionVaapi = "6.0";
     private readonly IConfigElementRepository _configElementRepository;
 
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
@@ -72,13 +72,13 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
     {
         if (version.StartsWith("3.") || version.StartsWith("4."))
         {
-            return FailResult($"{app} version {version} is too old; please install 5.1!");
+            return FailResult($"{app} version {version} is too old; please install 6.0!");
         }
 
-        if (!version.StartsWith("5.1") && version != BundledVersion && version != BundledVersionVaapi)
+        if (!version.StartsWith("6.0") && version != BundledVersion && version != BundledVersionVaapi)
         {
             return WarningResult(
-                $"{app} version {version} is unexpected and may have problems; please install 5.1!");
+                $"{app} version {version} is unexpected and may have problems; please install 6.0!");
         }
 
         return None;

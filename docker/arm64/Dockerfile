@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-jammy-arm64v8 AS dotnet-runtime
 
-FROM jasongdove/ersatztv-ffmpeg:5.1.2-arm64 AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:6.0-arm64 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev \
     tzdata \

@@ -208,7 +208,7 @@ jobs:
         id: downloadffmpeg
         name: Download ffmpeg
         with:
-          url: "https://github.com/GyanD/codexffmpeg/releases/download/5.1/ffmpeg-5.1-full_build.7z"
+          url: "https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-full_build.7z"
           target: ffmpeg/
 
       - name: Build
