@@ -17,6 +17,7 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
     private readonly IClient _client;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
@@ -40,6 +41,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<TelevisionFolderScanner> logger) : base(
         localFileSystem,
         localStatisticsProvider,
@@ -59,6 +61,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _libraryRepository = libraryRepository;
         _mediator = mediator;
         _client = client;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -228,7 +231,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 continue;
             }
 
-            Option<int> maybeSeasonNumber = SeasonNumberForFolder(seasonFolder);
+            Option<int> maybeSeasonNumber = _fallbackMetadataProvider.GetSeasonNumberForFolder(seasonFolder);
             foreach (int seasonNumber in maybeSeasonNumber)
             {
                 Either<BaseError, Season> maybeSeason = await _televisionRepository
@@ -578,20 +581,5 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             .Map(f => Path.Combine(folder, f))
             .Filter(f => _localFileSystem.FileExists(f))
             .HeadOrNone();
-    }
-
-    private static Option<int> SeasonNumberForFolder(string folder)
-    {
-        if (int.TryParse(folder.Split(" ").Last(), out int seasonNumber))
-        {
-            return seasonNumber;
-        }
-
-        if (folder.EndsWith("specials", StringComparison.OrdinalIgnoreCase))
-        {
-            return 0;
-        }
-
-        return None;
     }
 }

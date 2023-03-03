@@ -5,11 +5,37 @@ using ErsatzTV.Core.Interfaces.Metadata;
 
 namespace ErsatzTV.Core.Metadata;
 
-public class FallbackMetadataProvider : IFallbackMetadataProvider
+public partial class FallbackMetadataProvider : IFallbackMetadataProvider
 {
+    private static readonly Regex SeasonPattern = SeasonNumber();
     private readonly IClient _client;
 
     public FallbackMetadataProvider(IClient client) => _client = client;
+
+    public Option<int> GetSeasonNumberForFolder(string folder)
+    {
+        string folderName = Path.GetFileName(folder) ?? folder;
+        if (int.TryParse(folderName, out int seasonNumber))
+        {
+            return seasonNumber;
+        }
+
+        Match match = SeasonPattern.Match(folderName);
+        if (match.Success && int.TryParse(match.Groups[1].Value, out seasonNumber))
+        {
+            return seasonNumber;
+        }
+
+        if (folder.EndsWith("specials", StringComparison.OrdinalIgnoreCase))
+        {
+            return 0;
+        }
+
+        return None;
+    }
+    
+    [GeneratedRegex(@"s(?:eason)?\s?(\d+)(?![e\d])", RegexOptions.IgnoreCase)]
+    private static partial Regex SeasonNumber();
 
     public ShowMetadata GetFallbackMetadataForShow(string showFolder)
     {
