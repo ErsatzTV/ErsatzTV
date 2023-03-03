@@ -6,15 +6,22 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class PlexTelevisionRepository : IPlexTelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<PlexTelevisionRepository> _logger;
 
-    public PlexTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) =>
+    public PlexTelevisionRepository(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ILogger<PlexTelevisionRepository> logger)
+    {
         _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<bool> FlagNormal(PlexLibrary library, PlexEpisode episode)
     {
@@ -458,7 +465,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         }
     }
 
-    private static async Task UpdateEpisodePath(TvContext dbContext, PlexEpisode existing, PlexEpisode incoming)
+    private async Task UpdateEpisodePath(TvContext dbContext, PlexEpisode existing, PlexEpisode incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -477,8 +484,16 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         // media file
         MediaFile file = version.MediaFiles.Head();
         MediaFile incomingFile = incomingVersion.MediaFiles.Head();
-        file.Path = incomingFile.Path;
 
+        _logger.LogDebug(
+            "Updating plex episode (key {Key}) path from {Existing} to {Incoming}",
+            existing.Key,
+            file.Path,
+            incomingFile.Path);
+        
+        file.Path = incomingFile.Path;
+        
+        
         await dbContext.Connection.ExecuteAsync(
             @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
             new { file.Path, file.Id });
