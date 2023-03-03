@@ -150,4 +150,26 @@ public class FallbackMetadataProviderTests
         metadata.Should().NotBeNull();
         metadata.Title.Should().Be(expectedTitle);
     }
+
+    [Test]
+    [TestCase(@"/Whatever/American Dad! S01", 1)]
+    [TestCase(@"/Whatever/Season 2", 2)]
+    [TestCase(@"/Whatever/Season 02", 2)]
+    [TestCase(@"/Whatever/Seinfeld/S02", 2)]
+    [TestCase(@"/Whatever/Seinfeld/2", 2)]
+    [TestCase(@"/Whatever/Season 2009", 2009)]
+    [TestCase(@"/Whatever/Season1", 1)]
+    [TestCase(@"/Bojack Horseman/Bojack.Horseman.S04.1080p.WEB.x264-ABBA", 4)]
+    [TestCase(@"/Whatever/Season 7 (2016)", 7)]
+    [TestCase(@"/Whatever/Season (8)", null)]
+    [TestCase(@"/Whatever/s06e05", null)]
+    [TestCase(@"/Whatever/The.Legend.of.Condor.Heroes.2017.V2.web-dl.1080p.h264.aac-hdctv", null)]
+    [TestCase(@"/Whatever/extras", null)]
+    [TestCase(@"/Whatever/specials", 0)]
+    [TestCase(@"Stargate SG1 S08", 8)]
+    public void GetSeasonNumberForFolder_ShouldHandleVariousFormats(string folder, int? season)
+    {
+        Option<int> actual = _fallbackMetadataProvider.GetSeasonNumberForFolder(folder);
+        actual.Should<Option<int>>().Be(Optional(season));
+    }
 }

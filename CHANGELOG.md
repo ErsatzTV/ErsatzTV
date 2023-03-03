@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Search queries no longer remove duplicate results as this was causing incorrect behavior
 - Prioritize audio streams that are flagged as "default" over number of audio channels
     - For example, a video with a stereo commentary track and a mono "default" track will now prefer the "default" track
+- Support many more season folder names with local television libraries
 
 ## [0.7.4-beta] - 2023-02-12
 ### Added
