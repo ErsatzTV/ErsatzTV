@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Improve VAAPI encoder capability detection on newer hardware
 - Fix trash page to properly display episodes with missing metadata or titles
 - Fix playback of content with yuv444p10le pixel format
+- Fix case where some multi-episode files from Plex would crash the scanner
 
 ### Changed
 - Upgrade all docker images and windows builds to ffmpeg 6.0
