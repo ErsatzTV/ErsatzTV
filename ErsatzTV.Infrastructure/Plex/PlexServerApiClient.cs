@@ -186,6 +186,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
 
+    // this shouldn't be called anymore
     public async Task<Either<BaseError, MovieMetadata>> GetMovieMetadata(
         PlexLibrary library,
         string key,
