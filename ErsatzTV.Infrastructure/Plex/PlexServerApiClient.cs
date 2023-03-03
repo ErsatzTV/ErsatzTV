@@ -78,7 +78,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             return jsonService
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
-                .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
+                .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
                 .Map(list => list.Map(metadata => ProjectToMovie(metadata, library.MediaSourceId)));
         }
 
@@ -179,13 +179,14 @@ public class PlexServerApiClient : IPlexServerApiClient
         Task<IEnumerable<PlexEpisode>> GetItems(IPlexServerApi xmlService, IPlexServerApi _, int skip, int pageSize)
         {
             return xmlService.GetSeasonChildren(seasonMetadataKey, skip, pageSize, token.AuthToken)
-                .Map(r => r.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
-                .Map(list => list.Bind(metadata => ProjectToEpisodes(metadata, library.MediaSourceId)));
+                .Map(r => r.Metadata.Filter(m => m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
+                .Map(list => list.Map(metadata => ProjectToEpisode(metadata, library.MediaSourceId)));
         }
 
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
 
+    // this shouldn't be called anymore
     public async Task<Either<BaseError, MovieMetadata>> GetMovieMetadata(
         PlexLibrary library,
         string key,
@@ -197,7 +198,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             IPlexServerApi service = XmlServiceFor(connection.Uri);
             return await service.GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0))
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)))
                 .MapT(response => ProjectToMovieMetadata(response.Metadata, library.MediaSourceId))
                 .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
         }
@@ -239,7 +240,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0));
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
             return maybeResponse.Match(
                 response =>
                 {
@@ -268,7 +269,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0));
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
             return maybeResponse.Match(
                 response =>
                 {
@@ -401,7 +402,10 @@ public class PlexServerApiClient : IPlexServerApiClient
 
     private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
     {
-        PlexMediaResponse<PlexPartResponse> media = response.Media.Head();
+        PlexMediaResponse<PlexPartResponse> media = response.Media
+            .Filter(media => media.Part.Any())
+            .MaxBy(media => media.Id);
+        
         PlexPartResponse part = media.Part.Head();
         DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
         DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
@@ -541,7 +545,10 @@ public class PlexServerApiClient : IPlexServerApiClient
 
     private Option<MediaVersion> ProjectToMediaVersion(PlexXmlMetadataResponse response)
     {
-        PlexMediaResponse<PlexXmlPartResponse> media = response.Media.Head();
+        PlexMediaResponse<PlexXmlPartResponse> media = response.Media
+            .Filter(media => media.Part.Any())
+            .MaxBy(media => media.Id);
+
         List<PlexStreamResponse> streams = media.Part.Head().Stream;
         DateTime dateUpdated = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
         Option<PlexStreamResponse> maybeVideoStream = streams.Find(s => s.StreamType == 1);
@@ -814,52 +821,48 @@ public class PlexServerApiClient : IPlexServerApiClient
         return season;
     }
 
-    private IEnumerable<PlexEpisode> ProjectToEpisodes(PlexXmlMetadataResponse response, int mediaSourceId)
+    private PlexEpisode ProjectToEpisode(PlexXmlMetadataResponse response, int mediaSourceId)
     {
-        var result = new List<PlexEpisode>();
+        PlexMediaResponse<PlexXmlPartResponse> media = response.Media
+            .Filter(media => media.Part.Any())
+            .MaxBy(media => media.Id);
+        
+        PlexXmlPartResponse part = media.Part.Head();
+        DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+        DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
-        // TODO: actually use all media records
-        foreach (PlexMediaResponse<PlexXmlPartResponse> media in response.Media.HeadOrNone())
+        EpisodeMetadata metadata = ProjectToEpisodeMetadata(response, mediaSourceId);
+        var version = new MediaVersion
         {
-            PlexXmlPartResponse part = media.Part.Head();
-            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
-            DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
-
-            EpisodeMetadata metadata = ProjectToEpisodeMetadata(response, mediaSourceId);
-            var version = new MediaVersion
+            Name = "Main",
+            Duration = TimeSpan.FromMilliseconds(media.Duration),
+            Width = media.Width,
+            Height = media.Height,
+            DateAdded = dateAdded,
+            DateUpdated = lastWriteTime,
+            MediaFiles = new List<MediaFile>
             {
-                Name = "Main",
-                Duration = TimeSpan.FromMilliseconds(media.Duration),
-                Width = media.Width,
-                Height = media.Height,
-                DateAdded = dateAdded,
-                DateUpdated = lastWriteTime,
-                MediaFiles = new List<MediaFile>
+                new PlexMediaFile
                 {
-                    new PlexMediaFile
-                    {
-                        PlexId = part.Id,
-                        Key = part.Key,
-                        Path = part.File
-                    }
-                },
-                // specifically omit stream details
-                Streams = new List<MediaStream>()
-            };
+                    PlexId = part.Id,
+                    Key = part.Key,
+                    Path = part.File
+                }
+            },
+            // specifically omit stream details
+            Streams = new List<MediaStream>()
+        };
 
-            var episode = new PlexEpisode
-            {
-                Key = response.Key,
-                Etag = _plexEtag.ForEpisode(response),
-                EpisodeMetadata = new List<EpisodeMetadata> { metadata },
-                MediaVersions = new List<MediaVersion> { version },
-                TraktListItems = new List<TraktListItem>()
-            };
-            
-            result.Add(episode);
-        }
+        var episode = new PlexEpisode
+        {
+            Key = response.Key,
+            Etag = _plexEtag.ForEpisode(response),
+            EpisodeMetadata = new List<EpisodeMetadata> { metadata },
+            MediaVersions = new List<MediaVersion> { version },
+            TraktListItems = new List<TraktListItem>()
+        };
 
-        return result;
+        return episode;
     }
 
     private EpisodeMetadata ProjectToEpisodeMetadata(PlexMetadataResponse response, int mediaSourceId)

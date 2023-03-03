@@ -107,6 +107,7 @@ public class PlexMovieLibraryScanner :
             connectionParameters.Connection,
             connectionParameters.Token);
 
+    // this shouldn't be called anymore
     protected override async Task<Option<MovieMetadata>> GetFullMetadata(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library,
@@ -133,6 +134,7 @@ public class PlexMovieLibraryScanner :
         return None;
     }
 
+    // this shouldn't be called anymore
     protected override async Task<Option<MediaVersion>> GetMediaServerStatistics(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library,

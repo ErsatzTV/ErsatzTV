@@ -486,10 +486,6 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             version.Name = incomingVersion.Name;
             version.DateAdded = incomingVersion.DateAdded;
 
-            await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
-                new { version.Name, version.DateAdded, version.Id });
-
             // media file
             MediaFile file = version.MediaFiles.Head();
             MediaFile incomingFile = incomingVersion.MediaFiles.Head();
@@ -502,6 +498,10 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
             file.Path = incomingFile.Path;
 
+            await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
+                new { version.Name, version.DateAdded, version.Id });
+            
             await dbContext.Connection.ExecuteAsync(
                 @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
                 new { file.Path, file.Id });
