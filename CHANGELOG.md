@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.5-beta] - 2023-03-05
 ### Added
 - Use AV1 hardware-accelerated decoder with VAAPI, QSV, NVIDIA when available
 - Use VP9 hardware-accelerated decoder with VAAPI when available
@@ -1549,7 +1551,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.4-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.5-beta...HEAD
+[0.7.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.4-beta...v0.7.5-beta
 [0.7.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.3-beta...v0.7.4-beta
 [0.7.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...v0.7.3-beta
 [0.7.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.1-beta...v0.7.2-beta
