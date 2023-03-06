@@ -77,9 +77,11 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
         TvContext dbContext,
         ISynchronizeJellyfinLibraryById request)
     {
-        return await dbContext.JellyfinLibraries
+        DateTime minDateTime = await dbContext.JellyfinLibraries
             .SelectOneAsync(l => l.Id, l => l.Id == request.JellyfinLibraryId)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
+
+        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
     }
 
     protected override bool ScanIsRequired(

@@ -77,9 +77,11 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         TvContext dbContext,
         ISynchronizePlexLibraryById request)
     {
-        return await dbContext.PlexLibraries
+        DateTime minDateTime =  await dbContext.PlexLibraries
             .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
+        
+        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
     }
 
     protected override bool ScanIsRequired(

@@ -77,9 +77,11 @@ public class CallEmbyLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         TvContext dbContext,
         ISynchronizeEmbyLibraryById request)
     {
-        return await dbContext.EmbyLibraries
+        DateTime minDateTime = await dbContext.EmbyLibraries
             .SelectOneAsync(l => l.Id, l => l.Id == request.EmbyLibraryId)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
+        
+        return new DateTimeOffset(minDateTime, TimeSpan.Zero);
     }
 
     protected override bool ScanIsRequired(
