@@ -895,7 +895,18 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
 
         JellyfinMediaSourceResponse mediaSource = response.MediaSources.Head();
-        IList<JellyfinMediaStreamResponse> streams = mediaSource.MediaStreams;
+        
+        // jellyfin includes external streams first, obscuring real stream indexes
+        // from the source file
+        int streamIndexOffset = mediaSource.MediaStreams
+            .Filter(s => s.IsExternal)
+            .Map(s => s.Index + 1)
+            .OrderByDescending(i => i)
+            .FirstOrDefault();
+        
+        IList<JellyfinMediaStreamResponse> streams = mediaSource.MediaStreams
+            .Filter(s => s.IsExternal == false)
+            .ToList();
         Option<JellyfinMediaStreamResponse> maybeVideoStream =
             streams.Find(s => s.Type == JellyfinMediaStreamType.Video);
         return maybeVideoStream.Map(
@@ -948,7 +959,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                     {
                         MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Video,
-                        Index = videoStream.Index,
+                        Index = videoStream.Index - streamIndexOffset,
                         Codec = videoStream.Codec,
                         Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
                         Default = videoStream.IsDefault,
@@ -968,7 +979,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                     {
                         MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Audio,
-                        Index = audioStream.Index,
+                        Index = audioStream.Index - streamIndexOffset,
                         Codec = audioStream.Codec,
                         Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
                         Channels = audioStream.Channels ?? 2,
@@ -988,7 +999,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                     {
                         MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Subtitle,
-                        Index = subtitleStream.Index,
+                        Index = subtitleStream.Index - streamIndexOffset,
                         Codec = subtitleStream.Codec,
                         Default = subtitleStream.IsDefault,
                         Forced = subtitleStream.IsForced,
