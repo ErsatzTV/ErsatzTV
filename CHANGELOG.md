@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix scaling anamorphic content from non-local libraries
 - Fix direct streaming content from Jellyfin that has external subtitles
   - Note that these subtitles are not currently supported in ETV, but they did cause a playback issue
+- Fix Jellyfin, Emby and Plex library scans that wouldn't work in certain timezones
 
 ## [0.7.5-beta] - 2023-03-05
 ### Added
