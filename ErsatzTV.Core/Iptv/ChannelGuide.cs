@@ -53,9 +53,16 @@ public class ChannelGuide
                 xml.WriteAttributeString("id", $"{channel.Number}.etv");
 
                 xml.WriteStartElement("display-name");
-                xml.WriteAttributeString("lang", "en");
+                xml.WriteString($"{channel.Number} {channel.Name}");
+                xml.WriteEndElement(); // display-name (number and name)
+
+                xml.WriteStartElement("display-name");
+                xml.WriteString(channel.Number);
+                xml.WriteEndElement(); // display-name (number)
+
+                xml.WriteStartElement("display-name");
                 xml.WriteString(channel.Name);
-                xml.WriteEndElement(); // display-name
+                xml.WriteEndElement(); // display-name (name)
 
                 foreach (string category in GetCategories(channel.Categories))
                 {
