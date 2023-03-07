@@ -22,24 +22,24 @@ public abstract class LocalFolderScanner
     {
         ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
         ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts", ".webm"
-    }.ToImmutableHashSet();
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> AudioFileExtensions = new[]
     {
         ".aac", ".alac", ".dff", ".dsf", ".flac", ".mp3", ".m4a", ".ogg", ".opus", ".oga", ".ogx", ".spx", ".wav",
         ".wma"
-    }.ToImmutableHashSet();
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> ImageFileExtensions = new[]
     {
         "jpg", "jpeg", "png", "gif", "tbn"
-    }.ToImmutableHashSet();
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> ExtraFiles = new[]
     {
         "behindthescenes", "deleted", "featurette",
         "interview", "scene", "short", "trailer", "other"
-    }.ToImmutableHashSet();
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> ExtraDirectories = new List<string>
         {
@@ -48,7 +48,7 @@ public abstract class LocalFolderScanner
             "extras", "specials"
         }
         .Map(s => $"{Path.DirectorySeparatorChar}{s}{Path.DirectorySeparatorChar}")
-        .ToImmutableHashSet();
+        .ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     private readonly IClient _client;
     private readonly IFFmpegPngService _ffmpegPngService;

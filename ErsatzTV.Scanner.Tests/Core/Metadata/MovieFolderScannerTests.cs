@@ -121,6 +121,51 @@ public class MovieFolderScannerTests
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
         }
+        
+        [Test]
+        public async Task NewMovie_Statistics_And_FallbackMetadata_MixedCase(
+            [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+            string videoExtension)
+        {
+            char[] mixedCaseExtension = videoExtension.ToLowerInvariant().ToArray();
+            mixedCaseExtension[2] = char.ToUpper(mixedCaseExtension[2]);
+            videoExtension = new string(mixedCaseExtension);
+            
+            string moviePath = Path.Combine(
+                FakeRoot,
+                Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+            MovieFolderScanner service = GetService(
+                new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
+            );
+            var libraryPath = new LibraryPath
+                { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+            Either<BaseError, Unit> result = await service.ScanFolder(
+                libraryPath,
+                FFmpegPath,
+                FFprobePath,
+                0,
+                1,
+                CancellationToken.None);
+
+            result.IsRight.Should().BeTrue();
+
+            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+
+            _localStatisticsProvider.Verify(
+                x => x.RefreshStatistics(
+                    FFmpegPath,
+                    FFprobePath,
+                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
+                Times.Once);
+
+            _localMetadataProvider.Verify(
+                x => x.RefreshFallbackMetadata(
+                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
+                Times.Once);
+        }
 
         [Test]
         public async Task NewMovie_Statistics_And_SidecarMetadata_MovieNameNfo(
