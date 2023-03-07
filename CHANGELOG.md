@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Note that these subtitles are not currently supported in ETV, but they did cause a playback issue
 - Fix Jellyfin, Emby and Plex library scans that wouldn't work in certain timezones
 
+### Changed
+- Ignore case of video and audio file extensions in local folder scanner
+  - For example, the scanner will now find `movie.MKV` as well as `movie.mkv` on case-sensitive filesystems
+
 ## [0.7.5-beta] - 2023-03-05
 ### Added
 - Use AV1 hardware-accelerated decoder with VAAPI, QSV, NVIDIA when available
