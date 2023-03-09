@@ -53,6 +53,9 @@ public class ScannerService : BackgroundService
                         case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
                             requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
                             break;
+                        case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
+                            requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, cancellationToken);
+                            break;
                         case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
                             requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
                             break;
@@ -222,6 +225,22 @@ public class ScannerService : BackgroundService
         {
             entityLocker.UnlockLibrary(request.JellyfinLibraryId);
         }
+    }
+    
+    private async Task SynchronizeLibraries(SynchronizeEmbyLibraries request, CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogInformation(
+                "Successfully synchronized Emby libraries for source {MediaSourceId}",
+                request.EmbyMediaSourceId),
+            error => _logger.LogWarning(
+                "Unable to synchronize Emby libraries for source {MediaSourceId}: {Error}",
+                request.EmbyMediaSourceId,
+                error.Value));
     }
     
     private async Task SynchronizeEmbyLibrary(ISynchronizeEmbyLibraryById request, CancellationToken cancellationToken)
