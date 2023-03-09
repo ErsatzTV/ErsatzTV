@@ -3,7 +3,7 @@
 namespace ErsatzTV.Application.Jellyfin;
 
 public interface ISynchronizeJellyfinLibraryById : IRequest<Either<BaseError, string>>,
-    IJellyfinBackgroundServiceRequest
+    IScannerBackgroundServiceRequest
 {
     int JellyfinLibraryId { get; }
     bool ForceScan { get; }

@@ -1,3 +1,3 @@
 ﻿namespace ErsatzTV.Application.Search;
 
-public record RebuildSearchIndex : IRequest, IBackgroundServiceRequest;
+public record RebuildSearchIndex : IRequest, IScannerBackgroundServiceRequest;

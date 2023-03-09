@@ -14,14 +14,14 @@ public class CreateLocalLibraryHandler : LocalLibraryHandlerBase,
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
 
     public CreateLocalLibraryHandler(
-        ChannelWriter<IBackgroundServiceRequest> workerChannel,
+        ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel,
         IEntityLocker entityLocker,
         IDbContextFactory<TvContext> dbContextFactory)
     {
-        _workerChannel = workerChannel;
+        _scannerWorkerChannel = scannerWorkerChannel;
         _entityLocker = entityLocker;
         _dbContextFactory = dbContextFactory;
     }
@@ -44,7 +44,7 @@ public class CreateLocalLibraryHandler : LocalLibraryHandlerBase,
 
         if (_entityLocker.LockLibrary(localLibrary.Id))
         {
-            await _workerChannel.WriteAsync(new ForceScanLocalLibrary(localLibrary.Id));
+            await _scannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(localLibrary.Id));
         }
 
         return ProjectToViewModel(localLibrary);

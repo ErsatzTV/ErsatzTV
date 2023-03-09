@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Application.MediaSources;
 
-public interface IScanLocalLibrary : IRequest<Either<BaseError, string>>, IBackgroundServiceRequest
+public interface IScanLocalLibrary : IRequest<Either<BaseError, string>>, IScannerBackgroundServiceRequest
 {
     int LibraryId { get; }
     bool ForceScan { get; }

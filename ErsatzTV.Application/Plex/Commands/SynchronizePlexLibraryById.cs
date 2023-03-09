@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Application.Plex;
 
-public interface ISynchronizePlexLibraryById : IRequest<Either<BaseError, string>>, IPlexBackgroundServiceRequest
+public interface ISynchronizePlexLibraryById : IRequest<Either<BaseError, string>>, IScannerBackgroundServiceRequest
 {
     int PlexLibraryId { get; }
     bool ForceScan { get; }

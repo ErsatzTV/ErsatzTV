@@ -3,7 +3,7 @@
 @using ErsatzTV.Application.MediaSources
 @implements IDisposable
 @inject IMediator _mediator
-@inject ChannelWriter<IPlexBackgroundServiceRequest> _channel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
 
 <RemoteMediaSourceLibrariesEditor
     Id="@Id"
@@ -47,8 +47,7 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
+        await _scannerWorkerChannel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
-
 }

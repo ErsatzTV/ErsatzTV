@@ -3,7 +3,7 @@
 @using ErsatzTV.Application.MediaSources
 @implements IDisposable
 @inject IMediator _mediator
-@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
 
 <RemoteMediaSourceLibrariesEditor
     Id="@Id"
@@ -47,8 +47,8 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _channel.WriteAsync(new SynchronizeJellyfinLibraries(parameters.MediaSourceId), _cts.Token);
-        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
+        await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(parameters.MediaSourceId), _cts.Token);
+        await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

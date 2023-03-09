@@ -18,28 +18,22 @@ namespace ErsatzTV.Services;
 
 public class SchedulerService : BackgroundService
 {
-    private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IEntityLocker _entityLocker;
-    private readonly ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel;
     private readonly ILogger<SchedulerService> _logger;
-    private readonly ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public SchedulerService(
         IServiceScopeFactory serviceScopeFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
-        ChannelWriter<IPlexBackgroundServiceRequest> plexWorkerChannel,
-        ChannelWriter<IJellyfinBackgroundServiceRequest> jellyfinWorkerChannel,
-        ChannelWriter<IEmbyBackgroundServiceRequest> embyWorkerChannel,
+        ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel,
         IEntityLocker entityLocker,
         ILogger<SchedulerService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _workerChannel = workerChannel;
-        _plexWorkerChannel = plexWorkerChannel;
-        _jellyfinWorkerChannel = jellyfinWorkerChannel;
-        _embyWorkerChannel = embyWorkerChannel;
+        _scannerWorkerChannel = scannerWorkerChannel;
         _entityLocker = entityLocker;
         _logger = logger;
     }
@@ -200,9 +194,7 @@ public class SchedulerService : BackgroundService
         {
             if (_entityLocker.LockLibrary(libraryId))
             {
-                await _workerChannel.WriteAsync(
-                    new ScanLocalLibraryIfNeeded(libraryId),
-                    cancellationToken);
+                await _scannerWorkerChannel.WriteAsync(new ScanLocalLibraryIfNeeded(libraryId), cancellationToken);
             }
         }
     }
@@ -216,7 +208,7 @@ public class SchedulerService : BackgroundService
         {
             if (_entityLocker.LockLibrary(library.Id))
             {
-                await _plexWorkerChannel.WriteAsync(
+                await _scannerWorkerChannel.WriteAsync(
                     new SynchronizePlexLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }
@@ -232,7 +224,7 @@ public class SchedulerService : BackgroundService
         {
             if (_entityLocker.LockLibrary(library.Id))
             {
-                await _jellyfinWorkerChannel.WriteAsync(
+                await _scannerWorkerChannel.WriteAsync(
                     new SynchronizeJellyfinLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }
@@ -248,7 +240,7 @@ public class SchedulerService : BackgroundService
         {
             if (_entityLocker.LockLibrary(library.Id))
             {
-                await _embyWorkerChannel.WriteAsync(
+                await _scannerWorkerChannel.WriteAsync(
                     new SynchronizeEmbyLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }

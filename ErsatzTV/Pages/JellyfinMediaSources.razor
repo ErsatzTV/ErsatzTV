@@ -4,7 +4,7 @@
 @using ErsatzTV.Core.Jellyfin
 @implements IDisposable
 @inject IJellyfinSecretStore _jellyfinSecretStore
-@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
 
 <RemoteMediaSources
     TViewModel="JellyfinMediaSourceViewModel"
@@ -26,6 +26,6 @@
     }
 
     private async Task RefreshLibraries(int mediaSourceId) =>
-        await _channel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSourceId), _cts.Token);
+        await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSourceId), _cts.Token);
 
 }

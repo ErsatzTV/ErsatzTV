@@ -4,8 +4,6 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.Interfaces.Locking;
 using MediatR;
 
 namespace ErsatzTV.Services;
@@ -57,9 +55,6 @@ public class PlexService : BackgroundService
                             break;
                         case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
                             requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
-                            break;
-                        case ISynchronizePlexLibraryById synchronizePlexLibraryById:
-                            requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
@@ -147,39 +142,5 @@ public class PlexService : BackgroundService
                 "Unable to synchronize plex libraries for source {MediaSourceId}: {Error}",
                 request.PlexMediaSourceId,
                 error.Value));
-    }
-
-    private async Task SynchronizePlexLibrary(
-        ISynchronizePlexLibraryById request,
-        CancellationToken cancellationToken)
-    {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
-
-        Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
-        result.BiIter(
-            name => _logger.LogDebug("Done synchronizing plex library {Name}", name),
-            error =>
-            {
-                if (error is ScanIsNotRequired)
-                {
-                    _logger.LogDebug(
-                        "Scan is not required for plex library {LibraryId} at this time",
-                        request.PlexLibraryId);
-                }
-                else
-                {
-                    _logger.LogWarning(
-                        "Unable to synchronize plex library {LibraryId}: {Error}",
-                        request.PlexLibraryId,
-                        error.Value);
-                }
-            });
-        
-        if (entityLocker.IsLibraryLocked(request.PlexLibraryId))
-        {
-            entityLocker.UnlockLibrary(request.PlexLibraryId);
-        }
     }
 }
