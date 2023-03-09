@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Application.Emby;
 
-public interface ISynchronizeEmbyLibraryById : IRequest<Either<BaseError, string>>, IEmbyBackgroundServiceRequest
+public interface ISynchronizeEmbyLibraryById : IRequest<Either<BaseError, string>>, IScannerBackgroundServiceRequest
 {
     int EmbyLibraryId { get; }
     bool ForceScan { get; }

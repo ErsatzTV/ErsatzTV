@@ -10,10 +10,7 @@
 @implements IDisposable
 @inject IMediator _mediator
 @inject IEntityLocker _locker
-@inject ChannelWriter<IBackgroundServiceRequest> _workerChannel
-@inject ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel
-@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel
-@inject ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
 @inject ICourier _courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -113,18 +110,18 @@
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
+                    await _scannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
                     break;
                 case PlexLibraryViewModel:
-                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
+                    await _scannerWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
-                    await _jellyfinWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
-                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), _cts.Token);
+                    await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
+                    await _scannerWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case EmbyLibraryViewModel:
-                    await _embyWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
-                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), _cts.Token);
+                    await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
+                    await _scannerWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), _cts.Token);
                     break;
             }
 

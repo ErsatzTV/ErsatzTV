@@ -17,15 +17,15 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
     private readonly ISearchIndex _searchIndex;
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
 
     public UpdateLocalLibraryHandler(
-        ChannelWriter<IBackgroundServiceRequest> workerChannel,
+        ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel,
         IEntityLocker entityLocker,
         ISearchIndex searchIndex,
         IDbContextFactory<TvContext> dbContextFactory)
     {
-        _workerChannel = workerChannel;
+        _scannerWorkerChannel = scannerWorkerChannel;
         _entityLocker = entityLocker;
         _searchIndex = searchIndex;
         _dbContextFactory = dbContextFactory;
@@ -70,7 +70,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
 
         if ((toAdd.Count > 0 || toRemove.Count > 0) && _entityLocker.LockLibrary(existing.Id))
         {
-            await _workerChannel.WriteAsync(new ForceScanLocalLibrary(existing.Id));
+            await _scannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(existing.Id));
         }
 
         return ProjectToViewModel(existing);
