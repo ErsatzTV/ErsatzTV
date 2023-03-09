@@ -21,7 +21,9 @@ using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
+using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Runtime;
+using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
@@ -57,6 +59,11 @@ public class TranscodingTests
     public void DeleteTestVideos()
     {
         foreach (string file in Directory.GetFiles(TestContext.CurrentContext.TestDirectory, "*.mkv"))
+        {
+            File.Delete(file);
+        }
+
+        foreach (string file in Directory.GetFiles(TestContext.CurrentContext.TestDirectory, "*.aac"))
         {
             File.Delete(file);
         }
@@ -195,6 +202,200 @@ public class TranscodingTests
 
     [Test]
     [Combinatorial]
+    public async Task TranscodeSong(
+        [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
+        Resolution profileResolution,
+        [ValueSource(typeof(TestData), nameof(TestData.BitDepths))]
+        FFmpegProfileBitDepth profileBitDepth,
+        [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
+        FFmpegProfileVideoFormat profileVideoFormat,
+        [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
+        HardwareAccelerationKind profileAcceleration)
+    {
+        var localFileSystem = new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>());
+        var tempFilePool = new TempFilePool();
+        var imageCache = new ImageCache(localFileSystem, tempFilePool);
+        
+        var oldService = new FFmpegProcessService(
+            new FFmpegPlaybackSettingsCalculator(),
+            new FakeStreamSelector(),
+            imageCache,
+            tempFilePool,
+            new Mock<IClient>().Object,
+            MemoryCache,
+            LoggerFactory.CreateLogger<FFmpegProcessService>());
+
+        var service = new FFmpegLibraryProcessService(
+            oldService,
+            new FFmpegPlaybackSettingsCalculator(),
+            new FakeStreamSelector(),
+            tempFilePool,
+            new PipelineBuilderFactory(
+                new RuntimeInfo(),
+                //new FakeNvidiaCapabilitiesFactory(),
+                new HardwareCapabilitiesFactory(
+                    MemoryCache,
+                    LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
+                LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
+            LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
+        
+        var songVideoGenerator = new SongVideoGenerator(tempFilePool, imageCache, service);
+
+        var channel = new Channel(Guid.NewGuid())
+        {
+            Number = "1",
+            FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
+            {
+                HardwareAcceleration = profileAcceleration,
+                VideoFormat = profileVideoFormat,
+                AudioFormat = FFmpegProfileAudioFormat.Aac,
+                DeinterlaceVideo = true,
+                BitDepth = profileBitDepth
+            },
+            StreamingMode = StreamingMode.TransportStream,
+            SubtitleMode = ChannelSubtitleMode.None
+        };
+        
+        string name = GetStringSha256Hash($"test_song_aac");
+
+        string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.aac");
+        if (!File.Exists(file))
+        {
+            string mkvName = Path.ChangeExtension(file, "mkv");
+            
+            await GenerateTestFile(
+                TestData.InputFormats.Head(),
+                Padding.NoPadding,
+                VideoScanKind.Progressive,
+                Subtitle.None,
+                mkvName);
+
+            var tempFile = Path.GetTempFileName();
+            
+            var p1 = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = ExecutableName("mkvextract"),
+                    Arguments = $"tracks {mkvName} 1:{tempFile}"
+                }
+            };
+
+            p1.Start();
+            await p1.WaitForExitAsync();
+            // ReSharper disable once MethodHasAsyncOverload
+            p1.WaitForExit();
+            p1.ExitCode.Should().Be(0);
+
+            File.Move(tempFile, file, true);
+        }
+
+        var songVersion = new MediaVersion
+        {
+            MediaFiles = new List<MediaFile>
+            {
+                new() { Path = file }
+            },
+
+            Streams = new List<MediaStream>()
+        };
+
+        var song = new Song
+        {
+            SongMetadata = new List<SongMetadata>
+            {
+                new()
+                {
+                    Title = "Song Title",
+                    Artist = "Song Artist",
+                    Artwork = new List<Artwork>()
+                }
+            },
+            MediaVersions = new List<MediaVersion> { songVersion }
+        };
+        
+        (string videoPath, MediaVersion videoVersion) = await songVideoGenerator.GenerateSongVideo(
+            song,
+            channel,
+            None, // playout item watermark
+            None, // global watermark
+            ExecutableName("ffmpeg"),
+            ExecutableName("ffprobe"),
+            CancellationToken.None);
+        
+        var metadataRepository = new Mock<IMetadataRepository>();
+        metadataRepository
+            .Setup(r => r.UpdateStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
+            .Callback<MediaItem, MediaVersion, bool>(
+                (_, version, _) =>
+                {
+                    if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video))
+                    {
+                        version.MediaFiles = videoVersion.MediaFiles;
+                        videoVersion = version;
+                    }
+                    else
+                    {
+                        version.MediaFiles = songVersion.MediaFiles;
+                        songVersion = version;
+                    }
+                });
+
+        var localStatisticsProvider = new LocalStatisticsProvider(
+            metadataRepository.Object,
+            new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>()),
+            new Mock<IClient>().Object,
+            LoggerFactory.CreateLogger<LocalStatisticsProvider>());
+        
+        await localStatisticsProvider.RefreshStatistics(ExecutableName("ffmpeg"), ExecutableName("ffprobe"), song);
+        
+        DateTimeOffset now = DateTimeOffset.Now;
+        
+        Command process = await service.ForPlayoutItem(
+            ExecutableName("ffmpeg"),
+            ExecutableName("ffprobe"),
+            false,
+            channel,
+            videoVersion,
+            new MediaItemAudioVersion(song, songVersion),
+            videoPath,
+            file,
+            _ => Task.FromResult(new List<ErsatzTV.Core.Domain.Subtitle>()),
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            ChannelSubtitleMode.None,
+            now,
+            now + TimeSpan.FromSeconds(3),
+            now,
+            Option<ChannelWatermark>.None,
+            Option<ChannelWatermark>.None,
+            VaapiDriver.Default,
+            "/dev/dri/renderD128",
+            Option<int>.None,
+            false,
+            FillerKind.None,
+            TimeSpan.Zero,
+            TimeSpan.FromSeconds(3),
+            0,
+            None,
+            false,
+            _ => { });
+
+        // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
+
+        await TranscodeAndVerify(
+            process,
+            profileResolution,
+            profileBitDepth,
+            profileVideoFormat,
+            profileAcceleration,
+            localStatisticsProvider,
+            () => videoVersion);
+    }
+    
+    [Test]
+    [Combinatorial]
     public async Task Transcode(
             [ValueSource(typeof(TestData), nameof(TestData.FilesToTest))]
             string fileToTest,
@@ -238,39 +439,6 @@ public class TranscodingTests
                 await GenerateTestFile(inputFormat, padding, videoScanKind, subtitle, file);
             }
         }
-
-        var imageCache = new Mock<IImageCache>();
-
-        // always return the static watermark resource
-        imageCache.Setup(
-                ic => ic.GetPathForImage(
-                    It.IsAny<string>(),
-                    It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
-                    It.IsAny<Option<int>>()))
-            .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
-
-        var oldService = new FFmpegProcessService(
-            new FFmpegPlaybackSettingsCalculator(),
-            new FakeStreamSelector(),
-            imageCache.Object,
-            new Mock<ITempFilePool>().Object,
-            new Mock<IClient>().Object,
-            MemoryCache,
-            LoggerFactory.CreateLogger<FFmpegProcessService>());
-
-        var service = new FFmpegLibraryProcessService(
-            oldService,
-            new FFmpegPlaybackSettingsCalculator(),
-            new FakeStreamSelector(),
-            new Mock<ITempFilePool>().Object,
-            new PipelineBuilderFactory(
-                new RuntimeInfo(),
-                //new FakeNvidiaCapabilitiesFactory(),
-                new HardwareCapabilitiesFactory(
-                    MemoryCache,
-                    LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
-                LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
-            LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var v = new MediaVersion
         {
@@ -495,6 +663,8 @@ public class TranscodingTests
             hasWatermarkFilters.Should().Be(watermark != Watermark.None);
         }
 
+        FFmpegLibraryProcessService service = GetService();
+
         Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
@@ -541,127 +711,14 @@ public class TranscodingTests
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
-        string[] unsupportedMessages =
-        {
-            "No support for codec",
-            "No usable",
-            "Provided device doesn't support",
-            "Current pixel format is unsupported"
-        };
-
-        var sb = new StringBuilder();
-        var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        string tempFile = Path.GetTempFileName();
-        try
-        {
-            CommandResult result;
-
-            try
-            {
-                result = await process
-                    .WithStandardOutputPipe(PipeTarget.ToFile(tempFile))
-                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
-                    .ExecuteAsync(timeoutSignal.Token);
-
-                // var arguments = string.Join(
-                //     ' ',
-                //     process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
-                //
-                // Log.Logger.Debug(arguments);
-            }
-            catch (OperationCanceledException)
-            {
-                var arguments = string.Join(
-                    ' ',
-                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
-
-                Assert.Fail($"Transcode failure (timeout): ffmpeg {arguments}");
-                return;
-            }
-
-            var error = sb.ToString();
-            bool isUnsupported = unsupportedMessages.Any(error.Contains);
-
-            if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
-            {
-                result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
-                Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
-            }
-            else if (error.Contains("Impossible to convert between"))
-            {
-                var arguments = string.Join(
-                    ' ',
-                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
-
-                Assert.Fail($"Transcode failure: ffmpeg {arguments}");
-            }
-            else
-            {
-                var arguments = string.Join(
-                    ' ',
-                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
-
-                result.ExitCode.Should().Be(0, error + Environment.NewLine + arguments);
-                if (result.ExitCode == 0)
-                {
-                    Console.WriteLine(process.Arguments);
-                }
-            }
-            
-            // additional checks on resulting file
-            await localStatisticsProvider.RefreshStatistics(
-                ExecutableName("ffmpeg"),
-                ExecutableName("ffprobe"),
-                new Movie
-                {
-                    MediaVersions = new List<MediaVersion>
-                    {
-                        new()
-                        {
-                            MediaFiles = new List<MediaFile>
-                            {
-                                new() { Path = tempFile }
-                            }
-                        }
-                    }
-                });
-
-            // verify de-interlace
-            v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
-            
-            // verify resolution
-            v.Height.Should().Be(profileResolution.Height);
-            v.Width.Should().Be(profileResolution.Width);
-
-            foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
-            {
-                // verify pixel format
-                videoStream.PixelFormat.Should().Be(
-                    profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
-                
-                // verify colors
-                var colorParams = new ColorParams(
-                    videoStream.ColorRange,
-                    videoStream.ColorSpace,
-                    videoStream.ColorTransfer,
-                    videoStream.ColorPrimaries);
-
-                // AMF doesn't seem to set this metadata properly
-                // MPEG2Video doesn't always seem to set this properly
-                if (profileAcceleration != HardwareAccelerationKind.Amf &&
-                    profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video)
-                {
-                    colorParams.IsBt709.Should().BeTrue($"{colorParams}");
-                }
-            }
-        }
-        finally
-        {
-            if (File.Exists(tempFile))
-            {
-                File.Delete(tempFile);
-            }
-        }
+        await TranscodeAndVerify(
+            process,
+            profileResolution,
+            profileBitDepth,
+            profileVideoFormat,
+            profileAcceleration,
+            localStatisticsProvider,
+            () => v);
     }
 
     private static async Task GenerateTestFile(
@@ -795,6 +852,178 @@ public class TranscodingTests
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
 
+    private static FFmpegLibraryProcessService GetService()
+    {
+        var imageCache = new Mock<IImageCache>();
+
+        // always return the static watermark resource
+        imageCache.Setup(
+                ic => ic.GetPathForImage(
+                    It.IsAny<string>(),
+                    It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
+                    It.IsAny<Option<int>>()))
+            .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
+
+        var oldService = new FFmpegProcessService(
+            new FFmpegPlaybackSettingsCalculator(),
+            new FakeStreamSelector(),
+            imageCache.Object,
+            new Mock<ITempFilePool>().Object,
+            new Mock<IClient>().Object,
+            MemoryCache,
+            LoggerFactory.CreateLogger<FFmpegProcessService>());
+
+        var service = new FFmpegLibraryProcessService(
+            oldService,
+            new FFmpegPlaybackSettingsCalculator(),
+            new FakeStreamSelector(),
+            new Mock<ITempFilePool>().Object,
+            new PipelineBuilderFactory(
+                new RuntimeInfo(),
+                //new FakeNvidiaCapabilitiesFactory(),
+                new HardwareCapabilitiesFactory(
+                    MemoryCache,
+                    LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
+                LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
+            LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
+
+        return service;
+    }
+
+    private async Task TranscodeAndVerify(
+        Command process,
+        Resolution profileResolution,
+        FFmpegProfileBitDepth profileBitDepth,
+        FFmpegProfileVideoFormat profileVideoFormat,
+        HardwareAccelerationKind profileAcceleration,
+        ILocalStatisticsProvider localStatisticsProvider,
+        Func<MediaVersion> getFinalMediaVersion)
+    {
+        string[] unsupportedMessages =
+        {
+            "No support for codec",
+            "No usable",
+            "Provided device doesn't support",
+            "Current pixel format is unsupported"
+        };
+
+        var sb = new StringBuilder();
+        var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        string tempFile = Path.GetTempFileName();
+        try
+        {
+            CommandResult result;
+
+            try
+            {
+                result = await process
+                    .WithStandardOutputPipe(PipeTarget.ToFile(tempFile))
+                    .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
+                    .ExecuteAsync(timeoutSignal.Token);
+
+                // var arguments = string.Join(
+                //     ' ',
+                //     process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+                //
+                // Log.Logger.Debug(arguments);
+            }
+            catch (OperationCanceledException)
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                Assert.Fail($"Transcode failure (timeout): ffmpeg {arguments}");
+                return;
+            }
+
+            var error = sb.ToString();
+            bool isUnsupported = unsupportedMessages.Any(error.Contains);
+
+            if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
+            {
+                result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
+                Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
+            }
+            else if (error.Contains("Impossible to convert between"))
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                Assert.Fail($"Transcode failure: ffmpeg {arguments}");
+            }
+            else
+            {
+                var arguments = string.Join(
+                    ' ',
+                    process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
+
+                result.ExitCode.Should().Be(0, error + Environment.NewLine + arguments);
+                if (result.ExitCode == 0)
+                {
+                    Console.WriteLine(process.Arguments);
+                }
+            }
+            
+            // additional checks on resulting file
+            await localStatisticsProvider.RefreshStatistics(
+                ExecutableName("ffmpeg"),
+                ExecutableName("ffprobe"),
+                new Movie
+                {
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = tempFile }
+                            }
+                        }
+                    }
+                });
+
+            MediaVersion v = getFinalMediaVersion();
+            
+            // verify de-interlace
+            v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
+            
+            // verify resolution
+            v.Height.Should().Be(profileResolution.Height);
+            v.Width.Should().Be(profileResolution.Width);
+
+            foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
+            {
+                // verify pixel format
+                videoStream.PixelFormat.Should().Be(
+                    profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
+                
+                // verify colors
+                var colorParams = new ColorParams(
+                    videoStream.ColorRange,
+                    videoStream.ColorSpace,
+                    videoStream.ColorTransfer,
+                    videoStream.ColorPrimaries);
+
+                // AMF doesn't seem to set this metadata properly
+                // MPEG2Video doesn't always seem to set this properly
+                if (profileAcceleration != HardwareAccelerationKind.Amf &&
+                    profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video)
+                {
+                    colorParams.IsBt709.Should().BeTrue($"{colorParams}");
+                }
+            }
+        }
+        finally
+        {
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
+    }
+
     private class FakeStreamSelector : IFFmpegStreamSelector
     {
         public Task<MediaStream> SelectVideoStream(MediaVersion version) =>
@@ -806,7 +1035,8 @@ public class TranscodingTests
             Channel channel,
             string preferredAudioLanguage,
             string preferredAudioTitle) =>
-            Optional(version.MediaVersion.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
+            Optional(version.MediaVersion.Streams.FirstOrDefault(s => s.MediaStreamKind == MediaStreamKind.Audio))
+                .AsTask();
 
         public Task<Option<ErsatzTV.Core.Domain.Subtitle>> SelectSubtitleStream(
             List<ErsatzTV.Core.Domain.Subtitle> subtitles,
@@ -815,7 +1045,7 @@ public class TranscodingTests
             ChannelSubtitleMode subtitleMode) =>
             subtitles.HeadOrNone().AsTask();
     }
-
+    
     private static string ExecutableName(string baseName) =>
         OperatingSystem.IsWindows() ? $"{baseName}.exe" : baseName;
 }

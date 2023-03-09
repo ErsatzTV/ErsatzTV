@@ -130,7 +130,7 @@ public class FFmpegProcessService
                     None,
                     videoPath,
                     None)
-                .WithOutputFormat("apng", outputFile)
+                .WithOutputFormat("apng", outputFile, "-pix_fmt", "rgb24")
                 .Build();
 
             _logger.LogInformation(
