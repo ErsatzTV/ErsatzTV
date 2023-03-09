@@ -8,15 +8,15 @@ namespace ErsatzTV.Application.Emby;
 public class SynchronizeEmbyMediaSourcesHandler : IRequestHandler<SynchronizeEmbyMediaSources,
     Either<BaseError, List<EmbyMediaSource>>>
 {
-    private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _channel;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IMediaSourceRepository _mediaSourceRepository;
 
     public SynchronizeEmbyMediaSourcesHandler(
         IMediaSourceRepository mediaSourceRepository,
-        ChannelWriter<IEmbyBackgroundServiceRequest> channel)
+        ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel)
     {
         _mediaSourceRepository = mediaSourceRepository;
-        _channel = channel;
+        _scannerWorkerChannel = scannerWorkerChannel;
     }
 
     public async Task<Either<BaseError, List<EmbyMediaSource>>> Handle(
@@ -27,7 +27,7 @@ public class SynchronizeEmbyMediaSourcesHandler : IRequestHandler<SynchronizeEmb
         foreach (EmbyMediaSource mediaSource in mediaSources)
         {
             // await _channel.WriteAsync(new SynchronizeEmbyAdminUserId(mediaSource.Id), cancellationToken);
-            await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);
+            await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);
         }
 
         return mediaSources;

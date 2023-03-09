@@ -4,7 +4,7 @@
 @using ErsatzTV.Core.Emby
 @implements IDisposable
 @inject IEmbySecretStore _embySecretStore
-@inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
 
 <RemoteMediaSources
     TViewModel="EmbyMediaSourceViewModel"
@@ -26,6 +26,6 @@
     }
 
     private async Task RefreshLibraries(int mediaSourceId) =>
-        await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSourceId), _cts.Token);
+        await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(mediaSourceId), _cts.Token);
 
 }

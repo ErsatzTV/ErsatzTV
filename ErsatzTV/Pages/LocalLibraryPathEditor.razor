@@ -7,7 +7,7 @@
 @inject ISnackbar _snackbar
 @inject IMediator _mediator
 @inject IEntityLocker _locker
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">@_library.Name - Add Local Library Path</MudText>
@@ -80,7 +80,7 @@
                 {
                     if (_locker.LockLibrary(_library.Id))
                     {
-                        await _channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id), _cts.Token);
+                        await _scannerWorkerChannel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id), _cts.Token);
                         _navigationManager.NavigateTo("media/libraries");
                     }
                 });

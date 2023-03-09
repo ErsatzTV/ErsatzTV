@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - For example, the scanner will now find `movie.MKV` as well as `movie.mkv` on case-sensitive filesystems
 - Include multiple `display-name` entries in generated XMLTV
   - Plex should now display the channel number instead of the channel id (e.g. `1.2` instead of `1.2.etv`)
+- Rework concurrency a bit
+  - Playouts builds are no longer blocked by library scans
+  - Adding Trakt lists is no longer blocked by library scans
+  - All library scans (local and media servers) run sequentially
 
 ## [0.7.5-beta] - 2023-03-05
 ### Added
