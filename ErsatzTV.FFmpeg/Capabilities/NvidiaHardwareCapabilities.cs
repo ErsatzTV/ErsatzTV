@@ -95,7 +95,8 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
     }
 
-    public bool HevcBFrames => _architecture >= 75;
+    // this fails with some 1650 cards, so let's try greater than 75
+    public bool HevcBFrames => _architecture > 75;
 
     private FFmpegCapability CheckHardwareCodec(string codec, Func<string, bool> check)
     {

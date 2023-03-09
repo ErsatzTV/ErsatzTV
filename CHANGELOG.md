@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix direct streaming content from Jellyfin that has external subtitles
   - Note that these subtitles are not currently supported in ETV, but they did cause a playback issue
 - Fix Jellyfin, Emby and Plex library scans that wouldn't work in certain timezones
+- Fix song normalization to match FFmpeg Profile bit depth
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
@@ -16,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Include multiple `display-name` entries in generated XMLTV
   - Plex should now display the channel number instead of the channel id (e.g. `1.2` instead of `1.2.etv`)
 - Rework concurrency a bit
-  - Playouts builds are no longer blocked by library scans
+  - Playout builds are no longer blocked by library scans
   - Adding Trakt lists is no longer blocked by library scans
   - All library scans (local and media servers) run sequentially
 
