@@ -52,6 +52,11 @@ public class TranscodingTests
         LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
 
         MemoryCache = new MemoryCache(new MemoryCacheOptions());
+
+        if (!Directory.Exists(FileSystemLayout.TempFilePoolFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.TempFilePoolFolder);
+        }
     }
 
     [Test]
@@ -59,11 +64,6 @@ public class TranscodingTests
     public void DeleteTestVideos()
     {
         foreach (string file in Directory.GetFiles(TestContext.CurrentContext.TestDirectory, "*.mkv"))
-        {
-            File.Delete(file);
-        }
-
-        foreach (string file in Directory.GetFiles(TestContext.CurrentContext.TestDirectory, "*.aac"))
         {
             File.Delete(file);
         }
@@ -190,9 +190,9 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
-            // HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.Nvenc,
+            // HardwareAccelerationKind.Vaapi,
+            // HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
@@ -203,6 +203,8 @@ public class TranscodingTests
     [Test]
     [Combinatorial]
     public async Task TranscodeSong(
+        [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
+        Watermark watermark,
         [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
         Resolution profileResolution,
         [ValueSource(typeof(TestData), nameof(TestData.BitDepths))]
@@ -214,12 +216,21 @@ public class TranscodingTests
     {
         var localFileSystem = new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>());
         var tempFilePool = new TempFilePool();
-        var imageCache = new ImageCache(localFileSystem, tempFilePool);
+        
+        var mockImageCache = new Mock<ImageCache>(localFileSystem, tempFilePool);
+
+        // always return the static watermark resource
+        mockImageCache.Setup(
+                ic => ic.GetPathForImage(
+                    It.IsAny<string>(),
+                    It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
+                    It.IsAny<Option<int>>()))
+            .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
         
         var oldService = new FFmpegProcessService(
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
-            imageCache,
+            mockImageCache.Object,
             tempFilePool,
             new Mock<IClient>().Object,
             MemoryCache,
@@ -239,7 +250,7 @@ public class TranscodingTests
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
         
-        var songVideoGenerator = new SongVideoGenerator(tempFilePool, imageCache, service);
+        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache.Object, service);
 
         var channel = new Channel(Guid.NewGuid())
         {
@@ -256,40 +267,7 @@ public class TranscodingTests
             SubtitleMode = ChannelSubtitleMode.None
         };
         
-        string name = GetStringSha256Hash($"test_song_aac");
-
-        string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.aac");
-        if (!File.Exists(file))
-        {
-            string mkvName = Path.ChangeExtension(file, "mkv");
-            
-            await GenerateTestFile(
-                TestData.InputFormats.Head(),
-                Padding.NoPadding,
-                VideoScanKind.Progressive,
-                Subtitle.None,
-                mkvName);
-
-            var tempFile = Path.GetTempFileName();
-            
-            var p1 = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = ExecutableName("mkvextract"),
-                    Arguments = $"tracks {mkvName} 1:{tempFile}"
-                }
-            };
-
-            p1.Start();
-            await p1.WaitForExitAsync();
-            // ReSharper disable once MethodHasAsyncOverload
-            p1.WaitForExit();
-            p1.ExitCode.Should().Be(0);
-
-            File.Move(tempFile, file, true);
-        }
-
+        string file = Path.Combine(TestContext.CurrentContext.TestDirectory, "song.mp3");
         var songVersion = new MediaVersion
         {
             MediaFiles = new List<MediaFile>
@@ -329,7 +307,7 @@ public class TranscodingTests
             .Callback<MediaItem, MediaVersion, bool>(
                 (_, version, _) =>
                 {
-                    if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video))
+                    if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video && s.AttachedPic == false))
                     {
                         version.MediaFiles = videoVersion.MediaFiles;
                         videoVersion = version;
@@ -369,7 +347,7 @@ public class TranscodingTests
             now + TimeSpan.FromSeconds(3),
             now,
             Option<ChannelWatermark>.None,
-            Option<ChannelWatermark>.None,
+            GetWatermark(watermark),
             VaapiDriver.Default,
             "/dev/dri/renderD128",
             Option<int>.None,
@@ -382,7 +360,7 @@ public class TranscodingTests
             false,
             _ => { });
 
-        // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
+        // Console.WriteLine($"ffmpeg arguments {process.Arguments}");
 
         await TranscodeAndVerify(
             process,
@@ -517,72 +495,7 @@ public class TranscodingTests
 
         DateTimeOffset now = DateTimeOffset.Now;
 
-        Option<ChannelWatermark> channelWatermark = Option<ChannelWatermark>.None;
-        switch (watermark)
-        {
-            case Watermark.None:
-                break;
-            case Watermark.IntermittentOpaque:
-                channelWatermark = new ChannelWatermark
-                {
-                    ImageSource = ChannelWatermarkImageSource.Custom,
-                    Mode = ChannelWatermarkMode.Intermittent,
-                    // TODO: how do we make sure this actually appears
-                    FrequencyMinutes = 1,
-                    DurationSeconds = 2,
-                    Opacity = 100
-                };
-                break;
-            case Watermark.IntermittentTransparent:
-                channelWatermark = new ChannelWatermark
-                {
-                    ImageSource = ChannelWatermarkImageSource.Custom,
-                    Mode = ChannelWatermarkMode.Intermittent,
-                    // TODO: how do we make sure this actually appears
-                    FrequencyMinutes = 1,
-                    DurationSeconds = 2,
-                    Opacity = 80
-                };
-                break;
-            case Watermark.PermanentOpaqueScaled:
-                channelWatermark = new ChannelWatermark
-                {
-                    ImageSource = ChannelWatermarkImageSource.Custom,
-                    Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 100,
-                    Size = WatermarkSize.Scaled,
-                    WidthPercent = 15
-                };
-                break;
-            case Watermark.PermanentOpaqueActualSize:
-                channelWatermark = new ChannelWatermark
-                {
-                    ImageSource = ChannelWatermarkImageSource.Custom,
-                    Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 100,
-                    Size = WatermarkSize.ActualSize
-                };
-                break;
-            case Watermark.PermanentTransparentScaled:
-                channelWatermark = new ChannelWatermark
-                {
-                    ImageSource = ChannelWatermarkImageSource.Custom,
-                    Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 80,
-                    Size = WatermarkSize.Scaled,
-                    WidthPercent = 15
-                };
-                break;
-            case Watermark.PermanentTransparentActualSize:
-                channelWatermark = new ChannelWatermark
-                {
-                    ImageSource = ChannelWatermarkImageSource.Custom,
-                    Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 80,
-                    Size = WatermarkSize.ActualSize
-                };
-                break;
-        }
+        Option<ChannelWatermark> channelWatermark = GetWatermark(watermark);
 
         ChannelSubtitleMode subtitleMode = subtitle switch
         {
@@ -719,6 +632,71 @@ public class TranscodingTests
             profileAcceleration,
             localStatisticsProvider,
             () => v);
+    }
+
+    private Option<ChannelWatermark> GetWatermark(Watermark watermark)
+    {
+        switch (watermark)
+        {
+            case Watermark.None:
+                break;
+            case Watermark.IntermittentOpaque:
+                return new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Intermittent,
+                    // TODO: how do we make sure this actually appears
+                    FrequencyMinutes = 1,
+                    DurationSeconds = 2,
+                    Opacity = 100
+                };
+            case Watermark.IntermittentTransparent:
+                return new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Intermittent,
+                    // TODO: how do we make sure this actually appears
+                    FrequencyMinutes = 1,
+                    DurationSeconds = 2,
+                    Opacity = 80
+                };
+            case Watermark.PermanentOpaqueScaled:
+                return new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 100,
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 15
+                };
+            case Watermark.PermanentOpaqueActualSize:
+                return new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 100,
+                    Size = WatermarkSize.ActualSize
+                };
+            case Watermark.PermanentTransparentScaled:
+                return new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 80,
+                    Size = WatermarkSize.Scaled,
+                    WidthPercent = 15
+                };
+            case Watermark.PermanentTransparentActualSize:
+                return new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 80,
+                    Size = WatermarkSize.ActualSize
+                };
+        }
+
+        return Option<ChannelWatermark>.None;
     }
 
     private static async Task GenerateTestFile(

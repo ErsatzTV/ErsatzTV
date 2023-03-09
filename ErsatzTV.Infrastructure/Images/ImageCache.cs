@@ -97,7 +97,7 @@ public class ImageCache : IImageCache
         }
     }
 
-    public string GetPathForImage(string fileName, ArtworkKind artworkKind, Option<int> maybeMaxHeight)
+    public virtual string GetPathForImage(string fileName, ArtworkKind artworkKind, Option<int> maybeMaxHeight)
     {
         string subfolder = maybeMaxHeight.Match(
             maxHeight => Path.Combine(maxHeight.ToString(), fileName[..2]),

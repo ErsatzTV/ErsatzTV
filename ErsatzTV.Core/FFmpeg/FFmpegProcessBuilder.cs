@@ -131,16 +131,16 @@ internal class FFmpegProcessBuilder
 
     public FFmpegProcessBuilder WithOutputFormat(string format, string output, params string[] options)
     {
+        foreach (string option in options)
+        {
+            _arguments.Add(option);
+        }
+
         _arguments.Add("-f");
         _arguments.Add(format);
 
         _arguments.Add("-y");
         _arguments.Add(output);
-
-        foreach (string option in options)
-        {
-            _arguments.Add(option);
-        }
 
         return this;
     }
