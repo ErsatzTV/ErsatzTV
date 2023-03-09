@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix direct streaming content from Jellyfin that has external subtitles
   - Note that these subtitles are not currently supported in ETV, but they did cause a playback issue
 - Fix Jellyfin, Emby and Plex library scans that wouldn't work in certain timezones
+- Fix song normalization to match FFmpeg Profile bit depth
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
