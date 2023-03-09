@@ -190,9 +190,9 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         {
             // HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
-            // HardwareAccelerationKind.Vaapi,
-            // HardwareAccelerationKind.Qsv,
+            // HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
@@ -267,7 +267,7 @@ public class TranscodingTests
             SubtitleMode = ChannelSubtitleMode.None
         };
         
-        string file = Path.Combine(TestContext.CurrentContext.TestDirectory, "song.mp3");
+        string file = Path.Combine(TestContext.CurrentContext.TestDirectory, Path.Combine("Resources", "song.mp3"));
         var songVersion = new MediaVersion
         {
             MediaFiles = new List<MediaFile>
