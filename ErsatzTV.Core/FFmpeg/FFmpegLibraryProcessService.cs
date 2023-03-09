@@ -140,7 +140,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
             playbackSettings.NormalizeLoudness);
 
-        IPixelFormat pixelFormat = await AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger)
+        // don't log generated images which are expected to have unknown format
+        ILogger<FFmpegLibraryProcessService> pixelFormatLogger = videoPath == audioPath ? _logger : null;
+
+        IPixelFormat pixelFormat = await AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, pixelFormatLogger)
             .IfNoneAsync(
                 () =>
                 {
@@ -222,16 +225,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
             : Option<string>.None;
 
-        // normalize songs to yuv420p
-        IPixelFormat desiredPixelFormat =
-            videoPath == audioPath ? playbackSettings.PixelFormat : new PixelFormatYuv420P();
-
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             fillerKind == FillerKind.Fallback,
             videoFormat,
             Optional(videoStream.Profile),
-            Optional(desiredPixelFormat),
+            Optional(playbackSettings.PixelFormat),
             ffmpegVideoStream.SquarePixelFrameSize(
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),

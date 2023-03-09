@@ -129,8 +129,13 @@ internal class FFmpegProcessBuilder
         return this;
     }
 
-    public FFmpegProcessBuilder WithOutputFormat(string format, string output)
+    public FFmpegProcessBuilder WithOutputFormat(string format, string output, params string[] options)
     {
+        foreach (string option in options)
+        {
+            _arguments.Add(option);
+        }
+
         _arguments.Add("-f");
         _arguments.Add(format);
 
