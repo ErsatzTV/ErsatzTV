@@ -98,6 +98,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 preferredSubtitleLanguage,
                 subtitleMode);
 
+        foreach (Subtitle subtitle in maybeSubtitle)
+        {
+            if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
+            {
+                // proxy to avoid dealing with escaping
+                subtitle.Path = $"http://localhost:{Settings.ListenPort}/media/subtitle/{subtitle.Id}";
+            }
+        }
+
         Option<WatermarkOptions> watermarkOptions = disableWatermarks
             ? None
             : await _ffmpegProcessService.GetWatermarkOptions(
@@ -194,9 +203,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     subtitle.Codec,
                     StreamKind.Video);
 
-                string path = subtitle.IsImage
-                    ? videoPath
-                    : Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+                string path = subtitle.IsImage switch
+                {
+                    true => videoPath,
+                    false when subtitle.SubtitleKind == SubtitleKind.Sidecar => subtitle.Path,
+                    _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
+                };
 
                 return new SubtitleInputFile(
                     path,
