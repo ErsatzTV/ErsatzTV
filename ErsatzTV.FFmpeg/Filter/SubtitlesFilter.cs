@@ -34,7 +34,8 @@ public class SubtitlesFilter : BaseFilter
             // escape brackets after escaping for windows
             effectiveFile = effectiveFile
                 .Replace(@"[", @"\[")
-                .Replace(@"]", @"\]");
+                .Replace(@"]", @"\]")
+                .Replace(@"http://localhost:", @"http\\://localhost\\:");
 
             return $"subtitles={effectiveFile}:fontsdir={fontsDir}";
         }
