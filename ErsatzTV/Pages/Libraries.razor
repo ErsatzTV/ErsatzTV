@@ -83,10 +83,45 @@
     </MudTable>
 </MudContainer>
 
+@if (_externalCollections.Any())
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+        <MudTable Hover="true" Items="_externalCollections" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">External Collections</MudText>
+            </ToolBarContent>
+            <ColGroup>
+                <col/>
+                <col style="width: 180px;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>Library Kind</MudTh>
+                <MudTh/>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Library Kind">@context.LibraryKind</MudTd>
+                <MudTd>
+                    <div style="align-items: center; display: flex;">
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
+                        <MudTooltip Text="Scan Collections">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           OnClick="@(_ => ScanExternalCollections(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <div style="width: 48px"></div>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudContainer>
+}
+
 @code {
     private readonly CancellationTokenSource _cts = new();
 
     private IList<LibraryViewModel> _libraries;
+    private IList<LibraryViewModel> _externalCollections;
     private Dictionary<int, int> _progressByLibrary;
 
     protected override void OnInitialized()
@@ -100,6 +135,7 @@
     private async Task LoadLibraries(CancellationToken cancellationToken)
     {
         _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
+        _externalCollections = await _mediator.Send(new GetExternalCollections(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
@@ -126,6 +162,16 @@
             }
 
             StateHasChanged();
+        }
+    }
+
+    private async Task ScanExternalCollections(LibraryViewModel library)
+    {
+        switch (library.LibraryKind.ToLowerInvariant())
+        {
+            case "emby":
+                await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
+                break;
         }
     }
 
