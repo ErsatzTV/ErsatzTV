@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Playout builds are no longer blocked by library scans
   - Adding Trakt lists is no longer blocked by library scans
   - All library scans (local and media servers) run sequentially
+- Emby collection scanning will no longer happen after every (automatic or forced) library scan
+  - Automatic/periodic scans will check collections one time after all libraries have been scanned
+  - There is a new table in the `Media` > `Libraries` page with a button to manually re-scan Emby collections as needed
 
 ## [0.7.5-beta] - 2023-03-05
 ### Added
