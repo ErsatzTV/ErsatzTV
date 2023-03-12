@@ -1,0 +1,87 @@
+﻿@page "/system/troubleshooting"
+@using ErsatzTV.Application.Troubleshooting.Queries
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using ErsatzTV.Application.Troubleshooting
+@implements IDisposable
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudCard Class="mb-6">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">General</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MarkdownView Content="@_troubleshootingInfo"/>
+        </MudCardContent>
+    </MudCard>
+    <MudCard Class="mb-6">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">Nvidia Capabilities</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MarkdownView Content="@_nvidiaCapabilities"/>
+        </MudCardContent>
+    </MudCard>
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">Vaapi Capabilities</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MarkdownView Content="@_vaapiCapabilities"/>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private string _troubleshootingInfo;
+    private string _nvidiaCapabilities;
+    private string _vaapiCapabilities;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            TroubleshootingInfo info = await Mediator.Send(new GetTroubleshootingInfo(), _cts.Token);
+
+            string json = JsonSerializer.Serialize(
+                new { info.Version, info.Health, info.FFmpegSettings, info.Channels, info.FFmpegProfiles },
+                new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true
+                });
+            
+            _troubleshootingInfo = $@"```json
+{json}
+```";
+            string formattedCapabilities = info.NvidiaCapabilities.Replace("\n", $"  {Environment.NewLine}");
+
+            _nvidiaCapabilities = $@"```shell
+{formattedCapabilities}
+```";
+
+            _vaapiCapabilities = info.VaapiCapabilities;
+        }
+        catch (Exception ex)
+        {
+            _troubleshootingInfo = $@"```
+{ex}
+```";
+        }
+    }
+}

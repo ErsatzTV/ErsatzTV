@@ -18,14 +18,30 @@ public partial class MarkdownView
     [Parameter]
     public string Content { get; set; }
 
-    public MarkupString HtmlContent => _markupContent ?? (_markupContent = ConvertStringToMarkupString(Content)).Value;
+    public MarkupString? HtmlContent
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Content))
+            {
+                return null;
+            }
+
+            return _markupContent ?? (_markupContent = ConvertStringToMarkupString(Content)).Value;
+        }
+    }
 
     private MarkupString ConvertStringToMarkupString(string value)
     {
         if (!string.IsNullOrWhiteSpace(value))
         {
             // Convert markdown string to HTML
-            string html = Markdown.ToHtml(value, new MarkdownPipelineBuilder().UseAdvancedExtensions().Build());
+            string html = Markdown.ToHtml(
+                value,
+                new MarkdownPipelineBuilder()
+                    .UseAdvancedExtensions()
+                    .UseSoftlineBreakAsHardlineBreak()
+                    .Build());
 
             // Sanitize HTML before rendering
             string sanitizedHtml = HtmlSanitizer.Sanitize(html);

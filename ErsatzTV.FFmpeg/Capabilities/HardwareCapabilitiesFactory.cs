@@ -50,6 +50,56 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         };
     }
 
+    public async Task<string> GetNvidiaOutput(string ffmpegPath)
+    {
+        string[] arguments =
+        {
+            "-f", "lavfi",
+            "-i", "nullsrc",
+            "-c:v", "h264_nvenc",
+            "-gpu", "list",
+            "-f", "null", "-"
+        };
+
+        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
+            ? result.StandardError
+            : result.StandardOutput;
+        
+        return output;
+    }
+
+    public async Task<Option<string>> GetVaapiOutput(Option<string> vaapiDriver, string vaapiDevice)
+    {
+        BufferedCommandResult whichResult = await Cli.Wrap("which")
+            .WithArguments("vainfo")
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        if (whichResult.ExitCode != 0)
+        {
+            return Option<string>.None;
+        }
+
+        var envVars = new Dictionary<string, string?>();
+        foreach (string libvaDriverName in vaapiDriver)
+        {
+            envVars.Add("LIBVA_DRIVER_NAME", libvaDriverName);
+        }
+
+        BufferedCommandResult result = await Cli.Wrap("vainfo")
+            .WithArguments($"--display drm --device {vaapiDevice}")
+            .WithEnvironmentVariables(envVars)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        return result.StandardOutput;
+    }
+
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(string ffmpegPath, string capabilities)
     {
         var cacheKey = string.Format(FFmpegCapabilitiesCacheKeyFormat, capabilities);
@@ -109,32 +159,16 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }
 
-            BufferedCommandResult whichResult = await Cli.Wrap("which")
-                .WithArguments("vainfo")
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync(Encoding.UTF8);
-
-            if (whichResult.ExitCode != 0)
+            Option<string> output = await GetVaapiOutput(vaapiDriver, device);
+            if (output.IsNone)
             {
                 _logger.LogWarning("Unable to determine VAAPI capabilities; please install vainfo");
                 return new DefaultHardwareCapabilities();
             }
             
-            var envVars = new Dictionary<string, string?>();
-            foreach (string libvaDriverName in vaapiDriver)
-            {
-                envVars.Add("LIBVA_DRIVER_NAME", libvaDriverName);
-            }
-
-            BufferedCommandResult result = await Cli.Wrap("vainfo")
-                .WithArguments($"--display drm --device {device}")
-                .WithEnvironmentVariables(envVars)
-                .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync(Encoding.UTF8);
-
             profileEntrypoints = new List<VaapiProfileEntrypoint>();
 
-            foreach (string line in result.StandardOutput.Split("\n"))
+            foreach (string line in string.Join("", output).Split("\n"))
             {
                 const string PROFILE_ENTRYPOINT_PATTERN = @"(VAProfile\w*).*(VAEntrypoint\w*)";
                 Match match = Regex.Match(line, PROFILE_ENTRYPOINT_PATTERN);
@@ -187,23 +221,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 _logger);
         }
 
-        string[] arguments =
-        {
-            "-f", "lavfi",
-            "-i", "nullsrc",
-            "-c:v", "h264_nvenc",
-            "-gpu", "list",
-            "-f", "null", "-"
-        };
-
-        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
-            .WithArguments(arguments)
-            .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(Encoding.UTF8);
-
-        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
-            ? result.StandardError
-            : result.StandardOutput;
+        string output = await GetNvidiaOutput(ffmpegPath);
 
         Option<string> maybeLine = Optional(output.Split("\n").FirstOrDefault(x => x.Contains("GPU")));
         foreach (string line in maybeLine)
@@ -226,8 +244,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         }
 
         _logger.LogWarning(
-            "Error detecting NVIDIA GPU capabilities; some hardware accelerated features will be unavailable: {ExitCode}",
-            result.ExitCode);
+            "Error detecting NVIDIA GPU capabilities; some hardware accelerated features will be unavailable");
 
         return new NoHardwareCapabilities();
     }
