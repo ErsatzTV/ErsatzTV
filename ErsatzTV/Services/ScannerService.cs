@@ -284,6 +284,7 @@ public class ScannerService : BackgroundService
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
 
         Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
         result.BiIter(
@@ -299,6 +300,11 @@ public class ScannerService : BackgroundService
                     _logger.LogWarning("Unable to synchronize emby collections: {Error}", error.Value);
                 }
             });
+        
+        if (entityLocker.AreEmbyCollectionsLocked())
+        {
+            entityLocker.UnlockEmbyCollections();
+        }
     }
 }
 

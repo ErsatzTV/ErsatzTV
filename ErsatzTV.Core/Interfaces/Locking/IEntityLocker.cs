@@ -6,6 +6,7 @@ public interface IEntityLocker
     event EventHandler OnPlexChanged;
     event EventHandler<Type> OnRemoteMediaSourceChanged;
     event EventHandler OnTraktChanged;
+    event EventHandler OnEmbyCollectionsChanged;
     bool LockLibrary(int libraryId);
     bool UnlockLibrary(int libraryId);
     bool IsLibraryLocked(int libraryId);
@@ -18,4 +19,7 @@ public interface IEntityLocker
     bool IsTraktLocked();
     bool LockTrakt();
     bool UnlockTrakt();
+    bool LockEmbyCollections();
+    bool UnlockEmbyCollections();
+    bool AreEmbyCollectionsLocked();
 }

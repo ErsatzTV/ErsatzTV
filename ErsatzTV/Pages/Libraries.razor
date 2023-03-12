@@ -103,12 +103,22 @@
                 <MudTd>
                     <div style="align-items: center; display: flex;">
                         <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
-                        <MudTooltip Text="Scan Collections">
-                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                           OnClick="@(_ => ScanExternalCollections(context))">
-                            </MudIconButton>
-                        </MudTooltip>
+                        @if (AreCollectionsLocked(context.LibraryKind))
+                        {
+                            <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="width: 48px"></div>
+                            <MudTooltip Text="Scan Collections">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Disabled="@AreCollectionsLocked(context.LibraryKind)"
+                                               OnClick="@(_ => ScanExternalCollections(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        }
                         <div style="width: 48px"></div>
                     </div>
                 </MudTd>
@@ -127,6 +137,7 @@
     protected override void OnInitialized()
     {
         _locker.OnLibraryChanged += LockChanged;
+        _locker.OnEmbyCollectionsChanged += LockChanged;
         _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
@@ -170,13 +181,27 @@
         switch (library.LibraryKind.ToLowerInvariant())
         {
             case "emby":
-                await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
+                if (_locker.LockEmbyCollections())
+                {
+                    await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
+                }
                 break;
         }
     }
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
+
+    private bool AreCollectionsLocked(string libraryKind)
+    {
+        switch (libraryKind.ToLowerInvariant())
+        {
+            case "emby":
+                return _locker.AreEmbyCollectionsLocked();
+        }
+        
+        return false;
+    }
 
     private async Task HandleScanProgress(LibraryScanProgress libraryScanProgress, CancellationToken cancellationToken)
     {
@@ -197,6 +222,7 @@
     void IDisposable.Dispose()
     {
         _locker.OnLibraryChanged -= LockChanged;
+        _locker.OnEmbyCollectionsChanged -= LockChanged;
         _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
 
         _cts.Cancel();
