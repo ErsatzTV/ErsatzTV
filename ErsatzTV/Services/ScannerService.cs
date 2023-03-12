@@ -59,6 +59,9 @@ public class ScannerService : BackgroundService
                         case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
                             requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
                             break;
+                        case SynchronizeEmbyCollections synchronizeEmbyCollections:
+                            requestTask = SynchronizeEmbyCollections(synchronizeEmbyCollections, cancellationToken);
+                            break;
                         case IScanLocalLibrary scanLocalLibrary:
                             requestTask = SynchronizeLocalLibrary(scanLocalLibrary, cancellationToken);
                             break;
@@ -273,6 +276,29 @@ public class ScannerService : BackgroundService
         {
             entityLocker.UnlockLibrary(request.EmbyLibraryId);
         }
+    }
+
+    private async Task SynchronizeEmbyCollections(
+        SynchronizeEmbyCollections request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogDebug("Done synchronizing emby collections"),
+            error =>
+            {
+                if (error is ScanIsNotRequired)
+                {
+                    _logger.LogDebug("Scan is not required for emby collections at this time");
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to synchronize emby collections: {Error}", error.Value);
+                }
+            });
     }
 }
 

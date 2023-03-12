@@ -236,14 +236,25 @@ public class SchedulerService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
+        var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
+        
         foreach (EmbyLibrary library in dbContext.EmbyLibraries.Filter(l => l.ShouldSyncItems))
         {
+            mediaSourceIds.Add(library.MediaSourceId);
+            
             if (_entityLocker.LockLibrary(library.Id))
             {
                 await _scannerWorkerChannel.WriteAsync(
                     new SynchronizeEmbyLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }
+        }
+
+        foreach (int mediaSourceId in mediaSourceIds)
+        {
+            await _scannerWorkerChannel.WriteAsync(
+                new SynchronizeEmbyCollections(mediaSourceId, false),
+                cancellationToken);
         }
     }
 

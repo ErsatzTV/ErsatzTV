@@ -865,4 +865,12 @@ public class MediaSourceRepository : IMediaSourceRepository
 
         return deletedMediaIds;
     }
+
+    public async Task<Unit> UpdateLastScan(EmbyMediaSource embyMediaSource)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE EmbyMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
+            new { embyMediaSource.LastCollectionsScan, embyMediaSource.Id }).ToUnit();
+    }
 }
