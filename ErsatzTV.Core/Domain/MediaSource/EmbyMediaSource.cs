@@ -6,4 +6,5 @@ public class EmbyMediaSource : MediaSource
     public string OperatingSystem { get; set; }
     public List<EmbyConnection> Connections { get; set; }
     public List<EmbyPathReplacement> PathReplacements { get; set; }
+    public DateTime? LastCollectionsScan { get; set; }
 }

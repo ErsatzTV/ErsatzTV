@@ -11,31 +11,49 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IEmbyCollectionScanner _scanner;
+    private readonly IConfigElementRepository _configElementRepository;
 
     public SynchronizeEmbyCollectionsHandler(
         IMediaSourceRepository mediaSourceRepository,
         IEmbySecretStore embySecretStore,
-        IEmbyCollectionScanner scanner)
+        IEmbyCollectionScanner scanner,
+        IConfigElementRepository configElementRepository)
     {
         _mediaSourceRepository = mediaSourceRepository;
         _embySecretStore = embySecretStore;
         _scanner = scanner;
+        _configElementRepository = configElementRepository;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
         SynchronizeEmbyCollections request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, ConnectionParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
         return await validation.Match(
             SynchronizeCollections,
             error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
     }
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizeEmbyCollections request) =>
-        MediaSourceMustExist(request)
+    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeEmbyCollections request)
+    {
+        Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
+
+        return (await mediaSource, await ValidateLibraryRefreshInterval())
+            .Apply(
+                (connectionParameters, libraryRefreshInterval) => new RequestParameters(
+                    connectionParameters,
+                    connectionParameters.MediaSource,
+                    request.ForceScan,
+                    libraryRefreshInterval));
+    }
+
+    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+            .FilterT(lri => lri is >= 0 and < 1_000_000)
+            .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
     private Task<Validation<BaseError, EmbyMediaSource>> MediaSourceMustExist(
         SynchronizeEmbyCollections request) =>
@@ -46,7 +64,7 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
         EmbyMediaSource embyMediaSource)
     {
         Option<EmbyConnection> maybeConnection = embyMediaSource.Connections.HeadOrNone();
-        return maybeConnection.Map(connection => new ConnectionParameters(connection))
+        return maybeConnection.Map(connection => new ConnectionParameters(connection, embyMediaSource))
             .ToValidation<BaseError>("Emby media source requires an active connection");
     }
 
@@ -60,12 +78,37 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
             .ToValidation<BaseError>("Emby media source requires an api key");
     }
 
-    private async Task<Either<BaseError, Unit>> SynchronizeCollections(ConnectionParameters connectionParameters) =>
-        await _scanner.ScanCollections(
-            connectionParameters.ActiveConnection.Address,
-            connectionParameters.ApiKey);
+    private async Task<Either<BaseError, Unit>> SynchronizeCollections(RequestParameters parameters)
+    {
+        var lastScan = new DateTimeOffset(
+            parameters.MediaSource.LastCollectionsScan ?? SystemTime.MinValueUtc,
+            TimeSpan.Zero);
+        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+        {
+            Either<BaseError, Unit> result = await _scanner.ScanCollections(
+                parameters.ConnectionParameters.ActiveConnection.Address,
+                parameters.ConnectionParameters.ApiKey);
 
-    private record ConnectionParameters(EmbyConnection ActiveConnection)
+            if (result.IsRight)
+            {
+                parameters.MediaSource.LastCollectionsScan = DateTime.UtcNow;
+                await _mediaSourceRepository.UpdateLastScan(parameters.MediaSource);
+            }
+
+            return result;
+        }
+
+        return Unit.Default;
+    }
+
+    private record RequestParameters(
+        ConnectionParameters ConnectionParameters,
+        EmbyMediaSource MediaSource,
+        bool ForceScan,
+        int LibraryRefreshInterval);
+
+    private record ConnectionParameters(EmbyConnection ActiveConnection, EmbyMediaSource MediaSource)
     {
         public string? ApiKey { get; init; }
     }

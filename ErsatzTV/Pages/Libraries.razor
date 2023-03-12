@@ -83,15 +83,61 @@
     </MudTable>
 </MudContainer>
 
+@if (_externalCollections.Any())
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+        <MudTable Hover="true" Items="_externalCollections" Dense="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">External Collections</MudText>
+            </ToolBarContent>
+            <ColGroup>
+                <col/>
+                <col style="width: 180px;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>Library Kind</MudTh>
+                <MudTh/>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Library Kind">@context.LibraryKind</MudTd>
+                <MudTd>
+                    <div style="align-items: center; display: flex;">
+                        <div style="width: 48px"></div>
+                        @if (AreCollectionsLocked(context.LibraryKind))
+                        {
+                            <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="width: 48px"></div>
+                            <MudTooltip Text="Scan Collections">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Disabled="@AreCollectionsLocked(context.LibraryKind)"
+                                               OnClick="@(_ => ScanExternalCollections(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        }
+                        <div style="width: 48px"></div>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudContainer>
+}
+
 @code {
     private readonly CancellationTokenSource _cts = new();
 
     private IList<LibraryViewModel> _libraries;
+    private IList<LibraryViewModel> _externalCollections;
     private Dictionary<int, int> _progressByLibrary;
 
     protected override void OnInitialized()
     {
         _locker.OnLibraryChanged += LockChanged;
+        _locker.OnEmbyCollectionsChanged += LockChanged;
         _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
@@ -100,6 +146,7 @@
     private async Task LoadLibraries(CancellationToken cancellationToken)
     {
         _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
+        _externalCollections = await _mediator.Send(new GetExternalCollections(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
@@ -129,8 +176,32 @@
         }
     }
 
+    private async Task ScanExternalCollections(LibraryViewModel library)
+    {
+        switch (library.LibraryKind.ToLowerInvariant())
+        {
+            case "emby":
+                if (_locker.LockEmbyCollections())
+                {
+                    await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
+                }
+                break;
+        }
+    }
+
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
+
+    private bool AreCollectionsLocked(string libraryKind)
+    {
+        switch (libraryKind.ToLowerInvariant())
+        {
+            case "emby":
+                return _locker.AreEmbyCollectionsLocked();
+        }
+        
+        return false;
+    }
 
     private async Task HandleScanProgress(LibraryScanProgress libraryScanProgress, CancellationToken cancellationToken)
     {
@@ -151,6 +222,7 @@
     void IDisposable.Dispose()
     {
         _locker.OnLibraryChanged -= LockChanged;
+        _locker.OnEmbyCollectionsChanged -= LockChanged;
         _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
 
         _cts.Cancel();

@@ -59,6 +59,7 @@ public class Worker : BackgroundService
         };
         
         var libraryIdArgument = new Argument<int>("library-id", "The library id to scan");
+        var mediaSourceIdArgument = new Argument<int>("media-source-id", "The media source id to scan");
         
         var scanLocalCommand = new Command("scan-local", "Scan a local library");
         scanLocalCommand.AddArgument(libraryIdArgument);
@@ -73,6 +74,10 @@ public class Worker : BackgroundService
         scanEmbyCommand.AddArgument(libraryIdArgument);
         scanEmbyCommand.AddOption(forceOption);
         scanEmbyCommand.AddOption(deepOption);
+
+        var scanEmbyCollectionsCommand = new Command("scan-emby-collections", "Scan Emby collections");
+        scanEmbyCollectionsCommand.AddArgument(mediaSourceIdArgument);
+        scanEmbyCollectionsCommand.AddOption(forceOption);
 
         var scanJellyfinCommand = new Command("scan-jellyfin", "Scan a Jellyfin library");
         scanJellyfinCommand.AddArgument(libraryIdArgument);
@@ -135,6 +140,24 @@ public class Worker : BackgroundService
                 }
             });
         
+        scanEmbyCollectionsCommand.SetHandler(
+            async context =>
+            {
+                if (IsScanningEnabled())
+                {
+                    bool force = context.ParseResult.GetValueForOption(forceOption);
+                    SetProcessPriority(force);
+
+                    int mediaSourceId = context.ParseResult.GetValueForArgument(mediaSourceIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new SynchronizeEmbyCollections(mediaSourceId, force);
+                    await mediator.Send(scan, context.GetCancellationToken());
+                }
+            });
+        
         scanJellyfinCommand.SetHandler(
             async context =>
             {
@@ -158,6 +181,7 @@ public class Worker : BackgroundService
         rootCommand.AddCommand(scanLocalCommand);
         rootCommand.AddCommand(scanPlexCommand);
         rootCommand.AddCommand(scanEmbyCommand);
+        rootCommand.AddCommand(scanEmbyCollectionsCommand);
         rootCommand.AddCommand(scanJellyfinCommand);
 
         return rootCommand;
