@@ -10,4 +10,8 @@ public interface IHardwareCapabilitiesFactory
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<string> vaapiDriver,
         Option<string> vaapiDevice);
+
+    Task<string> GetNvidiaOutput(string ffmpegPath);
+
+    Task<Option<string>> GetVaapiOutput(Option<string> vaapiDriver, string vaapiDevice);
 }
