@@ -77,6 +77,15 @@
             }
         }
     };
+    
+    window.clipboardCopy = {
+        copyText: function (codeElement) {
+            navigator.clipboard.writeText(codeElement.textContent)
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
+    };
 </script>
 </body>
 </html>
