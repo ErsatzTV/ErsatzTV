@@ -289,7 +289,9 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(1, 50, 0)));
         playoutItems[2].GuideGroup.Should().Be(3);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
-        playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
+        
+        // offline should not set guide finish
+        playoutItems[2].GuideFinish.HasValue.Should().BeFalse();
     }
 
     [Test]
