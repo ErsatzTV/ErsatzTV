@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix song normalization to match FFmpeg Profile bit depth
 - Fix bug playing some external subtitle files (e.g. with an apostrophe in the file name)
 - Fix bug detecting VAAPI capabilities when no device is selected in active FFmpeg Profile
+- Fix playout mode duration bugs in XMLTV
+  - Tail mode filler will properly include filler duration in XMLTV
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
