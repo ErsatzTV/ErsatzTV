@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug detecting VAAPI capabilities when no device is selected in active FFmpeg Profile
 - Fix playout mode duration bugs in XMLTV
   - Tail mode filler will properly include filler duration in XMLTV
+  - Duration that wraps across midnight will no longer have overlapping items in XMLTV
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
