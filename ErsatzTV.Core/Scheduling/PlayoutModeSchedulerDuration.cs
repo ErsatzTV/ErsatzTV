@@ -48,9 +48,9 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 {
                     DurationFinish = itemStartTime + scheduleItem.PlayoutDuration
                 };
-
-                durationUntil = nextState.DurationFinish;
             }
+
+            durationUntil = nextState.DurationFinish;
 
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
@@ -194,10 +194,21 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
             }
         }
 
-        // clear guide finish on all but the last item
-        var all = playoutItems.Filter(pi => pi.FillerKind == FillerKind.None).ToList();
-        PlayoutItem last = all.MaxBy(pi => pi.FinishOffset);
-        foreach (PlayoutItem item in all.Filter(pi => pi != last))
+        bool hasFallback = playoutItems.Any(p => p.FillerKind == FillerKind.Fallback);
+        
+        var playoutItemsToClear = playoutItems
+            .Filter(pi => pi.FillerKind == FillerKind.None)
+            .ToList();
+
+        PlayoutItem lastItem = playoutItemsToClear.MaxBy(pi => pi.FinishOffset);
+
+        // if we've finished the duration or are in offline tail mode with no fallback, keep guide finish on the last item 
+        if (nextState.DurationFinish.IsNone && (scheduleItem.TailMode != TailMode.Offline || hasFallback))
+        {
+            playoutItemsToClear.Remove(lastItem);
+        }
+        
+        foreach (PlayoutItem item in playoutItemsToClear)
         {
             item.GuideFinish = null;
         }
