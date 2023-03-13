@@ -105,11 +105,9 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                                          Optional(GetDriverName(activeDriver)),
                                          vaapiDevice))
                             {
-                                vaapiCapabilities += $"Checking driver {activeDriver} device {vaapiDevice}  {Environment.NewLine}  {Environment.NewLine}";
-                                vaapiCapabilities += $@"```shell
-{output}
-```";
-                                vaapiCapabilities += "  " + Environment.NewLine + "  " + Environment.NewLine;
+                                vaapiCapabilities += $"Checking driver {activeDriver} device {vaapiDevice}{Environment.NewLine}{Environment.NewLine}";
+                                vaapiCapabilities += output;
+                                vaapiCapabilities += Environment.NewLine + Environment.NewLine;
                             }
                         }
                     }
