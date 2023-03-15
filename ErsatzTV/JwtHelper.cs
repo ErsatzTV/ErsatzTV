@@ -19,6 +19,5 @@ public static class JwtHelper
     public static bool ValidateIssuerSigningKey { get; private set; }
     public static bool ValidateLifetime { get; private set; }
     public static SymmetricSecurityKey IssuerSigningKey { get; private set; }
-    public static string IssuerSigningKeyString { get; private set; }
     public static bool IsEnabled { get; private set; }
 }
