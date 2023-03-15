@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Troubleshooting` page with aggregated settings/hardware accel info for easy reference
+
 ### Fixed
 - Fix scaling anamorphic content from non-local libraries
 - Fix direct streaming content from Jellyfin that has external subtitles
   - Note that these subtitles are not currently supported in ETV, but they did cause a playback issue
 - Fix Jellyfin, Emby and Plex library scans that wouldn't work in certain timezones
 - Fix song normalization to match FFmpeg Profile bit depth
+- Fix bug playing some external subtitle files (e.g. with an apostrophe in the file name)
+- Fix bug detecting VAAPI capabilities when no device is selected in active FFmpeg Profile
+- Fix playout mode duration bugs in XMLTV
+  - Tail mode filler will properly include filler duration in XMLTV
+  - Duration that wraps across midnight will no longer have overlapping items in XMLTV
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
@@ -20,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Playout builds are no longer blocked by library scans
   - Adding Trakt lists is no longer blocked by library scans
   - All library scans (local and media servers) run sequentially
+- Emby collection scanning will no longer happen after every (automatic or forced) library scan
+  - Automatic/periodic scans will check collections one time after all libraries have been scanned
+  - There is a new table in the `Media` > `Libraries` page with a button to manually re-scan Emby collections as needed
 
 ## [0.7.5-beta] - 2023-03-05
 ### Added

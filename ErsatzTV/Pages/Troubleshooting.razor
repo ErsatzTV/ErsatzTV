@@ -1,0 +1,88 @@
+﻿@page "/system/troubleshooting"
+@using ErsatzTV.Application.Troubleshooting.Queries
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using ErsatzTV.Application.Troubleshooting
+@implements IDisposable
+@inject IMediator Mediator
+@inject IJSRuntime JsRuntime
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="General" Class="mb-6">
+            <div class="overflow-y-scroll" style="max-height: 500px">
+                <pre>
+                    <code @ref="_troubleshootingView">@_troubleshootingInfo</code>
+                </pre>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="(() => CopyToClipboard(_troubleshootingView))">
+                Copy
+            </MudButton>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="NVIDIA Capabilities" Class="mb-6">
+            <div class="overflow-y-scroll" style="max-height: 500px">
+                <pre>
+                    <code @ref="_nvidiaView">@_nvidiaCapabilities</code>
+                </pre>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="(() => CopyToClipboard(_nvidiaView))">
+                Copy
+            </MudButton>
+        </MudExpansionPanel>
+        <MudExpansionPanel Text="VAAPI Capabilities">
+            <div class="overflow-y-scroll" style="max-height: 500px">
+                <pre>
+                    <code @ref="_vaapiView">@_vaapiCapabilities</code>
+                </pre>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="(() => CopyToClipboard(_vaapiView))">
+                Copy
+            </MudButton>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private string _troubleshootingInfo;
+    private string _nvidiaCapabilities;
+    private string _vaapiCapabilities;
+    private ElementReference _troubleshootingView;
+    private ElementReference _nvidiaView;
+    private ElementReference _vaapiView;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            TroubleshootingInfo info = await Mediator.Send(new GetTroubleshootingInfo(), _cts.Token);
+
+            _troubleshootingInfo = JsonSerializer.Serialize(
+                new { info.Version, info.Health, info.FFmpegSettings, info.Channels, info.FFmpegProfiles },
+                new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true
+                });
+
+            _nvidiaCapabilities = info.NvidiaCapabilities;
+            _vaapiCapabilities = info.VaapiCapabilities;
+        }
+        catch (Exception ex)
+        {
+            _troubleshootingInfo = ex.ToString();
+        }
+    }
+    
+    private async Task CopyToClipboard(ElementReference view)
+    {
+        await JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", view);
+    }
+}

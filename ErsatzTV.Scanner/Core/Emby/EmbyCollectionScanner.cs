@@ -30,6 +30,9 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
     {
         try
         {
+            // need to call get libraries to find library that contains collections (box sets)                
+            await _embyApiClient.GetLibraries(address, apiKey);
+            
             var incomingItemIds = new List<string>();
 
             // get all collections from db (item id, etag)
