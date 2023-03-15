@@ -60,12 +60,15 @@ using FluentValidation.AspNetCore;
 using Ganss.Xss;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
 using MudBlazor.Services;
 using Newtonsoft.Json;
@@ -121,6 +124,7 @@ public class Startup
             });
 
         OidcHelper.Init(Configuration);
+        JwtHelper.Init(Configuration);
 
         if (OidcHelper.IsEnabled)
         {
@@ -175,8 +179,89 @@ public class Startup
                                 }
                             };
                         }
-                    });
+                    })
+                .AddJwtBearer(
+                "jwt",
+                options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = JwtHelper.IssuerSigningKey,
+                        ValidateLifetime = true
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = static context =>
+                        {
+                            if (context.Request.Query.TryGetValue("access_token", out var token))
+                                context.Token = token;
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+            services.AddAuthorization(
+                options =>
+                {
+                    var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(
+                        "cookie",
+                        "oidc");
+
+                    defaultAuthorizationPolicyBuilder = defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+
+                    options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+
+                    var onlyJwtSchemePolicyBuilder = new AuthorizationPolicyBuilder("jwt");
+                    if (JwtHelper.IsEnabled)
+                    {
+                        options.AddPolicy("JwtOnlyScheme", onlyJwtSchemePolicyBuilder
+                        .RequireAuthenticatedUser()
+                        .Build());
+                    }
+                    else
+                    {
+                        options.AddPolicy("JwtOnlyScheme", onlyJwtSchemePolicyBuilder
+                        .RequireAssertion(_ => true)
+                        .Build());
+                    }
+
+                }
+                );
         }
+        else
+        {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "jwt";
+                options.DefaultChallengeScheme = "jwt";
+            })
+            .AddJwtBearer(
+            "jwt",
+            options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = JwtHelper.IssuerSigningKey,
+                    ValidateLifetime = true
+                };
+            });
+
+            services.AddAuthorization(
+                options =>
+                {
+                    var onlyJwtSchemePolicyBuilder = new AuthorizationPolicyBuilder("jwt");
+                    options.AddPolicy("JwtOnlyScheme", onlyJwtSchemePolicyBuilder
+                            .RequireAssertion(_ => true)
+                            .Build());
+                }
+            );
+        }
+
 
         services.AddCors(
             o => o.AddPolicy(
@@ -386,7 +471,7 @@ public class Startup
             });
 
         app.UseRouting();
-        
+
         if (OidcHelper.IsEnabled)
         {
             app.UseAuthentication();

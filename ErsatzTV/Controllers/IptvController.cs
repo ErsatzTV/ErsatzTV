@@ -10,6 +10,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Iptv;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers;
@@ -33,18 +34,21 @@ public class IptvController : ControllerBase
     }
 
     [HttpGet("iptv/channels.m3u")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public Task<IActionResult> GetChannelPlaylist(
         [FromQuery]
         string mode = "mixed") =>
-        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), Request.PathBase, mode))
+        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), Request.PathBase, mode, Request.Query["access_token"]))
             .Map<ChannelPlaylist, IActionResult>(Ok);
 
     [HttpGet("iptv/xmltv.xml")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public Task<IActionResult> GetGuide() =>
-        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString(), Request.PathBase))
+        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString(), Request.PathBase, Request.Query["access_token"]))
             .Map<ChannelGuide, IActionResult>(Ok);
 
     [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public Task<IActionResult> GetHDHRVideo(string channelNumber, [FromQuery] string mode = "ts")
     {
         // don't redirect to the correct channel mode for HDHR clients; always use TS
@@ -57,6 +61,7 @@ public class IptvController : ControllerBase
     }
 
     [HttpGet("iptv/channel/{channelNumber}.ts")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public async Task<IActionResult> GetTransportStreamVideo(
         string channelNumber,
         [FromQuery]
@@ -123,6 +128,7 @@ public class IptvController : ControllerBase
     }
 
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
         // _logger.LogDebug("Checking for session worker for channel {Channel}", channelNumber);
@@ -148,6 +154,7 @@ public class IptvController : ControllerBase
     }
 
     [HttpGet("iptv/channel/{channelNumber}.m3u8")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public async Task<IActionResult> GetHttpLiveStreamingVideo(
         string channelNumber,
         [FromQuery]
@@ -222,6 +229,7 @@ public class IptvController : ControllerBase
     [HttpGet("iptv/logos/{fileName}")]
     [HttpHead("iptv/logos/{fileName}.jpg")]
     [HttpGet("iptv/logos/{fileName}.jpg")]
+    [Authorize(Policy = "JwtOnlyScheme")]
     public async Task<IActionResult> GetImage(string fileName)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =

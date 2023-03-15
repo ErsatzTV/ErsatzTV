@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Iptv;
 
@@ -14,7 +14,7 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
     public Task<ChannelPlaylist> Handle(GetChannelPlaylist request, CancellationToken cancellationToken) =>
         _channelRepository.GetAll()
             .Map(channels => EnsureMode(channels, request.Mode))
-            .Map(channels => new ChannelPlaylist(request.Scheme, request.Host, request.BaseUrl, channels));
+            .Map(channels => new ChannelPlaylist(request.Scheme, request.Host, request.BaseUrl, channels, request.AccessToken));
 
     private static List<Channel> EnsureMode(IEnumerable<Channel> channels, string mode)
     {
