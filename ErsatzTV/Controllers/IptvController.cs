@@ -12,6 +12,7 @@ using ErsatzTV.Core.Iptv;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace ErsatzTV.Controllers;
 
@@ -33,7 +34,14 @@ public class IptvController : ControllerBase
         _mediator = mediator;
         _logger = logger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
-        _accessToken = Request.Query["access_token"];
+        if (StringValues.IsNullOrEmpty(Request.Query["access_token"]))
+        {
+            _accessToken = null;
+        }
+        else
+        {
+            _accessToken = (string)Request.Query["access_token"];
+        }
     }
 
     [HttpGet("iptv/channels.m3u")]
