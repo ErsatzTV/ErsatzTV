@@ -9,6 +9,7 @@ public class EntityLocker : IEntityLocker
     private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
     private bool _plex;
     private bool _trakt;
+    private bool _embyCollections;
 
     public EntityLocker()
     {
@@ -20,6 +21,7 @@ public class EntityLocker : IEntityLocker
     public event EventHandler OnPlexChanged;
     public event EventHandler<Type> OnRemoteMediaSourceChanged;
     public event EventHandler OnTraktChanged;
+    public event EventHandler OnEmbyCollectionsChanged;
 
     public bool LockLibrary(int libraryId)
     {
@@ -127,4 +129,30 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool IsTraktLocked() => _trakt;
+    
+    public bool LockEmbyCollections()
+    {
+        if (!_embyCollections)
+        {
+            _embyCollections = true;
+            OnEmbyCollectionsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool UnlockEmbyCollections()
+    {
+        if (_embyCollections)
+        {
+            _embyCollections = false;
+            OnEmbyCollectionsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool AreEmbyCollectionsLocked() => _embyCollections;
 }

@@ -4,6 +4,7 @@ using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Streaming;
+using ErsatzTV.Application.Subtitles.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Extensions;
@@ -141,6 +142,25 @@ public class InternalController : ControllerBase
                     .SetQueryParam("X-Emby-Token", r.ApiKey);
 
                 return new RedirectResult(fullPath.ToString());
+            });
+    }
+
+    [HttpGet("/media/subtitle/{id:int}")]
+    public async Task<IActionResult> GetSubtitle(int id)
+    {
+        Either<BaseError, string> path = await _mediator.Send(new GetSubtitlePathById(id));
+        return path.Match<IActionResult>(
+            Left: _ => new NotFoundResult(),
+            Right: r =>
+            {
+                string mimeType = Path.GetExtension(r).ToLowerInvariant() switch
+                {
+                    "ass" or "ssa" => "text/x-ssa",
+                    "vtt" => "text/vtt",
+                    _ => "application/x-subrip",
+                };
+
+                return new PhysicalFileResult(r, mimeType);
             });
     }
 }

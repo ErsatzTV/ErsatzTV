@@ -88,22 +88,6 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
             {
                 parameters.Library.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(parameters.Library);
-
-                // need to call get libraries to find library that contains collections (box sets)                
-                await _embyApiClient.GetLibraries(
-                    parameters.ConnectionParameters.ActiveConnection.Address,
-                    parameters.ConnectionParameters.ApiKey);
-
-                Either<BaseError, Unit> collectionResult = await _mediator.Send(
-                    new SynchronizeEmbyCollections(parameters.Library.MediaSourceId),
-                    cancellationToken);
-
-                collectionResult.BiIter(
-                    _ => _logger.LogDebug("Done synchronizing emby collections"),
-                    error => _logger.LogWarning(
-                        "Unable to synchronize emby collections for source {MediaSourceId}: {Error}",
-                        parameters.Library.MediaSourceId,
-                        error.Value));
             }
             
             foreach (BaseError error in result.LeftToSeq())
