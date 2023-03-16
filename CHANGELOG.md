@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add `Troubleshooting` page with aggregated settings/hardware accel info for easy reference
+- Read `director` fields from music video NFO metadata
+- Pass `directors` and `studios` to music video credit templates
 
 ### Fixed
 - Fix scaling anamorphic content from non-local libraries

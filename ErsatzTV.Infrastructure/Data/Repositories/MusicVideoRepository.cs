@@ -33,6 +33,8 @@ public class MusicVideoRepository : IMusicVideoRepository
             .ThenInclude(mvm => mvm.Tags)
             .Include(mv => mv.MusicVideoMetadata)
             .ThenInclude(mvm => mvm.Studios)
+            .Include(mv => mv.MusicVideoMetadata)
+            .ThenInclude(mvm => mvm.Directors)
             .Include(mv => mv.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(mv => mv.MediaVersions)
@@ -134,6 +136,14 @@ public class MusicVideoRepository : IMusicVideoRepository
             new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
+    public async Task<bool> AddDirector(MusicVideoMetadata metadata, Director director)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "INSERT INTO Director (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
+            new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
     public async Task<bool> RemoveArtist(MusicVideoArtist artist)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -191,6 +201,7 @@ public class MusicVideoRepository : IMusicVideoRepository
             .Include(m => m.Genres)
             .Include(m => m.Tags)
             .Include(m => m.Studios)
+            .Include(m => m.Directors)
             .Include(m => m.MusicVideo)
             .ThenInclude(mv => mv.Artist)
             .ThenInclude(a => a.ArtistMetadata)
