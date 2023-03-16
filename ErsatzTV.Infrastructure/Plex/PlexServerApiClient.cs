@@ -994,7 +994,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (guid.StartsWith("local://"))
         {
-            _logger.LogDebug("Ignoring local Plex guid: {Guid}", guid);
+            // _logger.LogDebug("Ignoring local Plex guid: {Guid}", guid);
         }
         else
         {

@@ -149,8 +149,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
             playbackSettings.NormalizeLoudness);
 
-        // don't log generated images which are expected to have unknown format
-        ILogger<FFmpegLibraryProcessService> pixelFormatLogger = videoPath == audioPath ? _logger : null;
+        // don't log generated images, or hls direct, which are expected to have unknown format
+        bool isUnknownPixelFormatExpected =
+            videoPath != audioPath || channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect;
+        ILogger<FFmpegLibraryProcessService> pixelFormatLogger = isUnknownPixelFormatExpected ? null : _logger;
 
         IPixelFormat pixelFormat = await AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, pixelFormatLogger)
             .IfNoneAsync(
