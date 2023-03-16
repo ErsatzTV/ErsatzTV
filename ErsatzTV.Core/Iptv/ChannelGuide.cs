@@ -86,8 +86,8 @@ public class ChannelGuide
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                     .HeadOrNone()
                     .Match(
-                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg" + accessTokenUri,
-                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png" + accessTokenUri);
+                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
+                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{accessTokenUri}");
                 xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
@@ -420,7 +420,7 @@ public class ChannelGuide
                 _ => "posters"
             };
 
-            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg" + accessTokenUri;
+            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg{accessTokenUri}";
         }
 
         return artworkPath;
