@@ -10,17 +10,20 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Iptv;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
+[ServiceFilter(typeof(ConditionalAuthorizeFilter))]
 public class IptvController : ControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ILogger<IptvController> _logger;
     private readonly IMediator _mediator;
+    private readonly string _accessToken;
 
     public IptvController(
         IMediator mediator,
@@ -30,18 +33,26 @@ public class IptvController : ControllerBase
         _mediator = mediator;
         _logger = logger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
+        try
+        {
+            _accessToken = Request.Query["access_token"];
+        }
+        catch (System.NullReferenceException)
+        {
+            _accessToken = null;
+        }
     }
 
     [HttpGet("iptv/channels.m3u")]
     public Task<IActionResult> GetChannelPlaylist(
         [FromQuery]
         string mode = "mixed") =>
-        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), Request.PathBase, mode))
+        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), Request.PathBase, mode, Request.Query["access_token"]))
             .Map<ChannelPlaylist, IActionResult>(Ok);
 
     [HttpGet("iptv/xmltv.xml")]
     public Task<IActionResult> GetGuide() =>
-        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString(), Request.PathBase))
+        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString(), Request.PathBase, Request.Query["access_token"]))
             .Map<ChannelGuide, IActionResult>(Ok);
 
     [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
@@ -77,7 +88,12 @@ public class IptvController : ControllerBase
                         mode = "ts";
                         break;
                     default:
-                        return Redirect($"~/iptv/channel/{channelNumber}.m3u8");
+                        if (_accessToken != null) {
+                            return Redirect($"~/iptv/channel/{channelNumber}.m3u8?access_token={_accessToken}");
+                        } else
+                        {
+                            return Redirect($"~/iptv/channel/{channelNumber}.m3u8");
+                        }
                 }
             }
         }
@@ -168,7 +184,14 @@ public class IptvController : ControllerBase
                         mode = "segmenter";
                         break;
                     default:
-                        return Redirect($"~/iptv/channel/{channelNumber}.ts");
+                        if (_accessToken != null)
+                        {
+                            return Redirect($"~/iptv/channel/{channelNumber}.ts?access_token={_accessToken}");
+                        }
+                        else
+                        {
+                            return Redirect($"~/iptv/channel/{channelNumber}.ts");
+                        }
                 }
             }
         }
@@ -184,7 +207,14 @@ public class IptvController : ControllerBase
                         _logger.LogDebug(
                             "Session started; returning multi-variant playlist for channel {Channel}",
                             channelNumber);
-                        return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                        if (_accessToken != null)
+                        {
+                            return Content(GetMultiVariantPlaylistWithAccessToken(channelNumber), "application/x-mpegurl");
+                        }
+                        else
+                        {
+                            return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                        }
                         // return Redirect($"~/iptv/session/{channelNumber}/hls.m3u8");
                     },
                     error =>
@@ -195,8 +225,15 @@ public class IptvController : ControllerBase
                                 _logger.LogDebug(
                                     "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
-                                return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
-                                // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
+                                if (_accessToken != null)
+                                {
+                                    return Content(GetMultiVariantPlaylistWithAccessToken(channelNumber), "application/x-mpegurl");
+                                }
+                                else
+                                {
+                                    return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                                }
+                            // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(
                                     "Failed to start segmenter for channel {ChannelNumber}: {Error}",
@@ -237,4 +274,10 @@ public class IptvController : ControllerBase
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000
 {Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8";
+
+    private string GetMultiVariantPlaylistWithAccessToken(string channelNumber) =>
+    $@"#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000
+{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8?access_token={_accessToken}";
 }

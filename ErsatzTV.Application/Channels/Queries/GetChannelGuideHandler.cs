@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Iptv;
 using Microsoft.IO;
 
@@ -25,5 +25,6 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, ChannelGu
                     request.Scheme,
                     request.Host,
                     request.BaseUrl,
-                    channels));
+                    channels,
+                    request.AccessToken));
 }
