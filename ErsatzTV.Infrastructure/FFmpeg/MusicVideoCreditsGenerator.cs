@@ -120,6 +120,8 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                         metadata.ReleaseDate,
                         AllArtists = (metadata.Artists ?? new List<MusicVideoArtist>()).Map(a => a.Name),
                         Artist = artist,
+                        Studios = (metadata.Studios ?? new List<Studio>()).Map(s => s.Name),
+                        Directors = (metadata.Directors ?? new List<Director>()).Map(s => s.Name),
                         musicVideo.GetHeadVersion().Duration,
                         StreamSeek = await settings.StreamSeek.IfNoneAsync(TimeSpan.Zero)
                     });

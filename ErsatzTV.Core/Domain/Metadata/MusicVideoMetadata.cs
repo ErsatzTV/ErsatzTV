@@ -8,4 +8,5 @@ public class MusicVideoMetadata : Metadata
     public int MusicVideoId { get; set; }
     public MusicVideo MusicVideo { get; set; }
     public List<MusicVideoArtist> Artists { get; set; }
+    public List<Director> Directors { get; set; }
 }

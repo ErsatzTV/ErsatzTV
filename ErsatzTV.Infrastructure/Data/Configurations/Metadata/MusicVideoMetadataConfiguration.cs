@@ -41,5 +41,9 @@ public class MusicVideoMetadataConfiguration : IEntityTypeConfiguration<MusicVid
         builder.HasMany(mvm => mvm.Artists)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(mvm => mvm.Directors)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

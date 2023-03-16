@@ -91,6 +91,12 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                                     nfo,
                                     (musicVideo, studio) => musicVideo.Studios.Add(studio));
                                 break;
+                            case "director":
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, director) => musicVideo.Directors.Add(director));
+                                break;
                         }
 
                         break;
