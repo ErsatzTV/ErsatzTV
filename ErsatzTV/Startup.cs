@@ -60,12 +60,17 @@ using FluentValidation.AspNetCore;
 using Ganss.Xss;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
 using MudBlazor.Services;
 using Newtonsoft.Json;
@@ -121,6 +126,7 @@ public class Startup
             });
 
         OidcHelper.Init(Configuration);
+        JwtHelper.Init(Configuration);
 
         if (OidcHelper.IsEnabled)
         {
@@ -175,8 +181,58 @@ public class Startup
                                 }
                             };
                         }
-                    });
+                    })
+                .AddJwtBearer(
+                "jwt",
+                options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = JwtHelper.IssuerSigningKey,
+                        ValidateLifetime = true
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = static context =>
+                        {
+                            if (context.Request.Query.TryGetValue("access_token", out var token))
+                                context.Token = token;
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+            services.AddAuthorization(
+                options =>
+                {
+                    var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(
+                        "cookie",
+                        "oidc");
+
+                    defaultAuthorizationPolicyBuilder = defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+
+                    options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+
+                    var onlyJwtSchemePolicyBuilder = new AuthorizationPolicyBuilder("jwt");
+                    if (JwtHelper.IsEnabled)
+                    {
+                        options.AddPolicy("JwtOnlyScheme", onlyJwtSchemePolicyBuilder
+                        .RequireAuthenticatedUser()
+                        .Build());
+                    }
+                    else
+                    {
+                        options.AddPolicy("JwtOnlyScheme", onlyJwtSchemePolicyBuilder
+                        .RequireAssertion(_ => true)
+                        .Build());
+                    }
+
+                }
+                );
         }
+
 
         services.AddCors(
             o => o.AddPolicy(
@@ -188,23 +244,25 @@ public class Startup
                         .AllowAnyHeader();
                 }));
 
-        services.AddControllers(
-                options =>
-                {
-                    options.OutputFormatters.Insert(0, new ConcatPlaylistOutputFormatter());
-                    options.OutputFormatters.Insert(0, new ChannelPlaylistOutputFormatter());
-                    options.OutputFormatters.Insert(0, new ChannelGuideOutputFormatter());
-                    options.OutputFormatters.Insert(0, new DeviceXmlOutputFormatter());
-                    options.OutputFormatters.Insert(0, new HdhrJsonOutputFormatter());
-                })
-            .AddNewtonsoftJson(
-                opt =>
-                {
-                    opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                    opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                    opt.SerializerSettings.ContractResolver = new CustomContractResolver();
-                    opt.SerializerSettings.Converters.Add(new StringEnumConverter());
-                });
+            services.AddControllers(
+                    options =>
+                    {
+                        options.OutputFormatters.Insert(0, new ConcatPlaylistOutputFormatter());
+                        options.OutputFormatters.Insert(0, new ChannelPlaylistOutputFormatter());
+                        options.OutputFormatters.Insert(0, new ChannelGuideOutputFormatter());
+                        options.OutputFormatters.Insert(0, new DeviceXmlOutputFormatter());
+                        options.OutputFormatters.Insert(0, new HdhrJsonOutputFormatter());
+                    })
+                .AddNewtonsoftJson(
+                    opt =>
+                    {
+                        opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                        opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                        opt.SerializerSettings.ContractResolver = new CustomContractResolver();
+                        opt.SerializerSettings.Converters.Add(new StringEnumConverter());
+                    });
+
+        services.AddScoped(_ => new ConditionalAuthorizeFilter("JwtOnlyScheme"));
 
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Startup>();
@@ -386,12 +444,34 @@ public class Startup
             });
 
         app.UseRouting();
-        
+
         if (OidcHelper.IsEnabled)
         {
             app.UseAuthentication();
             app.UseAuthorization();
         }
+
+        app.Use(async (context, next) =>
+        {
+            if (JwtHelper.IsEnabled)
+            {
+                // Only apply the [Authorize] tag to the IptvController
+                if (context.Request.Path.StartsWithSegments("/Iptv"))
+                {
+                    var authPolicyBuilder = new AuthorizationPolicyBuilder();
+                    authPolicyBuilder.RequireAuthenticatedUser();
+                    authPolicyBuilder.AddAuthenticationSchemes("JwtOnlyScheme");
+
+                    var authPolicy = authPolicyBuilder.Build();
+                    var authFilter = new AuthorizeFilter(authPolicy);
+
+                    context.Items["authFilter"] = authFilter;
+                }
+            }
+
+            await next();
+        });
+
 
         string v2 = Environment.GetEnvironmentVariable("ETV_UI_V2");
         if (!env.IsDevelopment() && !string.IsNullOrWhiteSpace(v2))
