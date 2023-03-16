@@ -278,7 +278,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Artists = nfo.Artists.Map(a => new MusicVideoArtist { Name = a }).ToList(),
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                    Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
+                    Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                    Directors = nfo.Directors.Map(s => new Director { Name = s }).ToList()
                 };
             }
 
@@ -828,6 +829,26 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             {
                 existing.Artists.Add(artist);
                 if (await _musicVideoRepository.AddArtist(existing, artist))
+                {
+                    updated = true;
+                }
+            }
+            
+            foreach (Director director in existing.Directors
+                         .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
+            {
+                existing.Directors.Remove(director);
+                if (await _metadataRepository.RemoveDirector(director))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Director director in metadata.Directors
+                         .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
+            {
+                existing.Directors.Add(director);
+                if (await _musicVideoRepository.AddDirector(existing, director))
                 {
                     updated = true;
                 }

@@ -8,6 +8,7 @@ public class MusicVideoNfo
         Genres = new List<string>();
         Tags = new List<string>();
         Studios = new List<string>();
+        Directors = new List<string>();
     }
 
     public List<string> Artists { get; }
@@ -20,4 +21,5 @@ public class MusicVideoNfo
     public List<string> Genres { get; }
     public List<string> Tags { get; }
     public List<string> Studios { get; }
+    public List<string> Directors { get; }
 }

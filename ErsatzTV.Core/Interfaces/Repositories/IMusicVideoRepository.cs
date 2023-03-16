@@ -16,6 +16,7 @@ public interface IMusicVideoRepository
     Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre);
     Task<bool> AddTag(MusicVideoMetadata metadata, Tag tag);
     Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio);
+    Task<bool> AddDirector(MusicVideoMetadata metadata, Director director);
     Task<bool> RemoveArtist(MusicVideoArtist artist);
     Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids);
     Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath);

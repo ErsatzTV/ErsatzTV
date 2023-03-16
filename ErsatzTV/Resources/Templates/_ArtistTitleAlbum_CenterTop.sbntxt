@@ -24,7 +24,7 @@ Style: RoboR,Roboto-Regular.ttf,{{ resolution.height // 20.0 }},&HFFFFFF,&HFFFFF
 {{~ _last_end_ts = timespan.from_seconds (_duration_s | math.minus 9) ~}}
 {{~ if all_artists | array.size == 0 ~}}
 {{~ capture _artists_t ~}}{{~ artist ~}}{{~ end ~}}
-{{ else }}
+{{~ else ~}}
 {{~ capture _artists_t ~}}{{~ all_artists | array.join " | " ~}}{{~ end ~}}
 {{~ end ~}}
 {{~ capture _fancy_title_t ~}}{%{{\b1}{\fscy150}{\1c&HC2C1BF&}}%}{{~ title ~}}{{~ end ~}}
