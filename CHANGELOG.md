@@ -34,6 +34,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Emby collection scanning will no longer happen after every (automatic or forced) library scan
   - Automatic/periodic scans will check collections one time after all libraries have been scanned
   - There is a new table in the `Media` > `Libraries` page with a button to manually re-scan Emby collections as needed
+- For performance reasons, limit console log output to errors on Windows
+  - Other platforms are unchanged
+  - Log file behavior is unchanged
 
 ## [0.7.5-beta] - 2023-03-05
 ### Added
