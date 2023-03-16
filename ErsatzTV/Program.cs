@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace ErsatzTV;
 
@@ -42,13 +44,26 @@ public class Program
     {
         LoggingLevelSwitch.MinimumLevel = LogEventLevel.Information;
 
-        Log.Logger = new LoggerConfiguration()
+        LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
             .MinimumLevel.ControlledBy(LoggingLevelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
-            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day)
-            .CreateLogger();
+            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day);
+
+        // for performance reasons, restrict windows console to error logs
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            loggerConfiguration = loggerConfiguration.WriteTo.Console(
+                restrictedToMinimumLevel: LogEventLevel.Error,
+                theme: AnsiConsoleTheme.Code);
+        }
+        else
+        {
+            loggerConfiguration = loggerConfiguration.WriteTo.Console(theme: AnsiConsoleTheme.Code);
+        }
+        
+        Log.Logger = loggerConfiguration.CreateLogger();
 
         try
         {

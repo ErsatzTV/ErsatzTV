@@ -59,7 +59,6 @@ public class WorkerService : BackgroundService
                                     error.Value));
                             break;
                         case DeleteOrphanedArtwork deleteOrphanedArtwork:
-                            _logger.LogInformation("Deleting orphaned artwork from the database");
                             await mediator.Send(deleteOrphanedArtwork, cancellationToken);
                             break;
                         case AddTraktList addTraktList:

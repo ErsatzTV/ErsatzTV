@@ -208,7 +208,7 @@ public abstract class TraktCommandBase
 
         foreach (int movieId in maybeMovieByGuid)
         {
-            _logger.LogDebug("Located trakt movie {Title} by id", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt movie {Title} by id", item.DisplayTitle);
             return movieId;
         }
 
@@ -221,11 +221,11 @@ public abstract class TraktCommandBase
 
         foreach (int movieId in maybeMovieByTitleYear)
         {
-            _logger.LogDebug("Located trakt movie {Title} by title/year", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt movie {Title} by title/year", item.DisplayTitle);
             return movieId;
         }
 
-        _logger.LogDebug("Unable to locate trakt movie {Title}", item.DisplayTitle);
+        // _logger.LogDebug("Unable to locate trakt movie {Title}", item.DisplayTitle);
 
         return None;
     }
@@ -243,7 +243,7 @@ public abstract class TraktCommandBase
 
         foreach (int showId in maybeShowByGuid)
         {
-            _logger.LogDebug("Located trakt show {Title} by id", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt show {Title} by id", item.DisplayTitle);
             return showId;
         }
 
@@ -256,11 +256,11 @@ public abstract class TraktCommandBase
 
         foreach (int showId in maybeShowByTitleYear)
         {
-            _logger.LogDebug("Located trakt show {Title} by title/year", item.Title);
+            // _logger.LogDebug("Located trakt show {Title} by title/year", item.Title);
             return showId;
         }
 
-        _logger.LogDebug("Unable to locate trakt show {Title}", item.DisplayTitle);
+        // _logger.LogDebug("Unable to locate trakt show {Title}", item.DisplayTitle);
 
         return None;
     }
@@ -278,7 +278,7 @@ public abstract class TraktCommandBase
 
         foreach (int seasonId in maybeSeasonByGuid)
         {
-            _logger.LogDebug("Located trakt season {Title} by id", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt season {Title} by id", item.DisplayTitle);
             return seasonId;
         }
 
@@ -292,11 +292,11 @@ public abstract class TraktCommandBase
 
         foreach (int seasonId in maybeSeasonByTitleYear)
         {
-            _logger.LogDebug("Located trakt season {Title} by title/year/season", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt season {Title} by title/year/season", item.DisplayTitle);
             return seasonId;
         }
 
-        _logger.LogDebug("Unable to locate trakt season {Title}", item.DisplayTitle);
+        // _logger.LogDebug("Unable to locate trakt season {Title}", item.DisplayTitle);
 
         return None;
     }
@@ -314,7 +314,7 @@ public abstract class TraktCommandBase
 
         foreach (int episodeId in maybeEpisodeByGuid)
         {
-            _logger.LogDebug("Located trakt episode {Title} by id", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt episode {Title} by id", item.DisplayTitle);
             return episodeId;
         }
 
@@ -329,11 +329,11 @@ public abstract class TraktCommandBase
 
         foreach (int episodeId in maybeEpisodeByTitleYear)
         {
-            _logger.LogDebug("Located trakt episode {Title} by title/year/season/episode", item.DisplayTitle);
+            // _logger.LogDebug("Located trakt episode {Title} by title/year/season/episode", item.DisplayTitle);
             return episodeId;
         }
 
-        _logger.LogDebug("Unable to locate trakt episode {Title}", item.DisplayTitle);
+        // _logger.LogDebug("Unable to locate trakt episode {Title}", item.DisplayTitle);
 
         return None;
     }
