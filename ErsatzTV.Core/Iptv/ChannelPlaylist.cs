@@ -32,7 +32,7 @@ public class ChannelPlaylist
             accessTokenUriAmp = $"&access_token={_accessToken}";
         }
 
-        string xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml" + accessTokenUri;
+        string xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml{accessTokenUri}";
         sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
         foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
         {
@@ -40,8 +40,8 @@ public class ChannelPlaylist
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                 .HeadOrNone()
                 .Match(
-                    artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg" + accessTokenUri,
-                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png" + accessTokenUri);
+                    artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
+                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{accessTokenUri}");
 
             string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                 .TrimEnd('=')
@@ -50,10 +50,10 @@ public class ChannelPlaylist
 
             string format = channel.StreamingMode switch
             {
-                StreamingMode.HttpLiveStreamingDirect => $"m3u8?mode=hls-direct" + accessTokenUriAmp,
-                StreamingMode.HttpLiveStreamingSegmenter => $"m3u8?mode=segmenter" + accessTokenUriAmp,
-                StreamingMode.TransportStreamHybrid => $"ts" + accessTokenUri,
-                _ => $"ts?mode=ts-legacy" + accessTokenUriAmp
+                StreamingMode.HttpLiveStreamingDirect => $"m3u8?mode=hls-direct{accessTokenUriAmp}",
+                StreamingMode.HttpLiveStreamingSegmenter => $"m3u8?mode=segmenter{accessTokenUriAmp}",
+                StreamingMode.TransportStreamHybrid => $"ts{accessTokenUri}",
+                _ => $"ts?mode=ts-legacy{accessTokenUriAmp}"
             };
 
             string vcodec = channel.FFmpegProfile.VideoFormat.ToString().ToLowerInvariant();
