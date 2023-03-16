@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playout mode duration bugs in XMLTV
   - Tail mode filler will properly include filler duration in XMLTV
   - Duration that wraps across midnight will no longer have overlapping items in XMLTV
+- Maintain collection progress across all alternate schedules on a playout
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
