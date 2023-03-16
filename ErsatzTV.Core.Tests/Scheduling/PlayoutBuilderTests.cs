@@ -2078,8 +2078,7 @@ public class PlayoutBuilderTests
                         Index = 1,
                         Seed = 12345
                     },
-                    Playout = playout,
-                    ProgramSchedule = playout.ProgramSchedule
+                    Playout = playout
                 });
 
             var configRepo = new Mock<IConfigElementRepository>();
@@ -2242,8 +2241,6 @@ public class PlayoutBuilderTests
                     MediaItemId = headAnchor.MediaItemId,
                     MultiCollection = headAnchor.MultiCollection,
                     MultiCollectionId = headAnchor.MultiCollectionId,
-                    ProgramSchedule = headAnchor.ProgramSchedule,
-                    ProgramScheduleId = headAnchor.ProgramScheduleId,
                     SmartCollection = headAnchor.SmartCollection,
                     SmartCollectionId = headAnchor.SmartCollectionId
                 });

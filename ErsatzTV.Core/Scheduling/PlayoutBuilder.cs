@@ -684,8 +684,6 @@ public class PlayoutBuilder : IPlayoutBuilder
                 {
                     Playout = playout,
                     PlayoutId = playout.Id,
-                    ProgramSchedule = activeSchedule,
-                    ProgramScheduleId = activeSchedule.Id,
                     CollectionType = collectionKey.CollectionType,
                     CollectionId = collectionKey.CollectionId,
                     MultiCollectionId = collectionKey.MultiCollectionId,
@@ -722,8 +720,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
             .OrderByDescending(a => a.AnchorDate ?? DateTime.MaxValue)
             .FirstOrDefault(
-                a => a.ProgramScheduleId == activeSchedule.Id
-                     && a.CollectionType == collectionKey.CollectionType
+                a => a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
