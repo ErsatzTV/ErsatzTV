@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -16,19 +16,27 @@ public class ChannelGuide
     private readonly string _baseUrl;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly string _scheme;
+    private readonly string _accessTokenUri;
 
     public ChannelGuide(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         string scheme,
         string host,
         string baseUrl,
-        List<Channel> channels)
+        List<Channel> channels,
+        string accessToken)
     {
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _scheme = scheme;
         _host = host;
         _baseUrl = baseUrl;
         _channels = channels;
+        
+        _accessTokenUri = string.Empty;
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            _accessTokenUri = $"?access_token={accessToken}";
+        }
     }
 
     public string ToXml()
@@ -77,8 +85,8 @@ public class ChannelGuide
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                     .HeadOrNone()
                     .Match(
-                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg",
-                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png");
+                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{_accessTokenUri}",
+                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{_accessTokenUri}");
                 xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
@@ -405,7 +413,7 @@ public class ChannelGuide
                 _ => "posters"
             };
 
-            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg";
+            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg{_accessTokenUri}";
         }
 
         return artworkPath;

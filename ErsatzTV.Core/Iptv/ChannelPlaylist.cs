@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Iptv;
@@ -9,20 +9,30 @@ public class ChannelPlaylist
     private readonly string _host;
     private readonly string _baseUrl;
     private readonly string _scheme;
+    private readonly string _accessToken;
 
-    public ChannelPlaylist(string scheme, string host, string baseUrl, List<Channel> channels)
+    public ChannelPlaylist(string scheme, string host, string baseUrl, List<Channel> channels, string accessToken)
     {
         _scheme = scheme;
         _host = host;
         _baseUrl = baseUrl;
         _channels = channels;
+        _accessToken = accessToken;
     }
 
     public string ToM3U()
     {
         var sb = new StringBuilder();
+        
+        string accessTokenUri = string.Empty;
+        string accessTokenUriAmp = string.Empty;
+        if (_accessToken != null)
+        {
+            accessTokenUri = $"?access_token={_accessToken}";
+            accessTokenUriAmp = $"&access_token={_accessToken}";
+        }
 
-        string xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml";
+        var xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml{accessTokenUri}";
         sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
         foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
         {
@@ -30,8 +40,8 @@ public class ChannelPlaylist
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                 .HeadOrNone()
                 .Match(
-                    artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg",
-                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png");
+                    artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
+                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{accessTokenUri}");
 
             string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                 .TrimEnd('=')
@@ -40,10 +50,10 @@ public class ChannelPlaylist
 
             string format = channel.StreamingMode switch
             {
-                StreamingMode.HttpLiveStreamingDirect => "m3u8?mode=hls-direct",
-                StreamingMode.HttpLiveStreamingSegmenter => "m3u8?mode=segmenter",
-                StreamingMode.TransportStreamHybrid => "ts",
-                _ => "ts?mode=ts-legacy"
+                StreamingMode.HttpLiveStreamingDirect => $"m3u8?mode=hls-direct{accessTokenUriAmp}",
+                StreamingMode.HttpLiveStreamingSegmenter => $"m3u8?mode=segmenter{accessTokenUriAmp}",
+                StreamingMode.TransportStreamHybrid => $"ts{accessTokenUri}",
+                _ => $"ts?mode=ts-legacy{accessTokenUriAmp}"
             };
 
             string vcodec = channel.FFmpegProfile.VideoFormat.ToString().ToLowerInvariant();

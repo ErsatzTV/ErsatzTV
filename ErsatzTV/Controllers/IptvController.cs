@@ -9,6 +9,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Iptv;
+using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +17,7 @@ namespace ErsatzTV.Controllers;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
+[ServiceFilter(typeof(ConditionalIptvAuthorizeFilter))]
 public class IptvController : ControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
@@ -36,12 +38,23 @@ public class IptvController : ControllerBase
     public Task<IActionResult> GetChannelPlaylist(
         [FromQuery]
         string mode = "mixed") =>
-        _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), Request.PathBase, mode))
+        _mediator.Send(
+                new GetChannelPlaylist(
+                    Request.Scheme,
+                    Request.Host.ToString(),
+                    Request.PathBase,
+                    mode,
+                    Request.Query["access_token"]))
             .Map<ChannelPlaylist, IActionResult>(Ok);
 
     [HttpGet("iptv/xmltv.xml")]
     public Task<IActionResult> GetGuide() =>
-        _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString(), Request.PathBase))
+        _mediator.Send(
+                new GetChannelGuide(
+                    Request.Scheme,
+                    Request.Host.ToString(),
+                    Request.PathBase,
+                    Request.Query["access_token"]))
             .Map<ChannelGuide, IActionResult>(Ok);
 
     [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
@@ -77,7 +90,7 @@ public class IptvController : ControllerBase
                         mode = "ts";
                         break;
                     default:
-                        return Redirect($"~/iptv/channel/{channelNumber}.m3u8");
+                        return Redirect($"~/iptv/channel/{channelNumber}.m3u8{AccessTokenQuery()}");
                 }
             }
         }
@@ -126,7 +139,7 @@ public class IptvController : ControllerBase
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
         // _logger.LogDebug("Checking for session worker for channel {Channel}", channelNumber);
-        
+
         if (_ffmpegSegmenterService.SessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
         {
             // _logger.LogDebug("Trimming playlist for channel {Channel}", channelNumber);
@@ -168,7 +181,7 @@ public class IptvController : ControllerBase
                         mode = "segmenter";
                         break;
                     default:
-                        return Redirect($"~/iptv/channel/{channelNumber}.ts");
+                        return Redirect($"~/iptv/channel/{channelNumber}.ts{AccessTokenQuery()}");
                 }
             }
         }
@@ -196,7 +209,7 @@ public class IptvController : ControllerBase
                                     "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
                                 return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
-                                // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
+                            // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(
                                     "Failed to start segmenter for channel {ChannelNumber}: {Error}",
@@ -236,5 +249,9 @@ public class IptvController : ControllerBase
         $@"#EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000
-{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8";
+{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8{AccessTokenQuery()}";
+
+    private string AccessTokenQuery() => string.IsNullOrWhiteSpace(Request.Query["access_token"])
+        ? string.Empty
+        : $"?access_token={Request.Query["access_token"]}";
 }

@@ -34,6 +34,7 @@ using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.Filters;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
@@ -60,12 +61,16 @@ using FluentValidation.AspNetCore;
 using Ganss.Xss;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.IO;
 using MudBlazor.Services;
 using Newtonsoft.Json;
@@ -121,6 +126,7 @@ public class Startup
             });
 
         OidcHelper.Init(Configuration);
+        JwtHelper.Init(Configuration);
 
         if (OidcHelper.IsEnabled)
         {
@@ -178,6 +184,66 @@ public class Startup
                     });
         }
 
+        if (JwtHelper.IsEnabled)
+        {
+            services.AddAuthentication().AddJwtBearer(
+                "jwt",
+                options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = JwtHelper.IssuerSigningKey,
+                        ValidateLifetime = true
+                    };
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = static context =>
+                        {
+                            StringValues token = context.Request.Query["access_token"];
+                            if (!string.IsNullOrWhiteSpace(token))
+                            {
+                                context.Token = token;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+        }
+
+        if (OidcHelper.IsEnabled || JwtHelper.IsEnabled)
+        {
+            services.AddAuthorization(
+                options =>
+                {
+                    if (OidcHelper.IsEnabled)
+                    {
+                        var defaultAuthorizationPolicyBuilder = new AuthorizationPolicyBuilder(
+                            "cookie",
+                            "oidc");
+
+                        defaultAuthorizationPolicyBuilder =
+                            defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+
+                        options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
+                    }
+
+                    if (JwtHelper.IsEnabled)
+                    {
+                        var onlyJwtSchemePolicyBuilder = new AuthorizationPolicyBuilder("jwt");
+                        options.AddPolicy(
+                            "JwtOnlyScheme",
+                            onlyJwtSchemePolicyBuilder
+                                .RequireAuthenticatedUser()
+                                .Build());
+                    }
+                }
+            );
+        }
+
         services.AddCors(
             o => o.AddPolicy(
                 "AllowAll",
@@ -205,6 +271,8 @@ public class Startup
                     opt.SerializerSettings.ContractResolver = new CustomContractResolver();
                     opt.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
+
+        services.AddScoped(_ => new ConditionalIptvAuthorizeFilter("JwtOnlyScheme"));
 
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Startup>();
@@ -386,7 +454,7 @@ public class Startup
             });
 
         app.UseRouting();
-        
+
         if (OidcHelper.IsEnabled)
         {
             app.UseAuthentication();
