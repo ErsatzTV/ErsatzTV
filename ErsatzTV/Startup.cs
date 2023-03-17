@@ -52,7 +52,6 @@ using ErsatzTV.Infrastructure.Scheduling;
 using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Trakt;
-using ErsatzTV.Middleware;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
@@ -461,10 +460,6 @@ public class Startup
             app.UseAuthorization();
         }
 
-        app.UseWhen(
-            context => JwtHelper.IsEnabled && context.Request.Path.StartsWithSegments("/iptv"),
-            branch => branch.UseMiddleware<JwtAuthorizeMiddleware>());
-
         string v2 = Environment.GetEnvironmentVariable("ETV_UI_V2");
         if (!env.IsDevelopment() && !string.IsNullOrWhiteSpace(v2))
         {
@@ -608,8 +603,6 @@ public class Startup
         services.AddScoped<IScriptEngine, ScriptEngine>();
 
         services.AddScoped<PlexEtag>();
-
-        services.AddScoped<JwtAuthorizeMiddleware>();
 
         // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
