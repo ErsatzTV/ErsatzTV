@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Troubleshooting` page with aggregated settings/hardware accel info for easy reference
 - Read `director` fields from music video NFO metadata
 - Pass `directors` and `studios` to music video credit templates
+- Add optional JSON Web Token (JWT) query string auth for streaming endpoints
+  - This can be configured using the following env var (note the double underscore separator `__`)
+    - `JWT__ISSUERSIGNINGKEY`
+  - When configured, a JWT signed with the configured signing key is required to be passed in the query string as `access_token`, for example:
+    - `http://localhost:8409/iptv/channels.m3u?access_token=ABCDEF`
+    - `http://localhost:8409/iptv/xmltv.xml?access_token=ABCDEF`
+  - When channels are retrieved this way, the access token will automatically be passed through to all necessary urls
 
 ### Fixed
 - Fix scaling anamorphic content from non-local libraries

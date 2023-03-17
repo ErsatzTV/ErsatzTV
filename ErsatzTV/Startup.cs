@@ -615,7 +615,7 @@ public class Startup
         services.AddHostedService<ResourceExtractorService>();
         services.AddHostedService<PlatformSettingsService>();
         services.AddHostedService<RebuildSearchIndexService>();
-        
+
         // background services
 #if !DEBUG_NO_SYNC
         services.AddHostedService<EmbyService>();
