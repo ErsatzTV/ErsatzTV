@@ -9,6 +9,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Iptv;
+using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,7 @@ namespace ErsatzTV.Controllers;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
-[ServiceFilter(typeof(ConditionalAuthorizeFilter))]
+[ServiceFilter(typeof(ConditionalIptvAuthorizeFilter))]
 public class IptvController : ControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
