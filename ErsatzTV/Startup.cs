@@ -34,6 +34,7 @@ using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Runtime;
+using ErsatzTV.Filters;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
@@ -271,7 +272,7 @@ public class Startup
                     opt.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
 
-        services.AddScoped(_ => new ConditionalAuthorizeFilter("JwtOnlyScheme"));
+        services.AddScoped(_ => new ConditionalIptvAuthorizeFilter("JwtOnlyScheme"));
 
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Startup>();
