@@ -24,15 +24,15 @@ public class ChannelPlaylist
     {
         var sb = new StringBuilder();
         
-        var accessTokenUri = "";
-        var accessTokenUriAmp = "";
+        string accessTokenUri = string.Empty;
+        string accessTokenUriAmp = string.Empty;
         if (_accessToken != null)
         {
             accessTokenUri = $"?access_token={_accessToken}";
             accessTokenUriAmp = $"&access_token={_accessToken}";
         }
 
-        string xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml{accessTokenUri}";
+        var xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml{accessTokenUri}";
         sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
         foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
         {

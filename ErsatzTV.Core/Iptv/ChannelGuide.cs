@@ -16,7 +16,7 @@ public class ChannelGuide
     private readonly string _baseUrl;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly string _scheme;
-    private readonly string _accessToken;
+    private readonly string _accessTokenUri;
 
     public ChannelGuide(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
@@ -31,7 +31,12 @@ public class ChannelGuide
         _host = host;
         _baseUrl = baseUrl;
         _channels = channels;
-        _accessToken = accessToken;
+        
+        _accessTokenUri = string.Empty;
+        if (!string.IsNullOrWhiteSpace(accessToken))
+        {
+            _accessTokenUri = $"?access_token={accessToken}";
+        }
     }
 
     public string ToXml()
@@ -44,12 +49,6 @@ public class ChannelGuide
         xml.WriteAttributeString("generator-info-name", "ersatztv");
 
         var sortedChannelItems = new Dictionary<Channel, List<PlayoutItem>>();
-
-        var accessTokenUri = "";
-        if (_accessToken != null)
-        {
-            accessTokenUri = $"?access_token={_accessToken}";
-        }
 
         foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
         {
@@ -86,8 +85,8 @@ public class ChannelGuide
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                     .HeadOrNone()
                     .Match(
-                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
-                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{accessTokenUri}");
+                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{_accessTokenUri}",
+                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{_accessTokenUri}");
                 xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
@@ -390,12 +389,6 @@ public class ChannelGuide
     {
         string artworkPath = artwork.Path;
 
-        var accessTokenUri = "";
-        if (_accessToken != null)
-        {
-            accessTokenUri = $"?access_token={_accessToken}";
-        }
-
         int height = artworkKind switch
         {
             ArtworkKind.Thumbnail => 220,
@@ -420,7 +413,7 @@ public class ChannelGuide
                 _ => "posters"
             };
 
-            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg{accessTokenUri}";
+            artworkPath = $"{_scheme}://{_host}{_baseUrl}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg{_accessTokenUri}";
         }
 
         return artworkPath;
