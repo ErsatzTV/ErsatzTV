@@ -302,30 +302,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         if (isMediaServer)
         {
-            string mediaItemFolder = Path.GetDirectoryName(playoutItemWithPath.Path);
-
-            allSubtitles = allSubtitles.Map<Subtitle, Option<Subtitle>>(
-                    subtitle =>
-                    {
-                        if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
-                        {
-                            // need to prepend path with movie/episode folder
-                            if (!string.IsNullOrWhiteSpace(mediaItemFolder))
-                            {
-                                subtitle.Path = Path.Combine(mediaItemFolder, subtitle.Path);
-
-                                // skip subtitles that don't exist
-                                if (!File.Exists(subtitle.Path))
-                                {
-                                    return None;
-                                }
-                            }
-                        }
-
-                        return subtitle;
-                    })
-                .Somes()
-                .ToList();
+            // TODO: sidecar subtitles are currently unsupported since media servers no longer use direct filesystem access
+            allSubtitles.RemoveAll(s => s.SubtitleKind == SubtitleKind.Sidecar);
         }
 
         return allSubtitles;
