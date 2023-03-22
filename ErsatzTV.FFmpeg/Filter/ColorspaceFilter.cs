@@ -54,8 +54,20 @@ public class ColorspaceFilter : BaseFilter
                 }
             }
 
-            string inputOverrides = string.Empty;
             ColorParams cp = _videoStream.ColorParams;
+
+            // bt470bg => bt709 seems to work correctly with `colormatrix` and NOT with `colorspace`
+            if (cp == ColorParams.Bt470Bg)
+            {
+                return _desiredPixelFormat.BitDepth switch
+                {
+                    10 => $"{hwdownload}colormatrix=dst=bt709,format=yuv420p10",
+                    8 => $"{hwdownload}colormatrix=dst=bt709,format=yuv420p",
+                    _ => string.Empty
+                };
+            }
+
+            string inputOverrides = string.Empty;
             if (cp.IsMixed || _forceInputOverrides)
             {
                 string range = string.IsNullOrWhiteSpace(cp.ColorRange) ? "tv" : cp.ColorRange;

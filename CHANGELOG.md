@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Tail mode filler will properly include filler duration in XMLTV
   - Duration that wraps across midnight will no longer have overlapping items in XMLTV
 - Maintain collection progress across all alternate schedules on a playout
+- Fix color normalization from `bt470bg` to `bt709`
 
 ### Changed
 - Ignore case of video and audio file extensions in local folder scanner
