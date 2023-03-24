@@ -1595,7 +1595,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.5-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.6-beta...HEAD
+[0.7.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.5-beta...v0.7.6-beta
 [0.7.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.4-beta...v0.7.5-beta
 [0.7.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.3-beta...v0.7.4-beta
 [0.7.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.2-beta...v0.7.3-beta
