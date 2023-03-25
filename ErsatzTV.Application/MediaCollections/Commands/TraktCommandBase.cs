@@ -87,7 +87,11 @@ public abstract class TraktCommandBase
 
                 foreach (TraktListItem existing in toUpdate)
                 {
-                    Option<TraktListItem> maybeIncoming = list.Items.Find(i => i.TraktId == existing.TraktId);
+                    Option<TraktListItem> maybeIncoming = items
+                        .Filter(i => i.TraktId == existing.TraktId)
+                        .Map(i => ProjectItem(list, i))
+                        .HeadOrNone();
+
                     foreach (TraktListItem incoming in maybeIncoming)
                     {
                         existing.Kind = incoming.Kind;

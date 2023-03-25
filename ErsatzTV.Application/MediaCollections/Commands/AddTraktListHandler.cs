@@ -61,7 +61,7 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
 
     private async Task<Either<BaseError, Unit>> DoAdd(Parameters parameters)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         return await TraktApiClient.GetUserList(parameters.User, parameters.List)
             .BindT(list => SaveList(dbContext, list))
