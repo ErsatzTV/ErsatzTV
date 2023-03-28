@@ -478,6 +478,8 @@ public class ChannelGuide
                 .IfNone(string.Empty),
             MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Map(mvm => mvm.Plot ?? string.Empty)
                 .IfNone(string.Empty),
+            OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Map(ovm => ovm.Plot ?? string.Empty)
+                .IfNone(string.Empty),
             _ => string.Empty
         };
     }
