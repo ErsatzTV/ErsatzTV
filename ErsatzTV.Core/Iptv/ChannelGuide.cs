@@ -257,15 +257,11 @@ public class ChannelGuide
                             }
                         }
 
-                        string thumbnail = Optional(metadata.Artwork).Flatten()
-                            .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
-                            .HeadOrNone()
-                            .Match(a => GetArtworkUrl(a, ArtworkKind.Thumbnail), () => string.Empty);
-
-                        if (!string.IsNullOrWhiteSpace(thumbnail))
+                        string artworkPath = GetPrioritizedArtworkPath(metadata);
+                        if (!string.IsNullOrWhiteSpace(artworkPath))
                         {
                             xml.WriteStartElement("icon");
-                            xml.WriteAttributeString("src", thumbnail);
+                            xml.WriteAttributeString("src", artworkPath);
                             xml.WriteEndElement(); // icon
                         }
                     }
@@ -280,15 +276,11 @@ public class ChannelGuide
 
                     foreach (SongMetadata metadata in song.SongMetadata.HeadOrNone())
                     {
-                        string thumbnail = Optional(metadata.Artwork).Flatten()
-                            .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
-                            .HeadOrNone()
-                            .Match(a => GetArtworkUrl(a, ArtworkKind.Thumbnail), () => string.Empty);
-
-                        if (!string.IsNullOrWhiteSpace(thumbnail))
+                        string artworkPath = GetPrioritizedArtworkPath(metadata);
+                        if (!string.IsNullOrWhiteSpace(artworkPath))
                         {
                             xml.WriteStartElement("icon");
-                            xml.WriteAttributeString("src", thumbnail);
+                            xml.WriteAttributeString("src", artworkPath);
                             xml.WriteEndElement(); // icon
                         }
                     }
@@ -313,24 +305,11 @@ public class ChannelGuide
                             xml.WriteEndElement(); // category
                         }
 
-                        string artwork = Optional(metadata.Artwork).Flatten()
-                            .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
-                            .HeadOrNone()
-                            .Match(a => GetArtworkUrl(a, ArtworkKind.Thumbnail), () => string.Empty);
-
-                        // fall back to poster
-                        if (string.IsNullOrWhiteSpace(artwork))
-                        {
-                            artwork = Optional(metadata.Artwork).Flatten()
-                                .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
-                                .HeadOrNone()
-                                .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(artwork))
+                        string artworkPath = GetPrioritizedArtworkPath(metadata);
+                        if (!string.IsNullOrWhiteSpace(artworkPath))
                         {
                             xml.WriteStartElement("icon");
-                            xml.WriteAttributeString("src", artwork);
+                            xml.WriteAttributeString("src", artworkPath);
                             xml.WriteEndElement(); // icon
                         }
                     }
@@ -534,4 +513,22 @@ public class ChannelGuide
         .ToList();
 
     private record ContentRating(Option<string> System, string Value);
+
+    private string GetPrioritizedArtworkPath(Domain.Metadata metadata)
+    {
+        Option<string> maybeArtwork = Optional(metadata.Artwork).Flatten()
+            .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+            .HeadOrNone()
+            .Map(a => GetArtworkUrl(a, ArtworkKind.Poster));
+
+        if (maybeArtwork.IsNone)
+        {
+            maybeArtwork = Optional(metadata.Artwork).Flatten()
+                .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
+                .HeadOrNone()
+                .Map(a => GetArtworkUrl(a, ArtworkKind.Thumbnail));
+        }
+
+        return maybeArtwork.IfNone(string.Empty);
+    }
 }
