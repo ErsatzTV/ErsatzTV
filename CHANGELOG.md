@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix updating (re-adding) Trakt lists to properly use new metadata ids that were not present when originally added
 
+### Changed
+- Use Poster artwork for XMLTV if available
+  - If Poster artwork is unavailable, use Thumbnail
+
 ## [0.7.6-beta] - 2023-03-24
 ### Added
 - Add `Troubleshooting` page with aggregated settings/hardware accel info for easy reference
