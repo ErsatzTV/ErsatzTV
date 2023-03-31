@@ -19,13 +19,18 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         {
             return seasonNumber;
         }
-
+        
         Match match = SeasonPattern.Match(folderName);
         if (match.Success && int.TryParse(match.Groups[1].Value, out seasonNumber))
         {
             return seasonNumber;
         }
 
+        if (int.TryParse(folder.Split(" ").Last(), out seasonNumber))
+        {
+            return seasonNumber;
+        }
+        
         if (folder.EndsWith("specials", StringComparison.OrdinalIgnoreCase))
         {
             return 0;
