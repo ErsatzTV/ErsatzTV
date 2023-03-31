@@ -155,6 +155,8 @@ public class FallbackMetadataProviderTests
     [TestCase(@"/Whatever/American Dad! S01", 1)]
     [TestCase(@"/Whatever/Season 2", 2)]
     [TestCase(@"/Whatever/Season 02", 2)]
+    [TestCase(@"/Whatever/Staffel 2", 2)]
+    [TestCase(@"/Whatever/Staffel 02", 2)]
     [TestCase(@"/Whatever/Seinfeld/S02", 2)]
     [TestCase(@"/Whatever/Seinfeld/2", 2)]
     [TestCase(@"/Whatever/Season 2009", 2009)]
