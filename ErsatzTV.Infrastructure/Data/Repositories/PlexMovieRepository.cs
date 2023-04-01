@@ -1,19 +1,26 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class PlexMovieRepository : IPlexMovieRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<PlexMovieRepository> _logger;
 
-    public PlexMovieRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+    public PlexMovieRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<PlexMovieRepository> logger)
+    {
+        _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<List<PlexItemEtag>> GetExistingMovies(PlexLibrary library)
     {
@@ -178,6 +185,11 @@ public class PlexMovieRepository : IPlexMovieRepository
     {
         try
         {
+            if (await MediaItemRepository.MediaFileAlreadyExists(item, dbContext, _logger))
+            {
+                return new MediaFileAlreadyExists();
+            }
+
             // blank out etag for initial save in case stats/metadata/etc updates fail
             string etag = item.Etag;
             item.Etag = string.Empty;
