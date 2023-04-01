@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Use `plot` field from Other Video NFO metadata as XMLTV description
+- Add detailed warning log when a file is added to ErsatzTV more than once
 
 ### Fixed
 - Fix updating (re-adding) Trakt lists to properly use new metadata ids that were not present when originally added
 - Fix local show library scanning with non-english season folder names, e.g. `Staffel 02`
+- Fix bug where local libraries would merge with media server libraries when the same file was added to both libraries
 
 ### Changed
 - Use Poster artwork for XMLTV if available

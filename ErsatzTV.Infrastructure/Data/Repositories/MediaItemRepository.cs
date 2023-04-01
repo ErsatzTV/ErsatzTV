@@ -3,9 +3,11 @@ using System.Globalization;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
@@ -103,6 +105,7 @@ public class MediaItemRepository : IMediaItemRepository
         mediaItem.State = MediaItemState.Normal;
 
         return await dbContext.Connection.ExecuteAsync(
+            
             @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
             new { mediaItem.Id }).ToUnit();
     }
@@ -119,6 +122,54 @@ public class MediaItemRepository : IMediaItemRepository
         }
 
         return Unit.Default;
+    }
+
+    public static async Task<bool> MediaFileAlreadyExists(MediaItem incoming, TvContext dbContext, ILogger logger)
+    {
+        string path = incoming.GetHeadVersion().MediaFiles.Head().Path;
+        return await MediaFileAlreadyExists(path, dbContext, logger);
+    }
+
+    public static async Task<bool> MediaFileAlreadyExists(string path, TvContext dbContext, ILogger logger)
+    {
+        Option<int> maybeMediaItemId = await dbContext.Connection
+            .QuerySingleOrDefaultAsync<int?>(
+                @"select coalesce(EpisodeId, MovieId, MusicVideoId, OtherVideoId, SongId) as MediaItemId
+                     from MediaVersion MV
+                     inner join MediaFile MF on MV.Id = MF.MediaVersionId
+                     where MF.Path = @Path",
+                new { Path = path })
+            .Map(Optional);
+
+        foreach (int mediaItemId in maybeMediaItemId)
+        {
+            Option<MediaItem> maybeMediaItem = await dbContext.MediaItems
+                .AsNoTracking()
+                .Include(mi => mi.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .SelectOneAsync(mi => mi.Id, mi => mi.Id == mediaItemId);
+
+            foreach (MediaItem mediaItem in maybeMediaItem)
+            {
+                string libraryType = mediaItem.LibraryPath.Library switch
+                {
+                    PlexLibrary => "Plex Library",
+                    EmbyLibrary => "Emby Library",
+                    JellyfinLibrary => "Jellyfin Library",
+                    _ => "Local Library"
+                };
+
+                string libraryName = mediaItem.LibraryPath.Library.Name;
+                logger.LogWarning(
+                    "Unable to add media item; {LibraryType} '{LibraryName}' already contains path {Path}",
+                    libraryType,
+                    libraryName,
+                    path);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task<List<string>> GetAllLanguageCodes()

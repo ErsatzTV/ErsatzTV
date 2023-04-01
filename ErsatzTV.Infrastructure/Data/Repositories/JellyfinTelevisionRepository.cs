@@ -1,20 +1,28 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<JellyfinTelevisionRepository> _logger;
 
-    public JellyfinTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) =>
+    public JellyfinTelevisionRepository(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ILogger<JellyfinTelevisionRepository> logger)
+    {
         _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<List<JellyfinItemEtag>> GetExistingShows(JellyfinLibrary library)
     {
@@ -804,6 +812,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         try
         {
+            if (await MediaItemRepository.MediaFileAlreadyExists(episode, dbContext, _logger))
+            {
+                return new MediaFileAlreadyExists();
+            }
+
             // blank out etag for initial save in case other updates fail
             string etag = episode.Etag;
             episode.Etag = string.Empty;

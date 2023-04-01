@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
@@ -425,16 +426,16 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         }
     }
 
-    private static async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> AddEpisode(
+    private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> AddEpisode(
         TvContext dbContext,
         PlexLibrary library,
         PlexEpisode item)
     {
         try
         {
-            if (dbContext.MediaFiles.Any(mf => mf.Path == item.MediaVersions.Head().MediaFiles.Head().Path))
+            if (await MediaItemRepository.MediaFileAlreadyExists(item, dbContext, _logger))
             {
-                return BaseError.New("Multi-episode files are not yet supported");
+                return new MediaFileAlreadyExists();
             }
 
             // blank out etag for initial save in case stats/metadata/etc updates fail

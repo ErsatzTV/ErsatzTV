@@ -115,7 +115,7 @@ public class ScheduleIntegrationTests
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
             new MediaCollectionRepository(new Mock<IClient>().Object, searchIndex, factory),
-            new TelevisionRepository(factory),
+            new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
             new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,
             new Mock<ILocalFileSystem>().Object,
@@ -275,7 +275,7 @@ public class ScheduleIntegrationTests
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
             new MediaCollectionRepository(new Mock<IClient>().Object, new Mock<ISearchIndex>().Object, factory),
-            new TelevisionRepository(factory),
+            new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
             new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,
             new Mock<ILocalFileSystem>().Object,

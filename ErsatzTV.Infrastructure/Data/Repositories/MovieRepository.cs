@@ -1,17 +1,24 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MovieRepository : IMovieRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<MovieRepository> _logger;
 
-    public MovieRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+    public MovieRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<MovieRepository> logger)
+    {
+        _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<bool> AllMoviesExist(List<int> movieIds)
     {
@@ -54,6 +61,7 @@ public class MovieRepository : IMovieRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<Movie> maybeExisting = await dbContext.Movies
+            .Filter(m => !(m is PlexMovie) && !(m is JellyfinMovie) && !(m is EmbyMovie))
             .Include(i => i.MovieMetadata)
             .ThenInclude(mm => mm.Artwork)
             .Include(i => i.MovieMetadata)
@@ -219,13 +227,18 @@ public class MovieRepository : IMovieRepository
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
         TvContext dbContext,
         int libraryPathId,
         string path)
     {
         try
         {
+            if (await MediaItemRepository.MediaFileAlreadyExists(path, dbContext, _logger))
+            {
+                return new MediaFileAlreadyExists();
+            }
+
             var movie = new Movie
             {
                 LibraryPathId = libraryPathId,

@@ -1,17 +1,24 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class TelevisionRepository : ITelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<TelevisionRepository> _logger;
 
-    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<TelevisionRepository> logger)
+    {
+        _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<bool> AllShowsExist(List<int> showIds)
     {
@@ -325,6 +332,7 @@ public class TelevisionRepository : ITelevisionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<Episode> maybeExisting = await dbContext.Episodes
+            .Filter(e => !(e is PlexEpisode) && !(e is JellyfinEpisode) && !(e is EmbyEpisode))
             .Include(i => i.EpisodeMetadata)
             .ThenInclude(em => em.Artwork)
             .Include(i => i.EpisodeMetadata)
@@ -670,7 +678,7 @@ public class TelevisionRepository : ITelevisionRepository
         }
     }
 
-    private static async Task<Either<BaseError, Episode>> AddEpisode(
+    private async Task<Either<BaseError, Episode>> AddEpisode(
         TvContext dbContext,
         Season season,
         int libraryPathId,
@@ -678,9 +686,9 @@ public class TelevisionRepository : ITelevisionRepository
     {
         try
         {
-            if (dbContext.MediaFiles.Any(mf => mf.Path == path))
+            if (await MediaItemRepository.MediaFileAlreadyExists(path, dbContext, _logger))
             {
-                return BaseError.New("Multi-episode files are not yet supported");
+                return new MediaFileAlreadyExists();
             }
 
             var episode = new Episode
