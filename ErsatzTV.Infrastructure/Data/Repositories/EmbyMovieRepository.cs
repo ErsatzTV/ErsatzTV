@@ -185,7 +185,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(movie, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(movie, library.Paths.Head().Id, dbContext, _logger))
             {
                 return new MediaFileAlreadyExists();
             }

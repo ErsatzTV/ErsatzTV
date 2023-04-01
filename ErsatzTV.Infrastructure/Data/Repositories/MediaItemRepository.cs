@@ -124,13 +124,13 @@ public class MediaItemRepository : IMediaItemRepository
         return Unit.Default;
     }
 
-    public static async Task<bool> MediaFileAlreadyExists(MediaItem incoming, TvContext dbContext, ILogger logger)
+    public static async Task<bool> MediaFileAlreadyExists(MediaItem incoming, int libraryPathId, TvContext dbContext, ILogger logger)
     {
         string path = incoming.GetHeadVersion().MediaFiles.Head().Path;
-        return await MediaFileAlreadyExists(path, dbContext, logger);
+        return await MediaFileAlreadyExists(path, libraryPathId, dbContext, logger);
     }
 
-    public static async Task<bool> MediaFileAlreadyExists(string path, TvContext dbContext, ILogger logger)
+    public static async Task<bool> MediaFileAlreadyExists(string path, int libraryPathId, TvContext dbContext, ILogger logger)
     {
         Option<int> maybeMediaItemId = await dbContext.Connection
             .QuerySingleOrDefaultAsync<int?>(
@@ -151,21 +151,40 @@ public class MediaItemRepository : IMediaItemRepository
 
             foreach (MediaItem mediaItem in maybeMediaItem)
             {
-                string libraryType = mediaItem.LibraryPath.Library switch
-                {
-                    PlexLibrary => "Plex Library",
-                    EmbyLibrary => "Emby Library",
-                    JellyfinLibrary => "Jellyfin Library",
-                    _ => "Local Library"
-                };
+                Option<Library> maybeIncomingLibrary = await dbContext.Libraries
+                    .Filter(l => l.Paths.Any(p => p.Id == libraryPathId))
+                    .SingleOrDefaultAsync()
+                    .Map(Optional);
 
-                string libraryName = mediaItem.LibraryPath.Library.Name;
-                logger.LogWarning(
-                    "Unable to add media item; {LibraryType} '{LibraryName}' already contains path {Path}",
-                    libraryType,
-                    libraryName,
-                    path);
-                return true;
+                foreach (Library incomingLibrary in maybeIncomingLibrary)
+                {
+                    string incomingLibraryType = incomingLibrary switch
+                    {
+                        PlexLibrary => "Plex Library",
+                        EmbyLibrary => "Emby Library",
+                        JellyfinLibrary => "Jellyfin Library",
+                        _ => "Local Library"
+                    };
+                    
+                    string existingLibraryType = mediaItem.LibraryPath.Library switch
+                    {
+                        PlexLibrary => "Plex Library",
+                        EmbyLibrary => "Emby Library",
+                        JellyfinLibrary => "Jellyfin Library",
+                        _ => "Local Library"
+                    };
+
+                    string libraryName = mediaItem.LibraryPath.Library.Name;
+                    logger.LogWarning(
+                        "Unable to add media item to {IncomingLibraryType} '{IncomingLibraryName}'; {LibraryType} '{LibraryName}' already contains path {Path}",
+                        incomingLibraryType,
+                        incomingLibrary.Name,
+                        existingLibraryType,
+                        libraryName,
+                        path);
+
+                    return true;
+                }
             }
         }
 

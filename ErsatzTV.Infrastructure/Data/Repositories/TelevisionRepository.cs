@@ -686,7 +686,7 @@ public class TelevisionRepository : ITelevisionRepository
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(path, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(path, libraryPathId, dbContext, _logger))
             {
                 return new MediaFileAlreadyExists();
             }

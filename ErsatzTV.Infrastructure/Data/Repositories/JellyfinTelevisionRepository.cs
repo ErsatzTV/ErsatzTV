@@ -812,7 +812,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(episode, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(episode, library.Paths.Head().Id, dbContext, _logger))
             {
                 return new MediaFileAlreadyExists();
             }
