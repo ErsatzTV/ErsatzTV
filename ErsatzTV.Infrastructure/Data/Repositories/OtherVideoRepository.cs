@@ -1,17 +1,24 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class OtherVideoRepository : IOtherVideoRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILogger<OtherVideoRepository> _logger;
 
-    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<OtherVideoRepository> logger)
+    {
+        _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
 
     public async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> GetOrAdd(
         LibraryPath libraryPath,
@@ -177,13 +184,18 @@ public class OtherVideoRepository : IOtherVideoRepository
             .ToListAsync();
     }
 
-    private static async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> AddOtherVideo(
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> AddOtherVideo(
         TvContext dbContext,
         int libraryPathId,
         string path)
     {
         try
         {
+            if (await MediaItemRepository.MediaFileAlreadyExists(path, libraryPathId, dbContext, _logger))
+            {
+                return new MediaFileAlreadyExists();
+            }
+
             var otherVideo = new OtherVideo
             {
                 LibraryPathId = libraryPathId,

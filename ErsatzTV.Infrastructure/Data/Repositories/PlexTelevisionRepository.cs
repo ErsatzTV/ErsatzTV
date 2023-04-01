@@ -433,7 +433,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     {
         try
         {
-            if (await MediaItemRepository.MediaFileAlreadyExists(item, dbContext, _logger))
+            if (await MediaItemRepository.MediaFileAlreadyExists(item, library.Paths.Head().Id, dbContext, _logger))
             {
                 return new MediaFileAlreadyExists();
             }
