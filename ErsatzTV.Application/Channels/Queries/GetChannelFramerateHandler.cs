@@ -86,10 +86,20 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
             return result;
         }
 
-        _logger.LogInformation(
-            "All content on channel {ChannelNumber} has the same frame rate of {FrameRate}; will not normalize",
-            request.ChannelNumber,
-            distinct[0]);
+        if (distinct.Any())
+        {
+            _logger.LogInformation(
+                "All content on channel {ChannelNumber} has the same frame rate of {FrameRate}; will not normalize",
+                request.ChannelNumber,
+                distinct[0]);
+        }
+        else
+        {
+            _logger.LogInformation(
+                "No content on channel {ChannelNumber} has frame rate information; will not normalize",
+                request.ChannelNumber);
+        }
+
         return None;
     }
 

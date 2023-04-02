@@ -39,7 +39,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             return await service.GetSystemInformation(apiKey, cts.Token)
                 .Map(response => new JellyfinServerInformation(response.ServerName, response.OperatingSystem));
         }
-        catch (OperationCanceledException ex)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             _logger.LogError(ex, "Timeout getting jellyfin server name");
             return BaseError.New("Jellyfin did not respond in time");

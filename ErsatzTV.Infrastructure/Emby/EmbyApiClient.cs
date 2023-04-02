@@ -39,7 +39,7 @@ public class EmbyApiClient : IEmbyApiClient
             return await service.GetSystemInformation(apiKey, cts.Token)
                 .Map(response => new EmbyServerInformation(response.ServerName, response.OperatingSystem));
         }
-        catch (OperationCanceledException ex)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             _logger.LogError(ex, "Timeout getting emby server name");
             return BaseError.New("Emby did not respond in time");
