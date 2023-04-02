@@ -47,9 +47,20 @@ public class ColorspaceFilter : BaseFilter
                 hwdownload = "hwdownload,";
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
-                    if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
+                    string name = pixelFormat.FFmpegName;
+                    
+                    // vaapi is not a target software format
+                    if (pixelFormat is PixelFormatVaapi vaapi)
                     {
-                        hwdownload = $"hwdownload,format={pixelFormat.FFmpegName},";
+                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(vaapi.Name, null))
+                        {
+                            name = pf.FFmpegName;
+                        }
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        hwdownload = $"hwdownload,format={name},";
                     }
                 }
             }
