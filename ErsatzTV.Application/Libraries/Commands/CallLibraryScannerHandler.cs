@@ -66,7 +66,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
             }
         }
-        catch (OperationCanceledException)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             // do nothing
         }

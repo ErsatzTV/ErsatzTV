@@ -67,31 +67,38 @@ public class HlsSessionWorker : IHlsSessionWorker
         DateTimeOffset filterBefore,
         CancellationToken cancellationToken)
     {
-        var sw = Stopwatch.StartNew();
-        await Slim.WaitAsync(cancellationToken);
         try
         {
-            Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
-            foreach (string[] input in maybeLines)
+            var sw = Stopwatch.StartNew();
+            await Slim.WaitAsync(cancellationToken);
+            try
             {
-                TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(PlaylistStart, filterBefore, input);
-                if (DateTimeOffset.Now > _lastDelete.AddSeconds(30))
+                Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
+                foreach (string[] input in maybeLines)
                 {
-                    DeleteOldSegments(trimResult);
-                    _lastDelete = DateTimeOffset.Now;
+                    TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylist(PlaylistStart, filterBefore, input);
+                    if (DateTimeOffset.Now > _lastDelete.AddSeconds(30))
+                    {
+                        DeleteOldSegments(trimResult);
+                        _lastDelete = DateTimeOffset.Now;
+                    }
+
+                    return trimResult;
                 }
-
-                return trimResult;
             }
-
-            return None;
+            finally
+            {
+                Slim.Release();
+                sw.Stop();
+                // _logger.LogDebug("TrimPlaylist took {Duration}", sw.Elapsed);
+            }
         }
-        finally
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            Slim.Release();
-            sw.Stop();
-            // _logger.LogDebug("TrimPlaylist took {Duration}", sw.Elapsed);
+            // do nothing
         }
+
+        return None;
     }
 
     public void PlayoutUpdated()

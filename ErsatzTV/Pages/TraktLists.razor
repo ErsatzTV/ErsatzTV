@@ -137,7 +137,7 @@
             PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
             return new TableData<TraktListViewModel> { TotalItems = data.TotalCount, Items = data.Page };
         }
-        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException or AggregateException)
         {
             return new TableData<TraktListViewModel>
             {
