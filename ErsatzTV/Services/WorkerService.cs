@@ -51,6 +51,9 @@ public class WorkerService : BackgroundService
                         case RefreshChannelList refreshChannelList:
                             await mediator.Send(refreshChannelList, cancellationToken);
                             break;
+                        case RefreshChannelData refreshChannelData:
+                            await mediator.Send(refreshChannelData, cancellationToken);
+                            break;
                         case BuildPlayout buildPlayout:
                             Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
                                 buildPlayout,

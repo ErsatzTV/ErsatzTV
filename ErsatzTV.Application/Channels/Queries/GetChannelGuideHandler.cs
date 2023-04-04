@@ -49,12 +49,24 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
             .Replace("{RequestBase}", $"{request.Scheme}://{request.Host}{request.BaseUrl}")
             .Replace("{AccessTokenUri}", accessTokenUri);
 
-        return new ChannelGuide(
-            _recyclableMemoryStreamManager,
-            request.Scheme,
-            request.Host,
-            request.BaseUrl,
-            channelsFragment,
-            request.AccessToken);
+        var channelDataFragments = new Dictionary<string, string>();
+
+        foreach (string fileName in _localFileSystem.ListFiles(FileSystemLayout.ChannelGuideCacheFolder))
+        {
+            if (fileName.Contains("channels"))
+            {
+                continue;
+            }
+
+            string channelDataFragment = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationToken);
+            
+            channelDataFragment = channelDataFragment
+                .Replace("{RequestBase}", $"{request.Scheme}://{request.Host}{request.BaseUrl}")
+                .Replace("{AccessTokenUri}", accessTokenUri);
+
+            channelDataFragments.Add(Path.GetFileNameWithoutExtension(fileName), channelDataFragment);
+        }
+
+        return new ChannelGuide(_recyclableMemoryStreamManager, channelsFragment, channelDataFragments);
     }
 }

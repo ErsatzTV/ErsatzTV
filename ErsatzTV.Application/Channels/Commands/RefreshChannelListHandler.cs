@@ -40,7 +40,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         await foreach (ChannelResult channel in GetChannels(dbContext).WithCancellation(cancellationToken))
         {
             await xml.WriteStartElementAsync(null, "channel", null);
-            await xml.WriteAttributeStringAsync(null, "id", $"{channel.Number}.etv", null);
+            await xml.WriteAttributeStringAsync(null, "id", null, $"{channel.Number}.etv");
 
             await xml.WriteStartElementAsync(null, "display-name", null);
             await xml.WriteStringAsync($"{channel.Number} {channel.Name}");
@@ -57,13 +57,13 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
             foreach (string category in GetCategories(channel.Categories))
             {
                 await xml.WriteStartElementAsync(null, "category", null);
-                await xml.WriteAttributeStringAsync(null, "lang", "en", null);
+                await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                 await xml.WriteStringAsync(category);
                 await xml.WriteEndElementAsync(); // category
             }
 
             await xml.WriteStartElementAsync(null, "icon", null);
-            await xml.WriteAttributeStringAsync(null, "src", GetIconUrl(channel), null);
+            await xml.WriteAttributeStringAsync(null, "src", null, GetIconUrl(channel));
             await xml.WriteEndElementAsync(); // icon
 
             await xml.WriteEndElementAsync(); // channel
