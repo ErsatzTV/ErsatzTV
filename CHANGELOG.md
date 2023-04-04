@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Use Poster artwork for XMLTV if available
   - If Poster artwork is unavailable, use Thumbnail
+- Improve XMLTV response time by caching data as playouts are updated 
 
 ## [0.7.6-beta] - 2023-03-24
 ### Added
