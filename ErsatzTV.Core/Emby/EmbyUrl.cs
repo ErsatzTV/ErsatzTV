@@ -40,8 +40,8 @@ public static class EmbyUrl
             .AppendPathSegment(pathSegment)
             .SetQueryParams(query);
     }
-
-    public static Url ProxyForArtwork(string scheme, string host, string artwork, ArtworkKind artworkKind)
+    
+    public static string PlaceholderProxyForArtwork(string artwork, ArtworkKind artworkKind, int height)
     {
         string[] split = artwork.Replace("emby://", string.Empty).Split('?');
         if (split.Length != 2)
@@ -58,9 +58,12 @@ public static class EmbyUrl
             _ => "posters"
         };
 
-        return Url.Parse($"{scheme}://{host}/iptv/artwork/{artworkFolder}/emby")
+        return Url.Parse($"http://not-a-real-host/iptv/artwork/{artworkFolder}/emby")
             .AppendPathSegment(pathSegment)
-            .SetQueryParams(query);
+            .SetQueryParams(query)
+            .SetQueryParam("maxHeight", height)
+            .ToString()
+            .Replace("http://not-a-real-host", "{RequestBase}");
     }
 
     public static Url RelativeProxyForArtwork(string artwork)

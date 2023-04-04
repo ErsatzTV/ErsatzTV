@@ -41,6 +41,31 @@ public static class JellyfinUrl
             .SetQueryParams(query);
     }
 
+    public static string PlaceholderProxyForArtwork(string artwork, ArtworkKind artworkKind, int height)
+    {
+        string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');
+        if (split.Length != 2)
+        {
+            return artwork;
+        }
+
+        string pathSegment = split[0];
+        QueryParamCollection query = Url.ParseQueryParams(split[1]);
+
+        string artworkFolder = artworkKind switch
+        {
+            ArtworkKind.Thumbnail => "thumbnails",
+            _ => "posters"
+        };
+
+        return Url.Parse($"http://not-a-real-host/iptv/artwork/{artworkFolder}/jellyfin")
+            .AppendPathSegment(pathSegment)
+            .SetQueryParams(query)
+            .SetQueryParam("fillHeight", height)
+            .ToString()
+            .Replace("http://not-a-real-host", "{RequestBase}");
+    }
+
     public static Url ProxyForArtwork(string scheme, string host, string artwork, ArtworkKind artworkKind)
     {
         string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');

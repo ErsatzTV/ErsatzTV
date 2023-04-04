@@ -1,5 +1,7 @@
 ﻿using System.Threading.Channels;
 using Bugsnag;
+using Dapper;
+using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -54,6 +56,23 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             if (request.Mode != PlayoutBuildMode.Continue && hasChanges)
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
+            }
+
+            Option<string> maybeChannelNumber = await dbContext.Connection
+                .QuerySingleOrDefaultAsync<string>(
+                    @"select C.Number from Channel C
+                         inner join Playout P on C.Id = P.ChannelId
+                         where P.Id = @PlayoutId",
+                    new { request.PlayoutId })
+                .Map(Optional);
+
+            foreach (string channelNumber in maybeChannelNumber)
+            {
+                string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
+                if (hasChanges || !File.Exists(fileName))
+                {
+                    await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber));
+                }
             }
 
             await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));

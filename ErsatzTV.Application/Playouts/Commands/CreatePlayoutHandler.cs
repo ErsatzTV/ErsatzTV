@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
@@ -28,7 +29,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, playout => PersistPlayout(dbContext, playout));
+        return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
     private async Task<CreatePlayoutResponse> PersistPlayout(TvContext dbContext, Playout playout)
@@ -36,6 +37,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
         await dbContext.Playouts.AddAsync(playout);
         await dbContext.SaveChangesAsync();
         await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset));
+        await _channel.WriteAsync(new RefreshChannelList());
         return new CreatePlayoutResponse(playout.Id);
     }
 

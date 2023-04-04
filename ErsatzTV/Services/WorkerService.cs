@@ -1,6 +1,7 @@
 ﻿using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application;
+using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.Playouts;
@@ -47,6 +48,12 @@ public class WorkerService : BackgroundService
 
                     switch (request)
                     {
+                        case RefreshChannelList refreshChannelList:
+                            await mediator.Send(refreshChannelList, cancellationToken);
+                            break;
+                        case RefreshChannelData refreshChannelData:
+                            await mediator.Send(refreshChannelData, cancellationToken);
+                            break;
                         case BuildPlayout buildPlayout:
                             Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
                                 buildPlayout,
