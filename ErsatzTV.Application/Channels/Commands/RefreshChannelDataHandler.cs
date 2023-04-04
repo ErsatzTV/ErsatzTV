@@ -147,19 +147,19 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             Option<ContentRating> contentRating = GetContentRating(displayItem);
 
             await xml.WriteStartElementAsync(null, "programme", null);
-            xml.WriteAttributeString("start", start);
-            xml.WriteAttributeString("stop", stop);
-            xml.WriteAttributeString("channel", $"{request.ChannelNumber}.etv");
+            await xml.WriteAttributeStringAsync(null, "start", null, start);
+            await xml.WriteAttributeStringAsync(null, "stop", null, stop);
+            await xml.WriteAttributeStringAsync(null, "channel", null, $"{request.ChannelNumber}.etv");
 
-            xml.WriteStartElement("title");
-            xml.WriteAttributeString("lang", "en");
+            await xml.WriteStartElementAsync(null, "title", null);
+            await xml.WriteAttributeStringAsync(null, "lang", null, "en");
             await xml.WriteStringAsync(title);
             await xml.WriteEndElementAsync(); // title
 
             if (!string.IsNullOrWhiteSpace(subtitle))
             {
-                xml.WriteStartElement("sub-title");
-                xml.WriteAttributeString("lang", "en");
+                await xml.WriteStartElementAsync(null, "sub-title", null);
+                await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                 await xml.WriteStringAsync(subtitle);
                 await xml.WriteEndElementAsync(); // subtitle
             }
@@ -168,8 +168,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             {
                 if (!string.IsNullOrWhiteSpace(description))
                 {
-                    xml.WriteStartElement("desc");
-                    xml.WriteAttributeString("lang", "en");
+                    await xml.WriteStartElementAsync(null, "desc", null);
+                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                     await xml.WriteStringAsync(description);
                     await xml.WriteEndElementAsync(); // desc
                 }
@@ -181,20 +181,20 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 {
                     if (metadata.Year.HasValue)
                     {
-                        xml.WriteStartElement("date");
+                        await xml.WriteStartElementAsync(null, "date", null);
                         await xml.WriteStringAsync(metadata.Year.Value.ToString());
                         await xml.WriteEndElementAsync(); // date
                     }
 
-                    xml.WriteStartElement("category");
-                    xml.WriteAttributeString("lang", "en");
+                    await xml.WriteStartElementAsync(null, "category", null);
+                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                     await xml.WriteStringAsync("Movie");
                     await xml.WriteEndElementAsync(); // category
 
-                    foreach (Genre genre in Optional(metadata.Genres).Flatten())
+                    foreach (Genre genre in Optional(metadata.Genres).Flatten().OrderBy(g => g.Name))
                     {
-                        xml.WriteStartElement("category");
-                        xml.WriteAttributeString("lang", "en");
+                        await xml.WriteStartElementAsync(null, "category", null);
+                        await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                         await xml.WriteStringAsync(genre.Name);
                         await xml.WriteEndElementAsync(); // category
                     }
@@ -219,21 +219,21 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 {
                     if (metadata.Year.HasValue)
                     {
-                        xml.WriteStartElement("date");
+                        await xml.WriteStartElementAsync(null, "date", null);
                         await xml.WriteStringAsync(metadata.Year.Value.ToString());
                         await xml.WriteEndElementAsync(); // date
                     }
 
-                    xml.WriteStartElement("category");
-                    xml.WriteAttributeString("lang", "en");
+                    await xml.WriteStartElementAsync(null, "category", null);
+                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                     await xml.WriteStringAsync("Music");
                     await xml.WriteEndElementAsync(); // category
 
                     // music video genres
-                    foreach (Genre genre in Optional(metadata.Genres).Flatten())
+                    foreach (Genre genre in Optional(metadata.Genres).Flatten().OrderBy(g => g.Name))
                     {
-                        xml.WriteStartElement("category");
-                        xml.WriteAttributeString("lang", "en");
+                        await xml.WriteStartElementAsync(null, "category", null);
+                        await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                         await xml.WriteStringAsync(genre.Name);
                         await xml.WriteEndElementAsync(); // category
                     }
@@ -243,10 +243,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         Optional(musicVideo.Artist?.ArtistMetadata.HeadOrNone()).Flatten();
                     foreach (ArtistMetadata artistMetadata in maybeMetadata)
                     {
-                        foreach (Genre genre in Optional(artistMetadata.Genres).Flatten())
+                        foreach (Genre genre in Optional(artistMetadata.Genres).Flatten().OrderBy(g => g.Name))
                         {
-                            xml.WriteStartElement("category");
-                            xml.WriteAttributeString("lang", "en");
+                            await xml.WriteStartElementAsync(null, "category", null);
+                            await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                             await xml.WriteStringAsync(genre.Name);
                             await xml.WriteEndElementAsync(); // category
                         }
@@ -264,8 +264,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
             if (!hasCustomTitle && displayItem.MediaItem is Song song)
             {
-                xml.WriteStartElement("category");
-                xml.WriteAttributeString("lang", "en");
+                await xml.WriteStartElementAsync(null, "category", null);
+                await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                 await xml.WriteStringAsync("Music");
                 await xml.WriteEndElementAsync(); // category
 
@@ -287,15 +287,15 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();
                 foreach (ShowMetadata metadata in maybeMetadata)
                 {
-                    xml.WriteStartElement("category");
-                    xml.WriteAttributeString("lang", "en");
+                    await xml.WriteStartElementAsync(null, "category", null);
+                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                     await xml.WriteStringAsync("Series");
                     await xml.WriteEndElementAsync(); // category
 
-                    foreach (Genre genre in Optional(metadata.Genres).Flatten())
+                    foreach (Genre genre in Optional(metadata.Genres).Flatten().OrderBy(g => g.Name))
                     {
-                        xml.WriteStartElement("category");
-                        xml.WriteAttributeString("lang", "en");
+                        await xml.WriteStartElementAsync(null, "category", null);
+                        await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                         await xml.WriteStringAsync(genre.Name);
                         await xml.WriteEndElementAsync(); // category
                     }
@@ -311,36 +311,36 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
                 if (!isSameCustomShow)
                 {
-                    int s = Optional(episode.Season?.SeasonNumber).IfNone(-1);
+                    int s = await Optional(episode.Season?.SeasonNumber).IfNoneAsync(-1);
                     // TODO: multi-episode?
                     int e = episode.EpisodeMetadata.HeadOrNone().Match(em => em.EpisodeNumber, -1);
                     if (s >= 0 && e > 0)
                     {
-                        xml.WriteStartElement("episode-num");
-                        xml.WriteAttributeString("system", "onscreen");
+                        await xml.WriteStartElementAsync(null, "episode-num", null);
+                        await xml.WriteAttributeStringAsync(null, "system", null, "onscreen");
                         await xml.WriteStringAsync($"S{s:00}E{e:00}");
                         await xml.WriteEndElementAsync(); // episode-num
 
-                        xml.WriteStartElement("episode-num");
-                        xml.WriteAttributeString("system", "xmltv_ns");
+                        await xml.WriteStartElementAsync(null, "episode-num", null);
+                        await xml.WriteAttributeStringAsync(null, "system", null, "xmltv_ns");
                         await xml.WriteStringAsync($"{s - 1}.{e - 1}.0/1");
                         await xml.WriteEndElementAsync(); // episode-num
                     }
                 }
             }
 
-            xml.WriteStartElement("previously-shown");
-            xml.WriteEndElement(); // previously-shown
+            await xml.WriteStartElementAsync(null, "previously-shown", null);
+            await xml.WriteEndElementAsync(); // previously-shown
 
             foreach (ContentRating rating in contentRating)
             {
-                xml.WriteStartElement("rating");
+                await xml.WriteStartElementAsync(null, "rating", null);
                 foreach (string system in rating.System)
                 {
-                    xml.WriteAttributeString("system", system);
+                    await xml.WriteAttributeStringAsync(null, "system", null, system);
                 }
 
-                xml.WriteStartElement("value");
+                await xml.WriteStartElementAsync(null, "value", null);
                 await xml.WriteStringAsync(rating.Value);
                 await xml.WriteEndElementAsync(); // value
                 await xml.WriteEndElementAsync(); // rating

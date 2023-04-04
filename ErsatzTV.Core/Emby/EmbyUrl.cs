@@ -61,7 +61,7 @@ public static class EmbyUrl
         return Url.Parse($"http://not-a-real-host/iptv/artwork/{artworkFolder}/emby")
             .AppendPathSegment(pathSegment)
             .SetQueryParams(query)
-            .SetQueryParam("fillHeight", height)
+            .SetQueryParam("maxHeight", height)
             .ToString()
             .Replace("http://not-a-real-host", "{RequestBase}");
     }
