@@ -11,9 +11,9 @@ namespace ErsatzTV.Core.Iptv;
 
 public class ChannelGuide
 {
-    private readonly List<Channel> _channels;
     private readonly string _host;
     private readonly string _baseUrl;
+    private readonly string _channelsFragment;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly string _scheme;
     private readonly string _accessTokenUri;
@@ -23,14 +23,14 @@ public class ChannelGuide
         string scheme,
         string host,
         string baseUrl,
-        List<Channel> channels,
+        string channelsFragment,
         string accessToken)
     {
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _scheme = scheme;
         _host = host;
         _baseUrl = baseUrl;
-        _channels = channels;
+        _channelsFragment = channelsFragment;
         
         _accessTokenUri = string.Empty;
         if (!string.IsNullOrWhiteSpace(accessToken))
@@ -47,52 +47,10 @@ public class ChannelGuide
 
         xml.WriteStartElement("tv");
         xml.WriteAttributeString("generator-info-name", "ersatztv");
+        
+        xml.WriteRaw(_channelsFragment);
 
         var sortedChannelItems = new Dictionary<Channel, List<PlayoutItem>>();
-
-        foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
-        {
-            var sortedItems = channel.Playouts.Collect(p => p.Items).OrderBy(x => x.Start).ToList();
-            sortedChannelItems.Add(channel, sortedItems);
-
-            if (sortedItems.Any())
-            {
-                xml.WriteStartElement("channel");
-                xml.WriteAttributeString("id", $"{channel.Number}.etv");
-
-                xml.WriteStartElement("display-name");
-                xml.WriteString($"{channel.Number} {channel.Name}");
-                xml.WriteEndElement(); // display-name (number and name)
-
-                xml.WriteStartElement("display-name");
-                xml.WriteString(channel.Number);
-                xml.WriteEndElement(); // display-name (number)
-
-                xml.WriteStartElement("display-name");
-                xml.WriteString(channel.Name);
-                xml.WriteEndElement(); // display-name (name)
-
-                foreach (string category in GetCategories(channel.Categories))
-                {
-                    xml.WriteStartElement("category");
-                    xml.WriteAttributeString("lang", "en");
-                    xml.WriteString(category);
-                    xml.WriteEndElement(); // category
-                }
-
-                xml.WriteStartElement("icon");
-                string logo = Optional(channel.Artwork).Flatten()
-                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                    .HeadOrNone()
-                    .Match(
-                        artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{_accessTokenUri}",
-                        () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{_accessTokenUri}");
-                xml.WriteAttributeString("src", logo);
-                xml.WriteEndElement(); // icon
-
-                xml.WriteEndElement(); // channel
-            }
-        }
 
         foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(
                      kvp => decimal.Parse(kvp.Key.Number)))
@@ -504,13 +462,6 @@ public class ChannelGuide
                     : new ContentRating(None, first);
             }).Flatten();
     }
-
-    private static List<string> GetCategories(string categories) =>
-        (categories ?? string.Empty).Split(',')
-        .Map(s => s.Trim())
-        .Filter(s => !string.IsNullOrWhiteSpace(s))
-        .Distinct()
-        .ToList();
 
     private record ContentRating(Option<string> System, string Value);
 

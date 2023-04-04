@@ -47,8 +47,9 @@ public class ChannelRepository : IChannelRepository
 
     public async Task<List<Channel>> GetAllForGuide()
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
+            .AsNoTracking()
             .Include(c => c.Artwork)
             .Include(c => c.Playouts)
             .ThenInclude(p => p.Items)

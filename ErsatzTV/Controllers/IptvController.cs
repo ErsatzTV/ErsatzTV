@@ -9,6 +9,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Iptv;
+using ErsatzTV.Extensions;
 using ErsatzTV.Filters;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +56,7 @@ public class IptvController : ControllerBase
                     Request.Host.ToString(),
                     Request.PathBase,
                     Request.Query["access_token"]))
-            .Map<ChannelGuide, IActionResult>(Ok);
+            .ToActionResult();
 
     [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
     public Task<IActionResult> GetHDHRVideo(string channelNumber, [FromQuery] string mode = "ts")
