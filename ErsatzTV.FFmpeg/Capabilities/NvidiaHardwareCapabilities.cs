@@ -45,7 +45,8 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
             
             VideoFormat.Vc1 => true,
             
-            VideoFormat.Mpeg4 => true,
+            // too many issues with odd mpeg4 content, so use software
+            VideoFormat.Mpeg4 => false,
             
             // ampere is required for av1 decoding
             VideoFormat.Av1 => _architecture >= 86,
