@@ -72,8 +72,8 @@ public class ColorspaceFilter : BaseFilter
             {
                 return _desiredPixelFormat.BitDepth switch
                 {
-                    10 => $"{hwdownload}colormatrix=dst=bt709,format=yuv420p10",
-                    8 => $"{hwdownload}colormatrix=dst=bt709,format=yuv420p",
+                    10 => $"{hwdownload}colormatrix=src=bt470bg:dst=bt709,format=yuv420p10",
+                    8 => $"{hwdownload}colormatrix=src=bt470bg:dst=bt709,format=yuv420p",
                     _ => string.Empty
                 };
             }
