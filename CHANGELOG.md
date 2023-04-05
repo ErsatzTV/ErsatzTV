@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where local libraries would merge with media server libraries when the same file was added to both libraries
 - Fix transcoding some 10-bit content from media servers using VAAPI acceleration
 - Fix decoding of MPEG-4 Part 2 (e.g. DivX) content using NVIDIA acceleration
+- Fix color normalization from `bt470bg` to `bt709` using QSV acceleration
 
 ### Changed
 - Use Poster artwork for XMLTV if available
