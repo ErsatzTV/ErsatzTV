@@ -96,7 +96,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 34;
+    public int Version => 35;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1154,7 +1154,10 @@ public sealed class SearchIndex : ISearchIndex
 
             foreach (MediaStream videoStream in version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
             {
-                doc.Add(new StringField(VideoCodecField, videoStream.Codec, Field.Store.NO));
+                if (!string.IsNullOrWhiteSpace(videoStream.Codec))
+                {
+                    doc.Add(new StringField(VideoCodecField, videoStream.Codec, Field.Store.NO));
+                }
 
                 Option<IPixelFormat> maybePixelFormat =
                     AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, null);

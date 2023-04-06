@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix transcoding some 10-bit content from media servers using VAAPI acceleration
 - Fix decoding of MPEG-4 Part 2 (e.g. DivX) content using NVIDIA acceleration
 - Fix color normalization from `bt470bg` to `bt709` using QSV acceleration
+- Fix adding files to search index with unknown video codec
 
 ### Changed
 - Use Poster artwork for XMLTV if available
