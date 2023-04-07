@@ -374,7 +374,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             fanArt.DateAdded = incomingFanArt.DateAdded;
             fanArt.DateUpdated = incomingFanArt.DateUpdated;
         }
-
+        
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

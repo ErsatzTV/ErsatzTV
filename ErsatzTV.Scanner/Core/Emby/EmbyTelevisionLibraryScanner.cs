@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -29,13 +28,9 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
-        ILocalStatisticsProvider localStatisticsProvider,
-        ILocalSubtitlesProvider localSubtitlesProvider,
         IMediator mediator,
         ILogger<EmbyTelevisionLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
-            localSubtitlesProvider,
             localFileSystem,
             metadataRepository,
             mediator,
@@ -54,8 +49,6 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         string address,
         string apiKey,
         EmbyLibrary library,
-        string ffmpegPath,
-        string ffprobePath,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -75,8 +68,6 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             new EmbyConnectionParameters(address, apiKey),
             library,
             GetLocalPath,
-            ffmpegPath,
-            ffprobePath,
             deepScan,
             cancellationToken);
     }

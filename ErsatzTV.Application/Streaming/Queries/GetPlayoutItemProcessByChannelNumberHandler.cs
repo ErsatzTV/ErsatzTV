@@ -302,8 +302,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         if (isMediaServer)
         {
-            // TODO: sidecar subtitles are currently unsupported since media servers no longer use direct filesystem access
-            allSubtitles.RemoveAll(s => s.SubtitleKind == SubtitleKind.Sidecar);
+            // closed captions are currently unsupported
+            allSubtitles.RemoveAll(s => s.Codec == "eia_608");
         }
 
         return allSubtitles;

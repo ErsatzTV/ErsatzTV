@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -33,12 +32,8 @@ public class PlexTelevisionLibraryScanner :
         IPlexPathReplacementService plexPathReplacementService,
         IPlexTelevisionRepository plexTelevisionRepository,
         ILocalFileSystem localFileSystem,
-        ILocalStatisticsProvider localStatisticsProvider,
-        ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
-            localSubtitlesProvider,
             localFileSystem,
             metadataRepository,
             mediator,
@@ -60,8 +55,6 @@ public class PlexTelevisionLibraryScanner :
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
-        string ffmpegPath,
-        string ffprobePath,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -81,8 +74,6 @@ public class PlexTelevisionLibraryScanner :
             new PlexConnectionParameters(connection, token),
             library,
             GetLocalPath,
-            ffmpegPath,
-            ffprobePath,
             deepScan,
             cancellationToken);
     }
@@ -598,6 +589,11 @@ public class PlexTelevisionLibraryScanner :
         }
 
         if (await UpdateArtworkIfNeeded(existingMetadata, fullMetadata, ArtworkKind.Thumbnail))
+        {
+            result.IsUpdated = true;
+        }
+        
+        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles))
         {
             result.IsUpdated = true;
         }

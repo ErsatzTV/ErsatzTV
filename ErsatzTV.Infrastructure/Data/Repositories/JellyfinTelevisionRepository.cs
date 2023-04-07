@@ -731,7 +731,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         {
             metadata.Artwork.Remove(artworkToRemove);
         }
-
+        
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

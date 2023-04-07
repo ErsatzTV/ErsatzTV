@@ -7,14 +7,27 @@ public class PlexStreamResponse
     [XmlAttribute("id")]
     public int Id { get; set; }
 
+    [XmlIgnore]
+    public int? Index { get; set; }
+
     [XmlAttribute("index")]
-    public int Index { get; set; }
+    public string IndexString
+    {
+        get => Index.HasValue ? Index.Value.ToString() : string.Empty;
+        set => Index = !string.IsNullOrEmpty(value) ? int.Parse(value) : null;
+    }
+
+    [XmlAttribute("key")]
+    public string Key { get; set; }
 
     [XmlAttribute("default")]
     public bool Default { get; set; }
 
     [XmlAttribute("forced")]
     public bool Forced { get; set; }
+
+    [XmlAttribute("embeddedInVideo")]
+    public bool EmbeddedInVideo { get; set; }
 
     [XmlAttribute("languageCode")]
     public string LanguageCode { get; set; }

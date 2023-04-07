@@ -728,7 +728,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         {
             metadata.Artwork.Remove(artworkToRemove);
         }
-
+        
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

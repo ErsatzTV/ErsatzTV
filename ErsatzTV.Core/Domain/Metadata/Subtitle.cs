@@ -15,7 +15,7 @@ public class Subtitle
     public string Path { get; set; }
     public DateTime DateAdded { get; set; }
     public DateTime DateUpdated { get; set; }
-    public bool IsImage => Codec is "hdmv_pgs_subtitle" or "dvd_subtitle";
+    public bool IsImage => Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "pgssub";
 
     public static Subtitle FromMediaStream(MediaStream stream) =>
         new()
@@ -26,8 +26,20 @@ public class Subtitle
             Forced = stream.Forced,
             Language = stream.Language,
             StreamIndex = stream.Index,
-            SubtitleKind = SubtitleKind.Embedded,
+            Path = !string.IsNullOrWhiteSpace(stream.FileName) ? stream.FileName : null,
+            SubtitleKind = stream.MediaStreamKind == MediaStreamKind.ExternalSubtitle
+                ? SubtitleKind.Sidecar
+                : SubtitleKind.Embedded,
             DateAdded = DateTime.UtcNow,
             DateUpdated = DateTime.UtcNow
         };
+
+    public static string ExtensionForCodec(string codec) => codec switch
+    {
+        "subrip" or "srt" => "srt",
+        "ass" => "ass",
+        "webvtt" => "vtt",
+        "mov_text" => "srt",
+        _ => string.Empty
+    };
 }

@@ -92,6 +92,7 @@ public class SchedulerService : BackgroundService
         try
         {
             await DeleteOrphanedArtwork(cancellationToken);
+            await DeleteOrphanedSubtitles(cancellationToken);
             await RefreshChannelGuideChannelList(cancellationToken);
             await BuildPlayouts(cancellationToken);
 #if !DEBUG_NO_SYNC
@@ -285,6 +286,9 @@ public class SchedulerService : BackgroundService
 
     private ValueTask DeleteOrphanedArtwork(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);
+
+    private ValueTask DeleteOrphanedSubtitles(CancellationToken cancellationToken) =>
+        _workerChannel.WriteAsync(new DeleteOrphanedSubtitles(), cancellationToken);
 
     private ValueTask ReleaseMemory(CancellationToken cancellationToken) =>
         _workerChannel.WriteAsync(new ReleaseMemory(false), cancellationToken);

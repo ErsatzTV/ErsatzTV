@@ -18,12 +18,10 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeEmbyLibraryByIdHandler> _logger;
 
-    private readonly IEmbyApiClient _embyApiClient;
     private readonly IMediator _mediator;
     private readonly IMediaSourceRepository _mediaSourceRepository;
 
     public SynchronizeEmbyLibraryByIdHandler(
-        IEmbyApiClient embyApiClient,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IEmbySecretStore embySecretStore,
@@ -33,7 +31,6 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
         IConfigElementRepository configElementRepository,
         ILogger<SynchronizeEmbyLibraryByIdHandler> logger)
     {
-        _embyApiClient = embyApiClient;
         _mediator = mediator;
         _mediaSourceRepository = mediaSourceRepository;
         _embySecretStore = embySecretStore;
@@ -68,8 +65,6 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                         parameters.ConnectionParameters.ActiveConnection.Address,
                         parameters.ConnectionParameters.ApiKey,
                         parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath,
                         parameters.DeepScan,
                         cancellationToken),
                 LibraryMediaKind.Shows =>
@@ -77,8 +72,6 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                         parameters.ConnectionParameters.ActiveConnection.Address,
                         parameters.ConnectionParameters.ApiKey,
                         parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath,
                         parameters.DeepScan,
                         cancellationToken),
                 _ => Unit.Default

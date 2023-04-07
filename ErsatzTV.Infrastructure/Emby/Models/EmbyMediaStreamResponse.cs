@@ -15,6 +15,7 @@ public class EmbyMediaStreamResponse
     public string AspectRatio { get; set; }
     public int? Channels { get; set; }
     public bool? IsAnamorphic { get; set; }
+    public bool? IsExternal { get; set; }
     public string DisplayTitle { get; set; }
     public string PixelFormat { get; set; }
     public string ColorRange { get; set; }
