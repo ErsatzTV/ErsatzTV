@@ -16,7 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix decoding of MPEG-4 Part 2 (e.g. DivX) content using NVIDIA acceleration
 - Fix color normalization from `bt470bg` to `bt709` using QSV acceleration
 - Fix adding files to search index with unknown video codec
-- Fix embedded subtitles from all media servers
+- Fix subtitle burn-in (embedded or external) using Jellyfin, Emby and Plex libraries
+    - **This requires a one-time full library scan, which may take a long time with large libraries.**
 
 ### Changed
 - Use Poster artwork for XMLTV if available

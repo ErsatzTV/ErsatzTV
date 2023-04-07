@@ -15,7 +15,7 @@ public class Subtitle
     public string Path { get; set; }
     public DateTime DateAdded { get; set; }
     public DateTime DateUpdated { get; set; }
-    public bool IsImage => Codec is "hdmv_pgs_subtitle" or "dvd_subtitle";
+    public bool IsImage => Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "pgssub";
 
     public static Subtitle FromMediaStream(MediaStream stream) =>
         new()
@@ -33,4 +33,13 @@ public class Subtitle
             DateAdded = DateTime.UtcNow,
             DateUpdated = DateTime.UtcNow
         };
+
+    public static string ExtensionForCodec(string codec) => codec switch
+    {
+        "subrip" => "srt",
+        "ass" => "ass",
+        "webvtt" => "vtt",
+        "mov_text" => "srt",
+        _ => string.Empty
+    };
 }

@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
@@ -493,7 +494,7 @@ public class MetadataRepository : IMetadataRepository
         return await UpdateSubtitles(dbContext, metadata, subtitles);
     }
 
-    public static async Task<bool> UpdateSubtitles(TvContext dbContext, Metadata metadata, List<Subtitle> subtitles)
+    private static async Task<bool> UpdateSubtitles(TvContext dbContext, Metadata metadata, List<Subtitle> subtitles)
     {
         // _logger.LogDebug(
         //     "Updating {Count} subtitles; metadata is {Metadata}",

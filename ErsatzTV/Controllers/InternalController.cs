@@ -114,11 +114,21 @@ public class InternalController : ControllerBase
             Left: _ => new NotFoundResult(),
             Right: r =>
             {
-                Url fullPath = Flurl.Url.Parse(r.Address)
-                    .AppendPathSegment("Videos")
-                    .AppendPathSegment(path)
-                    .AppendPathSegment("stream")
-                    .SetQueryParam("static", "true");
+                Url fullPath;
+                
+                if (path.Contains("Subtitles"))
+                {
+                    fullPath = Flurl.Url.Parse(r.Address)
+                        .AppendPathSegment(path);
+                }
+                else
+                {
+                    fullPath = Flurl.Url.Parse(r.Address)
+                        .AppendPathSegment("Videos")
+                        .AppendPathSegment(path)
+                        .AppendPathSegment("stream")
+                        .SetQueryParam("static", "true");
+                }
 
                 return new RedirectResult(fullPath.ToString());
             });

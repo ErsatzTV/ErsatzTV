@@ -494,7 +494,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
             Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList(),
             Artwork = new List<Artwork>(),
-            Guids = GuidsFromProviderIds(item.ProviderIds)
+            Guids = GuidsFromProviderIds(item.ProviderIds),
+            Subtitles = new List<Subtitle>()
         };
 
         // set order on actors
@@ -834,7 +835,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             Artwork = new List<Artwork>(),
             Guids = GuidsFromProviderIds(item.ProviderIds),
             Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
-            Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList()
+            Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList(),
+            Subtitles = new List<Subtitle>()
         };
 
         if (item.IndexNumber.HasValue)
@@ -904,9 +906,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             .OrderByDescending(i => i)
             .FirstOrDefault();
         
-        IList<JellyfinMediaStreamResponse> streams = mediaSource.MediaStreams
-            .Filter(s => s.IsExternal == false)
-            .ToList();
+        IList<JellyfinMediaStreamResponse> streams = mediaSource.MediaStreams;
+
         Option<JellyfinMediaStreamResponse> maybeVideoStream =
             streams.Find(s => s.Type == JellyfinMediaStreamType.Video);
         return maybeVideoStream.Map(
@@ -998,13 +999,23 @@ public class JellyfinApiClient : IJellyfinApiClient
                     var stream = new MediaStream
                     {
                         MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Subtitle,
-                        Index = subtitleStream.Index - streamIndexOffset,
-                        Codec = subtitleStream.Codec,
+                        Codec = (subtitleStream.Codec ?? string.Empty).ToLowerInvariant(),
                         Default = subtitleStream.IsDefault,
                         Forced = subtitleStream.IsForced,
                         Language = subtitleStream.Language
                     };
+
+                    if (subtitleStream.IsExternal)
+                    {
+                        stream.MediaStreamKind = MediaStreamKind.ExternalSubtitle;
+                        // ensure these don't collide with real indexes from the source file
+                        stream.Index = subtitleStream.Index + JellyfinStream.ExternalStreamOffset;
+                    }
+                    else
+                    {
+                        stream.MediaStreamKind = MediaStreamKind.Subtitle;
+                        stream.Index = subtitleStream.Index - streamIndexOffset;
+                    }
 
                     version.Streams.Add(stream);
                 }

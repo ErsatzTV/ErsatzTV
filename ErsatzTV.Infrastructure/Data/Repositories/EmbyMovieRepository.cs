@@ -375,8 +375,6 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             fanArt.DateUpdated = incomingFanArt.DateUpdated;
         }
         
-        await MetadataRepository.UpdateSubtitles(dbContext, metadata, incomingMetadata.Subtitles);
-
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

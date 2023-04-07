@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
@@ -154,7 +155,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                             existing,
                             incoming,
                             deepScan,
-                            None));
+                            None))
+                    .BindT(UpdateSubtitles);
             }
 
             if (maybeMovie.IsLeft)
@@ -447,5 +449,34 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         }
 
         return result;
+    }
+    
+        
+    private async Task<Either<BaseError, MediaItemScanResult<TMovie>>> UpdateSubtitles(
+        MediaItemScanResult<TMovie> existing)
+    {
+        try
+        {
+            MediaVersion version = existing.Item.GetHeadVersion();
+            Option<MovieMetadata> maybeMetadata = existing.Item.MovieMetadata.HeadOrNone();
+            foreach (MovieMetadata metadata in maybeMetadata)
+            {
+                List<Subtitle> subtitles = version.Streams
+                    .Filter(s => s.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+                    .Map(Subtitle.FromMediaStream)
+                    .ToList();
+
+                if (await _metadataRepository.UpdateSubtitles(metadata, subtitles))
+                {
+                    return existing;
+                }
+            }
+
+            return BaseError.New("Failed to update media server subtitles");
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
     }
 }
