@@ -68,6 +68,9 @@ public class WorkerService : BackgroundService
                         case DeleteOrphanedArtwork deleteOrphanedArtwork:
                             await mediator.Send(deleteOrphanedArtwork, cancellationToken);
                             break;
+                        case DeleteOrphanedSubtitles deleteOrphanedSubtitles:
+                            await mediator.Send(deleteOrphanedSubtitles, cancellationToken);
+                            break;
                         case AddTraktList addTraktList:
                             await mediator.Send(addTraktList, cancellationToken);
                             break;
