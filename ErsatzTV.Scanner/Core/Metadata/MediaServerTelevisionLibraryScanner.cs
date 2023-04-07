@@ -2,12 +2,10 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -23,18 +21,15 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 {
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IMetadataRepository _metadataRepository;
-    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
 
     protected MediaServerTelevisionLibraryScanner(
-        ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
         IMediator mediator,
         ILogger logger)
     {
-        _localSubtitlesProvider = localSubtitlesProvider;
         _localFileSystem = localFileSystem;
         _metadataRepository = metadataRepository;
         _mediator = mediator;
@@ -49,8 +44,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TConnectionParameters connectionParameters,
         TLibrary library,
         Func<TEpisode, string> getLocalPath,
-        string ffmpegPath,
-        string ffprobePath,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -71,8 +64,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     connectionParameters,
                     library,
                     getLocalPath,
-                    ffmpegPath,
-                    ffprobePath,
                     GetShowLibraryItems(connectionParameters, library),
                     count,
                     deepScan,
@@ -108,8 +99,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TConnectionParameters connectionParameters,
         TLibrary library,
         Func<TEpisode, string> getLocalPath,
-        string ffmpegPath,
-        string ffprobePath,
         IAsyncEnumerable<TShow> showEntries,
         int totalShowCount,
         bool deepScan,
@@ -179,8 +168,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     getLocalPath,
                     result.Item,
                     connectionParameters,
-                    ffmpegPath,
-                    ffprobePath,
                     GetSeasonLibraryItems(library, connectionParameters, result.Item),
                     deepScan,
                     cancellationToken);
@@ -302,8 +289,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         Func<TEpisode, string> getLocalPath,
         TShow show,
         TConnectionParameters connectionParameters,
-        string ffmpegPath,
-        string ffprobePath,
         IAsyncEnumerable<TSeason> seasonEntries,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -367,8 +352,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     show,
                     result.Item,
                     connectionParameters,
-                    ffmpegPath,
-                    ffprobePath,
                     GetEpisodeLibraryItems(library, connectionParameters, show, result.Item),
                     deepScan,
                     cancellationToken);
@@ -418,8 +401,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TShow show,
         TSeason season,
         TConnectionParameters connectionParameters,
-        string ffmpegPath,
-        string ffprobePath,
         IAsyncEnumerable<TEpisode> episodeEntries,
         bool deepScan,
         CancellationToken cancellationToken)
@@ -470,8 +451,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                             library,
                             existing,
                             incoming,
-                            deepScan))
-                    .BindT(UpdateSubtitles);
+                            deepScan));
             }
             else
             {
@@ -492,10 +472,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                             existing,
                             incoming,
                             deepScan,
-                            ffmpegPath,
-                            ffprobePath,
-                            None))
-                    .BindT(UpdateSubtitles);
+                            None));
             }
 
             if (maybeEpisode.IsLeft)
@@ -725,8 +702,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                 result,
                 incoming,
                 deepScan,
-                string.Empty,
-                string.Empty,
                 mediaVersion);
             
             foreach (BaseError error in statisticsResult.LeftToSeq())
@@ -772,8 +747,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         MediaItemScanResult<TEpisode> result,
         TEpisode incoming,
         bool deepScan,
-        string ffmpegPath,
-        string ffprobePath,
         Option<MediaVersion> maybeMediaVersion)
     {
         TEpisode existing = result.Item;
@@ -827,46 +800,5 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         }
 
         return result;
-    }
-
-    private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateSubtitles(
-        MediaItemScanResult<TEpisode> existing)
-    {
-        try
-        {
-            Option<EpisodeMetadata> maybeMetadata = existing.Item.EpisodeMetadata.HeadOrNone();
-            foreach (EpisodeMetadata metadata in maybeMetadata)
-            {
-                var subtitleStreams = existing.Item.GetHeadVersion().Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
-                
-                // TODO: check for/add external subtitles
-
-                if (await _metadataRepository.UpdateSubtitles(metadata, subtitles))
-                {
-                    return existing;
-                }
-
-                // skip checking subtitles for files that don't exist locally
-                // if (!_localFileSystem.FileExists(existing.LocalPath))
-                // {
-                // return existing;
-                // }
-                //
-                // if (await _localSubtitlesProvider.UpdateSubtitles(existing.Item, existing.LocalPath, false))
-                // {
-                //     return existing;
-                // }
-            }
-
-            return BaseError.New("Failed to update local subtitles");
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
     }
 }

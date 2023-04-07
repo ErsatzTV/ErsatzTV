@@ -153,6 +153,11 @@ public class InternalController : ControllerBase
             Left: _ => new NotFoundResult(),
             Right: r =>
             {
+                if (r.StartsWith("http"))
+                {
+                    return new RedirectResult(r);
+                }
+                
                 string mimeType = Path.GetExtension(r).ToLowerInvariant() switch
                 {
                     "ass" or "ssa" => "text/x-ssa",

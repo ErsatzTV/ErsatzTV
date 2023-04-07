@@ -80,8 +80,6 @@ public class
                         parameters.ConnectionParameters.ActiveConnection.Address,
                         parameters.ConnectionParameters.ApiKey,
                         parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath,
                         parameters.DeepScan,
                         cancellationToken),
                 LibraryMediaKind.Shows =>
@@ -89,8 +87,6 @@ public class
                         parameters.ConnectionParameters.ActiveConnection.Address,
                         parameters.ConnectionParameters.ApiKey,
                         parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath,
                         parameters.DeepScan,
                         cancellationToken),
                 _ => Unit.Default

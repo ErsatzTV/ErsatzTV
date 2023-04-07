@@ -26,7 +26,10 @@ public class Subtitle
             Forced = stream.Forced,
             Language = stream.Language,
             StreamIndex = stream.Index,
-            SubtitleKind = SubtitleKind.Embedded,
+            Path = !string.IsNullOrWhiteSpace(stream.FileName) ? stream.FileName : null,
+            SubtitleKind = stream.MediaStreamKind == MediaStreamKind.ExternalSubtitle
+                ? SubtitleKind.Sidecar
+                : SubtitleKind.Embedded,
             DateAdded = DateTime.UtcNow,
             DateUpdated = DateTime.UtcNow
         };

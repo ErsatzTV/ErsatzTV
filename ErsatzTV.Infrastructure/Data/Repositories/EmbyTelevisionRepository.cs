@@ -728,6 +728,8 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         {
             metadata.Artwork.Remove(artworkToRemove);
         }
+        
+        await MetadataRepository.UpdateSubtitles(dbContext, metadata, incomingMetadata.Subtitles);
 
         // version
         MediaVersion version = existing.MediaVersions.Head();

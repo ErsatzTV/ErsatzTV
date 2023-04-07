@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -30,10 +29,8 @@ public class JellyfinMovieLibraryScanner :
         IMediaSourceRepository mediaSourceRepository,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
-        ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<JellyfinMovieLibraryScanner> logger)
         : base(
-            localSubtitlesProvider,
             localFileSystem,
             metadataRepository,
             mediator,
@@ -52,8 +49,6 @@ public class JellyfinMovieLibraryScanner :
         string address,
         string apiKey,
         JellyfinLibrary library,
-        string ffmpegPath,
-        string ffprobePath,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -73,8 +68,6 @@ public class JellyfinMovieLibraryScanner :
             new JellyfinConnectionParameters(address, apiKey, library.MediaSourceId),
             library,
             GetLocalPath,
-            ffmpegPath,
-            ffprobePath,
             deepScan,
             cancellationToken);
     }

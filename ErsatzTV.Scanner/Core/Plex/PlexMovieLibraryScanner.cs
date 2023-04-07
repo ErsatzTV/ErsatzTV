@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -33,10 +32,8 @@ public class PlexMovieLibraryScanner :
         IPlexMovieRepository plexMovieRepository,
         IPlexPathReplacementService plexPathReplacementService,
         ILocalFileSystem localFileSystem,
-        ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexMovieLibraryScanner> logger)
         : base(
-            localSubtitlesProvider,
             localFileSystem,
             metadataRepository,
             mediator,
@@ -58,8 +55,6 @@ public class PlexMovieLibraryScanner :
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
-        string ffmpegPath,
-        string ffprobePath,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -79,8 +74,6 @@ public class PlexMovieLibraryScanner :
             new PlexConnectionParameters(connection, token),
             library,
             GetLocalPath,
-            ffmpegPath,
-            ffprobePath,
             deepScan,
             cancellationToken);
     }
@@ -115,18 +108,7 @@ public class PlexMovieLibraryScanner :
     {
         if (result.IsAdded || result.Item.Etag != incoming.Etag || deepScan)
         {
-            Either<BaseError, MovieMetadata> maybeMetadata = await _plexServerApiClient.GetMovieMetadata(
-                library,
-                incoming.Key.Split("/").Last(),
-                connectionParameters.Connection,
-                connectionParameters.Token);
-
-            foreach (BaseError error in maybeMetadata.LeftToSeq())
-            {
-                _logger.LogWarning("Failed to get movie metadata from Plex: {Error}", error.ToString());
-            }
-
-            return maybeMetadata.ToOption();
+            throw new NotSupportedException("This shouldn't happen anymore");
         }
 
         return None;
@@ -354,6 +336,11 @@ public class PlexMovieLibraryScanner :
             {
                 result.IsUpdated = true;
             }
+        }
+
+        if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles))
+        {
+            result.IsUpdated = true;
         }
 
         if (fullMetadata.SortTitle != existingMetadata.SortTitle)

@@ -489,14 +489,18 @@ public class MetadataRepository : IMetadataRepository
 
     public async Task<bool> UpdateSubtitles(Metadata metadata, List<Subtitle> subtitles)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await UpdateSubtitles(dbContext, metadata, subtitles);
+    }
+
+    public static async Task<bool> UpdateSubtitles(TvContext dbContext, Metadata metadata, List<Subtitle> subtitles)
+    {
         // _logger.LogDebug(
         //     "Updating {Count} subtitles; metadata is {Metadata}",
         //     subtitles.Count,
         //     metadata.GetType().Name);
         
         int metadataId = metadata.Id;
-
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<Metadata> maybeMetadata = metadata switch
         {
@@ -548,7 +552,8 @@ public class MetadataRepository : IMetadataRepository
                 foreach (Subtitle incomingSubtitle in toUpdate)
                 {
                     Subtitle existingSubtitle =
-                        existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
+                        existing.Subtitles.First(
+                            s => s.StreamIndex == incomingSubtitle.StreamIndex);
 
                     existingSubtitle.Codec = incomingSubtitle.Codec;
                     existingSubtitle.Default = incomingSubtitle.Default;

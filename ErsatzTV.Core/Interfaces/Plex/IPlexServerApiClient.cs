@@ -45,12 +45,6 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, MovieMetadata>> GetMovieMetadata(
-        PlexLibrary library,
-        string key,
-        PlexConnection connection,
-        PlexServerAuthToken token);
-
     Task<Either<BaseError, ShowMetadata>> GetShowMetadata(
         PlexLibrary library,
         string key,

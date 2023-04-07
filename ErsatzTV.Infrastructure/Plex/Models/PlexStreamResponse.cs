@@ -26,6 +26,9 @@ public class PlexStreamResponse
     [XmlAttribute("forced")]
     public bool Forced { get; set; }
 
+    [XmlAttribute("embeddedInVideo")]
+    public bool EmbeddedInVideo { get; set; }
+
     [XmlAttribute("languageCode")]
     public string LanguageCode { get; set; }
 

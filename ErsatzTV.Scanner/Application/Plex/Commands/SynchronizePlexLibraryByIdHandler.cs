@@ -64,8 +64,6 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
                         parameters.ConnectionParameters.ActiveConnection,
                         parameters.ConnectionParameters.PlexServerAuthToken,
                         parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath,
                         parameters.DeepScan,
                         cancellationToken),
                 LibraryMediaKind.Shows =>
@@ -73,8 +71,6 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
                         parameters.ConnectionParameters.ActiveConnection,
                         parameters.ConnectionParameters.PlexServerAuthToken,
                         parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath,
                         parameters.DeepScan,
                         cancellationToken),
                 _ => Unit.Default
