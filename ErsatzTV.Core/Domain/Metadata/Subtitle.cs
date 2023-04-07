@@ -36,7 +36,7 @@ public class Subtitle
 
     public static string ExtensionForCodec(string codec) => codec switch
     {
-        "subrip" => "srt",
+        "subrip" or "srt" => "srt",
         "ass" => "ass",
         "webvtt" => "vtt",
         "mov_text" => "srt",

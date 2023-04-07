@@ -35,7 +35,10 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
             return jellyfinUrl;
         }
         
-        // TODO: check for emby path
+        foreach (string embyUrl in await GetEmbyUrl(request, dbContext, maybeSubtitle))
+        {
+            return embyUrl;
+        }
 
         return maybeSubtitle
             .Map(s => s.Path)
@@ -120,6 +123,46 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                 var subtitlePath =
                     $"Videos/{jellyfinItemId}/{jellyfinItemId}/Subtitles/{index}/{index}/Stream.{extension}";
                 return $"http://localhost:{Settings.ListenPort}/media/jellyfin/{subtitlePath}";
+            }
+        }
+        
+        return Option<string>.None;
+    }
+    
+    private static async Task<Option<string>> GetEmbyUrl(
+        GetSubtitlePathById request,
+        TvContext dbContext,
+        Option<Subtitle> maybeSubtitle)
+    {
+        // check for emby episode
+        Option<string> maybeEmbyId = await dbContext.Connection.QuerySingleOrDefaultAsync<string>(
+                @"select EE.ItemId from EmbyEpisode EE
+                     inner join EpisodeMetadata EM on EM.EpisodeId = EE.Id
+                     inner join Subtitle S on EM.Id = S.EpisodeMetadataId
+                     where S.Id = @SubtitleId",
+                new { SubtitleId = request.Id })
+            .Map(Optional);
+
+        // check for emby movie
+        if (maybeEmbyId.IsNone)
+        {
+            maybeEmbyId = await dbContext.Connection.QuerySingleOrDefaultAsync<string>(
+                    @"select EM.ItemId from EmbyMovie EM
+                     inner join MovieMetadata MM on MM.MovieId = EM.Id
+                     inner join Subtitle S on MM.Id = S.MovieMetadataId
+                     where S.Id = @SubtitleId",
+                    new { SubtitleId = request.Id })
+                .Map(Optional);
+        }
+
+        foreach (string embyItemId in maybeEmbyId)
+        {
+            foreach (Subtitle subtitle in maybeSubtitle)
+            {
+                string extension = Subtitle.ExtensionForCodec(subtitle.Codec);
+                var subtitlePath =
+                    $"Videos/{embyItemId}/{subtitle.Path}/Subtitles/{subtitle.StreamIndex}/Stream.{extension}";
+                return $"http://localhost:{Settings.ListenPort}/media/emby/{subtitlePath}";
             }
         }
         

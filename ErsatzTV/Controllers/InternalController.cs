@@ -144,12 +144,23 @@ public class InternalController : ControllerBase
             Left: _ => new NotFoundResult(),
             Right: r =>
             {
-                Url fullPath = Flurl.Url.Parse(r.Address)
-                    .AppendPathSegment("Videos")
-                    .AppendPathSegment(path)
-                    .AppendPathSegment("stream")
-                    .SetQueryParam("static", "true")
-                    .SetQueryParam("X-Emby-Token", r.ApiKey);
+                Url fullPath;
+                
+                if (path.Contains("Subtitles"))
+                {
+                    fullPath = Flurl.Url.Parse(r.Address)
+                        .AppendPathSegment(path)
+                        .SetQueryParam("X-Emby-Token", r.ApiKey);
+                }
+                else
+                {
+                    fullPath = Flurl.Url.Parse(r.Address)
+                        .AppendPathSegment("Videos")
+                        .AppendPathSegment(path)
+                        .AppendPathSegment("stream")
+                        .SetQueryParam("static", "true")
+                        .SetQueryParam("X-Emby-Token", r.ApiKey);
+                }
 
                 return new RedirectResult(fullPath.ToString());
             });

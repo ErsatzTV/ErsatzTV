@@ -431,7 +431,8 @@ public class EmbyApiClient : IEmbyApiClient
             Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
             Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList(),
             Artwork = new List<Artwork>(),
-            Guids = GuidsFromProviderIds(item.ProviderIds)
+            Guids = GuidsFromProviderIds(item.ProviderIds),
+            Subtitles = new List<Subtitle>()
         };
 
         // set order on actors
@@ -747,7 +748,8 @@ public class EmbyApiClient : IEmbyApiClient
             Artwork = new List<Artwork>(),
             Guids = GuidsFromProviderIds(item.ProviderIds),
             Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
-            Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList()
+            Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList(),
+            Subtitles = new List<Subtitle>()
         };
 
         if (item.IndexNumber.HasValue)
@@ -900,13 +902,21 @@ public class EmbyApiClient : IEmbyApiClient
                     var stream = new MediaStream
                     {
                         MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Subtitle,
+                        MediaStreamKind = subtitleStream.IsExternal == true
+                            ? MediaStreamKind.ExternalSubtitle
+                            : MediaStreamKind.Subtitle,
                         Index = subtitleStream.Index,
-                        Codec = subtitleStream.Codec,
+                        Codec = (subtitleStream.Codec ?? string.Empty).ToLowerInvariant(),
                         Default = subtitleStream.IsDefault,
                         Forced = subtitleStream.IsForced,
                         Language = subtitleStream.Language
                     };
+
+                    // hacky, oh well
+                    if (subtitleStream.IsExternal == true)
+                    {
+                        stream.FileName = mediaSource.Id;
+                    }
 
                     version.Streams.Add(stream);
                 }

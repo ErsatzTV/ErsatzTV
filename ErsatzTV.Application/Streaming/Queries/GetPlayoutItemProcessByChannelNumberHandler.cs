@@ -297,14 +297,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             _ => new List<Subtitle>()
         };
 
-        // bool isMediaServer = playoutItemWithPath.PlayoutItem.MediaItem is PlexMovie or PlexEpisode or
-        //     JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
+        bool isMediaServer = playoutItemWithPath.PlayoutItem.MediaItem is PlexMovie or PlexEpisode or
+            JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
 
-        // if (isMediaServer)
-        // {
-        //     // TODO: sidecar subtitles are currently unsupported since media servers no longer use direct filesystem access
-        //     allSubtitles.RemoveAll(s => s.SubtitleKind == SubtitleKind.Sidecar);
-        // }
+        if (isMediaServer)
+        {
+            // closed captions are currently unsupported
+            allSubtitles.RemoveAll(s => s.Codec == "eia_608");
+        }
 
         return allSubtitles;
     }

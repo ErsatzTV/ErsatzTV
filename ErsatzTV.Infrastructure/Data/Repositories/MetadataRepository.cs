@@ -563,6 +563,7 @@ public class MetadataRepository : IMetadataRepository
                     existingSubtitle.Language = incomingSubtitle.Language;
                     existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
                     existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+                    existingSubtitle.Path = incomingSubtitle.Path;
 
                     dbContext.Entry(existingSubtitle).State = EntityState.Modified;
                 }
