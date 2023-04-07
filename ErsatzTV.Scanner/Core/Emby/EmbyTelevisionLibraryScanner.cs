@@ -29,12 +29,10 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         IMediator mediator,
         ILogger<EmbyTelevisionLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
             metadataRepository,

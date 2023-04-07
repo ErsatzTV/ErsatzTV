@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.MediaServer;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
@@ -20,20 +21,17 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 {
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IMetadataRepository _metadataRepository;
-    private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
 
     protected MediaServerMovieLibraryScanner(
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
         IMediator mediator,
         ILogger logger)
     {
-        _localStatisticsProvider = localStatisticsProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localFileSystem = localFileSystem;
         _metadataRepository = metadataRepository;
@@ -475,15 +473,32 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     {
         try
         {
-            // skip checking subtitles for files that don't exist locally
-            if (!_localFileSystem.FileExists(existing.LocalPath))
+            Option<MovieMetadata> maybeMetadata = existing.Item.MovieMetadata.HeadOrNone();
+            foreach (MovieMetadata metadata in maybeMetadata)
             {
-                return existing;
-            }
+                var subtitleStreams = existing.Item.GetHeadVersion().Streams
+                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                    .ToList();
 
-            if (await _localSubtitlesProvider.UpdateSubtitles(existing.Item, existing.LocalPath, false))
-            {
-                return existing;
+                var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
+                
+                // TODO: check for/add external subtitles
+
+                if (await _metadataRepository.UpdateSubtitles(metadata, subtitles))
+                {
+                    return existing;
+                }
+
+                // skip checking subtitles for files that don't exist locally
+                // if (!_localFileSystem.FileExists(existing.LocalPath))
+                // {
+                // return existing;
+                // }
+                //
+                // if (await _localSubtitlesProvider.UpdateSubtitles(existing.Item, existing.LocalPath, false))
+                // {
+                //     return existing;
+                // }
             }
 
             return BaseError.New("Failed to update local subtitles");

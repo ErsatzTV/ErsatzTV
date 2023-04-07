@@ -582,7 +582,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                     {
                         MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Video,
-                        Index = videoStream.Index,
+                        Index = videoStream.Index!.Value,
                         Codec = videoStream.Codec,
                         Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
                         Default = videoStream.Default,
@@ -594,14 +594,14 @@ public class PlexServerApiClient : IPlexServerApiClient
                         ColorTransfer = (videoStream.ColorTrc ?? string.Empty).ToLowerInvariant(),
                         ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
                     });
-                
-                foreach (PlexStreamResponse audioStream in streams.Filter(s => s.StreamType == 2))
+
+                foreach (PlexStreamResponse audioStream in streams.Filter(s => s.StreamType == 2 && s.Index.HasValue))
                 {
                     var stream = new MediaStream
                     {
                         MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Audio,
-                        Index = audioStream.Index,
+                        Index = audioStream.Index.Value,
                         Codec = audioStream.Codec,
                         Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
                         Channels = audioStream.Channels,
@@ -610,17 +610,19 @@ public class PlexServerApiClient : IPlexServerApiClient
                         Language = audioStream.LanguageCode,
                         Title = audioStream.Title ?? string.Empty
                     };
-                    
+
                     version.Streams.Add(stream);
                 }
 
-                foreach (PlexStreamResponse subtitleStream in streams.Filter(s => s.StreamType == 3))
+                // filter to embedded subtitles
+                foreach (PlexStreamResponse subtitleStream in
+                         streams.Filter(s => s.StreamType == 3 && s.Index.HasValue))
                 {
                     var stream = new MediaStream
                     {
                         MediaVersionId = version.Id,
                         MediaStreamKind = MediaStreamKind.Subtitle,
-                        Index = subtitleStream.Index,
+                        Index = subtitleStream.Index.Value,
                         Codec = subtitleStream.Codec,
                         Default = subtitleStream.Default,
                         Forced = subtitleStream.Forced,

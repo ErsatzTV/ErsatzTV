@@ -33,11 +33,9 @@ public class PlexTelevisionLibraryScanner :
         IPlexPathReplacementService plexPathReplacementService,
         IPlexTelevisionRepository plexTelevisionRepository,
         ILocalFileSystem localFileSystem,
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
             metadataRepository,

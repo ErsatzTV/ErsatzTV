@@ -30,11 +30,9 @@ public class EmbyMovieLibraryScanner :
         IEmbyPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<EmbyMovieLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
             metadataRepository,

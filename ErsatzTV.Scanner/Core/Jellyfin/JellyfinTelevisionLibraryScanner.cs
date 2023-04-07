@@ -30,12 +30,10 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         IJellyfinPathReplacementService pathReplacementService,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         IMediator mediator,
         ILogger<JellyfinTelevisionLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
             metadataRepository,

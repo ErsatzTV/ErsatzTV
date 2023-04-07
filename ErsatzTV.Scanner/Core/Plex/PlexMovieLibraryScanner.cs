@@ -33,11 +33,9 @@ public class PlexMovieLibraryScanner :
         IPlexMovieRepository plexMovieRepository,
         IPlexPathReplacementService plexPathReplacementService,
         ILocalFileSystem localFileSystem,
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexMovieLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
             metadataRepository,

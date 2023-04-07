@@ -30,11 +30,9 @@ public class JellyfinMovieLibraryScanner :
         IMediaSourceRepository mediaSourceRepository,
         ILocalFileSystem localFileSystem,
         IMetadataRepository metadataRepository,
-        ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<JellyfinMovieLibraryScanner> logger)
         : base(
-            localStatisticsProvider,
             localSubtitlesProvider,
             localFileSystem,
             metadataRepository,
