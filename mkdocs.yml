@@ -22,7 +22,7 @@ theme:
     - navigation.expand
 extra_css:
   - stylesheets/extra.css
-copyright: Copyright &copy; 2020 - 2021 Jason Dove
+copyright: Copyright &copy; 2020 - 2023 Jason Dove
 extra:
   social:
     - icon: fontawesome/brands/discord
