@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+## [0.7.7-beta] - 2023-04-07
 ### Added
 - Use `plot` field from Other Video NFO metadata as XMLTV description
 - Add detailed warning log when a file is added to ErsatzTV more than once
@@ -1614,7 +1615,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.6-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.7-beta...HEAD
+[0.7.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.6-beta...v0.7.7-beta
 [0.7.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.5-beta...v0.7.6-beta
 [0.7.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.4-beta...v0.7.5-beta
 [0.7.4-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.3-beta...v0.7.4-beta
