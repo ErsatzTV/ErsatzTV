@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Limit `HLS Direct` streams to realtime speed
+
 ## [0.7.7-beta] - 2023-04-07
 ### Added
 - Use `plot` field from Other Video NFO metadata as XMLTV description
