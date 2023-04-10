@@ -174,22 +174,13 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
         SetTimeLimit(ffmpegState, pipelineSteps);
 
-        FilterChain filterChain = FilterChain.Empty;
-        
-        if (desiredState.VideoFormat == VideoFormat.Copy)
-        {
-            pipelineSteps.Add(new EncoderCopyVideo());
-        }
-        else
-        {
-            filterChain = BuildVideoPipeline(
-                videoInputFile,
-                videoStream,
-                ffmpegState,
-                desiredState,
-                context,
-                pipelineSteps);
-        }
+        FilterChain filterChain = BuildVideoPipeline(
+            videoInputFile,
+            videoStream,
+            ffmpegState,
+            desiredState,
+            context,
+            pipelineSteps);
 
         if (_audioInputFile.IsNone)
         {
@@ -398,7 +389,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         ffmpegState = SetAccelState(videoStream, ffmpegState, desiredState, context, pipelineSteps);
 
-        Option<IDecoder> maybeDecoder = SetDecoder(videoInputFile, videoStream, ffmpegState, context);
+        // don't use explicit decoder with HLS Direct
+        Option<IDecoder> maybeDecoder = desiredState.VideoFormat == VideoFormat.Copy
+            ? None
+            : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
         SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
         SetRealtimeInput(videoInputFile, desiredState);
@@ -473,6 +467,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetOutputTsOffset(FFmpegState ffmpegState, FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return;
+        }
+
         if (ffmpegState.PtsOffset > 0)
         {
             foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
@@ -484,6 +483,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetVideoBufferSizeOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredBufferSize in desiredState.VideoBufferSize)
         {
             pipelineSteps.Add(new VideoBufferSizeOutputOption(desiredBufferSize));
@@ -492,6 +496,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetVideoBitrateOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredBitrate in desiredState.VideoBitrate)
         {
             pipelineSteps.Add(new VideoBitrateOutputOption(desiredBitrate));
@@ -500,6 +509,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetVideoTrackTimescaleOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredTimeScale in desiredState.VideoTrackTimeScale)
         {
             pipelineSteps.Add(new VideoTrackTimescaleOutputOption(desiredTimeScale));
@@ -508,6 +522,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetFrameRateOutput(FrameState desiredState, ICollection<IPipelineStep> pipelineSteps)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return;
+        }
+
         foreach (int desiredFrameRate in desiredState.FrameRate)
         {
             pipelineSteps.Add(new FrameRateOutputOption(desiredFrameRate));
