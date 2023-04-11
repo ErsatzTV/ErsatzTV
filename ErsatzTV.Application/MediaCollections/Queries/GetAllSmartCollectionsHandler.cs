@@ -15,7 +15,7 @@ public class GetAllSmartCollectionsHandler : IRequestHandler<GetAllSmartCollecti
         GetAllSmartCollections request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.SmartCollections
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());

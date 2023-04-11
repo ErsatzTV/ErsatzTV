@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove duplicate items from smart collections before scheduling
   - i.e. shows no longer need to be filtered out if search results also include episodes
   - Certain multi-collection scenarios may still include duplicates across multiple collections
+- Use autocomplete fields for collection searching in schedule items editor
+  - This greatly improves the editor performance
 
 ## [0.7.7-beta] - 2023-04-07
 ### Added
