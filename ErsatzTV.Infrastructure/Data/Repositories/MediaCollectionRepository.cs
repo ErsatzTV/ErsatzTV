@@ -86,7 +86,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             }
         }
 
-        return result.Distinct().ToList();
+        return result.DistinctBy(x => x.Id).ToList();
     }
 
     public async Task<List<MediaItem>> GetSmartCollectionItems(int id)
@@ -150,7 +150,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             result.AddRange(await GetSongItems(dbContext, songIds));
         }
 
-        return result;
+        return result.DistinctBy(x => x.Id).ToList();
     }
 
     public async Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id)
@@ -221,14 +221,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         // remove duplicate items from ungrouped collections
         var toRemoveFrom = result.Filter(c => !c.ScheduleAsGroup).ToList();
-        var toRemove = result.Filter(c => c.ScheduleAsGroup)
+        var scheduleAsGroupItemIds = result.Filter(c => c.ScheduleAsGroup)
             .SelectMany(c => c.MediaItems.Map(i => i.Id))
             .Distinct()
-            .ToList();
+            .ToHashSet();
 
         foreach (CollectionWithItems collection in toRemoveFrom)
         {
-            collection.MediaItems.RemoveAll(mi => toRemove.Contains(mi.Id));
+            collection.MediaItems.RemoveAll(mi => scheduleAsGroupItemIds.Contains(mi.Id));
         }
 
         return result;

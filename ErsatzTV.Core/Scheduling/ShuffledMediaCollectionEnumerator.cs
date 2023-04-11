@@ -49,7 +49,7 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
                 State.Seed = _random.Next();
                 _random = new CloneableRandom(State.Seed);
                 _shuffled = Shuffle(_mediaItems, _random);
-            } while (_mediaItems.Count > 1 && Current == tail);
+            } while (_mediaItems.Count > 1 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {

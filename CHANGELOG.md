@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Limit `HLS Direct` streams to realtime speed
+- Fix `Reset Playout` button to use worker thread instead of UI thread
+  - This fixes potential UI hangs and database concurrency bugs
+
+### Changed
+- Remove duplicate items from smart collections before scheduling
+  - i.e. shows no longer need to be filtered out if search results also include episodes
+  - Certain multi-collection scenarios may still include duplicates across multiple collections
 
 ## [0.7.7-beta] - 2023-04-07
 ### Added

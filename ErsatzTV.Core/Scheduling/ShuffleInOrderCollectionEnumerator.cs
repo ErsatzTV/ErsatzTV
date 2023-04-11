@@ -52,7 +52,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
                 State.Seed = _random.Next();
                 _random = new Random(State.Seed);
                 _shuffled = Shuffle(_collections, _random);
-            } while (_collections.Count > 1 && Current == tail);
+            } while (_collections.Count > 1 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {

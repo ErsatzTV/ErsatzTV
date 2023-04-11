@@ -93,7 +93,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
                 State.Seed = _random.Next();
                 _random = new CloneableRandom(State.Seed);
                 _shuffled = Shuffle(_random);
-            } while (_mediaItemCount > 1 && Current == tail);
+            } while (_mediaItemCount > 1 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {
