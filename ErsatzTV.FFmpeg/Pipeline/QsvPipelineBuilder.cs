@@ -411,11 +411,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 watermark.FilterSteps.Add(new WatermarkOpacityFilter(watermark.DesiredState));
             }
 
-            IPixelFormat pixelFormat = context.Is10BitOutput
-                ? new PixelFormatNv12(FFmpegFormat.P010LE)
-                : new PixelFormatNv12(FFmpegFormat.YUVA420P);
-
-            watermark.FilterSteps.Add(new PixelFormatFilter(pixelFormat));
+            watermark.FilterSteps.Add(new PixelFormatFilter(new PixelFormatYuva420P()));
 
             foreach (List<WatermarkFadePoint> fadePoints in watermark.DesiredState.MaybeFadePoints)
             {
