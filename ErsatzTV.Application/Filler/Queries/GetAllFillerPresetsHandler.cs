@@ -15,7 +15,7 @@ public class GetAllFillerPresetsHandler : IRequestHandler<GetAllFillerPresets, L
         GetAllFillerPresets request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.FillerPresets.ToListAsync(cancellationToken)
             .Map(presets => presets.Map(ProjectToViewModel).ToList());
     }

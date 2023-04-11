@@ -15,7 +15,7 @@ public class GetAllMultiCollectionsHandler : IRequestHandler<GetAllMultiCollecti
         GetAllMultiCollections request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.MultiCollections
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
