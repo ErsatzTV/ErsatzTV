@@ -9,10 +9,10 @@
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Artists
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<ScheduleItemsEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<ScheduleItemsEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
 <MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
@@ -361,34 +361,35 @@
     private async Task LoadScheduleItems()
     {
     // TODO: fix performance
-        _mediaCollections = await _mediator.Send(new GetAllCollections(), _cts.Token)
+        _mediaCollections = await Mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _multiCollections = await _mediator.Send(new GetAllMultiCollections(), _cts.Token)
+        _multiCollections = await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _smartCollections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
+        _smartCollections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionShows = await _mediator.Send(new GetAllTelevisionShows(), _cts.Token)
+        _televisionShows = await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
+        _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _artists = await _mediator.Send(new GetAllArtists(), _cts.Token)
+        _artists = await Mediator.Send(new GetAllArtists(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), _cts.Token)
+        _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token)
+        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
 
         string name = string.Empty;
         var shuffleScheduleItems = false;
-        Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
+        Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
         foreach (ProgramScheduleViewModel schedule in maybeSchedule)
         {
             name = schedule.Name;
             shuffleScheduleItems = schedule.ShuffleScheduleItems;
         }
 
-        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await _mediator.Send(new GetProgramScheduleItems(Id), _cts.Token);
+        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults =
+            await Mediator.Send(new GetProgramScheduleItems(Id), _cts.Token);
         foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
         {
             _schedule = new ProgramScheduleItemsEditViewModel
@@ -512,15 +513,15 @@
             item.PreferredSubtitleLanguageCode,
             item.SubtitleMode)).ToList();
 
-        Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items), _cts.Token).Map(e => e.LeftToSeq());
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items), _cts.Token).Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(
             error =>
             {
-                _snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
-                _logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+                Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
             },
-            () => _navigationManager.NavigateTo("/schedules"));
+            () => NavigationManager.NavigateTo("/schedules"));
     }
 
 }
