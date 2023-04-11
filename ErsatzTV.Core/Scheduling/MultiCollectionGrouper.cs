@@ -1,8 +1,8 @@
 ﻿namespace ErsatzTV.Core.Scheduling;
 
-public class MultiCollectionGrouper
+public static class MultiCollectionGrouper
 {
-    public static List<GroupedMediaItem> GroupMediaItems(IList<CollectionWithItems> collections)
+    public static List<GroupedMediaItem> GroupMediaItems(IEnumerable<CollectionWithItems> collections)
     {
         var result = new List<GroupedMediaItem>();
 
@@ -18,6 +18,6 @@ public class MultiCollectionGrouper
             }
         }
 
-        return result;
+        return result.Distinct().ToList();
     }
 }
