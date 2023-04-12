@@ -99,7 +99,7 @@ public class PlexMovieLibraryScanner :
             connectionParameters.Token);
 
     // this shouldn't be called anymore
-    protected override async Task<Option<MovieMetadata>> GetFullMetadata(
+    protected override Task<Option<MovieMetadata>> GetFullMetadata(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library,
         MediaItemScanResult<PlexMovie> result,
@@ -111,7 +111,7 @@ public class PlexMovieLibraryScanner :
             throw new NotSupportedException("This shouldn't happen anymore");
         }
 
-        return None;
+        return Task.FromResult<Option<MovieMetadata>>(None);
     }
 
     // this shouldn't be called anymore

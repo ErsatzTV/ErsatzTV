@@ -99,19 +99,28 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             currentState = decoder.NextState(currentState);
         }
 
-        SetDeinterlace(videoInputFile, context, currentState);
+        if (desiredState.VideoFormat != VideoFormat.Copy)
+        {
+            SetDeinterlace(videoInputFile, context, currentState);
 
-        currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
-        currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
-        SetSubtitle(videoInputFile, subtitleInputFile, context, desiredState, fontsFolder, subtitleOverlayFilterSteps);
-        SetWatermark(
-            videoStream,
-            watermarkInputFile,
-            context,
-            ffmpegState,
-            desiredState,
-            currentState,
-            watermarkOverlayFilterSteps);
+            currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
+            currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
+            SetSubtitle(
+                videoInputFile,
+                subtitleInputFile,
+                context,
+                desiredState,
+                fontsFolder,
+                subtitleOverlayFilterSteps);
+            SetWatermark(
+                videoStream,
+                watermarkInputFile,
+                context,
+                ffmpegState,
+                desiredState,
+                currentState,
+                watermarkOverlayFilterSteps);
+        }
 
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
@@ -121,6 +130,12 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                 pipelineSteps.Add(encoder);
                 videoInputFile.FilterSteps.Add(encoder);
             }
+        }
+        
+        // after decoder/encoder, return hls direct
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return FilterChain.Empty;
         }
 
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
