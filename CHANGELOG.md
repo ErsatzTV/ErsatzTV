@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Season, Episode` playback order
+  - This is currently *only* available when a show is added directly to a schedule
+  - This will ignore release date and sort exclusively by season number and then by episode number
+
 ### Fixed
 - Limit `HLS Direct` streams to realtime speed
 - Fix `Reset Playout` button to use worker thread instead of UI thread

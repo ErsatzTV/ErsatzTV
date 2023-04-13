@@ -772,6 +772,17 @@ public class PlayoutBuilder : IPlayoutBuilder
                 }
 
                 return new ChronologicalMediaCollectionEnumerator(mediaItems, state);
+            case PlaybackOrder.SeasonEpisode:
+                if (randomStartPoint)
+                {
+                    state = new CollectionEnumeratorState
+                    {
+                        Seed = state.Seed,
+                        Index = Random.Next(0, mediaItems.Count - 1)
+                    };
+                }
+
+                return new SeasonEpisodeMediaCollectionEnumerator(mediaItems, state);
             case PlaybackOrder.Random:
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
             case PlaybackOrder.ShuffleInOrder:
