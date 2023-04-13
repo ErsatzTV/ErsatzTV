@@ -6,15 +6,15 @@ using NUnit.Framework;
 namespace ErsatzTV.Core.Tests.Scheduling;
 
 [TestFixture]
-public class ChronologicalContentTests
+public class SeasonEpisodeContentTests
 {
     [Test]
-    public void Episodes_Should_Sort_By_Aired()
+    public void Episodes_Should_Sort_By_EpisodeNumber()
     {
         List<MediaItem> contents = Episodes(10);
         var state = new CollectionEnumeratorState();
 
-        var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
+        var chronologicalContent = new SeasonEpisodeMediaCollectionEnumerator(contents, state);
 
         for (var i = 1; i <= 10; i++)
         {
@@ -30,7 +30,7 @@ public class ChronologicalContentTests
         List<MediaItem> contents = Episodes(10);
         var state = new CollectionEnumeratorState();
 
-        var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
+        var chronologicalContent = new SeasonEpisodeMediaCollectionEnumerator(contents, state);
 
         for (var i = 0; i < 10; i++)
         {
@@ -45,7 +45,7 @@ public class ChronologicalContentTests
         List<MediaItem> contents = Episodes(10);
         var state = new CollectionEnumeratorState { Index = 5 };
 
-        var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
+        var chronologicalContent = new SeasonEpisodeMediaCollectionEnumerator(contents, state);
 
         for (var i = 6; i <= 10; i++)
         {
@@ -63,7 +63,7 @@ public class ChronologicalContentTests
         List<MediaItem> contents = Episodes(10);
         var state = new CollectionEnumeratorState { Index = 10 };
 
-        var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
+        var chronologicalContent = new SeasonEpisodeMediaCollectionEnumerator(contents, state);
 
         chronologicalContent.State.Index.Should().Be(0);
         chronologicalContent.State.Seed.Should().Be(0);
@@ -78,8 +78,8 @@ public class ChronologicalContentTests
                     {
                         new()
                         {
-                            ReleaseDate = new DateTime(2020, 1, i),
-                            EpisodeNumber = 20 - i
+                            ReleaseDate = new DateTime(2020, 1, 20 - i),
+                            EpisodeNumber = i
                         }
                     }
                 })

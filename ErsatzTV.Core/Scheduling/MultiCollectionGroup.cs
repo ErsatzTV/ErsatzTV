@@ -23,10 +23,20 @@ public class MultiCollectionGroup : GroupedMediaItem
             switch (collectionWithItems.PlaybackOrder)
             {
                 case PlaybackOrder.Chronological:
-                    var sortedItems = collectionWithItems.MediaItems.OrderBy(identity, new ChronologicalMediaComparer())
-                        .ToList();
-                    First = sortedItems.Head();
-                    Additional = sortedItems.Tail().ToList();
+                    {
+                        var sortedItems = collectionWithItems.MediaItems.OrderBy(identity, new ChronologicalMediaComparer())
+                            .ToList();
+                        First = sortedItems.Head();
+                        Additional = sortedItems.Tail().ToList();
+                    }
+                    break;
+                case PlaybackOrder.SeasonEpisode:
+                    {
+                        var sortedItems = collectionWithItems.MediaItems.OrderBy(identity, new SeasonEpisodeMediaComparer())
+                            .ToList();
+                        First = sortedItems.Head();
+                        Additional = sortedItems.Tail().ToList();
+                    }
                     break;
                 default:
                     throw new NotSupportedException(
