@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Channels;
 
-public record DeleteChannel(int ChannelId) : IRequest<Either<BaseError, Task>>;
+public record DeleteChannel(int ChannelId) : IRequest<Either<BaseError, Unit>>;

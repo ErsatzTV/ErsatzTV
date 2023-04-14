@@ -1,23 +1,39 @@
 ﻿using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Channels;
 
-public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseError, Task>>
+public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseError, Unit>>
 {
-    private readonly IChannelRepository _channelRepository;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public DeleteChannelHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
+    public DeleteChannelHandler(IDbContextFactory<TvContext> dbContextFactory)
+    {
+        _dbContextFactory = dbContextFactory;
+    }
 
-    public async Task<Either<BaseError, Task>> Handle(DeleteChannel request, CancellationToken cancellationToken) =>
-        (await ChannelMustExist(request))
-        .Map(DoDeletion)
-        .ToEither<Task>();
+    public async Task<Either<BaseError, Unit>> Handle(DeleteChannel request, CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        Validation<BaseError, Channel> validation = await ChannelMustExist(dbContext, request);
+        return await validation.Apply(c => DoDeletion(dbContext, c));
+    }
 
-    private Task DoDeletion(int channelId) => _channelRepository.Delete(channelId);
+    private static async Task<Unit> DoDeletion(TvContext dbContext, Channel channel)
+    {
+        dbContext.Channels.Remove(channel);
+        await dbContext.SaveChangesAsync();
+        
+        return Unit.Default;
+    }
 
-    private async Task<Validation<BaseError, int>> ChannelMustExist(DeleteChannel deleteChannel) =>
-        (await _channelRepository.Get(deleteChannel.ChannelId))
-        .ToValidation<BaseError>($"Channel {deleteChannel.ChannelId} does not exist.")
-        .Map(c => c.Id);
+    private static async Task<Validation<BaseError, Channel>> ChannelMustExist(TvContext dbContext, DeleteChannel deleteChannel)
+    {
+        Option<Channel> maybeChannel = await dbContext.Channels
+            .SelectOneAsync(c => c.Id, c => c.Id == deleteChannel.ChannelId);
+        return maybeChannel.ToValidation<BaseError>($"Channel {deleteChannel.ChannelId} does not exist.");
+    }
 }
