@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix `Reset Playout` button to use worker thread instead of UI thread
   - This fixes potential UI hangs and database concurrency bugs
 - Maintain watermark alpha channel (built-in transparency) using QSV acceleration
+- Properly extract and burn in embedded text subtitles using Jellyfin, Emby and Plex libraries
 
 ### Changed
 - Remove duplicate items from smart collections before scheduling
