@@ -4,14 +4,12 @@ using System.Threading.Channels;
 using CliWrap;
 using CliWrap.Buffered;
 using CliWrap.Builders;
+using Dapper;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.Interfaces.Emby;
-using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -22,27 +20,18 @@ namespace ErsatzTV.Application.Subtitles;
 public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSubtitles, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
-    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<ExtractEmbeddedSubtitlesHandler> _logger;
-    private readonly IPlexPathReplacementService _plexPathReplacementService;
 
     public ExtractEmbeddedSubtitlesHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         ILocalFileSystem localFileSystem,
-        IPlexPathReplacementService plexPathReplacementService,
-        IJellyfinPathReplacementService jellyfinPathReplacementService,
-        IEmbyPathReplacementService embyPathReplacementService,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ILogger<ExtractEmbeddedSubtitlesHandler> logger)
     {
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
-        _plexPathReplacementService = plexPathReplacementService;
-        _jellyfinPathReplacementService = jellyfinPathReplacementService;
-        _embyPathReplacementService = embyPathReplacementService;
         _workerChannel = workerChannel;
         _logger = logger;
     }
@@ -267,7 +256,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     continue;
                 }
 
-                string mediaItemPath = await GetMediaItemPath(mediaItem);
+                string mediaItemPath = await GetMediaItemPath(dbContext, mediaItem);
 
                 ArgumentsBuilder args = new ArgumentsBuilder()
                     .Add("-nostdin")
@@ -382,7 +371,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     continue;
                 }
 
-                string mediaItemPath = await GetMediaItemPath(mediaItem);
+                string mediaItemPath = await GetMediaItemPath(dbContext, mediaItem);
 
                 var arguments =
                     $"-nostdin -hide_banner -dump_attachment:t:{attachmentIndex} \"\" -i \"{mediaItemPath}\" -y";
@@ -423,7 +412,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
         string nameWithExtension = subtitle.Codec switch
         {
-            "subrip" => $"{name}.srt",
+            "subrip" or "srt" => $"{name}.srt",
             "ass" => $"{name}.ass",
             "webvtt" => $"{name}.vtt",
             "mov_text" => $"{name}.srt",
@@ -438,33 +427,39 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         return Path.Combine(subfolder, subfolder2, nameWithExtension);
     }
 
-    private async Task<string> GetMediaItemPath(MediaItem mediaItem)
+    private static async Task<string> GetMediaItemPath(TvContext dbContext, MediaItem mediaItem)
     {
         MediaVersion version = mediaItem.GetHeadVersion();
 
         MediaFile file = version.MediaFiles.Head();
-        string path = file.Path;
+        switch (file)
+        {
+            case PlexMediaFile pmf:
+                Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
+                        @"SELECT PMS.Id FROM PlexMediaSource PMS
+                  INNER JOIN Library L on PMS.Id = L.MediaSourceId
+                  INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
+                  WHERE LP.Id = @LibraryPathId",
+                        new { mediaItem.LibraryPathId })
+                    .Map(Optional);
+
+                foreach (int plexMediaSourceId in maybeId)
+                {
+                    return $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}";
+                }
+
+                break;
+        }
+
         return mediaItem switch
         {
-            PlexMovie plexMovie => await _plexPathReplacementService.GetReplacementPlexPath(
-                plexMovie.LibraryPathId,
-                path),
-            PlexEpisode plexEpisode => await _plexPathReplacementService.GetReplacementPlexPath(
-                plexEpisode.LibraryPathId,
-                path),
-            JellyfinMovie jellyfinMovie => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
-                jellyfinMovie.LibraryPathId,
-                path),
-            JellyfinEpisode jellyfinEpisode => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
-                jellyfinEpisode.LibraryPathId,
-                path),
-            EmbyMovie embyMovie => await _embyPathReplacementService.GetReplacementEmbyPath(
-                embyMovie.LibraryPathId,
-                path),
-            EmbyEpisode embyEpisode => await _embyPathReplacementService.GetReplacementEmbyPath(
-                embyEpisode.LibraryPathId,
-                path),
-            _ => path
+            JellyfinMovie jellyfinMovie =>
+                $"http://localhost:{Settings.ListenPort}/media/jellyfin/{jellyfinMovie.ItemId}",
+            JellyfinEpisode jellyfinEpisode =>
+                $"http://localhost:{Settings.ListenPort}/media/jellyfin/{jellyfinEpisode.ItemId}",
+            EmbyMovie embyMovie => $"http://localhost:{Settings.ListenPort}/media/emby/{embyMovie.ItemId}",
+            EmbyEpisode embyEpisode => $"http://localhost:{Settings.ListenPort}/media/emby/{embyEpisode.ItemId}",
+            _ => file.Path
         };
     }
 
