@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This fixes potential UI hangs and database concurrency bugs
 - Maintain watermark alpha channel (built-in transparency) using QSV acceleration
 - Properly extract and burn in embedded text subtitles using Jellyfin, Emby and Plex libraries
+- Fix bug where deleting a channel would not remove its data from XMLTV
 
 ### Changed
 - Remove duplicate items from smart collections before scheduling
