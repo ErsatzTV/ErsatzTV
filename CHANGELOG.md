@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Season, Episode` playback order
   - This is currently *only* available when a show is added directly to a schedule
   - This will ignore release date and sort exclusively by season number and then by episode number
+- Add `Show Media Info` button to movie and episode detail pages for troubleshooting
 
 ### Fixed
 - Limit `HLS Direct` streams to realtime speed

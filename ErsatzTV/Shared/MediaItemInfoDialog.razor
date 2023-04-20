@@ -1,0 +1,62 @@
+﻿@using ErsatzTV.Application.MediaItems
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@inject IJSRuntime JsRuntime
+
+<div>
+    <MudDialog>
+        <DialogContent>
+            <div class="overflow-y-scroll" style="max-height: 500px">
+                <pre>
+                    <code @ref="_infoView">@_info</code>
+                </pre>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="(() => CopyToClipboard(_infoView))">
+                Copy
+            </MudButton>
+            <MudButton Color="Color.Primary" OnClick="Close">Close</MudButton>
+        </DialogActions>
+    </MudDialog>
+</div>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public MediaItemInfo MediaItemInfo { get; set; }
+    
+    private string _info;
+    private ElementReference _infoView;
+
+    protected override Task OnParametersSetAsync()
+    {
+        try
+        {
+            _info = JsonSerializer.Serialize(
+                MediaItemInfo,
+                new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    WriteIndented = true
+                });
+        }
+        catch (Exception ex)
+        {
+            _info = ex.ToString();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task CopyToClipboard(ElementReference view)
+    {
+        await JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", view);
+    }
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+}

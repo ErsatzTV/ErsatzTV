@@ -3,6 +3,7 @@
 @using ErsatzTV.Application.Television
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
 @implements IDisposable
 @inject IMediator _mediator
@@ -10,7 +11,6 @@
 @inject ISnackbar _snackbar
 @inject IDialogService _dialog
 @inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
 @inject IJSRuntime _jsRuntime
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
@@ -107,6 +107,14 @@
                                        StartIcon="@Icons.Material.Filled.Add"
                                        OnClick="@(_ => AddEpisodeToCollection(episode))">
                                 Add To Collection
+                            </MudButton>
+                        </div>
+                        <div class="mt-6">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Secondary"
+                                       StartIcon="@Icons.Material.Filled.Info"
+                                       OnClick="@(_ => ShowInfo(episode))">
+                                Show Media Info
                             </MudButton>
                         </div>
                     </div>
@@ -256,6 +264,28 @@
                     _logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
                 },
                 Right: _ => _snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
+        }
+    }
+    
+    private async Task ShowInfo(TelevisionEpisodeCardViewModel episode)
+    {
+        Either<BaseError, MediaItemInfo> maybeInfo = await _mediator.Send(new GetMediaItemInfo(episode.EpisodeId));
+
+        foreach (BaseError error in maybeInfo.LeftToSeq())
+        {
+            _snackbar.Add("Unexpected error loading media info");
+            _logger.LogError("Unexpected error loading media info: {Error}", error.Value);
+        }
+
+        foreach (MediaItemInfo info in maybeInfo.RightToSeq())
+        {
+            var parameters = new DialogParameters { { "MediaItemInfo", info } };
+            var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            IDialogReference dialog = await _dialog.ShowAsync<MediaItemInfoDialog>(
+                $"{episode.ShowTitle} - s{episode.Season:00}e{episode.Episode:00} - {episode.Title}",
+                parameters,
+                options);
+            DialogResult _ = await dialog.Result;
         }
     }
 
