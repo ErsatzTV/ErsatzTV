@@ -4,10 +4,13 @@
 @using System.Globalization
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaItems
 @implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog
 @inject NavigationManager _navigationManager
+@inject ILogger<Movie> _logger
+@inject ISnackbar _snackbar
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -66,11 +69,20 @@
                 </MudCard>
             }
             <div>
-                <MudButton Variant="Variant.Filled"
+                <MudButton Class="mb-6"
+                           Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="@AddToCollection">
                     Add To Collection
+                </MudButton>
+            </div>
+            <div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Info"
+                           OnClick="@ShowInfo">
+                    Show Media Info
                 </MudButton>
             </div>
         </div>
@@ -253,4 +265,22 @@
         }
     }
 
+    private async Task ShowInfo()
+    {
+        Either<BaseError, MediaItemInfo> maybeInfo = await _mediator.Send(new GetMediaItemInfo(MovieId));
+
+        foreach (BaseError error in maybeInfo.LeftToSeq())
+        {
+            _snackbar.Add("Unexpected error loading media info");
+            _logger.LogError("Unexpected error loading media info: {Error}", error.Value);
+        }
+
+        foreach (MediaItemInfo info in maybeInfo.RightToSeq())
+        {
+            var parameters = new DialogParameters { { "MediaItemInfo", info } };
+            var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            IDialogReference dialog = await _dialog.ShowAsync<MediaItemInfoDialog>(_movie.Title, parameters, options);
+            DialogResult _ = await dialog.Result;
+        }
+    }
 }
