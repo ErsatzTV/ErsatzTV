@@ -82,13 +82,16 @@ public class ColorspaceFilter : BaseFilter
             if (cp.IsMixed || _forceInputOverrides)
             {
                 string range = string.IsNullOrWhiteSpace(cp.ColorRange) ? "tv" : cp.ColorRange;
-                string transfer = string.IsNullOrWhiteSpace(cp.ColorTransfer)
+
+                string transfer = string.IsNullOrWhiteSpace(cp.ColorTransfer) || string.Equals(cp.ColorTransfer, "reserved", StringComparison.OrdinalIgnoreCase)
                     ? "bt709"
                     : cp.ColorTransfer;
-                string primaries = string.IsNullOrWhiteSpace(cp.ColorPrimaries)
+
+                string primaries = string.IsNullOrWhiteSpace(cp.ColorPrimaries) || string.Equals(cp.ColorPrimaries, "reserved", StringComparison.OrdinalIgnoreCase)
                     ? "bt709"
                     : cp.ColorPrimaries;
-                string space = string.IsNullOrWhiteSpace(cp.ColorSpace)
+
+                string space = string.IsNullOrWhiteSpace(cp.ColorSpace) || string.Equals(cp.ColorSpace, "reserved", StringComparison.OrdinalIgnoreCase)
                     ? "bt709"
                     : cp.ColorSpace;
 
