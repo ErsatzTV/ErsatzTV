@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Destructurama;
 using ErsatzTV.Core;
@@ -52,7 +53,7 @@ public class Program
             .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day);
 
         // for performance reasons, restrict windows console to error logs
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !Debugger.IsAttached)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(
                 restrictedToMinimumLevel: LogEventLevel.Error,

@@ -27,8 +27,12 @@ public class SubtitlesFilter : BaseFilter
                     .Replace(@":/", @"\\:/");
 
                 effectiveFile = effectiveFile
-                    .Replace(@"\", @"/\")
-                    .Replace(@":/", @"\\:/");
+                    .Replace(@"\", @"/\");
+
+                if (!effectiveFile.StartsWith("http"))
+                {
+                    effectiveFile = effectiveFile.Replace(@":/", @"\\:/");
+                }
             }
 
             // escape brackets after escaping for windows
