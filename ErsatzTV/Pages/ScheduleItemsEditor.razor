@@ -114,7 +114,7 @@
                 {
                     <MudAutocomplete Class="mt-3" T="MediaCollectionViewModel" Label="Collection"
                                      @bind-Value="_selectedItem.Collection" SearchFunc="@SearchCollections"
-                                     ToStringFunc="@(c=> c.Name)" Placeholder="Type to search...">
+                                     ToStringFunc="@(c=> c?.Name)" Placeholder="Type to search...">
                         <MoreItemsTemplate>
                             <MudText Align="Align.Center" Class="px-4 py-1">
                                 Only the first 10 items are shown
@@ -126,7 +126,7 @@
                 {
                     <MudAutocomplete Class="mt-3" T="MultiCollectionViewModel" Label="Multi Collection"
                                      @bind-Value="_selectedItem.MultiCollection" SearchFunc="@SearchMultiCollections"
-                                     ToStringFunc="@(c=> c.Name)" Placeholder="Type to search...">
+                                     ToStringFunc="@(c=> c?.Name)" Placeholder="Type to search...">
                         <MoreItemsTemplate>
                             <MudText Align="Align.Center" Class="px-4 py-1">
                                 Only the first 10 items are shown
@@ -138,7 +138,7 @@
                 {
                     <MudAutocomplete Class="mt-3" T="SmartCollectionViewModel" Label="Smart Collection"
                                      @bind-Value="_selectedItem.SmartCollection" SearchFunc="@SearchSmartCollections"
-                                     ToStringFunc="@(c=> c.Name)" Placeholder="Type to search...">
+                                     ToStringFunc="@(c=> c?.Name)" Placeholder="Type to search...">
                         <MoreItemsTemplate>
                             <MudText Align="Align.Center" Class="px-4 py-1">
                                 Only the first 10 items are shown
@@ -150,7 +150,7 @@
                 {
                     <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Television Show"
                                      @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchTelevisionShows"
-                                     ToStringFunc="@(c=> c.Name)" Placeholder="Type to search...">
+                                     ToStringFunc="@(c=> c?.Name)" Placeholder="Type to search...">
                         <MoreItemsTemplate>
                             <MudText Align="Align.Center" Class="px-4 py-1">
                                 Only the first 10 items are shown
@@ -162,7 +162,7 @@
                 {
                     <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Television Season"
                                      @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchTelevisionSeasons"
-                                     ToStringFunc="@(c=> c.Name)" Placeholder="Type to search..."
+                                     ToStringFunc="@(c=> c?.Name)" Placeholder="Type to search..."
                                      MaxItems="20">
                         <MoreItemsTemplate>
                             <MudText Align="Align.Center" Class="px-4 py-1">
@@ -175,7 +175,7 @@
                 {
                     <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Artist"
                                      @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchArtists"
-                                     ToStringFunc="@(c=> c.Name)" Placeholder="Type to search..."
+                                     ToStringFunc="@(c=> c?.Name)" Placeholder="Type to search..."
                                      MaxItems="10">
                         <MoreItemsTemplate>
                             <MudText Align="Align.Center" Class="px-4 py-1">
