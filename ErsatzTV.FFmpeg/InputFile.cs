@@ -80,5 +80,5 @@ public record SubtitleInputFile(string Path, IList<MediaStream> SubtitleStreams,
     Path,
     SubtitleStreams)
 {
-    public bool IsImageBased = SubtitleStreams.All(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "pgssub");
+    public bool IsImageBased = SubtitleStreams.All(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "vobsub" or "pgssub");
 }

@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where deleting a channel would not remove its data from XMLTV
 - Fix colorspace filter for some files with invalid color metadata
 - Fix playback of external subtitles on Windows
+- Fix vobsub subtitle burn in from media server libraries
 
 ### Changed
 - Remove duplicate items from smart collections before scheduling
