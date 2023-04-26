@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Certain multi-collection scenarios may still include duplicates across multiple collections
 - Use autocomplete fields for collection searching in schedule items editor
   - This greatly improves the editor performance
+- Ignore dot underscore files
 
 ## [0.7.7-beta] - 2023-04-07
 ### Added
