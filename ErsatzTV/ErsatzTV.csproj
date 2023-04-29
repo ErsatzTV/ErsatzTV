@@ -54,17 +54,17 @@
     
     <ItemGroup>
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
-      <PackageReference Include="FluentValidation" Version="11.5.1" />
+      <PackageReference Include="FluentValidation" Version="11.5.2" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
       <PackageReference Include="HtmlSanitizer" Version="8.0.645" />
-      <PackageReference Include="LanguageExt.Core" Version="4.4.2" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
       <PackageReference Include="Markdig" Version="0.31.0" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.4" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.4" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.4" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.4" /> 
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.4">
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.5" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.5" /> 
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -72,7 +72,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.2.0" />
+      <PackageReference Include="MudBlazor" Version="6.2.2" />
       <PackageReference Include="NaturalSort.Extension" Version="4.0.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="11.1.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
