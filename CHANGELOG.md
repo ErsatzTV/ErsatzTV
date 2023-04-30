@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.7.8-beta] - 2023-04-29
 ### Added
 - Add `Season, Episode` playback order
   - This is currently *only* available when a show is added directly to a schedule
@@ -1640,7 +1642,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.7-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.8-beta...HEAD
+[0.7.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.7-beta...v0.7.8-beta
 [0.7.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.6-beta...v0.7.7-beta
 [0.7.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.5-beta...v0.7.6-beta
 [0.7.5-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.4-beta...v0.7.5-beta
