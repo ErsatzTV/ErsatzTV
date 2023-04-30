@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix extracting embedded text subtitles that had been incompletely extracted in the past 
 
 ## [0.7.8-beta] - 2023-04-29
 ### Added
