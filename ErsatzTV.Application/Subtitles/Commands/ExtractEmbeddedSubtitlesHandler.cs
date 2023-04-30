@@ -237,9 +237,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
                 // find each subtitle that needs extraction
                 IEnumerable<Subtitle> subtitles = allSubtitles
+                    .Filter(s => s.SubtitleKind == SubtitleKind.Embedded)
                     .Filter(
-                        s => s.SubtitleKind == SubtitleKind.Embedded && s.IsExtracted == false &&
-                             s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" && s.Codec != "vobsub" && s.Codec != "pgssub");
+                        s => s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
+                             s.Codec != "vobsub" && s.Codec != "pgssub")
+                    .Filter(s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path));
 
                 // find cache paths for each subtitle
                 foreach (Subtitle subtitle in subtitles)
