@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix extracting embedded text subtitles that had been incompletely extracted in the past 
+- Fix fallback filler looping by forcing software mode for this content
+  - Other content will still use hardware acceleration as configured
+  - Hardware-accelerated fallback filler may be re-enabled in the future
 
 ## [0.7.8-beta] - 2023-04-29
 ### Added

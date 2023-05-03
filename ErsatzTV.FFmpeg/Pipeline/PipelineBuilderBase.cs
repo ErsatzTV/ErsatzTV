@@ -539,15 +539,19 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         FFmpegState ffmpegState,
         FrameState desiredState)
     {
-        if (desiredState.InfiniteLoop)
+        if (!desiredState.InfiniteLoop)
         {
-            _audioInputFile.Iter(
-                a => a.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode)));
+            return;
+        }
 
-            if (!videoStream.StillImage)
-            {
-                videoInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
-            }
+        foreach (AudioInputFile audioInputFile in _audioInputFile)
+        {
+            audioInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
+        }
+
+        if (!videoStream.StillImage)
+        {
+            videoInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
         }
     }
 
