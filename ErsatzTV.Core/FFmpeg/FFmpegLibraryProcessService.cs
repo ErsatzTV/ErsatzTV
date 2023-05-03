@@ -225,7 +225,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         string videoFormat = GetVideoFormat(playbackSettings);
 
-        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
         OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
             ? OutputFormatKind.Hls
@@ -386,7 +386,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
-        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings);
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
 
         var ffmpegState = new FFmpegState(
             false,
@@ -716,9 +716,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
         };
 
-    private static HardwareAccelerationMode GetHardwareAccelerationMode(FFmpegPlaybackSettings playbackSettings) =>
+    private static HardwareAccelerationMode GetHardwareAccelerationMode(
+        FFmpegPlaybackSettings playbackSettings,
+        FillerKind fillerKind) =>
         playbackSettings.HardwareAcceleration switch
         {
+            _ when fillerKind == FillerKind.Fallback => HardwareAccelerationMode.None,
             HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
             HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
             HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,

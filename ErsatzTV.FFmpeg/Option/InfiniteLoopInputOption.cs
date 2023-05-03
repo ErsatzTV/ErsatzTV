@@ -32,7 +32,7 @@ public class InfiniteLoopInputOption : IInputOption
             : Array.Empty<string>();
 
     public FrameState NextState(FrameState currentState) => currentState with { Realtime = true };
-    public bool AppliesTo(AudioInputFile audioInputFile) => false;
+    public bool AppliesTo(AudioInputFile audioInputFile) => true;
     public bool AppliesTo(VideoInputFile videoInputFile) => true;
     public bool AppliesTo(ConcatInputFile concatInputFile) => true;
 }
