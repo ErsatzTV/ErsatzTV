@@ -54,7 +54,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         lock (_sync)
         {
-            _logger.LogDebug("Keep alive - session worker for channel {ChannelNumber}", _channelNumber);
+            // _logger.LogDebug("Keep alive - session worker for channel {ChannelNumber}", _channelNumber);
             
             _lastAccess = DateTimeOffset.Now;
 
