@@ -10,5 +10,6 @@ public interface IPlayoutModeScheduler<in T> where T : ProgramScheduleItem
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         T scheduleItem,
         ProgramScheduleItem nextScheduleItem,
-        DateTimeOffset hardStop);
+        DateTimeOffset hardStop,
+        CancellationToken cancellationToken);
 }

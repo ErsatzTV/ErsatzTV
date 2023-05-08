@@ -8,16 +8,19 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     private readonly IList<CollectionWithItems> _collections;
     private readonly int _mediaItemCount;
     private readonly bool _randomStartPoint;
+    private readonly CancellationToken _cancellationToken;
     private Random _random;
     private IList<MediaItem> _shuffled;
 
     public ShuffleInOrderCollectionEnumerator(
         IList<CollectionWithItems> collections,
         CollectionEnumeratorState state,
-        bool randomStartPoint)
+        bool randomStartPoint,
+        CancellationToken cancellationToken)
     {
         _collections = collections;
         _randomStartPoint = randomStartPoint;
+        _cancellationToken = cancellationToken;
         _mediaItemCount = collections.Sum(c => c.MediaItems.Count);
 
         if (state.Index >= _mediaItemCount)
@@ -52,7 +55,8 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
                 State.Seed = _random.Next();
                 _random = new Random(State.Seed);
                 _shuffled = Shuffle(_collections, _random);
-            } while (_collections.Count > 1 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
+            } while (!_cancellationToken.IsCancellationRequested && _collections.Count > 1 &&
+                     Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {

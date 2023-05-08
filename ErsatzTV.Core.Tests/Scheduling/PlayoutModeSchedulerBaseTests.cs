@@ -13,8 +13,18 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
 {
+    private CancellationToken _cancellationToken;
+    private PlayoutModeSchedulerBase<ProgramScheduleItem> _scheduler;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+        _scheduler = new TestScheduler();
+    }
+
     [TestFixture]
-    public class CalculateEndTimeWithFiller
+    public class CalculateEndTimeWithFiller : PlayoutModeSchedulerBaseTests
     {
         [Test]
         public void Should_Not_Touch_Enumerator()
@@ -197,7 +207,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
     }
 
     [TestFixture]
-    public class AddFiller
+    public class AddFiller : PlayoutModeSchedulerBaseTests
     {
         [Test]
         public void Should_Not_Crash_Mid_Roll_Zero_Chapters()
@@ -224,13 +234,14 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
 
             PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-            List<PlayoutItem> playoutItems = Scheduler()
+            List<PlayoutItem> playoutItems = _scheduler
                 .AddFiller(
                     startState,
                     CollectionEnumerators(scheduleItem, enumerator),
                     scheduleItem,
                     new PlayoutItem(),
-                    new List<MediaChapter>());
+                    new List<MediaChapter>(),
+                    _cancellationToken);
 
             playoutItems.Count.Should().Be(1);
         }
@@ -275,13 +286,14 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             // too lazy to make another enumerator for the filler that we don't want
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), enumerator);
 
-            List<PlayoutItem> playoutItems = Scheduler()
+            List<PlayoutItem> playoutItems = _scheduler
                 .AddFiller(
                     startState,
                     enumerators,
                     scheduleItem,
                     new PlayoutItem(),
-                    new List<MediaChapter> { new() });
+                    new List<MediaChapter> { new() },
+                    _cancellationToken);
 
             playoutItems.Count.Should().Be(1);
         }
@@ -331,7 +343,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
 
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), fillerEnumerator);
 
-            List<PlayoutItem> playoutItems = Scheduler()
+            List<PlayoutItem> playoutItems = _scheduler
                 .AddFiller(
                     startState,
                     enumerators,
@@ -346,7 +358,8 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     {
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(60) }
-                    });
+                    },
+                    _cancellationToken);
 
             playoutItems.Count.Should().Be(3);
             playoutItems[0].MediaItemId.Should().Be(1);
@@ -421,7 +434,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), midRollFillerEnumerator);
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.PostRollFiller), postRollFillerEnumerator);
 
-            List<PlayoutItem> playoutItems = Scheduler()
+            List<PlayoutItem> playoutItems = _scheduler
                 .AddFiller(
                     startState,
                     enumerators,
@@ -436,7 +449,8 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     {
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
-                    });
+                    },
+                    _cancellationToken);
 
             playoutItems.Count.Should().Be(5);
             
@@ -525,7 +539,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), midRollFillerEnumerator);
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.PostRollFiller), postRollFillerEnumerator);
 
-            List<PlayoutItem> playoutItems = Scheduler()
+            List<PlayoutItem> playoutItems = _scheduler
                 .AddFiller(
                     startState,
                     enumerators,
@@ -540,7 +554,8 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     {
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
-                    });
+                    },
+                    _cancellationToken);
 
             playoutItems.Count.Should().Be(5);
             
@@ -606,8 +621,6 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             }
         };
 
-    private static PlayoutModeSchedulerBase<ProgramScheduleItem> Scheduler() =>
-        new TestScheduler();
 
     private class TestScheduler : PlayoutModeSchedulerBase<ProgramScheduleItem>
     {
@@ -632,7 +645,8 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItem scheduleItem,
             ProgramScheduleItem nextScheduleItem,
-            DateTimeOffset hardStop) =>
+            DateTimeOffset hardStop,
+            CancellationToken cancellationToken) =>
             throw new NotSupportedException();
     }
 }

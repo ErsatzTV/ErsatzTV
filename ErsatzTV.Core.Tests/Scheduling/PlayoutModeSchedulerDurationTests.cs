@@ -11,6 +11,14 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
 {
+    private CancellationToken _cancellationToken;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    }
+
     [Test]
     public void Should_Fill_Exact_Duration()
     {
@@ -45,7 +53,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -117,7 +126,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -188,7 +198,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -256,7 +267,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         // duration block should end after exact duration, with gap
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
@@ -338,7 +350,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.FallbackFiller, enumerator2),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -424,7 +437,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -522,7 +536,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
@@ -637,7 +652,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
                 enumerator3),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -738,7 +754,8 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             CollectionEnumerators(scheduleItem, enumerator),
             scheduleItem,
             NextScheduleItem,
-            HardStop(scheduleItemsEnumerator));
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
 
         playoutItems.Should().BeEmpty();
 

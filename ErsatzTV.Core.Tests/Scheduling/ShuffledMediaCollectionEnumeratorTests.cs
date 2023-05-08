@@ -15,12 +15,20 @@ public class ShuffledMediaCollectionEnumeratorTests
         new GroupedMediaItem(new MediaItem { Id = 2 }, new List<MediaItem>()),
         new GroupedMediaItem(new MediaItem { Id = 3 }, new List<MediaItem>())
     };
+    
+    private CancellationToken _cancellationToken;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    }
 
     [Test]
     public void Peek_Zero_Should_Match_Current()
     {
         var state = new CollectionEnumeratorState { Index = 0, Seed = 0 };
-        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state);
+        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state, _cancellationToken);
 
         Option<MediaItem> peek = enumerator.Peek(0);
         Option<MediaItem> current = enumerator.Current;
@@ -35,7 +43,7 @@ public class ShuffledMediaCollectionEnumeratorTests
     public void Peek_One_Should_Match_Next()
     {
         var state = new CollectionEnumeratorState { Index = 0, Seed = 0 };
-        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state);
+        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state, _cancellationToken);
 
         Option<MediaItem> peek = enumerator.Peek(1);
 
@@ -52,7 +60,7 @@ public class ShuffledMediaCollectionEnumeratorTests
     public void Peek_Two_Should_Match_NextNext()
     {
         var state = new CollectionEnumeratorState { Index = 0, Seed = 0 };
-        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state);
+        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state, _cancellationToken);
 
         Option<MediaItem> peek = enumerator.Peek(2);
 
@@ -70,7 +78,7 @@ public class ShuffledMediaCollectionEnumeratorTests
     public void Peek_Three_Should_Match_NextNextNext()
     {
         var state = new CollectionEnumeratorState { Index = 0, Seed = 0 };
-        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state);
+        var enumerator = new ShuffledMediaCollectionEnumerator(_mediaItems, state, _cancellationToken);
 
         Option<MediaItem> peek = enumerator.Peek(3);
 

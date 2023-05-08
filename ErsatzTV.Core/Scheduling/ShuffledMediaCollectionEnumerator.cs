@@ -7,15 +7,18 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly int _mediaItemCount;
     private readonly IList<GroupedMediaItem> _mediaItems;
+    private readonly CancellationToken _cancellationToken;
     private CloneableRandom _random;
     private IList<MediaItem> _shuffled;
 
     public ShuffledMediaCollectionEnumerator(
         IList<GroupedMediaItem> mediaItems,
-        CollectionEnumeratorState state)
+        CollectionEnumeratorState state,
+        CancellationToken cancellationToken)
     {
         _mediaItemCount = mediaItems.Sum(i => 1 + Optional(i.Additional).Flatten().Count());
         _mediaItems = mediaItems;
+        _cancellationToken = cancellationToken;
 
         if (state.Index >= _mediaItems.Count)
         {
@@ -49,7 +52,8 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
                 State.Seed = _random.Next();
                 _random = new CloneableRandom(State.Seed);
                 _shuffled = Shuffle(_mediaItems, _random);
-            } while (_mediaItems.Count > 1 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
+            } while (!_cancellationToken.IsCancellationRequested && _mediaItems.Count > 1 &&
+                     Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {

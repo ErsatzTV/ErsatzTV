@@ -9,6 +9,7 @@ namespace ErsatzTV.Infrastructure.Scheduling;
 public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly ILogger _logger;
+    private readonly CancellationToken _cancellationToken;
     private readonly int _mediaItemCount;
     private readonly Dictionary<int, List<MediaItem>> _mediaItemGroups;
     private readonly List<MediaItem> _ungrouped;
@@ -20,9 +21,11 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         CollectionEnumeratorState state,
         IScriptEngine scriptEngine,
         string scriptFile,
-        ILogger logger)
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
         _logger = logger;
+        _cancellationToken = cancellationToken;
 
         scriptEngine.Load(scriptFile);
 
@@ -93,7 +96,8 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
                 State.Seed = _random.Next();
                 _random = new CloneableRandom(State.Seed);
                 _shuffled = Shuffle(_random);
-            } while (_mediaItemCount > 1 && Current.Map(x => x.Id) == tail.Map(x => x.Id));
+            } while (!_cancellationToken.IsCancellationRequested && _mediaItemCount > 1 &&
+                     Current.Map(x => x.Id) == tail.Map(x => x.Id));
         }
         else
         {

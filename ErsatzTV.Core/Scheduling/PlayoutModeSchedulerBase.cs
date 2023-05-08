@@ -18,13 +18,13 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         T scheduleItem,
         ProgramScheduleItem nextScheduleItem,
-        DateTimeOffset hardStop);
+        DateTimeOffset hardStop,
+        CancellationToken cancellationToken);
 
     public static DateTimeOffset GetFillerStartTimeAfter(
         PlayoutBuilderState state,
         ProgramScheduleItem scheduleItem,
-        DateTimeOffset hardStop
-    )
+        DateTimeOffset hardStop)
     {
         DateTimeOffset startTime = GetStartTimeAfter(state, scheduleItem);
         
@@ -74,7 +74,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItem scheduleItem,
         List<PlayoutItem> playoutItems,
-        DateTimeOffset nextItemStart)
+        DateTimeOffset nextItemStart,
+        CancellationToken cancellationToken)
     {
         var newItems = new List<PlayoutItem>(playoutItems);
         PlayoutBuilderState nextState = playoutBuilderState;
@@ -131,7 +132,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItem scheduleItem,
         List<PlayoutItem> playoutItems,
-        DateTimeOffset nextItemStart)
+        DateTimeOffset nextItemStart,
+        CancellationToken cancellationToken)
     {
         var newItems = new List<PlayoutItem>(playoutItems);
         PlayoutBuilderState nextState = playoutBuilderState;
@@ -328,7 +330,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
         ProgramScheduleItem scheduleItem,
         PlayoutItem playoutItem,
-        List<MediaChapter> chapters)
+        List<MediaChapter> chapters,
+        CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
 
@@ -363,7 +366,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             e1,
                             filler.Duration.Value,
                             FillerKind.PreRoll,
-                            filler.AllowWatermarks));
+                            filler.AllowWatermarks,
+                            cancellationToken));
                     break;
                 case FillerMode.Count when filler.Count.HasValue:
                     IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
@@ -373,7 +377,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             e2,
                             filler.Count.Value,
                             FillerKind.PreRoll,
-                            filler.AllowWatermarks));
+                            filler.AllowWatermarks,
+                            cancellationToken));
                     break;
             }
         }
@@ -402,7 +407,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         e1,
                                         filler.Duration.Value,
                                         FillerKind.MidRoll,
-                                        filler.AllowWatermarks));
+                                        filler.AllowWatermarks,
+                                        cancellationToken));
                             }
                         }
 
@@ -420,7 +426,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         e2,
                                         filler.Count.Value,
                                         FillerKind.MidRoll,
-                                        filler.AllowWatermarks));
+                                        filler.AllowWatermarks,
+                                        cancellationToken));
                             }
                         }
 
@@ -442,7 +449,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             e1,
                             filler.Duration.Value,
                             FillerKind.PostRoll,
-                            filler.AllowWatermarks));
+                            filler.AllowWatermarks,
+                            cancellationToken));
                     break;
                 case FillerMode.Count when filler.Count.HasValue:
                     IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
@@ -452,7 +460,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             e2,
                             filler.Count.Value,
                             FillerKind.PostRoll,
-                            filler.AllowWatermarks));
+                            filler.AllowWatermarks,
+                            cancellationToken));
                     break;
             }
         }
@@ -508,7 +517,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             pre1,
                             remainingToFill,
                             FillerKind.PreRoll,
-                            padFiller.AllowWatermarks));
+                            padFiller.AllowWatermarks,
+                            cancellationToken));
                     totalDuration =
                         TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
                     remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
@@ -520,7 +530,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                 playoutBuilderState,
                                 enumerators,
                                 scheduleItem,
-                                remainingToFill));
+                                remainingToFill,
+                                cancellationToken));
                     }
 
                     break;
@@ -532,7 +543,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             mid1,
                             remainingToFill,
                             FillerKind.MidRoll,
-                            padFiller.AllowWatermarks));
+                            padFiller.AllowWatermarks,
+                            cancellationToken));
                     TimeSpan average = effectiveChapters.Count <= 1
                         ? remainingToFill
                         : remainingToFill / (effectiveChapters.Count - 1);
@@ -569,7 +581,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         enumerators,
                                         scheduleItem,
-                                        i < effectiveChapters.Count - 1 ? maxThisBreak : leftOverall);
+                                        i < effectiveChapters.Count - 1 ? maxThisBreak : leftOverall,
+                                        cancellationToken);
 
                                     foreach (PlayoutItem fallback in maybeFallback)
                                     {
@@ -593,7 +606,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             post1,
                             remainingToFill,
                             FillerKind.PostRoll,
-                            padFiller.AllowWatermarks));
+                            padFiller.AllowWatermarks,
+                            cancellationToken));
                     totalDuration =
                         TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
                     remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
@@ -604,7 +618,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                 playoutBuilderState,
                                 enumerators,
                                 scheduleItem,
-                                remainingToFill));
+                                remainingToFill,
+                                cancellationToken));
                     }
 
                     break;
@@ -630,7 +645,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         IMediaCollectionEnumerator enumerator,
         int count,
         FillerKind fillerKind,
-        bool allowWatermarks)
+        bool allowWatermarks,
+        CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
 
@@ -665,7 +681,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         IMediaCollectionEnumerator enumerator,
         TimeSpan duration,
         FillerKind fillerKind,
-        bool allowWatermarks)
+        bool allowWatermarks,
+        CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
 
@@ -736,7 +753,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
         ProgramScheduleItem scheduleItem,
-        TimeSpan duration)
+        TimeSpan duration,
+        CancellationToken cancellationToken)
     {
         if (scheduleItem.FallbackFiller != null)
         {

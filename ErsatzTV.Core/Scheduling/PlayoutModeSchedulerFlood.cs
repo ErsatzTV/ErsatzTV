@@ -18,7 +18,8 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemFlood scheduleItem,
         ProgramScheduleItem nextScheduleItem,
-        DateTimeOffset hardStop)
+        DateTimeOffset hardStop,
+        CancellationToken cancellationToken)
     {
         var playoutItems = new List<PlayoutItem>();
 
@@ -88,7 +89,13 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             if (willFinishInTime)
             {
                 playoutItems.AddRange(
-                    AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
+                    AddFiller(
+                        nextState,
+                        collectionEnumerators,
+                        scheduleItem,
+                        playoutItem,
+                        itemChapters,
+                        cancellationToken));
                 // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                 if (playoutItems.Count > 0)
@@ -150,7 +157,8 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 collectionEnumerators,
                 scheduleItem,
                 playoutItems,
-                peekItemStart);
+                peekItemStart,
+                cancellationToken);
         }
 
         if (scheduleItem.FallbackFiller != null)
@@ -160,7 +168,8 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 collectionEnumerators,
                 scheduleItem,
                 playoutItems,
-                peekItemStart);
+                peekItemStart,
+                cancellationToken);
         }
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };

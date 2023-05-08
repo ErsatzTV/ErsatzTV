@@ -49,62 +49,46 @@ public class WorkerService : BackgroundService
                     switch (request)
                     {
                         case RefreshChannelList refreshChannelList:
-                            _logger.LogDebug("WorkerService - RefreshChannelList START");
                             await mediator.Send(refreshChannelList, cancellationToken);
-                            _logger.LogDebug("WorkerService - RefreshChannelList FINISH");
                             break;
                         case RefreshChannelData refreshChannelData:
-                            _logger.LogDebug("WorkerService - RefreshChannelData START");
                             await mediator.Send(refreshChannelData, cancellationToken);
-                            _logger.LogDebug("WorkerService - RefreshChannelData FINISH");
                             break;
                         case BuildPlayout buildPlayout:
-                            _logger.LogDebug("WorkerService - BuildPlayout START");
+                            var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                            var linkedTokenSource =
+                                CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken);
+
                             Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
                                 buildPlayout,
-                                cancellationToken);
+                                linkedTokenSource.Token);
                             buildPlayoutResult.BiIter(
                                 _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
                                 error => _logger.LogWarning(
                                     "Unable to build playout {PlayoutId}: {Error}",
                                     buildPlayout.PlayoutId,
                                     error.Value));
-                            _logger.LogDebug("WorkerService - BuildPlayout FINISH");
                             break;
                         case DeleteOrphanedArtwork deleteOrphanedArtwork:
-                            _logger.LogDebug("WorkerService - DeleteOrphanedArtwork START");
                             await mediator.Send(deleteOrphanedArtwork, cancellationToken);
-                            _logger.LogDebug("WorkerService - DeleteOrphanedArtwork FINISH");
                             break;
                         case DeleteOrphanedSubtitles deleteOrphanedSubtitles:
-                            _logger.LogDebug("WorkerService - DeleteOrphanedSubtitles START");
                             await mediator.Send(deleteOrphanedSubtitles, cancellationToken);
-                            _logger.LogDebug("WorkerService - DeleteOrphanedSubtitles FINISH");
                             break;
                         case AddTraktList addTraktList:
-                            _logger.LogDebug("WorkerService - AddTraktList START");
                             await mediator.Send(addTraktList, cancellationToken);
-                            _logger.LogDebug("WorkerService - AddTraktList FINISH");
                             break;
                         case DeleteTraktList deleteTraktList:
-                            _logger.LogDebug("WorkerService - DeleteTraktList START");
                             await mediator.Send(deleteTraktList, cancellationToken);
-                            _logger.LogDebug("WorkerService - DeleteTraktList FINISH");
                             break;
                         case MatchTraktListItems matchTraktListItems:
-                            _logger.LogDebug("WorkerService - MatchTraktListItems START");
                             await mediator.Send(matchTraktListItems, cancellationToken);
-                            _logger.LogDebug("WorkerService - MatchTraktListItems FINISH");
                             break;
                         case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:
-                            _logger.LogDebug("WorkerService - ExtractEmbeddedSubtitles START");
                             await mediator.Send(extractEmbeddedSubtitles, cancellationToken);
-                            _logger.LogDebug("WorkerService - ExtractEmbeddedSubtitles FINISH");
                             break;
                         case ReleaseMemory aggressivelyReleaseMemory:
-                            _logger.LogDebug("WorkerService - ReleaseMemory START");
                             await mediator.Send(aggressivelyReleaseMemory, cancellationToken);
-                            _logger.LogDebug("WorkerService - ReleaseMemory FINISH");
                             break;
                     }
                 }

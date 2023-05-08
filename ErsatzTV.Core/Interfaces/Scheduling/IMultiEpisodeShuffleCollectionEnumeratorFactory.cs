@@ -7,5 +7,6 @@ public interface IMultiEpisodeShuffleCollectionEnumeratorFactory
     IMediaCollectionEnumerator Create(
         string jsScriptPath,
         IList<MediaItem> mediaItems,
-        CollectionEnumeratorState state);
+        CollectionEnumeratorState state,
+        CancellationToken cancellationToken);
 }

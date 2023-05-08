@@ -40,19 +40,25 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
+        return await validation.Match(
+            playout => ApplyUpdateRequest(dbContext, request, playout, cancellationToken),
+            error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
     }
 
-    private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, BuildPlayout request, Playout playout)
+    private async Task<Either<BaseError, Unit>> ApplyUpdateRequest(
+        TvContext dbContext,
+        BuildPlayout request,
+        Playout playout,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _playoutBuilder.Build(playout, request.Mode);
+            await _playoutBuilder.Build(playout, request.Mode, cancellationToken);
 
             // let any active segmenter processes know that the playout has been modified
             // and therefore the segmenter may need to seek into the next item instead of
             // starting at the beginning (if already working ahead)
-            bool hasChanges = await dbContext.SaveChangesAsync() > 0;
+            bool hasChanges = await dbContext.SaveChangesAsync(cancellationToken) > 0;
             if (request.Mode != PlayoutBuildMode.Continue && hasChanges)
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
@@ -71,15 +77,23 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
                 if (hasChanges || !File.Exists(fileName))
                 {
-                    await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber));
+                    await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
                 }
             }
 
-            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
+            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id), cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _client.Notify(ex);
+            return BaseError.New(
+                $"Timeout building playout for channel {playout.Channel.Name}; this may be a bug!");
         }
         catch (Exception ex)
         {
             _client.Notify(ex);
+            return BaseError.New(
+                $"Unexpected error building playout for channel {playout.Channel.Name}: {ex.Message}");
         }
 
         return Unit.Default;
