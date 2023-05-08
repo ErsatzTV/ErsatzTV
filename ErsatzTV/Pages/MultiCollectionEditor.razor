@@ -218,7 +218,7 @@
 
     private void RemoveCollection(MultiCollectionItemEditViewModel item) => _model.Items.Remove(item);
 
-    private void AddCollection()
+    private async Task AddCollection()
     {
         if (_selectedCollection != null && _model.Items.All(i => i.Collection != _selectedCollection))
         {
@@ -229,11 +229,11 @@
             });
 
             _selectedCollection = null;
-            _collectionSelect.Reset();
+            await _collectionSelect.ResetAsync();
         }
     }
 
-    private void AddSmartCollection()
+    private async Task AddSmartCollection()
     {
         if (_selectedSmartCollection != null && _model.Items.OfType<MultiCollectionSmartItemEditViewModel>().All(i => i.SmartCollection != _selectedSmartCollection))
         {
@@ -244,7 +244,7 @@
             });
 
             _selectedSmartCollection = null;
-            _smartCollectionSelect.Reset();
+            await _smartCollectionSelect.ResetAsync();
         }
     }
 

@@ -19,7 +19,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemMultiple scheduleItem,
         ProgramScheduleItem nextScheduleItem,
-        DateTimeOffset hardStop)
+        DateTimeOffset hardStop,
+        CancellationToken cancellationToken)
     {
         var playoutItems = new List<PlayoutItem>();
 
@@ -84,7 +85,13 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 itemChapters);
 
             playoutItems.AddRange(
-                AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
+                AddFiller(
+                    nextState,
+                    collectionEnumerators,
+                    scheduleItem,
+                    playoutItem,
+                    itemChapters,
+                    cancellationToken));
 
             nextState = nextState with
             {
@@ -128,7 +135,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 collectionEnumerators,
                 scheduleItem,
                 playoutItems,
-                nextItemStart);
+                nextItemStart,
+                cancellationToken);
         }
 
         if (scheduleItem.FallbackFiller != null)
@@ -138,7 +146,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 collectionEnumerators,
                 scheduleItem,
                 playoutItems,
-                nextItemStart);
+                nextItemStart,
+                cancellationToken);
         }
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };

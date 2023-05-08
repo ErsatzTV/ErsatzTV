@@ -30,6 +30,8 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [Explicit]
 public class ScheduleIntegrationTests
 {
+    private CancellationToken _cancellationToken;
+
     public ScheduleIntegrationTests()
     {
         Log.Logger = new LoggerConfiguration()
@@ -39,6 +41,12 @@ public class ScheduleIntegrationTests
             .WriteTo.Console()
             .Destructure.UsingAttributes()
             .CreateLogger();
+    }
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromMinutes(1)).Token;
     }
 
     [Test]
@@ -122,38 +130,48 @@ public class ScheduleIntegrationTests
             provider.GetRequiredService<ILogger<PlayoutBuilder>>());
 
         {
-            await using TvContext context = await factory.CreateDbContextAsync();
+            await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
 
             Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
             Playout playout = maybePlayout.ValueUnsafe();
 
-            await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+            await builder.Build(playout, PlayoutBuildMode.Reset, start, finish, _cancellationToken);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(_cancellationToken);
         }
 
         for (var i = 1; i <= (24 * 1); i++)
         {
-            await using TvContext context = await factory.CreateDbContextAsync();
+            await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
             
             Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
             Playout playout = maybePlayout.ValueUnsafe();
 
-            await builder.Build(playout, PlayoutBuildMode.Continue, start.AddHours(i), finish.AddHours(i));
+            await builder.Build(
+                playout,
+                PlayoutBuildMode.Continue,
+                start.AddHours(i),
+                finish.AddHours(i),
+                _cancellationToken);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(_cancellationToken);
         }
         
         for (var i = 25; i <= 26; i++)
         {
-            await using TvContext context = await factory.CreateDbContextAsync();
+            await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
             
             Option<Playout> maybePlayout = await GetPlayout(context, PLAYOUT_ID);
             Playout playout = maybePlayout.ValueUnsafe();
 
-            await builder.Build(playout, PlayoutBuildMode.Continue, start.AddHours(i), finish.AddHours(i));
+            await builder.Build(
+                playout,
+                PlayoutBuildMode.Continue,
+                start.AddHours(i),
+                finish.AddHours(i),
+                _cancellationToken);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(_cancellationToken);
         }
     }
 
@@ -216,8 +234,8 @@ public class ScheduleIntegrationTests
             MediaSource = new LocalMediaSource()
         };
 
-        await dbContext.Libraries.AddAsync(library);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Libraries.AddAsync(library, _cancellationToken);
+        await dbContext.SaveChangesAsync(_cancellationToken);
         
         var movies = new List<Movie>();
         for (var i = 1; i < 25; i++)
@@ -243,8 +261,8 @@ public class ScheduleIntegrationTests
             movies.Add(movie);
         }
 
-        await dbContext.Movies.AddRangeAsync(movies);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Movies.AddRangeAsync(movies, _cancellationToken);
+        await dbContext.SaveChangesAsync(_cancellationToken);
 
         var collection = new Collection
         {
@@ -252,8 +270,8 @@ public class ScheduleIntegrationTests
             MediaItems = movies.Cast<MediaItem>().ToList()
         };
 
-        await dbContext.Collections.AddAsync(collection);
-        await dbContext.SaveChangesAsync();
+        await dbContext.Collections.AddAsync(collection, _cancellationToken);
+        await dbContext.SaveChangesAsync(_cancellationToken);
 
         var scheduleItems = new List<ProgramScheduleItem>
         {
@@ -283,14 +301,19 @@ public class ScheduleIntegrationTests
 
         for (var i = 0; i <= (24 * 4); i++)
         {
-            await using TvContext context = await factory.CreateDbContextAsync();
+            await using TvContext context = await factory.CreateDbContextAsync(_cancellationToken);
             
             Option<Playout> maybePlayout = await GetPlayout(context, playoutId);
             Playout playout = maybePlayout.ValueUnsafe();
 
-            await builder.Build(playout, PlayoutBuildMode.Continue, start.AddHours(i), finish.AddHours(i));
+            await builder.Build(
+                playout,
+                PlayoutBuildMode.Continue,
+                start.AddHours(i),
+                finish.AddHours(i),
+                _cancellationToken);
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(_cancellationToken);
         }
     }
 

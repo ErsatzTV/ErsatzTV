@@ -17,6 +17,14 @@ public class RandomizedContentTests
         1, 8, 2, 1, 1, 5, 5, 5, 3, 5, 8, 10, 4, 8, 7, 3, 3, 4, 4, 9, 2, 8, 8, 10, 8, 4, 3, 10, 7, 8, 9, 9
     };
 
+    private CancellationToken _cancellationToken;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    }
+
     [Test]
     public void Episodes_Should_Randomize()
     {

@@ -16,7 +16,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemOne scheduleItem,
         ProgramScheduleItem nextScheduleItem,
-        DateTimeOffset hardStop)
+        DateTimeOffset hardStop,
+        CancellationToken cancellationToken)
     {
         IMediaCollectionEnumerator contentEnumerator =
             collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
@@ -64,7 +65,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 collectionEnumerators,
                 scheduleItem,
                 playoutItem,
-                itemChapters);
+                itemChapters,
+                cancellationToken);
 
             PlayoutBuilderState nextState = playoutBuilderState with
             {
@@ -90,7 +92,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                     collectionEnumerators,
                     scheduleItem,
                     playoutItems,
-                    nextItemStart);
+                    nextItemStart,
+                    cancellationToken);
             }
 
             if (scheduleItem.FallbackFiller != null)
@@ -100,7 +103,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                     collectionEnumerators,
                     scheduleItem,
                     playoutItems,
-                    nextItemStart);
+                    nextItemStart,
+                    cancellationToken);
             }
 
             nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };

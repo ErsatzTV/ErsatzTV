@@ -17,7 +17,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         ProgramScheduleItemDuration scheduleItem,
         ProgramScheduleItem nextScheduleItem,
-        DateTimeOffset hardStop)
+        DateTimeOffset hardStop,
+        CancellationToken cancellationToken)
     {
         var playoutItems = new List<PlayoutItem>();
 
@@ -101,7 +102,13 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
             {
                 // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
                 playoutItems.AddRange(
-                    AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
+                    AddFiller(
+                        nextState,
+                        collectionEnumerators,
+                        scheduleItem,
+                        playoutItem,
+                        itemChapters,
+                        cancellationToken));
 
                 nextState = nextState with
                 {
@@ -163,7 +170,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                             collectionEnumerators,
                             scheduleItem,
                             playoutItems,
-                            nextItemStart);
+                            nextItemStart,
+                            cancellationToken);
                     }
 
                     if (scheduleItem.FallbackFiller != null)
@@ -173,7 +181,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                             collectionEnumerators,
                             scheduleItem,
                             playoutItems,
-                            nextItemStart);
+                            nextItemStart,
+                            cancellationToken);
                     }
 
                     nextState = nextState with { CurrentTime = nextItemStart };
@@ -186,7 +195,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                             collectionEnumerators,
                             scheduleItem,
                             playoutItems,
-                            nextItemStart);
+                            nextItemStart,
+                            cancellationToken);
                     }
 
                     nextState = nextState with { CurrentTime = nextItemStart };

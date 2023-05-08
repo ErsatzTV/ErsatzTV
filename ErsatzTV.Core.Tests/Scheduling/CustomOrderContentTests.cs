@@ -7,6 +7,14 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 
 public class CustomOrderContentTests
 {
+    private CancellationToken _cancellationToken;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    }
+
     [Test]
     public void MediaItems_Should_Sort_By_CustomOrder()
     {

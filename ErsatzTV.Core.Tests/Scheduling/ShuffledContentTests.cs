@@ -11,6 +11,14 @@ public class ShuffledContentTests
     // this seed will produce (shuffle) 1-10 in order
     private const int MagicSeed = 670596;
 
+    private CancellationToken _cancellationToken;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+    }
+
     [Test]
     public void Episodes_Should_Not_Duplicate_When_Reshuffling()
     {
@@ -20,7 +28,7 @@ public class ShuffledContentTests
         var state = new CollectionEnumeratorState { Seed = 8 };
 
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
+        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
         var list = new List<int>();
         for (var i = 1; i <= 1000; i++)
@@ -48,7 +56,7 @@ public class ShuffledContentTests
         var state = new CollectionEnumeratorState();
 
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
+        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
         var list = new List<int>();
         for (var i = 1; i <= 10; i++)
@@ -69,7 +77,7 @@ public class ShuffledContentTests
         var state = new CollectionEnumeratorState();
 
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
+        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
         var list = new List<int>();
         for (var i = 1; i <= 10; i++)
@@ -90,7 +98,7 @@ public class ShuffledContentTests
         var state = new CollectionEnumeratorState();
 
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
+        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
         for (var i = 0; i < 10; i++)
         {
@@ -106,7 +114,7 @@ public class ShuffledContentTests
         var state = new CollectionEnumeratorState { Index = 5, Seed = MagicSeed };
 
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
+        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
         for (var i = 6; i <= 10; i++)
         {
@@ -125,7 +133,7 @@ public class ShuffledContentTests
         var state = new CollectionEnumeratorState { Index = 10, Seed = MagicSeed };
 
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
+        var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
         shuffledContent.State.Index.Should().Be(0);
         shuffledContent.State.Seed.Should().NotBe(MagicSeed);
