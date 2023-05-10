@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Other content will still use hardware acceleration as configured
   - Hardware-accelerated fallback filler may be re-enabled in the future
 - Fix playout building when shuffle in order is used with a single media item
+- Fix pgs subtitle burn in from media server libraries
+- Fix subtitle and watermark overlays with RadeonSI VAAPI driver
 
 ### Changed
 - Timeout playout builds after 2 minutes; this should prevent playout bugs from blocking other functionality

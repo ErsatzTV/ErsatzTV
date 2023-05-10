@@ -15,7 +15,7 @@ public class Subtitle
     public string Path { get; set; }
     public DateTime DateAdded { get; set; }
     public DateTime DateUpdated { get; set; }
-    public bool IsImage => Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "vobsub" or "pgssub";
+    public bool IsImage => Codec is "hdmv_pgs_subtitle" or "dvd_subtitle" or "dvdsub" or "vobsub" or "pgssub" or "pgs";
 
     public static Subtitle FromMediaStream(MediaStream stream) =>
         new()
