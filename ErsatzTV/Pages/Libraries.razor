@@ -1,9 +1,9 @@
 ﻿@page "/media/libraries"
-@using MediatR.Courier
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
 @using ErsatzTV.Core.Metadata
+@using MediatR.Courier
 @using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
 @using ErsatzTV.Application.Jellyfin
 @using ErsatzTV.Application.Emby
@@ -199,7 +199,7 @@
             case "emby":
                 return _locker.AreEmbyCollectionsLocked();
         }
-        
+
         return false;
     }
 

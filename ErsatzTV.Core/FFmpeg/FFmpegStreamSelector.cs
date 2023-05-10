@@ -12,12 +12,12 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class FFmpegStreamSelector : IFFmpegStreamSelector
 {
-    private readonly IScriptEngine _scriptEngine;
-    private readonly IStreamSelectorRepository _streamSelectorRepository;
-    private readonly ISearchRepository _searchRepository;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<FFmpegStreamSelector> _logger;
+    private readonly IScriptEngine _scriptEngine;
+    private readonly ISearchRepository _searchRepository;
+    private readonly IStreamSelectorRepository _streamSelectorRepository;
 
     public FFmpegStreamSelector(
         IScriptEngine scriptEngine,
@@ -74,7 +74,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         {
             _logger.LogDebug("Preferred audio language has multiple codes {Codes}", allLanguageCodes);
         }
-        
+
         try
         {
             switch (version.MediaItem)
@@ -92,6 +92,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                     {
                         return result;
                     }
+
                     break;
                 case Movie:
                     var sw2 = Stopwatch.StartNew();
@@ -106,6 +107,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                     {
                         return result2;
                     }
+
                     break;
                 // let default fall through
             }
@@ -248,7 +250,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
             return PrioritizeDefault(streams);
         }
-        
+
         _logger.LogDebug("Unable to find audio stream with preferred title {Title}", title);
 
         return PrioritizeDefault(streams);
@@ -322,7 +324,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
         if (!_localFileSystem.FileExists(jsScriptPath))
         {
-            _logger.LogInformation("Unable to locate movie audio stream selector script; falling back to built-in logic");
+            _logger.LogInformation(
+                "Unable to locate movie audio stream selector script; falling back to built-in logic");
             return Option<MediaStream>.None;
         }
 

@@ -37,7 +37,7 @@ public class ArtistMetadataConfiguration : IEntityTypeConfiguration<ArtistMetada
         builder.HasMany(mm => mm.Subtitles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasMany(sm => sm.Styles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

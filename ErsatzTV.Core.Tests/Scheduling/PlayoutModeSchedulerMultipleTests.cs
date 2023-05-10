@@ -11,13 +11,10 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 {
-    private CancellationToken _cancellationToken;
-    
     [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+    private CancellationToken _cancellationToken;
 
     [Test]
     public void Should_Fill_Exactly_To_Next_Schedule_Item()

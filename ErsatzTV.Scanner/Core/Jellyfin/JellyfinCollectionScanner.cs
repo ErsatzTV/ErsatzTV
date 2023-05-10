@@ -10,9 +10,9 @@ namespace ErsatzTV.Scanner.Core.Jellyfin;
 public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
-    private readonly IMediator _mediator;
     private readonly IJellyfinCollectionRepository _jellyfinCollectionRepository;
     private readonly ILogger<JellyfinCollectionScanner> _logger;
+    private readonly IMediator _mediator;
 
     public JellyfinCollectionScanner(
         IMediator mediator,

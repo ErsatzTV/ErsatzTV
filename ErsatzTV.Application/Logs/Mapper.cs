@@ -7,7 +7,7 @@ internal partial class Mapper
 {
     [GeneratedRegex(@"(.*)\[(DBG|INF|WRN|ERR|FTL)\](.*)")]
     private static partial Regex LogEntryRegex();
-    
+
     internal static Option<LogEntryViewModel> ProjectToViewModel(string line)
     {
         Match match = LogEntryRegex().Match(line);

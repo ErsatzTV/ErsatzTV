@@ -40,7 +40,7 @@ public static class EmbyUrl
             .AppendPathSegment(pathSegment)
             .SetQueryParams(query);
     }
-    
+
     public static string PlaceholderProxyForArtwork(string artwork, ArtworkKind artworkKind, int height)
     {
         string[] split = artwork.Replace("emby://", string.Empty).Split('?');

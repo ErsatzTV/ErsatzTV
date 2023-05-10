@@ -8,8 +8,8 @@ namespace ErsatzTV.Application.Jellyfin;
 public class SynchronizeJellyfinMediaSourcesHandler : IRequestHandler<SynchronizeJellyfinMediaSources,
     Either<BaseError, List<JellyfinMediaSource>>>
 {
-    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
 
     public SynchronizeJellyfinMediaSourcesHandler(
         IMediaSourceRepository mediaSourceRepository,
@@ -26,7 +26,9 @@ public class SynchronizeJellyfinMediaSourcesHandler : IRequestHandler<Synchroniz
         List<JellyfinMediaSource> mediaSources = await _mediaSourceRepository.GetAllJellyfin();
         foreach (JellyfinMediaSource mediaSource in mediaSources)
         {
-            await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinAdminUserId(mediaSource.Id), cancellationToken);
+            await _scannerWorkerChannel.WriteAsync(
+                new SynchronizeJellyfinAdminUserId(mediaSource.Id),
+                cancellationToken);
             await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSource.Id), cancellationToken);
         }
 

@@ -289,7 +289,7 @@ public class EpisodeNfoReaderTests
                 .Should().Be(1);
         }
     }
-    
+
     [Test]
     public async Task Genres()
     {
@@ -315,7 +315,7 @@ public class EpisodeNfoReaderTests
             list.Count(nfo => nfo.Genres is ["Genre 2", "Genre 3"]).Should().Be(1);
         }
     }
-    
+
     [Test]
     public async Task Tags()
     {

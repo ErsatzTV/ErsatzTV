@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Filter.Vaapi;
 public class ScaleVaapiFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly FrameSize _paddedSize;
     private readonly bool _isAnamorphicEdgeCase;
+    private readonly FrameSize _paddedSize;
     private readonly FrameSize _scaledSize;
 
     public ScaleVaapiFilter(
@@ -44,7 +44,7 @@ public class ScaleVaapiFilter : BaseFilter
                 }
 
                 string squareScale = string.Empty;
-                string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
+                var targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {

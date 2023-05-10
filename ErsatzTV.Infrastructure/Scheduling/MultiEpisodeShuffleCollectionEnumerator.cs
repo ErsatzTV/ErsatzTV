@@ -8,8 +8,8 @@ namespace ErsatzTV.Infrastructure.Scheduling;
 
 public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerator
 {
-    private readonly ILogger _logger;
     private readonly CancellationToken _cancellationToken;
+    private readonly ILogger _logger;
     private readonly int _mediaItemCount;
     private readonly Dictionary<int, List<MediaItem>> _mediaItemGroups;
     private readonly List<MediaItem> _ungrouped;
@@ -30,7 +30,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         scriptEngine.Load(scriptFile);
 
         var numParts = (int)(double)scriptEngine.GetValue("numParts");
-        
+
         _mediaItemGroups = new Dictionary<int, List<MediaItem>>();
         for (var i = 1; i <= numParts; i++)
         {
@@ -39,7 +39,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
 
         _ungrouped = new List<MediaItem>();
         _mediaItemCount = mediaItems.Count;
-        
+
         IList<Episode> validEpisodes = mediaItems
             .OfType<Episode>()
             .Filter(e => e.Season is not null && e.EpisodeMetadata is not null && e.EpisodeMetadata.Count == 1)
@@ -49,7 +49,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
             // prep script params
             int seasonNumber = episode.Season.SeasonNumber;
             int episodeNumber = episode.EpisodeMetadata[0].EpisodeNumber;
-            
+
             // call the script function, and if we get a part (group) number back, use it
             if (scriptEngine.Invoke("partNumberForEpisode", seasonNumber, episodeNumber) is double result)
             {
@@ -182,7 +182,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         // flatten
         return GroupedMediaItem.FlattenGroups(copy, _mediaItemCount);
     }
-    
+
     private static IList<MediaItem> Shuffle(IEnumerable<MediaItem> mediaItems, CloneableRandom random)
     {
         MediaItem[] copy = mediaItems.ToArray();

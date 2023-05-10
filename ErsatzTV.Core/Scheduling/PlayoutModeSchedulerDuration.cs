@@ -205,7 +205,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         }
 
         bool hasFallback = playoutItems.Any(p => p.FillerKind == FillerKind.Fallback);
-        
+
         var playoutItemsToClear = playoutItems
             .Filter(pi => pi.FillerKind == FillerKind.None)
             .ToList();
@@ -217,7 +217,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         {
             playoutItemsToClear.Remove(lastItem);
         }
-        
+
         foreach (PlayoutItem item in playoutItemsToClear)
         {
             item.GuideFinish = null;

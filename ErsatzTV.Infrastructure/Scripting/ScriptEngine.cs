@@ -8,8 +8,7 @@ public class ScriptEngine : IScriptEngine
 {
     private Engine _engine;
 
-    public ScriptEngine(ILogger<ScriptEngine> logger)
-    {
+    public ScriptEngine(ILogger<ScriptEngine> logger) =>
         _engine = new Engine(
                 options =>
                 {
@@ -19,7 +18,6 @@ public class ScriptEngine : IScriptEngine
                     options.MaxStatements(1000);
                 })
             .SetValue("log", new Action<string>(s => logger.LogDebug("JS Script: {Message}", s)));
-    }
 
     public void Load(string jsScriptPath)
     {
@@ -32,7 +30,7 @@ public class ScriptEngine : IScriptEngine
         string contents = await File.ReadAllTextAsync(jsScriptPath);
         _engine.Execute(contents);
     }
-    
+
     public object GetValue(string propertyName) => _engine.GetValue(propertyName).ToObject();
 
     public object Invoke(string functionName, params object[] args) => _engine.Invoke(functionName, args).ToObject();

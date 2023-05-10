@@ -9,20 +9,17 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class ShuffledMediaCollectionEnumeratorTests
 {
+    [SetUp]
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
     private readonly List<GroupedMediaItem> _mediaItems = new()
     {
         new GroupedMediaItem(new MediaItem { Id = 1 }, new List<MediaItem>()),
         new GroupedMediaItem(new MediaItem { Id = 2 }, new List<MediaItem>()),
         new GroupedMediaItem(new MediaItem { Id = 3 }, new List<MediaItem>())
     };
-    
+
     private CancellationToken _cancellationToken;
-    
-    [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
 
     [Test]
     public void Peek_Zero_Should_Match_Current()

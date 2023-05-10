@@ -1,8 +1,8 @@
 ﻿@page "/system/troubleshooting"
+@using ErsatzTV.Application.Troubleshooting
 @using ErsatzTV.Application.Troubleshooting.Queries
 @using System.Text.Json
 @using System.Text.Json.Serialization
-@using ErsatzTV.Application.Troubleshooting
 @implements IDisposable
 @inject IMediator Mediator
 @inject IJSRuntime JsRuntime
@@ -15,7 +15,7 @@
                     <code @ref="_troubleshootingView">@_troubleshootingInfo</code>
                 </pre>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="(() => CopyToClipboard(_troubleshootingView))">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_troubleshootingView)">
                 Copy
             </MudButton>
         </MudExpansionPanel>
@@ -25,7 +25,7 @@
                     <code @ref="_nvidiaView">@_nvidiaCapabilities</code>
                 </pre>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="(() => CopyToClipboard(_nvidiaView))">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_nvidiaView)">
                 Copy
             </MudButton>
         </MudExpansionPanel>
@@ -35,7 +35,7 @@
                     <code @ref="_vaapiView">@_vaapiCapabilities</code>
                 </pre>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="(() => CopyToClipboard(_vaapiView))">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_vaapiView)">
                 Copy
             </MudButton>
         </MudExpansionPanel>
@@ -80,9 +80,7 @@
             _troubleshootingInfo = ex.ToString();
         }
     }
-    
-    private async Task CopyToClipboard(ElementReference view)
-    {
-        await JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", view);
-    }
+
+    private async Task CopyToClipboard(ElementReference view) => await JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", view);
+
 }

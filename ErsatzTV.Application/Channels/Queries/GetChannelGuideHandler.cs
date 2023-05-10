@@ -11,8 +11,8 @@ namespace ErsatzTV.Application.Channels;
 public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<BaseError, ChannelGuide>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
     public GetChannelGuideHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -35,7 +35,7 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
         {
             return BaseError.New($"Required file {channelsFile} is missing");
         }
-        
+
         string accessTokenUri = string.Empty;
         if (!string.IsNullOrWhiteSpace(request.AccessToken))
         {
@@ -43,7 +43,7 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
         }
 
         string channelsFragment = await File.ReadAllTextAsync(channelsFile, Encoding.UTF8, cancellationToken);
-        
+
         // TODO: is regex faster?
         channelsFragment = channelsFragment
             .Replace("{RequestBase}", $"{request.Scheme}://{request.Host}{request.BaseUrl}")
@@ -59,7 +59,7 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
             }
 
             string channelDataFragment = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationToken);
-            
+
             channelDataFragment = channelDataFragment
                 .Replace("{RequestBase}", $"{request.Scheme}://{request.Host}{request.BaseUrl}")
                 .Replace("{AccessTokenUri}", accessTokenUri);

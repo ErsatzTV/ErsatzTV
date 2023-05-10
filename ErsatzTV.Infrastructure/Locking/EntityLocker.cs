@@ -7,9 +7,9 @@ public class EntityLocker : IEntityLocker
 {
     private readonly ConcurrentDictionary<int, byte> _lockedLibraries;
     private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
+    private bool _embyCollections;
     private bool _plex;
     private bool _trakt;
-    private bool _embyCollections;
 
     public EntityLocker()
     {
@@ -129,7 +129,7 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool IsTraktLocked() => _trakt;
-    
+
     public bool LockEmbyCollections()
     {
         if (!_embyCollections)

@@ -20,7 +20,7 @@ public class DeleteCollectionHandler : IRequestHandler<DeleteCollection, Either<
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
         Validation<BaseError, Collection> validation = await CollectionMustExist(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c));
+        return await validation.Apply(c => DoDeletion(dbContext, c));
     }
 
     private static Task<Unit> DoDeletion(TvContext dbContext, Collection collection)

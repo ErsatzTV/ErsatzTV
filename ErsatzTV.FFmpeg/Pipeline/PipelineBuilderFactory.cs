@@ -6,9 +6,9 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public class PipelineBuilderFactory : IPipelineBuilderFactory
 {
-    private readonly IRuntimeInfo _runtimeInfo;
     private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
     private readonly ILogger<PipelineBuilderFactory> _logger;
+    private readonly IRuntimeInfo _runtimeInfo;
 
     public PipelineBuilderFactory(
         IRuntimeInfo runtimeInfo,
@@ -33,7 +33,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         string ffmpegPath)
     {
         IFFmpegCapabilities ffmpegCapabilities = await _hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
-        
+
         IHardwareCapabilities capabilities = await _hardwareCapabilitiesFactory.GetHardwareCapabilities(
             ffmpegCapabilities,
             ffmpegPath,

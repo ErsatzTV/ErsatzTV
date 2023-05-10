@@ -32,7 +32,7 @@ public class CreateLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, LocalLibrary> validation = await Validate(dbContext, request);
-        return await validation.Apply(localLibrary => PersistLocalLibrary(dbContext, localLibrary));
+        return await LanguageExtensions.Apply(validation, localLibrary => PersistLocalLibrary(dbContext, localLibrary));
     }
 
     private async Task<LocalLibraryViewModel> PersistLocalLibrary(

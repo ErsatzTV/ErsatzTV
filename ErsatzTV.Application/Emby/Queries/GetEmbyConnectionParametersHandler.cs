@@ -10,8 +10,8 @@ namespace ErsatzTV.Application.Emby;
 public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnectionParameters,
     Either<BaseError, EmbyConnectionParametersViewModel>>
 {
-    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IEmbySecretStore _embySecretStore;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMemoryCache _memoryCache;
 
     public GetEmbyConnectionParametersHandler(
@@ -65,7 +65,7 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
         return maybeConnection.Map(connection => new ConnectionParameters(embyMediaSource, connection))
             .ToValidation<BaseError>("Emby media source requires an active connection");
     }
-    
+
     private async Task<Validation<BaseError, ConnectionParameters>> MediaSourceMustHaveApiKey(
         ConnectionParameters connectionParameters)
     {

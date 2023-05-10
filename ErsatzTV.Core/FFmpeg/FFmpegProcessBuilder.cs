@@ -31,10 +31,7 @@ internal class FFmpegProcessBuilder
     private readonly string _ffmpegPath;
     private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
 
-    public FFmpegProcessBuilder(string ffmpegPath)
-    {
-        _ffmpegPath = ffmpegPath;
-    }
+    public FFmpegProcessBuilder(string ffmpegPath) => _ffmpegPath = ffmpegPath;
 
     public FFmpegProcessBuilder WithThreads(int threads)
     {
@@ -166,8 +163,8 @@ internal class FFmpegProcessBuilder
             audioIndex = 1;
         }
 
-        string videoLabel = $"{videoIndex}:{videoStreamIndex}";
-        string audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
+        var videoLabel = $"{videoIndex}:{videoStreamIndex}";
+        var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
 
         Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
             audioPath.IsNone,

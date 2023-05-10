@@ -95,7 +95,8 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
-        return None;    }
+        return None;
+    }
 
     public async Task<List<int>> FlagFileNotFound(JellyfinLibrary library, List<string> movieItemIds)
     {

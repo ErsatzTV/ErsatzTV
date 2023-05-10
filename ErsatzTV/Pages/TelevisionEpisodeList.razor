@@ -266,7 +266,7 @@
                 Right: _ => _snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
         }
     }
-    
+
     private async Task ShowInfo(TelevisionEpisodeCardViewModel episode)
     {
         Either<BaseError, MediaItemInfo> maybeInfo = await _mediator.Send(new GetMediaItemInfo(episode.EpisodeId));

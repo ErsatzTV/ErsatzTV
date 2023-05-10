@@ -8,10 +8,8 @@ public class GetChannelNameByPlayoutIdHandler : IRequestHandler<GetChannelNameBy
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetChannelNameByPlayoutIdHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetChannelNameByPlayoutIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<Option<string>> Handle(GetChannelNameByPlayoutId request, CancellationToken cancellationToken)
     {

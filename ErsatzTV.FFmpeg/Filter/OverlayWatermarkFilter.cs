@@ -6,10 +6,10 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class OverlayWatermarkFilter : BaseFilter
 {
+    private readonly ILogger _logger;
+    private readonly IPixelFormat _outputPixelFormat;
     private readonly FrameSize _resolution;
     private readonly FrameSize _squarePixelFrameSize;
-    private readonly IPixelFormat _outputPixelFormat;
-    private readonly ILogger _logger;
     private readonly WatermarkState _watermarkState;
 
     public OverlayWatermarkFilter(
@@ -68,7 +68,7 @@ public class OverlayWatermarkFilter : BaseFilter
         int verticalPadding = _resolution.Height - _squarePixelFrameSize.Height;
 
         _logger.LogDebug("Resolution: {Width}x{Height}", _resolution.Width, _resolution.Height);
-        _logger.LogDebug("Square Pix: {Width}x{Height}", _squarePixelFrameSize.Width, _squarePixelFrameSize.Height);    
+        _logger.LogDebug("Square Pix: {Width}x{Height}", _squarePixelFrameSize.Width, _squarePixelFrameSize.Height);
 
         double horizontalMargin = Math.Round(
             _watermarkState.HorizontalMarginPercent / 100.0 * _squarePixelFrameSize.Width

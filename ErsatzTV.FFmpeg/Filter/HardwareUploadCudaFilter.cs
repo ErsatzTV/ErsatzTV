@@ -4,10 +4,7 @@ public class HardwareUploadCudaFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
-    public HardwareUploadCudaFilter(FrameState currentState)
-    {
-        _currentState = currentState;
-    }
+    public HardwareUploadCudaFilter(FrameState currentState) => _currentState = currentState;
 
     public override string Filter => _currentState.FrameDataLocation switch
     {

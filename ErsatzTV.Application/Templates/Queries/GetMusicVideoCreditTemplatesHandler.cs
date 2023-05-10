@@ -7,10 +7,7 @@ public class GetMusicVideoCreditTemplatesHandler : IRequestHandler<GetMusicVideo
 {
     private readonly ILocalFileSystem _localFileSystem;
 
-    public GetMusicVideoCreditTemplatesHandler(ILocalFileSystem localFileSystem)
-    {
-        _localFileSystem = localFileSystem;
-    }
+    public GetMusicVideoCreditTemplatesHandler(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
     public Task<List<string>> Handle(GetMusicVideoCreditTemplates request, CancellationToken cancellationToken) =>
         _localFileSystem.ListFiles(FileSystemLayout.MusicVideoCreditsTemplatesFolder)

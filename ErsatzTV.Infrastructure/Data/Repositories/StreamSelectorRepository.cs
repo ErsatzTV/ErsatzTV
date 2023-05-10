@@ -9,10 +9,8 @@ public class StreamSelectorRepository : IStreamSelectorRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public StreamSelectorRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public StreamSelectorRepository(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<EpisodeAudioStreamSelectorData> GetEpisodeData(int episodeId)
     {
@@ -38,7 +36,7 @@ public class StreamSelectorRepository : IStreamSelectorRepository
                 new { Id = (int)episodeData.ShowMetadataId })
             .MapT(FormatGuid)
             .Map(result => result.ToArray());
-        
+
         string[] episodeGuids = await dbContext.Connection
             .QueryAsync<string>(
                 @"SELECT Guid FROM MetadataGuid WHERE EpisodeMetadataId = @Id",

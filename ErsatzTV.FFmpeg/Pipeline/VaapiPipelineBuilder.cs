@@ -128,9 +128,9 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             ScaledSize = videoStream.FrameSize,
             PaddedSize = videoStream.FrameSize,
             PixelFormat = videoStream.PixelFormat,
-            IsAnamorphic = videoStream.IsAnamorphic,
+            IsAnamorphic = videoStream.IsAnamorphic
         };
-        
+
         foreach (IDecoder decoder in maybeDecoder)
         {
             currentState = decoder.NextState(currentState);
@@ -166,9 +166,9 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             currentState = hardwareUpload.NextState(currentState);
             videoInputFile.FilterSteps.Add(hardwareUpload);
         }
-        else if(currentState.FrameDataLocation == FrameDataLocation.Hardware &&
-                (!context.HasSubtitleOverlay || forceSoftwareOverlay) &&
-                context.HasWatermark)
+        else if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
+                 (!context.HasSubtitleOverlay || forceSoftwareOverlay) &&
+                 context.HasWatermark)
         {
             // download for watermark (or forced software subtitle)
             var hardwareDownload = new HardwareDownloadFilter(currentState);
@@ -185,7 +185,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             desiredState,
             fontsFolder,
             subtitleOverlayFilterSteps);
-        
+
         currentState = SetWatermark(
             videoStream,
             watermarkInputFile,
@@ -213,7 +213,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 videoInputFile.FilterSteps.Add(encoder);
             }
         }
-        
+
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
             videoStream,
             desiredState.PixelFormat,
@@ -228,7 +228,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             subtitleOverlayFilterSteps,
             pixelFormatFilterSteps);
     }
-    
+
     private List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
@@ -255,8 +255,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 var colorspace = new ColorspaceFilter(
                     currentState,
                     videoStream,
-                    format,
-                    false);
+                    format);
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
             }
@@ -264,7 +263,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
             {
                 _logger.LogDebug("Using software encoder");
-                
+
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
                     _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
@@ -403,9 +402,9 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 // }
                 // else
                 // {
-                    var downloadFilter = new HardwareDownloadFilter(currentState);
-                    currentState = downloadFilter.NextState(currentState);
-                    videoInputFile.FilterSteps.Add(downloadFilter);
+                var downloadFilter = new HardwareDownloadFilter(currentState);
+                currentState = downloadFilter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(downloadFilter);
                 // }
 
                 var subtitlesFilter = new SubtitlesFilter(fontsFolder, subtitle);
@@ -429,7 +428,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                                 pf = format;
                             }
                         }
-                        
+
                         var subtitlesFilter = new OverlaySubtitleFilter(pf);
                         subtitleOverlayFilterSteps.Add(subtitlesFilter);
                     }
@@ -474,7 +473,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             currentState = padStep.NextState(currentState);
             videoInputFile.FilterSteps.Add(padStep);
         }
-        
+
         return currentState;
     }
 
@@ -487,12 +486,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         FrameState currentState)
     {
         IPipelineFilterStep scaleStep;
-        
-        if ((currentState.ScaledSize != desiredState.ScaledSize && ffmpegState is
+
+        if (currentState.ScaledSize != desiredState.ScaledSize && ffmpegState is
             {
                 DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
                 EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-            } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false }) ||
+            } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false } ||
             ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.Vaapi)
         {
             scaleStep = new ScaleFilter(
@@ -507,14 +506,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 currentState with
                 {
                     PixelFormat = //context.HasWatermark ||
-                                  //context.HasSubtitleOverlay ||
-                                  // (desiredState.ScaledSize != desiredState.PaddedSize) ||
-                                  // context.HasSubtitleText ||
-                                  ffmpegState is
-                                  {
-                                      DecoderHardwareAccelerationMode: HardwareAccelerationMode.Nvenc,
-                                      EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-                                  }
+                    //context.HasSubtitleOverlay ||
+                    // (desiredState.ScaledSize != desiredState.PaddedSize) ||
+                    // context.HasSubtitleText ||
+                    ffmpegState is
+                    {
+                        DecoderHardwareAccelerationMode: HardwareAccelerationMode.Nvenc,
+                        EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
+                    }
                         ? desiredState.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
                         : Option<IPixelFormat>.None
                 },

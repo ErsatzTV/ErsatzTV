@@ -10,9 +10,9 @@ namespace ErsatzTV.Scanner.Core.Emby;
 public class EmbyCollectionScanner : IEmbyCollectionScanner
 {
     private readonly IEmbyApiClient _embyApiClient;
-    private readonly IMediator _mediator;
     private readonly IEmbyCollectionRepository _embyCollectionRepository;
     private readonly ILogger<EmbyCollectionScanner> _logger;
+    private readonly IMediator _mediator;
 
     public EmbyCollectionScanner(
         IMediator mediator,
@@ -32,7 +32,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         {
             // need to call get libraries to find library that contains collections (box sets)                
             await _embyApiClient.GetLibraries(address, apiKey);
-            
+
             var incomingItemIds = new List<string>();
 
             // get all collections from db (item id, etag)

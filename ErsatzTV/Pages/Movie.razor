@@ -2,9 +2,9 @@
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.Movies
 @using System.Globalization
-@using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.MediaCards
 @implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog
@@ -283,4 +283,5 @@
             DialogResult _ = await dialog.Result;
         }
     }
+
 }

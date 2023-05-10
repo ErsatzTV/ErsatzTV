@@ -5,9 +5,9 @@ namespace ErsatzTV.FFmpeg.Filter.Qsv;
 public class SubtitleScaleQsvFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly FrameSize _scaledSize;
-    private readonly FrameSize _paddedSize;
     private readonly int _extraHardwareFrames;
+    private readonly FrameSize _paddedSize;
+    private readonly FrameSize _scaledSize;
 
     public SubtitleScaleQsvFilter(
         FrameState currentState,
@@ -28,8 +28,8 @@ public class SubtitleScaleQsvFilter : BaseFilter
             string scale = string.Empty;
             if (_currentState.ScaledSize != _scaledSize)
             {
-                string targetSize = $"w={_paddedSize.Width}:h={_paddedSize.Height}";
-                
+                var targetSize = $"w={_paddedSize.Width}:h={_paddedSize.Height}";
+
                 // use software scaling
                 scale = $"scale={targetSize}:force_original_aspect_ratio=decrease";
             }

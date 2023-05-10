@@ -15,7 +15,7 @@ public class FrameRateFilter : BaseFilter
     {
         get
         {
-            string frameRate = $"framerate=fps={_frameRate}:flags=-scd";
+            var frameRate = $"framerate=fps={_frameRate}:flags=-scd";
             string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)

@@ -69,9 +69,11 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         };
     }
 
-    protected override Option<IEncoder> GetEncoder(FFmpegState ffmpegState, FrameState currentState, FrameState desiredState)
-    {
-        return (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
+    protected override Option<IEncoder> GetEncoder(
+        FFmpegState ffmpegState,
+        FrameState currentState,
+        FrameState desiredState) =>
+        (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.Amf, VideoFormat.Hevc) =>
                 new EncoderHevcAmf(),
@@ -80,8 +82,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
 
             _ => GetSoftwareEncoder(currentState, desiredState)
         };
-    }
-    
+
     protected override List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
@@ -110,7 +111,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
 
             pipelineSteps.Add(new PixelFormatOutputOption(pixelFormat));
         }
-        
+
         return result;
     }
 }

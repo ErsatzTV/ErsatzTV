@@ -8,6 +8,9 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class RandomizedContentTests
 {
+    [SetUp]
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
     private const int KnownSeed = 22295;
 
     private readonly List<int> _expected = new()
@@ -18,12 +21,6 @@ public class RandomizedContentTests
     };
 
     private CancellationToken _cancellationToken;
-    
-    [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
 
     [Test]
     public void Episodes_Should_Randomize()

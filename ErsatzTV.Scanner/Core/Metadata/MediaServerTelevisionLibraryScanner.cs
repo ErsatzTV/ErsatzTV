@@ -21,9 +21,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     where TEtag : MediaServerItemEtag
 {
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
+    private readonly IMetadataRepository _metadataRepository;
 
     protected MediaServerTelevisionLibraryScanner(
         ILocalFileSystem localFileSystem,
@@ -283,7 +283,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     protected abstract Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateMetadata(
         MediaItemScanResult<TEpisode> result,
         EpisodeMetadata fullMetadata);
-    
+
     private async Task<Either<BaseError, Unit>> ScanSeasons(
         IMediaServerTelevisionRepository<TLibrary, TShow, TSeason, TEpisode, TEtag> televisionRepository,
         TLibrary library,
@@ -579,7 +579,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             // don't scan, but mark as unavailable
             if (!_localFileSystem.FileExists(localPath))
             {
-                if (ServerSupportsRemoteStreaming)                {
+                if (ServerSupportsRemoteStreaming)
+                {
                     foreach (int id in await televisionRepository.FlagRemoteOnly(library, incoming))
                     {
                         await _mediator.Publish(
@@ -705,12 +706,12 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                 incoming,
                 deepScan,
                 mediaVersion);
-            
+
             foreach (BaseError error in statisticsResult.LeftToSeq())
             {
                 return error;
             }
-            
+
             foreach (MediaItemScanResult<TEpisode> r in metadataResult.RightToSeq())
             {
                 result = r;
@@ -782,28 +783,28 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             // }
             // else
             // {
-                if (maybeMediaVersion.IsNone)
-                {
-                    maybeMediaVersion = await GetMediaServerStatistics(
-                        connectionParameters,
-                        library,
-                        result,
-                        incoming);
-                }
+            if (maybeMediaVersion.IsNone)
+            {
+                maybeMediaVersion = await GetMediaServerStatistics(
+                    connectionParameters,
+                    library,
+                    result,
+                    incoming);
+            }
 
-                foreach (MediaVersion mediaVersion in maybeMediaVersion)
+            foreach (MediaVersion mediaVersion in maybeMediaVersion)
+            {
+                if (await _metadataRepository.UpdateStatistics(result.Item, mediaVersion))
                 {
-                    if (await _metadataRepository.UpdateStatistics(result.Item, mediaVersion))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
             // }
         }
 
         return result;
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<TEpisode>>> UpdateSubtitles(
         MediaItemScanResult<TEpisode> existing)
     {

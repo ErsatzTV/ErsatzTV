@@ -592,7 +592,7 @@ public class PlexTelevisionLibraryScanner :
         {
             result.IsUpdated = true;
         }
-        
+
         if (await _metadataRepository.UpdateSubtitles(existingMetadata, fullMetadata.Subtitles))
         {
             result.IsUpdated = true;

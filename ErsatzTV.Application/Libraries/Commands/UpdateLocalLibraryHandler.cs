@@ -16,8 +16,8 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
-    private readonly ISearchIndex _searchIndex;
     private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
+    private readonly ISearchIndex _searchIndex;
 
     public UpdateLocalLibraryHandler(
         ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel,

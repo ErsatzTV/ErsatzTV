@@ -480,7 +480,7 @@ public class Startup
                         app.UseAuthentication();
                         app.UseAuthorization();
                     }
-                    
+
                     app2.UseEndpoints(e => e.MapFallbackToFile("index.html"));
                     app2.UseFileServer(
                         new FileServerOptions
@@ -582,7 +582,7 @@ public class Startup
         services.AddScoped<IStreamSelectorRepository, StreamSelectorRepository>();
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
         services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
-                MultiEpisodeShuffleCollectionEnumeratorFactory>();
+            MultiEpisodeShuffleCollectionEnumeratorFactory>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

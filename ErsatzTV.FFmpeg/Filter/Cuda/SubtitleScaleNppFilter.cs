@@ -22,7 +22,7 @@ public class SubtitleScaleNppFilter : BaseFilter
             string scale = string.Empty;
             if (_currentState.ScaledSize != _scaledSize)
             {
-                string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
+                var targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {

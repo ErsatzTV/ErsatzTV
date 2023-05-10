@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Filter;
 public class WatermarkPixelFormatFilter : BaseFilter
 {
     private readonly FFmpegState _ffmpegState;
-    private readonly WatermarkState _watermarkState;
     private readonly bool _is10BitOutput;
+    private readonly WatermarkState _watermarkState;
 
     public WatermarkPixelFormatFilter(FFmpegState ffmpegState, WatermarkState watermarkState, bool is10BitOutput)
     {

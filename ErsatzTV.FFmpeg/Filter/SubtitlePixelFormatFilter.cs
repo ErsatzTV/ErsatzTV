@@ -13,13 +13,13 @@ public class SubtitlePixelFormatFilter : BaseFilter
 
     public override string Filter => MaybeFormat.Match(f => $"format={f}", () => string.Empty);
 
-    public Option<string> MaybeFormat =>_ffmpegState.EncoderHardwareAccelerationMode switch
+    public Option<string> MaybeFormat => _ffmpegState.EncoderHardwareAccelerationMode switch
     {
         HardwareAccelerationMode.Nvenc when _is10BitOutput => "nv12",
         HardwareAccelerationMode.Nvenc => "yuva420p",
         HardwareAccelerationMode.Qsv => "yuva420p",
         _ => None
-    }; 
+    };
 
     public override FrameState NextState(FrameState currentState) => currentState;
 }

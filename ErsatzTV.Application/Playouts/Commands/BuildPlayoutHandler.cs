@@ -19,8 +19,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IPlayoutBuilder _playoutBuilder;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public BuildPlayoutHandler(
         IClient client,
@@ -108,7 +108,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.Items)
-            
             .Include(p => p.ProgramScheduleAlternates)
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
@@ -137,12 +136,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(a => a.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.FallbackFiller)
-            
             .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(psa => psa.EnumeratorState)
             .Include(p => p.ProgramScheduleAnchors)
             .ThenInclude(a => a.MediaItem)
-
             .Include(p => p.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.Collection)
@@ -164,7 +161,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .Include(p => p.ProgramSchedule)
             .ThenInclude(ps => ps.Items)
             .ThenInclude(psi => psi.FallbackFiller)
-
             .SelectOneAsync(p => p.Id, p => p.Id == buildPlayout.PlayoutId)
             .Map(o => o.ToValidation<BaseError>("Playout does not exist."));
 }

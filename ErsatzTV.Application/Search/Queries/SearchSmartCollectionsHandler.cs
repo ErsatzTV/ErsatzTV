@@ -12,7 +12,9 @@ public class SearchSmartCollectionsHandler : IRequestHandler<SearchSmartCollecti
     public SearchSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    public async Task<List<SmartCollectionViewModel>> Handle(SearchSmartCollections request, CancellationToken cancellationToken)
+    public async Task<List<SmartCollectionViewModel>> Handle(
+        SearchSmartCollections request,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.SmartCollections.FromSqlRaw(

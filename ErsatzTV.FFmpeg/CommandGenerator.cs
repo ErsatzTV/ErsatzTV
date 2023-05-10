@@ -42,7 +42,7 @@ public static class CommandGenerator
         {
             bool isVaapiOrQsv =
                 pipelineSteps.Any(s => s is VaapiHardwareAccelerationOption or QsvHardwareAccelerationOption);
-            
+
             if (!includedPaths.Contains(audioInputFile.Path) || isVaapiOrQsv)
             {
                 includedPaths.Add(audioInputFile.Path);

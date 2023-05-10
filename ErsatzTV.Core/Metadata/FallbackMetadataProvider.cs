@@ -19,7 +19,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         {
             return seasonNumber;
         }
-        
+
         Match match = SeasonPattern.Match(folderName);
         if (match.Success && int.TryParse(match.Groups[1].Value, out seasonNumber))
         {
@@ -30,7 +30,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
         {
             return seasonNumber;
         }
-        
+
         if (folder.EndsWith("specials", StringComparison.OrdinalIgnoreCase))
         {
             return 0;
@@ -38,9 +38,6 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
 
         return None;
     }
-    
-    [GeneratedRegex(@"s(?:eason)?\s?(\d+)(?![e\d])", RegexOptions.IgnoreCase)]
-    private static partial Regex SeasonNumber();
 
     public ShowMetadata GetFallbackMetadataForShow(string showFolder)
     {
@@ -155,6 +152,9 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
 
         return GetSongMetadata(path, metadata);
     }
+
+    [GeneratedRegex(@"s(?:eason)?\s?(\d+)(?![e\d])", RegexOptions.IgnoreCase)]
+    private static partial Regex SeasonNumber();
 
     private List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
     {

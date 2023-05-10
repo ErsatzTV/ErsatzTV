@@ -19,7 +19,7 @@ public class DeleteFillerPresetHandler : IRequestHandler<DeleteFillerPreset, Eit
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request);
-        return await LanguageExtensions.Apply(validation, ps => DoDeletion(dbContext, ps));
+        return await validation.Apply(ps => DoDeletion(dbContext, ps));
     }
 
     private static Task<Unit> DoDeletion(TvContext dbContext, FillerPreset fillerPreset)

@@ -45,7 +45,7 @@
 
     private string GetLinkForLetter(char letter)
     {
-        string uri = $"{BaseUri}/page/{PageMap.PageMap[letter]}";
+        var uri = $"{BaseUri}/page/{PageMap.PageMap[letter]}";
         if (!string.IsNullOrWhiteSpace(Query))
         {
             (string key, string value) = Query.EncodeQuery();

@@ -19,9 +19,9 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     where TEtag : MediaServerItemEtag
 {
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger _logger;
     private readonly IMediator _mediator;
+    private readonly IMetadataRepository _metadataRepository;
 
     protected MediaServerMovieLibraryScanner(
         ILocalFileSystem localFileSystem,
@@ -34,7 +34,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         _mediator = mediator;
         _logger = logger;
     }
-    
+
     protected virtual bool ServerSupportsRemoteStreaming => false;
     protected virtual bool ServerReturnsStatisticsWithMetadata => false;
 
@@ -115,7 +115,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             {
                 continue;
             }
-            
+
             Either<BaseError, MediaItemScanResult<TMovie>> maybeMovie;
 
             if (ServerReturnsStatisticsWithMetadata)
@@ -256,7 +256,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         TLibrary library,
         MediaItemScanResult<TMovie> result,
         TMovie incoming) => Task.FromResult(Option<MediaVersion>.None);
-    
+
     protected abstract Task<Option<Tuple<MovieMetadata, MediaVersion>>> GetFullMetadataAndStatistics(
         TConnectionParameters connectionParameters,
         TLibrary library,
@@ -379,12 +379,12 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
                 incoming,
                 deepScan,
                 mediaVersion);
-            
+
             foreach (BaseError error in statisticsResult.LeftToSeq())
             {
                 return error;
             }
-            
+
             foreach (MediaItemScanResult<TMovie> r in metadataResult.RightToSeq())
             {
                 result = r;
@@ -393,7 +393,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
         return result;
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<TMovie>>> UpdateMetadata(
         TConnectionParameters connectionParameters,
         TLibrary library,
@@ -450,8 +450,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
         return result;
     }
-    
-        
+
+
     private async Task<Either<BaseError, MediaItemScanResult<TMovie>>> UpdateSubtitles(
         MediaItemScanResult<TMovie> existing)
     {

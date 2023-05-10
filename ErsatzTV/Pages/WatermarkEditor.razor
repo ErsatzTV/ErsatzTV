@@ -1,7 +1,7 @@
 ﻿@page "/watermarks/{Id:int}"
 @page "/watermarks/add"
-@using ErsatzTV.FFmpeg.State
 @using ErsatzTV.Application.Watermarks
+@using ErsatzTV.FFmpeg.State
 @using ErsatzTV.Application.Images
 @implements IDisposable
 @inject NavigationManager NavigationManager
@@ -68,7 +68,7 @@
                     <MudCheckBox Class="mt-3" Label="Place Within Source Content"
                                  @bind-Checked="_model.PlaceWithinSourceContent"
                                  For="@(() => _model.PlaceWithinSourceContent)"
-                                 Disabled="@(_model.Mode == ChannelWatermarkMode.None)" />
+                                 Disabled="@(_model.Mode == ChannelWatermarkMode.None)"/>
                     <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
                         <MudItem xs="6">
                             <MudSelect Label="Size" @bind-Value="_model.Size"

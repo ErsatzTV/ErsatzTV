@@ -8,8 +8,8 @@ namespace ErsatzTV.Application.Emby;
 public class SynchronizeEmbyMediaSourcesHandler : IRequestHandler<SynchronizeEmbyMediaSources,
     Either<BaseError, List<EmbyMediaSource>>>
 {
-    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
 
     public SynchronizeEmbyMediaSourcesHandler(
         IMediaSourceRepository mediaSourceRepository,

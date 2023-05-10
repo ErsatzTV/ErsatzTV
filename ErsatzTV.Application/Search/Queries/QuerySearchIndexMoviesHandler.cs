@@ -10,9 +10,9 @@ namespace ErsatzTV.Application.Search;
 
 public class QuerySearchIndexMoviesHandler : IRequestHandler<QuerySearchIndexMovies, MovieCardResultsViewModel>
 {
+    private readonly IClient _client;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMovieRepository _movieRepository;
-    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
     public QuerySearchIndexMoviesHandler(

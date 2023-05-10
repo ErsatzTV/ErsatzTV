@@ -19,7 +19,9 @@ public class MovieNfo
     public int Year { get; set; }
     public string? ContentRating { get; set; }
     public Option<DateTime> Premiered { get; set; }
+
     public string? Plot { get; set; }
+
     // public string? Tagline { get; set; }
     public List<string> Genres { get; }
     public List<string> Tags { get; }

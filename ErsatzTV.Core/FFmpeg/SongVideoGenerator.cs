@@ -170,7 +170,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                     Streams = new List<MediaStream>
                     {
                         new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
-                    },
+                    }
                 };
 
                 string customPath = _imageCache.GetPathForImage(

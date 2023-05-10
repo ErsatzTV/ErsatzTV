@@ -20,7 +20,7 @@ public class CreateMultiCollectionHandler :
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => PersistCollection(dbContext, c));
+        return await validation.Apply(c => PersistCollection(dbContext, c));
     }
 
     private static async Task<MultiCollectionViewModel> PersistCollection(

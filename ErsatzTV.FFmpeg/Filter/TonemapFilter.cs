@@ -13,13 +13,6 @@ public class TonemapFilter : BaseFilter
         _desiredPixelFormat = desiredPixelFormat;
     }
 
-    public override FrameState NextState(FrameState currentState) =>
-        currentState with
-        {
-            PixelFormat = Some(_desiredPixelFormat),
-            FrameDataLocation = FrameDataLocation.Software
-        };
-
     public override string Filter
     {
         get
@@ -28,7 +21,7 @@ public class TonemapFilter : BaseFilter
 
             var tonemap =
                 $"setparams=colorspace=bt2020c,zscale=transfer=linear,tonemap=hable,zscale=transfer=bt709,format={_desiredPixelFormat.FFmpegName}";
-            
+
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
                 if (!string.IsNullOrWhiteSpace(pixelFormat))
@@ -42,4 +35,11 @@ public class TonemapFilter : BaseFilter
             return tonemap;
         }
     }
+
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with
+        {
+            PixelFormat = Some(_desiredPixelFormat),
+            FrameDataLocation = FrameDataLocation.Software
+        };
 }

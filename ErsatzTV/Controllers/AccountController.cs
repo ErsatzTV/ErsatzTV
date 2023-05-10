@@ -6,8 +6,5 @@ namespace ErsatzTV.Controllers;
 public class AccountController : ControllerBase
 {
     [HttpPost("account/logout")]
-    public IActionResult Logout()
-    {
-        return new SignOutResult(new[] { "oidc", "cookie" });
-    }
+    public IActionResult Logout() => new SignOutResult(new[] { "oidc", "cookie" });
 }

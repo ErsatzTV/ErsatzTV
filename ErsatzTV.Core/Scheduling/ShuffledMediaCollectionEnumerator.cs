@@ -5,9 +5,9 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
+    private readonly CancellationToken _cancellationToken;
     private readonly int _mediaItemCount;
     private readonly IList<GroupedMediaItem> _mediaItems;
-    private readonly CancellationToken _cancellationToken;
     private CloneableRandom _random;
     private IList<MediaItem> _shuffled;
 

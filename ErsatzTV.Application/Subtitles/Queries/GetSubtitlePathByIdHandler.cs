@@ -12,10 +12,8 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetSubtitlePathByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<Either<BaseError, string>> Handle(
         GetSubtitlePathById request,
@@ -34,7 +32,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
         {
             return jellyfinUrl;
         }
-        
+
         foreach (string embyUrl in await GetEmbyUrl(request, dbContext, maybeSubtitle))
         {
             return embyUrl;
@@ -125,10 +123,10 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                 return $"http://localhost:{Settings.ListenPort}/media/jellyfin/{subtitlePath}";
             }
         }
-        
+
         return Option<string>.None;
     }
-    
+
     private static async Task<Option<string>> GetEmbyUrl(
         GetSubtitlePathById request,
         TvContext dbContext,
@@ -165,7 +163,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                 return $"http://localhost:{Settings.ListenPort}/media/emby/{subtitlePath}";
             }
         }
-        
+
         return Option<string>.None;
     }
 }

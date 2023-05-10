@@ -12,8 +12,8 @@ namespace ErsatzTV.Application.Playouts;
 public class ReplacePlayoutAlternateScheduleItemsHandler :
     IRequestHandler<ReplacePlayoutAlternateScheduleItems, Either<BaseError, Unit>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILogger<ReplacePlayoutAlternateScheduleItemsHandler> _logger;
 
     public ReplacePlayoutAlternateScheduleItemsHandler(
@@ -46,7 +46,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
             {
                 var existingScheduleMap = new Dictionary<DateTimeOffset, ProgramSchedule>();
                 var daysToCheck = new List<DateTimeOffset>();
-                
+
                 Option<PlayoutItem> maybeLastPlayoutItem = await dbContext.PlayoutItems
                     .Filter(pi => pi.PlayoutId == request.PlayoutId)
                     .OrderByDescending(pi => pi.Start)
@@ -146,7 +146,7 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
                     }
                 }
             }
-            
+
             return Unit.Default;
         }
         catch (Exception ex)

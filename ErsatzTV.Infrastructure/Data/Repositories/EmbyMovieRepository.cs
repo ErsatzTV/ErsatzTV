@@ -93,7 +93,8 @@ public class EmbyMovieRepository : IEmbyMovieRepository
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
-        return None;    }
+        return None;
+    }
 
     public async Task<List<int>> FlagFileNotFound(EmbyLibrary library, List<string> movieItemIds)
     {
@@ -374,7 +375,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             fanArt.DateAdded = incomingFanArt.DateAdded;
             fanArt.DateUpdated = incomingFanArt.DateUpdated;
         }
-        
+
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

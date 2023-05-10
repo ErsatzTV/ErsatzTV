@@ -8,10 +8,7 @@ public class GetRecentLogEntriesHandler : IRequestHandler<GetRecentLogEntries, P
 {
     private readonly ILocalFileSystem _localFileSystem;
 
-    public GetRecentLogEntriesHandler(ILocalFileSystem localFileSystem)
-    {
-        _localFileSystem = localFileSystem;
-    }
+    public GetRecentLogEntriesHandler(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
     public Task<PagedLogEntriesViewModel> Handle(
         GetRecentLogEntries request,

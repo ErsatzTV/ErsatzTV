@@ -5,10 +5,8 @@ public class DecoderMpeg2Cuvid : CuvidDecoder
     private readonly bool _contentIsInterlaced;
 
     public DecoderMpeg2Cuvid(HardwareAccelerationMode hardwareAccelerationMode, bool contentIsInterlaced)
-        : base(hardwareAccelerationMode)
-    {
+        : base(hardwareAccelerationMode) =>
         _contentIsInterlaced = contentIsInterlaced;
-    }
 
     public override string Name => "mpeg2_cuvid";
 

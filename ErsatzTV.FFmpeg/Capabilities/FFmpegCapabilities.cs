@@ -6,8 +6,8 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 public class FFmpegCapabilities : IFFmpegCapabilities
 {
     private readonly IReadOnlySet<string> _ffmpegDecoders;
-    private readonly IReadOnlySet<string> _ffmpegFilters;
     private readonly IReadOnlySet<string> _ffmpegEncoders;
+    private readonly IReadOnlySet<string> _ffmpegFilters;
 
     public FFmpegCapabilities(
         IReadOnlySet<string> ffmpegDecoders,

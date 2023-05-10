@@ -1,7 +1,7 @@
 ﻿@page "/media/other/videos"
 @page "/media/other/videos/page/{PageNumber:int}"
-@using LanguageExt.UnsafeValueAccess
 @using ErsatzTV.Extensions
+@using LanguageExt.UnsafeValueAccess
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
@@ -99,7 +99,7 @@
 
     private void PrevPage()
     {
-        string uri = $"media/other/videos/page/{PageNumber - 1}";
+        var uri = $"media/other/videos/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -110,7 +110,7 @@
 
     private void NextPage()
     {
-        string uri = $"media/other/videos/page/{PageNumber + 1}";
+        var uri = $"media/other/videos/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();

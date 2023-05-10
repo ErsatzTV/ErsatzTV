@@ -13,8 +13,8 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizePlexLibraryByIdHandler> _logger;
-    private readonly IMediator _mediator;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMediator _mediator;
     private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
@@ -55,7 +55,7 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
     {
         var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+        if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
             Either<BaseError, Unit> result = parameters.Library.MediaKind switch
             {
@@ -93,7 +93,7 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
         _logger.LogDebug(
             "Skipping unforced scan of plex media library {Name}",
             parameters.Library.Name);
-            
+
         // send an empty progress update for the library name
         await _mediator.Publish(
             new ScannerProgressUpdate(

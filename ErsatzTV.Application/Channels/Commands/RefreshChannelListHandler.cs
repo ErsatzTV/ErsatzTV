@@ -12,9 +12,9 @@ namespace ErsatzTV.Application.Channels;
 
 public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
 {
-    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
     public RefreshChannelListHandler(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
@@ -29,7 +29,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
     public async Task Handle(RefreshChannelList request, CancellationToken cancellationToken)
     {
         _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
-        
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
@@ -73,7 +73,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
 
         string tempFile = Path.GetTempFileName();
         await File.WriteAllBytesAsync(tempFile, ms.ToArray(), cancellationToken);
-        
+
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, "channels.xml");
         File.Move(tempFile, targetFile, true);
     }
@@ -89,13 +89,16 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         await using var reader = (DbDataReader)await dbContext.Connection.ExecuteReaderAsync(QUERY);
         Func<IDataReader, ChannelResult> rowParser = reader.GetRowParser<ChannelResult>();
 
-        while (await reader.ReadAsync()) {
+        while (await reader.ReadAsync())
+        {
             yield return rowParser(reader);
         }
-        
-        while (await reader.NextResultAsync()) {}
+
+        while (await reader.NextResultAsync())
+        {
+        }
     }
-        
+
     private static List<string> GetCategories(string categories) =>
         (categories ?? string.Empty).Split(',')
         .Map(s => s.Trim())

@@ -15,11 +15,11 @@ namespace ErsatzTV.Application.Search;
 public class
     QuerySearchIndexMusicVideosHandler : IRequestHandler<QuerySearchIndexMusicVideos, MusicVideoCardResultsViewModel>
 {
+    private readonly IClient _client;
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
-    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
 
     public QuerySearchIndexMusicVideosHandler(

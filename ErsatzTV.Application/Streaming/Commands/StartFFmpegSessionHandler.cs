@@ -16,11 +16,11 @@ namespace ErsatzTV.Application.Streaming;
 public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<StartFFmpegSessionHandler> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public StartFFmpegSessionHandler(
         ILocalFileSystem localFileSystem,
@@ -104,7 +104,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             _logger.LogDebug("Playlist exists");
 
             var segmentCount = 0;
-            var lastSegmentCount = -1;
+            int lastSegmentCount = -1;
             while (DateTimeOffset.Now < finish && segmentCount < initialSegmentCount)
             {
                 if (segmentCount != lastSegmentCount)

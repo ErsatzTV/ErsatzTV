@@ -80,7 +80,7 @@ public sealed class SearchIndex : ISearchIndex
     public const string EpisodeType = "episode";
     public const string OtherVideoType = "other_video";
     public const string SongType = "song";
-    
+
     private readonly List<CultureInfo> _cultureInfos;
 
     private readonly ILogger<SearchIndex> _logger;
@@ -462,7 +462,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
@@ -584,7 +584,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
@@ -608,7 +608,7 @@ public sealed class SearchIndex : ISearchIndex
 
             try
             {
-                string seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
+                var seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
                 string sortTitle = $"{showMetadata.SortTitle}_{season.SeasonNumber:0000}"
                     .ToLowerInvariant();
                 string titleAndYear = $"{showMetadata.Title}_{showMetadata.Year}_{season.SeasonNumber}"
@@ -672,7 +672,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, season.Id.ToString()), doc);
@@ -726,7 +726,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(MoodField, mood.Name, Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, artist.Id.ToString()), doc);
@@ -821,7 +821,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ArtistField, artist, Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
@@ -1042,7 +1042,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, otherVideo.Id.ToString()), doc);
@@ -1108,7 +1108,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
                 }
-                
+
                 AddMetadataGuids(metadata, doc);
 
                 _writer.UpdateDocument(new Term(IdField, song.Id.ToString()), doc);
@@ -1139,7 +1139,7 @@ public sealed class SearchIndex : ISearchIndex
 
         return query;
     }
-    
+
     private void AddStatistics(Document doc, List<MediaVersion> mediaVersions)
     {
         foreach (MediaVersion version in mediaVersions)
@@ -1198,7 +1198,8 @@ public sealed class SearchIndex : ISearchIndex
             EpisodeMetadata em =>
                 $"{Title(em)}_{em.Episode.Season.Show.ShowMetadata.Head().Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}_{em.Episode.State}"
                     .ToLowerInvariant(),
-            OtherVideoMetadata ovm => $"{OtherVideoTitle(ovm).Replace(' ', '_')}_{ovm.Year}_{ovm.OtherVideo.State}".ToLowerInvariant(),
+            OtherVideoMetadata ovm => $"{OtherVideoTitle(ovm).Replace(' ', '_')}_{ovm.Year}_{ovm.OtherVideo.State}"
+                .ToLowerInvariant(),
             SongMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Song.State}".ToLowerInvariant(),
             MovieMetadata mm => $"{Title(mm)}_{mm.Year}_{mm.Movie.State}".ToLowerInvariant(),
             ArtistMetadata am => $"{Title(am)}_{am.Year}_{am.Artist.State}".ToLowerInvariant(),

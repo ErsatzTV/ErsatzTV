@@ -174,7 +174,7 @@
             }
         }
     }
-    
+
     private async Task ResetPlayout(PlayoutNameViewModel playout)
     {
         await WorkerChannel.WriteAsync(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);

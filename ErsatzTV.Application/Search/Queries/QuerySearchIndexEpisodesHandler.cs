@@ -19,13 +19,13 @@ namespace ErsatzTV.Application.Search;
 public class
     QuerySearchIndexEpisodesHandler : IRequestHandler<QuerySearchIndexEpisodes, TelevisionEpisodeCardResultsViewModel>
 {
+    private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
-    private readonly IClient _client;
     private readonly ISearchIndex _searchIndex;
     private readonly ITelevisionRepository _televisionRepository;
 

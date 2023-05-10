@@ -5,10 +5,10 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 {
+    private readonly CancellationToken _cancellationToken;
     private readonly IList<CollectionWithItems> _collections;
     private readonly int _mediaItemCount;
     private readonly bool _randomStartPoint;
-    private readonly CancellationToken _cancellationToken;
     private Random _random;
     private IList<MediaItem> _shuffled;
 

@@ -8,10 +8,8 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetExternalCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetExternalCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<List<LibraryViewModel>> Handle(
         GetExternalCollections request,
@@ -21,7 +19,7 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
         List<int> mediaSourceIds = await dbContext.EmbyMediaSources
             .Filter(ems => ems.Libraries.Any(l => ((EmbyLibrary)l).ShouldSyncItems))
             .Map(ems => ems.Id)
-            .ToListAsync(cancellationToken: cancellationToken);
+            .ToListAsync(cancellationToken);
 
         return mediaSourceIds.Map(
                 id => new LibraryViewModel(

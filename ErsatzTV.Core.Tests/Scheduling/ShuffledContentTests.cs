@@ -8,16 +8,13 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class ShuffledContentTests
 {
+    [SetUp]
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
     // this seed will produce (shuffle) 1-10 in order
     private const int MagicSeed = 670596;
 
     private CancellationToken _cancellationToken;
-    
-    [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
 
     [Test]
     public void Episodes_Should_Not_Duplicate_When_Reshuffling()

@@ -13,15 +13,15 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
 {
-    private CancellationToken _cancellationToken;
-    private PlayoutModeSchedulerBase<ProgramScheduleItem> _scheduler;
-    
     [SetUp]
     public void SetUp()
     {
         _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
         _scheduler = new TestScheduler();
     }
+
+    private CancellationToken _cancellationToken;
+    private PlayoutModeSchedulerBase<ProgramScheduleItem> _scheduler;
 
     [TestFixture]
     public class CalculateEndTimeWithFiller : PlayoutModeSchedulerBaseTests
@@ -369,14 +369,14 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             playoutItems[2].MediaItemId.Should().Be(1);
             playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
         }
-        
+
         [Test]
         public void Should_Schedule_Post_Roll_After_Padded_Mid_Roll()
         {
             // content 45 min, mid roll pad to 60, post roll 5 min
             // content + post = 50 min, mid roll will add two 5 min items
             // content + mid + post = 60 min
-            
+
             Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(45));
             Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
             Collection collectionThree = TwoItemCollection(5, 6, TimeSpan.FromMinutes(5));
@@ -453,35 +453,35 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(5);
-            
+
             // content chapter 1
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-            
+
             // mid-roll 1
             playoutItems[1].MediaItemId.Should().Be(3);
             playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
-            
+
             // mid-roll 2
             playoutItems[2].MediaItemId.Should().Be(4);
             playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
-            
+
             // content chapter 2
             playoutItems[3].MediaItemId.Should().Be(1);
             playoutItems[3].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(16));
-            
+
             // post-roll
             playoutItems[4].MediaItemId.Should().Be(5);
             playoutItems[4].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(55));
         }
-        
+
         [Test]
         public void Should_Schedule_Padded_Post_Roll_After_Mid_Roll_Count()
         {
             // content 45 min, mid roll 5 min, post roll pad to 60
             // content + mid = 50 min, post roll will add two 5 min items
             // content + mid + post = 60 min
-            
+
             Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(45));
             Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
             Collection collectionThree = TwoItemCollection(5, 6, TimeSpan.FromMinutes(5));
@@ -558,15 +558,15 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(5);
-            
+
             // content chapter 1
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-            
+
             // mid-roll 1
             playoutItems[1].MediaItemId.Should().Be(3);
             playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
-            
+
             // content chapter 2
             playoutItems[2].MediaItemId.Should().Be(1);
             playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
@@ -574,7 +574,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             // post-roll 1
             playoutItems[3].MediaItemId.Should().Be(5);
             playoutItems[3].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(50));
-            
+
             // post-roll 2
             playoutItems[4].MediaItemId.Should().Be(6);
             playoutItems[4].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(55));

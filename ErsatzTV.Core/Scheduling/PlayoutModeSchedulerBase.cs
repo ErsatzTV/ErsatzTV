@@ -27,7 +27,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         DateTimeOffset hardStop)
     {
         DateTimeOffset startTime = GetStartTimeAfter(state, scheduleItem);
-        
+
         // filler should always stop at the hard stop
         if (hardStop < startTime)
         {
@@ -553,7 +553,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     // remove post-roll to add after mid-roll/content
                     var postRoll = result.Where(i => i.FillerKind == FillerKind.PostRoll).ToList();
                     result.RemoveAll(i => i.FillerKind == FillerKind.PostRoll);
-                    
+
                     for (var i = 0; i < effectiveChapters.Count; i++)
                     {
                         result.Add(playoutItem.ForChapter(effectiveChapters[i]));

@@ -8,10 +8,10 @@ namespace ErsatzTV.Scanner.Application.Emby;
 
 public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmbyCollections, Either<BaseError, Unit>>
 {
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IEmbyCollectionScanner _scanner;
-    private readonly IConfigElementRepository _configElementRepository;
 
     public SynchronizeEmbyCollectionsHandler(
         IMediaSourceRepository mediaSourceRepository,
@@ -84,7 +84,7 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
             parameters.MediaSource.LastCollectionsScan ?? SystemTime.MinValueUtc,
             TimeSpan.Zero);
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+        if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
             Either<BaseError, Unit> result = await _scanner.ScanCollections(
                 parameters.ConnectionParameters.ActiveConnection.Address,

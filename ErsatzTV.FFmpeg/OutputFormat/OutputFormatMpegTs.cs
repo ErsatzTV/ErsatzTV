@@ -6,10 +6,7 @@ public class OutputFormatMpegTs : IPipelineStep
 {
     private readonly bool _initialDiscontinuity;
 
-    public OutputFormatMpegTs(bool initialDiscontinuity = true)
-    {
-        _initialDiscontinuity = initialDiscontinuity;
-    }
+    public OutputFormatMpegTs(bool initialDiscontinuity = true) => _initialDiscontinuity = initialDiscontinuity;
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();

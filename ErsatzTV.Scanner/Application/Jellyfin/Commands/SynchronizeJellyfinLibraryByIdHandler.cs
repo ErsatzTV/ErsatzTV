@@ -12,16 +12,16 @@ public class
     SynchronizeJellyfinLibraryByIdHandler : IRequestHandler<SynchronizeJellyfinLibraryById, Either<BaseError, string>>
 {
     private readonly IConfigElementRepository _configElementRepository;
+
+    private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinMovieLibraryScanner _jellyfinMovieLibraryScanner;
 
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeJellyfinLibraryByIdHandler> _logger;
-
-    private readonly IJellyfinApiClient _jellyfinApiClient;
-    private readonly IMediator _mediator;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMediator _mediator;
 
     public SynchronizeJellyfinLibraryByIdHandler(
         IJellyfinApiClient jellyfinApiClient,
@@ -60,7 +60,7 @@ public class
     {
         var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+        if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
             // need the jellyfin admin user id for now
             Either<BaseError, Unit> syncAdminResult = await _mediator.Send(

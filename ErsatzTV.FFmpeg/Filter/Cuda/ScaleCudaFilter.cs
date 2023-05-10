@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Filter.Cuda;
 public class ScaleCudaFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly FrameSize _paddedSize;
     private readonly bool _isAnamorphicEdgeCase;
+    private readonly FrameSize _paddedSize;
     private readonly FrameSize _scaledSize;
 
     public ScaleCudaFilter(
@@ -43,7 +43,7 @@ public class ScaleCudaFilter : BaseFilter
                 }
 
                 string squareScale = string.Empty;
-                string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
+                var targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
@@ -87,7 +87,7 @@ public class ScaleCudaFilter : BaseFilter
             FrameDataLocation = FrameDataLocation.Hardware,
             IsAnamorphic = false // this filter always outputs square pixels
         };
-        
+
         foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
         {
             result = result with { PixelFormat = Some(pixelFormat) };

@@ -11,13 +11,10 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
 {
-    private CancellationToken _cancellationToken;
-    
     [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+    private CancellationToken _cancellationToken;
 
     [Test]
     public void Should_Fill_Exact_Duration()
@@ -301,7 +298,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(1, 50, 0)));
         playoutItems[2].GuideGroup.Should().Be(3);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
-        
+
         // offline should not set guide finish
         playoutItems[2].GuideFinish.HasValue.Should().BeFalse();
     }

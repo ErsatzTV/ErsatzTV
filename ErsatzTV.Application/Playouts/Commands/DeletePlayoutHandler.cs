@@ -11,9 +11,9 @@ namespace ErsatzTV.Application.Playouts;
 
 public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseError, Unit>>
 {
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public DeletePlayoutHandler(
         ChannelWriter<IBackgroundServiceRequest> workerChannel,

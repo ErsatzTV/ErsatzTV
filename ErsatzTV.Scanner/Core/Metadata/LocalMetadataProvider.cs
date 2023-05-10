@@ -29,9 +29,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly IOtherVideoNfoReader _otherVideoNfoReader;
     private readonly IOtherVideoRepository _otherVideoRepository;
+    private readonly IShowNfoReader _showNfoReader;
     private readonly ISongRepository _songRepository;
     private readonly ITelevisionRepository _televisionRepository;
-    private readonly IShowNfoReader _showNfoReader;
 
     public LocalMetadataProvider(
         IMetadataRepository metadataRepository,
@@ -833,7 +833,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     updated = true;
                 }
             }
-            
+
             foreach (Director director in existing.Directors
                          .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
             {
@@ -1274,7 +1274,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
                     releaseDate = premiered;
                 }
-                
+
                 return new OtherVideoMetadata
                 {
                     MetadataKind = MetadataKind.Sidecar,

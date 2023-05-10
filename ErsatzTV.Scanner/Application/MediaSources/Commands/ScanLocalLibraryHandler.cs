@@ -67,7 +67,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
 
             var lastScan = new DateTimeOffset(libraryPath.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
             DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-            if (forceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+            if (forceScan || libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
             {
                 scanned = true;
 
