@@ -156,7 +156,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
 
         // need to upload for hardware overlay
-        bool forceSoftwareOverlay = context is { HasSubtitleOverlay: true, HasWatermark: true };
+        bool forceSoftwareOverlay = context is { HasSubtitleOverlay: true, HasWatermark: true }
+                                    || ffmpegState.VaapiDriver == "radeonsi";
 
         if (currentState.FrameDataLocation == FrameDataLocation.Software && context.HasSubtitleOverlay &&
             !forceSoftwareOverlay)
