@@ -11,10 +11,8 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetMediaItemInfoHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetMediaItemInfoHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<Either<BaseError, MediaItemInfo>> Handle(
         GetMediaItemInfo request,
@@ -56,7 +54,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             JellyfinMediaSource jellyfinMediaSource => jellyfinMediaSource.ServerName,
             _ => null
         };
-        
+
         return new MediaItemInfo(
             mediaItem.Id,
             mediaItem.GetType().Name,

@@ -705,7 +705,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         {
             metadata.Genres.Add(genre);
         }
-        
+
         // tags
         foreach (Tag tag in metadata.Tags
                      .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
@@ -728,7 +728,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         {
             metadata.Artwork.Remove(artworkToRemove);
         }
-        
+
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

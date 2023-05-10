@@ -92,9 +92,11 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
         return None;
     }
 
-    protected override Option<IEncoder> GetEncoder(FFmpegState ffmpegState, FrameState currentState, FrameState desiredState)
-    {
-        return (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
+    protected override Option<IEncoder> GetEncoder(
+        FFmpegState ffmpegState,
+        FrameState currentState,
+        FrameState desiredState) =>
+        (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) =>
                 new EncoderHevcVideoToolbox(desiredState.BitDepth),
@@ -103,8 +105,7 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
 
             _ => GetSoftwareEncoder(currentState, desiredState)
         };
-    }
-    
+
     protected override List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,

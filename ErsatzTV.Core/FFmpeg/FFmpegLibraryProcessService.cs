@@ -18,9 +18,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
+    private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
-    private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
 
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
@@ -154,7 +154,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath != audioPath || channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect;
         ILogger<FFmpegLibraryProcessService> pixelFormatLogger = isUnknownPixelFormatExpected ? null : _logger;
 
-        IPixelFormat pixelFormat = await AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, pixelFormatLogger)
+        IPixelFormat pixelFormat = await AvailablePixelFormats
+            .ForPixelFormat(videoStream.PixelFormat, pixelFormatLogger)
             .IfNoneAsync(
                 () =>
                 {
@@ -165,7 +166,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                         _ => new PixelFormatUnknown(videoStream.BitsPerRawSample)
                     };
                 });
-        
+
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
             videoStream.Codec,
@@ -429,7 +430,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
-        
+
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, None, None, pipeline);
@@ -459,7 +460,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
-        
+
         FFmpegPipeline pipeline = pipelineBuilder.Concat(
             concatInputFile,
             FFmpegState.Concat(saveReports, channel.Name));

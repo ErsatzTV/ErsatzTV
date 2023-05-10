@@ -43,7 +43,7 @@ public class EndpointValidatorService : IHostedService
         {
             throw new NotSupportedException($"Invalid endpoint format: {urls}");
         }
-        
+
         string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
 
         _logger.LogInformation(

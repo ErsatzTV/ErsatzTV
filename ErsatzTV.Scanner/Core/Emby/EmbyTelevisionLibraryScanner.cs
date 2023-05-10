@@ -16,9 +16,9 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
     EmbyItemEtag>, IEmbyTelevisionLibraryScanner
 {
     private readonly IEmbyApiClient _embyApiClient;
+    private readonly ILogger<EmbyTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IEmbyPathReplacementService _pathReplacementService;
-    private readonly ILogger<EmbyTelevisionLibraryScanner> _logger;
     private readonly IEmbyTelevisionRepository _televisionRepository;
 
     public EmbyTelevisionLibraryScanner(
@@ -165,7 +165,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
         EmbyLibrary library,
         MediaItemScanResult<EmbyEpisode> result,
         EmbyEpisode incoming) => Task.FromResult(Option<Tuple<EpisodeMetadata, MediaVersion>>.None);
-    
+
     protected override async Task<Option<MediaVersion>> GetMediaServerStatistics(
         EmbyConnectionParameters connectionParameters,
         EmbyLibrary library,
@@ -194,7 +194,6 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
 
         return maybeVersion.ToOption();
     }
-
 
 
     protected override Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> UpdateMetadata(

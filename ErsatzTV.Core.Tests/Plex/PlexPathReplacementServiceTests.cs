@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.FFmpeg.Runtime;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

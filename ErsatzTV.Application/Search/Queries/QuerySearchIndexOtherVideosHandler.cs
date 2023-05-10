@@ -11,8 +11,8 @@ public class
     QuerySearchIndexOtherVideosHandler : IRequestHandler<QuerySearchIndexOtherVideos,
         OtherVideoCardResultsViewModel>
 {
-    private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly IClient _client;
+    private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISearchIndex _searchIndex;
 
     public QuerySearchIndexOtherVideosHandler(

@@ -19,9 +19,9 @@ namespace ErsatzTV.Services;
 
 public class SchedulerService : BackgroundService
 {
-    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IEntityLocker _entityLocker;
     private readonly ILogger<SchedulerService> _logger;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
@@ -243,11 +243,11 @@ public class SchedulerService : BackgroundService
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
         var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
-        
+
         foreach (EmbyLibrary library in dbContext.EmbyLibraries.Filter(l => l.ShouldSyncItems))
         {
             mediaSourceIds.Add(library.MediaSourceId);
-            
+
             if (_entityLocker.LockLibrary(library.Id))
             {
                 await _scannerWorkerChannel.WriteAsync(

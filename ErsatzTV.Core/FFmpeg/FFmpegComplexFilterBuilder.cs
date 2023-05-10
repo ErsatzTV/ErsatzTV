@@ -96,7 +96,7 @@ public class FFmpegComplexFilterBuilder
 
         var complexFilter = new StringBuilder();
 
-        string videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
+        var videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
         string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
         var videoFilterQueue = new List<string>();
@@ -229,7 +229,7 @@ public class FFmpegComplexFilterBuilder
                     complexFilter.Append("[vt];");
                 }
 
-                string watermarkLabel = $"[{audioInput + 1}:v]";
+                var watermarkLabel = $"[{audioInput + 1}:v]";
                 foreach (int index in _watermarkIndex)
                 {
                     watermarkLabel = $"[{audioInput + 1}:{index}]";

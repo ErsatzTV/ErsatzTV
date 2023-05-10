@@ -3,7 +3,6 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
-using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using Map = LanguageExt.Map;
 
@@ -15,11 +14,11 @@ public class PlayoutBuilder : IPlayoutBuilder
 {
     private static readonly Random Random = new();
     private readonly IArtistRepository _artistRepository;
-    private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<PlayoutBuilder> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
     private readonly ITelevisionRepository _televisionRepository;
 
     public PlayoutBuilder(
@@ -395,7 +394,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         // random start points are disabled in some scenarios, so ensure it's enabled and active
         randomStartPoint = randomStartPoint && activeSchedule.RandomStartPoint;
-        
+
         var sortedScheduleItems = activeSchedule.Items.OrderBy(i => i.Index).ToList();
         CollectionEnumeratorState scheduleItemsEnumeratorState =
             playout.Anchor?.ScheduleItemsEnumeratorState ?? new CollectionEnumeratorState
@@ -469,7 +468,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         var schedulerFlood = new PlayoutModeSchedulerFlood(_logger);
 
         var timeCount = new Dictionary<DateTimeOffset, int>();
-        
+
         // loop until we're done filling the desired amount of time
         while (playoutBuilderState.CurrentTime < playoutFinish && !cancellationToken.IsCancellationRequested)
         {

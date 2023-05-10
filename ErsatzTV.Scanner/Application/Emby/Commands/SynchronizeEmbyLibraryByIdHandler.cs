@@ -17,9 +17,9 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeEmbyLibraryByIdHandler> _logger;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
 
     private readonly IMediator _mediator;
-    private readonly IMediaSourceRepository _mediaSourceRepository;
 
     public SynchronizeEmbyLibraryByIdHandler(
         IMediator mediator,
@@ -56,7 +56,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
     {
         var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || (parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now))
+        if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
             Either<BaseError, Unit> result = parameters.Library.MediaKind switch
             {
@@ -82,7 +82,7 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
                 parameters.Library.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(parameters.Library);
             }
-            
+
             foreach (BaseError error in result.LeftToSeq())
             {
                 _logger.LogError("Error synchronizing emby library: {Error}", error);

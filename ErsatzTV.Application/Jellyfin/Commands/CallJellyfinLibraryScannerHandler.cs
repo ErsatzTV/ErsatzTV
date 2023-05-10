@@ -24,13 +24,15 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
     {
     }
 
-    Task<Either<BaseError, string>> IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>.Handle(
-        ForceSynchronizeJellyfinLibraryById request,
-        CancellationToken cancellationToken) => Handle(request, cancellationToken);
+    Task<Either<BaseError, string>> IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>.
+        Handle(
+            ForceSynchronizeJellyfinLibraryById request,
+            CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    Task<Either<BaseError, string>> IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>.Handle(
-        SynchronizeJellyfinLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request, cancellationToken);
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>.
+        Handle(
+            SynchronizeJellyfinLibraryByIdIfNeeded request,
+            CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
     private async Task<Either<BaseError, string>> Handle(
         ISynchronizeJellyfinLibraryById request,
@@ -64,7 +66,7 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
         {
             arguments.Add("--force");
         }
-        
+
         if (request.DeepScan)
         {
             arguments.Add("--deep");
@@ -95,6 +97,6 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
         }
 
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
+        return request.ForceScan || libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now;
     }
 }

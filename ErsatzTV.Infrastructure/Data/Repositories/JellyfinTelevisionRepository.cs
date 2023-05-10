@@ -372,7 +372,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
-        return None;    }
+        return None;
+    }
 
     private async Task UpdateShow(TvContext dbContext, JellyfinShow existing, JellyfinShow incoming)
     {
@@ -693,7 +694,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         {
             metadata.Guids.Add(guid);
         }
-        
+
         // genres
         foreach (Genre genre in metadata.Genres
                      .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
@@ -708,7 +709,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         {
             metadata.Genres.Add(genre);
         }
-        
+
         // tags
         foreach (Tag tag in metadata.Tags
                      .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
@@ -731,7 +732,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         {
             metadata.Artwork.Remove(artworkToRemove);
         }
-        
+
         // version
         MediaVersion version = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();

@@ -73,7 +73,7 @@ public class ImageCache : IImageCache
     {
         try
         {
-            string filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
             byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
             string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
             string subfolder = hex[..2];

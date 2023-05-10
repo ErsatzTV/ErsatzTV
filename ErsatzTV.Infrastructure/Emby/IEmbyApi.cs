@@ -130,8 +130,8 @@ public interface IEmbyApi
         int startIndex = 0,
         [Query]
         int limit = 0);
-    
-    
+
+
     [Get("/Items/{itemId}/PlaybackInfo")]
     public Task<EmbyPlaybackInfoResponse> GetPlaybackInfo(
         [Header("X-Emby-Token")]

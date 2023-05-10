@@ -14,8 +14,8 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAccelerationHealthCheck
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IRuntimeInfo _runtimeInfo;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IRuntimeInfo _runtimeInfo;
 
     public HardwareAccelerationHealthCheck(
         IDbContextFactory<TvContext> dbContextFactory,

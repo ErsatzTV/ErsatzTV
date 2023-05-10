@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Filter;
 public class ScaleFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly FrameSize _paddedSize;
     private readonly bool _isAnamorphicEdgeCase;
+    private readonly FrameSize _paddedSize;
     private readonly FrameSize _scaledSize;
 
     public ScaleFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize, bool isAnamorphicEdgeCase)
@@ -35,11 +35,13 @@ public class ScaleFilter : BaseFilter
             string scale;
             if (_isAnamorphicEdgeCase)
             {
-                scale = $"scale=iw:sar*ih,setsar=1,scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
+                scale =
+                    $"scale=iw:sar*ih,setsar=1,scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
             }
             else if (_currentState.IsAnamorphic)
             {
-                scale = $"scale=iw*sar:ih,setsar=1,scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
+                scale =
+                    $"scale=iw*sar:ih,setsar=1,scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
             }
             else
             {

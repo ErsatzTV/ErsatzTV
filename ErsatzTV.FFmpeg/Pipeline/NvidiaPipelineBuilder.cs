@@ -133,14 +133,15 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         {
             ScaledSize = videoStream.FrameSize,
             PaddedSize = videoStream.FrameSize,
-            
-            PixelFormat = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc && videoStream.BitDepth == 8
+
+            PixelFormat = ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
+                          videoStream.BitDepth == 8
                 ? videoStream.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
                 : videoStream.PixelFormat,
-            
-            IsAnamorphic = videoStream.IsAnamorphic,
+
+            IsAnamorphic = videoStream.IsAnamorphic
         };
-        
+
         foreach (IDecoder decoder in maybeDecoder)
         {
             currentState = decoder.NextState(currentState);
@@ -207,7 +208,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             desiredState,
             fontsFolder,
             subtitleOverlayFilterSteps);
-        
+
         currentState = SetWatermark(
             videoStream,
             watermarkInputFile,
@@ -235,7 +236,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 videoInputFile.FilterSteps.Add(encoder);
             }
         }
-        
+
         List<IPipelineFilterStep> pixelFormatFilterSteps = SetPixelFormat(
             videoStream,
             desiredState.PixelFormat,
@@ -252,7 +253,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             subtitleOverlayFilterSteps,
             pixelFormatFilterSteps);
     }
-    
+
     private List<IPipelineFilterStep> SetPixelFormat(
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
@@ -285,16 +286,16 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             if (!videoStream.ColorParams.IsBt709)
             {
                 // _logger.LogDebug("Adding colorspace filter");
-                var colorspace = new ColorspaceFilter(currentState, videoStream, format, false);
+                var colorspace = new ColorspaceFilter(currentState, videoStream, format);
 
                 currentState = colorspace.NextState(currentState);
                 result.Add(colorspace);
             }
-            
+
             if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
             {
                 _logger.LogDebug("Using software encoder");
-                
+
                 if ((context.HasSubtitleOverlay || context.HasWatermark) &&
                     currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
@@ -306,7 +307,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     result.Add(hardwareDownload);
                 }
             }
-            
+
             if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
                 ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
             {
@@ -334,8 +335,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     bool hardwareEncoder =
                         ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.Nvenc;
 
-                    if (softwareDecoder || (noPipelineFilters && hasColorspace) ||
-                        (hardwareDecoder && hardwareEncoder && noPipelineFilters))
+                    if (softwareDecoder || noPipelineFilters && hasColorspace ||
+                        hardwareDecoder && hardwareEncoder && noPipelineFilters)
                     {
                         result.Add(new CudaFormatFilter(format));
                     }
@@ -488,7 +489,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                         currentState = cudaDownload.NextState(currentState);
                         videoInputFile.FilterSteps.Add(cudaDownload);
                     }
-                    
+
                     // only scale if scaling or padding was used for main video stream
                     if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
                     {
@@ -524,7 +525,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             currentState = padStep.NextState(currentState);
             videoInputFile.FilterSteps.Add(padStep);
         }
-        
+
         return currentState;
     }
 
@@ -549,7 +550,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         bool noHardwareFilters = context is
             { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
         bool needsToPad = currentState.PaddedSize != desiredState.PaddedSize;
-        
+
         if (decodedToSoftware && (needsToPad || noHardwareFilters && softwareEncoder))
         {
             scaleStep = new ScaleFilter(
@@ -564,15 +565,17 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 currentState with
                 {
                     PixelFormat = !context.Is10BitOutput && (context.HasWatermark ||
-                                  context.HasSubtitleOverlay ||
-                                  context.ShouldDeinterlace ||
-                                  (desiredState.ScaledSize != desiredState.PaddedSize) ||
-                                  context.HasSubtitleText ||
-                                  ffmpegState is
-                                  {
-                                      DecoderHardwareAccelerationMode: HardwareAccelerationMode.Nvenc,
-                                      EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-                                  })
+                                                             context.HasSubtitleOverlay ||
+                                                             context.ShouldDeinterlace ||
+                                                             desiredState.ScaledSize != desiredState.PaddedSize ||
+                                                             context.HasSubtitleText ||
+                                                             ffmpegState is
+                                                             {
+                                                                 DecoderHardwareAccelerationMode:
+                                                                 HardwareAccelerationMode.Nvenc,
+                                                                 EncoderHardwareAccelerationMode:
+                                                                 HardwareAccelerationMode.None
+                                                             })
                         ? desiredState.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
                         : Option<IPixelFormat>.None
                 },
@@ -590,7 +593,10 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         return currentState;
     }
 
-    private static FrameState SetDeinterlace(VideoInputFile videoInputFile, PipelineContext context, FrameState currentState)
+    private static FrameState SetDeinterlace(
+        VideoInputFile videoInputFile,
+        PipelineContext context,
+        FrameState currentState)
     {
         if (context.ShouldDeinterlace)
         {

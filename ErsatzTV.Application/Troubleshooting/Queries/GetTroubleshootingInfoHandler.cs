@@ -9,7 +9,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
-using ErsatzTV.Infrastructure.Runtime;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -17,12 +16,12 @@ namespace ErsatzTV.Application.Troubleshooting.Queries;
 
 public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingInfo, TroubleshootingInfo>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IHealthCheckService _healthCheckService;
-    private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IRuntimeInfo _runtimeInfo;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
+    private readonly IHealthCheckService _healthCheckService;
     private readonly IMemoryCache _memoryCache;
+    private readonly IRuntimeInfo _runtimeInfo;
 
     public GetTroubleshootingInfoHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -105,7 +104,8 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                                          Optional(GetDriverName(activeDriver)),
                                          vaapiDevice))
                             {
-                                vaapiCapabilities += $"Checking driver {activeDriver} device {vaapiDevice}{Environment.NewLine}{Environment.NewLine}";
+                                vaapiCapabilities +=
+                                    $"Checking driver {activeDriver} device {vaapiDevice}{Environment.NewLine}{Environment.NewLine}";
                                 vaapiCapabilities += output;
                                 vaapiCapabilities += Environment.NewLine + Environment.NewLine;
                             }
@@ -124,7 +124,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             nvidiaCapabilities,
             vaapiCapabilities);
     }
-    
+
     // lifted from GetFFmpegSettingsHandler
     private async Task<FFmpegSettingsViewModel> GetFFmpegSettings()
     {

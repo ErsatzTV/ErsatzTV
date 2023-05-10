@@ -385,7 +385,7 @@ public class EmbyApiClient : IEmbyApiClient
             return None;
         }
     }
-    
+
     private static List<MediaChapter> ProjectToModel(
         IEnumerable<EmbyChapterResponse> embyChapters,
         TimeSpan duration)
@@ -800,8 +800,8 @@ public class EmbyApiClient : IEmbyApiClient
 
         return result;
     }
-    
-        private Option<MediaVersion> ProjectToMediaVersion(EmbyPlaybackInfoResponse response)
+
+    private Option<MediaVersion> ProjectToMediaVersion(EmbyPlaybackInfoResponse response)
     {
         if (response.MediaSources is null || response.MediaSources.Count == 0)
         {
@@ -818,7 +818,7 @@ public class EmbyApiClient : IEmbyApiClient
             {
                 int width = videoStream.Width ?? 1;
                 int height = videoStream.Height ?? 1;
-                
+
                 var isAnamorphic = false;
                 if (videoStream.IsAnamorphic.HasValue)
                 {
@@ -828,7 +828,7 @@ public class EmbyApiClient : IEmbyApiClient
                 {
                     // if width/height != aspect ratio, is anamorphic
                     double resolutionRatio = width / (double)height;
-                    
+
                     string[] split = videoStream.AspectRatio.Split(":");
                     var num = double.Parse(split[0]);
                     var den = double.Parse(split[1]);

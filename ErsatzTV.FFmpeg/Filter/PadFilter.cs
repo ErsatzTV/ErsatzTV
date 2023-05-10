@@ -17,7 +17,7 @@ public class PadFilter : BaseFilter
     {
         get
         {
-            string pad = $"pad={_paddedSize.Width}:{_paddedSize.Height}:-1:-1:color=black";
+            var pad = $"pad={_paddedSize.Width}:{_paddedSize.Height}:-1:-1:color=black";
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {

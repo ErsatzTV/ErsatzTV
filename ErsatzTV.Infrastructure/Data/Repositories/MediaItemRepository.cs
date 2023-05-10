@@ -105,7 +105,6 @@ public class MediaItemRepository : IMediaItemRepository
         mediaItem.State = MediaItemState.Normal;
 
         return await dbContext.Connection.ExecuteAsync(
-            
             @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
             new { mediaItem.Id }).ToUnit();
     }
@@ -124,13 +123,21 @@ public class MediaItemRepository : IMediaItemRepository
         return Unit.Default;
     }
 
-    public static async Task<bool> MediaFileAlreadyExists(MediaItem incoming, int libraryPathId, TvContext dbContext, ILogger logger)
+    public static async Task<bool> MediaFileAlreadyExists(
+        MediaItem incoming,
+        int libraryPathId,
+        TvContext dbContext,
+        ILogger logger)
     {
         string path = incoming.GetHeadVersion().MediaFiles.Head().Path;
         return await MediaFileAlreadyExists(path, libraryPathId, dbContext, logger);
     }
 
-    public static async Task<bool> MediaFileAlreadyExists(string path, int libraryPathId, TvContext dbContext, ILogger logger)
+    public static async Task<bool> MediaFileAlreadyExists(
+        string path,
+        int libraryPathId,
+        TvContext dbContext,
+        ILogger logger)
     {
         Option<int> maybeMediaItemId = await dbContext.Connection
             .QuerySingleOrDefaultAsync<int?>(
@@ -165,7 +172,7 @@ public class MediaItemRepository : IMediaItemRepository
                         JellyfinLibrary => "Jellyfin Library",
                         _ => "Local Library"
                     };
-                    
+
                     string existingLibraryType = mediaItem.LibraryPath.Library switch
                     {
                         PlexLibrary => "Plex Library",

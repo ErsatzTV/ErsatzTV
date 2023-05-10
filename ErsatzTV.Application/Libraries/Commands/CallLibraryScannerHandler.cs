@@ -20,9 +20,9 @@ namespace ErsatzTV.Application.Libraries;
 
 public abstract class CallLibraryScannerHandler<TRequest>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IConfigElementRepository _configElementRepository;
     private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
+    private readonly IConfigElementRepository _configElementRepository;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
     private string _libraryName;
@@ -152,9 +152,9 @@ public abstract class CallLibraryScannerHandler<TRequest>
             .IfNoneAsync(0);
 
         libraryRefreshInterval = Math.Clamp(libraryRefreshInterval, 0, 999_999);
-        
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        
+
         DateTimeOffset lastScan = await GetLastScan(dbContext, request);
         if (!ScanIsRequired(lastScan, libraryRefreshInterval, request))
         {
@@ -164,7 +164,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
         string executable = _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
             ? "ErsatzTV.Scanner.exe"
             : "ErsatzTV.Scanner";
-        
+
         string processFileName = Environment.ProcessPath ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(processFileName))
         {

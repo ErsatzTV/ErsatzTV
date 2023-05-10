@@ -71,7 +71,7 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
         List<LibraryPath> libraryPaths = await dbContext.LibraryPaths
             .Filter(lp => lp.LibraryId == request.LibraryId)
             .ToListAsync();
-        
+
         DateTime minDateTime = libraryPaths.Any()
             ? libraryPaths.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc)
             : SystemTime.MaxValueUtc;
@@ -90,6 +90,6 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
         }
 
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
+        return request.ForceScan || libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now;
     }
 }

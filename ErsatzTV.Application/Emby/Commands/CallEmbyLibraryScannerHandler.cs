@@ -28,9 +28,10 @@ public class CallEmbyLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         ForceSynchronizeEmbyLibraryById request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    Task<Either<BaseError, string>> IRequestHandler<SynchronizeEmbyLibraryByIdIfNeeded, Either<BaseError, string>>.Handle(
-        SynchronizeEmbyLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request, cancellationToken);
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizeEmbyLibraryByIdIfNeeded, Either<BaseError, string>>.
+        Handle(
+            SynchronizeEmbyLibraryByIdIfNeeded request,
+            CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
     private async Task<Either<BaseError, string>> Handle(
         ISynchronizeEmbyLibraryById request,
@@ -80,7 +81,7 @@ public class CallEmbyLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         DateTime minDateTime = await dbContext.EmbyLibraries
             .SelectOneAsync(l => l.Id, l => l.Id == request.EmbyLibraryId)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
-        
+
         return new DateTimeOffset(minDateTime, TimeSpan.Zero);
     }
 
@@ -95,6 +96,6 @@ public class CallEmbyLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         }
 
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
+        return request.ForceScan || libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now;
     }
 }

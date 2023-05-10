@@ -5,7 +5,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
@@ -494,13 +493,56 @@ public class MetadataRepository : IMetadataRepository
         return await UpdateSubtitles(dbContext, metadata, subtitles);
     }
 
+    public async Task<bool> RemoveGenre(Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Genre WHERE Id = @GenreId",
+                new { GenreId = genre.Id })
+            .Map(result => result > 0);
+    }
+
+    public async Task<bool> RemoveTag(Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Tag WHERE Id = @TagId AND ExternalCollectionId = @ExternalCollectionId",
+                new { TagId = tag.Id, tag.ExternalCollectionId })
+            .Map(result => result > 0);
+    }
+
+    public async Task<bool> RemoveStudio(Studio studio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Studio WHERE Id = @StudioId",
+                new { StudioId = studio.Id })
+            .Map(result => result > 0);
+    }
+
+    public async Task<bool> RemoveStyle(Style style)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Style WHERE Id = @StyleId",
+                new { StyleId = style.Id })
+            .Map(result => result > 0);
+    }
+
+    public async Task<bool> RemoveMood(Mood mood)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync("DELETE FROM Mood WHERE Id = @MoodId", new { MoodId = mood.Id })
+            .Map(result => result > 0);
+    }
+
     private static async Task<bool> UpdateSubtitles(TvContext dbContext, Metadata metadata, List<Subtitle> subtitles)
     {
         // _logger.LogDebug(
         //     "Updating {Count} subtitles; metadata is {Metadata}",
         //     subtitles.Count,
         //     metadata.GetType().Name);
-        
+
         int metadataId = metadata.Id;
 
         Option<Metadata> maybeMetadata = metadata switch
@@ -540,7 +582,7 @@ public class MetadataRepository : IMetadataRepository
             //     toAdd.Count,
             //     toRemove.Count,
             //     toUpdate.Count);
-            
+
             if (toAdd.Any() || toRemove.Any() || toUpdate.Any())
             {
                 // add
@@ -583,48 +625,5 @@ public class MetadataRepository : IMetadataRepository
         // no metadata
         // _logger.LogDebug("Subtitle update failure due to missing metadata");
         return false;
-    }
-
-    public async Task<bool> RemoveGenre(Genre genre)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-                "DELETE FROM Genre WHERE Id = @GenreId",
-                new { GenreId = genre.Id })
-            .Map(result => result > 0);
-    }
-
-    public async Task<bool> RemoveTag(Tag tag)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-                "DELETE FROM Tag WHERE Id = @TagId AND ExternalCollectionId = @ExternalCollectionId",
-                new { TagId = tag.Id, tag.ExternalCollectionId })
-            .Map(result => result > 0);
-    }
-
-    public async Task<bool> RemoveStudio(Studio studio)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-                "DELETE FROM Studio WHERE Id = @StudioId",
-                new { StudioId = studio.Id })
-            .Map(result => result > 0);
-    }
-
-    public async Task<bool> RemoveStyle(Style style)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-                "DELETE FROM Style WHERE Id = @StyleId",
-                new { StyleId = style.Id })
-            .Map(result => result > 0);
-    }
-
-    public async Task<bool> RemoveMood(Mood mood)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync("DELETE FROM Mood WHERE Id = @MoodId", new { MoodId = mood.Id })
-            .Map(result => result > 0);
     }
 }

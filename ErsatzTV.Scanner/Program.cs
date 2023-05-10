@@ -55,7 +55,7 @@ public class Program
             .Enrich.FromLogContext()
             .WriteTo.Console(new CompactJsonFormatter(), standardErrorFromLevel: LogEventLevel.Debug)
             .CreateLogger();
-        
+
         try
         {
             await CreateHostBuilder(args).Build().RunAsync();
@@ -89,7 +89,7 @@ public class Program
                             }),
                         ServiceLifetime.Scoped,
                         ServiceLifetime.Singleton);
-                    
+
                     services.AddDbContextFactory<TvContext>(
                         options => options.UseSqlite(
                             connectionString,
@@ -131,7 +131,7 @@ public class Program
                     services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
                     services.AddScoped<IFFmpegPngService, FFmpegPngService>();
                     services.AddScoped<IRuntimeInfo, RuntimeInfo>();
-                    
+
                     services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
                     services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
                     services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
@@ -139,7 +139,7 @@ public class Program
                     services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
                     services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
                     services.AddScoped<PlexEtag>();
-                    
+
                     services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
                     services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
                     services.AddScoped<IEmbyCollectionScanner, EmbyCollectionScanner>();
@@ -157,7 +157,7 @@ public class Program
                     services.AddScoped<IJellyfinMovieRepository, JellyfinMovieRepository>();
                     services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
                     services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
-                    
+
                     services.AddSingleton<ITempFilePool, TempFilePool>();
                     services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
                     services.AddSingleton<IEmbySecretStore, EmbySecretStore>();
@@ -169,21 +169,44 @@ public class Program
 
                     services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<Worker>());
                     services.AddMemoryCache();
-                    
+
                     services.AddHostedService<Worker>();
                 })
             .UseSerilog();
 
     private class BugsnagNoopClient : IClient
     {
-        public void Notify(Exception exception) { }
-        public void Notify(Exception exception, Middleware callback) { }
-        public void Notify(Exception exception, Severity severity) { }
-        public void Notify(Exception exception, Severity severity, Middleware callback) { }
-        public void Notify(Exception exception, HandledState handledState) { }
-        public void Notify(Exception exception, HandledState handledState, Middleware callback) { }
-        public void Notify(Report report, Middleware callback) { }
-        public void BeforeNotify(Middleware middleware) { }
+        public void Notify(Exception exception)
+        {
+        }
+
+        public void Notify(Exception exception, Middleware callback)
+        {
+        }
+
+        public void Notify(Exception exception, Severity severity)
+        {
+        }
+
+        public void Notify(Exception exception, Severity severity, Middleware callback)
+        {
+        }
+
+        public void Notify(Exception exception, HandledState handledState)
+        {
+        }
+
+        public void Notify(Exception exception, HandledState handledState, Middleware callback)
+        {
+        }
+
+        public void Notify(Report report, Middleware callback)
+        {
+        }
+
+        public void BeforeNotify(Middleware middleware)
+        {
+        }
 
         public IBreadcrumbs Breadcrumbs => new Breadcrumbs(Configuration);
         public ISessionTracker SessionTracking => new SessionTracker(Configuration);

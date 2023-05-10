@@ -19,7 +19,13 @@ public abstract class NfoReader<T> : NfoReaderBase
 
     protected async Task<Stream> SanitizedStreamForFile(string fileName)
     {
-        await using var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read, Buffer.Length, true);
+        await using var fs = new FileStream(
+            fileName,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            Buffer.Length,
+            true);
         using var sr = new StreamReader(fs, Encoding.UTF8);
         string text = await sr.ReadToEndAsync();
         // trim BOM and zero width space, replace controls with replacement character
@@ -66,7 +72,9 @@ public abstract class NfoReader<T> : NfoReaderBase
     {
         try
         {
-            if (nfo is not null && DateTime.TryParse(await reader.ReadElementContentAsStringAsync(), out DateTime result))
+            if (nfo is not null && DateTime.TryParse(
+                    await reader.ReadElementContentAsStringAsync(),
+                    out DateTime result))
             {
                 action(nfo, result);
             }

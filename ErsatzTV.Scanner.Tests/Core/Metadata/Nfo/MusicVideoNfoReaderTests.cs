@@ -182,7 +182,7 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
             nfo.Studios.Should().BeEquivalentTo(new List<string> { "Test Studio" });
         }
     }
-    
+
     [Test]
     public async Task MetadataNfo_With_Directors_Should_Return_Nfo()
     {

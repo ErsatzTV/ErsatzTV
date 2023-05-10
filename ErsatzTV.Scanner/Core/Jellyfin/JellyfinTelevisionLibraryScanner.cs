@@ -17,9 +17,9 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     JellyfinItemEtag>, IJellyfinTelevisionLibraryScanner
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
+    private readonly ILogger<JellyfinTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IJellyfinPathReplacementService _pathReplacementService;
-    private readonly ILogger<JellyfinTelevisionLibraryScanner> _logger;
     private readonly IJellyfinTelevisionRepository _televisionRepository;
 
     public JellyfinTelevisionLibraryScanner(
@@ -191,7 +191,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
         {
             _logger.LogWarning("Failed to get episode statistics from Jellyfin: {Error}", error.ToString());
         }
-        
+
         // chapters are pulled with metadata, not with statistics, but we need to save them here
         foreach (MediaVersion version in maybeVersion.RightToSeq())
         {

@@ -20,11 +20,11 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
     private readonly IMovieRepository _movieRepository;
 
@@ -76,7 +76,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
-            
+
             decimal progressSpread = progressMax - progressMin;
 
             var foldersCompleted = 0;
@@ -142,7 +142,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     continue;
                 }
 
-                bool etagMatches = await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag; 
+                bool etagMatches = await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag;
                 if (etagMatches)
                 {
                     if (allFiles.Any(allTrashedItems.Contains))

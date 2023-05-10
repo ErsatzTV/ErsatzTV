@@ -39,7 +39,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => MovePath(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => MovePath(dbContext, parameters));
     }
 
     private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters)

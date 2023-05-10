@@ -13,7 +13,7 @@
             </div>
         </DialogContent>
         <DialogActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="(() => CopyToClipboard(_infoView))">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => CopyToClipboard(_infoView)">
                 Copy
             </MudButton>
             <MudButton Color="Color.Primary" OnClick="Close">Close</MudButton>
@@ -28,7 +28,7 @@
 
     [Parameter]
     public MediaItemInfo MediaItemInfo { get; set; }
-    
+
     private string _info;
     private ElementReference _infoView;
 
@@ -53,10 +53,7 @@
         return Task.CompletedTask;
     }
 
-    private async Task CopyToClipboard(ElementReference view)
-    {
-        await JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", view);
-    }
+    private async Task CopyToClipboard(ElementReference view) => await JsRuntime.InvokeVoidAsync("clipboardCopy.copyText", view);
 
     private void Close() => MudDialog.Close(DialogResult.Ok(true));
 }

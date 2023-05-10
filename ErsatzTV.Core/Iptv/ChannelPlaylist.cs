@@ -5,11 +5,11 @@ namespace ErsatzTV.Core.Iptv;
 
 public class ChannelPlaylist
 {
+    private readonly string _accessToken;
+    private readonly string _baseUrl;
     private readonly List<Channel> _channels;
     private readonly string _host;
-    private readonly string _baseUrl;
     private readonly string _scheme;
-    private readonly string _accessToken;
 
     public ChannelPlaylist(string scheme, string host, string baseUrl, List<Channel> channels, string accessToken)
     {
@@ -23,7 +23,7 @@ public class ChannelPlaylist
     public string ToM3U()
     {
         var sb = new StringBuilder();
-        
+
         string accessTokenUri = string.Empty;
         string accessTokenUriAmp = string.Empty;
         if (_accessToken != null)

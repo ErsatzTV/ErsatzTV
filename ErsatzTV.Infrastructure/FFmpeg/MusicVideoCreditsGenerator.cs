@@ -10,8 +10,8 @@ namespace ErsatzTV.Infrastructure.FFmpeg;
 
 public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
 {
-    private readonly ITempFilePool _tempFilePool;
     private readonly ILogger<MusicVideoCreditsGenerator> _logger;
+    private readonly ITempFilePool _tempFilePool;
 
     public MusicVideoCreditsGenerator(ITempFilePool tempFilePool, ILogger<MusicVideoCreditsGenerator> logger)
     {
@@ -108,7 +108,7 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
                 {
                     artist = artistMetadata.Title;
                 }
-                
+
                 string result = await template.RenderAsync(
                     new
                     {

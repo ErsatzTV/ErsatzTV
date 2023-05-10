@@ -112,7 +112,7 @@ public class TranscodingTests
             Watermark.None,
             Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
-            Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentScaled
             // Watermark.PermanentTransparentActualSize
         };
 
@@ -183,7 +183,7 @@ public class TranscodingTests
         public static FFmpegProfileVideoFormat[] VideoFormats =
         {
             FFmpegProfileVideoFormat.H264,
-            FFmpegProfileVideoFormat.Hevc,
+            FFmpegProfileVideoFormat.Hevc
             // FFmpegProfileVideoFormat.Mpeg2Video
         };
 
@@ -192,7 +192,7 @@ public class TranscodingTests
             // HardwareAccelerationKind.None,
             // HardwareAccelerationKind.Nvenc,
             HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.Qsv
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
@@ -214,9 +214,11 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
         HardwareAccelerationKind profileAcceleration)
     {
-        var localFileSystem = new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>());
+        var localFileSystem = new LocalFileSystem(
+            new Mock<IClient>().Object,
+            LoggerFactory.CreateLogger<LocalFileSystem>());
         var tempFilePool = new TempFilePool();
-        
+
         var mockImageCache = new Mock<ImageCache>(localFileSystem, tempFilePool);
 
         // always return the static watermark resource
@@ -226,7 +228,7 @@ public class TranscodingTests
                     It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
                     It.IsAny<Option<int>>()))
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
-        
+
         var oldService = new FFmpegProcessService(
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
@@ -249,7 +251,7 @@ public class TranscodingTests
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
-        
+
         var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache.Object, service);
 
         var channel = new Channel(Guid.NewGuid())
@@ -266,7 +268,7 @@ public class TranscodingTests
             StreamingMode = StreamingMode.TransportStream,
             SubtitleMode = ChannelSubtitleMode.None
         };
-        
+
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, Path.Combine("Resources", "song.mp3"));
         var songVersion = new MediaVersion
         {
@@ -291,7 +293,7 @@ public class TranscodingTests
             },
             MediaVersions = new List<MediaVersion> { songVersion }
         };
-        
+
         (string videoPath, MediaVersion videoVersion) = await songVideoGenerator.GenerateSongVideo(
             song,
             channel,
@@ -300,7 +302,7 @@ public class TranscodingTests
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             CancellationToken.None);
-        
+
         var metadataRepository = new Mock<IMetadataRepository>();
         metadataRepository
             .Setup(r => r.UpdateStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
@@ -324,11 +326,11 @@ public class TranscodingTests
             new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>()),
             new Mock<IClient>().Object,
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
-        
+
         await localStatisticsProvider.RefreshStatistics(ExecutableName("ffmpeg"), ExecutableName("ffprobe"), song);
-        
+
         DateTimeOffset now = DateTimeOffset.Now;
-        
+
         Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
@@ -371,40 +373,43 @@ public class TranscodingTests
             localStatisticsProvider,
             () => videoVersion);
     }
-    
+
     [Test]
     [Combinatorial]
     public async Task Transcode(
-            [ValueSource(typeof(TestData), nameof(TestData.FilesToTest))]
-            string fileToTest,
-            [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
-            InputFormat inputFormat,
-            [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
-            Resolution profileResolution,
-            [ValueSource(typeof(TestData), nameof(TestData.BitDepths))]
-            FFmpegProfileBitDepth profileBitDepth,
-            [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
-            Padding padding,
-            [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
-            VideoScanKind videoScanKind,
-            [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
-            Watermark watermark,
-            [ValueSource(typeof(TestData), nameof(TestData.Subtitles))]
-            Subtitle subtitle,
-            [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
-            FFmpegProfileVideoFormat profileVideoFormat,
-            [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.FilesToTest))]
+        string fileToTest,
+        [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
+        InputFormat inputFormat,
+        [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
+        Resolution profileResolution,
+        [ValueSource(typeof(TestData), nameof(TestData.BitDepths))]
+        FFmpegProfileBitDepth profileBitDepth,
+        [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
+        Padding padding,
+        [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
+        VideoScanKind videoScanKind,
+        [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
+        Watermark watermark,
+        [ValueSource(typeof(TestData), nameof(TestData.Subtitles))]
+        Subtitle subtitle,
+        [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
+        FFmpegProfileVideoFormat profileVideoFormat,
+        [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
+        HardwareAccelerationKind profileAcceleration)
     {
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
         {
             // some formats don't support interlaced content (mpeg1video, msmpeg4v2, msmpeg4v3)
             // others (libx265, any 10-bit) are unlikely to have interlaced content, so don't bother testing
-            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3" or "libx265" || inputFormat.PixelFormat.Contains("10"))
+            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3" or "libx265" ||
+                inputFormat.PixelFormat.Contains("10"))
             {
                 if (videoScanKind == VideoScanKind.Interlaced)
                 {
-                    Assert.Inconclusive($"{inputFormat.Encoder}/{inputFormat.PixelFormat} does not support interlaced content");
+                    Assert.Inconclusive(
+                        $"{inputFormat.Encoder}/{inputFormat.PixelFormat} does not support interlaced content");
                     return;
                 }
             }
@@ -527,7 +532,8 @@ public class TranscodingTests
             {
                 var videoFilters = string.Join(",", filterChain.VideoFilterSteps.Map(f => f.Filter));
                 var pixelFormatFilters = string.Join(",", filterChain.PixelFormatFilterSteps.Map(f => f.Filter));
-                if (videoFilters.Contains("nv12") || (pixelFormatFilters.Contains("nv12") && !pixelFormatFilters.EndsWith("format=nv12,format=p010le")))
+                if (videoFilters.Contains("nv12") || pixelFormatFilters.Contains("nv12") &&
+                    !pixelFormatFilters.EndsWith("format=nv12,format=p010le"))
                 {
                     // Assert.Fail("10-bit shouldn't use NV12!");
                 }
@@ -567,7 +573,7 @@ public class TranscodingTests
                         or OverlaySubtitleCudaFilter
                         or OverlaySubtitleQsvFilter
                         or OverlaySubtitleVaapiFilter);
-    
+
             hasSubtitleFilters.Should().Be(subtitle != Subtitle.None);
 
             bool hasWatermarkFilters = filterChain.WatermarkOverlayFilterSteps.Any(
@@ -729,7 +735,7 @@ public class TranscodingTests
             ? $" -color_primaries {inputFormat.ColorPrimaries}"
             : string.Empty;
 
-        string args =
+        var args =
             $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder}{colorRange}{colorSpace}{colorTransfer}{colorPrimaries} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
         var p1 = new Process
         {
@@ -763,7 +769,7 @@ public class TranscodingTests
                         $"-o {tempFileName} {sourceFile} --field-order 0:{(videoScanKind == VideoScanKind.Interlaced ? '1' : '0')} {subPath}")
                     .WithValidation(CommandResultValidation.None)
                     .ExecuteBufferedAsync();
-                
+
                 if (p2.ExitCode != 0)
                 {
                     if (File.Exists(sourceFile))
@@ -793,7 +799,7 @@ public class TranscodingTests
             StartInfo = new ProcessStartInfo
             {
                 FileName = ExecutableName("mkvpropedit"),
-                Arguments = $"{tempFileName} --edit track:v1 --set interlaced={(interlaced ? '1' : '0')}",
+                Arguments = $"{tempFileName} --edit track:v1 --set interlaced={(interlaced ? '1' : '0')}"
             }
         };
 
@@ -943,7 +949,7 @@ public class TranscodingTests
                     Console.WriteLine(process.Arguments);
                 }
             }
-            
+
             // additional checks on resulting file
             await localStatisticsProvider.RefreshStatistics(
                 ExecutableName("ffmpeg"),
@@ -963,10 +969,10 @@ public class TranscodingTests
                 });
 
             MediaVersion v = getFinalMediaVersion();
-            
+
             // verify de-interlace
             v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
-            
+
             // verify resolution
             v.Height.Should().Be(profileResolution.Height);
             v.Width.Should().Be(profileResolution.Width);
@@ -976,7 +982,7 @@ public class TranscodingTests
                 // verify pixel format
                 videoStream.PixelFormat.Should().Be(
                     profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
-                
+
                 // verify colors
                 var colorParams = new ColorParams(
                     videoStream.ColorRange,
@@ -1023,7 +1029,7 @@ public class TranscodingTests
             ChannelSubtitleMode subtitleMode) =>
             subtitles.HeadOrNone().AsTask();
     }
-    
+
     private static string ExecutableName(string baseName) =>
         OperatingSystem.IsWindows() ? $"{baseName}.exe" : baseName;
 }

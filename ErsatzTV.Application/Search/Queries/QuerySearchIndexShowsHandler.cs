@@ -11,8 +11,8 @@ namespace ErsatzTV.Application.Search;
 public class
     QuerySearchIndexShowsHandler : IRequestHandler<QuerySearchIndexShows, TelevisionShowCardResultsViewModel>
 {
-    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IClient _client;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ITelevisionRepository _televisionRepository;
 

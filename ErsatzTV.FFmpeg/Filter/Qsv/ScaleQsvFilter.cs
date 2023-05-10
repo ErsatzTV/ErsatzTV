@@ -5,10 +5,10 @@ namespace ErsatzTV.FFmpeg.Filter.Qsv;
 public class ScaleQsvFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly FrameSize _scaledSize;
     private readonly int _extraHardwareFrames;
     private readonly bool _isAnamorphicEdgeCase;
     private readonly string _sampleAspectRatio;
+    private readonly FrameSize _scaledSize;
 
     public ScaleQsvFilter(
         FrameState currentState,
@@ -43,7 +43,7 @@ public class ScaleQsvFilter : BaseFilter
             else
             {
                 string squareScale = string.Empty;
-                string targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
+                var targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {

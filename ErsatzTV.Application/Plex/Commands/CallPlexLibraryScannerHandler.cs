@@ -28,9 +28,10 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         ForceSynchronizePlexLibraryById request,
         CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    Task<Either<BaseError, string>> IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>.Handle(
-        SynchronizePlexLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request, cancellationToken);
+    Task<Either<BaseError, string>> IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>.
+        Handle(
+            SynchronizePlexLibraryByIdIfNeeded request,
+            CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
     private async Task<Either<BaseError, string>> Handle(
         ISynchronizePlexLibraryById request,
@@ -77,10 +78,10 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         TvContext dbContext,
         ISynchronizePlexLibraryById request)
     {
-        DateTime minDateTime =  await dbContext.PlexLibraries
+        DateTime minDateTime = await dbContext.PlexLibraries
             .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId)
             .Match(l => l.LastScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
-        
+
         return new DateTimeOffset(minDateTime, TimeSpan.Zero);
     }
 
@@ -95,6 +96,6 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
         }
 
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
+        return request.ForceScan || libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now;
     }
 }

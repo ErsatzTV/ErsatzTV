@@ -4,10 +4,7 @@ public class HardwareUploadFilter : BaseFilter
 {
     private readonly FFmpegState _ffmpegState;
 
-    public HardwareUploadFilter(FFmpegState ffmpegState)
-    {
-        _ffmpegState = ffmpegState;
-    }
+    public HardwareUploadFilter(FFmpegState ffmpegState) => _ffmpegState = ffmpegState;
 
     public override string Filter => _ffmpegState.EncoderHardwareAccelerationMode switch
     {

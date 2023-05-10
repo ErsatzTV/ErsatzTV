@@ -13,8 +13,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MediaCollectionRepository : IMediaCollectionRepository
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IClient _client;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ISearchIndex _searchIndex;
 
     public MediaCollectionRepository(

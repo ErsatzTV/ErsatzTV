@@ -37,7 +37,7 @@ public class MovieMetadataConfiguration : IEntityTypeConfiguration<MovieMetadata
         builder.HasMany(mm => mm.Subtitles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasMany(mm => mm.Directors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

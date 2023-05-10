@@ -1,10 +1,9 @@
 ﻿@page "/playouts/{Id:int}/alternate-schedules"
+@using System.Globalization
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.Playouts
-@using Microsoft.AspNetCore.Components
 @using ErsatzTV.Application.Channels
 @using System.Text
-@using System.Globalization
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleItemsEditor> Logger
@@ -12,202 +11,202 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-<MudTable Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">@_channelName Alternate Schedules</MudText>
-        <MudSpacer />
-        <MudText Typo="Typo.subtitle1" Class="mr-3">In priority order from top to bottom</MudText>
-    </ToolBarContent>
-    <ColGroup>
-        <col/>
-        <col/>
-        <col/>
-        <col/>
-        <col style="width: 60px;"/>
-        <col style="width: 60px;"/>
-        <col style="width: 60px;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Schedule</MudTh>
-        <MudTh>Days of the Week</MudTh>
-        <MudTh>Days of the Month</MudTh>
-        <MudTh>Months</MudTh>
-        <MudTh/>
-        <MudTh/>
-        <MudTh/>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Schedule">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @context.ProgramSchedule.Name
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Days of the Week">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @ToDaysOfWeekString(context.DaysOfWeek)
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Days of the Month">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @ToDaysOfMonthString(context.DaysOfMonth)
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Months">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @ToMonthsOfYearString(context.MonthsOfYear)
-            </MudText>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
-                           OnClick="@(_ => MoveItemUp(context))"
-                           Disabled="@(_items.All(x => x.Index >= context.Index))">
-            </MudIconButton>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
-                           OnClick="@(_ => MoveItemDown(context))"
-                           Disabled="@(_items.All(x => x.Index <= context.Index))">
-            </MudIconButton>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                           OnClick="@(_ => RemoveAlternateSchedule(context))"
-                           Disabled="@(_items.Count == 1)">
-            </MudIconButton>
-        </MudTd>
-    </RowTemplate>
-</MudTable>
-<MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddAlternateSchedule())" Class="mt-4">
-    Add Alternate Schedule
-</MudButton>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
-    Save Changes
-</MudButton>
+    <MudTable Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@_channelName Alternate Schedules</MudText>
+            <MudSpacer/>
+            <MudText Typo="Typo.subtitle1" Class="mr-3">In priority order from top to bottom</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col/>
+            <col/>
+            <col style="width: 60px;"/>
+            <col style="width: 60px;"/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Schedule</MudTh>
+            <MudTh>Days of the Week</MudTh>
+            <MudTh>Days of the Month</MudTh>
+            <MudTh>Months</MudTh>
+            <MudTh/>
+            <MudTh/>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Schedule">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.ProgramSchedule.Name
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Days of the Week">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @ToDaysOfWeekString(context.DaysOfWeek)
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Days of the Month">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @ToDaysOfMonthString(context.DaysOfMonth)
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Months">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @ToMonthsOfYearString(context.MonthsOfYear)
+                </MudText>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                               OnClick="@(_ => MoveItemUp(context))"
+                               Disabled="@(_items.All(x => x.Index >= context.Index))">
+                </MudIconButton>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                               OnClick="@(_ => MoveItemDown(context))"
+                               Disabled="@(_items.All(x => x.Index <= context.Index))">
+                </MudIconButton>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(_ => RemoveAlternateSchedule(context))"
+                               Disabled="@(_items.Count == 1)">
+                </MudIconButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddAlternateSchedule())" Class="mt-4">
+        Add Alternate Schedule
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+        Save Changes
+    </MudButton>
 
-@if (_selectedItem is not null)
-{
-    <EditForm Model="_selectedItem">
-    <FluentValidator/>
-    <div style="display: flex; flex-direction: row;" class="mt-6">
-        <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
-            <MudCard>
-                <MudCardContent>
-                    <MudSelect Label="Schedule" @bind-Value="_selectedItem.ProgramSchedule" For="@(() => _selectedItem.ProgramSchedule)">
-                        @foreach (ProgramScheduleViewModel schedule in _schedules)
-                        {
-                            <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudCardContent>
-            </MudCard>
-            <MudCard Class="mt-4">
-                <MudCardContent>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Monday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Monday, c))"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Tuesday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Tuesday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Tuesday, c))"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Wednesday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Wednesday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Wednesday, c))"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Thursday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Thursday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Thursday, c))"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Friday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Friday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Friday, c))"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Saturday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Saturday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Saturday, c))"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Sunday)"
-                                     Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Sunday))"
-                                     CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Sunday, c))"/>
-                    </MudElement>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekdays())">
-                        Weekdays
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekends())">
-                        Weekends
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfWeek())">
-                        All
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfWeek())">
-                        None
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </div>
-        <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
-            <MudCard>
-                <MudCardContent>
-                    <MudGrid Justify="Justify.FlexStart" Class="mt-3">
-                        @foreach (int day in Enumerable.Range(1, 31))
-                        {
-                            <MudItem xs="3">
-                                <MudCheckBox T="bool" Label="@day.ToString()"
-                                             Checked="@(_selectedItem.DaysOfMonth.Contains(day))"
-                                             CheckedChanged="@(c => DayOfMonthChanged(day, c))"/>
-                            </MudItem>
-                        }
-                    </MudGrid>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfMonth())">
-                        All
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfMonth())">
-                        None
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </div>
-        <div style="flex-grow: 1; max-width: 400px;">
-            <MudCard>
-                <MudCardContent>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudCheckBox T="bool" Label="@_dtf.GetMonthName(1)"
-                                     Checked="@(_selectedItem.MonthsOfYear.Contains(1))"
-                                     CheckedChanged="@(c => MonthOfYearChanged(1, c))"/>
-                    </MudElement>
-                    @foreach (int month in Enumerable.Range(2, 11))
-                    {
-                        <MudElement HtmlTag="div" Class="mt-2">
-                            <MudCheckBox T="bool" Label="@_dtf.GetMonthName(month)"
-                                         Checked="@(_selectedItem.MonthsOfYear.Contains(month))"
-                                         CheckedChanged="@(c => MonthOfYearChanged(month, c))"/>
-                        </MudElement>
-                    }
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllMonthsOfYear())">
-                        All
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoMonthsOfYear())">
-                        None
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </div>
-    </div>
-    </EditForm>
-}
+    @if (_selectedItem is not null)
+    {
+        <EditForm Model="_selectedItem">
+            <FluentValidator/>
+            <div style="display: flex; flex-direction: row;" class="mt-6">
+                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudSelect Label="Schedule" @bind-Value="_selectedItem.ProgramSchedule" For="@(() => _selectedItem.ProgramSchedule)">
+                                @foreach (ProgramScheduleViewModel schedule in _schedules)
+                                {
+                                    <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
+                    <MudCard Class="mt-4">
+                        <MudCardContent>
+                            <MudElement HtmlTag="div" Class="mt-3">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Monday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Monday, c))"/>
+                            </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Tuesday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Tuesday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Tuesday, c))"/>
+                            </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Wednesday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Wednesday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Wednesday, c))"/>
+                            </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Thursday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Thursday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Thursday, c))"/>
+                            </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Friday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Friday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Friday, c))"/>
+                            </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Saturday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Saturday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Saturday, c))"/>
+                            </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Sunday)"
+                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Sunday))"
+                                             CheckedChanged="@(c => DayOfWeekChanged(DayOfWeek.Sunday, c))"/>
+                            </MudElement>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekdays())">
+                                Weekdays
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekends())">
+                                Weekends
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfWeek())">
+                                All
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfWeek())">
+                                None
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </div>
+                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudGrid Justify="Justify.FlexStart" Class="mt-3">
+                                @foreach (int day in Enumerable.Range(1, 31))
+                                {
+                                    <MudItem xs="3">
+                                        <MudCheckBox T="bool" Label="@day.ToString()"
+                                                     Checked="@(_selectedItem.DaysOfMonth.Contains(day))"
+                                                     CheckedChanged="@(c => DayOfMonthChanged(day, c))"/>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfMonth())">
+                                All
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfMonth())">
+                                None
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </div>
+                <div style="flex-grow: 1; max-width: 400px;">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudElement HtmlTag="div" Class="mt-3">
+                                <MudCheckBox T="bool" Label="@_dtf.GetMonthName(1)"
+                                             Checked="@(_selectedItem.MonthsOfYear.Contains(1))"
+                                             CheckedChanged="@(c => MonthOfYearChanged(1, c))"/>
+                            </MudElement>
+                            @foreach (int month in Enumerable.Range(2, 11))
+                            {
+                                <MudElement HtmlTag="div" Class="mt-2">
+                                    <MudCheckBox T="bool" Label="@_dtf.GetMonthName(month)"
+                                                 Checked="@(_selectedItem.MonthsOfYear.Contains(month))"
+                                                 CheckedChanged="@(c => MonthOfYearChanged(month, c))"/>
+                                </MudElement>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllMonthsOfYear())">
+                                All
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoMonthsOfYear())">
+                                None
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </div>
+            </div>
+        </EditForm>
+    }
 </MudContainer>
 
 @code {
@@ -301,11 +300,8 @@
         _selectedItem.DaysOfWeek.AddRange(ProgramScheduleAlternate.AllDaysOfWeek());
     }
 
-    private void SelectNoDaysOfWeek()
-    {
-        _selectedItem.DaysOfWeek.Clear();
-    }
-    
+    private void SelectNoDaysOfWeek() => _selectedItem.DaysOfWeek.Clear();
+
     private void DayOfMonthChanged(int dayOfMonth, bool isChecked)
     {
         if (isChecked && !_selectedItem.DaysOfMonth.Contains(dayOfMonth))
@@ -319,18 +315,15 @@
             _selectedItem.DaysOfMonth.Remove(dayOfMonth);
         }
     }
-    
+
     private void SelectAllDaysOfMonth()
     {
         _selectedItem.DaysOfMonth.Clear();
         _selectedItem.DaysOfMonth.AddRange(ProgramScheduleAlternate.AllDaysOfMonth());
     }
 
-    private void SelectNoDaysOfMonth()
-    {
-        _selectedItem.DaysOfMonth.Clear();
-    }
-    
+    private void SelectNoDaysOfMonth() => _selectedItem.DaysOfMonth.Clear();
+
     private void MonthOfYearChanged(int monthOfYear, bool isChecked)
     {
         if (isChecked && !_selectedItem.MonthsOfYear.Contains(monthOfYear))
@@ -351,10 +344,7 @@
         _selectedItem.MonthsOfYear.AddRange(ProgramScheduleAlternate.AllMonthsOfYear());
     }
 
-    private void SelectNoMonthsOfYear()
-    {
-        _selectedItem.MonthsOfYear.Clear();
-    }
+    private void SelectNoMonthsOfYear() => _selectedItem.MonthsOfYear.Clear();
 
     private void AddAlternateSchedule()
     {
@@ -379,14 +369,14 @@
 
     private void MoveItemUp(PlayoutAlternateScheduleEditViewModel item)
     {
-        // swap with lower index
+    // swap with lower index
         PlayoutAlternateScheduleEditViewModel toSwap = _items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private void MoveItemDown(PlayoutAlternateScheduleEditViewModel item)
     {
-        // swap with higher index
+    // swap with higher index
         PlayoutAlternateScheduleEditViewModel toSwap = _items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
@@ -424,7 +414,7 @@
 
         return string.Join(", ", daysOfWeek.Map(_dtf.GetAbbreviatedDayName));
     }
-    
+
     private string ToDaysOfMonthString(List<int> daysOfMonth)
     {
         if (daysOfMonth.Count is 0 or 31)
@@ -434,7 +424,7 @@
 
         return ToRangeString(daysOfMonth);
     }
-    
+
     private string ToMonthsOfYearString(List<int> monthsOfYear)
     {
         if (monthsOfYear.Count is 0 or 12)
@@ -457,27 +447,26 @@
         {
             int temp = list[i];
 
-            //add a number
+    //add a number
             result.Append(list[i]);
 
-            //skip number(s) between a range
+    //skip number(s) between a range
             while (i < list.Count - 1 && list[i + 1] == list[i] + 1)
             {
                 i++;
             }
 
-            //add the range
+    //add the range
             if (temp != list[i])
             {
                 result.Append("-").Append(list[i]);
             }
 
-            //add comma
+    //add comma
             if (i != list.Count - 1)
             {
                 result.Append(", ");
             }
-
         }
 
         return result.ToString();

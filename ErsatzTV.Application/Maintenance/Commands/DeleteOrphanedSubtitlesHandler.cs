@@ -9,10 +9,8 @@ public class DeleteOrphanedSubtitlesHandler : IRequestHandler<DeleteOrphanedSubt
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public DeleteOrphanedSubtitlesHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public DeleteOrphanedSubtitlesHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<Either<BaseError, Unit>> Handle(
         DeleteOrphanedSubtitles request,

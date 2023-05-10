@@ -8,7 +8,8 @@ public class VaapiFormatFilter : BaseFilter
 
     public VaapiFormatFilter(IPixelFormat pixelFormat) => _pixelFormat = pixelFormat;
 
-    public override FrameState NextState(FrameState currentState) => currentState with { PixelFormat = Some(_pixelFormat) };
-
     public override string Filter => $"scale_vaapi=format={_pixelFormat.FFmpegName}";
+
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { PixelFormat = Some(_pixelFormat) };
 }

@@ -17,6 +17,9 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutBuilderTests
 {
+    [SetUp]
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
     private readonly ILogger<PlayoutBuilder> _logger;
 
     public PlayoutBuilderTests()
@@ -33,12 +36,6 @@ public class PlayoutBuilderTests
     }
 
     private CancellationToken _cancellationToken;
-    
-    [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
 
     [TestFixture]
     public class NewPlayout : PlayoutBuilderTests
@@ -2369,7 +2366,7 @@ public class PlayoutBuilderTests
         public async Task ShuffleFlood_Should_MaintainRandomSeed_MultipleDays()
         {
             var mediaItems = new List<MediaItem>();
-            for (int i = 1; i <= 25; i++)
+            for (var i = 1; i <= 25; i++)
             {
                 mediaItems.Add(TestMovie(i, TimeSpan.FromMinutes(55), DateTime.Today.AddHours(i)));
             }
@@ -2389,11 +2386,13 @@ public class PlayoutBuilderTests
                 .First();
             lastCheckpoint.EnumeratorState.Seed.Should().BeGreaterThan(0);
             lastCheckpoint.EnumeratorState.Index.Should().Be(3);
-            
+
             // we need to mess up the ordering to trigger the problematic behavior
             // this simulates the way the rows are loaded with EF
-            PlayoutProgramScheduleAnchor oldest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate).Last();
-            PlayoutProgramScheduleAnchor newest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate).First();
+            PlayoutProgramScheduleAnchor oldest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate)
+                .Last();
+            PlayoutProgramScheduleAnchor newest = result.ProgramScheduleAnchors.OrderByDescending(a => a.AnchorDate)
+                .First();
 
             result.ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>
             {
@@ -2416,11 +2415,11 @@ public class PlayoutBuilderTests
             PlayoutProgramScheduleAnchor continueAnchor =
                 result2.ProgramScheduleAnchors.First(x => x.AnchorDate is null);
             int secondSeedValue = continueAnchor.EnumeratorState.Seed;
-            
+
             // the continue anchor should have the same seed as the most recent (last) checkpoint from the first run
             firstSeedValue.Should().Be(secondSeedValue);
         }
-        
+
         [Test]
         public async Task ShuffleFlood_MultipleSmartCollections_Should_MaintainRandomSeed()
         {
@@ -2440,7 +2439,8 @@ public class PlayoutBuilderTests
 
             result.Items.Count.Should().Be(6);
             result.ProgramScheduleAnchors.Count.Should().Be(2);
-            PlayoutProgramScheduleAnchor primaryAnchor = result.ProgramScheduleAnchors.First(a => a.SmartCollectionId == 1);
+            PlayoutProgramScheduleAnchor primaryAnchor =
+                result.ProgramScheduleAnchors.First(a => a.SmartCollectionId == 1);
             primaryAnchor.EnumeratorState.Seed.Should().BeGreaterThan(0);
             primaryAnchor.EnumeratorState.Index.Should().Be(0);
 
@@ -2463,12 +2463,12 @@ public class PlayoutBuilderTests
 
             primaryAnchor.EnumeratorState.Index.Should().Be(0);
         }
-        
+
         [Test]
         public async Task ShuffleFlood_MultipleSmartCollections_Should_MaintainRandomSeed_MultipleDays()
         {
             var mediaItems = new List<MediaItem>();
-            for (int i = 1; i <= 100; i++)
+            for (var i = 1; i <= 100; i++)
             {
                 mediaItems.Add(TestMovie(i, TimeSpan.FromMinutes(55), DateTime.Today.AddHours(i)));
             }
@@ -2490,7 +2490,7 @@ public class PlayoutBuilderTests
                 .First();
             lastCheckpoint.EnumeratorState.Seed.Should().BeGreaterThan(0);
             lastCheckpoint.EnumeratorState.Index.Should().Be(53);
-            
+
             int firstSeedValue = lastCheckpoint.EnumeratorState.Seed;
 
             for (var i = 1; i < 20; i++)
@@ -2866,7 +2866,7 @@ public class PlayoutBuilderTests
             Collection = mediaCollection,
             CollectionId = mediaCollection.Id,
             StartTime = null,
-            PlaybackOrder = playbackOrder,
+            PlaybackOrder = playbackOrder
         };
 
     private static ProgramScheduleItem Flood(
@@ -2950,7 +2950,7 @@ public class PlayoutBuilderTests
 
         return new TestData(builder, playout);
     }
-    
+
     private TestData TestDataFloodForSmartCollectionItems(
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder,

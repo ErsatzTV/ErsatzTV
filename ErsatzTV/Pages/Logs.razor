@@ -14,7 +14,8 @@
             <MudText Typo="Typo.h6">Logs</MudText>
             <MudSpacer/>
             <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0">
+            </MudTextField>
         </ToolBarContent>
         <HeaderContent>
             <MudTh>
@@ -99,7 +100,7 @@
 
         return new TableData<LogEntryViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
-    
+
     private void OnSearch(string text)
     {
         _searchString = text;

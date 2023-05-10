@@ -8,13 +8,10 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class SeasonEpisodeContentTests
 {
-    private CancellationToken _cancellationToken;
-    
     [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+    private CancellationToken _cancellationToken;
 
     [Test]
     public void Episodes_Should_Sort_By_EpisodeNumber()

@@ -9,8 +9,6 @@ public class SaveConfigElementByKeyHandler : IRequestHandler<SaveConfigElementBy
     public SaveConfigElementByKeyHandler(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    public async Task Handle(SaveConfigElementByKey request, CancellationToken cancellationToken)
-    {
+    public async Task Handle(SaveConfigElementByKey request, CancellationToken cancellationToken) =>
         await _configElementRepository.Upsert(request.Key, request.Value);
-    }
 }

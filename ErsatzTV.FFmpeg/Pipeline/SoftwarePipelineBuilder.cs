@@ -31,10 +31,8 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         subtitleInputFile,
         reportsFolder,
         fontsFolder,
-        logger)
-    {
+        logger) =>
         _logger = logger;
-    }
 
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
@@ -65,10 +63,8 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     protected virtual Option<IEncoder> GetEncoder(
         FFmpegState ffmpegState,
         FrameState currentState,
-        FrameState desiredState)
-    {
-        return GetSoftwareEncoder(currentState, desiredState);
-    }
+        FrameState desiredState) =>
+        GetSoftwareEncoder(currentState, desiredState);
 
     protected override FilterChain SetVideoFilters(
         VideoInputFile videoInputFile,
@@ -84,7 +80,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     {
         var watermarkOverlayFilterSteps = new List<IPipelineFilterStep>();
         var subtitleOverlayFilterSteps = new List<IPipelineFilterStep>();
-        
+
         FrameState currentState = desiredState with
         {
             PixelFormat = videoStream.PixelFormat,
@@ -131,7 +127,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                 videoInputFile.FilterSteps.Add(encoder);
             }
         }
-        
+
         // after decoder/encoder, return hls direct
         if (desiredState.VideoFormat == VideoFormat.Copy)
         {
@@ -283,7 +279,9 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                     IPixelFormat pf = desiredPixelFormat;
                     if (desiredPixelFormat is PixelFormatNv12 nv12)
                     {
-                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(
+                                     nv12.Name,
+                                     null))
                         {
                             pf = availablePixelFormat;
                         }

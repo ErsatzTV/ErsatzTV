@@ -17,8 +17,8 @@ public class JellyfinMovieLibraryScanner :
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinMovieRepository _jellyfinMovieRepository;
-    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ILogger<JellyfinMovieLibraryScanner> _logger;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IJellyfinPathReplacementService _pathReplacementService;
 
     public JellyfinMovieLibraryScanner(
@@ -108,7 +108,7 @@ public class JellyfinMovieLibraryScanner :
         JellyfinLibrary library,
         MediaItemScanResult<JellyfinMovie> result,
         JellyfinMovie incoming) => Task.FromResult(Option<Tuple<MovieMetadata, MediaVersion>>.None);
-    
+
     protected override async Task<Option<MediaVersion>> GetMediaServerStatistics(
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library,

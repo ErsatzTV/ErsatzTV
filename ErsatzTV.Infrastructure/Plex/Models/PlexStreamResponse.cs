@@ -76,10 +76,10 @@ public class PlexStreamResponse
 
     [XmlAttribute("colorTrc")]
     public string ColorTrc { get; set; }
-    
+
     [XmlAttribute("colorPrimaries")]
     public string ColorPrimaries { get; set; }
-    
+
     [XmlAttribute("displayTitle")]
     public string DisplayTitle { get; set; }
 

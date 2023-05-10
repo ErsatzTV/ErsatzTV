@@ -4,13 +4,12 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
-using ErsatzTV.Scanner.Tests.Core.Fakes;
 using ErsatzTV.Scanner.Core.Metadata;
+using ErsatzTV.Scanner.Tests.Core.Fakes;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -121,7 +120,7 @@ public class MovieFolderScannerTests
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
         }
-        
+
         [Test]
         public async Task NewMovie_Statistics_And_FallbackMetadata_MixedCase(
             [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
@@ -130,7 +129,7 @@ public class MovieFolderScannerTests
             char[] mixedCaseExtension = videoExtension.ToLowerInvariant().ToArray();
             mixedCaseExtension[2] = char.ToUpper(mixedCaseExtension[2]);
             videoExtension = new string(mixedCaseExtension);
-            
+
             string moviePath = Path.Combine(
                 FakeRoot,
                 Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));

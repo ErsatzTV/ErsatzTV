@@ -6,10 +6,7 @@ public class FFmpegProcess : Process
 {
     public static int ProcessCount;
 
-    public FFmpegProcess()
-    {
-        Interlocked.Increment(ref ProcessCount);
-    }
+    public FFmpegProcess() => Interlocked.Increment(ref ProcessCount);
 
     protected override void Dispose(bool disposing)
     {

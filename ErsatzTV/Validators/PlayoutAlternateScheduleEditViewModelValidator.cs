@@ -5,8 +5,5 @@ namespace ErsatzTV.Validators;
 
 public class PlayoutAlternateScheduleEditViewModelValidator : AbstractValidator<PlayoutAlternateScheduleEditViewModel>
 {
-    public PlayoutAlternateScheduleEditViewModelValidator()
-    {
-        RuleFor(p => p.ProgramSchedule).NotNull();
-    }
+    public PlayoutAlternateScheduleEditViewModelValidator() => RuleFor(p => p.ProgramSchedule).NotNull();
 }

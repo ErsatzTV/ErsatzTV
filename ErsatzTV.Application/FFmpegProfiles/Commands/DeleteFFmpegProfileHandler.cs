@@ -19,7 +19,7 @@ public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, E
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, FFmpegProfile> validation = await FFmpegProfileMustExist(dbContext, request);
-        return await LanguageExtensions.Apply(validation, p => DoDeletion(dbContext, p));
+        return await validation.Apply(p => DoDeletion(dbContext, p));
     }
 
     private static async Task<Unit> DoDeletion(TvContext dbContext, FFmpegProfile ffmpegProfile)

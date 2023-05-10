@@ -37,7 +37,7 @@ public class OtherVideoMetadataConfiguration : IEntityTypeConfiguration<OtherVid
         builder.HasMany(mm => mm.Subtitles)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasMany(ovm => ovm.Directors)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);

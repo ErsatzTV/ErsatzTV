@@ -25,7 +25,7 @@ public class HardwareDownloadFilter : BaseFilter
                             return $"hwdownload,format=vaapi|{pf.FFmpegName}";
                         }
                     }
-                    
+
                     if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
                     {
                         hwdownload = $"hwdownload,format={pixelFormat.FFmpegName}";

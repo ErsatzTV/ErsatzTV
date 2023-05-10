@@ -46,7 +46,7 @@ public record VideoStream(
                 double res = FrameSize.Width / (double)FrameSize.Height;
                 return $"{dar}:{res}";
             }
-            else
+
             {
                 string[] split = MaybeSampleAspectRatio.Split(':');
                 var num = double.Parse(split[0]);
@@ -134,7 +134,7 @@ public record VideoStream(
             double res = FrameSize.Width / (double)FrameSize.Height;
             return dar / res;
         }
-        else
+
         {
             string[] split = MaybeSampleAspectRatio.Split(':');
             var num = double.Parse(split[0]);

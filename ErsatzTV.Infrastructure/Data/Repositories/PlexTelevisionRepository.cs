@@ -251,7 +251,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (PlexEpisode plexEpisode in maybeExisting)
         {
             var result = new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
-            
+
             // deepScan isn't needed here since we create our own plex etags
             if (plexEpisode.Etag != item.Etag)
             {
@@ -502,7 +502,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             await dbContext.Connection.ExecuteAsync(
                 @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
                 new { version.Name, version.DateAdded, version.Id });
-            
+
             await dbContext.Connection.ExecuteAsync(
                 @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
                 new { file.Path, file.Id });

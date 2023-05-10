@@ -12,7 +12,9 @@ public class SearchTelevisionShowsHandler : IRequestHandler<SearchTelevisionShow
     public SearchTelevisionShowsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    public async Task<List<NamedMediaItemViewModel>> Handle(SearchTelevisionShows request, CancellationToken cancellationToken)
+    public async Task<List<NamedMediaItemViewModel>> Handle(
+        SearchTelevisionShows request,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Connection.QueryAsync<TelevisionShow>(

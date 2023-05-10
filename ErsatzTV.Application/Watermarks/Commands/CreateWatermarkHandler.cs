@@ -18,7 +18,7 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, ChannelWatermark> validation = Validate(request);
-        return await LanguageExtensions.Apply(validation, profile => PersistChannelWatermark(dbContext, profile));
+        return await validation.Apply(profile => PersistChannelWatermark(dbContext, profile));
     }
 
     private static async Task<CreateWatermarkResult> PersistChannelWatermark(

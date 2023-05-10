@@ -6,17 +6,14 @@ public class QsvHardwareAccelerationOption : GlobalOption
 {
     private readonly Option<string> _qsvDevice;
 
-    public QsvHardwareAccelerationOption(Option<string> qsvDevice)
-    {
-        _qsvDevice = qsvDevice;
-    }
-    
     // TODO: read this from ffmpeg output
     private readonly List<string> _supportedFFmpegFormats = new()
     {
         FFmpegFormat.NV12,
         FFmpegFormat.P010LE
     };
+
+    public QsvHardwareAccelerationOption(Option<string> qsvDevice) => _qsvDevice = qsvDevice;
 
     public override IList<string> GlobalOptions
     {

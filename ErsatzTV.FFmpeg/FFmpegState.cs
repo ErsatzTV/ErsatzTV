@@ -22,7 +22,7 @@ public record FFmpegState(
     Option<int> MaybeQsvExtraHardwareFrames)
 {
     public int QsvExtraHardwareFrames => MaybeQsvExtraHardwareFrames.IfNone(64);
-    
+
     public static FFmpegState Concat(bool saveReport, string channelName) =>
         new(
             saveReport,

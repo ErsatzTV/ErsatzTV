@@ -12,7 +12,9 @@ public class SearchMultiCollectionsHandler : IRequestHandler<SearchMultiCollecti
     public SearchMultiCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    public async Task<List<MultiCollectionViewModel>> Handle(SearchMultiCollections request, CancellationToken cancellationToken)
+    public async Task<List<MultiCollectionViewModel>> Handle(
+        SearchMultiCollections request,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.MultiCollections.FromSqlRaw(

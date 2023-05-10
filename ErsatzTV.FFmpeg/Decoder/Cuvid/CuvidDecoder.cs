@@ -2,10 +2,8 @@ namespace ErsatzTV.FFmpeg.Decoder.Cuvid;
 
 public abstract class CuvidDecoder : DecoderBase
 {
-    protected CuvidDecoder(HardwareAccelerationMode hardwareAccelerationMode)
-    {
+    protected CuvidDecoder(HardwareAccelerationMode hardwareAccelerationMode) =>
         HardwareAccelerationMode = hardwareAccelerationMode;
-    }
 
     public HardwareAccelerationMode HardwareAccelerationMode { get; set; }
 
@@ -13,7 +11,7 @@ public abstract class CuvidDecoder : DecoderBase
         HardwareAccelerationMode == HardwareAccelerationMode.None
             ? FrameDataLocation.Software
             : FrameDataLocation.Hardware;
-    
+
     public override IList<string> InputOptions(InputFile inputFile)
     {
         IList<string> result = base.InputOptions(inputFile);

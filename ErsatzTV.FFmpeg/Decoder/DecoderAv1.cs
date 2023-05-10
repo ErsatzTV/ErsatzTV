@@ -5,14 +5,11 @@ public class DecoderAv1 : DecoderBase
     // ReSharper disable IdentifierTypo
     private const string Libdav1d = "libdav1d";
     private const string Libaomav1 = "libaom-av1";
-    
+
     private readonly IReadOnlySet<string> _ffmpegDecoders;
 
-    public DecoderAv1(IReadOnlySet<string> ffmpegDecoders)
-    {
-        _ffmpegDecoders = ffmpegDecoders;
-    }
-    
+    public DecoderAv1(IReadOnlySet<string> ffmpegDecoders) => _ffmpegDecoders = ffmpegDecoders;
+
     public override string Name
     {
         get

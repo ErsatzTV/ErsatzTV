@@ -8,7 +8,8 @@ public class QsvFormatFilter : BaseFilter
 
     public QsvFormatFilter(IPixelFormat pixelFormat) => _pixelFormat = pixelFormat;
 
-    public override FrameState NextState(FrameState currentState) => currentState with { PixelFormat = Some(_pixelFormat) };
-
     public override string Filter => $"vpp_qsv=format={_pixelFormat.FFmpegName}";
+
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { PixelFormat = Some(_pixelFormat) };
 }

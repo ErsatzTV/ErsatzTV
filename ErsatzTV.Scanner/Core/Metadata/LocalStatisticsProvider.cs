@@ -335,7 +335,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
     internal MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
         Optional(probeOutput)
-            .Filter(json => json is { format: { }, streams: { } })
+            .Filter(json => json is { format: not null, streams: not null })
             .ToValidation<BaseError>("Unable to parse ffprobe output")
             .ToEither<FFprobe>()
             .Match(

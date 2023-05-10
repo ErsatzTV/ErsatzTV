@@ -5,9 +5,9 @@ namespace ErsatzTV.FFmpeg.Filter;
 public class ColorspaceFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly VideoStream _videoStream;
     private readonly IPixelFormat _desiredPixelFormat;
     private readonly bool _forceInputOverrides;
+    private readonly VideoStream _videoStream;
 
     public ColorspaceFilter(
         FrameState currentState,
@@ -21,22 +21,6 @@ public class ColorspaceFilter : BaseFilter
         _forceInputOverrides = forceInputOverrides;
     }
 
-    public override FrameState NextState(FrameState currentState)
-    {
-        FrameState nextState = currentState;
-
-        if (!_videoStream.ColorParams.IsUnknown && _desiredPixelFormat.BitDepth is 10 or 8)
-        {
-            nextState = nextState with
-            {
-                FrameDataLocation = FrameDataLocation.Software,
-                PixelFormat = Some(_desiredPixelFormat)
-            };
-        }
-
-        return nextState;
-    }
-
     public override string Filter
     {
         get
@@ -48,7 +32,7 @@ public class ColorspaceFilter : BaseFilter
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
                     string name = pixelFormat.FFmpegName;
-                    
+
                     // vaapi is not a target software format
                     if (pixelFormat is PixelFormatVaapi vaapi)
                     {
@@ -57,7 +41,7 @@ public class ColorspaceFilter : BaseFilter
                             name = pf.FFmpegName;
                         }
                     }
-                    
+
                     if (!string.IsNullOrWhiteSpace(name))
                     {
                         hwdownload = $"hwdownload,format={name},";
@@ -83,15 +67,24 @@ public class ColorspaceFilter : BaseFilter
             {
                 string range = string.IsNullOrWhiteSpace(cp.ColorRange) ? "tv" : cp.ColorRange;
 
-                string transfer = string.IsNullOrWhiteSpace(cp.ColorTransfer) || string.Equals(cp.ColorTransfer, "reserved", StringComparison.OrdinalIgnoreCase)
+                string transfer = string.IsNullOrWhiteSpace(cp.ColorTransfer) || string.Equals(
+                    cp.ColorTransfer,
+                    "reserved",
+                    StringComparison.OrdinalIgnoreCase)
                     ? "bt709"
                     : cp.ColorTransfer;
 
-                string primaries = string.IsNullOrWhiteSpace(cp.ColorPrimaries) || string.Equals(cp.ColorPrimaries, "reserved", StringComparison.OrdinalIgnoreCase)
+                string primaries = string.IsNullOrWhiteSpace(cp.ColorPrimaries) || string.Equals(
+                    cp.ColorPrimaries,
+                    "reserved",
+                    StringComparison.OrdinalIgnoreCase)
                     ? "bt709"
                     : cp.ColorPrimaries;
 
-                string space = string.IsNullOrWhiteSpace(cp.ColorSpace) || string.Equals(cp.ColorSpace, "reserved", StringComparison.OrdinalIgnoreCase)
+                string space = string.IsNullOrWhiteSpace(cp.ColorSpace) || string.Equals(
+                    cp.ColorSpace,
+                    "reserved",
+                    StringComparison.OrdinalIgnoreCase)
                     ? "bt709"
                     : cp.ColorSpace;
 
@@ -111,5 +104,21 @@ public class ColorspaceFilter : BaseFilter
 
             return colorspace;
         }
+    }
+
+    public override FrameState NextState(FrameState currentState)
+    {
+        FrameState nextState = currentState;
+
+        if (!_videoStream.ColorParams.IsUnknown && _desiredPixelFormat.BitDepth is 10 or 8)
+        {
+            nextState = nextState with
+            {
+                FrameDataLocation = FrameDataLocation.Software,
+                PixelFormat = Some(_desiredPixelFormat)
+            };
+        }
+
+        return nextState;
     }
 }

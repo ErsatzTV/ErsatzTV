@@ -7,6 +7,6 @@ public class PixelFormatVaapi : IPixelFormat
     public string Name { get; }
 
     public string FFmpegName => "vaapi";
-    
+
     public int BitDepth => 8;
 }

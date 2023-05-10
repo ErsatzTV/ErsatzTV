@@ -56,14 +56,14 @@ public class Program
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !Debugger.IsAttached)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(
-                restrictedToMinimumLevel: LogEventLevel.Error,
+                LogEventLevel.Error,
                 theme: AnsiConsoleTheme.Code);
         }
         else
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(theme: AnsiConsoleTheme.Code);
         }
-        
+
         Log.Logger = loggerConfiguration.CreateLogger();
 
         try

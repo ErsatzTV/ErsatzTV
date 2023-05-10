@@ -15,8 +15,8 @@ namespace ErsatzTV.Services;
 public class ScannerService : BackgroundService
 {
     private readonly ChannelReader<IScannerBackgroundServiceRequest> _channel;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<ScannerService> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public ScannerService(
         ChannelReader<IScannerBackgroundServiceRequest> channel,
@@ -127,7 +127,7 @@ public class ScannerService : BackgroundService
             entityLocker.UnlockLibrary(request.LibraryId);
         }
     }
-    
+
     private async Task SynchronizePlexLibrary(
         ISynchronizePlexLibraryById request,
         CancellationToken cancellationToken)
@@ -155,13 +155,13 @@ public class ScannerService : BackgroundService
                         error.Value);
                 }
             });
-        
+
         if (entityLocker.IsLibraryLocked(request.PlexLibraryId))
         {
             entityLocker.UnlockLibrary(request.PlexLibraryId);
         }
     }
-    
+
     private async Task SynchronizeAdminUserId(
         SynchronizeJellyfinAdminUserId request,
         CancellationToken cancellationToken)
@@ -179,7 +179,7 @@ public class ScannerService : BackgroundService
                 request.JellyfinMediaSourceId,
                 error.Value));
     }
-    
+
     private async Task SynchronizeLibraries(SynchronizeJellyfinLibraries request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -195,7 +195,7 @@ public class ScannerService : BackgroundService
                 request.JellyfinMediaSourceId,
                 error.Value));
     }
-    
+
     private async Task SynchronizeJellyfinLibrary(
         ISynchronizeJellyfinLibraryById request,
         CancellationToken cancellationToken)
@@ -229,7 +229,7 @@ public class ScannerService : BackgroundService
             entityLocker.UnlockLibrary(request.JellyfinLibraryId);
         }
     }
-    
+
     private async Task SynchronizeLibraries(SynchronizeEmbyLibraries request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -245,7 +245,7 @@ public class ScannerService : BackgroundService
                 request.EmbyMediaSourceId,
                 error.Value));
     }
-    
+
     private async Task SynchronizeEmbyLibrary(ISynchronizeEmbyLibraryById request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -271,7 +271,7 @@ public class ScannerService : BackgroundService
                         error.Value);
                 }
             });
-        
+
         if (entityLocker.IsLibraryLocked(request.EmbyLibraryId))
         {
             entityLocker.UnlockLibrary(request.EmbyLibraryId);
@@ -300,11 +300,10 @@ public class ScannerService : BackgroundService
                     _logger.LogWarning("Unable to synchronize emby collections: {Error}", error.Value);
                 }
             });
-        
+
         if (entityLocker.AreEmbyCollectionsLocked())
         {
             entityLocker.UnlockEmbyCollections();
         }
     }
 }
-

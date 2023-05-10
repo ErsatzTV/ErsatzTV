@@ -7,7 +7,7 @@ public class DecoderAv1Qsv : DecoderBase
     public override string Name => "av1_qsv";
 
     protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
-    
+
     public override FrameState NextState(FrameState currentState)
     {
         FrameState nextState = base.NextState(currentState);

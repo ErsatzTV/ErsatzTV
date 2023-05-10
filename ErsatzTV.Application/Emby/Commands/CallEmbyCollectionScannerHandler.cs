@@ -22,6 +22,23 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
     {
     }
 
+    public async Task<Either<BaseError, Unit>>
+        Handle(SynchronizeEmbyCollections request, CancellationToken cancellationToken)
+    {
+        Validation<BaseError, string> validation = await Validate(request);
+        return await validation.Match(
+            scanner => PerformScan(scanner, request, cancellationToken),
+            error =>
+            {
+                foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
+                {
+                    return Task.FromResult<Either<BaseError, Unit>>(scanIsNotRequired);
+                }
+
+                return Task.FromResult<Either<BaseError, Unit>>(error.Join());
+            });
+    }
+
     protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, SynchronizeEmbyCollections request)
     {
         DateTime minDateTime = await dbContext.EmbyMediaSources
@@ -42,26 +59,9 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
         }
 
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
-        return request.ForceScan || (libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now);
+        return request.ForceScan || libraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now;
     }
 
-    public async Task<Either<BaseError, Unit>>
-        Handle(SynchronizeEmbyCollections request, CancellationToken cancellationToken)
-    {
-        Validation<BaseError, string> validation = await Validate(request);
-        return await validation.Match(
-            scanner => PerformScan(scanner, request, cancellationToken),
-            error =>
-            {
-                foreach (ScanIsNotRequired scanIsNotRequired in error.OfType<ScanIsNotRequired>())
-                {
-                    return Task.FromResult<Either<BaseError, Unit>>(scanIsNotRequired);
-                }
-
-                return Task.FromResult<Either<BaseError, Unit>>(error.Join());
-            });
-    }
-    
     private async Task<Either<BaseError, Unit>> PerformScan(
         string scanner,
         SynchronizeEmbyCollections request,

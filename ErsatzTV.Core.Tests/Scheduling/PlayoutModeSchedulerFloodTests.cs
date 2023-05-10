@@ -11,13 +11,10 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 [TestFixture]
 public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 {
-    private CancellationToken _cancellationToken;
-    
     [SetUp]
-    public void SetUp()
-    {
-        _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
-    }
+    public void SetUp() => _cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token;
+
+    private CancellationToken _cancellationToken;
 
     [Test]
     public void Should_Fill_Exactly_To_Next_Schedule_Item()
@@ -94,7 +91,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].CustomTitle.Should().Be("CustomTitle");
     }
-    
+
     [Test]
     public void Should_Schedule_Single_Item_Fixed_Start_Flood()
     {
@@ -174,13 +171,13 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[3].GuideGroup.Should().Be(1);
         playoutItems[3].FillerKind.Should().Be(FillerKind.None);
         playoutItems[3].CustomTitle.Should().Be("CustomTitle");
-    
+
         playoutItems[4].MediaItemId.Should().Be(1);
         playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.AddHours(4));
         playoutItems[4].GuideGroup.Should().Be(1);
         playoutItems[4].FillerKind.Should().Be(FillerKind.None);
         playoutItems[4].CustomTitle.Should().Be("CustomTitle");
-    
+
         playoutItems[5].MediaItemId.Should().Be(2);
         playoutItems[5].StartOffset.Should().Be(startState.CurrentTime.AddHours(5));
         playoutItems[5].GuideGroup.Should().Be(1);
@@ -840,7 +837,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[6].GuideGroup.Should().Be(3);
         playoutItems[6].FillerKind.Should().Be(FillerKind.Fallback);
     }
-    
+
     [Test]
     public void Should_Not_Schedule_Fallback_Filler_Incomplete_Flood()
     {
@@ -885,7 +882,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
-        
+
         // hard stop at 2, an hour before the "next schedule item" at 3
         DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
 
@@ -946,7 +943,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         playoutItems[5].GuideGroup.Should().Be(6);
         playoutItems[5].FillerKind.Should().Be(FillerKind.None);
     }
-    
+
     [Test]
     public void Should_Not_Schedule_Tail_Filler_Incomplete_Flood()
     {
@@ -991,7 +988,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
-        
+
         // hard stop at 2, an hour before the "next schedule item" at 3
         DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
 

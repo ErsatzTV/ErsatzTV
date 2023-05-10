@@ -6,8 +6,8 @@ namespace ErsatzTV.Core.Iptv;
 
 public class ChannelGuide
 {
-    private readonly string _channelsFragment;
     private readonly Dictionary<string, string> _channelDataFragments;
+    private readonly string _channelsFragment;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
     public ChannelGuide(
@@ -28,7 +28,7 @@ public class ChannelGuide
 
         xml.WriteStartElement("tv");
         xml.WriteAttributeString("generator-info-name", "ersatztv");
-        
+
         xml.WriteRaw(_channelsFragment);
 
         foreach ((string channelNumber, string channelDataFragment) in _channelDataFragments.OrderBy(

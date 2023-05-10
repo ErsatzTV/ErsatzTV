@@ -465,7 +465,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                 break;
         }
-        
+
         // attempt to remotely stream jellyfin
         Option<string> jellyfinItemId = playoutItem.MediaItem switch
         {
@@ -480,7 +480,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItem,
                 $"http://localhost:{Settings.ListenPort}/media/jellyfin/{itemId}");
         }
-        
+
         // attempt to remotely stream emby
         Option<string> embyItemId = playoutItem.MediaItem switch
         {

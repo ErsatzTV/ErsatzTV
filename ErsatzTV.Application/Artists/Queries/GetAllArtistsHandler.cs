@@ -10,10 +10,7 @@ public class GetAllArtistsHandler : IRequestHandler<GetAllArtists, List<NamedMed
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetAllArtistsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public GetAllArtistsHandler(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<List<NamedMediaItemViewModel>> Handle(
         GetAllArtists request,
@@ -24,8 +21,8 @@ public class GetAllArtistsHandler : IRequestHandler<GetAllArtists, List<NamedMed
         List<Artist> allArtists = await dbContext.Artists
             .AsNoTracking()
             .Include(a => a.ArtistMetadata)
-            .ToListAsync(cancellationToken: cancellationToken);
-            
+            .ToListAsync(cancellationToken);
+
         return allArtists.Bind(a => ProjectArtist(a)).ToList();
     }
 

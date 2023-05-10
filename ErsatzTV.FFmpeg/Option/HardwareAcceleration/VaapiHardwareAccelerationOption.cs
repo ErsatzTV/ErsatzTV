@@ -4,8 +4,8 @@ namespace ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 
 public class VaapiHardwareAccelerationOption : GlobalOption
 {
-    private readonly string _vaapiDevice;
     private readonly FFmpegCapability _decodeCapability;
+    private readonly string _vaapiDevice;
 
     public VaapiHardwareAccelerationOption(string vaapiDevice, FFmpegCapability decodeCapability)
     {

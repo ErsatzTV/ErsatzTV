@@ -39,16 +39,14 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         string ffmpegPath,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<string> vaapiDriver,
-        Option<string> vaapiDevice)
-    {
-        return hardwareAccelerationMode switch
+        Option<string> vaapiDevice) =>
+        hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
-    }
 
     public async Task<string> GetNvidiaOutput(string ffmpegPath)
     {
@@ -69,7 +67,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         string output = string.IsNullOrWhiteSpace(result.StandardOutput)
             ? result.StandardError
             : result.StandardOutput;
-        
+
         return output;
     }
 
@@ -108,7 +106,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         {
             return cachedDecoders;
         }
-        
+
         string[] arguments = { "-hide_banner", $"-{capabilities}" };
 
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
@@ -165,7 +163,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 _logger.LogWarning("Unable to determine VAAPI capabilities; please install vainfo");
                 return new DefaultHardwareCapabilities();
             }
-            
+
             profileEntrypoints = new List<VaapiProfileEntrypoint>();
 
             foreach (string line in string.Join("", output).Split("\n"))

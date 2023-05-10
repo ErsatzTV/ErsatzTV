@@ -14,10 +14,10 @@ namespace ErsatzTV.Application.Channels;
 
 public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 {
-    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RefreshChannelDataHandler> _logger;
+    private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
     public RefreshChannelDataHandler(
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
@@ -359,7 +359,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         File.Move(tempFile, targetFile, true);
     }
-    
+
     private static string GetArtworkUrl(Artwork artwork, ArtworkKind artworkKind)
     {
         string artworkPath = artwork.Path;
@@ -456,7 +456,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             _ => string.Empty
         };
     }
-    
+
     private Option<ContentRating> GetContentRating(PlayoutItem playoutItem)
     {
         try
@@ -478,7 +478,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             return None;
         }
     }
-    
+
     private static Option<ContentRating> ParseContentRating(string contentRating, string system)
     {
         Option<string> maybeFirst = (contentRating ?? string.Empty).Split('/').HeadOrNone();
@@ -499,8 +499,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             }).Flatten();
     }
 
-    private record ContentRating(Option<string> System, string Value);
-    
     private string GetPrioritizedArtworkPath(Metadata metadata)
     {
         Option<string> maybeArtwork = Optional(metadata.Artwork).Flatten()
@@ -518,4 +516,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return maybeArtwork.IfNone(string.Empty);
     }
+
+    private record ContentRating(Option<string> System, string Value);
 }

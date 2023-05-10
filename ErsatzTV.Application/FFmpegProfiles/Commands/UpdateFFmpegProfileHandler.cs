@@ -20,7 +20,7 @@ public class
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
+        return await LanguageExtensions.Apply(validation, p => ApplyUpdateRequest(dbContext, p, request));
     }
 
     private async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(
@@ -36,12 +36,12 @@ public class
         p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;
         p.ResolutionId = update.ResolutionId;
         p.VideoFormat = update.VideoFormat;
-        
+
         // mpeg2video only supports 8-bit content
         p.BitDepth = update.VideoFormat == FFmpegProfileVideoFormat.Mpeg2Video
             ? FFmpegProfileBitDepth.EightBit
             : update.BitDepth;
-        
+
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.AudioFormat = update.AudioFormat;

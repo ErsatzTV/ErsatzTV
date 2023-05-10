@@ -7,7 +7,8 @@ public class FFmpegPngService : IFFmpegPngService
 {
     public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
     {
-        string[] arguments = {
+        string[] arguments =
+        {
             "-threads", "1",
             "-nostdin",
             "-hide_banner", "-loglevel", "error", "-nostats",
@@ -23,7 +24,8 @@ public class FFmpegPngService : IFFmpegPngService
 
     public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile)
     {
-        string[] arguments = {
+        string[] arguments =
+        {
             "-threads", "1",
             "-nostdin",
             "-hide_banner", "-loglevel", "error", "-nostats",

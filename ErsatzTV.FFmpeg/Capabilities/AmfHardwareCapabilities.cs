@@ -9,7 +9,10 @@ public class AmfHardwareCapabilities : IHardwareCapabilities
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat) => FFmpegCapability.Software;
 
-    public FFmpegCapability CanEncode(string videoFormat, Option<string> videoProfile, Option<IPixelFormat> maybePixelFormat)
+    public FFmpegCapability CanEncode(
+        string videoFormat,
+        Option<string> videoProfile,
+        Option<IPixelFormat> maybePixelFormat)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
