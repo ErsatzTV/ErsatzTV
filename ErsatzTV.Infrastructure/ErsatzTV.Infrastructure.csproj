@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="Blurhash.ImageSharp" Version="3.0.0" />
-      <PackageReference Include="CliWrap" Version="3.6.1" />
+      <PackageReference Include="CliWrap" Version="3.6.3" />
       <PackageReference Include="Dapper" Version="2.0.123" />
       <PackageReference Include="Jint" Version="3.0.0-beta-2049" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
@@ -21,7 +21,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.5.22">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.6.40">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
