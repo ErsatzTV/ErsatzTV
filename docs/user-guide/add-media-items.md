@@ -57,9 +57,9 @@ In the libraries listing, click the `Synchronize` switch for all libraries you w
 
 ![Plex Libraries Synchronize Switch](../images/plex-libraries-synchronize-switch.png)
 
-### Path Replacements
+### Streaming From Disk
 
-Media items are not streamed from Plex media sources. Instead, ErsatzTV will attempt to play media items from disk using the same path that Plex uses to play the media item.
+Media items are streamed from Plex media sources by default. Instead, if you would like to stream from disk, ErsatzTV will check for media items using the same path that Plex uses to play the media item.
 There are two ways to make this work:
 
 1. Ensure ErsatzTV has access to exactly the same shares and mounts as Plex
@@ -118,9 +118,9 @@ In the libraries listing, click the `Synchronize` switch for all libraries you w
 
 ![Jellyfin Libraries Synchronize Switch](../images/jellyfin-libraries-synchronize-switch.png)
 
-### Path Replacements
+### Streaming From Disk
 
-Media items are not streamed from Jellyfin media sources. Instead, ErsatzTV will attempt to play media items from disk using the same path that Jellyfin uses to play the media item.
+Media items are streamed from Jellyfin media sources by default. Instead, if you would like to stream from disk, ErsatzTV will check for media items using the same path that Jellyfin uses to play the media item.
 There are two ways to make this work:
 
 1. Ensure ErsatzTV has access to exactly the same shares and mounts as Jellyfin
@@ -179,9 +179,9 @@ In the libraries listing, click the `Synchronize` switch for all libraries you w
 
 ![Emby Libraries Synchronize Switch](../images/emby-libraries-synchronize-switch.png)
 
-### Path Replacements
+### Streaming From Disk
 
-Media items are not streamed from Emby media sources. Instead, ErsatzTV will attempt to play media items from disk using the same path that Emby uses to play the media item.
+Media items are streamed from Emby media sources by default. Instead, if you would like to stream from disk, ErsatzTV will check for media items using the same path that Emby uses to play the media item.
 There are two ways to make this work:
 
 1. Ensure ErsatzTV has access to exactly the same shares and mounts as Emby

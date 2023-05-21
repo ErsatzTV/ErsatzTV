@@ -44,7 +44,7 @@ docker run -d \
   -e TZ=America/Chicago \
   -p 8409:8409 \
   -v /path/to/config:/root/.local/share/ersatztv \
-  -v /path/to/shared/media:/path/to/shared/media:ro \
+  -v /path/to/local/media:/path/to/local/media:ro \
   --restart unless-stopped \
   jasongdove/ersatztv
 ```
