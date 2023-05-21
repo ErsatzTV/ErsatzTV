@@ -9,7 +9,7 @@ ErsatzTV does not schedule individual media items; only collections of items can
 ### Collections
 
 Collections are created manually by adding individual media items to it. There is no restriction on media type. A collection can contain a single media type, eg. movies or any combination of media types.
-The items to be added can be found by browsing your libraries or by using ErsatzTV's powerful Search feature. An empty collection can be created under `Lists` > `Collections` > `Add Collection`.
+The items to be added can be found by browsing your libraries or by using ErsatzTV's powerful [Search](../search) feature. An empty collection can be created under `Lists` > `Collections` > `Add Collection`.
 
 To create a collection, find the media items you would like to include and select them by clicking the selection button in the top left of the poster:
 

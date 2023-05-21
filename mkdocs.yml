@@ -16,6 +16,7 @@ theme:
   name: material
   palette:
     scheme: slate
+    primary: custom
   logo: images/ersatztv-square-logo.png
   favicon: images/favicon-32x32.png
   features:
@@ -37,6 +38,4 @@ extra:
     - icon: fontawesome/brands/paypal
       link: https://www.paypal.me/jasongdove
       name: Donate on PayPal
-google_analytics:
-  - UA-193031642-1
-  - auto
+

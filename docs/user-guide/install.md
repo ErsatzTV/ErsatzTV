@@ -1,4 +1,4 @@
-﻿ErsatzTV is available as Docker images and as pre-built binary packages for Windows, MacOS and Linux. 
+﻿ErsatzTV is available as Docker images and as pre-built binary packages for Windows (x64), MacOS (x64, arm64) and Linux (x64, arm64, arm). 
 
 ## Docker Images
 
@@ -10,7 +10,7 @@ Base (software transcoding): `jasongdove/ersatztv:latest`
 
 Nvidia hardware-accelerated transcoding: `jasongdove/ersatztv:latest-nvidia`
 
-VAAPI hardware-accelerated transcoding: `jasongdove/ersatztv:latest-vaapi`
+VAAPI (Intel, AMD) hardware-accelerated transcoding: `jasongdove/ersatztv:latest-vaapi`
 
 ### Development Tags
 
@@ -20,7 +20,7 @@ Base (software transcoding): `jasongdove/ersatztv:develop`
 
 Nvidia hardware-accelerated transcoding: `jasongdove/ersatztv:develop-nvidia`
 
-VAAPI hardware-accelerated transcoding: `jasongdove/ersatztv:develop-vaapi`
+VAAPI (Intel, AMD) hardware-accelerated transcoding: `jasongdove/ersatztv:develop-vaapi`
 
 ### Docker
 
@@ -44,7 +44,7 @@ docker run -d \
   -e TZ=America/Chicago \
   -p 8409:8409 \
   -v /path/to/config:/root/.local/share/ersatztv \
-  -v /path/to/shared/media:/path/to/shared/media:ro \
+  -v /path/to/local/media:/path/to/local/media:ro \
   --restart unless-stopped \
   jasongdove/ersatztv
 ```
