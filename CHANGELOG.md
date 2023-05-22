@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Synchronize actor metadata from Jellyfin and Emby television libraries
+  - New libraries will get actor data automatically; existing libraries can deep scan to retrieve actor data
+
 ### Fixed
 - Fix extracting embedded text subtitles that had been incompletely extracted in the past 
 - Fix fallback filler looping by forcing software mode for this content

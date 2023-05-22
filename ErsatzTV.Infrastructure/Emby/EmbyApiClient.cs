@@ -744,7 +744,7 @@ public class EmbyApiClient : IEmbyApiClient
             Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
             Tags = Optional(item.TagItems).Flatten().Map(t => new Tag { Name = t.Name }).ToList(),
             Studios = new List<Studio>(),
-            Actors = new List<Actor>(),
+            Actors = Optional(item.People).Flatten().Collect(r => ProjectToActor(r, dateAdded)).ToList(),
             Artwork = new List<Artwork>(),
             Guids = GuidsFromProviderIds(item.ProviderIds),
             Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
