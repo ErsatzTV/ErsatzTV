@@ -45,7 +45,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
             VideoFormat.Vp9 => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
 
             // no hardware decoding of 10-bit h264
-            VideoFormat.H264 when bitDepth == 10 => false,
+            VideoFormat.H264 => bitDepth < 10,
 
             VideoFormat.Mpeg2Video => true,
 

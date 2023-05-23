@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Synchronize actor metadata from Jellyfin and Emby television libraries
-  - New libraries will get actor data automatically; existing libraries can deep scan to retrieve actor data
+  - New libraries and new episodes will get actor data automatically
+  - Existing libraries can deep scan (one time) to retrieve actor data for existing episodes
 
 ### Fixed
 - Fix extracting embedded text subtitles that had been incompletely extracted in the past 
@@ -16,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playout building when shuffle in order is used with a single media item
 - Fix pgs subtitle burn in from media server libraries
 - Fix subtitle and watermark overlays with RadeonSI VAAPI driver
+- Fix NVIDIA pipeline to use hardware-accelerated decoder with 8-bit h264 content   
 
 ### Changed
 - Timeout playout builds after 2 minutes; this should prevent playout bugs from blocking other functionality
