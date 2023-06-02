@@ -237,11 +237,18 @@ public class ComplexFilter : IPipelineStep
 
         foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(s => s.Copy))
         {
-            int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
-            foreach ((int index, _, _) in subtitleInputFile.Streams)
+            if (subtitleInputFile.Streams.Any())
             {
-                subtitleLabel = $"{inputIndex}:{index}";
-                result.AddRange(new[] { "-map", subtitleLabel });
+                int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
+                foreach ((int index, _, _) in subtitleInputFile.Streams)
+                {
+                    subtitleLabel = $"{inputIndex}:{index}";
+                    result.AddRange(new[] { "-map", subtitleLabel });
+                }
+            }
+            else
+            {
+                result.AddRange(new[] { "-map", "0:s" });
             }
         }
 

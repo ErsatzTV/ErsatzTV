@@ -91,9 +91,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsRealtime,
             targetFramerate);
 
+        var allSubtitles = await getSubtitles(playbackSettings);
+        
         Option<Subtitle> maybeSubtitle =
             await _ffmpegStreamSelector.SelectSubtitleStream(
-                await getSubtitles(playbackSettings),
+                allSubtitles,
                 channel,
                 preferredSubtitleLanguage,
                 subtitleMode);
@@ -216,11 +218,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new SubtitleInputFile(
                     path,
                     new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                    false);
-
-                // TODO: figure out HLS direct
-                // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
+                    channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
             }).Flatten();
+
+        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect && allSubtitles.Any() && maybeSubtitle.IsNone)
+        {
+            subtitleInputFile = new SubtitleInputFile(
+                string.Empty,
+                new List<ErsatzTV.FFmpeg.MediaStream>(),
+                true);
+        }
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
 
