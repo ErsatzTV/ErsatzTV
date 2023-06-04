@@ -220,10 +220,20 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 {
                     method = subtitle.Codec switch
                     {
-                        // TS only supports dvb subtitles
-                        "dvbsub" => SubtitleMethod.Copy,
-                        _ => SubtitleMethod.Convert
+                        // MP4 supports vobsub
+                        "dvdsub" or "dvd_subtitle" or "vobsub" => SubtitleMethod.Copy,
+
+                        // MP4 does not support PGS
+                        "pgs" or "pgssub" or "hdmv_pgs_subtitle" => SubtitleMethod.None,
+
+                        // ignore text subtitles for now
+                        _ => SubtitleMethod.None
                     };
+
+                    if (method == SubtitleMethod.None)
+                    {
+                        return None;
+                    }
                 }
 
                 return new SubtitleInputFile(

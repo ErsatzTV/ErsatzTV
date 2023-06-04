@@ -400,7 +400,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             {
                 if (subtitleInputFile.IsImageBased)
                 {
-                    pipelineSteps.Add(new EncoderDvbSubtitle());
+                    pipelineSteps.Add(new EncoderDvdSubtitle());
                 }
             }
         }
