@@ -91,9 +91,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsRealtime,
             targetFramerate);
 
+        var allSubtitles = await getSubtitles(playbackSettings);
+        
         Option<Subtitle> maybeSubtitle =
             await _ffmpegStreamSelector.SelectSubtitleStream(
-                await getSubtitles(playbackSettings),
+                allSubtitles,
                 channel,
                 preferredSubtitleLanguage,
                 subtitleMode);
@@ -213,13 +215,31 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
                 };
 
+                SubtitleMethod method = SubtitleMethod.Burn;
+                if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
+                {
+                    method = subtitle.Codec switch
+                    {
+                        // MP4 supports vobsub
+                        "dvdsub" or "dvd_subtitle" or "vobsub" => SubtitleMethod.Copy,
+
+                        // MP4 does not support PGS
+                        "pgs" or "pgssub" or "hdmv_pgs_subtitle" => SubtitleMethod.None,
+
+                        // ignore text subtitles for now
+                        _ => SubtitleMethod.None
+                    };
+
+                    if (method == SubtitleMethod.None)
+                    {
+                        return None;
+                    }
+                }
+
                 return new SubtitleInputFile(
                     path,
                     new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                    false);
-
-                // TODO: figure out HLS direct
-                // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
+                    method);
             }).Flatten();
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
@@ -228,9 +248,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
-        OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
-            ? OutputFormatKind.Hls
-            : OutputFormatKind.MpegTs;
+        OutputFormatKind outputFormat = channel.StreamingMode switch
+        {
+            StreamingMode.HttpLiveStreamingSegmenter => OutputFormatKind.Hls,
+            StreamingMode.HttpLiveStreamingDirect => OutputFormatKind.Mp4,
+            _ => OutputFormatKind.MpegTs
+        };
 
         Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
@@ -415,7 +438,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var subtitleInputFile = new SubtitleInputFile(
             subtitleFile,
             new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-            false);
+            SubtitleMethod.Burn);
 
         _logger.LogDebug("FFmpeg desired error state {FrameState}", desiredState);
 

@@ -141,6 +141,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
+        OutputOption outputOption = new FastStartOutputOption();
+        if (ffmpegState.OutputFormat == OutputFormatKind.Mp4)
+        {
+            outputOption = new Mp4OutputOptions();
+        }
+        
         var pipelineSteps = new List<IPipelineStep>
         {
             new NoStandardInputOption(),
@@ -149,7 +155,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
-            new FastStartOutputOption(),
+            outputOption,
             new ClosedGopOutputOption()
         };
 
@@ -163,8 +169,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         var context = new PipelineContext(
             _hardwareAccelerationMode,
             _watermarkInputFile.IsSome,
-            _subtitleInputFile.Map(s => s is { IsImageBased: true, Copy: false }).IfNone(false),
-            _subtitleInputFile.Map(s => s is { IsImageBased: false }).IfNone(false),
+            _subtitleInputFile.Map(s => s is { IsImageBased: true, Method: SubtitleMethod.Burn }).IfNone(false),
+            _subtitleInputFile.Map(s => s is { IsImageBased: false, Method: SubtitleMethod.Burn }).IfNone(false),
             desiredState.Deinterlaced,
             desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10);
 
@@ -242,6 +248,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             case OutputFormatKind.MpegTs:
                 pipelineSteps.Add(new OutputFormatMpegTs());
+                pipelineSteps.Add(new PipeProtocol());
+                break;
+            case OutputFormatKind.Mp4:
+                pipelineSteps.Add(new OutputFormatMp4());
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Hls:
@@ -380,9 +390,19 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        if (_subtitleInputFile.Map(s => s.Copy) == Some(true))
+        foreach (SubtitleInputFile subtitleInputFile in _subtitleInputFile)
         {
-            pipelineSteps.Add(new EncoderCopySubtitle());
+            if (subtitleInputFile.Method == SubtitleMethod.Copy)
+            {
+                pipelineSteps.Add(new EncoderCopySubtitle());
+            }
+            else if (subtitleInputFile.Method == SubtitleMethod.Convert)
+            {
+                if (subtitleInputFile.IsImageBased)
+                {
+                    pipelineSteps.Add(new EncoderDvdSubtitle());
+                }
+            }
         }
 
         ffmpegState = SetAccelState(videoStream, ffmpegState, desiredState, context, pipelineSteps);

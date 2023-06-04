@@ -4,5 +4,6 @@ public enum OutputFormatKind
 {
     None,
     MpegTs,
+    Mp4,
     Hls
 }
