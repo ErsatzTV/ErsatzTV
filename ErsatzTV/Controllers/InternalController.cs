@@ -73,8 +73,14 @@ public class InternalController : ControllerBase
                                 process.StartInfo.Environment[key] = value;
                             }
 
+                            var contentType = "video/mp2t";
+                            if (mode.ToLowerInvariant() == "hls-direct")
+                            {
+                                contentType = "video/mp4";
+                            }
+                            
                             process.Start();
-                            return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
+                            return new FileStreamResult(process.StandardOutput.BaseStream, contentType);
                         },
                         error =>
                         {

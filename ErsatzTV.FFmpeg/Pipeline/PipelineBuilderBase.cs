@@ -141,6 +141,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
+        OutputOption outputOption = new FastStartOutputOption();
+        if (ffmpegState.OutputFormat == OutputFormatKind.Mp4)
+        {
+            outputOption = new Mp4OutputOptions();
+        }
+        
         var pipelineSteps = new List<IPipelineStep>
         {
             new NoStandardInputOption(),
@@ -149,7 +155,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
-            new FastStartOutputOption(),
+            outputOption,
             new ClosedGopOutputOption()
         };
 
@@ -242,6 +248,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             case OutputFormatKind.MpegTs:
                 pipelineSteps.Add(new OutputFormatMpegTs());
+                pipelineSteps.Add(new PipeProtocol());
+                break;
+            case OutputFormatKind.Mp4:
+                pipelineSteps.Add(new OutputFormatMp4());
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Hls:

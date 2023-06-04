@@ -241,6 +241,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         OutputFormatKind outputFormat = channel.StreamingMode switch
         {
             StreamingMode.HttpLiveStreamingSegmenter => OutputFormatKind.Hls,
+            StreamingMode.HttpLiveStreamingDirect => OutputFormatKind.Mp4,
             _ => OutputFormatKind.MpegTs
         };
 
