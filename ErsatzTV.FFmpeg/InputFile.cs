@@ -76,7 +76,7 @@ public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : Inp
 public record WatermarkInputFile
     (string Path, IList<VideoStream> VideoStreams, WatermarkState DesiredState) : VideoInputFile(Path, VideoStreams);
 
-public record SubtitleInputFile(string Path, IList<MediaStream> SubtitleStreams, bool Copy) : InputFile(
+public record SubtitleInputFile(string Path, IList<MediaStream> SubtitleStreams, SubtitleMethod Method) : InputFile(
     Path,
     SubtitleStreams)
 {

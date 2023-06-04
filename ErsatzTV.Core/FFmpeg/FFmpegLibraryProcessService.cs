@@ -215,19 +215,22 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
                 };
 
+                SubtitleMethod method = SubtitleMethod.Burn;
+                if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
+                {
+                    method = subtitle.Codec switch
+                    {
+                        // TS only supports dvb subtitles
+                        "dvbsub" => SubtitleMethod.Copy,
+                        _ => SubtitleMethod.Convert
+                    };
+                }
+
                 return new SubtitleInputFile(
                     path,
                     new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                    channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
+                    method);
             }).Flatten();
-
-        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect && allSubtitles.Any() && maybeSubtitle.IsNone)
-        {
-            subtitleInputFile = new SubtitleInputFile(
-                string.Empty,
-                new List<ErsatzTV.FFmpeg.MediaStream>(),
-                true);
-        }
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
 
@@ -235,9 +238,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
-        OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
-            ? OutputFormatKind.Hls
-            : OutputFormatKind.MpegTs;
+        OutputFormatKind outputFormat = channel.StreamingMode switch
+        {
+            StreamingMode.HttpLiveStreamingSegmenter => OutputFormatKind.Hls,
+            _ => OutputFormatKind.MpegTs
+        };
 
         Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
@@ -422,7 +427,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var subtitleInputFile = new SubtitleInputFile(
             subtitleFile,
             new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-            false);
+            SubtitleMethod.Burn);
 
         _logger.LogDebug("FFmpeg desired error state {FrameState}", desiredState);
 

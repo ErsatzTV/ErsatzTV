@@ -138,15 +138,6 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             return None;
         }
 
-        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
-            string.IsNullOrWhiteSpace(preferredSubtitleLanguage))
-        {
-            // _logger.LogDebug(
-            //     "Channel {Number} is HLS Direct with no preferred subtitle language; using all subtitle streams",
-            //     channel.Number);
-            return None;
-        }
-
         string language = (preferredSubtitleLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {

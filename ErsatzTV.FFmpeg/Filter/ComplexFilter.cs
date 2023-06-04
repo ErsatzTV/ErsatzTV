@@ -138,7 +138,8 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
-        foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(s => !s.Copy))
+        foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(
+                     s => s.Method == SubtitleMethod.Burn))
         {
             int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
             foreach ((int index, _, _) in subtitleInputFile.Streams)
@@ -235,7 +236,9 @@ public class ComplexFilter : IPipelineStep
 
         result.AddRange(new[] { "-map", audioLabel, "-map", videoLabel });
 
-        foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(s => s.Copy))
+        foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(
+                     s => s.Method == SubtitleMethod.Copy ||
+                          s is { IsImageBased: true, Method: SubtitleMethod.Convert })) // TODO: support converting text subtitles?
         {
             if (subtitleInputFile.Streams.Any())
             {
@@ -245,10 +248,6 @@ public class ComplexFilter : IPipelineStep
                     subtitleLabel = $"{inputIndex}:{index}";
                     result.AddRange(new[] { "-map", subtitleLabel });
                 }
-            }
-            else
-            {
-                result.AddRange(new[] { "-map", "0:s" });
             }
         }
 

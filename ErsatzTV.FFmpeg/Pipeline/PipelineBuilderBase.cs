@@ -163,8 +163,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         var context = new PipelineContext(
             _hardwareAccelerationMode,
             _watermarkInputFile.IsSome,
-            _subtitleInputFile.Map(s => s is { IsImageBased: true, Copy: false }).IfNone(false),
-            _subtitleInputFile.Map(s => s is { IsImageBased: false }).IfNone(false),
+            _subtitleInputFile.Map(s => s is { IsImageBased: true, Method: SubtitleMethod.Burn }).IfNone(false),
+            _subtitleInputFile.Map(s => s is { IsImageBased: false, Method: SubtitleMethod.Burn }).IfNone(false),
             desiredState.Deinterlaced,
             desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10);
 
@@ -380,9 +380,19 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps)
     {
-        if (_subtitleInputFile.Map(s => s.Copy) == Some(true))
+        foreach (SubtitleInputFile subtitleInputFile in _subtitleInputFile)
         {
-            pipelineSteps.Add(new EncoderCopySubtitle());
+            if (subtitleInputFile.Method == SubtitleMethod.Copy)
+            {
+                pipelineSteps.Add(new EncoderCopySubtitle());
+            }
+            else if (subtitleInputFile.Method == SubtitleMethod.Convert)
+            {
+                if (subtitleInputFile.IsImageBased)
+                {
+                    pipelineSteps.Add(new EncoderDvbSubtitle());
+                }
+            }
         }
 
         ffmpegState = SetAccelState(videoStream, ffmpegState, desiredState, context, pipelineSteps);
