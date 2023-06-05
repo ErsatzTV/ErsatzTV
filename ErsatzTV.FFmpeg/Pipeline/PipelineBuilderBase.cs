@@ -246,6 +246,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         switch (ffmpegState.OutputFormat)
         {
+            case OutputFormatKind.Mkv:
+                pipelineSteps.Add(new OutputFormatMkv());
+                pipelineSteps.Add(new PipeProtocol());
+                break;
             case OutputFormatKind.MpegTs:
                 pipelineSteps.Add(new OutputFormatMpegTs());
                 pipelineSteps.Add(new PipeProtocol());

@@ -194,6 +194,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
+        OutputFormatKind outputFormat = channel.StreamingMode switch
+        {
+            StreamingMode.HttpLiveStreamingSegmenter => OutputFormatKind.Hls,
+            StreamingMode.HttpLiveStreamingDirect => OutputFormatKind.Mkv,
+            _ => OutputFormatKind.MpegTs
+        };
+
         Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
             subtitle =>
             {
@@ -220,11 +227,17 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 {
                     method = subtitle.Codec switch
                     {
+                        // mkv supports all subtitle codecs, maybe?
+                        _ when outputFormat is OutputFormatKind.Mkv && subtitle.SubtitleKind is SubtitleKind.Embedded =>
+                            SubtitleMethod.Copy,
+
                         // MP4 supports vobsub
-                        "dvdsub" or "dvd_subtitle" or "vobsub" => SubtitleMethod.Copy,
+                        "dvdsub" or "dvd_subtitle" or "vobsub" when outputFormat is OutputFormatKind.Mp4 =>
+                            SubtitleMethod.Copy,
 
                         // MP4 does not support PGS
-                        "pgs" or "pgssub" or "hdmv_pgs_subtitle" => SubtitleMethod.None,
+                        "pgs" or "pgssub" or "hdmv_pgs_subtitle" when outputFormat is OutputFormatKind.Mp4 =>
+                            SubtitleMethod.None,
 
                         // ignore text subtitles for now
                         _ => SubtitleMethod.None
@@ -233,6 +246,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     if (method == SubtitleMethod.None)
                     {
                         return None;
+                    }
+
+                    if (subtitle.SubtitleKind == SubtitleKind.Embedded)
+                    {
+                        path = videoPath;
+                        ffmpegSubtitleStream = ffmpegSubtitleStream with { Index = subtitle.StreamIndex };
                     }
                 }
 
@@ -247,13 +266,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string videoFormat = GetVideoFormat(playbackSettings);
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
-
-        OutputFormatKind outputFormat = channel.StreamingMode switch
-        {
-            StreamingMode.HttpLiveStreamingSegmenter => OutputFormatKind.Hls,
-            StreamingMode.HttpLiveStreamingDirect => OutputFormatKind.Mp4,
-            _ => OutputFormatKind.MpegTs
-        };
 
         Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
