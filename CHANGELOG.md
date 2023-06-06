@@ -8,7 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Synchronize actor metadata from Jellyfin and Emby television libraries
   - New libraries and new episodes will get actor data automatically
   - Existing libraries can deep scan (one time) to retrieve actor data for existing episodes
-- `HLS Direct` streaming mode: stream copy dvd subtitles 
+- `HLS Direct` streaming mode
+    - Use `MP4` container/output format by default, with new global option to use `MKV` container/output format
+    - `MP4` output format: stream copy dvd subtitles
+    - `MKV` output format: stream copy all embedded subtitles
 
 ### Fixed
 - Fix extracting embedded text subtitles that had been incompletely extracted in the past 
@@ -22,7 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Timeout playout builds after 2 minutes; this should prevent playout bugs from blocking other functionality
-- `HLS Direct` streaming mode: Use MP4 container instead MPEG-TS container to improve codec compatibility (e.g. FLAC audio)
 
 ## [0.7.8-beta] - 2023-04-29
 ### Added
