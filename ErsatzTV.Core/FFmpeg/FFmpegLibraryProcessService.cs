@@ -198,9 +198,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
-        // load hls direct format from settings
-
-
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter)
         {
