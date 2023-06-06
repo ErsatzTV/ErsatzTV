@@ -21,6 +21,7 @@ using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
+using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
@@ -250,6 +251,7 @@ public class TranscodingTests
                     MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
+            new Mock<ConfigElementRepository>().Object,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache.Object, service);
@@ -869,6 +871,7 @@ public class TranscodingTests
                     MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
+            new Mock<ConfigElementRepository>().Object,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;

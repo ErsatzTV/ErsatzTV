@@ -204,6 +204,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetMetadataServiceProvider(ffmpegState, pipelineSteps);
         SetMetadataServiceName(ffmpegState, pipelineSteps);
         SetMetadataAudioLanguage(ffmpegState, pipelineSteps);
+        SetMetadataSubtitle(ffmpegState, pipelineSteps);
         SetOutputFormat(ffmpegState, desiredState, pipelineSteps, videoStream);
 
         var complexFilter = new ComplexFilter(
@@ -246,6 +247,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         switch (ffmpegState.OutputFormat)
         {
+            case OutputFormatKind.Mkv:
+                pipelineSteps.Add(new OutputFormatMkv());
+                pipelineSteps.Add(new PipeProtocol());
+                break;
             case OutputFormatKind.MpegTs:
                 pipelineSteps.Add(new OutputFormatMpegTs());
                 pipelineSteps.Add(new PipeProtocol());
@@ -277,6 +282,19 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         foreach (string desiredAudioLanguage in ffmpegState.MetadataAudioLanguage)
         {
             pipelineSteps.Add(new MetadataAudioLanguageOutputOption(desiredAudioLanguage));
+        }
+    }
+
+    private static void SetMetadataSubtitle(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
+    {
+        foreach (string desiredSubtitleLanguage in ffmpegState.MetadataSubtitleLanguage)
+        {
+            pipelineSteps.Add(new MetadataSubtitleLanguageOutputOption(desiredSubtitleLanguage));
+        }
+
+        foreach (string desiredSubtitleTitle in ffmpegState.MetadataSubtitleTitle)
+        {
+            pipelineSteps.Add(new MetadataSubtitleTitleOutputOption(desiredSubtitleTitle));
         }
     }
 

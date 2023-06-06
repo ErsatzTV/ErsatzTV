@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
@@ -19,6 +20,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
 
@@ -28,6 +30,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IFFmpegStreamSelector ffmpegStreamSelector,
         ITempFilePool tempFilePool,
         IPipelineBuilderFactory pipelineBuilderFactory,
+        IConfigElementRepository configElementRepository,
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
@@ -35,6 +38,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _tempFilePool = tempFilePool;
         _pipelineBuilderFactory = pipelineBuilderFactory;
+        _configElementRepository = configElementRepository;
         _logger = logger;
     }
 
@@ -194,6 +198,28 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
+        OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
+        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter)
+        {
+            outputFormat = OutputFormatKind.Hls;
+        }
+        else if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
+        {
+            // use mp4 by default
+            outputFormat = OutputFormatKind.Mp4;
+            
+            // override with setting if applicable
+            Option<OutputFormatKind> maybeOutputFormat = await _configElementRepository
+                .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
+            foreach (OutputFormatKind of in maybeOutputFormat)
+            {
+                outputFormat = of;
+            }
+        }
+
+        Option<string> subtitleLanguage = Option<string>.None;
+        Option<string> subtitleTitle = Option<string>.None;
+
         Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
             subtitle =>
             {
@@ -218,13 +244,18 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 SubtitleMethod method = SubtitleMethod.Burn;
                 if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
                 {
-                    method = subtitle.Codec switch
+                    method = (outputFormat, subtitle.SubtitleKind, subtitle.Codec) switch
                     {
+                        // mkv supports all subtitle codecs, maybe?
+                        (OutputFormatKind.Mkv, SubtitleKind.Embedded, _) => SubtitleMethod.Copy,
+
                         // MP4 supports vobsub
-                        "dvdsub" or "dvd_subtitle" or "vobsub" => SubtitleMethod.Copy,
+                        (OutputFormatKind.Mp4, SubtitleKind.Embedded, "dvdsub" or "dvd_subtitle" or "vobsub") =>
+                            SubtitleMethod.Copy,
 
                         // MP4 does not support PGS
-                        "pgs" or "pgssub" or "hdmv_pgs_subtitle" => SubtitleMethod.None,
+                        (OutputFormatKind.Mp4, SubtitleKind.Embedded, "pgs" or "pgssub" or "hdmv_pgs_subtitle") =>
+                            SubtitleMethod.None,
 
                         // ignore text subtitles for now
                         _ => SubtitleMethod.None
@@ -234,6 +265,19 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     {
                         return None;
                     }
+                    
+                    // hls direct won't use extracted embedded subtitles
+                    if (subtitle.SubtitleKind == SubtitleKind.Embedded)
+                    {
+                        path = videoPath;
+                        ffmpegSubtitleStream = ffmpegSubtitleStream with { Index = subtitle.StreamIndex };
+                    }
+                }
+
+                if (method == SubtitleMethod.Copy)
+                {
+                    subtitleLanguage = Optional(subtitle.Language);
+                    subtitleTitle = Optional(subtitle.Title);
                 }
 
                 return new SubtitleInputFile(
@@ -247,13 +291,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string videoFormat = GetVideoFormat(playbackSettings);
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
-
-        OutputFormatKind outputFormat = channel.StreamingMode switch
-        {
-            StreamingMode.HttpLiveStreamingSegmenter => OutputFormatKind.Hls,
-            StreamingMode.HttpLiveStreamingDirect => OutputFormatKind.Mp4,
-            _ => OutputFormatKind.MpegTs
-        };
 
         Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
@@ -291,6 +328,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             "ErsatzTV",
             channel.Name,
             maybeAudioStream.Map(s => Optional(s.Language)).Flatten(),
+            subtitleLanguage,
+            subtitleTitle,
             outputFormat,
             hlsPlaylistPath,
             hlsSegmentTemplate,
@@ -423,6 +462,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
             "ErsatzTV",
             channel.Name,
+            None,
+            None,
             None,
             outputFormat,
             hlsPlaylistPath,
