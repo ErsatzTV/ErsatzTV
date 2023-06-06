@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.FFmpeg.OutputFormat;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
@@ -32,6 +33,8 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
         Option<int> initialSegmentCount =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount);
+        Option<OutputFormatKind> outputFormatKind =
+            await _configElementRepository.GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
 
         var result = new FFmpegSettingsViewModel
         {
@@ -42,7 +45,8 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             PreferredAudioLanguageCode = await preferredAudioLanguageCode.IfNoneAsync("eng"),
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
-            InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1)
+            InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
+            HlsDirectOutputFormat = await outputFormatKind.IfNoneAsync(OutputFormatKind.Mp4)
         };
 
         foreach (int watermarkId in watermark)

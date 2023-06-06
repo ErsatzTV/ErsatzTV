@@ -14,6 +14,8 @@ public record FFmpegState(
     Option<string> MetadataServiceProvider,
     Option<string> MetadataServiceName,
     Option<string> MetadataAudioLanguage,
+    Option<string> MetadataSubtitleLanguage,
+    Option<string> MetadataSubtitleTitle,
     OutputFormatKind OutputFormat,
     Option<string> HlsPlaylistPath,
     Option<string> HlsSegmentTemplate,
@@ -35,6 +37,8 @@ public record FFmpegState(
             true, // do not map metadata
             "ErsatzTV",
             channelName,
+            Option<string>.None,
+            Option<string>.None,
             Option<string>.None,
             OutputFormatKind.MpegTs,
             Option<string>.None,

@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Application.FFmpegProfiles;
+﻿using ErsatzTV.FFmpeg.OutputFormat;
+
+namespace ErsatzTV.Application.FFmpegProfiles;
 
 public class FFmpegSettingsViewModel
 {
@@ -12,4 +14,5 @@ public class FFmpegSettingsViewModel
     public int HlsSegmenterIdleTimeout { get; set; }
     public int WorkAheadSegmenterLimit { get; set; }
     public int InitialSegmentCount { get; set; }
+    public OutputFormatKind HlsDirectOutputFormat { get; set; }
 }

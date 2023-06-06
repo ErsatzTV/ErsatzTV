@@ -7,6 +7,7 @@
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Domain.Filler
+@using ErsatzTV.FFmpeg.OutputFormat
 @using Serilog.Events
 @implements IDisposable
 @inject IMediator _mediator
@@ -95,6 +96,13 @@
                                       Required="true"
                                       RequiredError="HLS Segmenter initial segment count is required!"/>
                     </MudElement>
+                    <MudSelect Class="mt-3"
+                               Label="HLS Direct Output Format"
+                               @bind-Value="_ffmpegSettings.HlsDirectOutputFormat"
+                               For="@(() => _ffmpegSettings.HlsDirectOutputFormat)">
+                        <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mp4">MP4</MudSelectItem>
+                        <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mkv">MKV</MudSelectItem>
+                    </MudSelect>
                 </MudForm>
             </MudCardContent>
             <MudCardActions>
