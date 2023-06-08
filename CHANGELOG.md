@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `HLS Direct` streaming mode
     - Use `MP4` container/output format by default, with new global option to use `MKV` container/output format
     - `MP4` output format: stream copy dvd subtitles
-    - `MKV` output format: stream copy all embedded subtitles
+    - `MKV` output format: stream copy any embedded subtitles
 
 ### Fixed
 - Fix extracting embedded text subtitles that had been incompletely extracted in the past 
