@@ -16,6 +16,10 @@ public class ProgramScheduleItemEditViewModelValidator : AbstractValidator<Progr
             () => RuleFor(i => i.MultipleCount).NotNull().GreaterThanOrEqualTo(0));
         When(
             i => i.PlayoutMode == PlayoutMode.Duration,
-            () => RuleFor(i => i.PlayoutDuration).NotNull());
+            () =>
+            {
+                RuleFor(i => i.PlayoutDuration).NotNull();
+                RuleFor(i => i.DiscardToFillAttempts).NotNull().GreaterThanOrEqualTo(0);
+            });
     }
 }

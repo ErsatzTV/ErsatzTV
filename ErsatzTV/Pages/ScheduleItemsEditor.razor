@@ -228,6 +228,7 @@
                     <MudSelectItem Value="@TailMode.Offline">Offline</MudSelectItem>
                     <MudSelectItem Value="@TailMode.Filler">Filler</MudSelectItem>
                 </MudSelect>
+                <MudTextField Class="mt-3" Label="Discard To Fill Attempts" @bind-Value="@_selectedItem.DiscardToFillAttempts" For="@(() => _selectedItem.DiscardToFillAttempts)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
                 <MudTextField Class="mt-3" Label="Custom Title" @bind-Value="@_selectedItem.CustomTitle" For="@(() => _selectedItem.CustomTitle)"/>
                 <MudSelect Class="mt-3" Label="Guide Mode" @bind-Value="@_selectedItem.GuideMode" For="@(() => _selectedItem.GuideMode)">
                     <MudSelectItem Value="@GuideMode.Normal">Normal</MudSelectItem>
@@ -489,6 +490,7 @@
             case ProgramScheduleItemDurationViewModel duration:
                 result.PlayoutDuration = duration.PlayoutDuration;
                 result.TailMode = duration.TailMode;
+                result.DiscardToFillAttempts = duration.DiscardToFillAttempts;
                 break;
         }
 
@@ -546,6 +548,7 @@
             item.MultipleCount,
             item.PlayoutDuration,
             item.TailMode,
+            item.DiscardToFillAttempts,
             item.CustomTitle,
             item.GuideMode,
             item.PreRollFiller?.Id,

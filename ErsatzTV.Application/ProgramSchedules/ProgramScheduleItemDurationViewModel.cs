@@ -21,6 +21,7 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         PlaybackOrder playbackOrder,
         TimeSpan playoutDuration,
         TailMode tailMode,
+        int discardToFillAttempts,
         string customTitle,
         GuideMode guideMode,
         FillerPresetViewModel preRollFiller,
@@ -59,8 +60,10 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
     {
         PlayoutDuration = playoutDuration;
         TailMode = tailMode;
+        DiscardToFillAttempts = discardToFillAttempts;
     }
 
     public TimeSpan PlayoutDuration { get; }
     public TailMode TailMode { get; }
+    public int DiscardToFillAttempts { get; }
 }

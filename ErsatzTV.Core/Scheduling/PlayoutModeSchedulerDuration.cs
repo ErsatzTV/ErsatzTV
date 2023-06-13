@@ -26,6 +26,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
         var willFinishInTime = true;
         Option<DateTimeOffset> durationUntil = None;
+        int discardAttempts = 0;
 
         IMediaCollectionEnumerator contentEnumerator =
             collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
@@ -68,77 +69,108 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 continue;
             }
 
-            var playoutItem = new PlayoutItem
+            TimeSpan remainingDuration = durationUntil.ValueUnsafe() - itemStartTime;
+            if (scheduleItem.DiscardToFillAttempts > 0 &&
+                remainingDuration >= contentEnumerator.MinimumDuration.IfNone(TimeSpan.Zero) &&
+                itemDuration > remainingDuration)
             {
-                MediaItemId = mediaItem.Id,
-                Start = itemStartTime.UtcDateTime,
-                Finish = itemStartTime.UtcDateTime + itemDuration,
-                InPoint = TimeSpan.Zero,
-                OutPoint = itemDuration,
-                GuideGroup = nextState.NextGuideGroup,
-                FillerKind = scheduleItem.GuideMode == GuideMode.Filler
-                    ? FillerKind.GuideMode
-                    : FillerKind.None,
-                CustomTitle = scheduleItem.CustomTitle,
-                WatermarkId = scheduleItem.WatermarkId,
-                PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
-                PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
-                PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
-                SubtitleMode = scheduleItem.SubtitleMode
-            };
-
-            durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
-
-            DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
-            DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
-                collectionEnumerators,
-                scheduleItem,
-                itemStartTime,
-                itemDuration,
-                itemChapters);
-            willFinishInTime = itemStartTime > durationFinish ||
-                               itemEndTimeWithFiller <= durationFinish;
-            if (willFinishInTime)
-            {
-                // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                playoutItems.AddRange(
-                    AddFiller(
-                        nextState,
-                        collectionEnumerators,
-                        scheduleItem,
-                        playoutItem,
-                        itemChapters,
-                        cancellationToken));
-
-                nextState = nextState with
+                discardAttempts++;
+                if (discardAttempts > scheduleItem.DiscardToFillAttempts)
                 {
-                    CurrentTime = itemEndTimeWithFiller,
+                    nextState = nextState with
+                    {
+                        DurationFinish = None
+                    };
 
-                    // only bump guide group if we don't have a custom title
-                    NextGuideGroup = string.IsNullOrWhiteSpace(scheduleItem.CustomTitle)
-                        ? nextState.IncrementGuideGroup
-                        : nextState.NextGuideGroup
-                };
+                    nextState.ScheduleItemsEnumerator.MoveNext();
+                }
+                else
+                {
+                    _logger.LogDebug(
+                        "Skipping playout item {Title} with duration {Duration} that is longer than remaining duration {RemainingDuration}",
+                        PlayoutBuilder.DisplayTitle(mediaItem),
+                        itemDuration,
+                        remainingDuration);
 
-                contentEnumerator.MoveNext();
+                    contentEnumerator.MoveNext();
+                }
             }
             else
             {
-                TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
-                if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
-                {
-                    _logger.LogWarning(
-                        "Unable to schedule duration block of {DurationBlock} which is longer than the configured playout duration {PlayoutDuration}",
-                        durationBlock,
-                        scheduleItem.PlayoutDuration);
-                }
+                discardAttempts = 0;
 
-                nextState = nextState with
+                var playoutItem = new PlayoutItem
                 {
-                    DurationFinish = None
+                    MediaItemId = mediaItem.Id,
+                    Start = itemStartTime.UtcDateTime,
+                    Finish = itemStartTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
+                    GuideGroup = nextState.NextGuideGroup,
+                    FillerKind = scheduleItem.GuideMode == GuideMode.Filler
+                        ? FillerKind.GuideMode
+                        : FillerKind.None,
+                    CustomTitle = scheduleItem.CustomTitle,
+                    WatermarkId = scheduleItem.WatermarkId,
+                    PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                    PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
+                    PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                    SubtitleMode = scheduleItem.SubtitleMode
                 };
 
-                nextState.ScheduleItemsEnumerator.MoveNext();
+                durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
+
+                DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
+                DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
+                    collectionEnumerators,
+                    scheduleItem,
+                    itemStartTime,
+                    itemDuration,
+                    itemChapters);
+                willFinishInTime = itemStartTime > durationFinish ||
+                                   itemEndTimeWithFiller <= durationFinish;
+                if (willFinishInTime)
+                {
+                    // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                    playoutItems.AddRange(
+                        AddFiller(
+                            nextState,
+                            collectionEnumerators,
+                            scheduleItem,
+                            playoutItem,
+                            itemChapters,
+                            cancellationToken));
+
+                    nextState = nextState with
+                    {
+                        CurrentTime = itemEndTimeWithFiller,
+
+                        // only bump guide group if we don't have a custom title
+                        NextGuideGroup = string.IsNullOrWhiteSpace(scheduleItem.CustomTitle)
+                            ? nextState.IncrementGuideGroup
+                            : nextState.NextGuideGroup
+                    };
+
+                    contentEnumerator.MoveNext();
+                }
+                else
+                {
+                    TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
+                    if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
+                    {
+                        _logger.LogWarning(
+                            "Unable to schedule duration block of {DurationBlock} which is longer than the configured playout duration {PlayoutDuration}",
+                            durationBlock,
+                            scheduleItem.PlayoutDuration);
+                    }
+
+                    nextState = nextState with
+                    {
+                        DurationFinish = None
+                    };
+
+                    nextState.ScheduleItemsEnumerator.MoveNext();
+                }
             }
         }
 
