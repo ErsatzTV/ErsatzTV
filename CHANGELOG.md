@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Disable playout buttons and show spinning indicator when a playout is being modified (built/extended, or subtitles are being extracted)
+- Automatically reload playout details table when playout build is complete
+
+### Fixed
+- Skip checking for subtitles to extract when subtitles are not enabled on a channel/schedule item
 
 ## [0.7.9-beta] - 2023-06-10
 ### Added

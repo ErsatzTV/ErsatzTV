@@ -6,6 +6,7 @@ using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
@@ -19,6 +20,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly IEntityLocker _entityLocker;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
@@ -27,12 +29,14 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IDbContextFactory<TvContext> dbContextFactory,
         IPlayoutBuilder playoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
+        IEntityLocker entityLocker,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
+        _entityLocker = entityLocker;
         _workerChannel = workerChannel;
     }
 
@@ -63,6 +67,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
             }
+
+            _entityLocker.UnlockPlayout(playout.Id);
 
             Option<string> maybeChannelNumber = await dbContext.Connection
                 .QuerySingleOrDefaultAsync<string>(

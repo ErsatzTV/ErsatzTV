@@ -3,9 +3,10 @@
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Scheduling
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IMediator _mediator
+@inject IDialogService Dialog
+@inject IMediator Mediator
 @inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel;
+@inject IEntityLocker EntityLocker;
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
@@ -46,23 +47,33 @@
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
                 <div style="align-items: center; display: flex;">
+                    @if (EntityLocker.IsPlayoutLocked(context.PlayoutId))
+                    {
+                        <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                            <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                        </div>
+                    }
                     <MudTooltip Text="Edit Alternate Schedules">
                         <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
+                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                        Link="@($"playouts/{context.PlayoutId}/alternate-schedules")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Reset Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                        OnClick="@(_ => ResetPlayout(context))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Schedule Reset">
                         <MudIconButton Icon="@Icons.Material.Filled.Update"
+                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                        OnClick="@(_ => ScheduleReset(context))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                        OnClick="@(_ => DeletePlayout(context))">
                         </MudIconButton>
                     </MudTooltip>
@@ -131,17 +142,21 @@
 
     public void Dispose()
     {
+        EntityLocker.OnPlayoutChanged -= ReloadDetailsIfNeeded;
+
         _cts.Cancel();
         _cts.Dispose();
     }
+    
+    protected override void OnInitialized() => EntityLocker.OnPlayoutChanged += ReloadDetailsIfNeeded;
 
     protected override async Task OnParametersSetAsync()
     {
-        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize), _cts.Token)
+        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _detailRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize), _cts.Token)
+        _detailRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-        _showFiller = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller), _cts.Token)
+        _showFiller = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller), _cts.Token)
             .Map(maybeShow => maybeShow.Match(ce => bool.TryParse(ce.Value, out bool show) && show, () => false));
     }
 
@@ -159,11 +174,11 @@
         var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ScheduleName} on {playout.ChannelNumber} - {playout.ChannelName}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Playout", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Playout", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeletePlayout(playout.PlayoutId), _cts.Token);
+            await Mediator.Send(new DeletePlayout(playout.PlayoutId), _cts.Token);
             if (_table != null)
             {
                 await _table.ReloadServerData();
@@ -199,7 +214,7 @@
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
         await dialog.Result;
 
         if (_table != null)
@@ -210,9 +225,9 @@
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        List<PlayoutNameViewModel> playouts = await _mediator.Send(new GetAllPlayouts(), _cts.Token);
+        List<PlayoutNameViewModel> playouts = await Mediator.Send(new GetAllPlayouts(), _cts.Token);
         IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber));
 
     // TODO: properly page this data
@@ -223,15 +238,25 @@
         };
     }
 
+    private async void ReloadDetailsIfNeeded(object sender, int playoutId)
+    {
+        if (playoutId == _selectedPlayoutId && _detailTable is not null)
+        {
+            await InvokeAsync(() => _detailTable.ReloadServerData());
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()), _cts.Token);
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()), _cts.Token);
 
         if (_selectedPlayoutId.HasValue)
         {
             PagedPlayoutItemsViewModel data =
-                await _mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), _cts.Token);
+                await Mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, _showFiller, state.Page, state.PageSize), _cts.Token);
             return new TableData<PlayoutItemViewModel>
             {
                 TotalItems = data.TotalCount,

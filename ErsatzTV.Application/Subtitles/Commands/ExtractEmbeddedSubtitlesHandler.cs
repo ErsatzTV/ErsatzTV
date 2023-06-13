@@ -9,6 +9,7 @@ using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -21,17 +22,20 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IEntityLocker _entityLocker;
     private readonly ILogger<ExtractEmbeddedSubtitlesHandler> _logger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public ExtractEmbeddedSubtitlesHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         ILocalFileSystem localFileSystem,
+        IEntityLocker entityLocker,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ILogger<ExtractEmbeddedSubtitlesHandler> logger)
     {
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
+        _entityLocker = entityLocker;
         _workerChannel = workerChannel;
         _logger = logger;
     }
@@ -70,7 +74,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .AsNoTracking()
                 .Filter(
                     p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
-                         p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != ChannelSubtitleMode.None))
+                         p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
                 .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1));
 
             playoutIdsToCheck.AddRange(requestedPlayout.Map(p => p.Id));
@@ -82,7 +86,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     .AsNoTracking()
                     .Filter(
                         p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
-                             p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != ChannelSubtitleMode.None))
+                             p.ProgramSchedule.Items.Any(psi => psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
                     .Map(p => p.Id)
                     .ToList();
             }
@@ -101,6 +105,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 return Unit.Default;
             }
 
+            foreach (int playoutId in playoutIdsToCheck)
+            {
+                _entityLocker.LockPlayout(playoutId);
+            }
+            
             _logger.LogDebug("Checking playouts {PlayoutIds} for text subtitles to extract", playoutIdsToCheck);
 
             // find all playout items in the next hour
@@ -154,6 +163,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             _logger.LogDebug("Done checking playouts {PlayoutIds} for text subtitles to extract", playoutIdsToCheck);
 
+            foreach (int playoutId in playoutIdsToCheck)
+            {
+                _entityLocker.UnlockPlayout(playoutId);
+            }
+            
             return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)

@@ -6,6 +6,7 @@ namespace ErsatzTV.Infrastructure.Locking;
 public class EntityLocker : IEntityLocker
 {
     private readonly ConcurrentDictionary<int, byte> _lockedLibraries;
+    private readonly ConcurrentDictionary<int, byte> _lockedPlayouts;
     private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
     private bool _embyCollections;
     private bool _plex;
@@ -14,6 +15,7 @@ public class EntityLocker : IEntityLocker
     public EntityLocker()
     {
         _lockedLibraries = new ConcurrentDictionary<int, byte>();
+        _lockedPlayouts = new ConcurrentDictionary<int, byte>();
         _lockedRemoteMediaSourceTypes = new ConcurrentDictionary<Type, byte>();
     }
 
@@ -22,6 +24,7 @@ public class EntityLocker : IEntityLocker
     public event EventHandler<Type> OnRemoteMediaSourceChanged;
     public event EventHandler OnTraktChanged;
     public event EventHandler OnEmbyCollectionsChanged;
+    public event EventHandler<int> OnPlayoutChanged;
 
     public bool LockLibrary(int libraryId)
     {
@@ -155,4 +158,28 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool AreEmbyCollectionsLocked() => _embyCollections;
+    
+    public bool LockPlayout(int playoutId)
+    {
+        if (!_lockedPlayouts.ContainsKey(playoutId) && _lockedPlayouts.TryAdd(playoutId, 0))
+        {
+            OnPlayoutChanged?.Invoke(this, playoutId);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool UnlockPlayout(int playoutId)
+    {
+        if (_lockedPlayouts.TryRemove(playoutId, out byte _))
+        {
+            OnPlayoutChanged?.Invoke(this, playoutId);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool IsPlayoutLocked(int playoutId) => _lockedPlayouts.ContainsKey(playoutId);
 }
