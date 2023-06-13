@@ -57,6 +57,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     {
         try
         {
+            _entityLocker.LockPlayout(playout.Id);
+
             await _playoutBuilder.Build(playout, request.Mode, cancellationToken);
 
             // let any active segmenter processes know that the playout has been modified
