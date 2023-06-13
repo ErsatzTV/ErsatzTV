@@ -15,6 +15,7 @@ public interface IProgramScheduleItemRequest
     int? MultipleCount { get; }
     TimeSpan? PlayoutDuration { get; }
     TailMode TailMode { get; }
+    int? DiscardToFillAttempts { get; }
     string CustomTitle { get; }
     GuideMode GuideMode { get; }
     int? PreRollFillerId { get; }

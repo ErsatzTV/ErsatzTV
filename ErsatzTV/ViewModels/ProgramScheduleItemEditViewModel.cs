@@ -13,6 +13,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 {
     private ProgramScheduleItemCollectionType _collectionType;
     private int? _multipleCount;
+    private int? _discardToFillAttempts;
     private TimeSpan? _playoutDuration;
     private TimeSpan? _startTime;
 
@@ -96,7 +97,12 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     }
 
     public TailMode TailMode { get; set; }
-
+    
+    public int? DiscardToFillAttempts
+    {
+        get => PlayoutMode == PlayoutMode.Duration ? _discardToFillAttempts ?? 0 : null;
+        set => _discardToFillAttempts = value;
+    }
     public string CustomTitle { get; set; }
 
     public GuideMode GuideMode { get; set; }

@@ -8,4 +8,5 @@ public interface IMediaCollectionEnumerator
     Option<MediaItem> Current { get; }
     void MoveNext();
     Option<MediaItem> Peek(int offset);
+    Option<TimeSpan> MinimumDuration { get; }
 }

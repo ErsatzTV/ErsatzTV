@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling;
@@ -11,6 +12,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     private readonly bool _randomStartPoint;
     private Random _random;
     private IList<MediaItem> _shuffled;
+    private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
 
     public ShuffleInOrderCollectionEnumerator(
         IList<CollectionWithItems> collections,
@@ -31,6 +33,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 
         _random = new Random(state.Seed);
         _shuffled = Shuffle(_collections, _random);
+        _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(() => _shuffled.Bind(i => i.GetDuration()).HeadOrNone());
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)
@@ -203,4 +206,6 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         public int Index { get; set; }
         public IList<Option<MediaItem>> Items { get; set; }
     }
+
+    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
 }

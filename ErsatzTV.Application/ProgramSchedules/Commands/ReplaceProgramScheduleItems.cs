@@ -17,6 +17,7 @@ public record ReplaceProgramScheduleItem(
     int? MultipleCount,
     TimeSpan? PlayoutDuration,
     TailMode TailMode,
+    int? DiscardToFillAttempts,
     string CustomTitle,
     GuideMode GuideMode,
     int? PreRollFillerId,

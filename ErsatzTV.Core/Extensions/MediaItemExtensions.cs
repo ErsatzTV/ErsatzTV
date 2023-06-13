@@ -7,6 +7,17 @@ namespace ErsatzTV.Core.Extensions;
 
 public static class MediaItemExtensions
 {
+    public static Option<TimeSpan> GetDuration(this MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            Movie m => m.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            Episode e => e.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            OtherVideo ov => ov.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            Song s => s.MediaVersions.HeadOrNone().Map(v => v.Duration),
+            _ => None
+        };
+
     public static MediaVersion GetHeadVersion(this MediaItem mediaItem) =>
         mediaItem switch
         {

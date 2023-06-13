@@ -42,6 +42,7 @@ internal static class Mapper
                     duration.PlaybackOrder,
                     duration.PlayoutDuration,
                     duration.TailMode,
+                    duration.DiscardToFillAttempts,
                     duration.CustomTitle,
                     duration.GuideMode,
                     duration.PreRollFiller != null

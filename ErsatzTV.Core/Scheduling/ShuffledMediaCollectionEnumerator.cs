@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling;
@@ -8,6 +9,7 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
     private readonly CancellationToken _cancellationToken;
     private readonly int _mediaItemCount;
     private readonly IList<GroupedMediaItem> _mediaItems;
+    private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private CloneableRandom _random;
     private IList<MediaItem> _shuffled;
 
@@ -28,6 +30,7 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 
         _random = new CloneableRandom(state.Seed);
         _shuffled = Shuffle(_mediaItems, _random);
+        _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(() => _shuffled.Bind(i => i.GetDuration()).HeadOrNone());
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)
@@ -105,4 +108,6 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 
         return GroupedMediaItem.FlattenGroups(copy, _mediaItemCount);
     }
+    
+    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
 }
