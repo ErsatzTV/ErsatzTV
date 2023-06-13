@@ -7,6 +7,7 @@ public interface IEntityLocker
     event EventHandler<Type> OnRemoteMediaSourceChanged;
     event EventHandler OnTraktChanged;
     event EventHandler OnEmbyCollectionsChanged;
+    event EventHandler<int> OnPlayoutChanged;
     bool LockLibrary(int libraryId);
     bool UnlockLibrary(int libraryId);
     bool IsLibraryLocked(int libraryId);
@@ -22,4 +23,7 @@ public interface IEntityLocker
     bool LockEmbyCollections();
     bool UnlockEmbyCollections();
     bool AreEmbyCollectionsLocked();
+    bool LockPlayout(int playoutId);
+    bool UnlockPlayout(int playoutId);
+    bool IsPlayoutLocked(int playoutId);
 }
