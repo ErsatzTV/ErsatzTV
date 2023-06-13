@@ -25,7 +25,7 @@
         <ColGroup>
             <col/>
             <col/>
-            <col style="width: 180px;"/>
+            <col style="width: 225px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>
@@ -47,12 +47,12 @@
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
                 <div style="align-items: center; display: flex;">
-                    @if (EntityLocker.IsPlayoutLocked(context.PlayoutId))
-                    {
-                        <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                    <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                        @if (EntityLocker.IsPlayoutLocked(context.PlayoutId))
+                        {
                             <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
-                        </div>
-                    }
+                        }
+                    </div>
                     <MudTooltip Text="Edit Alternate Schedules">
                         <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
                                        Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
