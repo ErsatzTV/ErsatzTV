@@ -12,7 +12,6 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     private readonly CancellationToken _cancellationToken;
     private readonly IList<MediaItem> _mediaItems;
     private readonly IScriptEngine _scriptEngine;
-    private readonly string _scriptFile;
     private readonly ILogger _logger;
     private readonly int _mediaItemCount;
     private readonly Dictionary<int, List<MediaItem>> _mediaItemGroups;
@@ -27,16 +26,14 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         IScriptEngine scriptEngine,
         string scriptFile,
         ILogger logger,
-        CancellationToken cancellationToken,
-        bool skipLoad = false)
+        CancellationToken cancellationToken)
     {
         _mediaItems = mediaItems;
         _scriptEngine = scriptEngine;
-        _scriptFile = scriptFile;
         _logger = logger;
         _cancellationToken = cancellationToken;
 
-        if (!skipLoad)
+        if (!string.IsNullOrWhiteSpace(scriptFile))
         {
             scriptEngine.Load(scriptFile);
         }
@@ -99,10 +96,9 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
             _mediaItems,
             state,
             _scriptEngine,
-            _scriptFile,
+            null,
             _logger,
-            cancellationToken,
-            skipLoad: true);
+            cancellationToken);
     }
 
     public CollectionEnumeratorState State { get; }
