@@ -4,6 +4,8 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace ErsatzTV.Core.Scheduling;
 
@@ -195,142 +197,13 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             PlayoutBuilder.DisplayTitle(mediaItem),
             startTime);
 
-    internal static DateTimeOffset CalculateEndTimeWithFiller(
-        Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
-        ProgramScheduleItem scheduleItem,
-        DateTimeOffset itemStartTime,
-        TimeSpan itemDuration,
-        List<MediaChapter> chapters)
-    {
-        var allFiller = Optional(scheduleItem.PreRollFiller)
-            .Append(Optional(scheduleItem.MidRollFiller))
-            .Append(Optional(scheduleItem.PostRollFiller))
-            .ToList();
-
-        // multiple pad-to-nearest-minute values are invalid; use no filler
-        if (allFiller.Count(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue) > 1)
-        {
-            return itemStartTime + itemDuration;
-        }
-
-        TimeSpan totalDuration = itemDuration;
-        foreach (FillerPreset filler in allFiller)
-        {
-            switch (filler.FillerKind, filler.FillerMode)
-            {
-                case (FillerKind.MidRoll, FillerMode.Duration) when filler.Duration.HasValue:
-                    IMediaCollectionEnumerator mrde = enumerators[CollectionKey.ForFillerPreset(filler)];
-                    var mrdePeekOffset = 0;
-                    for (var i = 0; i < chapters.Count - 1; i++)
-                    {
-                        TimeSpan midRollDuration = filler.Duration.Value;
-                        while (mrde.Peek(mrdePeekOffset))
-                        {
-                            foreach (MediaItem mediaItem in mrde.Peek(mrdePeekOffset))
-                            {
-                                TimeSpan currentDuration = DurationForMediaItem(mediaItem);
-                                midRollDuration -= currentDuration;
-                                if (midRollDuration >= TimeSpan.Zero)
-                                {
-                                    totalDuration += currentDuration;
-                                    mrdePeekOffset++;
-                                }
-                            }
-
-                            if (midRollDuration < TimeSpan.Zero)
-                            {
-                                break;
-                            }
-                        }
-                    }
-
-                    break;
-                case (FillerKind.MidRoll, FillerMode.Count) when filler.Count.HasValue:
-                    IMediaCollectionEnumerator mrce = enumerators[CollectionKey.ForFillerPreset(filler)];
-                    var mrcePeekOffset = 0;
-                    for (var i = 0; i < chapters.Count - 1; i++)
-                    {
-                        for (var j = 0; j < filler.Count.Value; j++)
-                        {
-                            foreach (MediaItem mediaItem in mrce.Peek(mrcePeekOffset))
-                            {
-                                totalDuration += DurationForMediaItem(mediaItem);
-                                mrcePeekOffset++;
-                            }
-                        }
-                    }
-
-                    break;
-                case (_, FillerMode.Duration) when filler.Duration.HasValue:
-                    IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                    var peekOffset1 = 0;
-                    TimeSpan duration = filler.Duration.Value;
-                    while (e1.Peek(peekOffset1).IsSome)
-                    {
-                        foreach (MediaItem mediaItem in e1.Peek(peekOffset1))
-                        {
-                            TimeSpan currentDuration = DurationForMediaItem(mediaItem);
-                            duration -= currentDuration;
-                            if (duration >= TimeSpan.Zero)
-                            {
-                                totalDuration += currentDuration;
-                                peekOffset1++;
-                            }
-                        }
-
-                        if (duration < TimeSpan.Zero)
-                        {
-                            break;
-                        }
-                    }
-
-                    break;
-                case (_, FillerMode.Count) when filler.Count.HasValue:
-                    IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                    var peekOffset2 = 0;
-                    for (var i = 0; i < filler.Count.Value; i++)
-                    {
-                        foreach (MediaItem mediaItem in e2.Peek(peekOffset2))
-                        {
-                            totalDuration += DurationForMediaItem(mediaItem);
-                            peekOffset2++;
-                        }
-                    }
-
-                    break;
-            }
-        }
-
-        foreach (FillerPreset padFiller in Optional(
-                     allFiller.FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue)))
-        {
-            int currentMinute = (itemStartTime + totalDuration).Minute;
-            // ReSharper disable once PossibleInvalidOperationException
-            int targetMinute = (currentMinute + padFiller.PadToNearestMinute.Value - 1) /
-                padFiller.PadToNearestMinute.Value * padFiller.PadToNearestMinute.Value;
-
-            DateTimeOffset targetTime = itemStartTime + totalDuration - TimeSpan.FromMinutes(currentMinute) +
-                                        TimeSpan.FromMinutes(targetMinute);
-
-            return new DateTimeOffset(
-                targetTime.Year,
-                targetTime.Month,
-                targetTime.Day,
-                targetTime.Hour,
-                targetTime.Minute,
-                0,
-                targetTime.Offset);
-        }
-
-        return itemStartTime + totalDuration;
-    }
-
     internal List<PlayoutItem> AddFiller(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
         ProgramScheduleItem scheduleItem,
         PlayoutItem playoutItem,
         List<MediaChapter> chapters,
+        bool log,
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
@@ -367,6 +240,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             filler.Duration.Value,
                             FillerKind.PreRoll,
                             filler.AllowWatermarks,
+                            log,
                             cancellationToken));
                     break;
                 case FillerMode.Count when filler.Count.HasValue:
@@ -408,6 +282,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         filler.Duration.Value,
                                         FillerKind.MidRoll,
                                         filler.AllowWatermarks,
+                                        log,
                                         cancellationToken));
                             }
                         }
@@ -450,6 +325,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             filler.Duration.Value,
                             FillerKind.PostRoll,
                             filler.AllowWatermarks,
+                            log,
                             cancellationToken));
                     break;
                 case FillerMode.Count when filler.Count.HasValue:
@@ -518,6 +394,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             remainingToFill,
                             FillerKind.PreRoll,
                             padFiller.AllowWatermarks,
+                            log,
                             cancellationToken));
                     totalDuration =
                         TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
@@ -544,6 +421,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             remainingToFill,
                             FillerKind.MidRoll,
                             padFiller.AllowWatermarks,
+                            log,
                             cancellationToken));
                     TimeSpan average = effectiveChapters.Count <= 1
                         ? remainingToFill
@@ -607,6 +485,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             remainingToFill,
                             FillerKind.PostRoll,
                             padFiller.AllowWatermarks,
+                            log,
                             cancellationToken));
                     totalDuration =
                         TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
@@ -682,13 +561,15 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         TimeSpan duration,
         FillerKind fillerKind,
         bool allowWatermarks,
+        bool log,
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
 
         TimeSpan remainingToFill = duration;
-        var skipped = false;
-        while (enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
+        var discardToFillAttempts = 0;
+        while (enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero &&
+               remainingToFill >= enumerator.MinimumDuration)
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
@@ -712,40 +593,30 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                     result.Add(playoutItem);
                     enumerator.MoveNext();
                 }
-                else if (skipped)
-                {
-                    // set to zero so it breaks out of the while loop
-                    remainingToFill = TimeSpan.Zero;
-                }
                 else
                 {
-                    if (itemDuration >= duration * 1.5)
+                    discardToFillAttempts++;
+                    if (discardToFillAttempts >= enumerator.Count)
                     {
-                        _logger.LogWarning(
-                            "Filler item is too long {FillerDuration} to fill {GapDuration}; skipping to next filler item",
-                            itemDuration,
-                            duration);
-
-                        skipped = true;
-                        enumerator.MoveNext();
+                        // set to zero so it breaks out of the while loop
+                        remainingToFill = TimeSpan.Zero;
                     }
                     else
                     {
-                        if (itemDuration > duration)
+                        if (log)
                         {
-                            _logger.LogWarning(
-                                "Filler item is too long {FillerDuration} to fill {GapDuration}; aborting filler block",
+                            _logger.LogDebug(
+                                "Filler item is too long {FillerDuration:g} to fill {GapDuration:g}; skipping to next filler item",
                                 itemDuration,
-                                duration);
+                                remainingToFill);
                         }
 
-                        // set to zero so it breaks out of the while loop
-                        remainingToFill = TimeSpan.Zero;
+                        enumerator.MoveNext();
                     }
                 }
             }
         }
-
+        
         return result;
     }
 

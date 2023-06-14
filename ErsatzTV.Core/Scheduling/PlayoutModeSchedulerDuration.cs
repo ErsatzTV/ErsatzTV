@@ -121,25 +121,41 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
 
                 DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
-                DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
-                    collectionEnumerators,
+                
+                var enumeratorClones = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+                foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
+                {
+                    IMediaCollectionEnumerator clone = enumerator.Clone(enumerator.State.Clone(), cancellationToken);
+                    enumeratorClones.Add(key, clone);
+                }
+
+                List<PlayoutItem> maybePlayoutItems = AddFiller(
+                    nextState,
+                    enumeratorClones,
                     scheduleItem,
-                    itemStartTime,
-                    itemDuration,
-                    itemChapters);
+                    playoutItem,
+                    itemChapters,
+                    log: false,
+                    cancellationToken);
+                
+                DateTimeOffset itemEndTimeWithFiller = maybePlayoutItems.Max(pi => pi.FinishOffset);
+
                 willFinishInTime = itemStartTime > durationFinish ||
                                    itemEndTimeWithFiller <= durationFinish;
                 if (willFinishInTime)
                 {
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                    playoutItems.AddRange(
-                        AddFiller(
-                            nextState,
-                            collectionEnumerators,
-                            scheduleItem,
-                            playoutItem,
-                            itemChapters,
-                            cancellationToken));
+                    playoutItems.AddRange(maybePlayoutItems);
+
+                    // update original enumerators
+                    foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
+                    {
+                        IMediaCollectionEnumerator clone = enumeratorClones[key];
+                        while (enumerator.State.Seed != clone.State.Seed || enumerator.State.Index != clone.State.Index)
+                        {
+                            enumerator.MoveNext();
+                        }
+                    }
 
                     nextState = nextState with
                     {

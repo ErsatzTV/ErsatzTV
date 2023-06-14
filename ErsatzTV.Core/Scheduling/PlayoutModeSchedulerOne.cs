@@ -53,24 +53,18 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 SubtitleMode = scheduleItem.SubtitleMode
             };
 
-            DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
-                collectionEnumerators,
-                scheduleItem,
-                itemStartTime,
-                itemDuration,
-                itemChapters);
-
             List<PlayoutItem> playoutItems = AddFiller(
                 playoutBuilderState,
                 collectionEnumerators,
                 scheduleItem,
                 playoutItem,
                 itemChapters,
+                log: true,
                 cancellationToken);
 
             PlayoutBuilderState nextState = playoutBuilderState with
             {
-                CurrentTime = itemEndTimeWithFiller
+                CurrentTime = playoutItems.Max(pi => pi.FinishOffset)
             };
 
             nextState.ScheduleItemsEnumerator.MoveNext();

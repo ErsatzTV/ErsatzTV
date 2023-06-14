@@ -74,12 +74,23 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                     ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
                     : DateTimeOffset.MaxValue;
 
-            DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
-                collectionEnumerators,
+            var enumeratorClones = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+            foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
+            {
+                IMediaCollectionEnumerator clone = enumerator.Clone(enumerator.State.Clone(), cancellationToken);
+                enumeratorClones.Add(key, clone);
+            }
+
+            List<PlayoutItem> maybePlayoutItems = AddFiller(
+                nextState,
+                enumeratorClones,
                 scheduleItem,
-                itemStartTime,
-                itemDuration,
-                itemChapters);
+                playoutItem,
+                itemChapters,
+                log: false,
+                cancellationToken);
+
+            DateTimeOffset itemEndTimeWithFiller = maybePlayoutItems.Max(pi => pi.FinishOffset);
 
             // if the next schedule item is supposed to start during this item,
             // don't schedule this item and just move on
@@ -88,27 +99,16 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
 
             if (willFinishInTime)
             {
-                playoutItems.AddRange(
-                    AddFiller(
-                        nextState,
-                        collectionEnumerators,
-                        scheduleItem,
-                        playoutItem,
-                        itemChapters,
-                        cancellationToken));
+                playoutItems.AddRange(maybePlayoutItems);
                 // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
-                if (playoutItems.Count > 0)
+                // update original enumerators
+                foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
                 {
-                    DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
-                    if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
+                    IMediaCollectionEnumerator clone = enumeratorClones[key];
+                    while (enumerator.State.Seed != clone.State.Seed || enumerator.State.Index != clone.State.Index)
                     {
-                        _logger.LogWarning(
-                            "Filler prediction failure: predicted {PredictedDuration} doesn't match actual {ActualDuration}",
-                            itemEndTimeWithFiller,
-                            actualEndTime);
-
-                        // _logger.LogWarning("Playout items: {@PlayoutItems}", playoutItems);
+                        enumerator.MoveNext();
                     }
                 }
 
