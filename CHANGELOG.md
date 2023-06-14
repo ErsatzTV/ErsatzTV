@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This setting only has an effect when it's configured to be greater than zero
   - When the current item is longer than the remaining duration, it will be discarded and ETV will try to fit the next item in the collection, up to the configured number of times
   - When the remaining duration is shorter than all items in the collection, the normal filler logic will be used
+- Add `Finish` column to playout detail table
 
 ### Fixed
 - Skip checking for subtitles to extract when subtitles are not enabled on a channel/schedule item
