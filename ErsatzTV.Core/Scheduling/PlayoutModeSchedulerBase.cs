@@ -567,7 +567,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         var result = new List<PlayoutItem>();
 
         TimeSpan remainingToFill = duration;
-        var discardToFillAttempts = 0;
         while (enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero &&
                remainingToFill >= enumerator.MinimumDuration)
         {
@@ -595,24 +594,15 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 }
                 else
                 {
-                    discardToFillAttempts++;
-                    if (discardToFillAttempts >= enumerator.Count)
+                    if (log)
                     {
-                        // set to zero so it breaks out of the while loop
-                        remainingToFill = TimeSpan.Zero;
+                        _logger.LogDebug(
+                            "Filler item is too long {FillerDuration:g} to fill {GapDuration:g}; skipping to next filler item",
+                            itemDuration,
+                            remainingToFill);
                     }
-                    else
-                    {
-                        if (log)
-                        {
-                            _logger.LogDebug(
-                                "Filler item is too long {FillerDuration:g} to fill {GapDuration:g}; skipping to next filler item",
-                                itemDuration,
-                                remainingToFill);
-                        }
 
-                        enumerator.MoveNext();
-                    }
+                    enumerator.MoveNext();
                 }
             }
         }
