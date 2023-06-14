@@ -99,11 +99,13 @@
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Start</MudTh>
+                <MudTh>Finish</MudTh>
                 <MudTh>Media Item</MudTh>
                 <MudTh>Duration</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Start">@context.Start.ToString("G")</MudTd>
+                <MudTd DataLabel="Finish">@context.Finish.ToString("G")</MudTd>
                 <MudTd DataLabel="Media Item">@context.Title</MudTd>
                 <MudTd DataLabel="Duration">@context.Duration</MudTd>
             </RowTemplate>

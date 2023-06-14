@@ -8,6 +8,7 @@ internal static class Mapper
         new(
             GetDisplayTitle(playoutItem),
             playoutItem.StartOffset,
+            playoutItem.FinishOffset,
             GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
 
     internal static PlayoutAlternateScheduleViewModel ProjectToViewModel(
