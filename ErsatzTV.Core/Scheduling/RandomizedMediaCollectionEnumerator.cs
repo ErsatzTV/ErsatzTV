@@ -26,6 +26,11 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
+    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    {
+        return new RandomizedMediaCollectionEnumerator(_mediaItems, state);
+    }
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _mediaItems.Any() ? _mediaItems[_index] : None;
@@ -36,8 +41,7 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
         State.Index++;
     }
 
-    public Option<MediaItem> Peek(int offset) =>
-        throw new NotSupportedException();
-    
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
+    
+    public int Count => _mediaItems.Count;
 }

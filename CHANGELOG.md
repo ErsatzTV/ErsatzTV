@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Skip checking for subtitles to extract when subtitles are not enabled on a channel/schedule item
 
+### Changed
+- For `Pad` and `Duration` filler - prioritize filling the configured pad/duration
+  - This will skip filler that is too long in an attempt to avoid unscheduled time
+  - You may see the same filler more often, which means you may want to add more filler to your library so ETV has more options
+
 ## [0.7.9-beta] - 2023-06-10
 ### Added
 - Synchronize actor metadata from Jellyfin and Emby television libraries

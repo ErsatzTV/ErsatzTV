@@ -31,14 +31,18 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
+    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    {
+        return new SeasonEpisodeMediaCollectionEnumerator(_sortedMediaItems, state);
+    }
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
 
     public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 
-    public Option<MediaItem> Peek(int offset) =>
-        _sortedMediaItems.Any() ? _sortedMediaItems[(State.Index + offset) % _sortedMediaItems.Count] : None;
-
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
+    
+    public int Count => _sortedMediaItems.Count;
 }

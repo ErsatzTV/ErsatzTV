@@ -77,12 +77,6 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
             };
 
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-            DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
-                collectionEnumerators,
-                scheduleItem,
-                itemStartTime,
-                itemDuration,
-                itemChapters);
 
             playoutItems.AddRange(
                 AddFiller(
@@ -91,11 +85,12 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                     scheduleItem,
                     playoutItem,
                     itemChapters,
+                    log: true,
                     cancellationToken));
 
             nextState = nextState with
             {
-                CurrentTime = itemEndTimeWithFiller,
+                CurrentTime = playoutItems.Max(pi => pi.FinishOffset),
                 MultipleRemaining = nextState.MultipleRemaining.Map(i => i - 1),
 
                 // only bump guide group if we don't have a custom title

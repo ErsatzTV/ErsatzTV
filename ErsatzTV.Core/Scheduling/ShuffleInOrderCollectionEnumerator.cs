@@ -42,6 +42,11 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
+    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    {
+        return new ShuffleInOrderCollectionEnumerator(_collections, state, _randomStartPoint, cancellationToken);
+    }
+
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
@@ -68,8 +73,6 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 
         State.Index %= _shuffled.Count;
     }
-
-    public Option<MediaItem> Peek(int offset) => throw new NotSupportedException();
 
     private IList<MediaItem> Shuffle(IList<CollectionWithItems> collections, Random random)
     {
@@ -208,4 +211,6 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     }
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
+
+    public int Count => _shuffled.Count;
 }
