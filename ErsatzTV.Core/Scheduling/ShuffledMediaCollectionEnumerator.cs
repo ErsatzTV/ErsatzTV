@@ -30,7 +30,8 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 
         _random = new CloneableRandom(state.Seed);
         _shuffled = Shuffle(_mediaItems, _random);
-        _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(() => _shuffled.Bind(i => i.GetDuration()).HeadOrNone());
+        _lazyMinimumDuration =
+            new Lazy<Option<TimeSpan>>(() => _shuffled.Bind(i => i.GetDuration()).OrderBy(identity).HeadOrNone());
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)

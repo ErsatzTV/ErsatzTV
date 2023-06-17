@@ -14,7 +14,8 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
     public RandomizedMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
     {
         _mediaItems = mediaItems;
-        _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(() => _mediaItems.Bind(i => i.GetDuration()).HeadOrNone());
+        _lazyMinimumDuration =
+            new Lazy<Option<TimeSpan>>(() => _mediaItems.Bind(i => i.GetDuration()).OrderBy(identity).HeadOrNone());
         _random = new Random(state.Seed);
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
