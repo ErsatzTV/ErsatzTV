@@ -96,7 +96,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 if (nextState.CurrentTime + itemDuration > nextItemStart)
                 {
                     _logger.LogDebug(
-                        "Filler with duration {Duration} will go past next item start {NextItemStart}",
+                        "Filler with duration {Duration:hh\\:mm\\:ss} will go past next item start {NextItemStart}",
                         itemDuration,
                         nextItemStart);
 

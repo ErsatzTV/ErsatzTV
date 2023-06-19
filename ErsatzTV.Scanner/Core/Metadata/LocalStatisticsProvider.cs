@@ -315,7 +315,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     {
                         string time = match.Groups[1].Value;
                         var duration = TimeSpan.Parse(time, NumberFormatInfo.InvariantInfo);
-                        _logger.LogInformation("Analyzed duration is {Duration}", duration);
+                        _logger.LogInformation("Analyzed duration is {Duration:hh\\:mm\\:ss}", duration);
                         version.Duration = duration;
                         return;
                     }
