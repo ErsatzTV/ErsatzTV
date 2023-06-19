@@ -253,7 +253,7 @@ public abstract class ProgramScheduleItemCommandBase
                 PlaybackOrder = item.PlaybackOrder,
                 PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
                 TailMode = item.TailMode,
-                DiscardToFillAttempts = item.DiscardToFillAttempts.GetValueOrDefault(),
+                DiscardToFillAttempts = FixDiscardToFillAttempts(item.PlaybackOrder, item.DiscardToFillAttempts.GetValueOrDefault()),
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,
@@ -277,4 +277,10 @@ public abstract class ProgramScheduleItemCommandBase
         startTime.HasValue && startTime.Value >= TimeSpan.FromDays(1)
             ? startTime.Value.Subtract(TimeSpan.FromDays(1))
             : startTime;
+
+    private static int FixDiscardToFillAttempts(PlaybackOrder playbackOrder, int value) => playbackOrder switch
+    {
+        PlaybackOrder.Random or PlaybackOrder.Shuffle => value,
+        _ => 0
+    };
 }

@@ -108,7 +108,21 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     }
 
     private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, BuildPlayout request) =>
-        PlayoutMustExist(dbContext, request);
+        PlayoutMustExist(dbContext, request).BindT(DiscardAttemptsMustBeValid);
+
+    private static Validation<BaseError, Playout> DiscardAttemptsMustBeValid(Playout playout)
+    {
+        foreach (ProgramScheduleItemDuration item in playout.ProgramSchedule.Items.OfType<ProgramScheduleItemDuration>())
+        {
+            item.DiscardToFillAttempts = item.PlaybackOrder switch
+            {
+                PlaybackOrder.Random or PlaybackOrder.Shuffle => item.DiscardToFillAttempts,
+                _ => 0
+            };
+        }
+        
+        return playout;
+    }
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
