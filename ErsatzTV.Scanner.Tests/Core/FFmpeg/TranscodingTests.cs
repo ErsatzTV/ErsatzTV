@@ -21,7 +21,6 @@ using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;
-using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
@@ -164,7 +163,7 @@ public class TranscodingTests
             // // // av1    yuv420p10le    51
             // //
             // new("msmpeg4v2", "yuv420p"),
-            new("msmpeg4v3", "yuv420p")
+            // new("msmpeg4v3", "yuv420p")
             //
             // // wmv3    yuv420p    1
         };
@@ -190,10 +189,10 @@ public class TranscodingTests
 
         public static HardwareAccelerationKind[] TestAccelerations =
         {
-            // HardwareAccelerationKind.None,
+            HardwareAccelerationKind.None,
             // HardwareAccelerationKind.Nvenc,
             HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv
+            // HardwareAccelerationKind.Qsv
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         };
@@ -251,7 +250,7 @@ public class TranscodingTests
                     MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
-            new Mock<ConfigElementRepository>().Object,
+            new Mock<IConfigElementRepository>().Object,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache.Object, service);
@@ -352,7 +351,7 @@ public class TranscodingTests
             now,
             Option<ChannelWatermark>.None,
             GetWatermark(watermark),
-            VaapiDriver.Default,
+            VaapiDriver.RadeonSI,
             "/dev/dri/renderD128",
             Option<int>.None,
             false,
@@ -372,6 +371,7 @@ public class TranscodingTests
             profileBitDepth,
             profileVideoFormat,
             profileAcceleration,
+            VaapiDriver.RadeonSI,
             localStatisticsProvider,
             () => videoVersion);
     }
@@ -618,7 +618,7 @@ public class TranscodingTests
             now,
             Option<ChannelWatermark>.None,
             channelWatermark,
-            VaapiDriver.Default,
+            VaapiDriver.RadeonSI,
             "/dev/dri/renderD128",
             Option<int>.None,
             false,
@@ -638,6 +638,7 @@ public class TranscodingTests
             profileBitDepth,
             profileVideoFormat,
             profileAcceleration,
+            VaapiDriver.RadeonSI,
             localStatisticsProvider,
             () => v);
     }
@@ -739,20 +740,16 @@ public class TranscodingTests
 
         var args =
             $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder}{colorRange}{colorSpace}{colorTransfer}{colorPrimaries} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
-        var p1 = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = ExecutableName("ffmpeg"),
-                Arguments = args
-            }
-        };
+        BufferedCommandResult p1 = await Cli.Wrap(ExecutableName("ffmpeg"))
+            .WithArguments(args)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync();
+        
+        string output = string.IsNullOrWhiteSpace(p1.StandardOutput)
+            ? p1.StandardError
+            : p1.StandardOutput;
 
-        p1.Start();
-        await p1.WaitForExitAsync();
-        // ReSharper disable once MethodHasAsyncOverload
-        p1.WaitForExit();
-        p1.ExitCode.Should().Be(0);
+        p1.ExitCode.Should().Be(0, output);
 
         switch (subtitle)
         {
@@ -871,7 +868,7 @@ public class TranscodingTests
                     MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
-            new Mock<ConfigElementRepository>().Object,
+            new Mock<IConfigElementRepository>().Object,
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;
@@ -883,6 +880,7 @@ public class TranscodingTests
         FFmpegProfileBitDepth profileBitDepth,
         FFmpegProfileVideoFormat profileVideoFormat,
         HardwareAccelerationKind profileAcceleration,
+        VaapiDriver vaapiDriver,
         ILocalStatisticsProvider localStatisticsProvider,
         Func<MediaVersion> getFinalMediaVersion)
     {
@@ -995,8 +993,10 @@ public class TranscodingTests
 
                 // AMF doesn't seem to set this metadata properly
                 // MPEG2Video doesn't always seem to set this properly
+                // RADEONSI driver doesn't set this properly
                 if (profileAcceleration != HardwareAccelerationKind.Amf &&
-                    profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video)
+                    profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video &&
+                    (profileAcceleration != HardwareAccelerationKind.Vaapi || vaapiDriver != VaapiDriver.RadeonSI))
                 {
                     colorParams.IsBt709.Should().BeTrue($"{colorParams}");
                 }
