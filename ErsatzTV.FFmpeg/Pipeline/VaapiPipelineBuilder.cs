@@ -418,6 +418,10 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
                 if (forceSoftwareOverlay)
                 {
+                    var downloadFilter = new HardwareDownloadFilter(currentState);
+                    currentState = downloadFilter.NextState(currentState);
+                    videoInputFile.FilterSteps.Add(downloadFilter);
+                    
                     foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
                     {
                         IPixelFormat pf = pixelFormat;
