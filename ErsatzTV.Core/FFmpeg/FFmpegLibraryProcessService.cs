@@ -199,21 +199,25 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             });
 
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
-        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter)
+        switch (channel.StreamingMode)
         {
-            outputFormat = OutputFormatKind.Hls;
-        }
-        else if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
-        {
-            // use mp4 by default
-            outputFormat = OutputFormatKind.Mp4;
-            
-            // override with setting if applicable
-            Option<OutputFormatKind> maybeOutputFormat = await _configElementRepository
-                .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
-            foreach (OutputFormatKind of in maybeOutputFormat)
+            case StreamingMode.HttpLiveStreamingSegmenter:
+                outputFormat = OutputFormatKind.Hls;
+                break;
+            case StreamingMode.HttpLiveStreamingDirect:
             {
-                outputFormat = of;
+                // use mpeg-ts by default
+                outputFormat = OutputFormatKind.MpegTs;
+            
+                // override with setting if applicable
+                Option<OutputFormatKind> maybeOutputFormat = await _configElementRepository
+                    .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
+                foreach (OutputFormatKind of in maybeOutputFormat)
+                {
+                    outputFormat = of;
+                }
+
+                break;
             }
         }
 

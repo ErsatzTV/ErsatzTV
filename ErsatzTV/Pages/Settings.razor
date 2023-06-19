@@ -100,6 +100,7 @@
                                Label="HLS Direct Output Format"
                                @bind-Value="_ffmpegSettings.HlsDirectOutputFormat"
                                For="@(() => _ffmpegSettings.HlsDirectOutputFormat)">
+                        <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.MpegTs">MPEG-TS</MudSelectItem>
                         <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mp4">MP4</MudSelectItem>
                         <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mkv">MKV</MudSelectItem>
                     </MudSelect>
