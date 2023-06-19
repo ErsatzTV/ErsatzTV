@@ -491,6 +491,13 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                             pf = availablePixelFormat;
                         }
                     }
+                    
+                    // only scale if scaling or padding was used for main video stream
+                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleFilter or PadFilter))
+                    {
+                        var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
+                        subtitle.FilterSteps.Add(scaleFilter);
+                    }
 
                     var subtitlesFilter = new OverlaySubtitleFilter(pf);
                     subtitleOverlayFilterSteps.Add(subtitlesFilter);

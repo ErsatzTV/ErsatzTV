@@ -429,6 +429,13 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                             }
                         }
 
+                        // only scale if scaling or padding was used for main video stream
+                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleVaapiFilter or PadFilter))
+                        {
+                            var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
+                            subtitle.FilterSteps.Add(scaleFilter);
+                        }
+
                         var subtitlesFilter = new OverlaySubtitleFilter(pf);
                         subtitleOverlayFilterSteps.Add(subtitlesFilter);
                     }
@@ -438,10 +445,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     var subtitleHardwareUpload = new HardwareUploadVaapiFilter(false);
                     subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
-                    // always scale - shouldn't really be needed outside of transcoding tests, which use picture subtitles
-                    // that are too big
-                    var scaleFilter = new SubtitleScaleVaapiFilter(desiredState.PaddedSize);
-                    subtitle.FilterSteps.Add(scaleFilter);
+                    // only scale if scaling or padding was used for main video stream
+                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleVaapiFilter or PadFilter))
+                    {
+                        var scaleFilter = new SubtitleScaleVaapiFilter(desiredState.PaddedSize);
+                        subtitle.FilterSteps.Add(scaleFilter);
+                    }
 
                     var subtitlesFilter = new OverlaySubtitleVaapiFilter();
                     subtitleOverlayFilterSteps.Add(subtitlesFilter);
