@@ -340,7 +340,7 @@ public class PipelineBuilderBaseTests
 
         // 0.4.0 reference: "-nostdin -threads 1 -hide_banner -loglevel error -nostats -fflags +genpts+discardcorrupt+igndts -re -ss 00:14:33.6195516 -i /tmp/whatever.mkv -map 0:0 -map 0:a -c:v copy -flags cgop -sc_threshold 0 -c:a copy -movflags +faststart -muxdelay 0 -muxpreload 0 -metadata service_provider="ErsatzTV" -metadata service_name="ErsatzTV" -t 00:06:39.6934484 -f mpegts -mpegts_flags +initial_discontinuity pipe:1"
         command.Should().Be(
-            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+delay_moov -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mp4 pipe:1");
+            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -re -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mp4 pipe:1");
     }
 
     [Test]
@@ -420,7 +420,7 @@ public class PipelineBuilderBaseTests
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
 
         command.Should().Be(
-            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -re -i /tmp/whatever.mkv -map 0:a -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+delay_moov -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mp4 pipe:1");
+            "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -re -i /tmp/whatever.mkv -map 0:a -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mp4 pipe:1");
     }
 
     [Test]

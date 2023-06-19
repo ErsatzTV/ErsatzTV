@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Skip checking for subtitles to extract when subtitles are not enabled on a channel/schedule item
 
 ### Changed
+- `HLS Direct` streaming mode
+    - Use `MPEG-TS` container/output format by default to maintain v0.7.8 compatibility
+      - `MP4` and `MKV` container/output format can still be configured in `Settings`
+    - Improve `MP4` compatibility with certain content
 - For `Pad` and `Duration` filler - prioritize filling the configured pad/duration
   - This will skip filler that is too long in an attempt to avoid unscheduled time
   - You may see the same filler more often, which means you may want to add more filler to your library so ETV has more options
