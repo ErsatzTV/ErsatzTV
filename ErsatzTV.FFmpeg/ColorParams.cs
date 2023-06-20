@@ -12,7 +12,8 @@ public record ColorParams(string ColorRange, string ColorSpace, string ColorTran
                              string.IsNullOrWhiteSpace(ColorTransfer) &&
                              string.IsNullOrWhiteSpace(ColorPrimaries);
 
-    public bool IsMixed => ColorSpace != ColorTransfer || ColorTransfer != ColorPrimaries;
+    public bool IsMixed => ColorSpace != ColorTransfer || ColorTransfer != ColorPrimaries ||
+                           string.IsNullOrWhiteSpace(ColorRange);
 
     public bool IsBt709
     {

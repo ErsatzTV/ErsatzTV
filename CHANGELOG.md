@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Skip checking for subtitles to extract when subtitles are not enabled on a channel/schedule item
 - Properly scale subtitles when using hardware acceleration
+- Fix color normalization of content with missing color metadata when using NVIDIA acceleration
 
 ### Changed
 - `HLS Direct` streaming mode
