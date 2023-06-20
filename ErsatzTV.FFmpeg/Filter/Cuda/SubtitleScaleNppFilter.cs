@@ -1,40 +1,13 @@
-using ErsatzTV.FFmpeg.Format;
-
 namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
 public class SubtitleScaleNppFilter : BaseFilter
 {
-    private readonly FrameState _currentState;
     private readonly FrameSize _paddedSize;
-    private readonly FrameSize _scaledSize;
 
-    public SubtitleScaleNppFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
-    {
-        _currentState = currentState;
-        _scaledSize = scaledSize;
-        _paddedSize = paddedSize;
-    }
+    public SubtitleScaleNppFilter(FrameSize paddedSize) => _paddedSize = paddedSize;
 
-    public override string Filter
-    {
-        get
-        {
-            string scale = string.Empty;
-            if (_currentState.ScaledSize != _scaledSize)
-            {
-                var targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                string format = string.Empty;
-                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
-                {
-                    format = $":format={pixelFormat.FFmpegName}";
-                }
-
-                scale = $"scale_npp={targetSize}{format}:force_original_aspect_ratio=1";
-            }
-
-            return scale;
-        }
-    }
+    public override string Filter =>
+        $"scale_npp={_paddedSize.Width}:{_paddedSize.Height}:force_original_aspect_ratio=1";
 
     public override FrameState NextState(FrameState currentState) => currentState;
 }
