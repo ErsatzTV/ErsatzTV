@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Skip checking for subtitles to extract when subtitles are not enabled on a channel/schedule item
-- Properly scale subtitles with QSV and some VAAPI configurations; now all configurations will scale subtitles
+- Properly scale subtitles when using hardware acceleration
 
 ### Changed
 - `HLS Direct` streaming mode

@@ -471,10 +471,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     // only scale if scaling or padding was used for main video stream
                     if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
                     {
-                        var scaleFilter = new SubtitleScaleNppFilter(
-                            currentState,
-                            desiredState.ScaledSize,
-                            desiredState.PaddedSize);
+                        var scaleFilter = new SubtitleScaleNppFilter(desiredState.PaddedSize);
                         subtitle.FilterSteps.Add(scaleFilter);
                     }
 
