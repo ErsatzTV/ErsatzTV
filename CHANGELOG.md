@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - For `Pad` and `Duration` filler - prioritize filling the configured pad/duration
   - This will skip filler that is too long in an attempt to avoid unscheduled time
   - You may see the same filler more often, which means you may want to add more filler to your library so ETV has more options
+- Update ffmpeg, libraries and drivers in all docker images
 
 ## [0.7.9-beta] - 2023-06-10
 ### Added
@@ -1686,7 +1687,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.8-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.9-beta...HEAD
+[0.7.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.8-beta...v0.7.9-beta
 [0.7.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.7-beta...v0.7.8-beta
 [0.7.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.6-beta...v0.7.7-beta
 [0.7.6-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.5-beta...v0.7.6-beta

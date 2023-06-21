@@ -87,7 +87,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                                order by CAST(C.Number as real)";
 
         await using var reader = (DbDataReader)await dbContext.Connection.ExecuteReaderAsync(QUERY);
-        Func<IDataReader, ChannelResult> rowParser = reader.GetRowParser<ChannelResult>();
+        Func<DbDataReader, ChannelResult> rowParser = reader.GetRowParser<ChannelResult>();
 
         while (await reader.ReadAsync())
         {
