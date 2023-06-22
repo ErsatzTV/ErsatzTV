@@ -35,4 +35,7 @@ public class DefaultHardwareCapabilities : IHardwareCapabilities
             _ => FFmpegCapability.Hardware
         };
     }
+    
+    public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
+        Option<RateControlMode>.None;
 }

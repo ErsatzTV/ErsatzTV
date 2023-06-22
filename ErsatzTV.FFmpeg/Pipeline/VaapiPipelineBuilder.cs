@@ -197,12 +197,16 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         // after everything else is done, apply the encoder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
         {
+            RateControlMode rateControlMode =
+                _hardwareCapabilities.GetRateControlMode(videoStream.Codec, videoStream.PixelFormat)
+                    .IfNone(RateControlMode.VBR);
+            
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
-                    (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(),
-                    (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(),
-                    (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) => new EncoderMpeg2Vaapi(),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(rateControlMode),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(rateControlMode),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) => new EncoderMpeg2Vaapi(rateControlMode),
 
                     (_, _) => GetSoftwareEncoder(currentState, desiredState)
                 };

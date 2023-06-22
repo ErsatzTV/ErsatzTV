@@ -90,7 +90,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         }
 
         BufferedCommandResult result = await Cli.Wrap("vainfo")
-            .WithArguments($"--display drm --device {vaapiDevice}")
+            .WithArguments($"--display drm --device {vaapiDevice} -a")
             .WithEnvironmentVariables(envVars)
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync(Encoding.UTF8);
@@ -164,22 +164,12 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 return new DefaultHardwareCapabilities();
             }
 
-            profileEntrypoints = new List<VaapiProfileEntrypoint>();
-
-            foreach (string line in string.Join("", output).Split("\n"))
+            foreach (string o in output)
             {
-                const string PROFILE_ENTRYPOINT_PATTERN = @"(VAProfile\w*).*(VAEntrypoint\w*)";
-                Match match = Regex.Match(line, PROFILE_ENTRYPOINT_PATTERN);
-                if (match.Success)
-                {
-                    profileEntrypoints.Add(
-                        new VaapiProfileEntrypoint(
-                            match.Groups[1].Value.Trim(),
-                            match.Groups[2].Value.Trim()));
-                }
+                profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
             }
 
-            if (profileEntrypoints.Any())
+            if (profileEntrypoints?.Any() ?? false)
             {
                 _logger.LogInformation(
                     "Detected {Count} VAAPI profile entrypoints for using {Driver} {Device}",

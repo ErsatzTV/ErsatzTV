@@ -122,28 +122,32 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             VideoFormat.H264 when bitDepth == 10 => false,
 
             VideoFormat.H264 =>
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.H264Main, VaapiEntrypoint.Encode)) ||
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.H264Main, VaapiEntrypoint.EncodeLowPower)),
+                _profileEntrypoints.Any(e => e is
+                {
+                    VaapiProfile: VaapiProfile.H264Main,
+                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                }),
 
             VideoFormat.Hevc when bitDepth == 10 =>
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain10, VaapiEntrypoint.Encode)) ||
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain10, VaapiEntrypoint.EncodeLowPower)),
+                _profileEntrypoints.Any(e => e is
+                {
+                    VaapiProfile: VaapiProfile.HevcMain10,
+                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                }),
 
             VideoFormat.Hevc =>
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain, VaapiEntrypoint.Encode)) ||
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.HevcMain, VaapiEntrypoint.EncodeLowPower)),
+                _profileEntrypoints.Any(e => e is
+                {
+                    VaapiProfile: VaapiProfile.HevcMain,
+                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                }),
 
             VideoFormat.Mpeg2Video =>
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.Mpeg2Main, VaapiEntrypoint.Encode)) ||
-                _profileEntrypoints.Contains(
-                    new VaapiProfileEntrypoint(VaapiProfile.Mpeg2Main, VaapiEntrypoint.EncodeLowPower)),
+                _profileEntrypoints.Any(e => e is
+                {
+                    VaapiProfile: VaapiProfile.Mpeg2Main,
+                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                }),
 
             _ => false
         };
@@ -157,5 +161,69 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
         }
 
         return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
+    }
+
+    public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat)
+    {
+        int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
+        Option<VaapiProfileEntrypoint> maybeEntrypoint = videoFormat switch
+        {
+            // vaapi cannot encode 10-bit h264
+            VideoFormat.H264 when bitDepth == 10 => None,
+
+            VideoFormat.H264 =>
+                _profileEntrypoints.Where(
+                        e => e is
+                        {
+                            VaapiProfile: VaapiProfile.H264Main,
+                            VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                        })
+                    .HeadOrNone(),
+
+            VideoFormat.Hevc when bitDepth == 10 =>
+                _profileEntrypoints.Where(
+                        e => e is
+                        {
+                            VaapiProfile: VaapiProfile.HevcMain10,
+                            VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                        })
+                    .HeadOrNone(),
+
+            VideoFormat.Hevc =>
+                _profileEntrypoints.Where(
+                        e => e is
+                        {
+                            VaapiProfile: VaapiProfile.HevcMain,
+                            VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                        })
+                    .HeadOrNone(),
+
+            VideoFormat.Mpeg2Video =>
+                _profileEntrypoints.Where(
+                        e => e is
+                        {
+                            VaapiProfile: VaapiProfile.Mpeg2Main,
+                            VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                        })
+                    .HeadOrNone(),
+
+            _ => None
+        };
+
+        foreach (VaapiProfileEntrypoint entrypoint in maybeEntrypoint)
+        {
+            if (entrypoint.RateControlModes.Contains(RateControlMode.VBR) ||
+                entrypoint.RateControlModes.Contains(RateControlMode.CBR))
+            {
+                return Option<RateControlMode>.None;
+            }
+
+            if (entrypoint.RateControlModes.Contains(RateControlMode.CQP))
+            {
+                return RateControlMode.CQP;
+            }
+        }
+
+        return Option<RateControlMode>.None;
     }
 }
