@@ -10,8 +10,6 @@ namespace ErsatzTV.Infrastructure.Scheduling;
 public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly CancellationToken _cancellationToken;
-    private readonly IList<MediaItem> _mediaItems;
-    private readonly IScriptEngine _scriptEngine;
     private readonly ILogger _logger;
     private readonly int _mediaItemCount;
     private readonly Dictionary<int, List<MediaItem>> _mediaItemGroups;
@@ -21,15 +19,13 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
 
     public MultiEpisodeShuffleCollectionEnumerator(
-        IList<MediaItem> mediaItems,
+        ICollection<MediaItem> mediaItems,
         CollectionEnumeratorState state,
         IScriptEngine scriptEngine,
         string scriptFile,
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        _mediaItems = mediaItems;
-        _scriptEngine = scriptEngine;
         _logger = logger;
         _cancellationToken = cancellationToken;
 
@@ -91,15 +87,16 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new MultiEpisodeShuffleCollectionEnumerator(
-            _mediaItems,
-            state,
-            _scriptEngine,
-            null,
-            _logger,
-            cancellationToken);
+        // only re-shuffle if needed
+        if (State.Seed != state.Seed)
+        {
+            _random = new CloneableRandom(state.Seed);
+            _shuffled = Shuffle(_random);
+        }
+
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }

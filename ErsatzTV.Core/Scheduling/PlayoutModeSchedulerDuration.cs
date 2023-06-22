@@ -122,16 +122,15 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
                 DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
                 
-                var enumeratorClones = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+                var enumeratorStates = new Dictionary<CollectionKey, CollectionEnumeratorState>();
                 foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
                 {
-                    IMediaCollectionEnumerator clone = enumerator.Clone(enumerator.State.Clone(), cancellationToken);
-                    enumeratorClones.Add(key, clone);
+                    enumeratorStates.Add(key, enumerator.State.Clone());
                 }
 
                 List<PlayoutItem> maybePlayoutItems = AddFiller(
                     nextState,
-                    enumeratorClones,
+                    collectionEnumerators,
                     scheduleItem,
                     playoutItem,
                     itemChapters,
@@ -147,16 +146,6 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
                     playoutItems.AddRange(maybePlayoutItems);
 
-                    // update original enumerators
-                    foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
-                    {
-                        IMediaCollectionEnumerator clone = enumeratorClones[key];
-                        while (enumerator.State.Seed != clone.State.Seed || enumerator.State.Index != clone.State.Index)
-                        {
-                            enumerator.MoveNext();
-                        }
-                    }
-
                     nextState = nextState with
                     {
                         CurrentTime = itemEndTimeWithFiller,
@@ -171,6 +160,12 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 }
                 else
                 {
+                    // reset enumerators
+                    foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
+                    {
+                        enumerator.ResetState(enumeratorStates[key]);
+                    }
+                    
                     TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
                     if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
                     {

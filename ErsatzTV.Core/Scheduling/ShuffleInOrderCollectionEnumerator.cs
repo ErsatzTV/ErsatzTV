@@ -43,9 +43,16 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new ShuffleInOrderCollectionEnumerator(_collections, state, _randomStartPoint, cancellationToken);
+        // only re-shuffle if needed
+        if (State.Seed != state.Seed)
+        {
+            _random = new Random(state.Seed);
+            _shuffled = Shuffle(_collections, _random);
+        }
+
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }

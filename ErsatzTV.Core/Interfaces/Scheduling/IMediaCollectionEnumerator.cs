@@ -4,7 +4,7 @@ namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IMediaCollectionEnumerator
 {
-    IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken);
+    void ResetState(CollectionEnumeratorState state);
     CollectionEnumeratorState State { get; }
     Option<MediaItem> Current { get; }
     void MoveNext();

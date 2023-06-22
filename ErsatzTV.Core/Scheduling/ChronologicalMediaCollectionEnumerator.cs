@@ -31,9 +31,10 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new ChronologicalMediaCollectionEnumerator(_sortedMediaItems, state);
+        // seed doesn't matter in chronological
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }

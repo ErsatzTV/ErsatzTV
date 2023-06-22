@@ -31,9 +31,10 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new SeasonEpisodeMediaCollectionEnumerator(_sortedMediaItems, state);
+        // seed doesn't matter here
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }
