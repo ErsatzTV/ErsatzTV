@@ -13,4 +13,8 @@ public interface IHardwareCapabilities
         string videoFormat,
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat);
+
+    public Option<RateControlMode> GetRateControlMode(
+        string videoFormat,
+        Option<IPixelFormat> maybePixelFormat);
 }

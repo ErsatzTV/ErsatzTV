@@ -115,4 +115,7 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         _logger.LogWarning("FFmpeg does not contain codec {Codec}; will fall back to software codec", codec);
         return FFmpegCapability.Software;
     }
+    
+    public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
+        Option<RateControlMode>.None;
 }
