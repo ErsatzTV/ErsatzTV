@@ -35,9 +35,10 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new CustomOrderCollectionEnumerator(_collection, _mediaItems, state);
+        // seed doesn't matter here
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }

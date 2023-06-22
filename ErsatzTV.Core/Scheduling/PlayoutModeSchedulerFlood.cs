@@ -74,16 +74,15 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                     ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
                     : DateTimeOffset.MaxValue;
 
-            var enumeratorClones = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+            var enumeratorStates = new Dictionary<CollectionKey, CollectionEnumeratorState>();
             foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
             {
-                IMediaCollectionEnumerator clone = enumerator.Clone(enumerator.State.Clone(), cancellationToken);
-                enumeratorClones.Add(key, clone);
+                enumeratorStates.Add(key, enumerator.State.Clone());
             }
 
             List<PlayoutItem> maybePlayoutItems = AddFiller(
                 nextState,
-                enumeratorClones,
+                collectionEnumerators,
                 scheduleItem,
                 playoutItem,
                 itemChapters,
@@ -102,16 +101,6 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 playoutItems.AddRange(maybePlayoutItems);
                 // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
-                // update original enumerators
-                foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
-                {
-                    IMediaCollectionEnumerator clone = enumeratorClones[key];
-                    while (enumerator.State.Seed != clone.State.Seed || enumerator.State.Index != clone.State.Index)
-                    {
-                        enumerator.MoveNext();
-                    }
-                }
-
                 nextState = nextState with
                 {
                     CurrentTime = itemEndTimeWithFiller,
@@ -124,6 +113,14 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 };
 
                 contentEnumerator.MoveNext();
+            }
+            else
+            {
+                // reset enumerators
+                foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
+                {
+                    enumerator.ResetState(enumeratorStates[key]);
+                }
             }
         }
 

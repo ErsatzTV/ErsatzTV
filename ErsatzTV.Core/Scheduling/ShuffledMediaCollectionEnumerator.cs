@@ -40,9 +40,16 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new ShuffledMediaCollectionEnumerator(_mediaItems, state, cancellationToken);
+        // only re-shuffle if needed
+        if (State.Seed != state.Seed)
+        {
+            _random = new CloneableRandom(state.Seed);
+            _shuffled = Shuffle(_mediaItems, _random);
+        }
+
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }

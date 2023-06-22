@@ -27,9 +27,10 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public IMediaCollectionEnumerator Clone(CollectionEnumeratorState state, CancellationToken cancellationToken)
+    public void ResetState(CollectionEnumeratorState state)
     {
-        return new RandomizedMediaCollectionEnumerator(_mediaItems, state);
+        // seed never changes here, no need to reset
+        State.Index = state.Index;
     }
 
     public CollectionEnumeratorState State { get; }
