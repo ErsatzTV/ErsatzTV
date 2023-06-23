@@ -820,11 +820,7 @@ public class EmbyApiClient : IEmbyApiClient
                 int height = videoStream.Height ?? 1;
 
                 var isAnamorphic = false;
-                if (videoStream.IsAnamorphic.HasValue)
-                {
-                    isAnamorphic = videoStream.IsAnamorphic.Value;
-                }
-                else if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(":"))
+                if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(":"))
                 {
                     // if width/height != aspect ratio, is anamorphic
                     double resolutionRatio = width / (double)height;
@@ -835,6 +831,10 @@ public class EmbyApiClient : IEmbyApiClient
                     double aspectRatio = num / den;
 
                     isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;
+                }
+                else if (videoStream.IsAnamorphic.HasValue)
+                {
+                    isAnamorphic = videoStream.IsAnamorphic.Value;
                 }
 
                 var version = new MediaVersion

@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly scale subtitles when using hardware acceleration
 - Fix color normalization of content with missing color metadata when using NVIDIA acceleration
 - `VAAPI`: explicitly use `CQP` rate control mode when it's the only compatible mode
+- Fix scaling anamorphic Emby content that Emby claims is not anamorphic
 
 ### Changed
 - `HLS Direct` streaming mode
