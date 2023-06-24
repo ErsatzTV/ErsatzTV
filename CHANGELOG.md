@@ -4,11 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.0-beta] - 2023-06-23
 ### Added
 - Disable playout buttons and show spinning indicator when a playout is being modified (built/extended, or subtitles are being extracted)
 - Automatically reload playout details table when playout build is complete
 - Add `Discard To Fill Attempts` setting to duration playout mode
-  - This setting only has an effect when it's configured to be greater than zero
+  - This setting only has an effect when it's configured to be greater than zero and when using `Shuffle` or `Random` playback order
   - When the current item is longer than the remaining duration, it will be discarded and ETV will try to fit the next item in the collection, up to the configured number of times
   - When the remaining duration is shorter than all items in the collection, the normal filler logic will be used
 - Add `Finish` column to playout detail table
@@ -1690,7 +1692,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.9-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.8.0-beta...HEAD
+[0.8.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.9-beta...v0.8.0-beta
 [0.7.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.8-beta...v0.7.9-beta
 [0.7.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.7-beta...v0.7.8-beta
 [0.7.7-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.6-beta...v0.7.7-beta
