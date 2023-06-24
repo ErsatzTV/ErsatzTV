@@ -6,21 +6,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Services.RunOnce;
 
-public class CacheCleanerService : IHostedService
+public class CacheCleanerService : BackgroundService
 {
     private readonly ILogger<CacheCleanerService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public CacheCleanerService(
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<CacheCleanerService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+        
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
         ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
@@ -57,6 +68,4 @@ public class CacheCleanerService : IHostedService
             _logger.LogInformation("Done emptying transcode cache folder");
         }
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

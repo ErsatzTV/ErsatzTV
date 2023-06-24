@@ -1,3 +1,4 @@
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Serilog.Core;
@@ -5,15 +6,27 @@ using Serilog.Events;
 
 namespace ErsatzTV.Services.RunOnce;
 
-public class LoadLoggingLevelService : IHostedService
+public class LoadLoggingLevelService : BackgroundService
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
-    public LoadLoggingLevelService(IServiceScopeFactory serviceScopeFactory) =>
-        _serviceScopeFactory = serviceScopeFactory;
-
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public LoadLoggingLevelService(IServiceScopeFactory serviceScopeFactory, SystemStartup systemStartup)
     {
+        _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        await Task.Yield();
+
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IConfigElementRepository configElementRepository =
             scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
@@ -26,6 +39,4 @@ public class LoadLoggingLevelService : IHostedService
             loggingLevelSwitch.MinimumLevel = logLevel;
         }
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

@@ -13,19 +13,30 @@ public class PlexService : BackgroundService
     private readonly ChannelReader<IPlexBackgroundServiceRequest> _channel;
     private readonly ILogger<PlexService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public PlexService(
         ChannelReader<IPlexBackgroundServiceRequest> channel,
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<PlexService> logger)
     {
         _channel = channel;
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         try
         {
             if (!File.Exists(FileSystemLayout.PlexSecretsPath))

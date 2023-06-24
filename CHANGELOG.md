@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Only allow a single instance of ErsatzTV to run
   - This fixes some cases where the search index would become unusable
 
+### Changed
+- Rework startup process to show UI as early as possible
+  - A minimal UI will indicate when the database and search index are initializing
+  - The UI will automatically refresh when the initialization processes have completed
+
+
 ## [0.8.0-beta] - 2023-06-23
 ### Added
 - Disable playout buttons and show spinning indicator when a playout is being modified (built/extended, or subtitles are being extracted)

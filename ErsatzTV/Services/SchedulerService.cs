@@ -9,6 +9,7 @@ using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaSources;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Plex;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Scheduling;
@@ -20,6 +21,7 @@ namespace ErsatzTV.Services;
 public class SchedulerService : BackgroundService
 {
     private readonly IEntityLocker _entityLocker;
+    private readonly SystemStartup _systemStartup;
     private readonly ILogger<SchedulerService> _logger;
     private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -30,60 +32,79 @@ public class SchedulerService : BackgroundService
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel,
         IEntityLocker entityLocker,
+        SystemStartup systemStartup,
         ILogger<SchedulerService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _workerChannel = workerChannel;
         _scannerWorkerChannel = scannerWorkerChannel;
         _entityLocker = entityLocker;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        DateTime firstRun = DateTime.Now;
-
-        // run once immediately at startup
-        if (!cancellationToken.IsCancellationRequested)
+        await Task.Yield();
+        
+        await _systemStartup.WaitForSearchIndex(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
         {
-            await DoWork(cancellationToken);
+            return;
         }
 
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
-            int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
-            _logger.LogDebug("Scheduler sleeping for {Minutes} minutes", toWait);
+            _logger.LogInformation("Scheduler service started");
 
-            try
-            {
-                await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
-            }
-            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
-            {
-                // do nothing
-            }
+            DateTime firstRun = DateTime.Now;
 
+            // run once immediately at startup
             if (!cancellationToken.IsCancellationRequested)
             {
-                var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
-                if (roundedMinute % 30 == 0)
+                await DoWork(cancellationToken);
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
+                int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
+                _logger.LogDebug("Scheduler sleeping for {Minutes} minutes", toWait);
+
+                try
                 {
-                    // check for playouts to reset every 30 minutes
-                    await ResetPlayouts(cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
+                }
+                catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+                {
+                    // do nothing
                 }
 
-                if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    // do other work every hour (on the hour)
-                    await DoWork(cancellationToken);
-                }
-                else if (roundedMinute % 30 == 0)
-                {
-                    // release memory every 30 minutes no matter what
-                    await ReleaseMemory(cancellationToken);
+                    var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
+                    if (roundedMinute % 30 == 0)
+                    {
+                        // check for playouts to reset every 30 minutes
+                        await ResetPlayouts(cancellationToken);
+                    }
+
+                    if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
+                    {
+                        // do other work every hour (on the hour)
+                        await DoWork(cancellationToken);
+                    }
+                    else if (roundedMinute % 30 == 0)
+                    {
+                        // release memory every 30 minutes no matter what
+                        await ReleaseMemory(cancellationToken);
+                    }
                 }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Scheduler service shutting down");
         }
     }
 

@@ -1,23 +1,35 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 
 namespace ErsatzTV.Services;
 
-public class FFmpegLocatorService : IHostedService
+public class FFmpegLocatorService : BackgroundService
 {
     private readonly ILogger<FFmpegLocatorService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public FFmpegLocatorService(
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<FFmpegLocatorService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IFFmpegLocator ffmpegLocator = scope.ServiceProvider.GetRequiredService<IFFmpegLocator>();
 
@@ -34,6 +46,4 @@ public class FFmpegLocatorService : IHostedService
             path => _logger.LogInformation("Located ffprobe at {Path}", path),
             () => _logger.LogWarning("Failed to locate ffprobe executable"));
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

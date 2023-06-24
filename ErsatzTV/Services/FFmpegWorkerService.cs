@@ -27,6 +27,8 @@ public class FFmpegWorkerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+        
         try
         {
             _logger.LogInformation("FFmpeg worker service started");

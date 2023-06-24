@@ -3,10 +3,12 @@ using ErsatzTV.Core;
 
 namespace ErsatzTV.Services.RunOnce;
 
-public class ResourceExtractorService : IHostedService
+public class ResourceExtractorService : BackgroundService
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+
         if (!Directory.Exists(FileSystemLayout.ResourcesCacheFolder))
         {
             Directory.CreateDirectory(FileSystemLayout.ResourcesCacheFolder);
@@ -59,8 +61,6 @@ public class ResourceExtractorService : IHostedService
             FileSystemLayout.AudioStreamSelectorScriptsFolder,
             cancellationToken);
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private static async Task ExtractResource(Assembly assembly, string name, CancellationToken cancellationToken)
     {

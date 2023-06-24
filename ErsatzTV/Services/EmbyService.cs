@@ -13,19 +13,30 @@ public class EmbyService : BackgroundService
     private readonly ChannelReader<IEmbyBackgroundServiceRequest> _channel;
     private readonly ILogger<EmbyService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public EmbyService(
         ChannelReader<IEmbyBackgroundServiceRequest> channel,
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<EmbyService> logger)
     {
         _channel = channel;
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+        
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         try
         {
             if (!File.Exists(FileSystemLayout.EmbySecretsPath))

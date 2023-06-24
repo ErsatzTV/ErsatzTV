@@ -521,6 +521,7 @@ public class Startup
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();
         services.AddSingleton<RecyclableMemoryStreamManager>();
+        services.AddSingleton<SystemStartup>();
         AddChannel<IBackgroundServiceRequest>(services);
         AddChannel<IPlexBackgroundServiceRequest>(services);
         AddChannel<IJellyfinBackgroundServiceRequest>(services);

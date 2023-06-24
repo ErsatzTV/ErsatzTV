@@ -1,23 +1,29 @@
-﻿using ErsatzTV.Infrastructure.Data;
+﻿using ErsatzTV.Core;
+using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Services.RunOnce;
 
-public class DatabaseMigratorService : IHostedService
+public class DatabaseMigratorService : BackgroundService
 {
     private readonly ILogger<DatabaseMigratorService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public DatabaseMigratorService(
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<DatabaseMigratorService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+        
         _logger.LogInformation("Applying database migrations");
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -25,8 +31,8 @@ public class DatabaseMigratorService : IHostedService
         await dbContext.Database.MigrateAsync(cancellationToken);
         await DbInitializer.Initialize(dbContext, cancellationToken);
 
+        _systemStartup.DatabaseIsReady();
+
         _logger.LogInformation("Done applying database migrations");
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
