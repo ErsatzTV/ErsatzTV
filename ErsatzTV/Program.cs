@@ -43,6 +43,13 @@ public class Program
 
     public static async Task<int> Main(string[] args)
     {
+        using var _ = new Mutex(true, "Global\\ErsatzTV.Singleton.74360cd8985c4d1fb6bc9e81887206fe", out bool createdNew);
+        if (!createdNew)
+        {
+            Console.WriteLine("Another instance of ErsatztTV is already running.");
+            return 1;
+        }
+
         LoggingLevelSwitch.MinimumLevel = LogEventLevel.Information;
 
         LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
