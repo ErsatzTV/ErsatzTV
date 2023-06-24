@@ -19,17 +19,11 @@ public class RebuildSearchIndexService : BackgroundService
     {
         await Task.Yield();
 
-        Serilog.Log.Information("{0} waiting for database", nameof(RebuildSearchIndexService));
-
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
-
-        Serilog.Log.Information("{0} DONE waiting for database", nameof(RebuildSearchIndexService));
-
-        await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();

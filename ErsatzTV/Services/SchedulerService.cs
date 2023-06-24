@@ -47,59 +47,64 @@ public class SchedulerService : BackgroundService
     {
         await Task.Yield();
         
-        _logger.LogInformation("{0} waiting for database", nameof(SchedulerService));
-
         await _systemStartup.WaitForSearchIndex(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        _logger.LogInformation("{0} waiting for database", nameof(SchedulerService));
-        
-        DateTime firstRun = DateTime.Now;
-
-        // run once immediately at startup
-        if (!cancellationToken.IsCancellationRequested)
+        try
         {
-            await DoWork(cancellationToken);
-        }
+            _logger.LogInformation("Scheduler service started");
 
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
-            int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
-            _logger.LogDebug("Scheduler sleeping for {Minutes} minutes", toWait);
+            DateTime firstRun = DateTime.Now;
 
-            try
-            {
-                await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
-            }
-            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
-            {
-                // do nothing
-            }
-
+            // run once immediately at startup
             if (!cancellationToken.IsCancellationRequested)
             {
-                var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
-                if (roundedMinute % 30 == 0)
+                await DoWork(cancellationToken);
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
+                int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
+                _logger.LogDebug("Scheduler sleeping for {Minutes} minutes", toWait);
+
+                try
                 {
-                    // check for playouts to reset every 30 minutes
-                    await ResetPlayouts(cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
+                }
+                catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+                {
+                    // do nothing
                 }
 
-                if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    // do other work every hour (on the hour)
-                    await DoWork(cancellationToken);
-                }
-                else if (roundedMinute % 30 == 0)
-                {
-                    // release memory every 30 minutes no matter what
-                    await ReleaseMemory(cancellationToken);
+                    var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
+                    if (roundedMinute % 30 == 0)
+                    {
+                        // check for playouts to reset every 30 minutes
+                        await ResetPlayouts(cancellationToken);
+                    }
+
+                    if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
+                    {
+                        // do other work every hour (on the hour)
+                        await DoWork(cancellationToken);
+                    }
+                    else if (roundedMinute % 30 == 0)
+                    {
+                        // release memory every 30 minutes no matter what
+                        await ReleaseMemory(cancellationToken);
+                    }
                 }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Scheduler service shutting down");
         }
     }
 

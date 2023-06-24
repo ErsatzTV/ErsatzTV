@@ -31,15 +31,11 @@ public class PlexService : BackgroundService
     {
         await Task.Yield();
 
-        _logger.LogInformation("{0} waiting for database", nameof(PlexService));
-
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
-
-        _logger.LogInformation("{0} waiting for database", nameof(PlexService));
 
         try
         {

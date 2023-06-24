@@ -26,16 +26,12 @@ public class CacheCleanerService : BackgroundService
     {
         await Task.Yield();
 
-        _logger.LogInformation("{0} waiting for database", nameof(CacheCleanerService));
-        
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
         
-        _logger.LogInformation("{0} DONE waiting for database", nameof(CacheCleanerService));
-
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
         ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();

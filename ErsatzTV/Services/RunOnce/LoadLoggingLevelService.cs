@@ -21,15 +21,11 @@ public class LoadLoggingLevelService : BackgroundService
     {
         await Task.Yield();
 
-        Console.WriteLine("{0} waiting for database", nameof(LoadLoggingLevelService));
-
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
-
-        Console.WriteLine("{0} DONE waiting for database", nameof(LoadLoggingLevelService));
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IConfigElementRepository configElementRepository =

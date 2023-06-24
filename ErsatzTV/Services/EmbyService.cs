@@ -31,16 +31,12 @@ public class EmbyService : BackgroundService
     {
         await Task.Yield();
         
-        _logger.LogInformation("{0} waiting for database", nameof(EmbyService));
-
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        _logger.LogInformation("{0} waiting for database", nameof(EmbyService));
-        
         try
         {
             if (!File.Exists(FileSystemLayout.EmbySecretsPath))

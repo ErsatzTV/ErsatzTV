@@ -24,15 +24,11 @@ public class FFmpegLocatorService : BackgroundService
     {
         await Task.Yield();
 
-        _logger.LogInformation("{0} waiting for database", nameof(FFmpegLocatorService));
-
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
-
-        _logger.LogInformation("{0} waiting for database", nameof(FFmpegLocatorService));
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IFFmpegLocator ffmpegLocator = scope.ServiceProvider.GetRequiredService<IFFmpegLocator>();

@@ -31,16 +31,12 @@ public class JellyfinService : BackgroundService
     {
         await Task.Yield();
 
-        _logger.LogInformation("{0} waiting for database", nameof(JellyfinService));
-
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        _logger.LogInformation("{0} waiting for database", nameof(JellyfinService));
-        
         try
         {
             if (!File.Exists(FileSystemLayout.JellyfinSecretsPath))
