@@ -20,7 +20,25 @@
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
-                <MudText>Please wait, this may take a few minutes...</MudText>
+                <MudText>Please wait, this may take a few minutes.</MudText>
+                <MudText>This page will automatically refresh when the database is ready.</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
+            </MudCardActions>
+        </MudCard>
+    }
+    else if (!SystemStartup.IsSearchIndexReady)
+    {
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h4">Search Index is initializing</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText>Please wait, this may take a few minutes.</MudText>
+                <MudText>This page will automatically refresh when the search index is ready.</MudText>
             </MudCardContent>
             <MudCardActions>
                 <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
@@ -98,18 +116,20 @@
 
     protected override void OnInitialized()
     {
-        SystemStartup.OnDatabaseReady += OnDatabaseReady;
+        SystemStartup.OnDatabaseReady += OnStartupProgress;
+        SystemStartup.OnSearchIndexReady += OnStartupProgress;
     }
 
     public void Dispose()
     {
-        SystemStartup.OnDatabaseReady -= OnDatabaseReady;
+        SystemStartup.OnDatabaseReady -= OnStartupProgress;
+        SystemStartup.OnSearchIndexReady -= OnStartupProgress;
 
         _cts.Cancel();
         _cts.Dispose();
     }
     
-    private async void OnDatabaseReady(object sender, EventArgs e)
+    private async void OnStartupProgress(object sender, EventArgs e)
     {
         await InvokeAsync(StateHasChanged);
     }

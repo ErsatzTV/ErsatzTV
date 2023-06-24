@@ -14,6 +14,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly SystemStartup _systemStartup;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RebuildSearchIndexHandler> _logger;
     private readonly ISearchIndex _searchIndex;
@@ -25,6 +26,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
         IFallbackMetadataProvider fallbackMetadataProvider,
+        SystemStartup systemStartup,
         ILogger<RebuildSearchIndexHandler> logger)
     {
         _searchIndex = searchIndex;
@@ -33,6 +35,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
         _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _systemStartup = systemStartup;
     }
 
     public async Task Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
@@ -63,5 +66,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
         {
             _logger.LogInformation("Search index is already version {Version}", _searchIndex.Version);
         }
+        
+        _systemStartup.SearchIndexIsReady();
     }
 }

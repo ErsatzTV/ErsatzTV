@@ -18,7 +18,7 @@
                 <img src="images/ersatztv.png" alt="ErsatzTV"/>
             </a>
         </div>
-        @if (SystemStartup.IsDatabaseReady)
+        @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
         {
             <div class="search-form">
                 <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
@@ -67,7 +67,7 @@
             </div>
         }
         <MudSpacer/>
-        @if (SystemStartup.IsDatabaseReady)
+        @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
         {
             <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
             <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
@@ -90,7 +90,7 @@
             </form>
         </AuthorizeView>
     </MudAppBar>
-    @if (SystemStartup.IsDatabaseReady)
+    @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
     {
         <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
             <MudNavMenu>
@@ -152,12 +152,14 @@
 
     protected override void OnInitialized()
     {
-        SystemStartup.OnDatabaseReady += OnDatabaseReady;
+        SystemStartup.OnDatabaseReady += OnStartupProgress;
+        SystemStartup.OnSearchIndexReady += OnStartupProgress;
     }
 
     public void Dispose()
     {
-        SystemStartup.OnDatabaseReady -= OnDatabaseReady;
+        SystemStartup.OnDatabaseReady -= OnStartupProgress;
+        SystemStartup.OnSearchIndexReady -= OnStartupProgress;
 
         _cts.Cancel();
         _cts.Dispose();
@@ -202,7 +204,7 @@
         }
     }
 
-    private async void OnDatabaseReady(object sender, EventArgs e)
+    private async void OnStartupProgress(object sender, EventArgs e)
     {
         await InvokeAsync(StateHasChanged);
     }

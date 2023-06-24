@@ -49,7 +49,7 @@ public class SchedulerService : BackgroundService
         
         _logger.LogInformation("{0} waiting for database", nameof(SchedulerService));
 
-        await _systemStartup.WaitForDatabase(cancellationToken);
+        await _systemStartup.WaitForSearchIndex(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {
             return;

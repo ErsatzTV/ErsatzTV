@@ -27,7 +27,9 @@ public class RebuildSearchIndexService : BackgroundService
             return;
         }
 
-        Serilog.Log.Information("{0} waiting for database", nameof(RebuildSearchIndexService));
+        Serilog.Log.Information("{0} DONE waiting for database", nameof(RebuildSearchIndexService));
+
+        await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
