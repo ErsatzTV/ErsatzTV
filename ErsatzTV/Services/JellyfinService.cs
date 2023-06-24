@@ -13,19 +13,34 @@ public class JellyfinService : BackgroundService
     private readonly ChannelReader<IJellyfinBackgroundServiceRequest> _channel;
     private readonly ILogger<JellyfinService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public JellyfinService(
         ChannelReader<IJellyfinBackgroundServiceRequest> channel,
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<JellyfinService> logger)
     {
         _channel = channel;
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+
+        _logger.LogInformation("{0} waiting for database", nameof(JellyfinService));
+
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _logger.LogInformation("{0} waiting for database", nameof(JellyfinService));
+        
         try
         {
             if (!File.Exists(FileSystemLayout.JellyfinSecretsPath))

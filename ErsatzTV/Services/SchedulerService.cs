@@ -9,6 +9,7 @@ using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaSources;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.Plex;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Scheduling;
@@ -20,6 +21,7 @@ namespace ErsatzTV.Services;
 public class SchedulerService : BackgroundService
 {
     private readonly IEntityLocker _entityLocker;
+    private readonly SystemStartup _systemStartup;
     private readonly ILogger<SchedulerService> _logger;
     private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -30,17 +32,31 @@ public class SchedulerService : BackgroundService
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ChannelWriter<IScannerBackgroundServiceRequest> scannerWorkerChannel,
         IEntityLocker entityLocker,
+        SystemStartup systemStartup,
         ILogger<SchedulerService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _workerChannel = workerChannel;
         _scannerWorkerChannel = scannerWorkerChannel;
         _entityLocker = entityLocker;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+        
+        _logger.LogInformation("{0} waiting for database", nameof(SchedulerService));
+
+        await _systemStartup.WaitForDatabase(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        _logger.LogInformation("{0} waiting for database", nameof(SchedulerService));
+        
         DateTime firstRun = DateTime.Now;
 
         // run once immediately at startup

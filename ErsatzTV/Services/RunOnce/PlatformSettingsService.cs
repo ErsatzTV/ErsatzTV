@@ -1,12 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.FFmpeg.Runtime;
-using ErsatzTV.Infrastructure.Data;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace ErsatzTV.Services.RunOnce;
 
-public class PlatformSettingsService : IHostedService
+public class PlatformSettingsService : BackgroundService
 {
     private readonly ILogger<PlatformSettingsService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -19,11 +18,11 @@ public class PlatformSettingsService : IHostedService
         _logger = logger;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+        await Task.Yield();
 
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IRuntimeInfo runtimeInfo = scope.ServiceProvider.GetRequiredService<IRuntimeInfo>();
         if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux) &&
             Directory.Exists("/dev/dri"))
@@ -38,6 +37,4 @@ public class PlatformSettingsService : IHostedService
             memoryCache.Set("ffmpeg.render_devices", devices);
         }
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

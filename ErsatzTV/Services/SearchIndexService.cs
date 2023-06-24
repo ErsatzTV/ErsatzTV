@@ -24,6 +24,8 @@ public class SearchIndexService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
+        await Task.Yield();
+        
         try
         {
             _logger.LogInformation("Search index worker service started");

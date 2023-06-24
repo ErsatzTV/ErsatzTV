@@ -5,6 +5,7 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
+@inject SystemStartup SystemStartup
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
@@ -17,54 +18,60 @@
                 <img src="images/ersatztv.png" alt="ErsatzTV"/>
             </a>
         </div>
-        <div class="search-form">
-            <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
-                <MudTextField T="string"
-                              @bind-Value="@Query"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Adornment="Adornment.Start"
-                              Variant="Variant.Outlined"
-                              Immediate="true"
-                              Class="search-bar"
-                              @onclick="@(() => _isOpen = true)"
-                              OnKeyUp="OnKeyUp">
-                </MudTextField>
-                <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="true">
-                    @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
-                    {
-                        var matches = _searchTargets.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();
-                        if (matches.Any())
+        @if (SystemStartup.IsDatabaseReady)
+        {
+            <div class="search-form">
+                <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
+                    <MudTextField T="string"
+                                  @bind-Value="@Query"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Adornment="Adornment.Start"
+                                  Variant="Variant.Outlined"
+                                  Immediate="true"
+                                  Class="search-bar"
+                                  @onclick="@(() => _isOpen = true)"
+                                  OnKeyUp="OnKeyUp">
+                    </MudTextField>
+                    <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="true">
+                        @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
                         {
-                            <MudList Clickable="true" Dense="true">
-                                @foreach (SearchTargetViewModel searchTarget in matches)
-                                {
-                                    <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
-                                        <MudText Typo="Typo.body1">@searchTarget.Name</MudText>
-                                        <MudText Typo="Typo.subtitle1" Class="mud-text-disabled">
-                                            @(searchTarget.Kind switch
-                                            {
-                                                SearchTargetKind.Channel => "Channel",
-                                                SearchTargetKind.FFmpegProfile => "FFmpeg Profile",
-                                                SearchTargetKind.ChannelWatermark => "Channel Watermark",
-                                                SearchTargetKind.Collection => "Collection",
-                                                SearchTargetKind.MultiCollection => "Multi Collection",
-                                                SearchTargetKind.SmartCollection => "Smart Collection",
-                                                SearchTargetKind.Schedule => "Schedule",
-                                                SearchTargetKind.ScheduleItems => "Schedule Items",
-                                                _ => string.Empty
-                                                })
-                                        </MudText>
-                                    </MudListItem>
-                                }
-                            </MudList>
+                            var matches = _searchTargets.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                            if (matches.Any())
+                            {
+                                <MudList Clickable="true" Dense="true">
+                                    @foreach (SearchTargetViewModel searchTarget in matches)
+                                    {
+                                        <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
+                                            <MudText Typo="Typo.body1">@searchTarget.Name</MudText>
+                                            <MudText Typo="Typo.subtitle1" Class="mud-text-disabled">
+                                                @(searchTarget.Kind switch
+                                                {
+                                                    SearchTargetKind.Channel => "Channel",
+                                                    SearchTargetKind.FFmpegProfile => "FFmpeg Profile",
+                                                    SearchTargetKind.ChannelWatermark => "Channel Watermark",
+                                                    SearchTargetKind.Collection => "Collection",
+                                                    SearchTargetKind.MultiCollection => "Multi Collection",
+                                                    SearchTargetKind.SmartCollection => "Smart Collection",
+                                                    SearchTargetKind.Schedule => "Schedule",
+                                                    SearchTargetKind.ScheduleItems => "Schedule Items",
+                                                    _ => string.Empty
+                                                    })
+                                            </MudText>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+                            }
                         }
-                    }
-                </MudPopover>
-            </EditForm>
-        </div>
+                    </MudPopover>
+                </EditForm>
+            </div>
+        }
         <MudSpacer/>
-        <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
-        <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+        @if (SystemStartup.IsDatabaseReady)
+        {
+            <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
+            <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+        }
         @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
         <MudTooltip Text="Documentation">
             <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Link="https://ersatztv.org" Target="_blank"/>
@@ -83,45 +90,48 @@
             </form>
         </AuthorizeView>
     </MudAppBar>
-    <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
-        <MudNavMenu>
-            <MudNavLink Href="channels">Channels</MudNavLink>
-            <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
-            <MudNavLink Href="watermarks">Watermarks</MudNavLink>
-            <MudNavGroup Title="Media Sources" Expanded="true">
-                <MudNavLink Href="media/sources/local">Local</MudNavLink>
-                <MudNavLink Href="media/sources/emby">Emby</MudNavLink>
-                <MudNavLink Href="media/sources/jellyfin">Jellyfin</MudNavLink>
-                <MudNavLink Href="media/sources/plex">Plex</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="Media" Expanded="true">
-                <MudNavLink Href="media/libraries">Libraries</MudNavLink>
-                <MudNavLink Href="media/trash">Trash</MudNavLink>
-                <MudNavLink Href="media/tv/shows">TV Shows</MudNavLink>
-                <MudNavLink Href="media/movies">Movies</MudNavLink>
-                <MudNavLink Href="media/music/artists">Music</MudNavLink>
-                <MudNavLink Href="media/other/videos">Other Videos</MudNavLink>
-                <MudNavLink Href="media/music/songs">Songs</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="Lists" Expanded="true">
-                <MudNavLink Href="media/collections">Collections</MudNavLink>
-                <MudNavLink Href="media/trakt/lists">Trakt Lists</MudNavLink>
-                <MudNavLink Href="media/filler/presets">Filler Presets</MudNavLink>
-            </MudNavGroup>
-            <MudNavLink Href="schedules">Schedules</MudNavLink>
-            <MudNavLink Href="playouts">Playouts</MudNavLink>
-            <MudNavLink Href="settings">Settings</MudNavLink>
-            <MudNavGroup Title="Support" Expanded="true">
-                <MudNavLink Href="system/logs">Logs</MudNavLink>
-                <MudNavLink Href="system/troubleshooting">Troubleshooting</MudNavLink>
-            </MudNavGroup>
-            <MudDivider Class="my-6" DividerType="DividerType.Middle"/>
-            <MudContainer Style="text-align: right" Class="mr-6">
-                <MudText Typo="Typo.body2">ErsatzTV Version</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Info">@InfoVersion</MudText>
-            </MudContainer>
-        </MudNavMenu>
-    </MudDrawer>
+    @if (SystemStartup.IsDatabaseReady)
+    {
+        <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
+            <MudNavMenu>
+                <MudNavLink Href="channels">Channels</MudNavLink>
+                <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
+                <MudNavLink Href="watermarks">Watermarks</MudNavLink>
+                <MudNavGroup Title="Media Sources" Expanded="true">
+                    <MudNavLink Href="media/sources/local">Local</MudNavLink>
+                    <MudNavLink Href="media/sources/emby">Emby</MudNavLink>
+                    <MudNavLink Href="media/sources/jellyfin">Jellyfin</MudNavLink>
+                    <MudNavLink Href="media/sources/plex">Plex</MudNavLink>
+                </MudNavGroup>
+                <MudNavGroup Title="Media" Expanded="true">
+                    <MudNavLink Href="media/libraries">Libraries</MudNavLink>
+                    <MudNavLink Href="media/trash">Trash</MudNavLink>
+                    <MudNavLink Href="media/tv/shows">TV Shows</MudNavLink>
+                    <MudNavLink Href="media/movies">Movies</MudNavLink>
+                    <MudNavLink Href="media/music/artists">Music</MudNavLink>
+                    <MudNavLink Href="media/other/videos">Other Videos</MudNavLink>
+                    <MudNavLink Href="media/music/songs">Songs</MudNavLink>
+                </MudNavGroup>
+                <MudNavGroup Title="Lists" Expanded="true">
+                    <MudNavLink Href="media/collections">Collections</MudNavLink>
+                    <MudNavLink Href="media/trakt/lists">Trakt Lists</MudNavLink>
+                    <MudNavLink Href="media/filler/presets">Filler Presets</MudNavLink>
+                </MudNavGroup>
+                <MudNavLink Href="schedules">Schedules</MudNavLink>
+                <MudNavLink Href="playouts">Playouts</MudNavLink>
+                <MudNavLink Href="settings">Settings</MudNavLink>
+                <MudNavGroup Title="Support" Expanded="true">
+                    <MudNavLink Href="system/logs">Logs</MudNavLink>
+                    <MudNavLink Href="system/troubleshooting">Troubleshooting</MudNavLink>
+                </MudNavGroup>
+                <MudDivider Class="my-6" DividerType="DividerType.Middle"/>
+                <MudContainer Style="text-align: right" Class="mr-6">
+                    <MudText Typo="Typo.body2">ErsatzTV Version</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Info">@InfoVersion</MudText>
+                </MudContainer>
+            </MudNavMenu>
+        </MudDrawer>
+    }
     <MudMainContent>
         @Body
     </MudMainContent>
@@ -140,8 +150,15 @@
     private bool _isOpen;
     private List<SearchTargetViewModel> _searchTargets;
 
+    protected override void OnInitialized()
+    {
+        SystemStartup.OnDatabaseReady += OnDatabaseReady;
+    }
+
     public void Dispose()
     {
+        SystemStartup.OnDatabaseReady -= OnDatabaseReady;
+
         _cts.Cancel();
         _cts.Dispose();
     }
@@ -185,12 +202,17 @@
         }
     }
 
+    private async void OnDatabaseReady(object sender, EventArgs e)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
         _query = NavigationManager.Uri.GetSearchQuery();
 
-        if (_searchTargets is null)
+        if (SystemStartup.IsDatabaseReady && _searchTargets is null)
         {
             _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
         }
