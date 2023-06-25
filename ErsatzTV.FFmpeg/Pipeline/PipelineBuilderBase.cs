@@ -616,7 +616,16 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private void SetThreadCount(FFmpegState ffmpegState, FrameState desiredState, IList<IPipelineStep> pipelineSteps)
     {
-        if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
+        if (ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.None ||
+            ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.None)
+        {
+            _logger.LogInformation(
+                "Forcing {Threads} ffmpeg thread when hardware acceleration is used",
+                1);
+
+            pipelineSteps.Insert(0, new ThreadCountOption(1));
+        }
+        else if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
         {
             _logger.LogInformation(
                 "Forcing {Threads} ffmpeg thread due to buggy combination of stream seek and realtime output",
