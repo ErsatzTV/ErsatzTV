@@ -14,7 +14,7 @@
         <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Local Library" : "Add Local Library")</MudText>
 
         <EditForm EditContext="_editContext" OnSubmit="@SaveChangesAsync">
-            <FluentValidator/>
+            <FluentValidationValidator/>
             <MudCard>
                 <MudCardContent>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
