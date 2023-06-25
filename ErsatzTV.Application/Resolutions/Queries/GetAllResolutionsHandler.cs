@@ -15,9 +15,9 @@ public class GetAllResolutionsHandler : IRequestHandler<GetAllResolutions, List<
         GetAllResolutions request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Resolutions
             .ToListAsync(cancellationToken)
-            .Map(list => list.Map(ProjectToViewModel).ToList());
+            .Map(list => list.OrderBy(r => r.Width).ThenBy(r => r.Height).Map(ProjectToViewModel).ToList());
     }
 }

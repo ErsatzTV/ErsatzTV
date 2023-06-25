@@ -1,5 +1,4 @@
-﻿using ErsatzTV.Application.Resolutions;
-using ErsatzTV.Core.Api.FFmpegProfiles;
+﻿using ErsatzTV.Core.Api.FFmpegProfiles;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
@@ -15,7 +14,7 @@ internal static class Mapper
             profile.VaapiDriver,
             profile.VaapiDevice,
             profile.QsvExtraHardwareFrames,
-            Project(profile.Resolution),
+            Resolutions.Mapper.ProjectToViewModel(profile.Resolution),
             profile.VideoFormat,
             profile.BitDepth,
             profile.VideoBitrate,
@@ -57,7 +56,4 @@ internal static class Mapper
             ffmpegProfile.AudioSampleRate,
             ffmpegProfile.NormalizeFramerate,
             ffmpegProfile.DeinterlaceVideo);
-
-    private static ResolutionViewModel Project(Resolution resolution) =>
-        new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);
 }

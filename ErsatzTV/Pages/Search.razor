@@ -616,7 +616,7 @@
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
+        IDialogReference dialog = await Dialog.ShowAsync<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is SmartCollectionViewModel collection)
         {

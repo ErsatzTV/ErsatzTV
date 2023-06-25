@@ -1,0 +1,51 @@
+﻿<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_model" OnSubmit="@(_ => Submit())">
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField Label="Width" @bind-Value="@_model.Width" For="@(() => _model.Width)" Style="min-width: 400px"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField Label="Height" @bind-Value="@_model.Height" For="@(() => _model.Height)" Style="min-width: 400px"/>
+            </MudElement>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Add
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private readonly ResolutionEditViewModel _model = new();
+
+    private void Submit()
+    {
+        // if (!CanSubmit())
+        // {
+        //     return;
+        // }
+
+        MudDialog.Close(DialogResult.Ok(_model));
+    }
+
+    private void Cancel(MouseEventArgs e)
+    {
+        // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        if (e.Detail == 0)
+        {
+            Submit();
+        }
+        else
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+}
