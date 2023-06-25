@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add custom resolution management to `Settings` page
+
 ### Fixed
 - Only allow a single instance of ErsatzTV to run
   - This fixes some cases where the search index would become unusable
@@ -12,7 +15,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Rework startup process to show UI as early as possible
   - A minimal UI will indicate when the database and search index are initializing
   - The UI will automatically refresh when the initialization processes have completed
-
 
 ## [0.8.0-beta] - 2023-06-23
 ### Added

@@ -6,13 +6,15 @@
 @using ErsatzTV.Application.Watermarks
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.FFmpeg.OutputFormat
 @using Serilog.Events
 @implements IDisposable
-@inject IMediator _mediator
-@inject ISnackbar _snackbar
-@inject ILogger<Settings> _logger
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<Settings> Logger
+@inject IDialogService Dialog
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="display: flex; flex-direction: row">
     <MudGrid>
@@ -201,6 +203,45 @@
                 </MudCardActions>
             </MudCard>
         </MudStack>
+        <MudStack Class="mr-6">
+            <MudCard Class="mb-6" Style="width: 350px">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Custom Resolutions</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (_customResolutions.Any())
+                    {
+                        <MudTable Hover="true" Items="_customResolutions" Dense="true" Class="mt-6">
+                            <ColGroup>
+                                <col/>
+                                <col style="width: 60px;"/>
+                            </ColGroup>
+                            <HeaderContent>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Resolution">@context.Name</MudTd>
+                                <MudTd>
+                                    <div style="align-items: center; display: flex;">
+                                        <MudTooltip Text="Delete Custom Resolution">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                           OnClick="@(() => DeleteCustomResolution(context))">
+                                            </MudIconButton>
+                                        </MudTooltip>
+                                    </div>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddCustomResolution())" Class="ml-2">
+                        Add Custom Resolution
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudStack>
     </MudGrid>
 </MudContainer>
 
@@ -216,6 +257,7 @@
     private List<CultureInfo> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
     private List<FillerPresetViewModel> _fillerPresets;
+    private List<ResolutionViewModel> _customResolutions;
     private int _tunerCount;
     private int _libraryRefreshInterval;
     private PlayoutSettingsViewModel _playoutSettings;
@@ -231,19 +273,21 @@
     {
         await LoadFFmpegProfilesAsync();
 
-        _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings(), _cts.Token);
+        _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), _cts.Token);
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
-        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token);
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), _cts.Token)
+        _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
+        _fillerPresets = await Mediator.Send(new GetAllFillerPresets(), _cts.Token)
             .Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
-        _tunerCount = await _mediator.Send(new GetHDHRTunerCount(), _cts.Token);
+        _tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
-        _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
+        _libraryRefreshInterval = await Mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
         _scannerSuccess = _libraryRefreshInterval is >= 0 and < 1_000_000;
-        _playoutSettings = await _mediator.Send(new GetPlayoutSettings(), _cts.Token);
+        _playoutSettings = await Mediator.Send(new GetPlayoutSettings(), _cts.Token);
         _playoutSuccess = _playoutSettings.DaysToBuild > 0;
-        _generalSettings = await _mediator.Send(new GetGeneralSettings(), _cts.Token);
+        _generalSettings = await Mediator.Send(new GetGeneralSettings(), _cts.Token);
+
+        await RefreshCustomResolutions();
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
@@ -265,66 +309,110 @@
     private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
 
     private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
+        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
 
     private async Task SaveFFmpegSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings), _cts.Token);
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings), _cts.Token);
         result.Match(
             Left: error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
             },
-            Right: _ => _snackbar.Add("Successfully saved FFmpeg settings", Severity.Success));
+            Right: _ => Snackbar.Add("Successfully saved FFmpeg settings", Severity.Success));
     }
 
     private async Task SaveHDHRSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
         result.Match(
             Left: error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
             },
-            Right: _ => _snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
+            Right: _ => Snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
     }
 
     private async Task SaveScannerSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval), _cts.Token);
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval), _cts.Token);
         result.Match(
             Left: error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Unexpected error saving scanner settings: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving scanner settings: {Error}", error.Value);
             },
-            Right: _ => _snackbar.Add("Successfully saved scanner settings", Severity.Success));
+            Right: _ => Snackbar.Add("Successfully saved scanner settings", Severity.Success));
     }
 
     private async Task SavePlayoutSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
         result.Match(
             Left: error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Unexpected error saving playout settings: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving playout settings: {Error}", error.Value);
             },
-            Right: _ => _snackbar.Add("Successfully saved playout settings", Severity.Success));
+            Right: _ => Snackbar.Add("Successfully saved playout settings", Severity.Success));
     }
 
     private async Task SaveGeneralSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateGeneralSettings(_generalSettings), _cts.Token);
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateGeneralSettings(_generalSettings), _cts.Token);
         result.Match(
             Left: error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Unexpected error saving general settings: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving general settings: {Error}", error.Value);
             },
-            Right: _ => _snackbar.Add("Successfully saved general settings", Severity.Success));
+            Right: _ => Snackbar.Add("Successfully saved general settings", Severity.Success));
     }
 
+    private async Task RefreshCustomResolutions()
+    {
+        _customResolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token)
+            .Map(list => list.Filter(r => r.IsCustom).ToList());
+    }
+
+    private async Task AddCustomResolution()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        IDialogReference dialog = await Dialog.ShowAsync<AddCustomResolutionDialog>("Add Custom Resolution", options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled && result.Data is ResolutionEditViewModel resolution)
+        {
+            Option<BaseError> saveResult = await Mediator.Send(
+                new CreateCustomResolution(resolution.Width, resolution.Height),
+                _cts.Token);
+            foreach (BaseError error in saveResult)
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error adding custom resolution: {Error}", error.Value);
+            }
+
+            if (saveResult.IsNone)
+            {
+                await RefreshCustomResolutions();
+            }
+        }
+    }
+
+    private async Task DeleteCustomResolution(ResolutionViewModel resolution)
+    {
+        Option<BaseError> result = await Mediator.Send(new DeleteCustomResolution(resolution.Id), _cts.Token);
+        foreach (BaseError error in result)
+        {
+            Snackbar.Add(error.Value, Severity.Error);
+            Logger.LogError("Unexpected error deleting custom resolution: {Error}", error.Value);
+        }
+
+        if (result.IsNone)
+        {
+            await RefreshCustomResolutions();
+        }
+    }
 }

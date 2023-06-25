@@ -12,7 +12,7 @@
         <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Schedule" : "Add Schedule")</MudText>
 
         <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-            <FluentValidator/>
+            <FluentValidationValidator/>
             <MudCard>
                 <MudCardContent>
                     <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>

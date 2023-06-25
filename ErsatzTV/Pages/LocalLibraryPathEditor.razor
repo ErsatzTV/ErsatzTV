@@ -13,7 +13,7 @@
     <MudText Typo="Typo.h4" Class="mb-4">@_library.Name - Add Local Library Path</MudText>
     <div style="max-width: 400px;">
         <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-            <FluentValidator/>
+            <FluentValidationValidator/>
             <MudCard>
                 <MudCardContent>
                     <MudTextField T="string" Label="Media Kind" Disabled="true" Value="@(Enum.GetName(typeof(LibraryMediaKind), _library.MediaKind))"/>
