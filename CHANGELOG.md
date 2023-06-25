@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Rework startup process to show UI as early as possible
   - A minimal UI will indicate when the database and search index are initializing
   - The UI will automatically refresh when the initialization processes have completed
+- Force ffmpeg to use one thread when hardware acceleration is used since hardware acceleration does not support multiple threads
 
 ## [0.8.0-beta] - 2023-06-23
 ### Added
