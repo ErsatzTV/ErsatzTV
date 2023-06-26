@@ -315,7 +315,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         _logger.LogDebug("Checking for JS Script at {Path}", jsScriptPath);
         if (!_localFileSystem.FileExists(jsScriptPath))
         {
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "Unable to locate movie audio stream selector script; falling back to built-in logic");
             return Option<MediaStream>.None;
         }
