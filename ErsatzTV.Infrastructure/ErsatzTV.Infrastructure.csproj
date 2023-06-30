@@ -27,7 +27,7 @@
       </PackageReference>
       <PackageReference Include="Refit" Version="6.3.2" />
       <PackageReference Include="Refit.Newtonsoft.Json" Version="6.3.2" />
-      <PackageReference Include="Refit.Xml" Version="6.3.2" />
+      <PackageReference Include="Refit.Xml" Version="7.0.0" />
       <PackageReference Include="Scriban.Signed" Version="5.7.0" />
     </ItemGroup>
 
