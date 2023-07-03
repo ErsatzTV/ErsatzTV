@@ -4,7 +4,7 @@
 
 Documentation is available at [ersatztv.org](https://ersatztv.org/).
 
-Want to join the community or have a question? Join us on [Discord](https://discord.gg/hHaJm3yGy6).
+Want to join the community or have a question? Join us at the [ErsatzTV Community](https://discuss.ersatztv.org/) or on [Discord](https://discord.gg/hHaJm3yGy6).
 
 ## Current Features
 
