@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Only allow a single instance of ErsatzTV to run
   - This fixes some cases where the search index would become unusable
+- Fix VAAPI rate control mode capability check 
 
 ### Changed
 - Rework startup process to show UI as early as possible

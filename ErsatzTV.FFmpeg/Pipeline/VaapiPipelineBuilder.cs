@@ -198,7 +198,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         if (pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
         {
             RateControlMode rateControlMode =
-                _hardwareCapabilities.GetRateControlMode(videoStream.Codec, videoStream.PixelFormat)
+                _hardwareCapabilities.GetRateControlMode(desiredState.VideoFormat, desiredState.PixelFormat)
                     .IfNone(RateControlMode.VBR);
             
             Option<IEncoder> maybeEncoder =
