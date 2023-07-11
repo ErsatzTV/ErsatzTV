@@ -73,7 +73,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.5.0" />
+      <PackageReference Include="MudBlazor" Version="6.7.0" />
       <PackageReference Include="NaturalSort.Extension" Version="4.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
       <PackageReference Include="Serilog" Version="3.0.1" />
