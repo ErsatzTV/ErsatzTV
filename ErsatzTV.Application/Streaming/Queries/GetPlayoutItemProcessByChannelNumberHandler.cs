@@ -458,6 +458,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                 foreach (int plexMediaSourceId in maybeId)
                 {
+                    _logger.LogDebug(
+                        "Attempting to stream Plex file {PlexFileName} using key {PlexKey}",
+                        pmf.Path,
+                        pmf.Key);
+                    
                     return new PlayoutItemWithPath(
                         playoutItem,
                         $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
