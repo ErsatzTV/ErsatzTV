@@ -69,6 +69,8 @@ public class Program
         else
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(theme: AnsiConsoleTheme.Code);
+            // for troubleshooting log category
+            // outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}"
         }
 
         Log.Logger = loggerConfiguration.CreateLogger();
