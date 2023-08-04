@@ -59,7 +59,7 @@
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
       <PackageReference Include="HtmlSanitizer" Version="8.0.645" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
-      <PackageReference Include="Markdig" Version="0.31.0" />
+      <PackageReference Include="Markdig" Version="0.32.0" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.9" />
