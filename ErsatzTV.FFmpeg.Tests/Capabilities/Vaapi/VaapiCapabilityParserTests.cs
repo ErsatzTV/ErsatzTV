@@ -178,7 +178,7 @@ VAProfileNone/VAEntrypointVideoProc
                                              VA_RT_FORMAT_YUV420_10
                                              VA_RT_FORMAT_RGB32
                                              VA_RT_FORMAT_YUV420_10BPP";
-    
+
     [Test]
     public void ShouldParseEntrypoints()
     {
@@ -188,7 +188,7 @@ VAProfileNone/VAEntrypointVideoProc
         brief.Count.Should().Be(20);
         full.Count.Should().Be(20);
     }
-    
+
     [Test]
     public void Full_ShouldParseRateControlModes()
     {

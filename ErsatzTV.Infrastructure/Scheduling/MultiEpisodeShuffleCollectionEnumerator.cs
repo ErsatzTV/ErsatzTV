@@ -10,13 +10,13 @@ namespace ErsatzTV.Infrastructure.Scheduling;
 public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly CancellationToken _cancellationToken;
+    private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly ILogger _logger;
     private readonly int _mediaItemCount;
     private readonly Dictionary<int, List<MediaItem>> _mediaItemGroups;
     private readonly List<MediaItem> _ungrouped;
     private CloneableRandom _random;
     private IList<MediaItem> _shuffled;
-    private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
 
     public MultiEpisodeShuffleCollectionEnumerator(
         ICollection<MediaItem> mediaItems,
@@ -126,6 +126,10 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         State.Index %= _mediaItemCount;
     }
 
+    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
+
+    public int Count => _shuffled.Count;
+
     private IList<MediaItem> Shuffle(CloneableRandom random)
     {
         int maxGroupNumber = _mediaItemGroups.Max(a => a.Key);
@@ -188,8 +192,4 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
 
         return copy;
     }
-
-    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
-    
-    public int Count => _shuffled.Count;
 }

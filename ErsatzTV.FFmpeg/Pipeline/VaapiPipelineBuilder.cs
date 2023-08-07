@@ -200,7 +200,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             RateControlMode rateControlMode =
                 _hardwareCapabilities.GetRateControlMode(desiredState.VideoFormat, desiredState.PixelFormat)
                     .IfNone(RateControlMode.VBR);
-            
+
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
@@ -425,7 +425,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     var downloadFilter = new HardwareDownloadFilter(currentState);
                     currentState = downloadFilter.NextState(currentState);
                     videoInputFile.FilterSteps.Add(downloadFilter);
-                    
+
                     foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
                     {
                         IPixelFormat pf = pixelFormat;

@@ -152,7 +152,7 @@ public class TranscodingTests
             new("mpeg2video", "yuv420p"),
             // //
             new("libx265", "yuv420p"),
-            new("libx265", "yuv420p10le"),
+            new("libx265", "yuv420p10le")
             //
             // new("mpeg4", "yuv420p"),
             //
@@ -191,7 +191,7 @@ public class TranscodingTests
         {
             HardwareAccelerationKind.None,
             // HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Vaapi
             // HardwareAccelerationKind.Qsv
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
@@ -744,7 +744,7 @@ public class TranscodingTests
             .WithArguments(args)
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync();
-        
+
         string output = string.IsNullOrWhiteSpace(p1.StandardOutput)
             ? p1.StandardError
             : p1.StandardOutput;

@@ -28,7 +28,7 @@ public class DeleteCustomResolutionHandler : IRequestHandler<DeleteCustomResolut
             await dbContext.Connection.ExecuteAsync(
                 @"UPDATE FFmpegProfile SET ResolutionId = 3 WHERE ResolutionId = @ResolutionId",
                 new { request.ResolutionId });
-            
+
             dbContext.Resolutions.Remove(resolution);
             await dbContext.SaveChangesAsync(cancellationToken);
         }

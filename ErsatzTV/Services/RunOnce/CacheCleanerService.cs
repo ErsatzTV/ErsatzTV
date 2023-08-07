@@ -31,7 +31,7 @@ public class CacheCleanerService : BackgroundService
         {
             return;
         }
-        
+
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
         ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();

@@ -78,7 +78,7 @@ public class InternalController : ControllerBase
                             {
                                 contentType = "video/mp4";
                             }
-                            
+
                             process.Start();
                             return new FileStreamResult(process.StandardOutput.BaseStream, contentType);
                         },

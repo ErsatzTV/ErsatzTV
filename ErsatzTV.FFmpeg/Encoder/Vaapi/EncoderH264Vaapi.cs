@@ -7,11 +7,11 @@ public class EncoderH264Vaapi : EncoderBase
     private readonly RateControlMode _rateControlMode;
 
     public EncoderH264Vaapi(RateControlMode rateControlMode) => _rateControlMode = rateControlMode;
-    
+
     public override string Name => "h264_vaapi";
-    
+
     public override StreamKind Kind => StreamKind.Video;
-    
+
     public override IList<string> OutputOptions
     {
         get
@@ -23,7 +23,7 @@ public class EncoderH264Vaapi : EncoderBase
                 result.Add("-rc_mode");
                 result.Add("1");
             }
-            
+
             return result;
         }
     }

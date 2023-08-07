@@ -21,10 +21,10 @@ namespace ErsatzTV.Services;
 public class SchedulerService : BackgroundService
 {
     private readonly IEntityLocker _entityLocker;
-    private readonly SystemStartup _systemStartup;
     private readonly ILogger<SchedulerService> _logger;
     private readonly ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public SchedulerService(
@@ -46,7 +46,7 @@ public class SchedulerService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await Task.Yield();
-        
+
         await _systemStartup.WaitForSearchIndex(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {

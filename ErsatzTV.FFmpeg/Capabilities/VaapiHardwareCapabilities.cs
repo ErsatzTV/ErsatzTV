@@ -31,116 +31,132 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             (VideoFormat.H264, "baseline" or "66") => false,
 
             (VideoFormat.H264, "main" or "77") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.H264Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.H264Main,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.H264, "high" or "100") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.H264High,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.H264High,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.H264, "high 10" or "110") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.H264High,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.H264High,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.H264, "baseline constrained" or "578") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.H264ConstrainedBaseline,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.H264ConstrainedBaseline,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Mpeg2Video, "main" or "4") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Mpeg2Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Mpeg2Main,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Mpeg2Video, "simple" or "5") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Mpeg2Simple,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Mpeg2Simple,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vc1, "simple" or "0") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vc1Simple,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vc1Simple,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vc1, "main" or "1") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vc1Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vc1Main,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vc1, "advanced" or "3") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vc1Advanced,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vc1Advanced,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Hevc, "main" or "1") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.HevcMain,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.HevcMain,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Hevc, "main 10" or "2") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.HevcMain10,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.HevcMain10,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vp9, "profile 0" or "0") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vp9Profile0,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vp9Profile0,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vp9, "profile 1" or "1") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vp9Profile1,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vp9Profile1,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vp9, "profile 2" or "2") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vp9Profile2,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vp9Profile2,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Vp9, "profile 3" or "3") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Vp9Profile3,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Vp9Profile3,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             (VideoFormat.Av1, "main" or "0") =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Av1Profile0,
-                    VaapiEntrypoint: VaapiEntrypoint.Decode
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Av1Profile0,
+                        VaapiEntrypoint: VaapiEntrypoint.Decode
+                    }),
 
             // fall back to software decoder
             _ => false
@@ -170,32 +186,36 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
             VideoFormat.H264 when bitDepth == 10 => false,
 
             VideoFormat.H264 =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.H264Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.H264Main,
+                        VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                    }),
 
             VideoFormat.Hevc when bitDepth == 10 =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.HevcMain10,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.HevcMain10,
+                        VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                    }),
 
             VideoFormat.Hevc =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.HevcMain,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.HevcMain,
+                        VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                    }),
 
             VideoFormat.Mpeg2Video =>
-                _profileEntrypoints.Any(e => e is
-                {
-                    VaapiProfile: VaapiProfile.Mpeg2Main,
-                    VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
-                }),
+                _profileEntrypoints.Any(
+                    e => e is
+                    {
+                        VaapiProfile: VaapiProfile.Mpeg2Main,
+                        VaapiEntrypoint: VaapiEntrypoint.Encode or VaapiEntrypoint.EncodeLowPower
+                    }),
 
             _ => false
         };

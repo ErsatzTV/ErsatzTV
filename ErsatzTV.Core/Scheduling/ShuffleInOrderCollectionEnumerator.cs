@@ -8,11 +8,11 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly CancellationToken _cancellationToken;
     private readonly IList<CollectionWithItems> _collections;
+    private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly int _mediaItemCount;
     private readonly bool _randomStartPoint;
     private Random _random;
     private IList<MediaItem> _shuffled;
-    private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
 
     public ShuffleInOrderCollectionEnumerator(
         IList<CollectionWithItems> collections,
@@ -81,6 +81,10 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
 
         State.Index %= _shuffled.Count;
     }
+
+    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
+
+    public int Count => _shuffled.Count;
 
     private IList<MediaItem> Shuffle(IList<CollectionWithItems> collections, Random random)
     {
@@ -217,8 +221,4 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         public int Index { get; set; }
         public IList<Option<MediaItem>> Items { get; set; }
     }
-
-    public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
-
-    public int Count => _shuffled.Count;
 }

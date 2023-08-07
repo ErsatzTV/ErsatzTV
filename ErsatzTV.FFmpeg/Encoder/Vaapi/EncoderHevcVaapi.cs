@@ -9,7 +9,7 @@ public class EncoderHevcVaapi : EncoderBase
     public EncoderHevcVaapi(RateControlMode rateControlMode) => _rateControlMode = rateControlMode;
 
     public override string Name => "hevc_vaapi";
-    
+
     public override StreamKind Kind => StreamKind.Video;
 
     public override IList<string> OutputOptions
@@ -23,7 +23,7 @@ public class EncoderHevcVaapi : EncoderBase
                 result.Add("-rc_mode");
                 result.Add("1");
             }
-            
+
             return result;
         }
     }

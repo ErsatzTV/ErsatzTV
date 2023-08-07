@@ -25,19 +25,16 @@
 
     private readonly ResolutionEditViewModel _model = new();
 
-    private void Submit()
-    {
-        // if (!CanSubmit())
-        // {
-        //     return;
-        // }
-
+    private void Submit() =>
+    // if (!CanSubmit())
+    // {
+    //     return;
+    // }
         MudDialog.Close(DialogResult.Ok(_model));
-    }
 
     private void Cancel(MouseEventArgs e)
     {
-        // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+    // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
         if (e.Detail == 0)
         {
             Submit();

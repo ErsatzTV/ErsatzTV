@@ -19,8 +19,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 {
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IEntityLocker _entityLocker;
+    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
@@ -112,7 +112,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
     private static Validation<BaseError, Playout> DiscardAttemptsMustBeValid(Playout playout)
     {
-        foreach (ProgramScheduleItemDuration item in playout.ProgramSchedule.Items.OfType<ProgramScheduleItemDuration>())
+        foreach (ProgramScheduleItemDuration item in
+                 playout.ProgramSchedule.Items.OfType<ProgramScheduleItemDuration>())
         {
             item.DiscardToFillAttempts = item.PlaybackOrder switch
             {
@@ -120,7 +121,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 _ => 0
             };
         }
-        
+
         return playout;
     }
 

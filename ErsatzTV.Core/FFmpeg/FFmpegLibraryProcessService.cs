@@ -16,11 +16,11 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
-    private readonly IConfigElementRepository _configElementRepository;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
 
@@ -95,8 +95,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsRealtime,
             targetFramerate);
 
-        var allSubtitles = await getSubtitles(playbackSettings);
-        
+        List<Subtitle> allSubtitles = await getSubtitles(playbackSettings);
+
         Option<Subtitle> maybeSubtitle =
             await _ffmpegStreamSelector.SelectSubtitleStream(
                 allSubtitles,
@@ -208,7 +208,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             {
                 // use mpeg-ts by default
                 outputFormat = OutputFormatKind.MpegTs;
-            
+
                 // override with setting if applicable
                 Option<OutputFormatKind> maybeOutputFormat = await _configElementRepository
                     .GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
@@ -269,7 +269,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     {
                         return None;
                     }
-                    
+
                     // hls direct won't use extracted embedded subtitles
                     if (subtitle.SubtitleKind == SubtitleKind.Embedded)
                     {

@@ -23,7 +23,7 @@ public class DatabaseMigratorService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await Task.Yield();
-        
+
         _logger.LogInformation("Applying database migrations");
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();

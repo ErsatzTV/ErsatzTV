@@ -14,11 +14,11 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
-    private readonly SystemStartup _systemStartup;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<RebuildSearchIndexHandler> _logger;
     private readonly ISearchIndex _searchIndex;
     private readonly ICachingSearchRepository _searchRepository;
+    private readonly SystemStartup _systemStartup;
 
     public RebuildSearchIndexHandler(
         ISearchIndex searchIndex,
@@ -66,7 +66,7 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
         {
             _logger.LogInformation("Search index is already version {Version}", _searchIndex.Version);
         }
-        
+
         _systemStartup.SearchIndexIsReady();
     }
 }

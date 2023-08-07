@@ -26,7 +26,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
         var willFinishInTime = true;
         Option<DateTimeOffset> durationUntil = None;
-        int discardAttempts = 0;
+        var discardAttempts = 0;
 
         IMediaCollectionEnumerator contentEnumerator =
             collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
@@ -121,7 +121,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
 
                 DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
-                
+
                 var enumeratorStates = new Dictionary<CollectionKey, CollectionEnumeratorState>();
                 foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)
                 {
@@ -134,9 +134,9 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     scheduleItem,
                     playoutItem,
                     itemChapters,
-                    log: false,
+                    false,
                     cancellationToken);
-                
+
                 DateTimeOffset itemEndTimeWithFiller = maybePlayoutItems.Max(pi => pi.FinishOffset);
 
                 willFinishInTime = itemStartTime > durationFinish ||
@@ -165,7 +165,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     {
                         enumerator.ResetState(enumeratorStates[key]);
                     }
-                    
+
                     TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
                     if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
                     {

@@ -149,7 +149,7 @@
         _cts.Cancel();
         _cts.Dispose();
     }
-    
+
     protected override void OnInitialized() => EntityLocker.OnPlayoutChanged += ReloadDetailsIfNeeded;
 
     protected override async Task OnParametersSetAsync()

@@ -15,7 +15,7 @@ public class NoHardwareCapabilities : IHardwareCapabilities
         Option<string> videoProfile,
         Option<IPixelFormat> maybePixelFormat) =>
         FFmpegCapability.Software;
-    
+
     public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
         Option<RateControlMode>.None;
 }

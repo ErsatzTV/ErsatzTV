@@ -6,8 +6,8 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
-    private readonly IList<MediaItem> _mediaItems;
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
+    private readonly IList<MediaItem> _mediaItems;
     private readonly Random _random;
     private int _index;
 
@@ -27,11 +27,9 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public void ResetState(CollectionEnumeratorState state)
-    {
+    public void ResetState(CollectionEnumeratorState state) =>
         // seed never changes here, no need to reset
         State.Index = state.Index;
-    }
 
     public CollectionEnumeratorState State { get; }
 
@@ -44,6 +42,6 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
     }
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
-    
+
     public int Count => _mediaItems.Count;
 }
