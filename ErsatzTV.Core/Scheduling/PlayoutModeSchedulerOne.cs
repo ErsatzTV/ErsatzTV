@@ -59,7 +59,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 scheduleItem,
                 playoutItem,
                 itemChapters,
-                log: true,
+                true,
                 cancellationToken);
 
             PlayoutBuilderState nextState = playoutBuilderState with

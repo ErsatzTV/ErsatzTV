@@ -146,7 +146,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             outputOption = new Mp4OutputOptions();
         }
-        
+
         var pipelineSteps = new List<IPipelineStep>
         {
             new NoStandardInputOption(),

@@ -105,6 +105,9 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         return isHardware ? FFmpegCapability.Hardware : FFmpegCapability.Software;
     }
 
+    public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
+        Option<RateControlMode>.None;
+
     private FFmpegCapability CheckHardwareCodec(string codec, Func<string, bool> check)
     {
         if (check(codec))
@@ -115,7 +118,4 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         _logger.LogWarning("FFmpeg does not contain codec {Codec}; will fall back to software codec", codec);
         return FFmpegCapability.Software;
     }
-    
-    public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
-        Option<RateControlMode>.None;
 }

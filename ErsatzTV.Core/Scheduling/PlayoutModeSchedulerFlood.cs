@@ -86,7 +86,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 scheduleItem,
                 playoutItem,
                 itemChapters,
-                log: false,
+                false,
                 cancellationToken);
 
             DateTimeOffset itemEndTimeWithFiller = maybePlayoutItems.Max(pi => pi.FinishOffset);

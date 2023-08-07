@@ -6,8 +6,8 @@ namespace ErsatzTV.Core.Scheduling;
 
 public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
-    private readonly IList<MediaItem> _sortedMediaItems;
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
+    private readonly IList<MediaItem> _sortedMediaItems;
 
     public SeasonEpisodeMediaCollectionEnumerator(
         IEnumerable<MediaItem> mediaItems,
@@ -31,11 +31,9 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
-    public void ResetState(CollectionEnumeratorState state)
-    {
+    public void ResetState(CollectionEnumeratorState state) =>
         // seed doesn't matter here
         State.Index = state.Index;
-    }
 
     public CollectionEnumeratorState State { get; }
 
@@ -44,6 +42,6 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
     public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
-    
+
     public int Count => _sortedMediaItems.Count;
 }

@@ -9,9 +9,9 @@ public class EncoderMpeg2Vaapi : EncoderBase
     public EncoderMpeg2Vaapi(RateControlMode rateControlMode) => _rateControlMode = rateControlMode;
 
     public override string Name => "mpeg2_vaapi";
-    
+
     public override StreamKind Kind => StreamKind.Video;
-    
+
     public override IList<string> OutputOptions
     {
         get
@@ -23,7 +23,7 @@ public class EncoderMpeg2Vaapi : EncoderBase
                 result.Add("-rc_mode");
                 result.Add("1");
             }
-            
+
             return result;
         }
     }

@@ -6,8 +6,5 @@ public record VaapiProfileEntrypoint(string VaapiProfile, string VaapiEntrypoint
 
     public IReadOnlyCollection<RateControlMode> RateControlModes => _rateControlModes;
 
-    public bool AddRateControlMode(RateControlMode mode)
-    {
-        return _rateControlModes.Add(mode);
-    }
+    public bool AddRateControlMode(RateControlMode mode) => _rateControlModes.Add(mode);
 }

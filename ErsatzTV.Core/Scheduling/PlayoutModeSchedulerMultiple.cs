@@ -85,7 +85,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                     scheduleItem,
                     playoutItem,
                     itemChapters,
-                    log: true,
+                    true,
                     cancellationToken));
 
             nextState = nextState with

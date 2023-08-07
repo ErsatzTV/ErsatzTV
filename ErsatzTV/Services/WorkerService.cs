@@ -30,7 +30,7 @@ public class WorkerService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await Task.Yield();
-        
+
         try
         {
             _logger.LogInformation("Worker service started");

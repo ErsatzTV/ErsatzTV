@@ -253,7 +253,9 @@ public abstract class ProgramScheduleItemCommandBase
                 PlaybackOrder = item.PlaybackOrder,
                 PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
                 TailMode = item.TailMode,
-                DiscardToFillAttempts = FixDiscardToFillAttempts(item.PlaybackOrder, item.DiscardToFillAttempts.GetValueOrDefault()),
+                DiscardToFillAttempts = FixDiscardToFillAttempts(
+                    item.PlaybackOrder,
+                    item.DiscardToFillAttempts.GetValueOrDefault()),
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,

@@ -23,7 +23,7 @@ public static class VaapiCapabilityParser
 
         return profileEntrypoints;
     }
-    
+
     public static List<VaapiProfileEntrypoint> ParseFull(string output)
     {
         var profileEntrypoints = new List<VaapiProfileEntrypoint>();

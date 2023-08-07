@@ -238,7 +238,10 @@ public class ComplexFilter : IPipelineStep
 
         foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(
                      s => s.Method == SubtitleMethod.Copy ||
-                          s is { IsImageBased: true, Method: SubtitleMethod.Convert })) // TODO: support converting text subtitles?
+                          s is
+                          {
+                              IsImageBased: true, Method: SubtitleMethod.Convert
+                          })) // TODO: support converting text subtitles?
         {
             if (subtitleInputFile.Streams.Any())
             {

@@ -204,10 +204,7 @@
         }
     }
 
-    private async void OnStartupProgress(object sender, EventArgs e)
-    {
-        await InvokeAsync(StateHasChanged);
-    }
+    private async void OnStartupProgress(object sender, EventArgs e) => await InvokeAsync(StateHasChanged);
 
     protected override async Task OnParametersSetAsync()
     {

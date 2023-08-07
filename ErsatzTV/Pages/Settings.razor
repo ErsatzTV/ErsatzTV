@@ -3,10 +3,10 @@
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Application.HDHR
 @using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Application.Watermarks
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
-@using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.FFmpeg.OutputFormat
 @using Serilog.Events
@@ -17,232 +17,232 @@
 @inject IDialogService Dialog
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="display: flex; flex-direction: row">
-    <MudGrid>
-        <MudCard Class="mr-6 mb-6" Style="max-width: 400px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">FFmpeg Settings</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudForm @bind-IsValid="@_success">
-                    <MudTextField T="string" Label="FFmpeg Path" @bind-Value="_ffmpegSettings.FFmpegPath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFmpeg path is required!"/>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudTextField T="string" Label="FFprobe Path" @bind-Value="_ffmpegSettings.FFprobePath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFprobe path is required!"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudSelect Label="Default Profile" @bind-Value="_ffmpegSettings.DefaultFFmpegProfileId" For="@(() => _ffmpegSettings.DefaultFFmpegProfileId)">
-                            @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
-                            {
-                                <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudElement>
-                    <MudSelect Class="mt-3" Label="Preferred Audio Language" @bind-Value="_ffmpegSettings.PreferredAudioLanguageCode" For="@(() => _ffmpegSettings.PreferredAudioLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
-                        @foreach (CultureInfo culture in _availableCultures)
-                        {
-                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudSwitch T="bool"
-                                   Label="Save troubleshooting reports to disk"
-                                   Color="Color.Primary"
-                                   @bind-Checked="@_ffmpegSettings.SaveReports"/>
-                    </MudElement>
-                    <MudSelect Class="mt-3"
-                               Label="Global Watermark"
-                               @bind-Value="_ffmpegSettings.GlobalWatermarkId"
-                               For="@(() => _ffmpegSettings.GlobalWatermarkId)"
-                               Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
-                        @foreach (WatermarkViewModel watermark in _watermarks)
-                        {
-                            <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudSelect Class="mt-3"
-                               Label="Global Fallback Filler"
-                               @bind-Value="_ffmpegSettings.GlobalFallbackFillerId"
-                               For="@(() => _ffmpegSettings.GlobalFallbackFillerId)"
-                               Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
-                        @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
-                        {
-                            <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudTextField T="int"
-                                      Label="HLS Segmenter Idle Timeout"
-                                      @bind-Value="_ffmpegSettings.HlsSegmenterIdleTimeout"
-                                      Validation="@(new Func<int, string>(ValidateHlsSegmenterIdleTimeout))"
-                                      Required="true"
-                                      RequiredError="HLS Segmenter idle timeout is required!"
-                                      Adornment="Adornment.End"
-                                      AdornmentText="Seconds"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudTextField T="int"
-                                      Label="Work-Ahead HLS Segmenter Limit"
-                                      @bind-Value="_ffmpegSettings.WorkAheadSegmenterLimit"
-                                      Validation="@(new Func<int, string>(ValidateWorkAheadSegmenterLimit))"
-                                      Required="true"
-                                      RequiredError="Work-ahead HLS Segmenter limit is required!"/>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudTextField T="int"
-                                      Label="HLS Segmenter Initial Segment Count"
-                                      @bind-Value="_ffmpegSettings.InitialSegmentCount"
-                                      Validation="@(new Func<int, string>(ValidateInitialSegmentCount))"
-                                      Required="true"
-                                      RequiredError="HLS Segmenter initial segment count is required!"/>
-                    </MudElement>
-                    <MudSelect Class="mt-3"
-                               Label="HLS Direct Output Format"
-                               @bind-Value="_ffmpegSettings.HlsDirectOutputFormat"
-                               For="@(() => _ffmpegSettings.HlsDirectOutputFormat)">
-                        <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.MpegTs">MPEG-TS</MudSelectItem>
-                        <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mp4">MP4</MudSelectItem>
-                        <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mkv">MKV</MudSelectItem>
-                    </MudSelect>
-                </MudForm>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveFFmpegSettings())">Save Settings</MudButton>
-            </MudCardActions>
-        </MudCard>
-        <MudStack Class="mr-6">
-            <MudCard Class="mb-6" Style="width: 350px">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">General Settings</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudForm>
-                        <MudSelect Class="mt-3"
-                                   Label="Minimum Log Level"
-                                   @bind-Value="_generalSettings.MinimumLogLevel"
-                                   For="@(() => _generalSettings.MinimumLogLevel)">
-                            <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
-                            <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
-                            <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
-                            <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
-                        </MudSelect>
-                    </MudForm>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveGeneralSettings())">Save Settings</MudButton>
-                </MudCardActions>
-            </MudCard>
-            <MudCard Class="mb-6" Style="width: 350px">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudForm @bind-IsValid="@_hdhrSuccess">
-                        <MudTextField T="int" Label="Tuner Count" @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
-                    </MudForm>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
-                </MudCardActions>
-            </MudCard>
-            <MudCard Class="mb-6" Style="width: 350px">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Scanner Settings</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudForm @bind-IsValid="@_scannerSuccess">
-                        <MudTextField T="int"
-                                      Label="Library Refresh Interval"
-                                      @bind-Value="_libraryRefreshInterval"
-                                      Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
-                                      Required="true"
-                                      RequiredError="Library refresh interval is required!"
-                                      Adornment="Adornment.End"
-                                      AdornmentText="Hours"/>
-                    </MudForm>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
-                </MudCardActions>
-            </MudCard>
-            <MudCard Class="mb-6" Style="width: 350px">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Playout Settings</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudForm @bind-IsValid="@_playoutSuccess">
-                        <MudTextField T="int"
-                                      Label="Days To Build"
-                                      @bind-Value="_playoutSettings.DaysToBuild"
-                                      Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
-                                      Required="true"
-                                      RequiredError="Days to build is required!"
-                                      Adornment="Adornment.End"
-                                      AdornmentText="Days"/>
-                        <MudElement HtmlTag="div" Class="mt-3">
-                            <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
-                                <MudCheckBox Label="Skip Missing Items"
-                                             @bind-Checked="_playoutSettings.SkipMissingItems"
-                                             For="@(() => _playoutSettings.SkipMissingItems)"/>
-                            </MudTooltip>
-                        </MudElement>
-                    </MudForm>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())">Save Settings</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudStack>
-        <MudStack Class="mr-6">
-            <MudCard Class="mb-6" Style="width: 350px">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Custom Resolutions</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    @if (_customResolutions.Any())
+<MudGrid>
+<MudCard Class="mr-6 mb-6" Style="max-width: 400px">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">FFmpeg Settings</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudForm @bind-IsValid="@_success">
+            <MudTextField T="string" Label="FFmpeg Path" @bind-Value="_ffmpegSettings.FFmpegPath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFmpeg path is required!"/>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField T="string" Label="FFprobe Path" @bind-Value="_ffmpegSettings.FFprobePath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFprobe path is required!"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudSelect Label="Default Profile" @bind-Value="_ffmpegSettings.DefaultFFmpegProfileId" For="@(() => _ffmpegSettings.DefaultFFmpegProfileId)">
+                    @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
                     {
-                        <MudTable Hover="true" Items="_customResolutions" Dense="true" Class="mt-6">
-                            <ColGroup>
-                                <col/>
-                                <col style="width: 60px;"/>
-                            </ColGroup>
-                            <HeaderContent>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Resolution">@context.Name</MudTd>
-                                <MudTd>
-                                    <div style="align-items: center; display: flex;">
-                                        <MudTooltip Text="Delete Custom Resolution">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                           OnClick="@(() => DeleteCustomResolution(context))">
-                                            </MudIconButton>
-                                        </MudTooltip>
-                                    </div>
-                                </MudTd>
-                            </RowTemplate>
-                        </MudTable>
+                        <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
                     }
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddCustomResolution())" Class="ml-2">
-                        Add Custom Resolution
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudStack>
-    </MudGrid>
+                </MudSelect>
+            </MudElement>
+            <MudSelect Class="mt-3" Label="Preferred Audio Language" @bind-Value="_ffmpegSettings.PreferredAudioLanguageCode" For="@(() => _ffmpegSettings.PreferredAudioLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
+                @foreach (CultureInfo culture in _availableCultures)
+                {
+                    <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudSwitch T="bool"
+                           Label="Save troubleshooting reports to disk"
+                           Color="Color.Primary"
+                           @bind-Checked="@_ffmpegSettings.SaveReports"/>
+            </MudElement>
+            <MudSelect Class="mt-3"
+                       Label="Global Watermark"
+                       @bind-Value="_ffmpegSettings.GlobalWatermarkId"
+                       For="@(() => _ffmpegSettings.GlobalWatermarkId)"
+                       Clearable="true">
+                <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                @foreach (WatermarkViewModel watermark in _watermarks)
+                {
+                    <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect Class="mt-3"
+                       Label="Global Fallback Filler"
+                       @bind-Value="_ffmpegSettings.GlobalFallbackFillerId"
+                       For="@(() => _ffmpegSettings.GlobalFallbackFillerId)"
+                       Clearable="true">
+                <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
+                {
+                    <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField T="int"
+                              Label="HLS Segmenter Idle Timeout"
+                              @bind-Value="_ffmpegSettings.HlsSegmenterIdleTimeout"
+                              Validation="@(new Func<int, string>(ValidateHlsSegmenterIdleTimeout))"
+                              Required="true"
+                              RequiredError="HLS Segmenter idle timeout is required!"
+                              Adornment="Adornment.End"
+                              AdornmentText="Seconds"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField T="int"
+                              Label="Work-Ahead HLS Segmenter Limit"
+                              @bind-Value="_ffmpegSettings.WorkAheadSegmenterLimit"
+                              Validation="@(new Func<int, string>(ValidateWorkAheadSegmenterLimit))"
+                              Required="true"
+                              RequiredError="Work-ahead HLS Segmenter limit is required!"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField T="int"
+                              Label="HLS Segmenter Initial Segment Count"
+                              @bind-Value="_ffmpegSettings.InitialSegmentCount"
+                              Validation="@(new Func<int, string>(ValidateInitialSegmentCount))"
+                              Required="true"
+                              RequiredError="HLS Segmenter initial segment count is required!"/>
+            </MudElement>
+            <MudSelect Class="mt-3"
+                       Label="HLS Direct Output Format"
+                       @bind-Value="_ffmpegSettings.HlsDirectOutputFormat"
+                       For="@(() => _ffmpegSettings.HlsDirectOutputFormat)">
+                <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.MpegTs">MPEG-TS</MudSelectItem>
+                <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mp4">MP4</MudSelectItem>
+                <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mkv">MKV</MudSelectItem>
+            </MudSelect>
+        </MudForm>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveFFmpegSettings())">Save Settings</MudButton>
+    </MudCardActions>
+</MudCard>
+<MudStack Class="mr-6">
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">General Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm>
+                <MudSelect Class="mt-3"
+                           Label="Minimum Log Level"
+                           @bind-Value="_generalSettings.MinimumLogLevel"
+                           For="@(() => _generalSettings.MinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveGeneralSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_hdhrSuccess">
+                <MudTextField T="int" Label="Tuner Count" @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Scanner Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_scannerSuccess">
+                <MudTextField T="int"
+                              Label="Library Refresh Interval"
+                              @bind-Value="_libraryRefreshInterval"
+                              Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
+                              Required="true"
+                              RequiredError="Library refresh interval is required!"
+                              Adornment="Adornment.End"
+                              AdornmentText="Hours"/>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Playout Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_playoutSuccess">
+                <MudTextField T="int"
+                              Label="Days To Build"
+                              @bind-Value="_playoutSettings.DaysToBuild"
+                              Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
+                              Required="true"
+                              RequiredError="Days to build is required!"
+                              Adornment="Adornment.End"
+                              AdornmentText="Days"/>
+                <MudElement HtmlTag="div" Class="mt-3">
+                    <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
+                        <MudCheckBox Label="Skip Missing Items"
+                                     @bind-Checked="_playoutSettings.SkipMissingItems"
+                                     For="@(() => _playoutSettings.SkipMissingItems)"/>
+                    </MudTooltip>
+                </MudElement>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudStack>
+<MudStack Class="mr-6">
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Custom Resolutions</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (_customResolutions.Any())
+            {
+                <MudTable Hover="true" Items="_customResolutions" Dense="true" Class="mt-6">
+                    <ColGroup>
+                        <col/>
+                        <col style="width: 60px;"/>
+                    </ColGroup>
+                    <HeaderContent>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Resolution">@context.Name</MudTd>
+                        <MudTd>
+                            <div style="align-items: center; display: flex;">
+                                <MudTooltip Text="Delete Custom Resolution">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   OnClick="@(() => DeleteCustomResolution(context))">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddCustomResolution())" Class="ml-2">
+                Add Custom Resolution
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudStack>
+</MudGrid>
 </MudContainer>
 
 @code {
@@ -371,11 +371,8 @@
             Right: _ => Snackbar.Add("Successfully saved general settings", Severity.Success));
     }
 
-    private async Task RefreshCustomResolutions()
-    {
-        _customResolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token)
-            .Map(list => list.Filter(r => r.IsCustom).ToList());
-    }
+    private async Task RefreshCustomResolutions() => _customResolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token)
+        .Map(list => list.Filter(r => r.IsCustom).ToList());
 
     private async Task AddCustomResolution()
     {
@@ -415,4 +412,5 @@
             await RefreshCustomResolutions();
         }
     }
+
 }

@@ -158,7 +158,7 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool AreEmbyCollectionsLocked() => _embyCollections;
-    
+
     public bool LockPlayout(int playoutId)
     {
         if (!_lockedPlayouts.ContainsKey(playoutId) && _lockedPlayouts.TryAdd(playoutId, 0))

@@ -58,7 +58,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     scheduleItem,
                     new PlayoutItem(),
                     new List<MediaChapter>(),
-                    log: true,
+                    true,
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(1);
@@ -111,7 +111,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     scheduleItem,
                     new PlayoutItem(),
                     new List<MediaChapter> { new() },
-                    log: true,
+                    true,
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(1);
@@ -178,7 +178,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(60) }
                     },
-                    log: true,
+                    true,
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(3);
@@ -270,7 +270,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
                     },
-                    log: true,
+                    true,
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(5);
@@ -376,7 +376,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
                         new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(45) }
                     },
-                    log: true,
+                    true,
                     _cancellationToken);
 
             playoutItems.Count.Should().Be(5);

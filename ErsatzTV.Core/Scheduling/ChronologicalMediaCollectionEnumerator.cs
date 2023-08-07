@@ -6,8 +6,8 @@ namespace ErsatzTV.Core.Scheduling;
 
 public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
-    private readonly IList<MediaItem> _sortedMediaItems;
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
+    private readonly IList<MediaItem> _sortedMediaItems;
 
     public ChronologicalMediaCollectionEnumerator(
         IEnumerable<MediaItem> mediaItems,
@@ -31,11 +31,9 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
         }
     }
 
-    public void ResetState(CollectionEnumeratorState state)
-    {
+    public void ResetState(CollectionEnumeratorState state) =>
         // seed doesn't matter in chronological
         State.Index = state.Index;
-    }
 
     public CollectionEnumeratorState State { get; }
 

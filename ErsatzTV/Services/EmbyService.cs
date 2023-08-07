@@ -30,7 +30,7 @@ public class EmbyService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await Task.Yield();
-        
+
         await _systemStartup.WaitForDatabase(cancellationToken);
         if (cancellationToken.IsCancellationRequested)
         {

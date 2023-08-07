@@ -89,234 +89,234 @@
     </div>
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Style="margin-top: 96px">
-@if (_movies?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
-            Movies
-        </MudText>
-        @if (_movies.Count > 50)
-        {
-            <MudLink Href="@GetMoviesLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_movies?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
+                Movies
+            </MudText>
+            @if (_movies.Count > 50)
+            {
+                <MudLink Href="@GetMoviesLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (MovieCardViewModel card in _movies.Cards.OrderBy(m => m.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"media/movies/{card.MovieId}")"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (MovieCardViewModel card in _movies.Cards.OrderBy(m => m.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"media/movies/{card.MovieId}")"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_shows?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
-            Shows
-        </MudText>
-        @if (_shows.Count > 50)
-        {
-            <MudLink Href="@GetShowsLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_shows?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
+                Shows
+            </MudText>
+            @if (_shows.Count > 50)
+            {
+                <MudLink Href="@GetShowsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionShowCardViewModel card in _shows.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"media/tv/shows/{card.TelevisionShowId}")"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionShowCardViewModel card in _shows.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"media/tv/shows/{card.TelevisionShowId}")"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_seasons?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "seasons" } })">
-            Seasons
-        </MudText>
-        @if (_seasons.Count > 50)
-        {
-            <MudLink Href="@GetSeasonsLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_seasons?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "seasons" } })">
+                Seasons
+            </MudText>
+            @if (_seasons.Count > 50)
+            {
+                <MudLink Href="@GetSeasonsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionSeasonCardViewModel card in _seasons.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionSeasonCardViewModel card in _seasons.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_episodes?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
-            Episodes
-        </MudText>
-        @if (_episodes.Count > 50)
-        {
-            <MudLink Href="@GetEpisodesLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_episodes?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
+                Episodes
+            </MudText>
+            @if (_episodes.Count > 50)
+            {
+                <MudLink Href="@GetEpisodesLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionEpisodeCardViewModel card in _episodes.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       Link="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
-                       Subtitle="@($"{card.ShowTitle} - S{card.Season} E{card.Episode}")"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionEpisodeCardViewModel card in _episodes.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           Link="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
+                           Subtitle="@($"{card.ShowTitle} - S{card.Season} E{card.Episode}")"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_artists?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "artists" } })">
-            Artists
-        </MudText>
-        @if (_artists.Count > 50)
-        {
-            <MudLink Href="@GetArtistsLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_artists?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "artists" } })">
+                Artists
+            </MudText>
+            @if (_artists.Count > 50)
+            {
+                <MudLink Href="@GetArtistsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (ArtistCardViewModel card in _artists.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"media/music/artists/{card.ArtistId}")"
-                       ArtworkKind="ArtworkKind.Thumbnail"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (ArtistCardViewModel card in _artists.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"media/music/artists/{card.ArtistId}")"
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_musicVideos?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "music_videos" } })">
-            Music Videos
-        </MudText>
-        @if (_musicVideos.Count > 50)
-        {
-            <MudLink Href="@GetMusicVideosLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_musicVideos?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "music_videos" } })">
+                Music Videos
+            </MudText>
+            @if (_musicVideos.Count > 50)
+            {
+                <MudLink Href="@GetMusicVideosLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (MusicVideoCardViewModel card in _musicVideos.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link=""
-                       ArtworkKind="ArtworkKind.Thumbnail"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (MusicVideoCardViewModel card in _musicVideos.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_otherVideos?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "other_videos" } })">
-            Other Videos
-        </MudText>
-        @if (_otherVideos.Count > 50)
-        {
-            <MudLink Href="@GetOtherVideosLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_otherVideos?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "other_videos" } })">
+                Other Videos
+            </MudText>
+            @if (_otherVideos.Count > 50)
+            {
+                <MudLink Href="@GetOtherVideosLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (OtherVideoCardViewModel card in _otherVideos.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link=""
-                       ArtworkKind="ArtworkKind.Thumbnail"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (OtherVideoCardViewModel card in _otherVideos.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 
-@if (_songs?.Count > 0)
-{
-    <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
-        <MudText Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
-            Songs
-        </MudText>
-        @if (_songs.Count > 50)
-        {
-            <MudLink Href="@GetSongsLink()" Class="ml-4">See All >></MudLink>
-        }
-    </div>
+    @if (_songs?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
+                Songs
+            </MudText>
+            @if (_songs.Count > 50)
+            {
+                <MudLink Href="@GetSongsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (SongCardViewModel card in _songs.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link=""
-                       ArtworkKind="ArtworkKind.Thumbnail"
-                       DeleteClicked="@DeleteItemFromDatabase"
-                       SelectColor="@Color.Error"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
-                       IsSelectMode="@IsSelectMode()"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (SongCardViewModel card in _songs.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {

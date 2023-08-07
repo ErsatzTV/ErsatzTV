@@ -31,7 +31,7 @@ public class ScannerService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         await Task.Yield();
-        
+
         try
         {
             _logger.LogInformation("Scanner service started");

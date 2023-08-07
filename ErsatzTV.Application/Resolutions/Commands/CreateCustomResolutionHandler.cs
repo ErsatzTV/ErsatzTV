@@ -9,10 +9,8 @@ public class CreateCustomResolutionHandler : IRequestHandler<CreateCustomResolut
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public CreateCustomResolutionHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public CreateCustomResolutionHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<Option<BaseError>> Handle(CreateCustomResolution request, CancellationToken cancellationToken)
     {
