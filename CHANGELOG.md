@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.1-beta] - 2023-08-07
 ### Added
 - Add custom resolution management to `Settings` page
 
@@ -1705,7 +1707,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.8.0-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.8.1-beta...HEAD
+[0.8.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.8.0-beta...v0.8.1-beta
 [0.8.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.9-beta...v0.8.0-beta
 [0.7.9-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.8-beta...v0.7.9-beta
 [0.7.8-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.7.7-beta...v0.7.8-beta
