@@ -21,7 +21,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Moq" Version="4.18.4" />
+      <PackageReference Include="Moq" Version="4.20.0" />
       <PackageReference Include="NUnit" Version="3.13.3" />
       <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
       <PackageReference Include="Serilog" Version="3.0.1" />
