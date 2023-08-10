@@ -10,7 +10,7 @@ using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using static LanguageExt.Prelude;
 
@@ -19,7 +19,7 @@ namespace ErsatzTV.FFmpeg.Tests;
 [TestFixture]
 public class PipelineBuilderBaseTests
 {
-    private readonly ILogger _logger = new Mock<ILogger>().Object;
+    private readonly ILogger _logger = Substitute.For<ILogger>();
 
     [Test]
     public void Incorrect_Video_Codec_Should_Use_Encoder()

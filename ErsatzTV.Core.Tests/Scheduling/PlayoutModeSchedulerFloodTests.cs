@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -50,7 +50,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -125,7 +125,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -222,7 +222,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -307,7 +307,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.PostRollFiller, enumerator2),
@@ -395,7 +395,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -477,7 +477,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
@@ -575,7 +575,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.FallbackFiller, enumerator2),
@@ -663,7 +663,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
@@ -771,7 +771,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
@@ -881,7 +881,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
 
         // hard stop at 2, an hour before the "next schedule item" at 3
         DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
@@ -987,7 +987,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
 
         // hard stop at 2, an hour before the "next schedule item" at 3
         DateTimeOffset hardStop = StartState(scheduleItemsEnumerator).CurrentTime.AddHours(2);
@@ -1103,7 +1103,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
@@ -1183,7 +1183,7 @@ public class PlayoutModeSchedulerFloodTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerFlood(new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerFlood(Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),

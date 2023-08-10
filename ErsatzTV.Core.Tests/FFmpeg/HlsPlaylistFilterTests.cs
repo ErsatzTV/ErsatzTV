@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
@@ -13,8 +13,8 @@ public class HlsPlaylistFilterTests
     [SetUp]
     public void SetUp() =>
         _hlsPlaylistFilter = new HlsPlaylistFilter(
-            new Mock<ITempFilePool>().Object,
-            new Mock<ILogger<HlsPlaylistFilter>>().Object
+            Substitute.For<ITempFilePool>(),
+            Substitute.For<ILogger<HlsPlaylistFilter>>()
         );
 
     private HlsPlaylistFilter _hlsPlaylistFilter;

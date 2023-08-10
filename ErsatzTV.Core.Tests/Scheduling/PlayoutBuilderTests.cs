@@ -8,7 +8,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Tests.Fakes;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 
@@ -32,7 +32,7 @@ public class PlayoutBuilderTests
 
         ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
 
-        _logger = loggerFactory?.CreateLogger<PlayoutBuilder>();
+        _logger = loggerFactory.CreateLogger<PlayoutBuilder>();
     }
 
     private CancellationToken _cancellationToken;
@@ -90,18 +90,15 @@ public class PlayoutBuilderTests
 
             mediaItems[0].State = MediaItemState.FileNotFound;
 
-            var configRepo = new Mock<IConfigElementRepository>();
-            configRepo.Setup(
-                    repo => repo.GetValue<bool>(
-                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
-                .ReturnsAsync(Some(true));
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+                .Returns(Some(true));
 
             (PlayoutBuilder builder, Playout playout) =
                 TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
 
             Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, _cancellationToken);
-
-            configRepo.Verify();
 
             result.Items.Should().BeEmpty();
         }
@@ -117,11 +114,10 @@ public class PlayoutBuilderTests
 
             mediaItems[0].State = MediaItemState.FileNotFound;
 
-            var configRepo = new Mock<IConfigElementRepository>();
-            configRepo.Setup(
-                    repo => repo.GetValue<bool>(
-                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
-                .ReturnsAsync(Some(true));
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+                .Returns(Some(true));
 
             (PlayoutBuilder builder, Playout playout) =
                 TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
@@ -129,8 +125,6 @@ public class PlayoutBuilderTests
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
             Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish, _cancellationToken);
-
-            configRepo.Verify();
 
             result.Items.Count.Should().Be(1);
             result.Items.Head().MediaItemId.Should().Be(2);
@@ -151,18 +145,15 @@ public class PlayoutBuilderTests
 
             mediaItems[0].State = MediaItemState.Unavailable;
 
-            var configRepo = new Mock<IConfigElementRepository>();
-            configRepo.Setup(
-                    repo => repo.GetValue<bool>(
-                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
-                .ReturnsAsync(Some(true));
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+                .Returns(Some(true));
 
             (PlayoutBuilder builder, Playout playout) =
                 TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
 
             Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, _cancellationToken);
-
-            configRepo.Verify();
 
             result.Items.Should().BeEmpty();
         }
@@ -178,11 +169,10 @@ public class PlayoutBuilderTests
 
             mediaItems[0].State = MediaItemState.Unavailable;
 
-            var configRepo = new Mock<IConfigElementRepository>();
-            configRepo.Setup(
-                    repo => repo.GetValue<bool>(
-                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
-                .ReturnsAsync(Some(true));
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+                .Returns(Some(true));
 
             (PlayoutBuilder builder, Playout playout) =
                 TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
@@ -190,8 +180,6 @@ public class PlayoutBuilderTests
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
 
             Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish, _cancellationToken);
-
-            configRepo.Verify();
 
             result.Items.Count.Should().Be(1);
             result.Items.Head().MediaItemId.Should().Be(2);
@@ -211,11 +199,10 @@ public class PlayoutBuilderTests
 
             mediaItems[0].State = MediaItemState.FileNotFound;
 
-            var configRepo = new Mock<IConfigElementRepository>();
-            configRepo.Setup(
-                    repo => repo.GetValue<bool>(
-                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
-                .ReturnsAsync(Some(false));
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+                .Returns(Some(false));
 
             (PlayoutBuilder builder, Playout playout) =
                 TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
@@ -241,11 +228,10 @@ public class PlayoutBuilderTests
 
             mediaItems[0].State = MediaItemState.Unavailable;
 
-            var configRepo = new Mock<IConfigElementRepository>();
-            configRepo.Setup(
-                    repo => repo.GetValue<bool>(
-                        It.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key)))
-                .ReturnsAsync(Some(false));
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            configRepo
+                .GetValue<bool>(Arg.Is<ConfigElementKey>(k => k.Key == ConfigElementKey.PlayoutSkipMissingItems.Key))
+                .Returns(Some(false));
 
             (PlayoutBuilder builder, Playout playout) =
                 TestDataFloodForItems(mediaItems, PlaybackOrder.Random, configRepo);
@@ -567,18 +553,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -664,18 +651,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -809,18 +797,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -912,18 +901,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1024,18 +1014,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1129,18 +1120,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1238,18 +1230,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1352,18 +1345,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1455,18 +1449,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1569,18 +1564,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1694,18 +1690,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1811,18 +1808,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -1888,18 +1886,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -2101,18 +2100,19 @@ public class PlayoutBuilderTests
                     Playout = playout
                 });
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(24);
@@ -2590,18 +2590,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -2702,18 +2703,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -2814,18 +2816,19 @@ public class PlayoutBuilderTests
                 ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
             };
 
-            var configRepo = new Mock<IConfigElementRepository>();
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
-            var artistRepo = new Mock<IArtistRepository>();
-            var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-            var localFileSystem = new Mock<ILocalFileSystem>();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
             var builder = new PlayoutBuilder(
-                configRepo.Object,
+                configRepo,
                 fakeRepository,
                 televisionRepo,
-                artistRepo.Object,
-                factory.Object,
-                localFileSystem.Object,
+                artistRepo,
+                factory,
+                localFileSystem,
                 _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
@@ -2912,7 +2915,7 @@ public class PlayoutBuilderTests
     private TestData TestDataFloodForItems(
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder,
-        Mock<IConfigElementRepository> configMock = null)
+        IConfigElementRepository configMock = null)
     {
         var mediaCollection = new Collection
         {
@@ -2920,20 +2923,21 @@ public class PlayoutBuilderTests
             MediaItems = mediaItems
         };
 
-        Mock<IConfigElementRepository> configRepo = configMock ?? new Mock<IConfigElementRepository>();
+        IConfigElementRepository configRepo = configMock ?? Substitute.For<IConfigElementRepository>();
 
         var collectionRepo = new FakeMediaCollectionRepository(Map((mediaCollection.Id, mediaItems)));
         var televisionRepo = new FakeTelevisionRepository();
-        var artistRepo = new Mock<IArtistRepository>();
-        var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-        var localFileSystem = new Mock<ILocalFileSystem>();
+        IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+        IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+            Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+        ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
         var builder = new PlayoutBuilder(
-            configRepo.Object,
+            configRepo,
             collectionRepo,
             televisionRepo,
-            artistRepo.Object,
-            factory.Object,
-            localFileSystem.Object,
+            artistRepo,
+            factory,
+            localFileSystem,
             _logger);
 
         var items = new List<ProgramScheduleItem> { Flood(mediaCollection, playbackOrder) };
@@ -2954,7 +2958,7 @@ public class PlayoutBuilderTests
     private TestData TestDataFloodForSmartCollectionItems(
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder,
-        Mock<IConfigElementRepository> configMock = null)
+        IConfigElementRepository configMock = null)
     {
         var mediaCollection = new SmartCollection
         {
@@ -2968,7 +2972,7 @@ public class PlayoutBuilderTests
             Query = "ghjk"
         };
 
-        Mock<IConfigElementRepository> configRepo = configMock ?? new Mock<IConfigElementRepository>();
+        IConfigElementRepository configRepo = configMock ?? Substitute.For<IConfigElementRepository>();
 
         var collectionRepo = new FakeMediaCollectionRepository(
             Map(
@@ -2977,16 +2981,17 @@ public class PlayoutBuilderTests
             )
         );
         var televisionRepo = new FakeTelevisionRepository();
-        var artistRepo = new Mock<IArtistRepository>();
-        var factory = new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
-        var localFileSystem = new Mock<ILocalFileSystem>();
+        IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+        IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+            Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+        ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
         var builder = new PlayoutBuilder(
-            configRepo.Object,
+            configRepo,
             collectionRepo,
             televisionRepo,
-            artistRepo.Object,
-            factory.Object,
-            localFileSystem.Object,
+            artistRepo,
+            factory,
+            localFileSystem,
             _logger);
 
         var items = new List<ProgramScheduleItem> { Flood(mediaCollection, fillerCollection, playbackOrder) };

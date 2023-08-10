@@ -2,7 +2,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using FluentAssertions;
 using LanguageExt;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Infrastructure.Tests.Data.Repositories.Caching;
@@ -18,11 +18,11 @@ public class CachingSearchRepositoryTests
         var englishResult = new List<string> { "english_result" };
         var frenchResult = new List<string> { "french_result" };
 
-        var searchRepo = new Mock<ISearchRepository>();
-        searchRepo.Setup(x => x.GetAllLanguageCodes(englishMediaCodes)).Returns(englishResult.AsTask());
-        searchRepo.Setup(x => x.GetAllLanguageCodes(frenchMediaCodes)).Returns(frenchResult.AsTask());
+        ISearchRepository searchRepo = Substitute.For<ISearchRepository>();
+        searchRepo.GetAllLanguageCodes(englishMediaCodes).Returns(englishResult.AsTask());
+        searchRepo.GetAllLanguageCodes(frenchMediaCodes).Returns(frenchResult.AsTask());
 
-        var repo = new CachingSearchRepository(searchRepo.Object);
+        var repo = new CachingSearchRepository(searchRepo);
 
         List<string> result1 = await repo.GetAllLanguageCodes(englishMediaCodes);
         result1.Should().BeEquivalentTo(englishResult);
