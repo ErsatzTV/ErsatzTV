@@ -61,15 +61,15 @@
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
       <PackageReference Include="Markdig" Version="0.32.0" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.9" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.9" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.9" /> 
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.9">
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.10" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.10" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.10" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.10" /> 
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.10">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.6.40">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.7.30">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
