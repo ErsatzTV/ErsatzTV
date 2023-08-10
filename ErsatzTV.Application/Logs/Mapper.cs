@@ -11,12 +11,11 @@ internal partial class Mapper
     internal static Option<LogEntryViewModel> ProjectToViewModel(string line)
     {
         Match match = LogEntryRegex().Match(line);
-        if (!match.Success)
+        if (!match.Success || !DateTimeOffset.TryParse(match.Groups[1].Value, out DateTimeOffset timestamp))
         {
             return None;
         }
 
-        var timestamp = DateTimeOffset.Parse(match.Groups[1].Value);
         LogEventLevel level = match.Groups[2].Value switch
         {
             "FTL" => LogEventLevel.Fatal,
