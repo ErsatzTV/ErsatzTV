@@ -493,7 +493,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     }
 
                     // only scale if scaling or padding was used for main video stream
-                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleFilter or PadFilter))
+                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleQsvFilter or PadFilter))
                     {
                         var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
                         subtitle.FilterSteps.Add(scaleFilter);
