@@ -70,6 +70,8 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     {
         try
         {
+            _logger.LogDebug("Starting to scan other videos library");
+
             decimal progressSpread = progressMax - progressMin;
 
             var foldersCompleted = 0;
@@ -79,6 +81,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
             if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
+                _logger.LogDebug("Will scan library path {Path}", libraryPath.Path);
                 folderQueue.Enqueue(libraryPath.Path);
             }
 
@@ -87,9 +90,11 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                          .Filter(allFolders.Add)
                          .OrderBy(identity))
             {
+                _logger.LogDebug("Will scan subdirectory {Folder}", folder);
                 folderQueue.Enqueue(folder);
             }
 
+            _logger.LogDebug("Found {Count} folders to scan", folderQueue.Count);
             while (folderQueue.Count > 0)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -108,6 +113,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     cancellationToken);
 
                 string otherVideoFolder = folderQueue.Dequeue();
+                _logger.LogDebug("Scanning folder {Folder}", otherVideoFolder);
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(otherVideoFolder).ToList();
@@ -122,6 +128,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                              .Filter(allFolders.Add)
                              .OrderBy(identity))
                 {
+                    _logger.LogDebug("Will scan subdirectory {Subdirectory}", subdirectory);
                     folderQueue.Enqueue(subdirectory);
                 }
 
@@ -131,9 +138,23 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     .HeadOrNone();
 
                 // skip folder if etag matches
-                if (!allFiles.Any() || await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                    etag)
+                string knownEtag = await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty);
+                if (!allFiles.Any() || knownEtag == etag)
                 {
+                    if (allFiles.Count == 0)
+                    {
+                        _logger.LogDebug("Skipping folder {Folder} with no files", otherVideoFolder);
+                    }
+                    else
+                    {
+                        _logger.LogDebug(
+                            "Skipping folder {Folder} with file count {FileCount} and new etag {Etag} vs last etag {KnownEtag}",
+                            otherVideoFolder,
+                            allFiles.Count,
+                            etag,
+                            knownEtag);
+                    }
+
                     continue;
                 }
 
@@ -178,6 +199,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 if (!hasErrors)
                 {
                     await _libraryRepository.SetEtag(libraryPath, knownFolder, otherVideoFolder, etag);
+                    _logger.LogDebug("Done scanning folder {Folder}", otherVideoFolder);
                 }
             }
 
