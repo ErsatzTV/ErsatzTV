@@ -5,7 +5,7 @@ using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 
@@ -17,7 +17,7 @@ public class ArtistNfoReaderTests
     [SetUp]
     public void SetUp() => _artistNfoReader = new ArtistNfoReader(
         new RecyclableMemoryStreamManager(),
-        new Mock<IClient>().Object,
+        Substitute.For<IClient>(),
         _logger);
 
     private readonly ILogger<ArtistNfoReader> _logger;

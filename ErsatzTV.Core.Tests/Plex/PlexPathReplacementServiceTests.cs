@@ -5,7 +5,7 @@ using ErsatzTV.Core.Plex;
 using ErsatzTV.FFmpeg.Runtime;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Plex;
@@ -27,16 +27,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(true);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(true);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -59,16 +59,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -91,16 +91,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -123,16 +123,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -155,16 +155,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(true);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(true);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -187,16 +187,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -219,16 +219,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,
@@ -251,16 +251,16 @@ public class PlexPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new PlexPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<PlexPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
 
         string result = await service.GetReplacementPlexPath(
             0,

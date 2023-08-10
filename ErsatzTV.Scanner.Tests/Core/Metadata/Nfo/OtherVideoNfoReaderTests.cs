@@ -5,7 +5,7 @@ using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IO;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata.Nfo;
@@ -16,7 +16,7 @@ public class OtherVideoNfoReaderTests
     [SetUp]
     public void SetUp() => _otherVideoNfoReader = new OtherVideoNfoReader(
         new RecyclableMemoryStreamManager(),
-        new Mock<IClient>().Object,
+        Substitute.For<IClient>(),
         new NullLogger<OtherVideoNfoReader>());
 
     private OtherVideoNfoReader _otherVideoNfoReader;

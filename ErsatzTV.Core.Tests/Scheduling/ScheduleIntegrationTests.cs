@@ -18,7 +18,7 @@ using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using Serilog.Events;
@@ -91,7 +91,7 @@ public class ScheduleIntegrationTests
 
         services.AddSingleton<ISearchIndex, SearchIndex>();
 
-        services.AddSingleton(_ => new Mock<IClient>().Object);
+        services.AddSingleton(_ => Substitute.For<IClient>());
 
         ServiceProvider provider = services.BuildServiceProvider();
 
@@ -117,11 +117,11 @@ public class ScheduleIntegrationTests
 
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
-            new MediaCollectionRepository(new Mock<IClient>().Object, searchIndex, factory),
+            new MediaCollectionRepository(Substitute.For<IClient>(), searchIndex, factory),
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
-            new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,
-            new Mock<ILocalFileSystem>().Object,
+            Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>(),
+            Substitute.For<ILocalFileSystem>(),
             provider.GetRequiredService<ILogger<PlayoutBuilder>>());
 
         {
@@ -287,11 +287,11 @@ public class ScheduleIntegrationTests
 
         var builder = new PlayoutBuilder(
             new ConfigElementRepository(factory),
-            new MediaCollectionRepository(new Mock<IClient>().Object, new Mock<ISearchIndex>().Object, factory),
+            new MediaCollectionRepository(Substitute.For<IClient>(), Substitute.For<ISearchIndex>(), factory),
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
             new ArtistRepository(factory),
-            new Mock<IMultiEpisodeShuffleCollectionEnumeratorFactory>().Object,
-            new Mock<ILocalFileSystem>().Object,
+            Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>(),
+            Substitute.For<ILocalFileSystem>(),
             provider.GetRequiredService<ILogger<PlayoutBuilder>>());
 
         for (var i = 0; i <= 24 * 4; i++)

@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -51,7 +51,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -126,7 +126,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -209,7 +209,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
@@ -308,7 +308,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.FallbackFiller, enumerator2),
@@ -397,7 +397,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
@@ -507,7 +507,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
@@ -629,7 +629,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
@@ -715,7 +715,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),

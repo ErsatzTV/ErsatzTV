@@ -5,7 +5,7 @@ using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
@@ -45,10 +45,10 @@ public class LocalSubtitlesProviderTests
         };
 
         var provider = new LocalSubtitlesProvider(
-            new Mock<IMediaItemRepository>().Object,
-            new Mock<IMetadataRepository>().Object,
+            Substitute.For<IMediaItemRepository>(),
+            Substitute.For<IMetadataRepository>(),
             new FakeLocalFileSystem(fakeFiles),
-            new Mock<ILogger<LocalSubtitlesProvider>>().Object);
+            Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
         List<Subtitle> result = provider.LocateExternalSubtitles(
             cultures,
@@ -86,10 +86,10 @@ public class LocalSubtitlesProviderTests
         };
 
         var provider = new LocalSubtitlesProvider(
-            new Mock<IMediaItemRepository>().Object,
-            new Mock<IMetadataRepository>().Object,
+            Substitute.For<IMediaItemRepository>(),
+            Substitute.For<IMetadataRepository>(),
             new FakeLocalFileSystem(fakeFiles),
-            new Mock<ILogger<LocalSubtitlesProvider>>().Object);
+            Substitute.For<ILogger<LocalSubtitlesProvider>>());
 
         List<Subtitle> result = provider.LocateExternalSubtitles(
             cultures,

@@ -28,7 +28,7 @@ using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
@@ -215,26 +215,25 @@ public class TranscodingTests
         HardwareAccelerationKind profileAcceleration)
     {
         var localFileSystem = new LocalFileSystem(
-            new Mock<IClient>().Object,
+            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalFileSystem>());
         var tempFilePool = new TempFilePool();
 
-        var mockImageCache = new Mock<ImageCache>(localFileSystem, tempFilePool);
+        ImageCache mockImageCache = Substitute.For<ImageCache>(localFileSystem, tempFilePool);
 
         // always return the static watermark resource
-        mockImageCache.Setup(
-                ic => ic.GetPathForImage(
-                    It.IsAny<string>(),
-                    It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
-                    It.IsAny<Option<int>>()))
+        mockImageCache.GetPathForImage(
+                Arg.Any<string>(),
+                Arg.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
+                Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
 
         var oldService = new FFmpegProcessService(
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
-            mockImageCache.Object,
+            mockImageCache,
             tempFilePool,
-            new Mock<IClient>().Object,
+            Substitute.For<IClient>(),
             MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
@@ -250,10 +249,10 @@ public class TranscodingTests
                     MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
-            new Mock<IConfigElementRepository>().Object,
+            Substitute.For<IConfigElementRepository>(),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
-        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache.Object, service);
+        var songVideoGenerator = new SongVideoGenerator(tempFilePool, mockImageCache, service);
 
         var channel = new Channel(Guid.NewGuid())
         {
@@ -304,12 +303,12 @@ public class TranscodingTests
             ExecutableName("ffprobe"),
             CancellationToken.None);
 
-        var metadataRepository = new Mock<IMetadataRepository>();
-        metadataRepository
-            .Setup(r => r.UpdateStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
-            .Callback<MediaItem, MediaVersion, bool>(
-                (_, version, _) =>
+        IMetadataRepository metadataRepository = Substitute.For<IMetadataRepository>();
+        metadataRepository.When(x => x.UpdateStatistics(Arg.Any<MediaItem>(), Arg.Any<MediaVersion>(), Arg.Any<bool>()))
+            .Do(
+                x =>
                 {
+                    MediaVersion version = x.Arg<MediaVersion>();
                     if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video && s.AttachedPic == false))
                     {
                         version.MediaFiles = videoVersion.MediaFiles;
@@ -323,9 +322,9 @@ public class TranscodingTests
                 });
 
         var localStatisticsProvider = new LocalStatisticsProvider(
-            metadataRepository.Object,
-            new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>()),
-            new Mock<IClient>().Object,
+            metadataRepository,
+            new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
+            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
         await localStatisticsProvider.RefreshStatistics(ExecutableName("ffmpeg"), ExecutableName("ffprobe"), song);
@@ -434,20 +433,21 @@ public class TranscodingTests
             Streams = new List<MediaStream>()
         };
 
-        var metadataRepository = new Mock<IMetadataRepository>();
+        IMetadataRepository? metadataRepository = Substitute.For<IMetadataRepository>();
         metadataRepository
-            .Setup(r => r.UpdateStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
-            .Callback<MediaItem, MediaVersion, bool>(
-                (_, version, _) =>
+            .When(r => r.UpdateStatistics(Arg.Any<MediaItem>(), Arg.Any<MediaVersion>(), Arg.Any<bool>()))
+            .Do(
+                args =>
                 {
+                    MediaVersion? version = args.Arg<MediaVersion>();
                     version.MediaFiles = v.MediaFiles;
                     v = version;
                 });
 
         var localStatisticsProvider = new LocalStatisticsProvider(
-            metadataRepository.Object,
-            new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>()),
-            new Mock<IClient>().Object,
+            metadataRepository,
+            new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
+            Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
         await localStatisticsProvider.RefreshStatistics(
@@ -837,22 +837,21 @@ public class TranscodingTests
 
     private static FFmpegLibraryProcessService GetService()
     {
-        var imageCache = new Mock<IImageCache>();
+        IImageCache? imageCache = Substitute.For<IImageCache>();
 
         // always return the static watermark resource
-        imageCache.Setup(
-                ic => ic.GetPathForImage(
-                    It.IsAny<string>(),
-                    It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
-                    It.IsAny<Option<int>>()))
+        imageCache.GetPathForImage(
+                Arg.Any<string>(),
+                Arg.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
+                Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
 
         var oldService = new FFmpegProcessService(
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
-            imageCache.Object,
-            new Mock<ITempFilePool>().Object,
-            new Mock<IClient>().Object,
+            imageCache,
+            Substitute.For<ITempFilePool>(),
+            Substitute.For<IClient>(),
             MemoryCache,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
@@ -860,7 +859,7 @@ public class TranscodingTests
             oldService,
             new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
-            new Mock<ITempFilePool>().Object,
+            Substitute.For<ITempFilePool>(),
             new PipelineBuilderFactory(
                 new RuntimeInfo(),
                 //new FakeNvidiaCapabilitiesFactory(),
@@ -868,7 +867,7 @@ public class TranscodingTests
                     MemoryCache,
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
-            new Mock<IConfigElementRepository>().Object,
+            Substitute.For<IConfigElementRepository>(),
             LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
         return service;

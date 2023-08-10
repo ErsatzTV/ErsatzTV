@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Emby;
@@ -27,16 +27,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(true);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(true);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -59,16 +59,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -82,15 +82,15 @@ public class EmbyPathReplacementServiceTests
     {
         var mediaSource = new EmbyMediaSource { OperatingSystem = "Windows" };
 
-        var repo = new Mock<IMediaSourceRepository>();
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = service.ReplaceNetworkPath(
             mediaSource,
@@ -115,16 +115,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -147,16 +147,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -179,16 +179,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(true);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(true);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -211,16 +211,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -243,16 +243,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,
@@ -275,16 +275,16 @@ public class EmbyPathReplacementServiceTests
             }
         };
 
-        var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
 
-        var runtime = new Mock<IRuntimeInfo>();
-        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
 
         var service = new EmbyPathReplacementService(
-            repo.Object,
-            runtime.Object,
-            new Mock<ILogger<EmbyPathReplacementService>>().Object);
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
 
         string result = await service.GetReplacementEmbyPath(
             0,

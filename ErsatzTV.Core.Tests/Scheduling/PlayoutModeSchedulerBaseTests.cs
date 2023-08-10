@@ -4,7 +4,7 @@ using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 using Serilog;
 
@@ -409,10 +409,10 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
         [Test]
         public void Should_Compare_Time_As_Local_Time()
         {
-            var enumerator = new Mock<IScheduleItemsEnumerator>();
+            IScheduleItemsEnumerator enumerator = Substitute.For<IScheduleItemsEnumerator>();
 
             var state = new PlayoutBuilderState(
-                enumerator.Object,
+                enumerator,
                 None,
                 None,
                 false,

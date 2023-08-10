@@ -13,7 +13,7 @@ using ErsatzTV.Scanner.Tests.Core.Fakes;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
@@ -43,42 +43,42 @@ public class MovieFolderScannerTests
         [SetUp]
         public void SetUp()
         {
-            _movieRepository = new Mock<IMovieRepository>();
-            _movieRepository.Setup(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()))
+            _movieRepository = Substitute.For<IMovieRepository>();
+            _movieRepository.GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>())
                 .Returns(
-                    (LibraryPath _, string path) =>
-                        Right<BaseError, MediaItemScanResult<Movie>>(new FakeMovieWithPath(path)).AsTask());
-            _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
+                    args =>
+                        Right<BaseError, MediaItemScanResult<Movie>>(new FakeMovieWithPath(args.Arg<string>()))
+                            .AsTask());
+            _movieRepository.FindMoviePaths(Arg.Any<LibraryPath>())
                 .Returns(new List<string>().AsEnumerable().AsTask());
 
-            _mediaItemRepository = new Mock<IMediaItemRepository>();
-            _mediaItemRepository.Setup(x => x.FlagFileNotFound(It.IsAny<LibraryPath>(), It.IsAny<string>()))
+            _mediaItemRepository = Substitute.For<IMediaItemRepository>();
+            _mediaItemRepository.FlagFileNotFound(Arg.Any<LibraryPath>(), Arg.Any<string>())
                 .Returns(new List<int>().AsTask());
 
-            _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
-            _localMetadataProvider = new Mock<ILocalMetadataProvider>();
+            _localStatisticsProvider = Substitute.For<ILocalStatisticsProvider>();
+            _localMetadataProvider = Substitute.For<ILocalMetadataProvider>();
 
-            _localStatisticsProvider.Setup(
-                    x => x.RefreshStatistics(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MediaItem>()))
-                .Returns<string, string, MediaItem>((_, _, _) => Right<BaseError, bool>(true).AsTask());
+            _localStatisticsProvider.RefreshStatistics(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<MediaItem>())
+                .Returns(Right<BaseError, bool>(true).AsTask());
 
             // fallback metadata adds metadata to a movie, so we need to replicate that here
-            _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<Movie>()))
+            _localMetadataProvider.RefreshFallbackMetadata(Arg.Any<Movie>())
                 .Returns(
-                    (MediaItem mediaItem) =>
+                    arg =>
                     {
-                        ((Movie)mediaItem).MovieMetadata = new List<MovieMetadata> { new() };
+                        ((Movie)arg.Arg<MediaItem>()).MovieMetadata = new List<MovieMetadata> { new() };
                         return Task.FromResult(true);
                     });
 
-            _imageCache = new Mock<IImageCache>();
+            _imageCache = Substitute.For<IImageCache>();
         }
 
-        private Mock<IMovieRepository> _movieRepository;
-        private Mock<IMediaItemRepository> _mediaItemRepository;
-        private Mock<ILocalStatisticsProvider> _localStatisticsProvider;
-        private Mock<ILocalMetadataProvider> _localMetadataProvider;
-        private Mock<IImageCache> _imageCache;
+        private IMovieRepository _movieRepository;
+        private IMediaItemRepository _mediaItemRepository;
+        private ILocalStatisticsProvider _localStatisticsProvider;
+        private ILocalMetadataProvider _localMetadataProvider;
+        private IImageCache _imageCache;
 
         [Test]
         public async Task NewMovie_Statistics_And_FallbackMetadata(
@@ -105,20 +105,16 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
         }
 
         [Test]
@@ -150,20 +146,16 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
         }
 
         [Test]
@@ -194,21 +186,17 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshSidecarMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath),
-                    metadataPath),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshSidecarMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath),
+                metadataPath);
         }
 
         [Test]
@@ -239,21 +227,17 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshSidecarMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath),
-                    metadataPath),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshSidecarMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath),
+                metadataPath);
         }
 
         [Test]
@@ -288,24 +272,18 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _imageCache.Verify(
-                x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
-                Times.Once);
+            await _imageCache.Received(1).CopyArtworkToCache(posterPath, ArtworkKind.Poster);
         }
 
         [Test]
@@ -340,24 +318,18 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _imageCache.Verify(
-                x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
-                Times.Once);
+            await _imageCache.Received(1).CopyArtworkToCache(posterPath, ArtworkKind.Poster);
         }
 
         [Test]
@@ -392,24 +364,18 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _imageCache.Verify(
-                x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
-                Times.Once);
+            await _imageCache.Received(1).CopyArtworkToCache(posterPath, ArtworkKind.Poster);
         }
 
         [Test]
@@ -443,20 +409,16 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
         }
 
         [Test]
@@ -488,20 +450,16 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
         }
 
         [Test]
@@ -535,20 +493,16 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
         }
 
         [Test]
@@ -576,20 +530,16 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-            _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+            await _movieRepository.Received(1).GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _movieRepository.Received(1).GetOrAdd(libraryPath, moviePath);
 
-            _localStatisticsProvider.Verify(
-                x => x.RefreshStatistics(
-                    FFmpegPath,
-                    FFprobePath,
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localStatisticsProvider.Received(1).RefreshStatistics(
+                FFmpegPath,
+                FFprobePath,
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
 
-            _localMetadataProvider.Verify(
-                x => x.RefreshFallbackMetadata(
-                    It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
-                Times.Once);
+            await _localMetadataProvider.Received(1).RefreshFallbackMetadata(
+                Arg.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath));
         }
 
         [Test]
@@ -601,7 +551,7 @@ public class MovieFolderScannerTests
             string movieFolder = Path.Combine(FakeRoot, "Movie (2020)");
             string oldMoviePath = Path.Combine(movieFolder, "Movie (2020).avi");
 
-            _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
+            _movieRepository.FindMoviePaths(Arg.Any<LibraryPath>())
                 .Returns(new List<string> { oldMoviePath }.AsEnumerable().AsTask());
 
             string moviePath = Path.Combine(movieFolder, "Movie (2020).mkv");
@@ -622,10 +572,8 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _mediaItemRepository.Verify(
-                x => x.FlagFileNotFound(It.IsAny<LibraryPath>(), It.IsAny<string>()),
-                Times.Once);
-            _mediaItemRepository.Verify(x => x.FlagFileNotFound(libraryPath, oldMoviePath), Times.Once);
+            await _mediaItemRepository.Received(1).FlagFileNotFound(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _mediaItemRepository.Received(1).FlagFileNotFound(libraryPath, oldMoviePath);
         }
 
         [Test]
@@ -634,7 +582,7 @@ public class MovieFolderScannerTests
             string movieFolder = Path.Combine(FakeRoot, "Movie (2020)");
             string oldMoviePath = Path.Combine(movieFolder, "Movie (2020).avi");
 
-            _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
+            _movieRepository.FindMoviePaths(Arg.Any<LibraryPath>())
                 .Returns(new List<string> { oldMoviePath }.AsEnumerable().AsTask());
 
             MovieFolderScanner service = GetService(
@@ -653,46 +601,44 @@ public class MovieFolderScannerTests
 
             result.IsRight.Should().BeTrue();
 
-            _mediaItemRepository.Verify(
-                x => x.FlagFileNotFound(It.IsAny<LibraryPath>(), It.IsAny<string>()),
-                Times.Once);
-            _mediaItemRepository.Verify(x => x.FlagFileNotFound(libraryPath, oldMoviePath), Times.Once);
+            await _mediaItemRepository.Received(1).FlagFileNotFound(Arg.Any<LibraryPath>(), Arg.Any<string>());
+            await _mediaItemRepository.Received(1).FlagFileNotFound(libraryPath, oldMoviePath);
         }
 
         private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
             new(
                 new FakeLocalFileSystem(new List<FakeFileEntry>(files)),
-                _movieRepository.Object,
-                _localStatisticsProvider.Object,
-                new Mock<ILocalSubtitlesProvider>().Object,
-                _localMetadataProvider.Object,
-                new Mock<IMetadataRepository>().Object,
-                _imageCache.Object,
-                new Mock<ILibraryRepository>().Object,
-                _mediaItemRepository.Object,
-                new Mock<IMediator>().Object,
-                new Mock<IFFmpegPngService>().Object,
-                new Mock<ITempFilePool>().Object,
-                new Mock<IClient>().Object,
-                new Mock<ILogger<MovieFolderScanner>>().Object
+                _movieRepository,
+                _localStatisticsProvider,
+                Substitute.For<ILocalSubtitlesProvider>(),
+                _localMetadataProvider,
+                Substitute.For<IMetadataRepository>(),
+                _imageCache,
+                Substitute.For<ILibraryRepository>(),
+                _mediaItemRepository,
+                Substitute.For<IMediator>(),
+                Substitute.For<IFFmpegPngService>(),
+                Substitute.For<ITempFilePool>(),
+                Substitute.For<IClient>(),
+                Substitute.For<ILogger<MovieFolderScanner>>()
             );
 
         private MovieFolderScanner GetService(params FakeFolderEntry[] folders) =>
             new(
                 new FakeLocalFileSystem(new List<FakeFileEntry>(), new List<FakeFolderEntry>(folders)),
-                _movieRepository.Object,
-                _localStatisticsProvider.Object,
-                new Mock<ILocalSubtitlesProvider>().Object,
-                _localMetadataProvider.Object,
-                new Mock<IMetadataRepository>().Object,
-                _imageCache.Object,
-                new Mock<ILibraryRepository>().Object,
-                _mediaItemRepository.Object,
-                new Mock<IMediator>().Object,
-                new Mock<IFFmpegPngService>().Object,
-                new Mock<ITempFilePool>().Object,
-                new Mock<IClient>().Object,
-                new Mock<ILogger<MovieFolderScanner>>().Object
+                _movieRepository,
+                _localStatisticsProvider,
+                Substitute.For<ILocalSubtitlesProvider>(),
+                _localMetadataProvider,
+                Substitute.For<IMetadataRepository>(),
+                _imageCache,
+                Substitute.For<ILibraryRepository>(),
+                _mediaItemRepository,
+                Substitute.For<IMediator>(),
+                Substitute.For<IFFmpegPngService>(),
+                Substitute.For<ITempFilePool>(),
+                Substitute.For<IClient>(),
+                Substitute.For<ILogger<MovieFolderScanner>>()
             );
     }
 }

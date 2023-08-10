@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
@@ -19,10 +19,10 @@ public class LocalStatisticsProviderTests
     public void Test()
     {
         var provider = new LocalStatisticsProvider(
-            new Mock<IMetadataRepository>().Object,
-            new Mock<ILocalFileSystem>().Object,
-            new Mock<IClient>().Object,
-            new Mock<ILogger<LocalStatisticsProvider>>().Object);
+            Substitute.For<IMetadataRepository>(),
+            Substitute.For<ILocalFileSystem>(),
+            Substitute.For<IClient>(),
+            Substitute.For<ILogger<LocalStatisticsProvider>>());
 
         var input = new LocalStatisticsProvider.FFprobe(
             new LocalStatisticsProvider.FFprobeFormat(
