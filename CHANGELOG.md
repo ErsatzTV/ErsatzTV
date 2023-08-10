@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix subtitle scaling when using QSV hardware acceleration
 
 ## [0.8.1-beta] - 2023-08-07
 ### Added
