@@ -36,4 +36,5 @@
       <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
     </ItemGroup>
 
+
 </Project>

@@ -43,7 +43,7 @@ public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, U
 
         foreach (string type in types)
         {
-            SearchResult result = _searchIndex.Search(_client, $"type:{type} AND (state:FileNotFound)", 0, 0);
+            SearchResult result = await _searchIndex.Search(_client, $"type:{type} AND (state:FileNotFound)", 0, 0);
             ids.AddRange(result.Items.Map(i => i.Id));
         }
 

@@ -96,6 +96,11 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
+    public Task<bool> IndexExists()
+    {
+        return Task.FromResult(Directory.Exists(FileSystemLayout.SearchIndexFolder));
+    }
+
     public int Version => 35;
 
     public async Task<bool> Initialize(
@@ -174,7 +179,7 @@ public sealed class SearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public SearchResult Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
+    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
     {
         var metadata = new Dictionary<string, string>
         {
@@ -189,7 +194,7 @@ public sealed class SearchIndex : ISearchIndex
         if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)) ||
             _writer.MaxDoc == 0)
         {
-            return new SearchResult(new List<SearchItem>(), 0);
+            return Task.FromResult(new SearchResult(new List<SearchItem>(), 0));
         }
 
         using DirectoryReader reader = _writer.GetReader(true);
@@ -227,7 +232,7 @@ public sealed class SearchIndex : ISearchIndex
             searchResult.PageMap = GetSearchPageMap(searcher, query, null, sort, limit);
         }
 
-        return searchResult;
+        return Task.FromResult(searchResult);
     }
 
     public void Commit() => _writer.Commit();
@@ -1192,7 +1197,7 @@ public sealed class SearchIndex : ISearchIndex
     }
 
     // this is used for filtering duplicate search results
-    private static string GetTitleAndYear(Metadata metadata) =>
+    internal static string GetTitleAndYear(Metadata metadata) =>
         metadata switch
         {
             EpisodeMetadata em =>
@@ -1212,7 +1217,7 @@ public sealed class SearchIndex : ISearchIndex
     private static string Title(Metadata metadata) =>
         (metadata.Title ?? string.Empty).Replace(' ', '_');
 
-    private static string GetJumpLetter(Metadata metadata)
+    internal static string GetJumpLetter(Metadata metadata)
     {
         char c = (metadata.SortTitle ?? " ").ToLowerInvariant().Head();
         return c switch

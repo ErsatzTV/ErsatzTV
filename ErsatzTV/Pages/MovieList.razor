@@ -6,8 +6,7 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
 @inherits MultiSelectBase<MovieList>
-@inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject NavigationManager NavigationManager
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -63,7 +62,7 @@
         </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
-@if (_data.PageMap.IsSome)
+@if (_data is not null && _data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
                BaseUri="media/movies"
@@ -76,18 +75,19 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private MovieCardResultsViewModel _data;
+    private MovieCardResultsViewModel _data = new(0, new List<MovieCardViewModel>(), None);
     private string _query;
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (PageNumber == 0)
         {
             PageNumber = 1;
         }
 
-        _query = _navigationManager.Uri.GetSearchQuery();
-        return RefreshData();
+        _query = NavigationManager.Uri.GetSearchQuery();
+        
+        await RefreshData();
     }
 
     protected override async Task RefreshData()
@@ -104,7 +104,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
-        _navigationManager.NavigateTo(uri);
+        NavigationManager.NavigateTo(uri);
     }
 
     private void NextPage()
@@ -115,7 +115,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
-        _navigationManager.NavigateTo(uri);
+        NavigationManager.NavigateTo(uri);
     }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)

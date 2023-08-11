@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Interfaces.Search;
 
 public interface ISearchIndex : IDisposable
 {
+    Task<bool> IndexExists();
     public int Version { get; }
     Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository);
     Task<Unit> Rebuild(ICachingSearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider);
@@ -24,6 +25,6 @@ public interface ISearchIndex : IDisposable
         List<MediaItem> items);
 
     Task<Unit> RemoveItems(IEnumerable<int> ids);
-    SearchResult Search(IClient client, string query, int skip, int limit, string searchField = "");
+    Task<SearchResult> Search(IClient client, string query, int skip, int limit, string searchField = "");
     void Commit();
 }

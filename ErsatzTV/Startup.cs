@@ -516,7 +516,8 @@ public class Startup
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
         services.AddSingleton<IEntityLocker, EntityLocker>();
-        services.AddSingleton<ISearchIndex, SearchIndex>();
+        //services.AddSingleton<ISearchIndex, SearchIndex>();
+        services.AddSingleton<ISearchIndex, ElasticSearchIndex>();
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();

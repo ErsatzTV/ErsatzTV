@@ -15,19 +15,19 @@ public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexA
         _searchIndex = searchIndex;
     }
 
-    public Task<SearchResultAllItemsViewModel> Handle(
+    public async Task<SearchResultAllItemsViewModel> Handle(
         QuerySearchIndexAllItems request,
         CancellationToken cancellationToken) =>
-        new SearchResultAllItemsViewModel(
-            GetIds(SearchIndex.MovieType, request.Query),
-            GetIds(SearchIndex.ShowType, request.Query),
-            GetIds(SearchIndex.SeasonType, request.Query),
-            GetIds(SearchIndex.EpisodeType, request.Query),
-            GetIds(SearchIndex.ArtistType, request.Query),
-            GetIds(SearchIndex.MusicVideoType, request.Query),
-            GetIds(SearchIndex.OtherVideoType, request.Query),
-            GetIds(SearchIndex.SongType, request.Query)).AsTask();
+        new(
+            await GetIds(SearchIndex.MovieType, request.Query),
+            await GetIds(SearchIndex.ShowType, request.Query),
+            await GetIds(SearchIndex.SeasonType, request.Query),
+            await GetIds(SearchIndex.EpisodeType, request.Query),
+            await GetIds(SearchIndex.ArtistType, request.Query),
+            await GetIds(SearchIndex.MusicVideoType, request.Query),
+            await GetIds(SearchIndex.OtherVideoType, request.Query),
+            await GetIds(SearchIndex.SongType, request.Query));
 
-    private List<int> GetIds(string type, string query) =>
-        _searchIndex.Search(_client, $"type:{type} AND ({query})", 0, 0).Items.Map(i => i.Id).ToList();
+    private async Task<List<int>> GetIds(string type, string query) =>
+        (await _searchIndex.Search(_client, $"type:{type} AND ({query})", 0, 0)).Items.Map(i => i.Id).ToList();
 }

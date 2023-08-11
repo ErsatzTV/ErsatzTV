@@ -100,7 +100,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            SearchResult searchResults = _searchIndex.Search(_client, collection.Query, 0, 0);
+            SearchResult searchResults = await _searchIndex.Search(_client, collection.Query, 0, 0);
 
             var movieIds = searchResults.Items
                 .Filter(i => i.Type == SearchIndex.MovieType)
