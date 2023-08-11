@@ -1,7 +1,7 @@
 using System.Globalization;
-using System.Linq.Expressions;
 using Bugsnag;
 using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Aggregations;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -417,9 +417,9 @@ public class ElasticSearchIndex : ISearchIndex
     {
         SearchResponse<ElasticSearchItem> response = await _client.SearchAsync<ElasticSearchItem>(
             s => s.Index(IndexName)
-                .Size(10_000)
+                .Size(0)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
-                .SourceIncludes(new Expression<Func<ElasticSearchItem, object>>[] { x => x.JumpLetter })
+                .Aggregations(a => a.Terms("count", v => v.Field(i => i.JumpLetter).Size(30)))
                 .QueryLuceneSyntax(query));
         
         if (!response.IsValidResponse)
@@ -434,32 +434,18 @@ public class ElasticSearchIndex : ISearchIndex
         };
         var map = letters.ToDictionary(letter => letter, _ => 0);
 
-        var current = 0;
-        var page = 0;
-        while (current < totalCount)
+        if (response.Aggregations?.Values.Head() is StringTermsAggregate aggregate)
         {
-            // walk up by page size (limit)
-            page++;
-            current += limit;
-            if (current > totalCount)
+            // start on page 1
+            int total = limit;
+            
+            foreach (char letter in letters)
             {
-                current = totalCount;
-            }
+                map[letter] = total / limit;
 
-            char jumpLetter = response.Hits.ElementAt(current - 1).Source.JumpLetter.Head();
-            foreach (char letter in letters.Where(l => letters.IndexOf(l) <= letters.IndexOf(jumpLetter)))
-            {
-                if (map[letter] == 0)
-                {
-                    map[letter] = page;
-                }
+                Option<StringTermsBucket> maybeBucket = aggregate.Buckets.Find(b => b.Key == letter.ToString());
+                total += maybeBucket.Sum(bucket => (int)bucket.DocCount);
             }
-        }
-
-        int max = map.Values.Max();
-        foreach (char letter in letters.Where(letter => map[letter] == 0))
-        {
-            map[letter] = max;
         }
 
         return new SearchPageMap(map);
