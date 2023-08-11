@@ -44,7 +44,10 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
 
         bool indexExists = await _searchIndex.IndexExists();
 
-        await _searchIndex.Initialize(_localFileSystem, _configElementRepository);
+        if (!await _searchIndex.Initialize(_localFileSystem, _configElementRepository))
+        {
+            indexExists = false;
+        }
 
         _logger.LogInformation("Done initializing search index");
 

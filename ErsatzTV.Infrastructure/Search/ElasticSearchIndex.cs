@@ -37,7 +37,8 @@ public class ElasticSearchIndex : ISearchIndex
         // do nothing
     }
 
-    public Task<bool> IndexExists() => Task.FromResult(true);
+    // not really used by elasticsearch
+    public Task<bool> IndexExists() => Task.FromResult(false);
 
     public int Version => 36;
 
@@ -78,7 +79,7 @@ public class ElasticSearchIndex : ISearchIndex
 
     private async Task<CreateIndexResponse> CreateIndex()
     {
-        return await _client.Indices.CreateAsync<BaseSearchItem>(
+        return await _client.Indices.CreateAsync<ElasticSearchItem>(
             IndexName,
             i => i.Mappings(
                 m => m.Properties(
@@ -109,6 +110,16 @@ public class ElasticSearchIndex : ISearchIndex
                         .Text(t => t.Director, t => t.Store(false))
                         .Text(t => t.Writer, t => t.Store(false))
                         .Keyword(t => t.TraktList, t => t.Store(false))
+                        .IntegerNumber(t => t.SeasonNumber, t => t.Store(false))
+                        .Text(t => t.ShowTitle, t => t.Store(false))
+                        .Text(t => t.ShowGenre, t => t.Store(false))
+                        .Text(t => t.ShowTag, t => t.Store(false))
+                        .Text(t => t.Style, t => t.Store(false))
+                        .Text(t => t.Mood, t => t.Store(false))
+                        .Text(t => t.Album, t => t.Store(false))
+                        .Text(t => t.Artist, t => t.Store(false))
+                        .IntegerNumber(t => t.EpisodeNumber, t => t.Store(false))
+                        .Text(t => t.AlbumArtist, t => t.Store(false))
                 )));
     }
 
@@ -140,27 +151,27 @@ public class ElasticSearchIndex : ISearchIndex
                 case Movie movie:
                     await UpdateMovie(searchRepository, movie);
                     break;
-                // case Show show:
-                //     await UpdateShow(searchRepository, show);
-                //     break;
-                // case Season season:
-                //     await UpdateSeason(searchRepository, season);
-                //     break;
-                // case Artist artist:
-                //     await UpdateArtist(searchRepository, artist);
-                //     break;
-                // case MusicVideo musicVideo:
-                //     await UpdateMusicVideo(searchRepository, musicVideo);
-                //     break;
-                // case Episode episode:
-                //     await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
-                //     break;
-                // case OtherVideo otherVideo:
-                //     await UpdateOtherVideo(searchRepository, otherVideo);
-                //     break;
-                // case Song song:
-                //     await UpdateSong(searchRepository, song);
-                //     break;
+                case Show show:
+                    await UpdateShow(searchRepository, show);
+                    break;
+                case Season season:
+                    await UpdateSeason(searchRepository, season);
+                    break;
+                case Artist artist:
+                    await UpdateArtist(searchRepository, artist);
+                    break;
+                case MusicVideo musicVideo:
+                    await UpdateMusicVideo(searchRepository, musicVideo);
+                    break;
+                case Episode episode:
+                    await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
+                    break;
+                case OtherVideo otherVideo:
+                    await UpdateOtherVideo(searchRepository, otherVideo);
+                    break;
+                case Song song:
+                    await UpdateSong(searchRepository, song);
+                    break;
             }
         }
 
@@ -179,10 +190,10 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<SearchResult> Search(IClient client, string query, int skip, int limit, string searchField = "")
     {
-        var items = new List<ElasticSearchItem>();
+        var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        SearchResponse<ElasticSearchItem> response = await _client.SearchAsync<ElasticSearchItem>(
+        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
                 .From(skip)
@@ -198,7 +209,7 @@ public class ElasticSearchIndex : ISearchIndex
         
         if (limit > 0)
         {
-            searchResult.PageMap = await GetSearchPageMap(query, limit, totalCount);
+            searchResult.PageMap = await GetSearchPageMap(query, limit);
         }
 
         return searchResult;
@@ -219,27 +230,27 @@ public class ElasticSearchIndex : ISearchIndex
             case Movie movie:
                 await UpdateMovie(searchRepository, movie);
                 break;
-            // case Show show:
-            //     await UpdateShow(searchRepository, show);
-            //     break;
-            // case Season season:
-            //     await UpdateSeason(searchRepository, season);
-            //     break;
-            // case Artist artist:
-            //     await UpdateArtist(searchRepository, artist);
-            //     break;
-            // case MusicVideo musicVideo:
-            //     await UpdateMusicVideo(searchRepository, musicVideo);
-            //     break;
-            // case Episode episode:
-            //     await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
-            //     break;
-            // case OtherVideo otherVideo:
-            //     await UpdateOtherVideo(searchRepository, otherVideo);
-            //     break;
-            // case Song song:
-            //     await UpdateSong(searchRepository, song);
-            //     break;
+            case Show show:
+                await UpdateShow(searchRepository, show);
+                break;
+            case Season season:
+                await UpdateSeason(searchRepository, season);
+                break;
+            case Artist artist:
+                await UpdateArtist(searchRepository, artist);
+                break;
+            case MusicVideo musicVideo:
+                await UpdateMusicVideo(searchRepository, musicVideo);
+                break;
+            case Episode episode:
+                await UpdateEpisode(searchRepository, fallbackMetadataProvider, episode);
+                break;
+            case OtherVideo otherVideo:
+                await UpdateOtherVideo(searchRepository, otherVideo);
+                break;
+            case Song song:
+                await UpdateSong(searchRepository, song);
+                break;
         }
     }
 
@@ -249,7 +260,7 @@ public class ElasticSearchIndex : ISearchIndex
         {
             try
             {
-                var doc = new SearchMovie
+                var doc = new ElasticSearchItem
                 {
                     Id = movie.Id,
                     Type = SearchIndex.MovieType,
@@ -291,7 +302,369 @@ public class ElasticSearchIndex : ISearchIndex
             }
         }
     }
+    
+    private async Task UpdateShow(ISearchRepository searchRepository, Show show)
+    {
+        foreach (ShowMetadata metadata in show.ShowMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = show.Id,
+                    Type = SearchIndex.ShowType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = show.LibraryPath.Library.Name,
+                    LibraryId = show.LibraryPath.Library.Id,
+                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    State = show.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForShow(show)),
+                    ContentRating = GetContentRatings(metadata.ContentRating),
+                    ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Plot = metadata.Plot ?? string.Empty,
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    Studio = metadata.Studios.Map(s => s.Name).ToList(),
+                    Actor = metadata.Actors.Map(a => a.Name).ToList(),
+                    TraktList = show.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList()
+                };
+                
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
 
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.Show = null;
+                _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateSeason(ISearchRepository searchRepository, Season season)
+    {
+        foreach (SeasonMetadata metadata in season.SeasonMetadata.HeadOrNone())
+        foreach (ShowMetadata showMetadata in season.Show.ShowMetadata.HeadOrNone())
+        {
+            try
+            {
+                var seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
+                string sortTitle = $"{showMetadata.SortTitle}_{season.SeasonNumber:0000}"
+                    .ToLowerInvariant();
+                string titleAndYear = $"{showMetadata.Title}_{showMetadata.Year}_{season.SeasonNumber}"
+                    .ToLowerInvariant();
+
+                var doc = new ElasticSearchItem
+                {
+                    Id = season.Id,
+                    Type = SearchIndex.SeasonType,
+                    Title = seasonTitle,
+                    SortTitle = sortTitle,
+                    LibraryName = season.LibraryPath.Library.Name,
+                    LibraryId = season.LibraryPath.Library.Id,
+                    TitleAndYear = titleAndYear,
+                    JumpLetter = SearchIndex.GetJumpLetter(showMetadata),
+                    State = season.State.ToString(),
+                    SeasonNumber = season.SeasonNumber,
+                    ShowTitle = showMetadata.Title,
+                    ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList(),
+                    ShowTag = showMetadata.Tags.Map(t => t.Name).ToList(),
+                    Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForSeason(season)),
+                    ContentRating = GetContentRatings(showMetadata.ContentRating),
+                    ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    TraktList = season.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList(),
+                    Tag = metadata.Tags.Map(a => a.Name).ToList()
+                };
+                
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.Season = null;
+                _logger.LogWarning(ex, "Error indexing season with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateArtist(ISearchRepository searchRepository, Artist artist)
+    {
+        foreach (ArtistMetadata metadata in artist.ArtistMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = artist.Id,
+                    Type = SearchIndex.ArtistType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = artist.LibraryPath.Library.Name,
+                    LibraryId = artist.LibraryPath.Library.Id,
+                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    State = artist.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForArtist(artist)),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Style = metadata.Styles.Map(t => t.Name).ToList(),
+                    Mood = metadata.Moods.Map(s => s.Name).ToList()
+                };
+                
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.Artist = null;
+                _logger.LogWarning(ex, "Error indexing artist with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateMusicVideo(ISearchRepository searchRepository, MusicVideo musicVideo)
+    {
+        foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = musicVideo.Id,
+                    Type = SearchIndex.MusicVideoType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = musicVideo.LibraryPath.Library.Name,
+                    LibraryId = musicVideo.LibraryPath.Library.Id,
+                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    State = musicVideo.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    Language = await GetLanguages(searchRepository, musicVideo.MediaVersions),
+                    ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Album = metadata.Album ?? string.Empty,
+                    Plot = metadata.Plot ?? string.Empty,
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    Studio = metadata.Studios.Map(s => s.Name).ToList()
+                };
+                
+                var artists = new System.Collections.Generic.HashSet<string>();
+
+                if (musicVideo.Artist != null)
+                {
+                    foreach (ArtistMetadata artistMetadata in musicVideo.Artist.ArtistMetadata)
+                    {
+                        artists.Add(artistMetadata.Title);
+                    }
+                }
+
+                foreach (MusicVideoArtist artist in metadata.Artists)
+                {
+                    artists.Add(artist.Name);
+                }
+
+                doc.Artist = artists.ToList();
+                
+                AddStatistics(doc, musicVideo.MediaVersions);
+
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.MusicVideo = null;
+                _logger.LogWarning(ex, "Error indexing music video with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateEpisode(
+        ISearchRepository searchRepository,
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        Episode episode)
+    {
+        // try to load metadata here, since episodes without metadata won't index
+        if (episode.EpisodeMetadata.Count == 0)
+        {
+            episode.EpisodeMetadata ??= new List<EpisodeMetadata>();
+            episode.EpisodeMetadata = fallbackMetadataProvider.GetFallbackMetadata(episode);
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+            {
+                metadata.Episode = episode;
+            }
+        }
+
+        foreach (EpisodeMetadata metadata in episode.EpisodeMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = episode.Id,
+                    Type = SearchIndex.EpisodeType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = episode.LibraryPath.Library.Name,
+                    LibraryId = episode.LibraryPath.Library.Id,
+                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    State = episode.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    SeasonNumber = episode.Season?.SeasonNumber ?? 0,
+                    EpisodeNumber = metadata.EpisodeNumber,
+                    Language = await GetLanguages(searchRepository, episode.MediaVersions),
+                    ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Plot = metadata.Plot ?? string.Empty,
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    Studio = metadata.Studios.Map(s => s.Name).ToList(),
+                    Actor = metadata.Actors.Map(a => a.Name).ToList(),
+                    Director = metadata.Directors.Map(d => d.Name).ToList(),
+                    Writer = metadata.Writers.Map(w => w.Name).ToList(),
+                    TraktList = episode.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList()
+                };
+
+                // add some show fields to help filter episodes within a particular show
+                foreach (ShowMetadata showMetadata in Optional(episode.Season?.Show?.ShowMetadata).Flatten())
+                {
+                    doc.ShowTitle = showMetadata.Title;
+                    doc.ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList();
+                    doc.ShowTag = showMetadata.Tags.Map(t => t.Name).ToList();
+                }
+
+                AddStatistics(doc, episode.MediaVersions);
+
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.Episode = null;
+                _logger.LogWarning(ex, "Error indexing episode with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateOtherVideo(ISearchRepository searchRepository, OtherVideo otherVideo)
+    {
+        foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = otherVideo.Id,
+                    Type = SearchIndex.OtherVideoType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = otherVideo.LibraryPath.Library.Name,
+                    LibraryId = otherVideo.LibraryPath.Library.Id,
+                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    State = otherVideo.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    Language = await GetLanguages(searchRepository, otherVideo.MediaVersions),
+                    ContentRating = GetContentRatings(metadata.ContentRating),
+                    ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Plot = metadata.Plot ?? string.Empty,
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    Studio = metadata.Studios.Map(s => s.Name).ToList(),
+                    Actor = metadata.Actors.Map(a => a.Name).ToList(),
+                    Director = metadata.Directors.Map(d => d.Name).ToList(),
+                    Writer = metadata.Writers.Map(w => w.Name).ToList()
+                };
+                
+                AddStatistics(doc, otherVideo.MediaVersions);
+
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.OtherVideo = null;
+                _logger.LogWarning(ex, "Error indexing other video with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateSong(ISearchRepository searchRepository, Song song)
+    {
+        foreach (SongMetadata metadata in song.SongMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = song.Id,
+                    Type = SearchIndex.SongType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = song.LibraryPath.Library.Name,
+                    LibraryId = song.LibraryPath.Library.Id,
+                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    State = song.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    Language = await GetLanguages(searchRepository, song.MediaVersions),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Album = metadata.Album ?? string.Empty,
+                    Artist = !string.IsNullOrWhiteSpace(metadata.Artist) ? new List<string> { metadata.Artist } : null,
+                    AlbumArtist = metadata.AlbumArtist,
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Tag = metadata.Tags.Map(t => t.Name).ToList()
+                };
+                
+                AddStatistics(doc, song.MediaVersions);
+
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.Song = null;
+                _logger.LogWarning(ex, "Error indexing song with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
     private static string GetReleaseDate(DateTime? metadataReleaseDate)
     {
         return metadataReleaseDate?.ToString("yyyyMMdd");
@@ -354,7 +727,7 @@ public class ElasticSearchIndex : ISearchIndex
         return englishNames.ToList();
     }
 
-    private static void AddStatistics(BaseSearchItem doc, IEnumerable<MediaVersion> mediaVersions)
+    private static void AddStatistics(ElasticSearchItem doc, IEnumerable<MediaVersion> mediaVersions)
     {
         foreach (MediaVersion version in mediaVersions.HeadOrNone())
         {
@@ -413,9 +786,9 @@ public class ElasticSearchIndex : ISearchIndex
         return result;
     }
 
-    private async Task<Option<SearchPageMap>> GetSearchPageMap(string query, int limit, int totalCount)
+    private async Task<Option<SearchPageMap>> GetSearchPageMap(string query, int limit)
     {
-        SearchResponse<ElasticSearchItem> response = await _client.SearchAsync<ElasticSearchItem>(
+        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
                 .Size(0)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))

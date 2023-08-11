@@ -634,7 +634,7 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(ShowTitleField, showMetadata.Title, Field.Store.NO)
                 };
 
-                // add some show fields to help filter shows within a particular show
+                // add some show fields to help filter seasons within a particular show
                 foreach (Genre genre in showMetadata.Genres)
                 {
                     doc.Add(new TextField(ShowGenreField, genre.Name, Field.Store.NO));
@@ -685,7 +685,7 @@ public sealed class SearchIndex : ISearchIndex
             catch (Exception ex)
             {
                 metadata.Season = null;
-                _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+                _logger.LogWarning(ex, "Error indexing season with metadata {@Metadata}", metadata);
             }
         }
     }
