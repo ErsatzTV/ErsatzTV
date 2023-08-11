@@ -19,14 +19,14 @@ public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexA
         QuerySearchIndexAllItems request,
         CancellationToken cancellationToken) =>
         new(
-            await GetIds(SearchIndex.MovieType, request.Query),
-            await GetIds(SearchIndex.ShowType, request.Query),
-            await GetIds(SearchIndex.SeasonType, request.Query),
-            await GetIds(SearchIndex.EpisodeType, request.Query),
-            await GetIds(SearchIndex.ArtistType, request.Query),
-            await GetIds(SearchIndex.MusicVideoType, request.Query),
-            await GetIds(SearchIndex.OtherVideoType, request.Query),
-            await GetIds(SearchIndex.SongType, request.Query));
+            await GetIds(LuceneSearchIndex.MovieType, request.Query),
+            await GetIds(LuceneSearchIndex.ShowType, request.Query),
+            await GetIds(LuceneSearchIndex.SeasonType, request.Query),
+            await GetIds(LuceneSearchIndex.EpisodeType, request.Query),
+            await GetIds(LuceneSearchIndex.ArtistType, request.Query),
+            await GetIds(LuceneSearchIndex.MusicVideoType, request.Query),
+            await GetIds(LuceneSearchIndex.OtherVideoType, request.Query),
+            await GetIds(LuceneSearchIndex.SongType, request.Query));
 
     private async Task<List<int>> GetIds(string type, string query) =>
         (await _searchIndex.Search(_client, $"type:{type} AND ({query})", 0, 0)).Items.Map(i => i.Id).ToList();

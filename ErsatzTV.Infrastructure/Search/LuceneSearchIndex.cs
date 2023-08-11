@@ -28,7 +28,7 @@ using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
-public sealed class SearchIndex : ISearchIndex
+public sealed class LuceneSearchIndex : ISearchIndex
 {
     private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
 
@@ -83,13 +83,13 @@ public sealed class SearchIndex : ISearchIndex
 
     private readonly List<CultureInfo> _cultureInfos;
 
-    private readonly ILogger<SearchIndex> _logger;
+    private readonly ILogger<LuceneSearchIndex> _logger;
 
     private FSDirectory _directory;
     private bool _initialized;
     private IndexWriter _writer;
 
-    public SearchIndex(ILogger<SearchIndex> logger)
+    public LuceneSearchIndex(ILogger<LuceneSearchIndex> logger)
     {
         _logger = logger;
         _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();

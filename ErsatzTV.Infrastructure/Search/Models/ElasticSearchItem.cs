@@ -7,105 +7,105 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonExtensionData]
     public Dictionary<string, object> AdditionalProperties { get; set; } = new();
     
-    [JsonPropertyName(SearchIndex.TitleField)]
+    [JsonPropertyName(LuceneSearchIndex.TitleField)]
     public string Title { get; set; }
 
-    [JsonPropertyName(SearchIndex.LibraryNameField)]
+    [JsonPropertyName(LuceneSearchIndex.LibraryNameField)]
     public string LibraryName { get; set; }
 
-    [JsonPropertyName(SearchIndex.LibraryIdField)]
+    [JsonPropertyName(LuceneSearchIndex.LibraryIdField)]
     public int LibraryId { get; set; }
     
-    [JsonPropertyName(SearchIndex.TitleAndYearField)]
+    [JsonPropertyName(LuceneSearchIndex.TitleAndYearField)]
     public string TitleAndYear { get; set; }
 
-    [JsonPropertyName(SearchIndex.StateField)]
+    [JsonPropertyName(LuceneSearchIndex.StateField)]
     public string State { get; set; }
 
-    [JsonPropertyName(SearchIndex.MetadataKindField)]
+    [JsonPropertyName(LuceneSearchIndex.MetadataKindField)]
     public string MetadataKind { get; set; }
     
-    [JsonPropertyName(SearchIndex.LanguageField)]
+    [JsonPropertyName(LuceneSearchIndex.LanguageField)]
     public List<string> Language { get; set; }
     
-    [JsonPropertyName(SearchIndex.MinutesField)]
+    [JsonPropertyName(LuceneSearchIndex.MinutesField)]
     public int Minutes { get; set; }
     
-    [JsonPropertyName(SearchIndex.HeightField)]
+    [JsonPropertyName(LuceneSearchIndex.HeightField)]
     public int Height { get; set; }
     
-    [JsonPropertyName(SearchIndex.WidthField)]
+    [JsonPropertyName(LuceneSearchIndex.WidthField)]
     public int Width { get; set; }
     
-    [JsonPropertyName(SearchIndex.VideoCodecField)]
+    [JsonPropertyName(LuceneSearchIndex.VideoCodecField)]
     public string VideoCodec { get; set; }
     
-    [JsonPropertyName(SearchIndex.VideoBitDepthField)]
+    [JsonPropertyName(LuceneSearchIndex.VideoBitDepthField)]
     public int VideoBitDepth { get; set; }
     
-    [JsonPropertyName(SearchIndex.VideoDynamicRange)]
+    [JsonPropertyName(LuceneSearchIndex.VideoDynamicRange)]
     public string VideoDynamicRange { get; set; }
     
-    [JsonPropertyName(SearchIndex.ContentRatingField)]
+    [JsonPropertyName(LuceneSearchIndex.ContentRatingField)]
     public List<string> ContentRating { get; set; }
     
-    [JsonPropertyName(SearchIndex.ReleaseDateField)]
+    [JsonPropertyName(LuceneSearchIndex.ReleaseDateField)]
     public string ReleaseDate { get; set; }
     
-    [JsonPropertyName(SearchIndex.AddedDateField)]
+    [JsonPropertyName(LuceneSearchIndex.AddedDateField)]
     public string AddedDate { get; set; }
     
-    [JsonPropertyName(SearchIndex.AlbumField)]
+    [JsonPropertyName(LuceneSearchIndex.AlbumField)]
     public string Album { get; set; }
 
-    [JsonPropertyName(SearchIndex.AlbumArtistField)]
+    [JsonPropertyName(LuceneSearchIndex.AlbumArtistField)]
     public string AlbumArtist { get; set; }
 
-    [JsonPropertyName(SearchIndex.PlotField)]
+    [JsonPropertyName(LuceneSearchIndex.PlotField)]
     public string Plot { get; set; }
     
-    [JsonPropertyName(SearchIndex.GenreField)]
+    [JsonPropertyName(LuceneSearchIndex.GenreField)]
     public List<string> Genre { get; set; }
     
-    [JsonPropertyName(SearchIndex.TagField)]
+    [JsonPropertyName(LuceneSearchIndex.TagField)]
     public List<string> Tag { get; set; }
 
-    [JsonPropertyName(SearchIndex.StudioField)]
+    [JsonPropertyName(LuceneSearchIndex.StudioField)]
     public List<string> Studio { get; set; }
     
-    [JsonPropertyName(SearchIndex.ArtistField)]
+    [JsonPropertyName(LuceneSearchIndex.ArtistField)]
     public List<string> Artist { get; set; }
 
-    [JsonPropertyName(SearchIndex.ActorField)]
+    [JsonPropertyName(LuceneSearchIndex.ActorField)]
     public List<string> Actor { get; set; }
 
-    [JsonPropertyName(SearchIndex.DirectorField)]
+    [JsonPropertyName(LuceneSearchIndex.DirectorField)]
     public List<string> Director { get; set; }
 
-    [JsonPropertyName(SearchIndex.WriterField)]
+    [JsonPropertyName(LuceneSearchIndex.WriterField)]
     public List<string> Writer { get; set; }
     
-    [JsonPropertyName(SearchIndex.TraktListField)]
+    [JsonPropertyName(LuceneSearchIndex.TraktListField)]
     public List<string> TraktList { get; set; }
     
-    [JsonPropertyName(SearchIndex.SeasonNumberField)]
+    [JsonPropertyName(LuceneSearchIndex.SeasonNumberField)]
     public int SeasonNumber { get; set; }
     
-    [JsonPropertyName(SearchIndex.EpisodeNumberField)]
+    [JsonPropertyName(LuceneSearchIndex.EpisodeNumberField)]
     public int EpisodeNumber { get; set; }
 
-    [JsonPropertyName(SearchIndex.ShowTitleField)]
+    [JsonPropertyName(LuceneSearchIndex.ShowTitleField)]
     public string ShowTitle { get; set; }
 
-    [JsonPropertyName(SearchIndex.ShowGenreField)]
+    [JsonPropertyName(LuceneSearchIndex.ShowGenreField)]
     public List<string> ShowGenre { get; set; }
     
-    [JsonPropertyName(SearchIndex.ShowTagField)]
+    [JsonPropertyName(LuceneSearchIndex.ShowTagField)]
     public List<string> ShowTag { get; set; }
 
-    [JsonPropertyName(SearchIndex.StyleField)]
+    [JsonPropertyName(LuceneSearchIndex.StyleField)]
     public List<string> Style { get; set; }
     
-    [JsonPropertyName(SearchIndex.MoodField)]
+    [JsonPropertyName(LuceneSearchIndex.MoodField)]
     public List<string> Mood { get; set; }
 }

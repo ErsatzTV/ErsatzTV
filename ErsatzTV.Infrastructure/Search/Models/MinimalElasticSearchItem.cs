@@ -4,15 +4,15 @@ namespace ErsatzTV.Infrastructure.Search.Models;
 
 public class MinimalElasticSearchItem
 {
-    [JsonPropertyName(SearchIndex.IdField)]
+    [JsonPropertyName(LuceneSearchIndex.IdField)]
     public int Id { get; set; }
     
-    [JsonPropertyName(SearchIndex.TypeField)]
+    [JsonPropertyName(LuceneSearchIndex.TypeField)]
     public string Type { get; set; }
     
-    [JsonPropertyName(SearchIndex.SortTitleField)]
+    [JsonPropertyName(LuceneSearchIndex.SortTitleField)]
     public string SortTitle { get; set; }
 
-    [JsonPropertyName(SearchIndex.JumpLetterField)]
+    [JsonPropertyName(LuceneSearchIndex.JumpLetterField)]
     public string JumpLetter { get; set; }
 }

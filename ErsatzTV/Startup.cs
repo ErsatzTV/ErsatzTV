@@ -127,6 +127,7 @@ public class Startup
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);
+        SearchHelper.Init(Configuration);
 
         if (OidcHelper.IsEnabled)
         {
@@ -516,8 +517,18 @@ public class Startup
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
         services.AddSingleton<IEntityLocker, EntityLocker>();
-        //services.AddSingleton<ISearchIndex, SearchIndex>();
-        services.AddSingleton<ISearchIndex, ElasticSearchIndex>();
+
+        if (SearchHelper.IsElasticSearchEnabled)
+        {
+            ElasticSearchIndex.Uri = new Uri(SearchHelper.ElasticSearchUri);
+            ElasticSearchIndex.IndexName = SearchHelper.ElasticSearchIndexName;
+            services.AddSingleton<ISearchIndex, ElasticSearchIndex>();
+        }
+        else
+        {
+            services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
+        }
+
         services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
         services.AddSingleton<ITempFilePool, TempFilePool>();
         services.AddSingleton<IHlsPlaylistFilter, HlsPlaylistFilter>();

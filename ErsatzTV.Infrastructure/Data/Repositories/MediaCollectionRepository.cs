@@ -103,48 +103,48 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             SearchResult searchResults = await _searchIndex.Search(_client, collection.Query, 0, 0);
 
             var movieIds = searchResults.Items
-                .Filter(i => i.Type == SearchIndex.MovieType)
+                .Filter(i => i.Type == LuceneSearchIndex.MovieType)
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetMovieItems(dbContext, movieIds));
 
-            foreach (int showId in searchResults.Items.Filter(i => i.Type == SearchIndex.ShowType).Map(i => i.Id))
+            foreach (int showId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.ShowType).Map(i => i.Id))
             {
                 result.AddRange(await GetShowItemsFromShowId(dbContext, showId));
             }
 
-            foreach (int seasonId in searchResults.Items.Filter(i => i.Type == SearchIndex.SeasonType)
+            foreach (int seasonId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.SeasonType)
                          .Map(i => i.Id))
             {
                 result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, seasonId));
             }
 
-            foreach (int artistId in searchResults.Items.Filter(i => i.Type == SearchIndex.ArtistType)
+            foreach (int artistId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.ArtistType)
                          .Map(i => i.Id))
             {
                 result.AddRange(await GetArtistItemsFromArtistId(dbContext, artistId));
             }
 
             var musicVideoIds = searchResults.Items
-                .Filter(i => i.Type == SearchIndex.MusicVideoType)
+                .Filter(i => i.Type == LuceneSearchIndex.MusicVideoType)
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetMusicVideoItems(dbContext, musicVideoIds));
 
             var episodeIds = searchResults.Items
-                .Filter(i => i.Type == SearchIndex.EpisodeType)
+                .Filter(i => i.Type == LuceneSearchIndex.EpisodeType)
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetEpisodeItems(dbContext, episodeIds));
 
             var otherVideoIds = searchResults.Items
-                .Filter(i => i.Type == SearchIndex.OtherVideoType)
+                .Filter(i => i.Type == LuceneSearchIndex.OtherVideoType)
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetOtherVideoItems(dbContext, otherVideoIds));
 
             var songIds = searchResults.Items
-                .Filter(i => i.Type == SearchIndex.SongType)
+                .Filter(i => i.Type == LuceneSearchIndex.SongType)
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetSongItems(dbContext, songIds));

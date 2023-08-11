@@ -29,14 +29,14 @@ public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, U
     {
         string[] types =
         {
-            SearchIndex.MovieType,
-            SearchIndex.ShowType,
-            SearchIndex.SeasonType,
-            SearchIndex.EpisodeType,
-            SearchIndex.MusicVideoType,
-            SearchIndex.OtherVideoType,
-            SearchIndex.SongType,
-            SearchIndex.ArtistType
+            LuceneSearchIndex.MovieType,
+            LuceneSearchIndex.ShowType,
+            LuceneSearchIndex.SeasonType,
+            LuceneSearchIndex.EpisodeType,
+            LuceneSearchIndex.MusicVideoType,
+            LuceneSearchIndex.OtherVideoType,
+            LuceneSearchIndex.SongType,
+            LuceneSearchIndex.ArtistType
         };
 
         var ids = new List<int>();

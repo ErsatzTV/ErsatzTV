@@ -20,7 +20,8 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public class ElasticSearchIndex : ISearchIndex
 {
-    private const string IndexName = "ersatztv";    
+    public static Uri Uri;
+    public static string IndexName;    
 
     private readonly ILogger<ElasticSearchIndex> _logger;
     private readonly List<CultureInfo> _cultureInfos;
@@ -44,7 +45,7 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository)
     {
-        _client = new ElasticsearchClient(new Uri("http://localhost:9200"));
+        _client = new ElasticsearchClient(Uri);
         ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
         if (!exists.IsValidResponse)
         {
@@ -263,13 +264,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = movie.Id,
-                    Type = SearchIndex.MovieType,
+                    Type = LuceneSearchIndex.MovieType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = movie.LibraryPath.Library.Name,
                     LibraryId = movie.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = movie.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, movie.MediaVersions),
@@ -312,13 +313,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = show.Id,
-                    Type = SearchIndex.ShowType,
+                    Type = LuceneSearchIndex.ShowType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = show.LibraryPath.Library.Name,
                     LibraryId = show.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = show.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForShow(show)),
@@ -364,13 +365,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = season.Id,
-                    Type = SearchIndex.SeasonType,
+                    Type = LuceneSearchIndex.SeasonType,
                     Title = seasonTitle,
                     SortTitle = sortTitle,
                     LibraryName = season.LibraryPath.Library.Name,
                     LibraryId = season.LibraryPath.Library.Id,
                     TitleAndYear = titleAndYear,
-                    JumpLetter = SearchIndex.GetJumpLetter(showMetadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(showMetadata),
                     State = season.State.ToString(),
                     SeasonNumber = season.SeasonNumber,
                     ShowTitle = showMetadata.Title,
@@ -408,13 +409,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = artist.Id,
-                    Type = SearchIndex.ArtistType,
+                    Type = LuceneSearchIndex.ArtistType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = artist.LibraryPath.Library.Name,
                     LibraryId = artist.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = artist.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForArtist(artist)),
@@ -448,13 +449,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = musicVideo.Id,
-                    Type = SearchIndex.MusicVideoType,
+                    Type = LuceneSearchIndex.MusicVideoType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = musicVideo.LibraryPath.Library.Name,
                     LibraryId = musicVideo.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = musicVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, musicVideo.MediaVersions),
@@ -524,13 +525,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = episode.Id,
-                    Type = SearchIndex.EpisodeType,
+                    Type = LuceneSearchIndex.EpisodeType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = episode.LibraryPath.Library.Name,
                     LibraryId = episode.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = episode.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     SeasonNumber = episode.Season?.SeasonNumber ?? 0,
@@ -582,13 +583,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = otherVideo.Id,
-                    Type = SearchIndex.OtherVideoType,
+                    Type = LuceneSearchIndex.OtherVideoType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = otherVideo.LibraryPath.Library.Name,
                     LibraryId = otherVideo.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = otherVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, otherVideo.MediaVersions),
@@ -630,13 +631,13 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new ElasticSearchItem
                 {
                     Id = song.Id,
-                    Type = SearchIndex.SongType,
+                    Type = LuceneSearchIndex.SongType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = song.LibraryPath.Library.Name,
                     LibraryId = song.LibraryPath.Library.Id,
-                    TitleAndYear = SearchIndex.GetTitleAndYear(metadata),
-                    JumpLetter = SearchIndex.GetJumpLetter(metadata),
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
                     State = song.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, song.MediaVersions),
