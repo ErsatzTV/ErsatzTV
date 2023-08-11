@@ -38,8 +38,12 @@ public class ElasticSearchIndex : ISearchIndex
         // do nothing
     }
 
-    // not really used by elasticsearch
-    public Task<bool> IndexExists() => Task.FromResult(false);
+    public async Task<bool> IndexExists()
+    {
+        _client ??= new ElasticsearchClient(Uri);
+        ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
+        return exists.IsValidResponse;
+    }
 
     public int Version => 36;
 
@@ -47,7 +51,7 @@ public class ElasticSearchIndex : ISearchIndex
         ILocalFileSystem localFileSystem,
         IConfigElementRepository configElementRepository)
     {
-        _client = new ElasticsearchClient(Uri);
+        _client ??= new ElasticsearchClient(Uri);
         ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
         if (!exists.IsValidResponse)
         {
@@ -167,7 +171,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         var searchResult = new SearchResult(items.Map(i => new SearchItem(i.Type, i.Id)).ToList(), totalCount);
 
-        if (limit > 0)
+        if (limit is > 0 and < 10_000)
         {
             searchResult.PageMap = await GetSearchPageMap(query, limit);
         }

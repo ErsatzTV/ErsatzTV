@@ -228,7 +228,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         TopFieldDocs topDocs = searcher.Search(query, null, hitsLimit, sort, true, true);
         IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip);
 
-        if (limit > 0)
+        if (limit is > 0 and < 10_000)
         {
             selectedHits = selectedHits.Take(limit);
         }
@@ -237,7 +237,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             selectedHits.Map(d => ProjectToSearchItem(searcher.Doc(d.Doc))).ToList(),
             topDocs.TotalHits);
 
-        if (limit > 0)
+        if (limit is > 0 and < 10_000)
         {
             searchResult.PageMap = GetSearchPageMap(searcher, query, null, sort, limit);
         }
