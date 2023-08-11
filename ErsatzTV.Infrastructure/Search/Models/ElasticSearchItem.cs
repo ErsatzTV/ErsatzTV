@@ -12,4 +12,7 @@ public class ElasticSearchItem
     
     [JsonPropertyName(SearchIndex.SortTitleField)]
     public string SortTitle { get; set; }
+
+    [JsonPropertyName(SearchIndex.JumpLetterField)]
+    public string JumpLetter { get; set; }
 }

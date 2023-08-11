@@ -19,9 +19,6 @@ public abstract class BaseSearchItem : ElasticSearchItem
     [JsonPropertyName(SearchIndex.TitleAndYearField)]
     public string TitleAndYear { get; set; }
 
-    [JsonPropertyName(SearchIndex.JumpLetterField)]
-    public string JumpLetter { get; set; }
-    
     [JsonPropertyName(SearchIndex.StateField)]
     public string State { get; set; }
 

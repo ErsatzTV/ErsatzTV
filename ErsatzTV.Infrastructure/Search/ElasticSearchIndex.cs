@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq.Expressions;
 using Bugsnag;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.IndexManagement;
@@ -195,11 +196,10 @@ public class ElasticSearchIndex : ISearchIndex
 
         var searchResult = new SearchResult(items.Map(i => new SearchItem(i.Type, i.Id)).ToList(), totalCount);
         
-        // if (limit > 0)
-        // {
-            searchResult.PageMap = Option<SearchPageMap>.None;
-            //; GetSearchPageMap(searcher, query, null, sort, limit);
-        // }
+        if (limit > 0)
+        {
+            searchResult.PageMap = await GetSearchPageMap(query, limit, totalCount);
+        }
 
         return searchResult;
     }
@@ -411,5 +411,57 @@ public class ElasticSearchIndex : ISearchIndex
         }
 
         return result;
+    }
+
+    private async Task<Option<SearchPageMap>> GetSearchPageMap(string query, int limit, int totalCount)
+    {
+        SearchResponse<ElasticSearchItem> response = await _client.SearchAsync<ElasticSearchItem>(
+            s => s.Index(IndexName)
+                .Size(10_000)
+                .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
+                .SourceIncludes(new Expression<Func<ElasticSearchItem, object>>[] { x => x.JumpLetter })
+                .QueryLuceneSyntax(query));
+        
+        if (!response.IsValidResponse)
+        {
+            return Option<SearchPageMap>.None;
+        }
+
+        var letters = new List<char>
+        {
+            '#', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+            'u', 'v', 'w', 'x', 'y', 'z'
+        };
+        var map = letters.ToDictionary(letter => letter, _ => 0);
+
+        var current = 0;
+        var page = 0;
+        while (current < totalCount)
+        {
+            // walk up by page size (limit)
+            page++;
+            current += limit;
+            if (current > totalCount)
+            {
+                current = totalCount;
+            }
+
+            char jumpLetter = response.Hits.ElementAt(current - 1).Source.JumpLetter.Head();
+            foreach (char letter in letters.Where(l => letters.IndexOf(l) <= letters.IndexOf(jumpLetter)))
+            {
+                if (map[letter] == 0)
+                {
+                    map[letter] = page;
+                }
+            }
+        }
+
+        int max = map.Values.Max();
+        foreach (char letter in letters.Where(letter => map[letter] == 0))
+        {
+            map[letter] = max;
+        }
+
+        return new SearchPageMap(map);
     }
 }
