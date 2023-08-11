@@ -100,7 +100,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            SearchResult searchResults = await _searchIndex.Search(_client, collection.Query, 0, 0);
+            // elasticsearch doesn't like when we ask for a limit of zero, so use 10,000
+            SearchResult searchResults = await _searchIndex.Search(_client, collection.Query, 0, 10_000);
 
             var movieIds = searchResults.Items
                 .Filter(i => i.Type == LuceneSearchIndex.MovieType)
