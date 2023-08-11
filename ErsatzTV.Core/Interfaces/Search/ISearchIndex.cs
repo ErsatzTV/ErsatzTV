@@ -9,8 +9,8 @@ namespace ErsatzTV.Core.Interfaces.Search;
 
 public interface ISearchIndex : IDisposable
 {
-    Task<bool> IndexExists();
     public int Version { get; }
+    Task<bool> IndexExists();
     Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository);
     Task<Unit> Rebuild(ICachingSearchRepository searchRepository, IFallbackMetadataProvider fallbackMetadataProvider);
 

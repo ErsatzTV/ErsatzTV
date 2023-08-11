@@ -96,10 +96,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public Task<bool> IndexExists()
-    {
-        return Task.FromResult(Directory.Exists(FileSystemLayout.SearchIndexFolder));
-    }
+    public Task<bool> IndexExists() => Task.FromResult(Directory.Exists(FileSystemLayout.SearchIndexFolder));
 
     public int Version => 36;
 
