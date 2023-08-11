@@ -4,6 +4,6 @@ namespace ErsatzTV.Infrastructure.Search.Models;
 
 public class SearchMovie : BaseSearchItem
 {
-    [JsonPropertyName("type")]
+    [JsonPropertyName(SearchIndex.TypeField)]
     public override string Type => SearchIndex.MovieType;
 }

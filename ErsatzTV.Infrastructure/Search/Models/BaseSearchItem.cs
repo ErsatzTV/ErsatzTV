@@ -4,6 +4,7 @@ namespace ErsatzTV.Infrastructure.Search.Models;
 
 public abstract class BaseSearchItem
 {
+    [JsonPropertyName(SearchIndex.IdField)]
     public int Id { get; set; }
 
     public virtual string Type { get; }
@@ -11,81 +12,81 @@ public abstract class BaseSearchItem
     [JsonExtensionData]
     public Dictionary<string, object> AdditionalProperties { get; set; } = new();
     
-    [JsonPropertyName("title")]
+    [JsonPropertyName(SearchIndex.TitleField)]
     public string Title { get; set; }
 
-    [JsonPropertyName("sort_title")]
+    [JsonPropertyName(SearchIndex.SortTitleField)]
     public string SortTitle { get; set; }
     
-    [JsonPropertyName("library_name")]
+    [JsonPropertyName(SearchIndex.LibraryNameField)]
     public string LibraryName { get; set; }
 
-    [JsonPropertyName("library_id")]
+    [JsonPropertyName(SearchIndex.LibraryIdField)]
     public int LibraryId { get; set; }
     
-    [JsonPropertyName("title_and_year")]
+    [JsonPropertyName(SearchIndex.TitleAndYearField)]
     public string TitleAndYear { get; set; }
 
-    [JsonPropertyName("jump_letter")]
+    [JsonPropertyName(SearchIndex.JumpLetterField)]
     public string JumpLetter { get; set; }
     
-    [JsonPropertyName("state")]
+    [JsonPropertyName(SearchIndex.StateField)]
     public string State { get; set; }
 
-    [JsonPropertyName("metadata_kind")]
+    [JsonPropertyName(SearchIndex.MetadataKindField)]
     public string MetadataKind { get; set; }
     
-    [JsonPropertyName("language")]
+    [JsonPropertyName(SearchIndex.LanguageField)]
     public List<string> Language { get; set; }
     
-    [JsonPropertyName("minutes")]
+    [JsonPropertyName(SearchIndex.MinutesField)]
     public int Minutes { get; set; }
     
-    [JsonPropertyName("height")]
+    [JsonPropertyName(SearchIndex.HeightField)]
     public int Height { get; set; }
     
-    [JsonPropertyName("width")]
+    [JsonPropertyName(SearchIndex.WidthField)]
     public int Width { get; set; }
     
-    [JsonPropertyName("video_codec")]
+    [JsonPropertyName(SearchIndex.VideoCodecField)]
     public string VideoCodec { get; set; }
     
-    [JsonPropertyName("video_bit_depth")]
+    [JsonPropertyName(SearchIndex.VideoBitDepthField)]
     public int VideoBitDepth { get; set; }
     
-    [JsonPropertyName("video_dynamic_range")]
+    [JsonPropertyName(SearchIndex.VideoDynamicRange)]
     public string VideoDynamicRange { get; set; }
     
-    [JsonPropertyName("content_rating")]
+    [JsonPropertyName(SearchIndex.ContentRatingField)]
     public List<string> ContentRating { get; set; }
     
-    [JsonPropertyName("release_date")]
+    [JsonPropertyName(SearchIndex.ReleaseDateField)]
     public string ReleaseDate { get; set; }
     
-    [JsonPropertyName("added_date")]
+    [JsonPropertyName(SearchIndex.AddedDateField)]
     public string AddedDate { get; set; }
     
-    [JsonPropertyName("plot")]
+    [JsonPropertyName(SearchIndex.PlotField)]
     public string Plot { get; set; }
     
-    [JsonPropertyName("genre")]
+    [JsonPropertyName(SearchIndex.GenreField)]
     public List<string> Genre { get; set; }
     
-    [JsonPropertyName("tag")]
+    [JsonPropertyName(SearchIndex.TagField)]
     public List<string> Tag { get; set; }
 
-    [JsonPropertyName("studio")]
+    [JsonPropertyName(SearchIndex.StudioField)]
     public List<string> Studio { get; set; }
     
-    [JsonPropertyName("actor")]
+    [JsonPropertyName(SearchIndex.ActorField)]
     public List<string> Actor { get; set; }
 
-    [JsonPropertyName("director")]
+    [JsonPropertyName(SearchIndex.DirectorField)]
     public List<string> Director { get; set; }
 
-    [JsonPropertyName("writer")]
+    [JsonPropertyName(SearchIndex.WriterField)]
     public List<string> Writer { get; set; }
     
-    [JsonPropertyName("trakt_list")]
+    [JsonPropertyName(SearchIndex.TraktListField)]
     public List<string> TraktList { get; set; }
 }
