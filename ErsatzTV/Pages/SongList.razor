@@ -77,10 +77,10 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private SongCardResultsViewModel _data;
+    private SongCardResultsViewModel _data = new(0, new List<SongCardViewModel>(), None);
     private string _query;
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (PageNumber == 0)
         {
@@ -88,7 +88,8 @@
         }
 
         _query = _navigationManager.Uri.GetSearchQuery();
-        return RefreshData();
+
+        await RefreshData();
     }
 
     protected override async Task RefreshData()

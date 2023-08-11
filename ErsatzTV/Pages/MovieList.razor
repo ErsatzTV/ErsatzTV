@@ -62,7 +62,7 @@
         </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
-@if (_data is not null && _data.PageMap.IsSome)
+@if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
                BaseUri="media/movies"
