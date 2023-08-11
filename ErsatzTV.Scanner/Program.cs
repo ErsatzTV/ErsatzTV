@@ -162,7 +162,7 @@ public class Program
                     services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
                     services.AddSingleton<IEmbySecretStore, EmbySecretStore>();
                     services.AddSingleton<IJellyfinSecretStore, JellyfinSecretStore>();
-                    services.AddSingleton<ISearchIndex, SearchIndex>();
+                    services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
                     // TODO: real bugsnag?
                     services.AddSingleton<IClient>(_ => new BugsnagNoopClient());

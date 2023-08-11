@@ -29,7 +29,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         if (field == "released_onthisday")
         {
             var todayString = DateTime.Today.ToString("*MMdd");
-            return base.GetWildcardQuery(SearchIndex.ReleaseDateField, todayString);
+            return base.GetWildcardQuery(LuceneSearchIndex.ReleaseDateField, todayString);
         }
 
         if (CustomQueryParser.NumericFields.Contains(field) && int.TryParse(queryText, out int val))
@@ -49,14 +49,14 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = start.ToString("yyyyMMdd");
 
-            return base.GetRangeQuery(SearchIndex.ReleaseDateField, dateString, todayString, true, true);
+            return base.GetRangeQuery(LuceneSearchIndex.ReleaseDateField, dateString, todayString, true, true);
         }
 
         if (field == "released_notinthelast" && CustomQueryParser.ParseStart(queryText, out DateTime finish))
         {
             var dateString = finish.ToString("yyyyMMdd");
 
-            return base.GetRangeQuery(SearchIndex.ReleaseDateField, "00000000", dateString, false, false);
+            return base.GetRangeQuery(LuceneSearchIndex.ReleaseDateField, "00000000", dateString, false, false);
         }
 
         if (field == "added_inthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedStart))
@@ -64,14 +64,14 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = addedStart.ToString("yyyyMMdd");
 
-            return base.GetRangeQuery(SearchIndex.AddedDateField, dateString, todayString, true, true);
+            return base.GetRangeQuery(LuceneSearchIndex.AddedDateField, dateString, todayString, true, true);
         }
 
         if (field == "added_notinthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedFinish))
         {
             var dateString = addedFinish.ToString("yyyyMMdd");
 
-            return base.GetRangeQuery(SearchIndex.AddedDateField, "00000000", dateString, false, false);
+            return base.GetRangeQuery(LuceneSearchIndex.AddedDateField, "00000000", dateString, false, false);
         }
 
         return base.GetFieldQuery(field, queryText, slop);

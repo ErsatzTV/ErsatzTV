@@ -29,21 +29,21 @@ public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, U
     {
         string[] types =
         {
-            SearchIndex.MovieType,
-            SearchIndex.ShowType,
-            SearchIndex.SeasonType,
-            SearchIndex.EpisodeType,
-            SearchIndex.MusicVideoType,
-            SearchIndex.OtherVideoType,
-            SearchIndex.SongType,
-            SearchIndex.ArtistType
+            LuceneSearchIndex.MovieType,
+            LuceneSearchIndex.ShowType,
+            LuceneSearchIndex.SeasonType,
+            LuceneSearchIndex.EpisodeType,
+            LuceneSearchIndex.MusicVideoType,
+            LuceneSearchIndex.OtherVideoType,
+            LuceneSearchIndex.SongType,
+            LuceneSearchIndex.ArtistType
         };
 
         var ids = new List<int>();
 
         foreach (string type in types)
         {
-            SearchResult result = _searchIndex.Search(_client, $"type:{type} AND (state:FileNotFound)", 0, 0);
+            SearchResult result = await _searchIndex.Search(_client, $"type:{type} AND (state:FileNotFound)", 0, 0);
             ids.AddRange(result.Items.Map(i => i.Id));
         }
 

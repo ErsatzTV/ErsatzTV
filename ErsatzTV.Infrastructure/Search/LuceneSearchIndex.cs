@@ -28,40 +28,40 @@ using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
-public sealed class SearchIndex : ISearchIndex
+public sealed class LuceneSearchIndex : ISearchIndex
 {
     private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
 
-    private const string IdField = "id";
-    private const string TypeField = "type";
-    private const string TitleField = "title";
-    private const string SortTitleField = "sort_title";
-    private const string GenreField = "genre";
-    private const string TagField = "tag";
-    private const string PlotField = "plot";
-    private const string LibraryNameField = "library_name";
-    private const string LibraryIdField = "library_id";
-    private const string TitleAndYearField = "title_and_year";
-    private const string JumpLetterField = "jump_letter";
-    private const string StudioField = "studio";
-    private const string LanguageField = "language";
-    private const string StyleField = "style";
-    private const string MoodField = "mood";
-    private const string ActorField = "actor";
-    private const string ContentRatingField = "content_rating";
-    private const string DirectorField = "director";
-    private const string WriterField = "writer";
-    private const string TraktListField = "trakt_list";
-    private const string AlbumField = "album";
-    private const string ArtistField = "artist";
-    private const string StateField = "state";
-    private const string AlbumArtistField = "album_artist";
-    private const string ShowTitleField = "show_title";
-    private const string ShowGenreField = "show_genre";
-    private const string ShowTagField = "show_tag";
-    private const string MetadataKindField = "metadata_kind";
-    private const string VideoCodecField = "video_codec";
-    private const string VideoDynamicRange = "video_dynamic_range";
+    internal const string IdField = "id";
+    internal const string TypeField = "type";
+    internal const string TitleField = "title";
+    internal const string SortTitleField = "sort_title";
+    internal const string GenreField = "genre";
+    internal const string TagField = "tag";
+    internal const string PlotField = "plot";
+    internal const string LibraryNameField = "library_name";
+    internal const string LibraryIdField = "library_id";
+    internal const string TitleAndYearField = "title_and_year";
+    internal const string JumpLetterField = "jump_letter";
+    internal const string StudioField = "studio";
+    internal const string LanguageField = "language";
+    internal const string StyleField = "style";
+    internal const string MoodField = "mood";
+    internal const string ActorField = "actor";
+    internal const string ContentRatingField = "content_rating";
+    internal const string DirectorField = "director";
+    internal const string WriterField = "writer";
+    internal const string TraktListField = "trakt_list";
+    internal const string AlbumField = "album";
+    internal const string ArtistField = "artist";
+    internal const string StateField = "state";
+    internal const string AlbumArtistField = "album_artist";
+    internal const string ShowTitleField = "show_title";
+    internal const string ShowGenreField = "show_genre";
+    internal const string ShowTagField = "show_tag";
+    internal const string MetadataKindField = "metadata_kind";
+    internal const string VideoCodecField = "video_codec";
+    internal const string VideoDynamicRange = "video_dynamic_range";
 
     internal const string MinutesField = "minutes";
     internal const string HeightField = "height";
@@ -82,21 +82,31 @@ public sealed class SearchIndex : ISearchIndex
     public const string SongType = "song";
 
     private readonly List<CultureInfo> _cultureInfos;
+    private readonly string _cleanShutdownPath;
 
-    private readonly ILogger<SearchIndex> _logger;
+    private readonly ILogger<LuceneSearchIndex> _logger;
 
     private FSDirectory _directory;
     private bool _initialized;
     private IndexWriter _writer;
 
-    public SearchIndex(ILogger<SearchIndex> logger)
+    public LuceneSearchIndex(ILogger<LuceneSearchIndex> logger)
     {
         _logger = logger;
         _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
+        _cleanShutdownPath = Path.Combine(FileSystemLayout.SearchIndexFolder, ".clean-shutdown");
         _initialized = false;
     }
 
-    public int Version => 35;
+    public Task<bool> IndexExists()
+    {
+        bool directoryExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
+        bool fileExists = File.Exists(_cleanShutdownPath);
+
+        return Task.FromResult(directoryExists && fileExists);
+    }
+
+    public int Version => 36;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -112,6 +122,11 @@ public sealed class SearchIndex : ISearchIndex
                 await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0);
                 Directory.Delete(FileSystemLayout.SearchIndexFolder, true);
                 localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+            }
+
+            if (File.Exists(_cleanShutdownPath))
+            {
+                File.Delete(_cleanShutdownPath);
             }
 
             _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
@@ -174,7 +189,7 @@ public sealed class SearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public SearchResult Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
+    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
     {
         var metadata = new Dictionary<string, string>
         {
@@ -189,7 +204,7 @@ public sealed class SearchIndex : ISearchIndex
         if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)) ||
             _writer.MaxDoc == 0)
         {
-            return new SearchResult(new List<SearchItem>(), 0);
+            return Task.FromResult(new SearchResult(new List<SearchItem>(), 0));
         }
 
         using DirectoryReader reader = _writer.GetReader(true);
@@ -227,7 +242,7 @@ public sealed class SearchIndex : ISearchIndex
             searchResult.PageMap = GetSearchPageMap(searcher, query, null, sort, limit);
         }
 
-        return searchResult;
+        return Task.FromResult(searchResult);
     }
 
     public void Commit() => _writer.Commit();
@@ -236,6 +251,11 @@ public sealed class SearchIndex : ISearchIndex
     {
         _writer?.Dispose();
         _directory?.Dispose();
+
+        using (File.Create(_cleanShutdownPath))
+        {
+            // do nothing
+        }
     }
 
     public async Task<Unit> Rebuild(
@@ -270,7 +290,7 @@ public sealed class SearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    private static bool ValidateDirectory(string folder)
+    private bool ValidateDirectory(string folder)
     {
         try
         {
@@ -284,7 +304,7 @@ public sealed class SearchIndex : ISearchIndex
                     {
                         using (DirectoryReader _ = w.GetReader(true))
                         {
-                            return true;
+                            return File.Exists(_cleanShutdownPath);
                         }
                     }
                 }
@@ -629,7 +649,7 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(ShowTitleField, showMetadata.Title, Field.Store.NO)
                 };
 
-                // add some show fields to help filter shows within a particular show
+                // add some show fields to help filter seasons within a particular show
                 foreach (Genre genre in showMetadata.Genres)
                 {
                     doc.Add(new TextField(ShowGenreField, genre.Name, Field.Store.NO));
@@ -680,7 +700,7 @@ public sealed class SearchIndex : ISearchIndex
             catch (Exception ex)
             {
                 metadata.Season = null;
-                _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+                _logger.LogWarning(ex, "Error indexing season with metadata {@Metadata}", metadata);
             }
         }
     }
@@ -1174,7 +1194,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 string dynamicRange = colorParams.IsHdr ? "hdr" : "sdr";
 
-                doc.Add(new TextField(VideoDynamicRange, dynamicRange, Field.Store.NO));
+                doc.Add(new StringField(VideoDynamicRange, dynamicRange, Field.Store.NO));
             }
         }
     }
@@ -1192,7 +1212,7 @@ public sealed class SearchIndex : ISearchIndex
     }
 
     // this is used for filtering duplicate search results
-    private static string GetTitleAndYear(Metadata metadata) =>
+    internal static string GetTitleAndYear(Metadata metadata) =>
         metadata switch
         {
             EpisodeMetadata em =>
@@ -1212,7 +1232,7 @@ public sealed class SearchIndex : ISearchIndex
     private static string Title(Metadata metadata) =>
         (metadata.Title ?? string.Empty).Replace(' ', '_');
 
-    private static string GetJumpLetter(Metadata metadata)
+    internal static string GetJumpLetter(Metadata metadata)
     {
         char c = (metadata.SortTitle ?? " ").ToLowerInvariant().Head();
         return c switch

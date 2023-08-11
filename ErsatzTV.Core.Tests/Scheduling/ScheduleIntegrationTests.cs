@@ -89,7 +89,7 @@ public class ScheduleIntegrationTests
         services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
         services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
 
-        services.AddSingleton<ISearchIndex, SearchIndex>();
+        services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
 
         services.AddSingleton(_ => Substitute.For<IClient>());
 

@@ -76,10 +76,10 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private TelevisionShowCardResultsViewModel _data;
+    private TelevisionShowCardResultsViewModel _data = new(0, new List<TelevisionShowCardViewModel>(), None);
     private string _query;
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (PageNumber == 0)
         {
@@ -87,7 +87,8 @@
         }
 
         _query = _navigationManager.Uri.GetSearchQuery();
-        return RefreshData();
+
+        await RefreshData();
     }
 
     protected override async Task RefreshData()

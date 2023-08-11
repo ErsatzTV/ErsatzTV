@@ -42,13 +42,16 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex>
     {
         _logger.LogInformation("Initializing search index");
 
-        bool indexFolderExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
+        bool indexExists = await _searchIndex.IndexExists();
 
-        await _searchIndex.Initialize(_localFileSystem, _configElementRepository);
+        if (!await _searchIndex.Initialize(_localFileSystem, _configElementRepository))
+        {
+            indexExists = false;
+        }
 
         _logger.LogInformation("Done initializing search index");
 
-        if (!indexFolderExists ||
+        if (!indexExists ||
             await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
             _searchIndex.Version)
         {

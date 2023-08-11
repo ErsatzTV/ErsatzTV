@@ -24,7 +24,7 @@ public class QuerySearchIndexArtistsHandler : IRequestHandler<QuerySearchIndexAr
         QuerySearchIndexArtists request,
         CancellationToken cancellationToken)
     {
-        SearchResult searchResult = _searchIndex.Search(
+        SearchResult searchResult = await _searchIndex.Search(
             _client,
             request.Query,
             (request.PageNumber - 1) * request.PageSize,

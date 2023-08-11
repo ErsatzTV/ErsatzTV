@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Automatically rebuild search index after improper shutdown
+- Add *experimental* support for Elasticsearch as search index backend
+  - No query changes should be needed since ES is backed by lucene and supports the same query syntax
+  - This can be configured using the following env vars (note the double underscore separator `__`)
+    - `ELASTICSEARCH__URI` (e.g. `http://localhost:9200`)
+    - `ELASTICSEARCH__INDEXNAME` (default is `ersatztv`)
+
 ### Fixed
 - Fix subtitle scaling when using QSV hardware acceleration
 - Fix log viewer crash when log file contains invalid data
