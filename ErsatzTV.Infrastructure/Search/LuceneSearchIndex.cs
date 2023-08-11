@@ -82,6 +82,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public const string SongType = "song";
 
     private readonly List<CultureInfo> _cultureInfos;
+    private readonly string _cleanShutdownPath;
 
     private readonly ILogger<LuceneSearchIndex> _logger;
 
@@ -93,10 +94,17 @@ public sealed class LuceneSearchIndex : ISearchIndex
     {
         _logger = logger;
         _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
+        _cleanShutdownPath = Path.Combine(FileSystemLayout.SearchIndexFolder, ".clean-shutdown");
         _initialized = false;
     }
 
-    public Task<bool> IndexExists() => Task.FromResult(Directory.Exists(FileSystemLayout.SearchIndexFolder));
+    public Task<bool> IndexExists()
+    {
+        bool directoryExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
+        bool fileExists = File.Exists(_cleanShutdownPath);
+
+        return Task.FromResult(directoryExists && fileExists);
+    }
 
     public int Version => 36;
 
@@ -114,6 +122,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, 0);
                 Directory.Delete(FileSystemLayout.SearchIndexFolder, true);
                 localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+            }
+
+            if (File.Exists(_cleanShutdownPath))
+            {
+                File.Delete(_cleanShutdownPath);
             }
 
             _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
@@ -238,6 +251,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
     {
         _writer?.Dispose();
         _directory?.Dispose();
+
+        using (File.Create(_cleanShutdownPath))
+        {
+            // do nothing
+        }
     }
 
     public async Task<Unit> Rebuild(
@@ -272,7 +290,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    private static bool ValidateDirectory(string folder)
+    private bool ValidateDirectory(string folder)
     {
         try
         {
@@ -286,7 +304,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     {
                         using (DirectoryReader _ = w.GetReader(true))
                         {
-                            return true;
+                            return File.Exists(_cleanShutdownPath);
                         }
                     }
                 }
