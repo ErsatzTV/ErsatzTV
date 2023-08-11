@@ -2,22 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace ErsatzTV.Infrastructure.Search.Models;
 
-public abstract class BaseSearchItem
+public abstract class BaseSearchItem : ElasticSearchItem
 {
-    [JsonPropertyName(SearchIndex.IdField)]
-    public int Id { get; set; }
-
-    public virtual string Type { get; }
-
     [JsonExtensionData]
     public Dictionary<string, object> AdditionalProperties { get; set; } = new();
     
     [JsonPropertyName(SearchIndex.TitleField)]
     public string Title { get; set; }
 
-    [JsonPropertyName(SearchIndex.SortTitleField)]
-    public string SortTitle { get; set; }
-    
     [JsonPropertyName(SearchIndex.LibraryNameField)]
     public string LibraryName { get; set; }
 

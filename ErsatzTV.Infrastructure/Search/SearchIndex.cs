@@ -101,7 +101,7 @@ public sealed class SearchIndex : ISearchIndex
         return Task.FromResult(Directory.Exists(FileSystemLayout.SearchIndexFolder));
     }
 
-    public int Version => 35;
+    public int Version => 36;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1179,7 +1179,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 string dynamicRange = colorParams.IsHdr ? "hdr" : "sdr";
 
-                doc.Add(new TextField(VideoDynamicRange, dynamicRange, Field.Store.NO));
+                doc.Add(new StringField(VideoDynamicRange, dynamicRange, Field.Store.NO));
             }
         }
     }

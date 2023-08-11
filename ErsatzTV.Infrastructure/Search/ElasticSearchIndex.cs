@@ -38,7 +38,7 @@ public class ElasticSearchIndex : ISearchIndex
 
     public Task<bool> IndexExists() => Task.FromResult(true);
 
-    public int Version => 35;
+    public int Version => 36;
 
     public async Task<bool> Initialize(ILocalFileSystem localFileSystem, IConfigElementRepository configElementRepository)
     {
@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
         if (!exists.IsValidResponse)
         {
-            CreateIndexResponse createResponse = await _client.Indices.CreateAsync(IndexName);
+            CreateIndexResponse createResponse = await CreateIndex();
             return createResponse.IsValidResponse;
         }
 
@@ -61,7 +61,7 @@ public class ElasticSearchIndex : ISearchIndex
             return Unit.Default;
         }
 
-        CreateIndexResponse createResponse = await _client.Indices.CreateAsync(IndexName);
+        CreateIndexResponse createResponse = await CreateIndex();
         if (!createResponse.IsValidResponse)
         {
             return Unit.Default;
@@ -73,6 +73,42 @@ public class ElasticSearchIndex : ISearchIndex
         }
 
         return Unit.Default;
+    }
+
+    private async Task<CreateIndexResponse> CreateIndex()
+    {
+        return await _client.Indices.CreateAsync<BaseSearchItem>(
+            IndexName,
+            i => i.Mappings(
+                m => m.Properties(
+                    p => p
+                        .Keyword(t => t.Type, t => t.Store())
+                        .Text(t => t.Title, t => t.Store(false))
+                        .Keyword(t => t.SortTitle, t => t.Store(false))
+                        .Text(t => t.LibraryName, t => t.Store(false))
+                        .Keyword(t => t.LibraryId, t => t.Store(false))
+                        .Keyword(t => t.TitleAndYear, t => t.Store(false))
+                        .Keyword(t => t.JumpLetter, t => t.Store())
+                        .Keyword(t => t.State, t => t.Store(false))
+                        .Text(t => t.MetadataKind, t => t.Store(false))
+                        .Text(t => t.Language, t => t.Store(false))
+                        .IntegerNumber(t => t.Height, t => t.Store(false))
+                        .IntegerNumber(t => t.Width, t => t.Store(false))
+                        .Keyword(t => t.VideoCodec, t => t.Store(false))
+                        .IntegerNumber(t => t.VideoBitDepth, t => t.Store(false))
+                        .Keyword(t => t.VideoDynamicRange, t => t.Store(false))
+                        .Keyword(t => t.ContentRating, t => t.Store(false))
+                        .Keyword(t => t.ReleaseDate, t => t.Store(false))
+                        .Keyword(t => t.AddedDate, t => t.Store(false))
+                        .Text(t => t.Plot, t => t.Store(false))
+                        .Text(t => t.Genre, t => t.Store(false))
+                        .Text(t => t.Tag, t => t.Store(false))
+                        .Text(t => t.Studio, t => t.Store(false))
+                        .Text(t => t.Actor, t => t.Store(false))
+                        .Text(t => t.Director, t => t.Store(false))
+                        .Text(t => t.Writer, t => t.Store(false))
+                        .Keyword(t => t.TraktList, t => t.Store(false))
+                )));
     }
 
     public async Task<Unit> RebuildItems(
@@ -142,18 +178,22 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<SearchResult> Search(IClient client, string query, int skip, int limit, string searchField = "")
     {
-        var items = new List<SearchItem>();
+        var items = new List<ElasticSearchItem>();
         var totalCount = 0;
-        
-        SearchResponse<SearchItem> response = await _client
-            .SearchAsync<SearchItem>(s => s.Index(IndexName).From(skip).Size(limit).QueryLuceneSyntax(query));
+
+        SearchResponse<ElasticSearchItem> response = await _client.SearchAsync<ElasticSearchItem>(
+            s => s.Index(IndexName)
+                .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
+                .From(skip)
+                .Size(limit)
+                .QueryLuceneSyntax(query));
         if (response.IsValidResponse)
         {
             items.AddRange(response.Documents);
             totalCount = (int)response.Total;
         }
 
-        var searchResult = new SearchResult(items, totalCount);
+        var searchResult = new SearchResult(items.Map(i => new SearchItem(i.Type, i.Id)).ToList(), totalCount);
         
         // if (limit > 0)
         // {
@@ -212,6 +252,7 @@ public class ElasticSearchIndex : ISearchIndex
                 var doc = new SearchMovie
                 {
                     Id = movie.Id,
+                    Type = SearchIndex.MovieType,
                     Title = metadata.Title,
                     SortTitle = metadata.SortTitle.ToLowerInvariant(),
                     LibraryName = movie.LibraryPath.Library.Name,
