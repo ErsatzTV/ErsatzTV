@@ -189,14 +189,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
+    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit)
     {
         var metadata = new Dictionary<string, string>
         {
             { "searchQuery", searchQuery },
             { "skip", skip.ToString() },
-            { "limit", limit.ToString() },
-            { "searchField", searchField }
+            { "limit", limit.ToString() }
         };
 
         client?.Breadcrumbs?.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
@@ -217,9 +216,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             { StateField, new KeywordAnalyzer() }
         };
         using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
-        QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
-            ? new CustomQueryParser(AppLuceneVersion, searchField, analyzerWrapper)
-            : new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
+        QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
         parser.AllowLeadingWildcard = true;
         Query query = ParseQuery(searchQuery, parser);
         // TODO: figure out if this is actually needed

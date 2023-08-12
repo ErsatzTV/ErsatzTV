@@ -152,11 +152,23 @@ public class ElasticSearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit, string searchField = "")
+    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit)
     {
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
+        // TODO: parse/manipulate using lucene to support relative items
+        // using var analyzer = new StandardAnalyzer(AppLuceneVersion);
+        // var customAnalyzers = new Dictionary<string, Analyzer>
+        // {
+        //     { ContentRatingField, new KeywordAnalyzer() },
+        //     { StateField, new KeywordAnalyzer() }
+        // };
+        // using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
+        // QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
+        // parser.AllowLeadingWildcard = true;
+        // Query query = ParseQuery(searchQuery, parser);
+        
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
