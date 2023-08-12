@@ -15,6 +15,7 @@ using ErsatzTV.Infrastructure.Search.Models;
 using Microsoft.Extensions.Logging;
 using ExistsResponse = Elastic.Clients.Elasticsearch.IndexManagement.ExistsResponse;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
+using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
@@ -157,24 +158,15 @@ public class ElasticSearchIndex : ISearchIndex
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        // TODO: parse/manipulate using lucene to support relative items
-        // using var analyzer = new StandardAnalyzer(AppLuceneVersion);
-        // var customAnalyzers = new Dictionary<string, Analyzer>
-        // {
-        //     { ContentRatingField, new KeywordAnalyzer() },
-        //     { StateField, new KeywordAnalyzer() }
-        // };
-        // using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
-        // QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
-        // parser.AllowLeadingWildcard = true;
-        // Query query = ParseQuery(searchQuery, parser);
+        Query parsedQuery = LuceneSearchIndex.ParseQuery(query);
         
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
                 .From(skip)
                 .Size(limit)
-                .QueryLuceneSyntax(query));
+                .QueryLuceneSyntax(parsedQuery.ToString()));
+
         if (response.IsValidResponse)
         {
             items.AddRange(response.Documents);
