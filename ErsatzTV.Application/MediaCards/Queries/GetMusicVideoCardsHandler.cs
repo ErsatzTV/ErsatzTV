@@ -49,6 +49,6 @@ public class GetMusicVideoCardsHandler : IRequestHandler<GetMusicVideoCards, Mus
             results.Add(ProjectToViewModel(musicVideoMetadata, localPath));
         }
 
-        return new MusicVideoCardResultsViewModel(count, results, None);
+        return new MusicVideoCardResultsViewModel(count, results, null);
     }
 }

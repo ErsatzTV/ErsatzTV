@@ -6,6 +6,8 @@
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject PersistentComponentState ApplicationState
+@implements IDisposable
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -324,21 +326,107 @@
     private OtherVideoCardResultsViewModel _otherVideos;
     private SongCardResultsViewModel _songs;
     private ArtistCardResultsViewModel _artists;
+    private PersistingComponentStateSubscription _persistingSubscription;
 
     protected override async Task OnInitializedAsync()
     {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
+
         _query = _navigationManager.Uri.GetSearchQuery();
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50), CancellationToken);
-            _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50), CancellationToken);
-            _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), CancellationToken);
-            _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), CancellationToken);
-            _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), CancellationToken);
-            _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), CancellationToken);
-            _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), CancellationToken);
-            _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
+            if (!ApplicationState.TryTakeFromJson("_movies", out MovieCardResultsViewModel restoredMovies))
+            {
+                _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _movies = restoredMovies;
+            }
+
+            if (!ApplicationState.TryTakeFromJson("_shows", out TelevisionShowCardResultsViewModel restoredShows))
+            {
+                _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _shows = restoredShows;
+            }
+
+            if (!ApplicationState.TryTakeFromJson("_seasons", out TelevisionSeasonCardResultsViewModel restoredSeasons))
+            {
+                _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _seasons = restoredSeasons;
+            }
+
+            if (!ApplicationState.TryTakeFromJson("_episodes", out TelevisionEpisodeCardResultsViewModel restoredEpisodes))
+            {
+                _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _episodes = restoredEpisodes;
+            }
+            
+            if (!ApplicationState.TryTakeFromJson("_musicVideos", out MusicVideoCardResultsViewModel restoredMusicVideos))
+            {
+                _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _musicVideos = restoredMusicVideos;
+            }
+            
+            if (!ApplicationState.TryTakeFromJson("_otherVideos", out OtherVideoCardResultsViewModel restoredOtherVideos))
+            {
+                _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _otherVideos = restoredOtherVideos;
+            }
+            
+            if (!ApplicationState.TryTakeFromJson("_songs", out SongCardResultsViewModel restoredSongs))
+            {
+                _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _songs = restoredSongs;
+            }
+            
+            if (!ApplicationState.TryTakeFromJson("_artists", out ArtistCardResultsViewModel restoredArtists))
+            {
+                _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
+            }
+            else
+            {
+                _artists = restoredArtists;
+            }
         }
+    }
+    
+    private Task PersistData()
+    {
+        ApplicationState.PersistAsJson("_movies", _movies);
+        ApplicationState.PersistAsJson("_shows", _shows);
+        ApplicationState.PersistAsJson("_seasons", _seasons);
+        ApplicationState.PersistAsJson("_episodes", _episodes);
+        ApplicationState.PersistAsJson("_musicVideos", _musicVideos);
+        ApplicationState.PersistAsJson("_otherVideos", _otherVideos);
+        ApplicationState.PersistAsJson("_songs", _songs);
+        ApplicationState.PersistAsJson("_artists", _artists);
+
+        return Task.CompletedTask;
+    }
+    
+    void IDisposable.Dispose()
+    {
+        _persistingSubscription.Dispose(); 
+        base.Dispose();
     }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)

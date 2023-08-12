@@ -796,7 +796,7 @@ public class ElasticSearchIndex : ISearchIndex
         return result;
     }
 
-    private async Task<Option<SearchPageMap>> GetSearchPageMap(string query, int limit)
+    private async Task<SearchPageMap> GetSearchPageMap(string query, int limit)
     {
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
@@ -807,7 +807,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         if (!response.IsValidResponse)
         {
-            return Option<SearchPageMap>.None;
+            return null;
         }
 
         var letters = new List<char>

@@ -355,7 +355,11 @@
         _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadScheduleItems();
+    protected override async Task OnParametersSetAsync()
+    {
+        Logger.LogInformation("Loading schedule items");
+        await LoadScheduleItems();
+    }
 
     private async Task LoadScheduleItems()
     {

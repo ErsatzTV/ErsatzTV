@@ -295,7 +295,8 @@ public class Startup
                 }
             });
 
-        services.AddServerSideBlazor();
+        services.AddServerSideBlazor()
+            .AddHubOptions(hubOptions => hubOptions.MaximumReceiveMessageSize = 1024 * 1024);
 
         services.AddMudServices();
 

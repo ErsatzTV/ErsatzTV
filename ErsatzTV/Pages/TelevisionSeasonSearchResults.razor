@@ -63,9 +63,9 @@
         </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
-@if (_data.PageMap.IsSome)
+@if (_data.PageMap is not null)
 {
-    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+    <LetterBar PageMap="@_data.PageMap"
                BaseUri="media/tv/seasons"
                Query="@_query"/>
 }
@@ -76,7 +76,7 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private TelevisionSeasonCardResultsViewModel _data = new(0, new List<TelevisionSeasonCardViewModel>(), None);
+    private TelevisionSeasonCardResultsViewModel _data = new(0, new List<TelevisionSeasonCardViewModel>(), null);
     private string _query;
 
     protected override async Task OnParametersSetAsync()

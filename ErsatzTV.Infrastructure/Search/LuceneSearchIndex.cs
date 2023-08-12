@@ -338,7 +338,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
     }
 
-    private static Option<SearchPageMap> GetSearchPageMap(
+    private static SearchPageMap GetSearchPageMap(
         IndexSearcher searcher,
         Query query,
         DuplicateFilter filter,

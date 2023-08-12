@@ -64,9 +64,9 @@
         </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
-@if (_data.PageMap.IsSome)
+@if (_data.PageMap is not null)
 {
-    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+    <LetterBar PageMap="@_data.PageMap"
                BaseUri="media/music/artists"
                Query="@_query"/>
 }
@@ -77,7 +77,7 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private ArtistCardResultsViewModel _data = new(0, new List<ArtistCardViewModel>(), None);
+    private ArtistCardResultsViewModel _data = new(0, new List<ArtistCardViewModel>(), null);
     private string _query;
 
     protected override async Task OnParametersSetAsync()

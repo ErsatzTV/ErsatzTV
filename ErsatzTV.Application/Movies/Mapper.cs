@@ -41,7 +41,7 @@ internal static class Mapper
         };
     }
 
-    private static List<CultureInfo> LanguagesForMovie(List<string> languageCodes)
+    private static List<string> LanguagesForMovie(List<string> languageCodes)
     {
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
 
@@ -52,6 +52,7 @@ internal static class Mapper
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lang, StringComparison.OrdinalIgnoreCase)))
             .Sequence()
             .Flatten()
+            .Map(ci => ci.EnglishName)
             .ToList();
     }
 

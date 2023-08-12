@@ -1,12 +1,13 @@
 ﻿@page "/media/movies"
 @page "/media/movies/page/{PageNumber:int}"
 @using ErsatzTV.Extensions
-@using LanguageExt.UnsafeValueAccess
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
 @inherits MultiSelectBase<MovieList>
 @inject NavigationManager NavigationManager
+@inject PersistentComponentState ApplicationState
+@implements IDisposable
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -62,9 +63,9 @@
         </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
-@if (_data.PageMap.IsSome)
+@if (_data.PageMap is not null)
 {
-    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+    <LetterBar PageMap="@_data.PageMap"
                BaseUri="media/movies"
                Query="@_query"/>
 }
@@ -75,8 +76,17 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private MovieCardResultsViewModel _data = new(0, new List<MovieCardViewModel>(), None);
+    private MovieCardResultsViewModel _data = new(0, new List<MovieCardViewModel>(), null);
     private string _query;
+    private PersistingComponentStateSubscription _persistingSubscription;
+
+    protected override Task OnInitializedAsync()
+    {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
+        _query = NavigationManager.Uri.GetSearchQuery();
+
+        return base.OnInitializedAsync();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -85,15 +95,33 @@
             PageNumber = 1;
         }
 
-        _query = NavigationManager.Uri.GetSearchQuery();
+        if (!ApplicationState.TryTakeFromJson("_data", out MovieCardResultsViewModel restored))
+        {
+            _data = await RefreshData();
+        }
+        else
+        {
+            _data = restored;
+        }
+    }
+    
+    private Task PersistData()
+    {
+        ApplicationState.PersistAsJson("_data", _data);
 
-        await RefreshData();
+        return Task.CompletedTask;
+    }
+    
+    void IDisposable.Dispose()
+    {
+        _persistingSubscription.Dispose();
+        base.Dispose();
     }
 
-    protected override async Task RefreshData()
+    protected override async Task<MovieCardResultsViewModel> RefreshData()
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:movie" : $"type:movie AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexMovies(searchQuery, PageNumber, PageSize), CancellationToken);
+        return await Mediator.Send(new QuerySearchIndexMovies(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
