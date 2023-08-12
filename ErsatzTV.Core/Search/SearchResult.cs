@@ -2,5 +2,5 @@
 
 public record SearchResult(List<SearchItem> Items, int TotalCount)
 {
-    public Option<SearchPageMap> PageMap { get; set; }
+    public SearchPageMap PageMap { get; set; }
 }

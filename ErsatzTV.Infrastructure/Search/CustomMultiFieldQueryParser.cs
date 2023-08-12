@@ -1,4 +1,5 @@
-﻿using Lucene.Net.Analysis;
+﻿using ErsatzTV.Core;
+using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
@@ -9,6 +10,16 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public class CustomMultiFieldQueryParser : MultiFieldQueryParser
 {
+    private static readonly List<string> NumericFields = new()
+    {
+        LuceneSearchIndex.MinutesField,
+        LuceneSearchIndex.HeightField,
+        LuceneSearchIndex.WidthField,
+        LuceneSearchIndex.SeasonNumberField,
+        LuceneSearchIndex.EpisodeNumberField,
+        LuceneSearchIndex.VideoBitDepthField
+    };
+
     public CustomMultiFieldQueryParser(
         LuceneVersion matchVersion,
         string[] fields,
@@ -32,7 +43,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             return base.GetWildcardQuery(LuceneSearchIndex.ReleaseDateField, todayString);
         }
 
-        if (CustomQueryParser.NumericFields.Contains(field) && int.TryParse(queryText, out int val))
+        if (NumericFields.Contains(field) && int.TryParse(queryText, out int val))
         {
             var bytesRef = new BytesRef();
             NumericUtils.Int32ToPrefixCoded(val, 0, bytesRef);
@@ -44,7 +55,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
 
     protected override Query GetFieldQuery(string field, string queryText, int slop)
     {
-        if (field == "released_inthelast" && CustomQueryParser.ParseStart(queryText, out DateTime start))
+        if (field == "released_inthelast" && ParseStart(queryText, out DateTime start))
         {
             var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = start.ToString("yyyyMMdd");
@@ -52,14 +63,14 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             return base.GetRangeQuery(LuceneSearchIndex.ReleaseDateField, dateString, todayString, true, true);
         }
 
-        if (field == "released_notinthelast" && CustomQueryParser.ParseStart(queryText, out DateTime finish))
+        if (field == "released_notinthelast" && ParseStart(queryText, out DateTime finish))
         {
             var dateString = finish.ToString("yyyyMMdd");
 
             return base.GetRangeQuery(LuceneSearchIndex.ReleaseDateField, "00000000", dateString, false, false);
         }
 
-        if (field == "added_inthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedStart))
+        if (field == "added_inthelast" && ParseStart(queryText, out DateTime addedStart))
         {
             var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
             var dateString = addedStart.ToString("yyyyMMdd");
@@ -67,7 +78,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             return base.GetRangeQuery(LuceneSearchIndex.AddedDateField, dateString, todayString, true, true);
         }
 
-        if (field == "added_notinthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedFinish))
+        if (field == "added_notinthelast" && ParseStart(queryText, out DateTime addedFinish))
         {
             var dateString = addedFinish.ToString("yyyyMMdd");
 
@@ -84,7 +95,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         bool startInclusive,
         bool endInclusive)
     {
-        if (CustomQueryParser.NumericFields.Contains(field))
+        if (NumericFields.Contains(field))
         {
             if (part1 is null or "*" && int.TryParse(part2, out int max1))
             {
@@ -106,5 +117,46 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         }
 
         return base.GetRangeQuery(field, part1, part2, startInclusive, endInclusive);
+    }
+    
+    private static bool ParseStart(string text, out DateTime start)
+    {
+        start = SystemTime.MinValueUtc;
+
+        try
+        {
+            if (int.TryParse(text.Split(" ")[0], out int number))
+            {
+                if (text.Contains("day"))
+                {
+                    start = DateTime.Today.AddDays(number * -1);
+                    return true;
+                }
+
+                if (text.Contains("week"))
+                {
+                    start = DateTime.Today.AddDays(number * -7);
+                    return true;
+                }
+
+                if (text.Contains("month"))
+                {
+                    start = DateTime.Today.AddMonths(number * -1);
+                    return true;
+                }
+
+                if (text.Contains("year"))
+                {
+                    start = DateTime.Today.AddYears(number * -1);
+                    return true;
+                }
+            }
+        }
+        catch
+        {
+            // do nothing
+        }
+
+        return false;
     }
 }

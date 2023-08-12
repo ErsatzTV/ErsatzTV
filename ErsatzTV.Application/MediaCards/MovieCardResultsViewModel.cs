@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.MediaCards;
 
-public record MovieCardResultsViewModel(int Count, List<MovieCardViewModel> Cards, Option<SearchPageMap> PageMap);
+public record MovieCardResultsViewModel(int Count, List<MovieCardViewModel> Cards, SearchPageMap PageMap);

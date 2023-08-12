@@ -5,12 +5,14 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.MediaCards
+@using LanguageExt.UnsafeValueAccess
 @implements IDisposable
-@inject IMediator _mediator
-@inject IDialogService _dialog
-@inject NavigationManager _navigationManager
-@inject ILogger<Movie> _logger
-@inject ISnackbar _snackbar
+@inject IMediator Mediator
+@inject IDialogService Dialog
+@inject NavigationManager NavigationManager
+@inject ILogger<Movie> Logger
+@inject ISnackbar Snackbar
+@inject PersistentComponentState ApplicationState
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -129,11 +131,11 @@
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Languages:&nbsp;</MudText>
-                    <MudLink Href="@(@$"language:""{_sortedLanguages.Head().EnglishName.ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedLanguages.Head().EnglishName</MudLink>
-                    @foreach (CultureInfo language in _sortedLanguages.Skip(1))
+                    <MudLink Href="@(@$"language:""{_sortedLanguages.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedLanguages.Head()</MudLink>
+                    @foreach (string language in _sortedLanguages.Skip(1))
                     {
                         <MudText>,&nbsp;</MudText>
-                        <MudLink Href="@(@$"language:""{language.EnglishName.ToLowerInvariant()}""".GetRelativeSearchQuery())">@language.EnglishName</MudLink>
+                        <MudLink Href="@(@$"language:""{language.ToLowerInvariant()}""".GetRelativeSearchQuery())">@language</MudLink>
                     }
                 </div>
             }
@@ -217,13 +219,14 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
+    private PersistingComponentStateSubscription _persistingSubscription;
 
     [Parameter]
     public int MovieId { get; set; }
 
     private MovieViewModel _movie;
     private List<string> _sortedContentRatings = new();
-    private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedLanguages = new();
     private List<string> _sortedDirectors = new();
     private List<string> _sortedWriters = new();
     private List<string> _sortedStudios = new();
@@ -232,54 +235,81 @@
 
     public void Dispose()
     {
+        _persistingSubscription.Dispose();
+
         _cts.Cancel();
         _cts.Dispose();
     }
 
-    protected override Task OnParametersSetAsync() => RefreshData();
+    protected override Task OnInitializedAsync()
+    {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
+        
+        return base.OnInitializedAsync();
+    }
 
-    private async Task RefreshData() =>
-        await _mediator.Send(new GetMovieById(MovieId), _cts.Token).IfSomeAsync(vm =>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!ApplicationState.TryTakeFromJson("_movie", out MovieViewModel restored))
         {
-            _movie = vm;
-            _sortedContentRatings = _movie.ContentRatings.OrderBy(cr => cr).ToList();
-            _sortedLanguages = _movie.Languages.OrderBy(ci => ci.EnglishName).ToList();
-            _sortedStudios = _movie.Studios.OrderBy(s => s).ToList();
-            _sortedGenres = _movie.Genres.OrderBy(g => g).ToList();
-            _sortedTags = _movie.Tags.OrderBy(t => t).ToList();
-            _sortedDirectors = _movie.Directors.OrderBy(d => d).ToList();
-            _sortedWriters = _movie.Writers.OrderBy(w => w).ToList();
-        });
+            _movie = await RefreshData();
+        }
+        else
+        {
+            _movie = restored;
+        }
+
+        _sortedContentRatings = _movie?.ContentRatings.OrderBy(cr => cr).ToList();
+        _sortedLanguages = _movie?.Languages.OrderBy(l => l).ToList();
+        _sortedStudios = _movie?.Studios.OrderBy(s => s).ToList();
+        _sortedGenres = _movie?.Genres.OrderBy(g => g).ToList();
+        _sortedTags = _movie?.Tags.OrderBy(t => t).ToList();
+        _sortedDirectors = _movie?.Directors.OrderBy(d => d).ToList();
+        _sortedWriters = _movie?.Writers.OrderBy(w => w).ToList();
+    }
+    
+    private Task PersistData()
+    {
+        ApplicationState.PersistAsJson("_movie", _movie);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task<MovieViewModel> RefreshData()
+    {
+        Option<MovieViewModel> vm = await Mediator.Send(new GetMovieById(MovieId), _cts.Token);
+        return vm.IsSome ? vm.ValueUnsafe() : null;
+    }
 
     private async Task AddToCollection()
     {
         var parameters = new DialogParameters { { "EntityType", "movie" }, { "EntityName", _movie.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
         {
-            await _mediator.Send(new AddMovieToCollection(collection.Id, MovieId), _cts.Token);
-            _navigationManager.NavigateTo($"media/collections/{collection.Id}");
+            await Mediator.Send(new AddMovieToCollection(collection.Id, MovieId), _cts.Token);
+            NavigationManager.NavigateTo($"media/collections/{collection.Id}");
         }
     }
 
     private async Task ShowInfo()
     {
-        Either<BaseError, MediaItemInfo> maybeInfo = await _mediator.Send(new GetMediaItemInfo(MovieId));
+        Either<BaseError, MediaItemInfo> maybeInfo = await Mediator.Send(new GetMediaItemInfo(MovieId));
 
         foreach (BaseError error in maybeInfo.LeftToSeq())
         {
-            _snackbar.Add("Unexpected error loading media info");
-            _logger.LogError("Unexpected error loading media info: {Error}", error.Value);
+            Snackbar.Add("Unexpected error loading media info");
+            Logger.LogError("Unexpected error loading media info: {Error}", error.Value);
         }
 
         foreach (MediaItemInfo info in maybeInfo.RightToSeq())
         {
             var parameters = new DialogParameters { { "MediaItemInfo", info } };
             var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-            IDialogReference dialog = await _dialog.ShowAsync<MediaItemInfoDialog>(_movie.Title, parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<MediaItemInfoDialog>(_movie.Title, parameters, options);
             DialogResult _ = await dialog.Result;
         }
     }

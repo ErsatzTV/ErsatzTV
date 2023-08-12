@@ -35,6 +35,6 @@ public class
             .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, request.PageSize)
             .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby)).ToList());
 
-        return new TelevisionSeasonCardResultsViewModel(count, results, None);
+        return new TelevisionSeasonCardResultsViewModel(count, results, null);
     }
 }

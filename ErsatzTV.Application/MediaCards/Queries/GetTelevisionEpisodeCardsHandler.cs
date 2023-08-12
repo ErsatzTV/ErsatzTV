@@ -59,6 +59,6 @@ public class
             results.Add(ProjectToViewModel(episodeMetadata, maybeJellyfin, maybeEmby, false, localPath));
         }
 
-        return new TelevisionEpisodeCardResultsViewModel(count, results, Option<SearchPageMap>.None);
+        return new TelevisionEpisodeCardResultsViewModel(count, results, null);
     }
 }

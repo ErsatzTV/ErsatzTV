@@ -12,7 +12,7 @@ public record MovieViewModel(
     List<string> Tags,
     List<string> Studios,
     List<string> ContentRatings,
-    List<CultureInfo> Languages,
+    List<string> Languages,
     List<ActorCardViewModel> Actors,
     List<string> Directors,
     List<string> Writers,

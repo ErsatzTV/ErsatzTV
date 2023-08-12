@@ -25,6 +25,6 @@ public interface ISearchIndex : IDisposable
         List<MediaItem> items);
 
     Task<Unit> RemoveItems(IEnumerable<int> ids);
-    Task<SearchResult> Search(IClient client, string query, int skip, int limit, string searchField = "");
+    Task<SearchResult> Search(IClient client, string query, int skip, int limit);
     void Commit();
 }

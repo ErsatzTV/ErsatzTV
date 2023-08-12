@@ -15,6 +15,7 @@ using ErsatzTV.Infrastructure.Search.Models;
 using Microsoft.Extensions.Logging;
 using ExistsResponse = Elastic.Clients.Elasticsearch.IndexManagement.ExistsResponse;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
+using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
@@ -152,17 +153,20 @@ public class ElasticSearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit, string searchField = "")
+    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit)
     {
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
+        Query parsedQuery = LuceneSearchIndex.ParseQuery(query);
+        
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
                 .From(skip)
                 .Size(limit)
-                .QueryLuceneSyntax(query));
+                .QueryLuceneSyntax(parsedQuery.ToString()));
+
         if (response.IsValidResponse)
         {
             items.AddRange(response.Documents);
@@ -792,7 +796,7 @@ public class ElasticSearchIndex : ISearchIndex
         return result;
     }
 
-    private async Task<Option<SearchPageMap>> GetSearchPageMap(string query, int limit)
+    private async Task<SearchPageMap> GetSearchPageMap(string query, int limit)
     {
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
@@ -803,7 +807,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         if (!response.IsValidResponse)
         {
-            return Option<SearchPageMap>.None;
+            return null;
         }
 
         var letters = new List<char>

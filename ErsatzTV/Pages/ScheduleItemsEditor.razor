@@ -5,7 +5,6 @@
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Watermarks
-@using System.Globalization
 @using ErsatzTV.Core.Domain.Filler
 @implements IDisposable
 @inject NavigationManager NavigationManager
@@ -305,7 +304,7 @@
                                    For="@(() => _selectedItem.PreferredAudioLanguageCode)"
                                    Clearable="true">
                             <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                            @foreach (CultureInfo culture in _availableCultures)
+                            @foreach (LanguageCodeViewModel culture in _availableCultures)
                             {
                                 <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                             }
@@ -317,7 +316,7 @@
                                    For="@(() => _selectedItem.PreferredSubtitleLanguageCode)"
                                    Clearable="true">
                             <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                            @foreach (CultureInfo culture in _availableCultures)
+                            @foreach (LanguageCodeViewModel culture in _availableCultures)
                             {
                                 <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                             }
@@ -345,7 +344,7 @@
     private ProgramScheduleItemsEditViewModel _schedule;
     private List<FillerPresetViewModel> _fillerPresets;
     private List<WatermarkViewModel> _watermarks;
-    private List<CultureInfo> _availableCultures;
+    private List<LanguageCodeViewModel> _availableCultures;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
 
@@ -355,7 +354,11 @@
         _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadScheduleItems();
+    protected override async Task OnParametersSetAsync()
+    {
+        Logger.LogInformation("Loading schedule items");
+        await LoadScheduleItems();
+    }
 
     private async Task LoadScheduleItems()
     {

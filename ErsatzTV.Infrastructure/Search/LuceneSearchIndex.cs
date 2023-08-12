@@ -189,14 +189,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(Unit.Default);
     }
 
-    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit, string searchField = "")
+    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit)
     {
         var metadata = new Dictionary<string, string>
         {
             { "searchQuery", searchQuery },
             { "skip", skip.ToString() },
-            { "limit", limit.ToString() },
-            { "searchField", searchField }
+            { "limit", limit.ToString() }
         };
 
         client?.Breadcrumbs?.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
@@ -210,18 +209,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        using var analyzer = new StandardAnalyzer(AppLuceneVersion);
-        var customAnalyzers = new Dictionary<string, Analyzer>
-        {
-            { ContentRatingField, new KeywordAnalyzer() },
-            { StateField, new KeywordAnalyzer() }
-        };
-        using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
-        QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
-            ? new CustomQueryParser(AppLuceneVersion, searchField, analyzerWrapper)
-            : new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
-        parser.AllowLeadingWildcard = true;
-        Query query = ParseQuery(searchQuery, parser);
+        Query query = ParseQuery(searchQuery);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
@@ -350,7 +338,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
     }
 
-    private static Option<SearchPageMap> GetSearchPageMap(
+    private static SearchPageMap GetSearchPageMap(
         IndexSearcher searcher,
         Query query,
         DuplicateFilter filter,
@@ -1144,6 +1132,20 @@ public sealed class LuceneSearchIndex : ISearchIndex
     private static SearchItem ProjectToSearchItem(Document doc) => new(
         doc.Get(TypeField),
         Convert.ToInt32(doc.Get(IdField)));
+
+    internal static Query ParseQuery(string query)
+    {
+        using var analyzer = new StandardAnalyzer(AppLuceneVersion);
+        var customAnalyzers = new Dictionary<string, Analyzer>
+        {
+            { ContentRatingField, new KeywordAnalyzer() },
+            { StateField, new KeywordAnalyzer() }
+        };
+        using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
+        QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
+        parser.AllowLeadingWildcard = true;
+        return ParseQuery(query, parser);
+    }
 
     private static Query ParseQuery(string searchQuery, QueryParser parser)
     {

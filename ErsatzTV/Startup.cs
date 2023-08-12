@@ -295,7 +295,8 @@ public class Startup
                 }
             });
 
-        services.AddServerSideBlazor();
+        services.AddServerSideBlazor()
+            .AddHubOptions(hubOptions => hubOptions.MaximumReceiveMessageSize = 1024 * 1024);
 
         services.AddMudServices();
 
@@ -520,12 +521,16 @@ public class Startup
 
         if (SearchHelper.IsElasticSearchEnabled)
         {
+            Log.Logger.Information("Using Elasticsearch (external) search index backend");
+
             ElasticSearchIndex.Uri = new Uri(SearchHelper.ElasticSearchUri);
             ElasticSearchIndex.IndexName = SearchHelper.ElasticSearchIndexName;
             services.AddSingleton<ISearchIndex, ElasticSearchIndex>();
         }
         else
         {
+            Log.Logger.Information("Using Lucene (embedded) search index backend");
+
             services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
         }
 
