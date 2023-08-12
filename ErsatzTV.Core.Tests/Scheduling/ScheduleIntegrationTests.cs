@@ -14,6 +14,7 @@ using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
 using ErsatzTV.Infrastructure.Extensions;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Infrastructure.Sqlite.Data;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,7 +65,7 @@ public class ScheduleIntegrationTests
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                 }),
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
@@ -75,7 +76,7 @@ public class ScheduleIntegrationTests
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                 }));
 
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
@@ -186,7 +187,7 @@ public class ScheduleIntegrationTests
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                 }),
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
@@ -197,7 +198,7 @@ public class ScheduleIntegrationTests
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                 }));
 
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());

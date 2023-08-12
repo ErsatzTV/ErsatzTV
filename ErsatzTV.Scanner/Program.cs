@@ -85,7 +85,7 @@ public class Program
                             o =>
                             {
                                 o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                                o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                                o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                             }),
                         ServiceLifetime.Scoped,
                         ServiceLifetime.Singleton);
@@ -96,7 +96,7 @@ public class Program
                             o =>
                             {
                                 o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                                o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                                o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                             }));
 
                     services.AddScoped<IConfigElementRepository, ConfigElementRepository>();

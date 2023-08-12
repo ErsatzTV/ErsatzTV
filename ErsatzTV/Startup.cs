@@ -52,6 +52,7 @@ using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Scheduling;
 using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -380,7 +381,7 @@ public class Startup
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                 }),
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
@@ -391,7 +392,7 @@ public class Startup
                 o =>
                 {
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
                 }));
 
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
