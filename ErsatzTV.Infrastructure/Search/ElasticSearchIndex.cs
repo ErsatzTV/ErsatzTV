@@ -41,7 +41,7 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<bool> IndexExists()
     {
-        _client ??= new ElasticsearchClient(Uri);
+        _client ??= CreateClient();
         ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
         return exists.IsValidResponse;
     }
@@ -52,7 +52,8 @@ public class ElasticSearchIndex : ISearchIndex
         ILocalFileSystem localFileSystem,
         IConfigElementRepository configElementRepository)
     {
-        _client ??= new ElasticsearchClient(Uri);
+        _client ??= CreateClient();
+
         ExistsResponse exists = await _client.Indices.ExistsAsync(IndexName);
         if (!exists.IsValidResponse)
         {
@@ -159,7 +160,7 @@ public class ElasticSearchIndex : ISearchIndex
         var totalCount = 0;
 
         Query parsedQuery = LuceneSearchIndex.ParseQuery(query);
-        
+
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
@@ -186,6 +187,12 @@ public class ElasticSearchIndex : ISearchIndex
     public void Commit()
     {
         // do nothing
+    }
+
+    private static ElasticsearchClient CreateClient()
+    {
+        ElasticsearchClientSettings settings = new ElasticsearchClientSettings(Uri).DefaultIndex(IndexName);
+        return new ElasticsearchClient(settings);
     }
 
     private async Task<CreateIndexResponse> CreateIndex() =>
