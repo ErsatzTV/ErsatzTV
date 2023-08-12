@@ -7,7 +7,6 @@
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Templates
 @using ErsatzTV.Application.Watermarks
-@using System.Globalization
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Channels
 @implements IDisposable
@@ -50,7 +49,7 @@
                                For="@(() => _model.PreferredAudioLanguageCode)"
                                Clearable="true">
                         <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                        @foreach (CultureInfo culture in _availableCultures)
+                        @foreach (LanguageCodeViewModel culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
@@ -62,7 +61,7 @@
                                For="@(() => _model.PreferredSubtitleLanguageCode)"
                                Clearable="true">
                         <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                        @foreach (CultureInfo culture in _availableCultures)
+                        @foreach (LanguageCodeViewModel culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
@@ -148,7 +147,7 @@
     private ValidationMessageStore _messageStore;
 
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
-    private List<CultureInfo> _availableCultures;
+    private List<LanguageCodeViewModel> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
     private List<FillerPresetViewModel> _fillerPresets;
     private List<string> _musicVideoCreditsTemplates;
