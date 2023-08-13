@@ -26,6 +26,8 @@ COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
 COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
+COPY ErsatzTV.Infrastructure.Sqlite/*.csproj ./ErsatzTV.Infrastructure.Sqlite/
+COPY ErsatzTV.Infrastructure.MySql/*.csproj ./ErsatzTV.Infrastructure.MySql/
 COPY ErsatzTV.Scanner/*.csproj ./ErsatzTV.Scanner/
 RUN dotnet restore -r linux-arm ErsatzTV/
 
@@ -35,6 +37,8 @@ COPY ErsatzTV.Application/. ./ErsatzTV.Application/
 COPY ErsatzTV.Core/. ./ErsatzTV.Core/
 COPY ErsatzTV.FFmpeg/. ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
+COPY ErsatzTV.Infrastructure.Sqlite/. ./ErsatzTV.Infrastructure.Sqlite/
+COPY ErsatzTV.Infrastructure.MySql/. ./ErsatzTV.Infrastructure.MySql/
 COPY ErsatzTV.Scanner/. ./ErsatzTV.Scanner/
 WORKDIR /source/ErsatzTV.Scanner
 ARG INFO_VERSION="unknown"
