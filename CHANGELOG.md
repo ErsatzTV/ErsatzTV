@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This can be configured using the following env vars (note the double underscore separator `__`)
     - `ELASTICSEARCH__URI` (e.g. `http://localhost:9200`)
     - `ELASTICSEARCH__INDEXNAME` (default is `ersatztv`)
+- Add *experimental* support for MySQL/MariaDB database provider
+  - ***There is no functionality to migrate data between providers***
+  - This can be configured using the following env vars (note the double underscore separator `__`)
+    - `PROVIDER` - set to `MySql`
+    - `MYSQL__CONNECTIONSTRING` - (e.g. `Server=localhost;Database=ErsatzTV;Uid=root;Pwd=ersatztv;`)
 
 ### Fixed
 - Fix subtitle scaling when using QSV hardware acceleration
