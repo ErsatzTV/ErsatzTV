@@ -34,7 +34,7 @@ jobs:
       artifacts_version: ${{ env.ARTIFACTS_VERSION }}
       info_version: ${{ env.INFO_VERSION }}
   build_and_upload:
-    uses: jasongdove/ersatztv/.github/workflows/artifacts.yml@main
+    uses: ersatztv/ersatztv/.github/workflows/artifacts.yml@main
     needs: calculate_version
     with:
       release_tag: develop
@@ -47,7 +47,7 @@ jobs:
       ac_password: ${{ secrets.AC_PASSWORD }}
       gh_token: ${{ secrets.GITHUB_TOKEN }}
   build_and_push:
-    uses: jasongdove/ersatztv/.github/workflows/docker.yml@main
+    uses: ersatztv/ersatztv/.github/workflows/docker.yml@main
     needs: calculate_version
     with:
       base_version: develop
