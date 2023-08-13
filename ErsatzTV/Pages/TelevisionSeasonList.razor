@@ -15,7 +15,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
-    @if (!string.IsNullOrWhiteSpace(_show.FanArt))
+    @if (!string.IsNullOrWhiteSpace(_show?.FanArt))
     {
         if (_show.FanArt.StartsWith("http://") || _show.FanArt.StartsWith("https://"))
         {
@@ -29,7 +29,7 @@
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
     <div style="display: flex; flex-direction: row;" class="mb-6">
-        @if (!string.IsNullOrWhiteSpace(_show.Poster))
+        @if (!string.IsNullOrWhiteSpace(_show?.Poster))
         {
             if (_show.Poster.StartsWith("http://") || _show.Poster.StartsWith("https://"))
             {
@@ -45,9 +45,9 @@
             }
         }
         <div style="display: flex; flex-direction: column; height: 100%">
-            <MudText Typo="Typo.h2" Class="media-item-title">@_show.Title</MudText>
-            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_show.Year</MudText>
-            @if (!string.IsNullOrWhiteSpace(_show.Plot))
+            <MudText Typo="Typo.h2" Class="media-item-title">@_show?.Title</MudText>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_show?.Year</MudText>
+            @if (!string.IsNullOrWhiteSpace(_show?.Plot))
             {
                 <MudCard Elevation="2" Class="mb-6">
                     <MudCardContent Class="mx-3 my-3" Style="height: 100%">
@@ -148,7 +148,7 @@
                    AddToCollectionClicked="@AddSeasonToCollection"/>
     }
 </MudContainer>
-@if (_show.Actors.Any())
+@if ((_show?.Actors?.Count ?? 0) > 0)
 {
     <MudContainer MaxWidth="MaxWidth.Large">
         <MudText Class="mb-4">Actors</MudText>
@@ -179,7 +179,7 @@
     private int _pageSize => 100;
     private readonly int _pageNumber = 1;
 
-    private TelevisionSeasonCardResultsViewModel _data;
+    private TelevisionSeasonCardResultsViewModel _data = new(0, new List<TelevisionSeasonCardViewModel>(), null);
 
     public void Dispose()
     {

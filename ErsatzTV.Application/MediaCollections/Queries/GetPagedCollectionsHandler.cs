@@ -17,14 +17,12 @@ public class GetPagedCollectionsHandler : IRequestHandler<GetPagedCollections, P
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        int count = await dbContext.Connection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM Collection");
-        List<MediaCollectionViewModel> page = await dbContext.Collections.FromSqlRaw(
-                @"SELECT * FROM Collection
-                    ORDER BY Name
-                    COLLATE NOCASE
-                    LIMIT {0} OFFSET {1}",
-                request.PageSize,
-                request.PageNum * request.PageSize)
+        int count = await dbContext.Collections.CountAsync(cancellationToken);
+        List<MediaCollectionViewModel> page = await dbContext.Collections
+            .AsNoTracking()
+            .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
+            .Skip(request.PageNum * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 

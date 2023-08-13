@@ -3,7 +3,6 @@
 @using ErsatzTV.Application.MediaCollections
 @inherits MultiSelectBase<CollectionItems>
 @inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
 @inject IJSRuntime _jsRuntime
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
@@ -30,40 +29,40 @@
         else
         {
             <div style="align-items: center; display: flex; flex-direction: row;">
-                <MudText Typo="Typo.h4">@_data.Name</MudText>
+                <MudText Typo="Typo.h4">@_data?.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                Link="@($"media/collections/{Id}/edit")"/>
             </div>
-            @if (_data.MovieCards.Any())
+            @if (_data?.MovieCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
             }
-            @if (_data.ShowCards.Any())
+            @if (_data?.ShowCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
             }
-            @if (_data.SeasonCards.Any())
+            @if (_data?.SeasonCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#seasons")">@_data.SeasonCards.Count Seasons</MudLink>
             }
-            @if (_data.EpisodeCards.Any())
+            @if (_data?.EpisodeCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
             }
-            @if (_data.ArtistCards.Any())
+            @if (_data?.ArtistCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")">@_data.ArtistCards.Count Artists</MudLink>
             }
-            @if (_data.MusicVideoCards.Any())
+            @if (_data?.MusicVideoCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
             }
-            @if (_data.OtherVideoCards.Any())
+            @if (_data?.OtherVideoCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")">@_data.OtherVideoCards.Count Other Videos</MudLink>
             }
 
-            @if (_data.SongCards.Any())
+            @if (_data?.SongCards.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")">@_data.SongCards.Count Songs</MudLink>
             }
@@ -82,7 +81,7 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
 
-    @if (_data.MovieCards.Any())
+    @if (_data?.MovieCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -105,7 +104,7 @@
         </MudContainer>
     }
 
-    @if (_data.ShowCards.Any())
+    @if (_data?.ShowCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -128,7 +127,7 @@
         </MudContainer>
     }
 
-    @if (_data.SeasonCards.Any())
+    @if (_data?.SeasonCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -153,7 +152,7 @@
         </MudContainer>
     }
 
-    @if (_data.EpisodeCards.Any())
+    @if (_data?.EpisodeCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -181,7 +180,7 @@
         </MudContainer>
     }
 
-    @if (_data.ArtistCards.Any())
+    @if (_data?.ArtistCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -205,7 +204,7 @@
         </MudContainer>
     }
 
-    @if (_data.MusicVideoCards.Any())
+    @if (_data?.MusicVideoCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -229,7 +228,7 @@
         </MudContainer>
     }
 
-    @if (_data.OtherVideoCards.Any())
+    @if (_data?.OtherVideoCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -253,7 +252,7 @@
         </MudContainer>
     }
 
-    @if (_data.SongCards.Any())
+    @if (_data?.SongCards.Count > 0)
     {
         <MudText GutterBottom="true"
                  Typo="Typo.h4"
@@ -286,7 +285,7 @@
     private CollectionCardResultsViewModel _data;
 
     private bool SupportsCustomOrdering() =>
-        _data.MovieCards.Any() && !_data.ShowCards.Any() && !_data.SeasonCards.Any() && !_data.EpisodeCards.Any();
+        _data is not null && _data.MovieCards.Any() && !_data.ShowCards.Any() && !_data.SeasonCards.Any() && !_data.EpisodeCards.Any();
 
     protected override async Task OnParametersSetAsync() => await RefreshData();
 

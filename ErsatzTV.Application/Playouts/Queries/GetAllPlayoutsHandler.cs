@@ -14,7 +14,7 @@ public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<Playou
         GetAllPlayouts request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Playouts
             .Filter(p => p.Channel != null && p.ProgramSchedule != null)
             .Map(

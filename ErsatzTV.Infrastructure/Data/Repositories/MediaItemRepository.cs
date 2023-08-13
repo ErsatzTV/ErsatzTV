@@ -201,12 +201,13 @@ public class MediaItemRepository : IMediaItemRepository
     private async Task<List<string>> GetAllLanguageCodes()
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        // TODO: might need to fix this for sqlite
         return await dbContext.Connection.QueryAsync<string>(
                 @"SELECT LanguageCode FROM
                     (SELECT Language AS LanguageCode
                     FROM MediaStream WHERE Language IS NOT NULL
                     UNION ALL SELECT PreferredAudioLanguageCode AS LanguageCode
-                    FROM Channel WHERE PreferredAudioLanguageCode IS NOT NULL)
+                    FROM Channel WHERE PreferredAudioLanguageCode IS NOT NULL) AS A
                     GROUP BY LanguageCode
                     ORDER BY COUNT(LanguageCode) DESC")
             .Map(result => result.ToList());

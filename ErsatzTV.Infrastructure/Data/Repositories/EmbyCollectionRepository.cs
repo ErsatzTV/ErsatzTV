@@ -100,7 +100,7 @@ public class EmbyCollectionRepository : IEmbyCollectionRepository
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, MovieMetadataId)
                       SELECT @Name, @ItemId, Id FROM
-                      (SELECT Id FROM MovieMetadata WHERE MovieId = @MovieId)",
+                      (SELECT Id FROM MovieMetadata WHERE MovieId = @MovieId) AS A",
                     new { collection.Name, collection.ItemId, MovieId = movieId });
                 return movieId;
             case EmbyShow show:
@@ -110,7 +110,7 @@ public class EmbyCollectionRepository : IEmbyCollectionRepository
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, ShowMetadataId)
                       SELECT @Name, @ItemId, Id FROM
-                      (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId)",
+                      (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
                     new { collection.Name, collection.ItemId, ShowId = showId });
                 return showId;
             case EmbySeason season:
@@ -120,7 +120,7 @@ public class EmbyCollectionRepository : IEmbyCollectionRepository
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, SeasonMetadataId)
                       SELECT @Name, @ItemId, Id FROM
-                      (SELECT Id FROM SeasonMetadata WHERE SeasonId = @SeasonId)",
+                      (SELECT Id FROM SeasonMetadata WHERE SeasonId = @SeasonId) AS A",
                     new { collection.Name, collection.ItemId, SeasonId = seasonId });
                 return seasonId;
             case EmbyEpisode episode:
@@ -130,7 +130,7 @@ public class EmbyCollectionRepository : IEmbyCollectionRepository
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, EpisodeMetadataId)
                       SELECT @Name, @ItemId, Id FROM
-                      (SELECT Id FROM EpisodeMetadata WHERE EpisodeId = @EpisodeId)",
+                      (SELECT Id FROM EpisodeMetadata WHERE EpisodeId = @EpisodeId) AS A",
                     new { collection.Name, collection.ItemId, EpisodeId = episodeId });
                 return episodeId;
             default:

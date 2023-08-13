@@ -52,6 +52,7 @@ using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Scheduling;
 using ErsatzTV.Infrastructure.Scripting;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -364,39 +365,91 @@ public class Startup
             Directory.CreateDirectory(FileSystemLayout.AudioStreamSelectorScriptsFolder);
         }
 
-        Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
-
         // until we add a setting for a file-specific scheme://host:port to access
         // stream urls contained in this file, it doesn't make sense to do
         // for now, continue to use scheme and host from incoming requests
         // string xmltvPath = Path.Combine(appDataFolder, "xmltv.xml");
         // Log.Logger.Information("XMLTV is at {XmltvPath}", xmltvPath);
 
-        var connectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
+        string databaseProvider = Configuration.GetValue("provider", Provider.Sqlite.Name);
+        var sqliteConnectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
+        string mySqlConnectionString = Configuration.GetValue<string>("MySql:ConnectionString");
 
         services.AddDbContext<TvContext>(
-            options => options.UseSqlite(
-                connectionString,
-                o =>
+            options =>
+            {
+                if (databaseProvider == Provider.Sqlite.Name)
                 {
-                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
-                }),
+                    options.UseSqlite(
+                        sqliteConnectionString,
+                        o =>
+                        {
+                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                            o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+                        });
+                }
+
+                if (databaseProvider == Provider.MySql.Name)
+                {
+                    options.UseMySql(
+                        mySqlConnectionString,
+                        ServerVersion.AutoDetect(mySqlConnectionString),
+                        o =>
+                        {
+                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                            o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
+                        }
+                    );
+                }
+            },
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
 
         services.AddDbContextFactory<TvContext>(
-            options => options.UseSqlite(
-                connectionString,
-                o =>
+            options =>
+            {
+                if (databaseProvider == Provider.Sqlite.Name)
                 {
-                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure");
-                }));
+                    options.UseSqlite(
+                        sqliteConnectionString,
+                        o =>
+                        {
+                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                            o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+                        });
+                }
 
-        SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
-        SqlMapper.AddTypeHandler(new GuidHandler());
-        SqlMapper.AddTypeHandler(new TimeSpanHandler());
+                if (databaseProvider == Provider.MySql.Name)
+                {
+                    options.UseMySql(
+                        mySqlConnectionString,
+                        ServerVersion.AutoDetect(mySqlConnectionString),
+                        o =>
+                        {
+                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                            o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
+                        }
+                    );
+                }
+            });
+
+        if (databaseProvider == Provider.Sqlite.Name)
+        {
+            Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
+
+            TvContext.LastInsertedRowId = "last_insert_rowid()";
+            TvContext.CaseInsensitiveCollation = "NOCASE";
+
+            SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(new GuidHandler());
+            SqlMapper.AddTypeHandler(new TimeSpanHandler());
+        }
+        
+        if (databaseProvider == Provider.MySql.Name)
+        {
+            TvContext.LastInsertedRowId = "last_insert_id()";
+            TvContext.CaseInsensitiveCollation = "utf8mb4_general_ci";
+        }
 
         services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<GetAllChannels>());
 

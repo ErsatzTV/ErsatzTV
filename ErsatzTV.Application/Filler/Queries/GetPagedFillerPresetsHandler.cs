@@ -1,5 +1,4 @@
-﻿using Dapper;
-using ErsatzTV.Infrastructure.Data;
+﻿using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Filler.Mapper;
 
@@ -17,14 +16,12 @@ public class GetPagedFillerPresetsHandler : IRequestHandler<GetPagedFillerPreset
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        int count = await dbContext.Connection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM FillerPreset");
-        List<FillerPresetViewModel> page = await dbContext.FillerPresets.FromSqlRaw(
-                @"SELECT * FROM FillerPreset
-                    ORDER BY Name
-                    COLLATE NOCASE
-                    LIMIT {0} OFFSET {1}",
-                request.PageSize,
-                request.PageNum * request.PageSize)
+        int count = await dbContext.FillerPresets.CountAsync(cancellationToken);
+        List<FillerPresetViewModel> page = await dbContext.FillerPresets
+            .AsNoTracking()
+            .OrderBy(f => EF.Functions.Collate(f.Name, TvContext.CaseInsensitiveCollation))
+            .Skip(request.PageNum * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
 

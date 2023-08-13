@@ -146,11 +146,11 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
-    private List<FFmpegProfileViewModel> _ffmpegProfiles;
-    private List<LanguageCodeViewModel> _availableCultures;
-    private List<WatermarkViewModel> _watermarks;
-    private List<FillerPresetViewModel> _fillerPresets;
-    private List<string> _musicVideoCreditsTemplates;
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
+    private List<LanguageCodeViewModel> _availableCultures = new();
+    private List<WatermarkViewModel> _watermarks = new();
+    private List<FillerPresetViewModel> _fillerPresets = new();
+    private List<string> _musicVideoCreditsTemplates = new();
 
     public void Dispose()
     {

@@ -19,7 +19,7 @@ public static class DbInitializer
                     using var reader = new StreamReader(resource);
                     while (!reader.EndOfStream)
                     {
-                        string line = await reader.ReadLineAsync();
+                        string line = await reader.ReadLineAsync(cancellationToken);
                         if (line != null)
                         {
                             string[] split = line.Split("|");

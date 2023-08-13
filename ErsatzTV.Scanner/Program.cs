@@ -1,5 +1,6 @@
 ﻿using Bugsnag;
 using Bugsnag.Payload;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
@@ -25,6 +26,7 @@ using ErsatzTV.Infrastructure.Jellyfin;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Infrastructure.Sqlite.Data;
 using ErsatzTV.Scanner.Core.Emby;
 using ErsatzTV.Scanner.Core.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -35,6 +37,7 @@ using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
 using ErsatzTV.Scanner.Core.Plex;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IO;
@@ -75,29 +78,85 @@ public class Program
     private static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
             .ConfigureServices(
-                (_, services) =>
+                (context, services) =>
                 {
-                    var connectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
+                    string databaseProvider = context.Configuration.GetValue("provider", Provider.Sqlite.Name) ?? string.Empty;
+                    var sqliteConnectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
+                    string mySqlConnectionString = context.Configuration.GetValue<string>("MySql:ConnectionString") ?? string.Empty;
 
                     services.AddDbContext<TvContext>(
-                        options => options.UseSqlite(
-                            connectionString,
-                            o =>
+                        options =>
+                        {
+                            if (databaseProvider == Provider.Sqlite.Name)
                             {
-                                o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                                o.MigrationsAssembly("ErsatzTV.Infrastructure");
-                            }),
+                                options.UseSqlite(
+                                    sqliteConnectionString,
+                                    o =>
+                                    {
+                                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                                        o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+                                    });
+                            }
+
+                            if (databaseProvider == Provider.MySql.Name)
+                            {
+                                options.UseMySql(
+                                    mySqlConnectionString,
+                                    ServerVersion.AutoDetect(mySqlConnectionString),
+                                    o =>
+                                    {
+                                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                                        o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
+                                    }
+                                );
+                            }
+                        },
                         ServiceLifetime.Scoped,
                         ServiceLifetime.Singleton);
 
                     services.AddDbContextFactory<TvContext>(
-                        options => options.UseSqlite(
-                            connectionString,
-                            o =>
+                        options =>
+                        {
+                            if (databaseProvider == Provider.Sqlite.Name)
                             {
-                                o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                                o.MigrationsAssembly("ErsatzTV.Infrastructure");
-                            }));
+                                options.UseSqlite(
+                                    sqliteConnectionString,
+                                    o =>
+                                    {
+                                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                                        o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+                                    });
+                            }
+
+                            if (databaseProvider == Provider.MySql.Name)
+                            {
+                                options.UseMySql(
+                                    mySqlConnectionString,
+                                    ServerVersion.AutoDetect(mySqlConnectionString),
+                                    o =>
+                                    {
+                                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                                        o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
+                                    }
+                                );
+                            }
+                        });
+                    
+                    if (databaseProvider == Provider.Sqlite.Name)
+                    {
+                        TvContext.LastInsertedRowId = "last_insert_rowid()";
+                        TvContext.CaseInsensitiveCollation = "NOCASE";
+
+                        SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
+                        SqlMapper.AddTypeHandler(new GuidHandler());
+                        SqlMapper.AddTypeHandler(new TimeSpanHandler());
+                    }
+
+                    if (databaseProvider == Provider.MySql.Name)
+                    {
+                        TvContext.LastInsertedRowId = "last_insert_id()";
+                        TvContext.CaseInsensitiveCollation = "utf8mb4_general_ci";
+                    }
 
                     services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
                     services.AddScoped<IMetadataRepository, MetadataRepository>();
@@ -210,6 +269,6 @@ public class Program
 
         public IBreadcrumbs Breadcrumbs => new Breadcrumbs(Configuration);
         public ISessionTracker SessionTracking => new SessionTracker(Configuration);
-        public IConfiguration Configuration => new Configuration();
+        public Bugsnag.IConfiguration Configuration => new Configuration();
     }
 }

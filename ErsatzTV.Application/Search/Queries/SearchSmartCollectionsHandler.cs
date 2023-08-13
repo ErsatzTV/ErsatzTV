@@ -17,14 +17,11 @@ public class SearchSmartCollectionsHandler : IRequestHandler<SearchSmartCollecti
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await dbContext.SmartCollections.FromSqlRaw(
-                @"SELECT * FROM SmartCollection
-                    WHERE Name LIKE {0} 
-                    ORDER BY Name
-                    LIMIT 10
-                    COLLATE NOCASE",
-                $"%{request.Query}%")
+        return await dbContext.SmartCollections
             .AsNoTracking()
+            .Where(c => EF.Functions.Like(EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation), $"%{request.Query}%"))
+            .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
+            .Take(10)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
     }

@@ -17,14 +17,11 @@ public class SearchMultiCollectionsHandler : IRequestHandler<SearchMultiCollecti
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await dbContext.MultiCollections.FromSqlRaw(
-                @"SELECT * FROM MultiCollection
-                    WHERE Name LIKE {0} 
-                    ORDER BY Name
-                    LIMIT 10
-                    COLLATE NOCASE",
-                $"%{request.Query}%")
+        return await dbContext.MultiCollections
             .AsNoTracking()
+            .Where(c => EF.Functions.Like(EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation), $"%{request.Query}%"))
+            .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
+            .Take(10)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());
     }

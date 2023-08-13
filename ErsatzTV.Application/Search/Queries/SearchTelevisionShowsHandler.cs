@@ -1,5 +1,5 @@
-using Dapper;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,25 +17,23 @@ public class SearchTelevisionShowsHandler : IRequestHandler<SearchTelevisionShow
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        return await dbContext.Connection.QueryAsync<TelevisionShow>(
-                @"SELECT Show.Id, SM.Title, SM.Year FROM Show
-                    INNER JOIN ShowMetadata SM on SM.ShowId = Show.Id
-                    WHERE (SM.Title || ' ' || SM.Year) LIKE @Title
-                    ORDER BY SM.Title, SM.Year
-                    LIMIT 10
-                    COLLATE NOCASE",
-                new { Title = $"%{request.Query}%" })
+        return await dbContext.ShowMetadata
+            .AsNoTracking()
+            .Where(
+                s => EF.Functions.Like(
+                    EF.Functions.Collate(s.Title + " " + s.Year, TvContext.CaseInsensitiveCollation),
+                    $"%{request.Query}%"))
+            .OrderBy(s => EF.Functions.Collate(s.Title, TvContext.CaseInsensitiveCollation))
+            .ThenBy(s => s.Year)
+            .Take(10)
+            .ToListAsync(cancellationToken)
             .Map(list => list.Map(ToNamedMediaItem).ToList());
     }
 
-    private static NamedMediaItemViewModel ToNamedMediaItem(TelevisionShow show) => new(
-        show.Id,
-        $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString() : "???")})");
-
-    public record TelevisionShow(int Id, string Title, int? Year)
+    private static NamedMediaItemViewModel ToNamedMediaItem(ShowMetadata show)
     {
-        public TelevisionShow() : this(default, default, default)
-        {
-        }
+        return new NamedMediaItemViewModel(
+            show.Id,
+            $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString() : "???")})");
     }
 }

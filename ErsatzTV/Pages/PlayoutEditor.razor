@@ -50,8 +50,8 @@
     private readonly CancellationTokenSource _cts = new();
 
     private readonly PlayoutEditViewModel _model = new();
-    private List<ChannelViewModel> _channels;
-    private List<ProgramScheduleViewModel> _programSchedules;
+    private List<ChannelViewModel> _channels = new();
+    private List<ProgramScheduleViewModel> _programSchedules = new();
 
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;

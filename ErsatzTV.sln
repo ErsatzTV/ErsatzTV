@@ -22,6 +22,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{325E6DA0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Scanner.Tests", "ErsatzTV.Scanner.Tests\ErsatzTV.Scanner.Tests.csproj", "{2EF80455-953D-4696-831D-E8CBCA82B0EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Infrastructure.MySql", "ErsatzTV.Infrastructure.MySql\ErsatzTV.Infrastructure.MySql.csproj", "{37A0C761-F59E-44EB-9660-5E158980D1D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Infrastructure.Sqlite", "ErsatzTV.Infrastructure.Sqlite\ErsatzTV.Infrastructure.Sqlite.csproj", "{C105FD01-9D6F-4574-A987-BD39E7B349E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +93,18 @@ Global
 		{2EF80455-953D-4696-831D-E8CBCA82B0EF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2EF80455-953D-4696-831D-E8CBCA82B0EF}.Debug No Sync|Any CPU.ActiveCfg = Debug|Any CPU
 		{2EF80455-953D-4696-831D-E8CBCA82B0EF}.Debug No Sync|Any CPU.Build.0 = Debug|Any CPU
+		{37A0C761-F59E-44EB-9660-5E158980D1D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37A0C761-F59E-44EB-9660-5E158980D1D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37A0C761-F59E-44EB-9660-5E158980D1D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37A0C761-F59E-44EB-9660-5E158980D1D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37A0C761-F59E-44EB-9660-5E158980D1D8}.Debug No Sync|Any CPU.ActiveCfg = Debug|Any CPU
+		{37A0C761-F59E-44EB-9660-5E158980D1D8}.Debug No Sync|Any CPU.Build.0 = Debug|Any CPU
+		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Debug No Sync|Any CPU.ActiveCfg = Debug|Any CPU
+		{C105FD01-9D6F-4574-A987-BD39E7B349E8}.Debug No Sync|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CE7F1ACD-F286-4761-A7BC-A541A1E25C86} = {325E6DA0-52B3-4431-98A2-72C36F403704}

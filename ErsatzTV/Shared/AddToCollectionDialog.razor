@@ -58,7 +58,7 @@
     private readonly MediaCollectionViewModel _newCollection = new(-1, "(New Collection)", false, MediaItemState.Normal);
     private string _newCollectionName;
 
-    private List<MediaCollectionViewModel> _collections;
+    private List<MediaCollectionViewModel> _collections = new();
 
     private MediaCollectionViewModel _selectedCollection;
 
