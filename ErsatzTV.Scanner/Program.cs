@@ -144,8 +144,6 @@ public class Program
                     
                     if (databaseProvider == Provider.Sqlite.Name)
                     {
-                        Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
-
                         TvContext.LastInsertedRowId = "last_insert_rowid()";
                         TvContext.CaseInsensitiveCollation = "NOCASE";
 
