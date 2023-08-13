@@ -130,9 +130,9 @@
 @code {
     private readonly CancellationTokenSource _cts = new();
 
-    private IList<LibraryViewModel> _libraries;
-    private IList<LibraryViewModel> _externalCollections;
-    private Dictionary<int, int> _progressByLibrary;
+    private IList<LibraryViewModel> _libraries = new List<LibraryViewModel>();
+    private IList<LibraryViewModel> _externalCollections = new List<LibraryViewModel>();
+    private Dictionary<int, int> _progressByLibrary = new();
 
     protected override void OnInitialized()
     {

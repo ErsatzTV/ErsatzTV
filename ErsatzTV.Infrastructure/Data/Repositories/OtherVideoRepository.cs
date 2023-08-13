@@ -135,9 +135,11 @@ public class OtherVideoRepository : IOtherVideoRepository
         if (actor.Artwork != null)
         {
             artworkId = await dbContext.Connection.QuerySingleAsync<int>(
-                @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
-                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
-                      SELECT last_insert_rowid()",
+                $"""
+                 INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                     VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                 SELECT {TvContext.LastInsertedRowId}
+                 """,
                 new
                 {
                     ArtworkKind = (int)actor.Artwork.ArtworkKind,
@@ -148,7 +150,7 @@ public class OtherVideoRepository : IOtherVideoRepository
         }
 
         return await dbContext.Connection.ExecuteAsync(
-                "INSERT INTO Actor (Name, Role, \"Order\", OtherVideoMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                "INSERT INTO Actor (Name, Role, `Order`, OtherVideoMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
     }

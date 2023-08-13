@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Xml;
 using Dapper;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -83,7 +84,8 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                                from Channel C
                                left outer join Artwork A on C.Id = A.ChannelId and A.ArtworkKind = 2
                                where C.Id in (select ChannelId from Playout)
-                               order by CAST(C.Number as real)";
+                               order by CAST(C.Number as double)";
+        // TODO: this needs to be fixed for sqlite/mariadb
 
         await using var reader = (DbDataReader)await dbContext.Connection.ExecuteReaderAsync(QUERY);
         Func<DbDataReader, ChannelResult> rowParser = reader.GetRowParser<ChannelResult>();

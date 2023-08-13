@@ -252,16 +252,16 @@
     private bool _hdhrSuccess;
     private bool _scannerSuccess;
     private bool _playoutSuccess;
-    private List<FFmpegProfileViewModel> _ffmpegProfiles;
-    private FFmpegSettingsViewModel _ffmpegSettings;
-    private List<LanguageCodeViewModel> _availableCultures;
-    private List<WatermarkViewModel> _watermarks;
-    private List<FillerPresetViewModel> _fillerPresets;
-    private List<ResolutionViewModel> _customResolutions;
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
+    private FFmpegSettingsViewModel _ffmpegSettings = new();
+    private List<LanguageCodeViewModel> _availableCultures = new();
+    private List<WatermarkViewModel> _watermarks = new();
+    private List<FillerPresetViewModel> _fillerPresets = new();
+    private List<ResolutionViewModel> _customResolutions = new();
     private int _tunerCount;
     private int _libraryRefreshInterval;
-    private PlayoutSettingsViewModel _playoutSettings;
-    private GeneralSettingsViewModel _generalSettings;
+    private PlayoutSettingsViewModel _playoutSettings = new();
+    private GeneralSettingsViewModel _generalSettings = new();
 
     public void Dispose()
     {

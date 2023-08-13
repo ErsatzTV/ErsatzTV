@@ -8,6 +8,8 @@ namespace ErsatzTV.Infrastructure.Data;
 
 public class TvContext : DbContext
 {
+    public static string LastInsertedRowId = "last_insert_rowid()";
+    
     private readonly ILoggerFactory _loggerFactory;
 
     public TvContext(DbContextOptions<TvContext> options, ILoggerFactory loggerFactory)

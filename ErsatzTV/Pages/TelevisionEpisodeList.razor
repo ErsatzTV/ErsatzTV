@@ -15,7 +15,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
-    @if (!string.IsNullOrWhiteSpace(_season.FanArt))
+    @if (!string.IsNullOrWhiteSpace(_season?.FanArt))
     {
         if (_season.FanArt.StartsWith("http://") || _season.FanArt.StartsWith("https://"))
         {
@@ -29,7 +29,7 @@
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
     <div style="display: flex; flex-direction: row;">
-        @if (!string.IsNullOrWhiteSpace(_season.Poster))
+        @if (!string.IsNullOrWhiteSpace(_season?.Poster))
         {
             if (_season.Poster.StartsWith("http://") || _season.Poster.StartsWith("https://"))
             {
@@ -45,10 +45,10 @@
             }
         }
         <div style="display: flex; flex-direction: column; height: 100%">
-            <MudLink Href="@($"media/tv/shows/{_season.ShowId}")">
-                <MudText Typo="Typo.h2" Class="media-item-title">@_season.Title</MudText>
+            <MudLink Href="@($"media/tv/shows/{_season?.ShowId}")">
+                <MudText Typo="Typo.h2" Class="media-item-title">@_season?.Title</MudText>
             </MudLink>
-            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_season.Name</MudText>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_season?.Name</MudText>
             <div>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -184,7 +184,7 @@
     private int _pageSize => 100;
     private readonly int _pageNumber = 1;
 
-    private TelevisionEpisodeCardResultsViewModel _data;
+    private TelevisionEpisodeCardResultsViewModel _data = new(0, new List<TelevisionEpisodeCardViewModel>(), null);
 
     public void Dispose()
     {

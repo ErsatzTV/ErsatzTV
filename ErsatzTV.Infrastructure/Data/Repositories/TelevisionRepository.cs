@@ -179,7 +179,7 @@ public class TelevisionRepository : ITelevisionRepository
                 @"SELECT m1.ShowId
                 FROM ShowMetadata m1
                 LEFT OUTER JOIN ShowMetadata m2 ON m2.ShowId = @ShowId
-                WHERE m1.Title = m2.Title AND m1.Year is m2.Year",
+                WHERE m1.Title = m2.Title AND m1.Year = m2.Year",
                 new { ShowId = televisionShowId })
             .Map(results => results.ToList());
 
@@ -595,9 +595,11 @@ public class TelevisionRepository : ITelevisionRepository
         if (actor.Artwork != null)
         {
             artworkId = await dbContext.Connection.QuerySingleAsync<int>(
-                @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
-                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
-                      SELECT last_insert_rowid()",
+                $"""
+                 INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                     VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                 SELECT {TvContext.LastInsertedRowId}
+                 """,
                 new
                 {
                     ArtworkKind = (int)actor.Artwork.ArtworkKind,
@@ -608,7 +610,7 @@ public class TelevisionRepository : ITelevisionRepository
         }
 
         return await dbContext.Connection.ExecuteAsync(
-                "INSERT INTO Actor (Name, Role, \"Order\", ShowMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                "INSERT INTO Actor (Name, Role, `Order`, ShowMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
     }
@@ -622,9 +624,11 @@ public class TelevisionRepository : ITelevisionRepository
         if (actor.Artwork != null)
         {
             artworkId = await dbContext.Connection.QuerySingleAsync<int>(
-                @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
-                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
-                      SELECT last_insert_rowid()",
+                $"""
+                 INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                     VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                 SELECT {TvContext.LastInsertedRowId}
+                 """,
                 new
                 {
                     ArtworkKind = (int)actor.Artwork.ArtworkKind,
@@ -635,7 +639,7 @@ public class TelevisionRepository : ITelevisionRepository
         }
 
         return await dbContext.Connection.ExecuteAsync(
-                "INSERT INTO Actor (Name, Role, \"Order\", EpisodeMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                "INSERT INTO Actor (Name, Role, `Order`, EpisodeMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
     }
