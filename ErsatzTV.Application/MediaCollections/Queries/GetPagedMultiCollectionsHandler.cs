@@ -17,14 +17,12 @@ public class GetPagedMultiCollectionsHandler : IRequestHandler<GetPagedMultiColl
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        int count = await dbContext.Connection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM MultiCollection");
-        List<MultiCollectionViewModel> page = await dbContext.MultiCollections.FromSqlRaw(
-                @"SELECT * FROM MultiCollection
-                    ORDER BY Name
-                    COLLATE NOCASE
-                    LIMIT {0} OFFSET {1}",
-                request.PageSize,
-                request.PageNum * request.PageSize)
+        int count = await dbContext.MultiCollections.CountAsync(cancellationToken);
+        List<MultiCollectionViewModel> page = await dbContext.MultiCollections
+            .AsNoTracking()
+            .OrderBy(f => EF.Functions.Collate(f.Name, TvContext.CaseInsensitiveCollation))
+            .Skip(request.PageNum * request.PageSize)
+            .Take(request.PageSize)
             .Include(mc => mc.MultiCollectionItems)
             .ThenInclude(i => i.Collection)
             .ToListAsync(cancellationToken)

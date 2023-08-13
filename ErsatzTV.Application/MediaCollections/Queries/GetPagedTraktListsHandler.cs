@@ -17,14 +17,12 @@ public class GetPagedTraktListsHandler : IRequestHandler<GetPagedTraktLists, Pag
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        int count = await dbContext.Connection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM TraktList");
-        List<TraktListViewModel> page = await dbContext.TraktLists.FromSqlRaw(
-                @"SELECT * FROM TraktList
-                    ORDER BY Name
-                    COLLATE NOCASE
-                    LIMIT {0} OFFSET {1}",
-                request.PageSize,
-                request.PageNum * request.PageSize)
+        int count = await dbContext.TraktLists.CountAsync(cancellationToken);
+        List<TraktListViewModel> page = await dbContext.TraktLists
+            .AsNoTracking()
+            .OrderBy(f => EF.Functions.Collate(f.Name, TvContext.CaseInsensitiveCollation))
+            .Skip(request.PageNum * request.PageSize)
+            .Take(request.PageSize)
             .Include(l => l.Items)
             .ToListAsync(cancellationToken)
             .Map(list => list.Map(ProjectToViewModel).ToList());

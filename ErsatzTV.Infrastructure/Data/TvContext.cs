@@ -9,6 +9,7 @@ namespace ErsatzTV.Infrastructure.Data;
 public class TvContext : DbContext
 {
     public static string LastInsertedRowId = "last_insert_rowid()";
+    public static string CaseInsensitiveCollation = "NOCASE";
     
     private readonly ILoggerFactory _loggerFactory;
 

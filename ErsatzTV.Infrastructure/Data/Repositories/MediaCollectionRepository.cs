@@ -567,11 +567,13 @@ public class MediaCollectionRepository : IMediaCollectionRepository
     private async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT Episode.Id FROM CollectionItem ci
-            INNER JOIN Show ON Show.Id = ci.MediaItemId
-            INNER JOIN Season ON Season.ShowId = Show.Id
-            INNER JOIN Episode ON Episode.SeasonId = Season.Id
-            WHERE ci.CollectionId = @CollectionId",
+            """
+            SELECT Episode.Id FROM CollectionItem ci
+                INNER JOIN `Show` ON `Show`.Id = ci.MediaItemId
+                INNER JOIN Season ON Season.ShowId = `Show`.Id
+                INNER JOIN Episode ON Episode.SeasonId = Season.Id
+                WHERE ci.CollectionId = @CollectionId
+            """,
             new { CollectionId = collectionId });
 
         return await GetShowItemsFromEpisodeIds(dbContext, ids);

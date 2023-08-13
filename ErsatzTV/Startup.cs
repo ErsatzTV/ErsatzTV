@@ -380,8 +380,6 @@ public class Startup
             {
                 if (databaseProvider == Provider.Sqlite.Name)
                 {
-                    Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
-
                     options.UseSqlite(
                         sqliteConnectionString,
                         o =>
@@ -437,9 +435,20 @@ public class Startup
 
         if (databaseProvider == Provider.Sqlite.Name)
         {
+            Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
+
+            TvContext.LastInsertedRowId = "last_insert_rowid()";
+            TvContext.CaseInsensitiveCollation = "NOCASE";
+
             SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(new GuidHandler());
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
+        }
+        
+        if (databaseProvider == Provider.MySql.Name)
+        {
+            TvContext.LastInsertedRowId = "last_insert_id()";
+            TvContext.CaseInsensitiveCollation = "utf8mb4_general_ci";
         }
 
         services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<GetAllChannels>());

@@ -147,6 +147,7 @@ public class Program
                         Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
 
                         TvContext.LastInsertedRowId = "last_insert_rowid()";
+                        TvContext.CaseInsensitiveCollation = "NOCASE";
 
                         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
                         SqlMapper.AddTypeHandler(new GuidHandler());
@@ -156,6 +157,7 @@ public class Program
                     if (databaseProvider == Provider.MySql.Name)
                     {
                         TvContext.LastInsertedRowId = "last_insert_id()";
+                        TvContext.CaseInsensitiveCollation = "utf8mb4_general_ci";
                     }
 
                     services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
