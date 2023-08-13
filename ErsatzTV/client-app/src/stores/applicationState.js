@@ -11,7 +11,7 @@ export const applicationState = defineStore('appState', {
             m3uURL: originURL + '/iptv/channels.m3u', // this will need to be fixed for reverse proxies
             xmlURL: originURL + '/iptv/xmltv.xml', // this will need to be fixed for reverse proxies
             documentationURL: 'https://ersatztv.org/',
-            githubURL: 'https://github.com/jasongdove/ErsatzTV',
+            githubURL: 'https://github.com/ErsatzTV/ErsatzTV',
             discordURL: 'https://discord.gg/hHaJm3yGy6'
         };
     },

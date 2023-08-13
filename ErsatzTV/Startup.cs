@@ -317,7 +317,7 @@ public class Startup
         Log.Logger.Warning("This is beta software and may be unstable");
         Log.Logger.Warning(
             "Give feedback at {GitHub} or {Discord}",
-            "https://github.com/jasongdove/ErsatzTV",
+            "https://github.com/ErsatzTV/ErsatzTV",
             "https://discord.gg/hHaJm3yGy6");
 
         if (!Directory.Exists(FileSystemLayout.AppDataFolder))
