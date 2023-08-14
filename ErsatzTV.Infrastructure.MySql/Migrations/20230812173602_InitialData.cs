@@ -52,7 +52,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                 (SELECT LMS.Id FROM LocalMediaSource LMS LIMIT 1) AS A");
             migrationBuilder.Sql("INSERT INTO LocalLibrary (Id) Values (last_insert_id())");
             
-            migrationBuilder.Sql("INSERT INTO Resolution (Id, Height, Width, Name) VALUES (0, 480, 640, '640x480')");
+            migrationBuilder.Sql(
+                """
+                INSERT INTO Resolution (Id, Height, Width, Name) VALUES (0, 480, 640, '640x480');
+                UPDATE Resolution SET Id = 0;
+                """);
         }
 
         /// <inheritdoc />
