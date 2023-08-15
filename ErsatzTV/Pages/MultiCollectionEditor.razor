@@ -11,53 +11,56 @@
     <div style="max-width: 400px;">
         <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Multi Collection" : "Add Multi Collection")</MudText>
 
-        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-            <FluentValidationValidator/>
-            <MudCard>
-                <MudCardContent>
-                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudSelect @ref="_collectionSelect"
-                               Class="mt-4"
-                               T="MediaCollectionViewModel"
-                               Label="Collection"
-                               @bind-value="_selectedCollection"
-                               HelperText="Disabled collections are already present in this multi collection">
-                        @foreach (MediaCollectionViewModel collection in _collections)
-                        {
-                            <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.Id == collection.Id))"
-                                           Value="@collection">
-                                @collection.Name
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="mt-4 mr-auto">
-                        Add Collection
-                    </MudButton>
-                    <MudSelect @ref="_smartCollectionSelect"
-                               Class="mt-4"
-                               T="SmartCollectionViewModel"
-                               Label="Smart Collection"
-                               @bind-value="_selectedSmartCollection"
-                               HelperText="Disabled collections are already present in this multi collection">
-                        @foreach (SmartCollectionViewModel collection in _smartCollections)
-                        {
-                            <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.Id == collection.Id))"
-                                           Value="@collection">
-                                @collection.Name
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddSmartCollection())" Class="mt-4 mr-auto">
-                        Add Smart Collection
-                    </MudButton>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
-                        @(IsEdit ? "Save Changes" : "Add Multi Collection")
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </EditForm>
+        @if (_editContext is not null)
+        {
+            <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+                <FluentValidationValidator/>
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                        <MudSelect @ref="_collectionSelect"
+                                   Class="mt-4"
+                                   T="MediaCollectionViewModel"
+                                   Label="Collection"
+                                   @bind-value="_selectedCollection"
+                                   HelperText="Disabled collections are already present in this multi collection">
+                            @foreach (MediaCollectionViewModel collection in _collections)
+                            {
+                                <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.Id == collection.Id))"
+                                               Value="@collection">
+                                    @collection.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="mt-4 mr-auto">
+                            Add Collection
+                        </MudButton>
+                        <MudSelect @ref="_smartCollectionSelect"
+                                   Class="mt-4"
+                                   T="SmartCollectionViewModel"
+                                   Label="Smart Collection"
+                                   @bind-value="_selectedSmartCollection"
+                                   HelperText="Disabled collections are already present in this multi collection">
+                            @foreach (SmartCollectionViewModel collection in _smartCollections)
+                            {
+                                <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.Id == collection.Id))"
+                                               Value="@collection">
+                                    @collection.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddSmartCollection())" Class="mt-4 mr-auto">
+                            Add Smart Collection
+                        </MudButton>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
+                            @(IsEdit ? "Save Changes" : "Add Multi Collection")
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </EditForm>
+        }
     </div>
 
     <MudTable Hover="true" Items="_model.Items.OrderBy(i => i.Collection.Name, StringComparer.CurrentCultureIgnoreCase)" Dense="true" Class="mt-6">
@@ -108,11 +111,12 @@
     [Parameter]
     public int Id { get; set; }
 
-    private readonly MultiCollectionEditViewModel _model = new();
+    private readonly MultiCollectionEditViewModel _model =
+        new() { Items = new List<MultiCollectionItemEditViewModel>() };
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-    private List<MediaCollectionViewModel> _collections;
-    private List<SmartCollectionViewModel> _smartCollections;
+    private List<MediaCollectionViewModel> _collections = new();
+    private List<SmartCollectionViewModel> _smartCollections = new();
     private MediaCollectionViewModel _selectedCollection;
     private SmartCollectionViewModel _selectedSmartCollection;
     private MudSelect<MediaCollectionViewModel> _collectionSelect;
