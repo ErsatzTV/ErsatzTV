@@ -35,6 +35,6 @@ public class SearchArtistsHandler : IRequestHandler<SearchArtists, List<NamedMed
             return Option<NamedMediaItemViewModel>.None;
         }
 
-        return new NamedMediaItemViewModel(artist.Id, artist.Title);
+        return new NamedMediaItemViewModel(artist.ArtistId, artist.Title);
     }
 }

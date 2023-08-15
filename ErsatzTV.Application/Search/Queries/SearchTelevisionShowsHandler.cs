@@ -33,7 +33,7 @@ public class SearchTelevisionShowsHandler : IRequestHandler<SearchTelevisionShow
     private static NamedMediaItemViewModel ToNamedMediaItem(ShowMetadata show)
     {
         return new NamedMediaItemViewModel(
-            show.Id,
+            show.ShowId,
             $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString() : "???")})");
     }
 }
