@@ -17,3 +17,4 @@ features = [
 
 [build-dependencies]
 windres = "*"
+static_vcruntime = "2.0"
