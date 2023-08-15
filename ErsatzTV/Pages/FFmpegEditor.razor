@@ -11,9 +11,12 @@
 @inject ISnackbar _snackbar
 @inject IMediator _mediator
 @inject IMemoryCache _memoryCache
+@inject PersistentComponentState ApplicationState
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+    @if (_editContext is not null)
+    {
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
         <FluentValidationValidator/>
         <MudCard>
             <MudCardHeader>
@@ -139,6 +142,7 @@
             </MudCardActions>
         </MudCard>
     </EditForm>
+    }
 </MudContainer>
 
 @code {
@@ -151,25 +155,55 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
-    private List<ResolutionViewModel> _resolutions;
-    private List<string> _vaapiDevices;
+    private List<ResolutionViewModel> _resolutions = new();
+    private List<string> _vaapiDevices = new();
+    private PersistingComponentStateSubscription _persistingSubscription;
 
     public void Dispose()
     {
+        _persistingSubscription.Dispose();
+
         _cts.Cancel();
         _cts.Dispose();
+    }
+    
+    protected override Task OnInitializedAsync()
+    {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
+
+        return base.OnInitializedAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _resolutions = await _mediator.Send(new GetAllResolutions(), _cts.Token);
+        if (!ApplicationState.TryTakeFromJson("_resolutions", out List<ResolutionViewModel> restoredResolutions))
+        {
+            _resolutions = await _mediator.Send(new GetAllResolutions(), _cts.Token);
+        }
+        else
+        {
+            _resolutions = restoredResolutions;
+        }
 
         if (IsEdit)
         {
-            Option<FFmpegProfileViewModel> profile = await _mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
-            profile.Match(
-                ffmpegProfileViewModel => _model = new FFmpegProfileEditViewModel(ffmpegProfileViewModel),
-                () => _navigationManager.NavigateTo("404"));
+            if (!ApplicationState.TryTakeFromJson("_model", out FFmpegProfileEditViewModel restoredProfile))
+            {
+                Option<FFmpegProfileViewModel> maybeProfile = await _mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
+                foreach (FFmpegProfileViewModel profile in maybeProfile)
+                {
+                    _model = new FFmpegProfileEditViewModel(profile);
+                }
+
+                if (maybeProfile.IsNone)
+                {
+                    _navigationManager.NavigateTo("404");
+                }
+            }
+            else
+            {
+                _model = restoredProfile;
+            }
         }
         else
         {
@@ -185,6 +219,14 @@
         }
 
         _vaapiDevices = vaapiDevices.OrderBy(s => s).ToList();
+    }
+    
+    private Task PersistData()
+    {
+        ApplicationState.PersistAsJson("_model", _model);
+        ApplicationState.PersistAsJson("_resolutions", _resolutions);
+
+        return Task.CompletedTask;
     }
 
     private bool IsEdit => Id != 0;
