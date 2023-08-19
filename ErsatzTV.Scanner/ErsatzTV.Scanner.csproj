@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release;Debug No Sync</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <UserSecretsId>729e6271-c307-43c8-8e36-1b36c39f6de2</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
