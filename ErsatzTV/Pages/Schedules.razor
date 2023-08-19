@@ -98,8 +98,8 @@
 
     private MudTable<ProgramScheduleViewModel> _table;
     private MudTable<ProgramScheduleItemViewModel> _detailTable;
-    private int _rowsPerPage;
-    private int _detailRowsPerPage;
+    private int _rowsPerPage = 10;
+    private int _detailRowsPerPage = 10;
     private ProgramScheduleViewModel _selectedSchedule;
 
     public void Dispose()

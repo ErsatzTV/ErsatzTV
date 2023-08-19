@@ -28,10 +28,14 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
                 .ThenInclude(lp => lp.Library)
                 .ThenInclude(l => l.MediaSource)
                 // TODO: support all media types here
+                .Include(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mv => mv.Subtitles)
                 .Include(i => (i as Movie).MediaVersions)
                 .ThenInclude(mv => mv.Streams)
                 .Include(i => (i as Episode).MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(i => (i as Episode).EpisodeMetadata)
+                .ThenInclude(mv => mv.Subtitles)
                 .SelectOneAsync(i => i.Id, i => i.Id == request.Id)
                 .MapT(Project);
 
@@ -55,6 +59,18 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             _ => null
         };
 
+        List<Subtitle> subtitles = mediaItem switch
+        {
+            Movie m => m.MovieMetadata.Map(mm => mm.Subtitles).Flatten().ToList(),
+            Episode e => e.EpisodeMetadata.Map(mm => mm.Subtitles).Flatten().ToList(),
+            _ => new List<Subtitle>()
+        };
+
+        var allStreams = version.Streams.OrderBy(s => s.Index).Map(Project).ToList();
+        
+        // include external subtitles from local libraries
+        allStreams.AddRange(subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Sidecar).Map(ProjectToStream));
+
         return new MediaItemInfo(
             mediaItem.Id,
             mediaItem.GetType().Name,
@@ -69,7 +85,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             version.VideoScanKind,
             version.Width,
             version.Height,
-            version.Streams.OrderBy(s => s.Index).Map(Project).ToList());
+            allStreams);
     }
 
     private static MediaItemInfoStream Project(MediaStream mediaStream) =>
@@ -92,4 +108,25 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             mediaStream.BitsPerRawSample > 0 ? mediaStream.BitsPerRawSample : null,
             mediaStream.FileName,
             mediaStream.MimeType);
+
+    private static MediaItemInfoStream ProjectToStream(Subtitle subtitle) =>
+        new(
+            null,
+            MediaStreamKind.ExternalSubtitle,
+            subtitle.Title,
+            subtitle.Codec,
+            null,
+            subtitle.Language,
+            null,
+            subtitle.Default ? true : null,
+            subtitle.Forced ? true : null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            string.IsNullOrWhiteSpace(subtitle.Path) ? null : Path.GetFileName(subtitle.Path),
+            null);
 }

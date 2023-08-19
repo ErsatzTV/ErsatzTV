@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain;
 namespace ErsatzTV.Application.MediaItems;
 
 public record MediaItemInfoStream(
-    int Index,
+    int? Index,
     MediaStreamKind Kind,
     string Title,
     string Codec,
