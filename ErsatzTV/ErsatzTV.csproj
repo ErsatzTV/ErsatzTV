@@ -55,7 +55,7 @@
     <ItemGroup>
       <PackageReference Include="Blazored.FluentValidation" Version="2.1.0" />
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
-      <PackageReference Include="FluentValidation" Version="11.6.0" />
+      <PackageReference Include="FluentValidation" Version="11.7.1" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
       <PackageReference Include="HtmlSanitizer" Version="8.0.692" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
@@ -73,7 +73,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.8.0" />
+      <PackageReference Include="MudBlazor" Version="6.9.0" />
       <PackageReference Include="NaturalSort.Extension" Version="4.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
       <PackageReference Include="Serilog" Version="3.0.1" />
