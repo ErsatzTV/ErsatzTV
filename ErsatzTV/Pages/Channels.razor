@@ -82,7 +82,7 @@
     private readonly CancellationTokenSource _cts = new();
 
     private MudTable<ChannelViewModel> _table;
-    private List<FFmpegProfileViewModel> _ffmpegProfiles;
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
 
     private int _rowsPerPage = 10;
 
