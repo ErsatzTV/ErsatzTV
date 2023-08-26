@@ -1,7 +1,6 @@
 ﻿@page "/media/movies/{MovieId:int}"
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.Movies
-@using System.Globalization
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.MediaCards
@@ -16,7 +15,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
-    @if (!string.IsNullOrWhiteSpace(_movie.FanArt))
+    @if (!string.IsNullOrWhiteSpace(_movie?.FanArt))
     {
         if (_movie.FanArt.StartsWith("http://") || _movie.FanArt.StartsWith("https://"))
         {
@@ -30,7 +29,7 @@
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
     <div style="display: flex; flex-direction: row;" class="mb-6">
-        @if (!string.IsNullOrWhiteSpace(_movie.Poster))
+        @if (!string.IsNullOrWhiteSpace(_movie?.Poster))
         {
             <div class="mr-6" style="display: flex; flex-direction: column; max-height: 440px; position: relative">
                 @if (_movie.Poster.StartsWith("http://") || _movie.Poster.StartsWith("https://"))
@@ -60,9 +59,9 @@
             </div>
         }
         <div style="display: flex; flex-direction: column; height: 100%">
-            <MudText Typo="Typo.h2" Class="media-item-title">@_movie.Title</MudText>
-            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_movie.Year</MudText>
-            @if (!string.IsNullOrWhiteSpace(_movie.Plot))
+            <MudText Typo="Typo.h2" Class="media-item-title">@_movie?.Title</MudText>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_movie?.Year</MudText>
+            @if (!string.IsNullOrWhiteSpace(_movie?.Plot))
             {
                 <MudCard Elevation="2" Class="mb-6">
                     <MudCardContent Class="mx-3 my-3" Style="height: 100%">
@@ -89,7 +88,7 @@
             </div>
         </div>
     </div>
-    @if (_movie.MediaItemState == MediaItemState.FileNotFound)
+    @if (_movie?.MediaItemState == MediaItemState.FileNotFound)
     {
         <MudCard Class="mb-6">
             <MudCardContent>
@@ -101,7 +100,7 @@
             </MudCardContent>
         </MudCard>
     }
-    else if (_movie.MediaItemState == MediaItemState.Unavailable)
+    else if (_movie?.MediaItemState == MediaItemState.Unavailable)
     {
         <MudCard Class="mb-6">
             <MudCardContent>
@@ -202,7 +201,7 @@
         </MudCardContent>
     </MudCard>
 </MudContainer>
-@if (_movie.Actors.Any())
+@if (_movie is not null && _movie.Actors.Any())
 {
     <MudContainer MaxWidth="MaxWidth.Large">
         <MudText Class="mb-4">Actors</MudText>
