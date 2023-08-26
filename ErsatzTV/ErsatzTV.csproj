@@ -78,7 +78,7 @@
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
       <PackageReference Include="Serilog" Version="3.0.1" />
       <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
-      <PackageReference Include="Serilog.Settings.Configuration" Version="7.0.0" />
+      <PackageReference Include="Serilog.Settings.Configuration" Version="7.0.1" />
       <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
       <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
       <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
