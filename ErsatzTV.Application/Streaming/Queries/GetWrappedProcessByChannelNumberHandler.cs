@@ -37,6 +37,6 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
             request.Scheme,
             request.Host);
 
-        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue);
+        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue, true);
     }
 }
