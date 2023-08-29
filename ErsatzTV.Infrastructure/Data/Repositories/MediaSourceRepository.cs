@@ -31,14 +31,6 @@ public class MediaSourceRepository : IMediaSourceRepository
             .ToListAsync();
     }
 
-    public async Task<List<PlexLibrary>> GetPlexLibraries(int plexMediaSourceId)
-    {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
-        return await context.PlexLibraries
-            .Filter(l => l.MediaSourceId == plexMediaSourceId)
-            .ToListAsync();
-    }
-
     public async Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId)
     {
         await using TvContext context = await _dbContextFactory.CreateDbContextAsync();

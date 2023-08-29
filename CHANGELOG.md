@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `MYSQL__CONNECTIONSTRING` - (e.g. `Server=localhost;Database=ErsatzTV;Uid=root;Pwd=ersatztv;`)
 - Add option to use shared Plex servers, not just owned servers
   - This can be enabled by setting the env var `ETV_ALLOW_SHARED_PLEX_SERVERS` to any non-empty value
+- Show Plex server names in Libraries page
 
 ### Fixed
 - Fix subtitle scaling when using QSV hardware acceleration
