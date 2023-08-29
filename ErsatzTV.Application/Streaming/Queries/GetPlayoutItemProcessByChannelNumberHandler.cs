@@ -177,7 +177,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             TimeSpan inPoint = playoutItemWithPath.PlayoutItem.InPoint;
             TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
             DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
-            if (!request.HlsRealtime && (outPoint - inPoint) > TimeSpan.FromMinutes(2))
+            TimeSpan duration = finish - effectiveNow;
+
+            if (!request.HlsRealtime && duration > TimeSpan.FromMinutes(2))
             {
                 finish = effectiveNow + TimeSpan.FromMinutes(2);
                 outPoint = finish - start + TimeSpan.FromMinutes(2);
@@ -214,7 +216,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.DisableWatermarks,
                 _ => { });
 
-            var result = new PlayoutItemProcessModel(process, finish - effectiveNow, finish);
+            var result = new PlayoutItemProcessModel(process, duration, finish);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
