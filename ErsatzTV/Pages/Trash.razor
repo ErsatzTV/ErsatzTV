@@ -70,20 +70,20 @@
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
             }
 
-            if (_movies?.Count == 0 && _shows?.Count == 0 && _seasons?.Count == 0 && _episodes?.Count == 0 && _artists?.Count == 0 && _musicVideos?.Count == 0 && _otherVideos?.Count == 0 && _songs?.Count == 0)
-            {
-                <MudText>Nothing to see here...</MudText>
-            }
-            else
+            if (IsNotEmpty)
             {
                 <div style="margin-left: auto">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Error"
+                    <MudButton Variant="@Variant.Filled"
+                               Color="@Color.Error"
                                StartIcon="@Icons.Material.Filled.DeleteForever"
                                OnClick="@(_ => EmptyTrash())">
                         Empty Trash
                     </MudButton>
                 </div>
+            }
+            else
+            {
+                <MudText>Nothing to see here...</MudText>
             }
         }
     </div>
@@ -331,7 +331,7 @@
     private ArtistCardResultsViewModel _artists;
 
     protected override Task OnInitializedAsync() => RefreshData();
-
+    
     protected override async Task RefreshData()
     {
         _query = "state:FileNotFound";
@@ -347,6 +347,9 @@
             _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
         }
     }
+
+    private bool IsNotEmpty =>
+        _movies?.Count > 0 || _shows?.Count > 0 || _seasons?.Count > 0 || _episodes?.Count > 0 || _musicVideos?.Count > 0 || _otherVideos?.Count > 0 || _songs?.Count > 0 || _artists?.Count > 0;
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {

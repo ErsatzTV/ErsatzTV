@@ -172,6 +172,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
+            DateTimeOffset start = playoutItemWithPath.PlayoutItem.StartOffset;
+            DateTimeOffset finish = playoutItemWithPath.PlayoutItem.FinishOffset;
+            TimeSpan inPoint = playoutItemWithPath.PlayoutItem.InPoint;
+            TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
+            DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
+            if (!request.HlsRealtime && (outPoint - inPoint) > TimeSpan.FromMinutes(2))
+            {
+                finish = effectiveNow + TimeSpan.FromMinutes(2);
+                outPoint = finish - start + TimeSpan.FromMinutes(2);
+            }
+
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
                 ffprobePath,
@@ -186,9 +197,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.PreferredAudioTitle ?? channel.PreferredAudioTitle,
                 playoutItemWithPath.PlayoutItem.PreferredSubtitleLanguageCode ?? channel.PreferredSubtitleLanguageCode,
                 playoutItemWithPath.PlayoutItem.SubtitleMode ?? channel.SubtitleMode,
-                playoutItemWithPath.PlayoutItem.StartOffset,
-                playoutItemWithPath.PlayoutItem.FinishOffset,
-                request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
+                start,
+                finish,
+                request.StartAtZero ? start : now,
                 Optional(playoutItemWithPath.PlayoutItem.Watermark),
                 maybeGlobalWatermark,
                 channel.FFmpegProfile.VaapiDriver,
@@ -196,18 +207,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
                 request.HlsRealtime,
                 playoutItemWithPath.PlayoutItem.FillerKind,
-                playoutItemWithPath.PlayoutItem.InPoint,
-                playoutItemWithPath.PlayoutItem.OutPoint,
+                inPoint,
+                outPoint,
                 request.PtsOffset,
                 request.TargetFramerate,
                 playoutItemWithPath.PlayoutItem.DisableWatermarks,
                 _ => { });
 
-            var result = new PlayoutItemProcessModel(
-                process,
-                playoutItemWithPath.PlayoutItem.FinishOffset -
-                (request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now),
-                playoutItemWithPath.PlayoutItem.FinishOffset);
+            var result = new PlayoutItemProcessModel(process, finish - effectiveNow, finish);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }

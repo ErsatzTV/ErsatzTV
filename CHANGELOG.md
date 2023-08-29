@@ -22,6 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix subtitle scaling when using QSV hardware acceleration
 - Fix log viewer crash when log file contains invalid data
+- Clean channel guide cache on startup (delete channels that no longer exist)
+
+### Changed
+- Optimize transcoding session to only work ahead (at max speed) for 2 minutes before throttling to realtime
+  - This should *greatly* reduce cpu/gpu use when joining a channel, particularly with long content
 
 ## [0.8.1-beta] - 2023-08-07
 ### Added

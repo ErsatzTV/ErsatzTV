@@ -21,6 +21,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
+using Serilog;
 
 namespace ErsatzTV.Core.FFmpeg;
 
@@ -66,8 +67,7 @@ public class FFmpegPlaybackSettingsCalculator
             }
         };
 
-        // always use one thread with realtime output
-        result.ThreadCount = result.RealtimeOutput ? 1 : ffmpegProfile.ThreadCount;
+        result.ThreadCount = ffmpegProfile.ThreadCount;
 
         if (now != start || inPoint != TimeSpan.Zero)
         {

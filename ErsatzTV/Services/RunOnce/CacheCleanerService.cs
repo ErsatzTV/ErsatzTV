@@ -41,6 +41,7 @@ public class CacheCleanerService : BackgroundService
             _logger.LogInformation("Migrating channel logos from legacy image cache folder");
 
             List<string> logos = await dbContext.Channels
+                .AsNoTracking()
                 .SelectMany(c => c.Artwork)
                 .Where(a => a.ArtworkKind == ArtworkKind.Logo)
                 .Map(a => a.Path)
@@ -66,6 +67,27 @@ public class CacheCleanerService : BackgroundService
             _logger.LogInformation("Emptying transcode cache folder");
             localFileSystem.EmptyFolder(FileSystemLayout.TranscodeFolder);
             _logger.LogInformation("Done emptying transcode cache folder");
+        }
+
+        if (localFileSystem.FolderExists(FileSystemLayout.ChannelGuideCacheFolder))
+        {
+            _logger.LogInformation("Cleaning channel cache");
+
+            List<string> channelFiles = await dbContext.Channels
+                .AsNoTracking()
+                .Select(c => c.Number)
+                .Map(num => Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{num}.xml"))
+                .ToListAsync(cancellationToken);
+
+            foreach (string fileName in localFileSystem.ListFiles(FileSystemLayout.ChannelGuideCacheFolder))
+            {
+                if (fileName.Contains("channels") || channelFiles.Contains(fileName))
+                {
+                    continue;
+                }
+                
+                File.Delete(fileName);
+            }
         }
     }
 }
