@@ -1,20 +1,28 @@
-﻿using ErsatzTV.Core.Interfaces.Repositories;
+﻿using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Plex.Mapper;
 
 namespace ErsatzTV.Application.Plex;
 
-public class
-    GetPlexLibrariesBySourceIdHandler : IRequestHandler<GetPlexLibrariesBySourceId,
-        List<PlexLibraryViewModel>>
+public class GetPlexLibrariesBySourceIdHandler : IRequestHandler<GetPlexLibrariesBySourceId, List<PlexLibraryViewModel>>
 {
-    private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPlexLibrariesBySourceIdHandler(IMediaSourceRepository mediaSourceRepository) =>
-        _mediaSourceRepository = mediaSourceRepository;
+    public GetPlexLibrariesBySourceIdHandler(IDbContextFactory<TvContext> dbContextFactory)
+    {
+        _dbContextFactory = dbContextFactory;
+    }
 
-    public Task<List<PlexLibraryViewModel>> Handle(
+    public async Task<List<PlexLibraryViewModel>> Handle(
         GetPlexLibrariesBySourceId request,
-        CancellationToken cancellationToken) =>
-        _mediaSourceRepository.GetPlexLibraries(request.PlexMediaSourceId)
-            .Map(list => list.Map(ProjectToViewModel).ToList());
+        CancellationToken cancellationToken)
+    {
+        await using TvContext context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.PlexLibraries
+            .AsNoTracking()
+            .Where(l => l.MediaSourceId == request.PlexMediaSourceId)
+            .Map(pl => ProjectToViewModel(pl))
+            .ToListAsync(cancellationToken);
+    }
 }

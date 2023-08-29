@@ -6,7 +6,6 @@ public interface IMediaSourceRepository
 {
     Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource);
     Task<List<PlexMediaSource>> GetAllPlex();
-    Task<List<PlexLibrary>> GetPlexLibraries(int plexMediaSourceId);
     Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId);
     Task<Option<PlexLibrary>> GetPlexLibrary(int plexLibraryId);
     Task<Option<PlexMediaSource>> GetPlex(int id);
