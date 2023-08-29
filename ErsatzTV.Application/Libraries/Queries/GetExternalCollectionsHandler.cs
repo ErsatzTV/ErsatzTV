@@ -27,7 +27,8 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
                     0,
                     "Collections",
                     0,
-                    id))
+                    id,
+                    string.Empty))
             .ToList();
     }
 }

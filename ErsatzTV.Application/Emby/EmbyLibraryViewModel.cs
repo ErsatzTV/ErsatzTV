@@ -9,4 +9,4 @@ public record EmbyLibraryViewModel(
         LibraryMediaKind MediaKind,
         bool ShouldSyncItems,
         int MediaSourceId)
-    : LibraryViewModel("Emby", Id, Name, MediaKind, MediaSourceId);
+    : LibraryViewModel("Emby", Id, Name, MediaKind, MediaSourceId, string.Empty);

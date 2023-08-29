@@ -9,4 +9,4 @@ public record JellyfinLibraryViewModel(
         LibraryMediaKind MediaKind,
         bool ShouldSyncItems,
         int MediaSourceId)
-    : LibraryViewModel("Jellyfin", Id, Name, MediaKind, MediaSourceId);
+    : LibraryViewModel("Jellyfin", Id, Name, MediaKind, MediaSourceId, string.Empty);

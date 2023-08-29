@@ -20,19 +20,31 @@
         </ToolBarContent>
         <ColGroup>
             <col/>
+            @if (_showServerNames)
+            {
+                <col/>
+            }
             <col/>
             <col/>
             <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Library Kind</MudTh>
-            <MudTh>Name</MudTh>
+            @if (_showServerNames)
+            {
+                <MudTh>Server Name</MudTh>
+            }
+            <MudTh>Library Name</MudTh>
             <MudTh>Media Kind</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Library Kind">@context.LibraryKind</MudTd>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
+            @if (_showServerNames)
+            {
+                <MudTd DataLabel="Server Name">@context.MediaSourceName</MudTd>
+            }
+            <MudTd DataLabel="Library Name">@context.Name</MudTd>
             <MudTd DataLabel="Media Kind">@context.MediaKind</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
@@ -133,6 +145,7 @@
     private IList<LibraryViewModel> _libraries = new List<LibraryViewModel>();
     private IList<LibraryViewModel> _externalCollections = new List<LibraryViewModel>();
     private Dictionary<int, int> _progressByLibrary = new();
+    private bool _showServerNames = false;
 
     protected override void OnInitialized()
     {
@@ -146,6 +159,8 @@
     private async Task LoadLibraries(CancellationToken cancellationToken)
     {
         _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
+        _showServerNames = _libraries.Any(l => l is PlexLibraryViewModel);
+        
         _externalCollections = await _mediator.Send(new GetExternalCollections(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }

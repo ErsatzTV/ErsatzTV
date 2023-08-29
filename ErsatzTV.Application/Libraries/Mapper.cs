@@ -10,7 +10,7 @@ internal static class Mapper
         library switch
         {
             LocalLibrary l => ProjectToViewModel(l),
-            PlexLibrary p => new PlexLibraryViewModel(p.Id, p.Name, p.MediaKind, p.MediaSourceId),
+            PlexLibrary p => new PlexLibraryViewModel(p.Id, p.Name, p.MediaKind, p.MediaSourceId, GetServerName(p.MediaSource)),
             JellyfinLibrary j => new JellyfinLibraryViewModel(
                 j.Id,
                 j.Name,
@@ -26,4 +26,11 @@ internal static class Mapper
 
     public static LocalLibraryPathViewModel ProjectToViewModel(LibraryPath libraryPath) =>
         new(libraryPath.Id, libraryPath.LibraryId, libraryPath.Path);
+
+    private static string GetServerName(MediaSource ms) =>
+        ms switch
+        {
+            PlexMediaSource pms => pms.ServerName,
+            _ => string.Empty
+        };
 }
