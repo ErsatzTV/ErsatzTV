@@ -36,6 +36,6 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
             channel.FFmpegProfile.VaapiDevice,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
-        return new PlayoutItemProcessModel(process, request.MaybeDuration, request.Until);
+        return new PlayoutItemProcessModel(process, request.MaybeDuration, request.Until, true);
     }
 }

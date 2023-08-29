@@ -37,6 +37,6 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
             request.Scheme,
             request.Host);
 
-        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue);
+        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue, true);
     }
 }

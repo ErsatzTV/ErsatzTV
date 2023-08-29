@@ -27,15 +27,13 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly object _sync = new();
     private string _channelNumber;
-    private bool _firstProcess;
     private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
-    private bool _seekNextItem;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private HlsSessionWorkAheadState _workAheadState;
+    private HlsSessionState _state;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -104,9 +102,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     public void PlayoutUpdated()
     {
-        _firstProcess = true;
-        _seekNextItem = true;
-        _workAheadState = HlsSessionWorkAheadState.SeekAndRealtime;
+        _state = HlsSessionState.PlayoutUpdated;
     }
 
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
@@ -148,12 +144,8 @@ public class HlsSessionWorker : IHlsSessionWorker
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
 
-            _firstProcess = true;
-
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-            _workAheadState = initialWorkAhead
-                ? HlsSessionWorkAheadState.MaxSpeed
-                : HlsSessionWorkAheadState.SeekAndRealtime;
+            _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
 
             if (!await Transcode(!initialWorkAhead, cancellationToken))
             {
@@ -206,6 +198,42 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
+    private HlsSessionState NextState(HlsSessionState state, PlayoutItemProcessModel processModel)
+    {
+        bool isComplete = processModel?.IsComplete == true;
+        
+        HlsSessionState result = state switch
+        {
+            // playout updates should have the channel start over, transcode method will throttle if needed
+            HlsSessionState.PlayoutUpdated => HlsSessionState.SeekAndWorkAhead,
+
+            // after seeking and NOT completing the item, seek again, transcode method will throttle if needed
+            HlsSessionState.SeekAndWorkAhead when !isComplete => HlsSessionState.SeekAndWorkAhead,
+
+            // after seeking and completing the item, start at zero
+            HlsSessionState.SeekAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
+
+            // after starting and zero and NOT completing the item, seek, transcode method will throttle if needed
+            HlsSessionState.ZeroAndWorkAhead when !isComplete => HlsSessionState.SeekAndWorkAhead,
+
+            // after starting at zero and completing the item, start at zero again, transcode method will throttle if needed
+            HlsSessionState.ZeroAndWorkAhead => HlsSessionState.ZeroAndWorkAhead,
+
+            // realtime will always complete items, so start next at zero
+            HlsSessionState.SeekAndRealtime => HlsSessionState.ZeroAndRealtime,
+
+            // realtime will always complete items, so start next at zero
+            HlsSessionState.ZeroAndRealtime => HlsSessionState.ZeroAndRealtime,
+            
+            // this will never happen with the enum
+            _ => throw new InvalidOperationException()
+        };
+
+        _logger.LogDebug("HLS session state {Last} => {Next}", state, result);
+
+        return result;
+    }
+
     private async Task<bool> Transcode(
         bool realtime,
         CancellationToken cancellationToken)
@@ -226,30 +254,34 @@ public class HlsSessionWorker : IHlsSessionWorker
                     _channelNumber);
             }
 
+            // throttle to realtime if needed
+            if (realtime)
+            {
+                HlsSessionState nextState = _state switch
+                {
+                    HlsSessionState.SeekAndWorkAhead => HlsSessionState.SeekAndRealtime,
+                    HlsSessionState.ZeroAndWorkAhead => HlsSessionState.ZeroAndRealtime,
+                    _ => _state
+                };
+
+                if (nextState != _state)
+                {
+                    _logger.LogDebug("HLS session state throttling {Last} => {Next}", _state, nextState);
+                    _state = nextState;
+                }
+            }
+
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
             long ptsOffset = await GetPtsOffset(mediator, _channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
-            // this shouldn't happen, but respect realtime
-            if (realtime && _workAheadState is HlsSessionWorkAheadState.MaxSpeed)
-            {
-                _workAheadState = HlsSessionWorkAheadState.SeekAndRealtime;
-            }
-
-            // this happens when we initially transcode (at max speed) insufficient content to work
-            // in realtime yet, so we need to reset to max speed
-            if (!realtime && _workAheadState is not HlsSessionWorkAheadState.MaxSpeed)
-            {
-                _workAheadState = HlsSessionWorkAheadState.MaxSpeed;
-            }
-
-            _logger.LogInformation("Work ahead state: {State}", _workAheadState);
+            _logger.LogInformation("HLS session state: {State}", _state);
             
-            DateTimeOffset now = (_firstProcess || _workAheadState is HlsSessionWorkAheadState.MaxSpeed)
+            DateTimeOffset now = _state is HlsSessionState.SeekAndWorkAhead
                 ? DateTimeOffset.Now
-                : _transcodedUntil.AddSeconds(_workAheadState is HlsSessionWorkAheadState.SeekAndRealtime ? 0 : 1);
-            bool startAtZero = _workAheadState is HlsSessionWorkAheadState.RealtimeFromZero && !_firstProcess;
+                : _transcodedUntil.AddSeconds(_state is HlsSessionState.SeekAndRealtime ? 0 : 1);
+            bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime;
 
             var request = new GetPlayoutItemProcessByChannelNumber(
                 _channelNumber,
@@ -295,20 +327,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
                         _logger.LogDebug("Transcoded until: {Until}", processModel.Until);
                         _transcodedUntil = processModel.Until;
-                        _firstProcess = false;
-                        if (_seekNextItem)
-                        {
-                            _firstProcess = true;
-                            _seekNextItem = false;
-                        }
-
-                        _workAheadState = _workAheadState switch
-                        {
-                            HlsSessionWorkAheadState.MaxSpeed => HlsSessionWorkAheadState.SeekAndRealtime,
-                            HlsSessionWorkAheadState.SeekAndRealtime => HlsSessionWorkAheadState.RealtimeFromZero,
-                            _ => _workAheadState
-                        };
-
+                        _state = NextState(_state, processModel);
                         _hasWrittenSegments = true;
                         return true;
                     }
@@ -353,12 +372,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                             if (commandResult.ExitCode == 0)
                             {
-                                _firstProcess = false;
-                                if (_seekNextItem)
-                                {
-                                    _firstProcess = true;
-                                    _seekNextItem = false;
-                                }
+                                _state = NextState(_state, null);
 
                                 _hasWrittenSegments = true;
 
