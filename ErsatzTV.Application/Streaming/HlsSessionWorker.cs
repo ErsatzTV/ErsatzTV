@@ -236,7 +236,14 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 _workAheadState = HlsSessionWorkAheadState.SeekAndRealtime;
             }
-            
+
+            // this happens when we initially transcode (at max speed) insufficient content to work
+            // in realtime yet, so we need to reset to max speed
+            if (!realtime && _workAheadState is not HlsSessionWorkAheadState.MaxSpeed)
+            {
+                _workAheadState = HlsSessionWorkAheadState.MaxSpeed;
+            }
+
             _logger.LogInformation("Work ahead state: {State}", _workAheadState);
             
             DateTimeOffset now = (_firstProcess || _workAheadState is HlsSessionWorkAheadState.MaxSpeed)
