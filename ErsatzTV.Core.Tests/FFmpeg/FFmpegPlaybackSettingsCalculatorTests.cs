@@ -40,9 +40,11 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_Not_UseSpecifiedThreadCount_ForTransportStream()
+        public void Should_UseSpecifiedThreadCount_ForTransportStream()
         {
             // MPEG-TS requires realtime output which is hardcoded to a single thread
+            // The thread limitation now happens in ErsatzTV.FFmpeg.Pipeline.PipelineBuilderBase
+            // So the value should be passed through this playback settings process
 
             FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
 
@@ -59,7 +61,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ThreadCount.Should().Be(1);
+            actual.ThreadCount.Should().Be(7);
         }
 
         [Test]
