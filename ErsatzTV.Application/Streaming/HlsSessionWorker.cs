@@ -35,6 +35,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private HlsSessionWorkAheadState _workAheadState;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -105,6 +106,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         _firstProcess = true;
         _seekNextItem = true;
+        _workAheadState = HlsSessionWorkAheadState.SeekAndRealtime;
     }
 
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
@@ -149,6 +151,10 @@ public class HlsSessionWorker : IHlsSessionWorker
             _firstProcess = true;
 
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
+            _workAheadState = initialWorkAhead
+                ? HlsSessionWorkAheadState.MaxSpeed
+                : HlsSessionWorkAheadState.SeekAndRealtime;
+
             if (!await Transcode(!initialWorkAhead, cancellationToken))
             {
                 return;
@@ -225,11 +231,24 @@ public class HlsSessionWorker : IHlsSessionWorker
             long ptsOffset = await GetPtsOffset(mediator, _channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
+            // this shouldn't happen, but respect realtime
+            if (realtime && _workAheadState is HlsSessionWorkAheadState.MaxSpeed)
+            {
+                _workAheadState = HlsSessionWorkAheadState.SeekAndRealtime;
+            }
+            
+            _logger.LogInformation("Work ahead state: {State}", _workAheadState);
+            
+            DateTimeOffset now = (_firstProcess || _workAheadState is HlsSessionWorkAheadState.MaxSpeed)
+                ? DateTimeOffset.Now
+                : _transcodedUntil.AddSeconds(_workAheadState is HlsSessionWorkAheadState.SeekAndRealtime ? 0 : 1);
+            bool startAtZero = _workAheadState is HlsSessionWorkAheadState.RealtimeFromZero && !_firstProcess;
+
             var request = new GetPlayoutItemProcessByChannelNumber(
                 _channelNumber,
                 "segmenter",
-                _firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
-                !_firstProcess,
+                now,
+                startAtZero,
                 realtime,
                 ptsOffset,
                 _targetFramerate);
@@ -267,6 +286,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     if (commandResult.ExitCode == 0)
                     {
                         _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
+                        _logger.LogDebug("Transcoded until: {Until}", processModel.Until);
                         _transcodedUntil = processModel.Until;
                         _firstProcess = false;
                         if (_seekNextItem)
@@ -274,6 +294,13 @@ public class HlsSessionWorker : IHlsSessionWorker
                             _firstProcess = true;
                             _seekNextItem = false;
                         }
+
+                        _workAheadState = _workAheadState switch
+                        {
+                            HlsSessionWorkAheadState.MaxSpeed => HlsSessionWorkAheadState.SeekAndRealtime,
+                            HlsSessionWorkAheadState.SeekAndRealtime => HlsSessionWorkAheadState.RealtimeFromZero,
+                            _ => _workAheadState
+                        };
 
                         _hasWrittenSegments = true;
                         return true;
