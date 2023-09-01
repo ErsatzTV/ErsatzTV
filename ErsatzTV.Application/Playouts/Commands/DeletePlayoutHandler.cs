@@ -32,7 +32,6 @@ public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseEr
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playout> maybePlayout = await dbContext.Playouts
-            .AsNoTracking()
             .Include(p => p.Channel)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
 
