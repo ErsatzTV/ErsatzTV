@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use different control for editing schedule item duration, and allow 24-hour duration
   - This is needed if you want a default/fallback alternate schedule to fill the entire day with one schedule item
   - The schedule item should have a fixed start time of midnight (00:00) and a duration of 24 hours
+- Use Direct3D 11 for QSV acceleration on Windows
 
 ## [0.8.1-beta] - 2023-08-07
 ### Added
