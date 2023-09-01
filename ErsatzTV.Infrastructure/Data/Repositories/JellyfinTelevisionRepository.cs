@@ -29,7 +29,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<JellyfinItemEtag>(
                 @"SELECT ItemId, Etag, MI.State FROM JellyfinShow
-                      INNER JOIN Show S on JellyfinShow.Id = S.Id
+                      INNER JOIN `Show` S on JellyfinShow.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       WHERE LP.LibraryId = @LibraryId",
@@ -45,7 +45,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                       INNER JOIN Season S on JellyfinSeason.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
-                      INNER JOIN Show S2 on S.ShowId = S2.Id
+                      INNER JOIN `Show` S2 on S.ShowId = S2.Id
                       INNER JOIN JellyfinShow JS on S2.Id = JS.Id
                       WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @ShowItemId",
                 new { LibraryId = library.Id, ShowItemId = show.ItemId })

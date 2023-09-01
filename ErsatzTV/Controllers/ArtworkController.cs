@@ -137,6 +137,10 @@ public class ArtworkController : ControllerBase
         string transcodePath,
         CancellationToken cancellationToken)
     {
+#if DEBUG_NO_SYNC
+        return NotFound();
+#endif
+
         Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId), cancellationToken);
 
@@ -165,6 +169,10 @@ public class ArtworkController : ControllerBase
 
     private async Task<IActionResult> GetJellyfinArtwork(string path, CancellationToken cancellationToken)
     {
+#if DEBUG_NO_SYNC
+        return NotFound();
+#endif
+
         Either<BaseError, JellyfinConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetJellyfinConnectionParameters(), cancellationToken);
 
@@ -192,6 +200,10 @@ public class ArtworkController : ControllerBase
 
     private async Task<IActionResult> GetEmbyArtwork(string path, CancellationToken cancellationToken)
     {
+#if DEBUG_NO_SYNC
+        return NotFound();
+#endif
+
         Either<BaseError, EmbyConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetEmbyConnectionParameters(), cancellationToken);
 

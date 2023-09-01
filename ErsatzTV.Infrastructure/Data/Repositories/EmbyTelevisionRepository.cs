@@ -29,7 +29,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
                 @"SELECT ItemId, Etag, MI.State FROM EmbyShow
-                      INNER JOIN Show S on EmbyShow.Id = S.Id
+                      INNER JOIN `Show` S on EmbyShow.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       WHERE LP.LibraryId = @LibraryId",
@@ -45,7 +45,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
                       INNER JOIN Season S on EmbySeason.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
-                      INNER JOIN Show S2 on S.ShowId = S2.Id
+                      INNER JOIN `Show` S2 on S.ShowId = S2.Id
                       INNER JOIN EmbyShow JS on S2.Id = JS.Id
                       WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @ShowItemId",
                 new { LibraryId = library.Id, ShowItemId = show.ItemId })
