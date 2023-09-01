@@ -100,7 +100,7 @@
                                 <MudSelectItem Value="StartType.Fixed">Fixed</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
+                        <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)" Editable="true"/>
                         <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
@@ -221,7 +221,23 @@
                             <MudSelectItem Value="PlayoutMode.Duration">Duration</MudSelectItem>
                         </MudSelect>
                         <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
-                        <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                        <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                            <MudItem xs="6">
+                                <MudTextField T="int"
+                                              Label="Playout Duration"
+                                              @bind-Value="_selectedItem.PlayoutDurationHours"
+                                              Adornment="Adornment.End"
+                                              AdornmentText="hours"
+                                              Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)" />
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudTextField T="int"
+                                              @bind-Value="_selectedItem.PlayoutDurationMinutes"
+                                              Adornment="Adornment.End"
+                                              AdornmentText="minutes"
+                                              Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                            </MudItem>
+                        </MudGrid>
                         <MudSelect Class="mt-3" Label="Tail Mode" @bind-Value="@_selectedItem.TailMode" For="@(() => _selectedItem.TailMode)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)">
                             <MudSelectItem Value="@TailMode.None">(none)</MudSelectItem>
                             <MudSelectItem Value="@TailMode.Offline">Offline</MudSelectItem>

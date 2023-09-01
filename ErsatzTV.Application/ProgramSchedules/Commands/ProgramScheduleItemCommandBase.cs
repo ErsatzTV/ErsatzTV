@@ -83,6 +83,11 @@ public abstract class ProgramScheduleItemCommandBase
                     return BaseError.New("[PlayoutDuration] is required for playout mode 'duration'");
                 }
 
+                if (item.PlayoutDuration <= TimeSpan.Zero || item.PlayoutDuration > TimeSpan.FromHours(24))
+                {
+                    return BaseError.New("[PlayoutDuration] must be between 1 minute and 24 hours");
+                }
+
                 if (item.DiscardToFillAttempts is null)
                 {
                     return BaseError.New("[DiscardToFillAttempts] is required for playout mode 'duration'");
@@ -251,7 +256,7 @@ public abstract class ProgramScheduleItemCommandBase
                 SmartCollectionId = item.SmartCollectionId,
                 MediaItemId = item.MediaItemId,
                 PlaybackOrder = item.PlaybackOrder,
-                PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
+                PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
                 TailMode = item.TailMode,
                 DiscardToFillAttempts = FixDiscardToFillAttempts(
                     item.PlaybackOrder,
@@ -271,9 +276,6 @@ public abstract class ProgramScheduleItemCommandBase
             },
             _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
         };
-
-    private static TimeSpan FixDuration(TimeSpan duration) =>
-        duration >= TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
 
     private static TimeSpan? FixStartTime(TimeSpan? startTime) =>
         startTime.HasValue && startTime.Value >= TimeSpan.FromDays(1)

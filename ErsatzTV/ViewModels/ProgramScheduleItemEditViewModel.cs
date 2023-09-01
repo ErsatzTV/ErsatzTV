@@ -16,6 +16,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private int? _multipleCount;
     private TimeSpan? _playoutDuration;
     private TimeSpan? _startTime;
+    private int _playoutDurationHours;
+    private int _playoutDurationMinutes;
 
     public int Id { get; set; }
     public int Index { get; set; }
@@ -93,7 +95,31 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     public TimeSpan? PlayoutDuration
     {
         get => PlayoutMode == PlayoutMode.Duration ? _playoutDuration : null;
-        set => _playoutDuration = value;
+        set
+        {
+            _playoutDuration = value;
+            CheckPlayoutDuration();
+        }
+    }
+
+    public int PlayoutDurationHours
+    {
+        get => _playoutDurationHours;
+        set
+        {
+            _playoutDuration = TimeSpan.FromHours(value) + TimeSpan.FromMinutes(_playoutDuration?.Minutes ?? 0);
+            CheckPlayoutDuration();
+        }
+    }
+
+    public int PlayoutDurationMinutes
+    {
+        get => _playoutDurationMinutes;
+        set
+        {
+            _playoutDuration = TimeSpan.FromHours(_playoutDuration?.Hours ?? 0) + TimeSpan.FromMinutes(value);
+            CheckPlayoutDuration();
+        }
     }
 
     public TailMode TailMode { get; set; }
@@ -115,4 +141,26 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         [CallerMemberName]
         string propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    private void CheckPlayoutDuration()
+    {
+        _playoutDuration ??= TimeSpan.Zero;
+        
+        if (_playoutDuration > TimeSpan.FromHours(24))
+        {
+            _playoutDuration = TimeSpan.FromHours(24);
+        }
+
+        if (_playoutDuration < TimeSpan.FromMinutes(1))
+        {
+            _playoutDuration = TimeSpan.FromMinutes(1);
+        }
+
+        _playoutDurationHours = (int)_playoutDuration.Value.TotalHours;
+        _playoutDurationMinutes = _playoutDuration.Value.Minutes;
+        
+        OnPropertyChanged(nameof(PlayoutDuration));
+        OnPropertyChanged(nameof(PlayoutDurationHours));
+        OnPropertyChanged(nameof(PlayoutDurationMinutes));
+    }
 }
