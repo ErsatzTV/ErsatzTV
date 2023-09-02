@@ -19,13 +19,13 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        Option<ConfigElement> maybeFFmpegPath = await _configElementRepository.Get(ConfigElementKey.FFmpegPath);
+        Option<ConfigElement> maybeFFmpegPath = await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
         {
             return FailResult("Unable to locate ffmpeg");
         }
 
-        Option<ConfigElement> maybeFFprobePath = await _configElementRepository.Get(ConfigElementKey.FFprobePath);
+        Option<ConfigElement> maybeFFprobePath = await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath);
         if (maybeFFprobePath.IsNone)
         {
             return FailResult("Unable to locate ffprobe");

@@ -41,7 +41,7 @@ public class ConfigElementRepository : IConfigElementRepository
         return Unit.Default;
     }
 
-    public async Task<Option<ConfigElement>> Get(ConfigElementKey key)
+    public async Task<Option<ConfigElement>> GetConfigElement(ConfigElementKey key)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.ConfigElements
@@ -51,7 +51,7 @@ public class ConfigElementRepository : IConfigElementRepository
     }
 
     public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
-        Get(key).MapT(
+        GetConfigElement(key).MapT(
             ce =>
             {
                 if (typeof(T).IsEnum)

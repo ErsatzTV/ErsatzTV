@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -231,8 +232,9 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
             if (match.Success)
             {
                 metadata.Title = match.Groups[1].Value.Trim();
-                metadata.Year = int.Parse(match.Groups[2].Value);
-                metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
+                metadata.Year = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                metadata.ReleaseDate =
+                    new DateTime(int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture), 1, 1);
                 metadata.DateUpdated = DateTime.UtcNow;
             }
         }
@@ -353,8 +355,9 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
             if (match.Success)
             {
                 metadata.Title = match.Groups[1].Value;
-                metadata.Year = int.Parse(match.Groups[2].Value);
-                metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
+                metadata.Year = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+                metadata.ReleaseDate =
+                    new DateTime(int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture), 1, 1);
                 metadata.DateUpdated = DateTime.UtcNow;
             }
         }

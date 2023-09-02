@@ -10,6 +10,6 @@ public class GetChannelByIdHandler : IRequestHandler<GetChannelById, Option<Chan
     public GetChannelByIdHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
 
     public Task<Option<ChannelViewModel>> Handle(GetChannelById request, CancellationToken cancellationToken) =>
-        _channelRepository.Get(request.Id)
+        _channelRepository.GetChannel(request.Id)
             .MapT(ProjectToViewModel);
 }

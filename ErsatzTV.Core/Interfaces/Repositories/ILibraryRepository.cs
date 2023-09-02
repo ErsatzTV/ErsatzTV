@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories;
 public interface ILibraryRepository
 {
     Task<LibraryPath> Add(LibraryPath libraryPath);
-    Task<Option<Library>> Get(int libraryId);
+    Task<Option<Library>> GetLibrary(int libraryId);
     Task<Option<LocalLibrary>> GetLocal(int libraryId);
     Task<List<Library>> GetAll();
     Task<Unit> UpdateLastScan(Library library);

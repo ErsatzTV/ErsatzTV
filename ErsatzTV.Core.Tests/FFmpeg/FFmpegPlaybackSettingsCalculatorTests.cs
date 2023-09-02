@@ -14,16 +14,12 @@ public class FFmpegPlaybackSettingsCalculatorTests
     [TestFixture]
     public class CalculateSettings
     {
-        private readonly FFmpegPlaybackSettingsCalculator _calculator;
-
-        public CalculateSettings() => _calculator = new FFmpegPlaybackSettingsCalculator();
-
         [Test]
         public void Should_Not_GenPts_ForHlsSegmenter()
         {
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingSegmenter,
                 ffmpegProfile,
                 TestVersion,
@@ -48,7 +44,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -69,7 +65,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingSegmenter,
                 ffmpegProfile,
                 TestVersion,
@@ -90,7 +86,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -113,7 +109,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
                 TestVersion,
@@ -136,7 +132,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -157,7 +153,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
                 TestVersion,
@@ -180,7 +176,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -204,7 +200,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             FFmpegProfile ffmpegProfile = TestProfile();
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
                 TestVersion,
@@ -232,7 +228,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -259,7 +255,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -286,7 +282,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -314,7 +310,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -341,7 +337,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             var version = new MediaVersion { Width = 706, Height = 362, SampleAspectRatio = "32:27" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -371,7 +367,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
                 version,
@@ -401,7 +397,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -433,7 +429,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             var version = new MediaVersion
                 { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -464,7 +460,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             var version = new MediaVersion
                 { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
                 version,
@@ -495,7 +491,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             var version = new MediaVersion
                 { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -525,7 +521,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -556,7 +552,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             var version = new MediaVersion
                 { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -586,7 +582,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             // not anamorphic
             var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -617,7 +613,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             var version = new MediaVersion
                 { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -643,7 +639,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -667,7 +663,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -691,7 +687,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
                 TestVersion,
@@ -716,7 +712,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -741,7 +737,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -766,7 +762,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioChannels = 6
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -791,7 +787,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioSampleRate = 48
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -815,7 +811,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioChannels = 6
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -839,7 +835,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioSampleRate = 48
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -869,7 +865,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 SampleAspectRatio = "1:1", Width = 1920, Height = 1080, Duration = TimeSpan.FromMinutes(5)
             }; // not pulled from here
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
@@ -893,7 +889,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 NormalizeLoudness = true
             };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,
@@ -913,17 +909,13 @@ public class FFmpegPlaybackSettingsCalculatorTests
     [TestFixture]
     public class CalculateSettingsQsv
     {
-        private readonly FFmpegPlaybackSettingsCalculator _calculator;
-
-        public CalculateSettingsQsv() => _calculator = new FFmpegPlaybackSettingsCalculator();
-
         [Test]
         public void Should_UseHardwareAcceleration()
         {
             FFmpegProfile ffmpegProfile =
                 TestProfile() with { HardwareAcceleration = HardwareAccelerationKind.Qsv };
 
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 TestVersion,

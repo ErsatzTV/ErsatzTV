@@ -3,6 +3,7 @@
 namespace ErsatzTV.Core.Hdhr;
 
 [SuppressMessage("ReSharper", "InconsistentNaming")]
+[SuppressMessage("Performance", "CA1822:Mark members as static")]
 public class Discover
 {
     private readonly string _host;

@@ -1,5 +1,8 @@
-﻿namespace ErsatzTV.Core.Domain;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace ErsatzTV.Core.Domain;
+
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 public class EmbyCollection
 {
     public int Id { get; set; }

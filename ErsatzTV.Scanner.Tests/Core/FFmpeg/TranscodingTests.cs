@@ -229,7 +229,6 @@ public class TranscodingTests
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
 
         var oldService = new FFmpegProcessService(
-            new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             mockImageCache,
             tempFilePool,
@@ -239,7 +238,6 @@ public class TranscodingTests
 
         var service = new FFmpegLibraryProcessService(
             oldService,
-            new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             tempFilePool,
             new PipelineBuilderFactory(
@@ -847,7 +845,6 @@ public class TranscodingTests
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
 
         var oldService = new FFmpegProcessService(
-            new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             imageCache,
             Substitute.For<ITempFilePool>(),
@@ -857,7 +854,6 @@ public class TranscodingTests
 
         var service = new FFmpegLibraryProcessService(
             oldService,
-            new FFmpegPlaybackSettingsCalculator(),
             new FakeStreamSelector(),
             Substitute.For<ITempFilePool>(),
             new PipelineBuilderFactory(

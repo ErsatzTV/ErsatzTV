@@ -566,7 +566,6 @@ public class Startup
 
     private void CustomServices(IServiceCollection services)
     {
-        services.AddSingleton<FFmpegPlaybackSettingsCalculator>();
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();

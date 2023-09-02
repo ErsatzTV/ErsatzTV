@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -122,26 +123,27 @@ public class SubtitleBuilder
 
         foreach (IDisplaySize resolution in _resolution)
         {
-            sb.AppendLine($"PlayResX: {resolution.Width}");
-            sb.AppendLine($"PlayResY: {resolution.Height}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"PlayResX: {resolution.Width}");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"PlayResY: {resolution.Height}");
         }
 
         sb.AppendLine("[V4+ Styles]");
         sb.AppendLine(
             "Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment, Encoding");
         sb.AppendLine(
+            CultureInfo.InvariantCulture,
             $"Style: Default,{await _fontName.IfNoneAsync("")},{await _fontSize.IfNoneAsync(32)},{await _primaryColor.IfNoneAsync("")},{await _outlineColor.IfNoneAsync("")},{await _borderStyle.IfNoneAsync(0)},1,{await _shadow.IfNoneAsync(0)},{await _alignment.IfNoneAsync(0)},1");
 
         var start = "0:00:00.00";
         foreach (TimeSpan startTime in _start)
         {
-            start = $"{(int)startTime.TotalHours:00}:{startTime.ToString(@"mm\:ss\.ff")}";
+            start = $"{(int)startTime.TotalHours:00}:{startTime.ToString(@"mm\:ss\.ff", CultureInfo.InvariantCulture)}";
         }
 
         var end = "99:99:99.99";
         foreach (TimeSpan endTime in _end)
         {
-            end = $"{(int)endTime.TotalHours:00}:{endTime.ToString(@"mm\:ss\.ff")}";
+            end = $"{(int)endTime.TotalHours:00}:{endTime.ToString(@"mm\:ss\.ff", CultureInfo.InvariantCulture)}";
         }
 
         string fade = _fade ? @"{\fad(1200, 1200)}" : string.Empty;
@@ -149,6 +151,7 @@ public class SubtitleBuilder
         sb.AppendLine("[Events]");
         sb.AppendLine("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text");
         sb.AppendLine(
+            CultureInfo.InvariantCulture,
             @$"Dialogue: 0,{start},{end},Default,,{_marginLeft},{_marginRight},{_marginV},,{fade}{_content}");
 
         await File.WriteAllTextAsync(fileName, sb.ToString());

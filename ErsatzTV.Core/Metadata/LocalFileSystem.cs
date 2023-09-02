@@ -77,7 +77,7 @@ public class LocalFileSystem : ILocalFileSystem
             try
             {
                 return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)
-                    .Where(path => !Path.GetFileName(path).StartsWith("._"));
+                    .Where(path => !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase));
             }
             catch (UnauthorizedAccessException)
             {
@@ -100,7 +100,7 @@ public class LocalFileSystem : ILocalFileSystem
             try
             {
                 return Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly)
-                    .Where(path => !Path.GetFileName(path).StartsWith("._"));
+                    .Where(path => !Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase));
             }
             catch (UnauthorizedAccessException)
             {

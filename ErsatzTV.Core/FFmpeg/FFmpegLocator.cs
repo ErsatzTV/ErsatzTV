@@ -15,7 +15,7 @@ public class FFmpegLocator : IFFmpegLocator
 
     public async Task<Option<string>> ValidatePath(string executableBase, ConfigElementKey key)
     {
-        Option<ConfigElement> setting = await _configElementRepository.Get(key);
+        Option<ConfigElement> setting = await _configElementRepository.GetConfigElement(key);
 
         return await setting.MatchAsync(
             async ce =>
@@ -45,7 +45,7 @@ public class FFmpegLocator : IFFmpegLocator
             () => None);
     }
 
-    private async Task<Option<string>> LocateExecutableOnPathAsync(string executableBase)
+    private static async Task<Option<string>> LocateExecutableOnPathAsync(string executableBase)
     {
         string executable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? $"{executableBase}.exe"
@@ -62,15 +62,13 @@ public class FFmpegLocator : IFFmpegLocator
         }
 
         string locateCommand = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "where" : "which";
-        using var p = new Process
+        using var p = new Process();
+        p.StartInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                UseShellExecute = false,
-                FileName = locateCommand,
-                Arguments = executable,
-                RedirectStandardOutput = true
-            }
+            UseShellExecute = false,
+            FileName = locateCommand,
+            Arguments = executable,
+            RedirectStandardOutput = true
         };
         p.Start();
         string path = (await p.StandardOutput.ReadToEndAsync()).Trim();

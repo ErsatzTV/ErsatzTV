@@ -18,14 +18,14 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
-using Serilog;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class FFmpegPlaybackSettingsCalculator
+public static class FFmpegPlaybackSettingsCalculator
 {
     private static readonly List<string> CommonFormatFlags = new()
     {
@@ -40,7 +40,7 @@ public class FFmpegPlaybackSettingsCalculator
         "+igndts"
     };
 
-    public FFmpegPlaybackSettings CalculateSettings(
+    public static FFmpegPlaybackSettings CalculateSettings(
         StreamingMode streamingMode,
         FFmpegProfile ffmpegProfile,
         MediaVersion videoVersion,
@@ -169,7 +169,7 @@ public class FFmpegPlaybackSettingsCalculator
         return result;
     }
 
-    public FFmpegPlaybackSettings CalculateErrorSettings(
+    public static FFmpegPlaybackSettings CalculateErrorSettings(
         StreamingMode streamingMode,
         FFmpegProfile ffmpegProfile,
         bool hlsRealtime) =>
@@ -273,6 +273,8 @@ public class FFmpegPlaybackSettingsCalculator
     private static IDisplaySize SARSize(MediaVersion version)
     {
         string[] split = version.SampleAspectRatio.Split(":");
-        return new DisplaySize(int.Parse(split[0]), int.Parse(split[1]));
+        return new DisplaySize(
+            int.Parse(split[0], CultureInfo.InvariantCulture),
+            int.Parse(split[1], CultureInfo.InvariantCulture));
     }
 }

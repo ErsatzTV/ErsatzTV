@@ -174,7 +174,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     }
 
     private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(ScanLocalLibrary request) =>
-        _libraryRepository.Get(request.LibraryId)
+        _libraryRepository.GetLibrary(request.LibraryId)
             .Map(maybeLibrary => maybeLibrary.OfType<LocalLibrary>().HeadOrNone())
             .Map(v => v.ToValidation<BaseError>($"Local library {request.LibraryId} does not exist."));
 

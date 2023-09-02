@@ -38,25 +38,27 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         GetReplacementJellyfinPath(pathReplacements, path, _runtimeInfo.IsOSPlatform(OSPlatform.Windows), log);
 
     public string ReplaceNetworkPath(
-        JellyfinMediaSource jellyfinMediaSource,
+        JellyfinMediaSource mediaSource,
         string path,
         string networkPath,
         string replacement)
     {
         var replacements = new List<JellyfinPathReplacement>
         {
-            new() { JellyfinPath = networkPath, LocalPath = replacement, JellyfinMediaSource = jellyfinMediaSource }
+            new() { JellyfinPath = networkPath, LocalPath = replacement, JellyfinMediaSource = mediaSource }
         };
 
         // we want to target the jellyfin platform with the network path replacement
-        bool isTargetPlatformWindows = jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        bool isTargetPlatformWindows = mediaSource.OperatingSystem.ToLowerInvariant()
+            .StartsWith("windows", StringComparison.OrdinalIgnoreCase);
         return GetReplacementJellyfinPath(replacements, path, isTargetPlatformWindows, false);
     }
 
     private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource, string path)
     {
         bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
-        return isUnc || jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        return isUnc || jellyfinMediaSource.OperatingSystem.ToLowerInvariant()
+            .StartsWith("windows", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetReplacementJellyfinPath(
@@ -75,10 +77,10 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
                     }
 
                     string separatorChar = IsWindows(r.JellyfinMediaSource, path) ? @"\" : @"/";
-                    string prefix = r.JellyfinPath.EndsWith(separatorChar)
+                    string prefix = r.JellyfinPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
                         ? r.JellyfinPath
                         : r.JellyfinPath + separatorChar;
-                    return path.StartsWith(prefix);
+                    return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
                 });
 
         foreach (JellyfinPathReplacement replacement in maybeReplacement)

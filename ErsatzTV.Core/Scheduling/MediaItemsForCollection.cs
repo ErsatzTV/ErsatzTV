@@ -1,8 +1,10 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Diagnostics.CodeAnalysis;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Core.Scheduling;
 
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 public static class MediaItemsForCollection
 {
     public static async Task<List<MediaItem>> Collect(
@@ -36,7 +38,7 @@ public static class MediaItemsForCollection
                     await mediaCollectionRepository.GetSmartCollectionItems(collectionKey.SmartCollectionId ?? 0));
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(collectionKey));
         }
 
         return result.DistinctBy(x => x.Id).ToList();

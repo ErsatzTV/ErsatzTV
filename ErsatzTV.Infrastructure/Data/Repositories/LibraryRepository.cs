@@ -25,7 +25,7 @@ public class LibraryRepository : ILibraryRepository
         return libraryPath;
     }
 
-    public async Task<Option<Library>> Get(int libraryId)
+    public async Task<Option<Library>> GetLibrary(int libraryId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Libraries

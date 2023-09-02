@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using ErsatzTV.Core.Domain;
 
@@ -33,8 +34,8 @@ public class ChannelPlaylist
         }
 
         var xmltv = $"{_scheme}://{_host}{_baseUrl}/iptv/xmltv.xml{accessTokenUri}";
-        sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
-        foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
+        sb.AppendLine(CultureInfo.InvariantCulture, $"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
+        foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture)))
         {
             string logo = Optional(channel.Artwork).Flatten()
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -60,8 +61,11 @@ public class ChannelPlaylist
             string acodec = channel.FFmpegProfile.AudioFormat.ToString().ToLowerInvariant();
 
             sb.AppendLine(
+                CultureInfo.InvariantCulture,
                 $"#EXTINF:0 tvg-id=\"{channel.Number}.etv\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"{channel.Group}\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
-            sb.AppendLine($"{_scheme}://{_host}{_baseUrl}/iptv/channel/{channel.Number}.{format}");
+            sb.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"{_scheme}://{_host}{_baseUrl}/iptv/channel/{channel.Number}.{format}");
         }
 
         return sb.ToString();

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Diagnostics.CodeAnalysis;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -7,11 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling;
 
+[SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
 public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> where T : ProgramScheduleItem
 {
-    protected readonly ILogger _logger;
+    protected ILogger Logger { get; }
 
-    protected PlayoutModeSchedulerBase(ILogger logger) => _logger = logger;
+    protected PlayoutModeSchedulerBase(ILogger logger) => Logger = logger;
 
     public abstract Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
         PlayoutBuilderState playoutBuilderState,
@@ -93,7 +95,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
                 if (nextState.CurrentTime + itemDuration > nextItemStart)
                 {
-                    _logger.LogDebug(
+                    Logger.LogDebug(
                         "Filler with duration {Duration:hh\\:mm\\:ss} will go past next item start {NextItemStart}",
                         itemDuration,
                         nextItemStart);
@@ -187,7 +189,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         ProgramScheduleItem scheduleItem,
         MediaItem mediaItem,
         DateTimeOffset startTime) =>
-        _logger.LogDebug(
+        Logger.LogDebug(
             "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
             scheduleItem.Index,
             scheduleItem.CollectionType,
@@ -214,7 +216,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         // multiple pad-to-nearest-minute values are invalid; use no filler
         if (allFiller.Count(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue) > 1)
         {
-            _logger.LogError("Multiple pad-to-nearest-minute values are invalid; no filler will be used");
+            Logger.LogError("Multiple pad-to-nearest-minute values are invalid; no filler will be used");
             return new List<PlayoutItem> { playoutItem };
         }
 
@@ -594,7 +596,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 {
                     if (log)
                     {
-                        _logger.LogDebug(
+                        Logger.LogDebug(
                             "Filler item is too long {FillerDuration:g} to fill {GapDuration:g}; skipping to next filler item",
                             itemDuration,
                             remainingToFill);
