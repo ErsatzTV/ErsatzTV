@@ -1,5 +1,5 @@
 namespace ErsatzTV.Core.Interfaces.Repositories.Caching;
 
-public interface ICachingSearchRepository : ISearchRepository
+public interface ICachingSearchRepository : ISearchRepository, IDisposable
 {
 }

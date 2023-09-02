@@ -14,8 +14,8 @@ public class EmbySecretStore : IEmbySecretStore
             .Map(JsonConvert.DeserializeObject<EmbySecrets>)
             .Map(s => Optional(s).IfNone(new EmbySecrets()));
 
-    public Task<Unit> SaveSecrets(EmbySecrets embySecrets) =>
-        Some(JsonConvert.SerializeObject(embySecrets)).Match(
+    public Task<Unit> SaveSecrets(EmbySecrets secrets) =>
+        Some(JsonConvert.SerializeObject(secrets)).Match(
             s => File.WriteAllTextAsync(FileSystemLayout.EmbySecretsPath, s).ToUnit(),
             Task.FromResult(Unit.Default));
 }

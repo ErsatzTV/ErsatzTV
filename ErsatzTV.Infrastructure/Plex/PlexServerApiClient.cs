@@ -290,7 +290,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    private async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
+    private static async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
         PlexConnection connection,
         Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
         Func<IPlexServerApi, IPlexServerApi, int, int, Task<IEnumerable<TItem>>> getItems)
@@ -315,28 +315,6 @@ public class PlexServerApiClient : IPlexServerApiClient
                 yield return item;
             }
         }
-    }
-
-    // TODO: fix this with the addition of paging
-    private List<PlexEpisode> ProcessMultiEpisodeFiles(IEnumerable<PlexEpisode> episodes)
-    {
-        // add all metadata from duplicate paths to first entry with given path
-        // i.e. s1e1 episode will add s1e2 metadata if s1e1 and s1e2 have same physical path
-        var result = new Dictionary<string, PlexEpisode>();
-        foreach (PlexEpisode episode in episodes.OrderBy(e => e.EpisodeMetadata.Head().EpisodeNumber))
-        {
-            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
-            if (result.TryGetValue(path, out PlexEpisode existing))
-            {
-                existing.EpisodeMetadata.Add(episode.EpisodeMetadata.Head());
-            }
-            else
-            {
-                result.Add(path, episode);
-            }
-        }
-
-        return result.Values.ToList();
     }
 
     private static IPlexServerApi XmlServiceFor(string uri, TimeSpan? timeout = null)
@@ -485,12 +463,12 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture) });
         }
 
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString() });
+            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString(CultureInfo.InvariantCulture) });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -536,7 +514,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return metadata;
     }
 
-    private Option<MediaVersion> ProjectToMediaVersion(PlexXmlMetadataResponse response)
+    private static Option<MediaVersion> ProjectToMediaVersion(PlexXmlMetadataResponse response)
     {
         PlexMediaResponse<PlexXmlPartResponse> media = response.Media
             .Filter(media => media.Part.Any())
@@ -718,12 +696,12 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture) });
         }
 
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString() });
+            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString(CultureInfo.InvariantCulture) });
         }
 
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
@@ -795,7 +773,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture) });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
@@ -945,7 +923,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture) });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
@@ -966,7 +944,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return metadata;
     }
 
-    private Actor ProjectToModel(PlexRoleResponse role, DateTime dateAdded, DateTime lastWriteTime)
+    private static Actor ProjectToModel(PlexRoleResponse role, DateTime dateAdded, DateTime lastWriteTime)
     {
         var actor = new Actor { Name = role.Tag, Role = role.Role };
         if (!string.IsNullOrWhiteSpace(role.Thumb))
@@ -993,36 +971,36 @@ public class PlexServerApiClient : IPlexServerApiClient
 
     private Option<string> NormalizeGuid(string guid)
     {
-        if (guid.StartsWith("plex://show") ||
-            guid.StartsWith("plex://season") ||
-            guid.StartsWith("plex://episode") ||
-            guid.StartsWith("plex://movie"))
+        if (guid.StartsWith("plex://show", StringComparison.OrdinalIgnoreCase) ||
+            guid.StartsWith("plex://season", StringComparison.OrdinalIgnoreCase) ||
+            guid.StartsWith("plex://episode", StringComparison.OrdinalIgnoreCase) ||
+            guid.StartsWith("plex://movie", StringComparison.OrdinalIgnoreCase))
         {
             return guid;
         }
 
-        if (guid.StartsWith("com.plexapp.agents.imdb"))
+        if (guid.StartsWith("com.plexapp.agents.imdb", StringComparison.OrdinalIgnoreCase))
         {
             string strip1 = guid.Replace("com.plexapp.agents.imdb://", string.Empty);
             string strip2 = strip1.Split("?").Head();
             return $"imdb://{strip2}";
         }
 
-        if (guid.StartsWith("com.plexapp.agents.thetvdb"))
+        if (guid.StartsWith("com.plexapp.agents.thetvdb", StringComparison.OrdinalIgnoreCase))
         {
             string strip1 = guid.Replace("com.plexapp.agents.thetvdb://", string.Empty);
             string strip2 = strip1.Split("?").Head();
             return $"tvdb://{strip2}";
         }
 
-        if (guid.StartsWith("com.plexapp.agents.themoviedb"))
+        if (guid.StartsWith("com.plexapp.agents.themoviedb", StringComparison.OrdinalIgnoreCase))
         {
             string strip1 = guid.Replace("com.plexapp.agents.themoviedb://", string.Empty);
             string strip2 = strip1.Split("?").Head();
             return $"tmdb://{strip2}";
         }
 
-        if (guid.StartsWith("local://"))
+        if (guid.StartsWith("local://", StringComparison.OrdinalIgnoreCase))
         {
             // _logger.LogDebug("Ignoring local Plex guid: {Guid}", guid);
         }

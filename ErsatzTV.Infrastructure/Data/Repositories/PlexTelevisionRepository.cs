@@ -293,9 +293,9 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
     }
 
-    public async Task<List<int>> FlagFileNotFoundShows(PlexLibrary library, List<string> plexShowKeys)
+    public async Task<List<int>> FlagFileNotFoundShows(PlexLibrary library, List<string> showItemIds)
     {
-        if (plexShowKeys.Count == 0)
+        if (showItemIds.Count == 0)
         {
             return new List<int>();
         }
@@ -308,7 +308,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 INNER JOIN PlexShow ON PlexShow.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                 WHERE PlexShow.Key IN @ShowKeys",
-                new { LibraryId = library.Id, ShowKeys = plexShowKeys })
+                new { LibraryId = library.Id, ShowKeys = showItemIds })
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
@@ -318,9 +318,9 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         return ids;
     }
 
-    public async Task<List<int>> FlagFileNotFoundSeasons(PlexLibrary library, List<string> plexSeasonKeys)
+    public async Task<List<int>> FlagFileNotFoundSeasons(PlexLibrary library, List<string> seasonItemIds)
     {
-        if (plexSeasonKeys.Count == 0)
+        if (seasonItemIds.Count == 0)
         {
             return new List<int>();
         }
@@ -333,7 +333,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 INNER JOIN PlexSeason ON PlexSeason.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                 WHERE PlexSeason.Key IN @SeasonKeys",
-                new { LibraryId = library.Id, SeasonKeys = plexSeasonKeys })
+                new { LibraryId = library.Id, SeasonKeys = seasonItemIds })
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
@@ -343,9 +343,9 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         return ids;
     }
 
-    public async Task<List<int>> FlagFileNotFoundEpisodes(PlexLibrary library, List<string> plexEpisodeKeys)
+    public async Task<List<int>> FlagFileNotFoundEpisodes(PlexLibrary library, List<string> episodeItemIds)
     {
-        if (plexEpisodeKeys.Count == 0)
+        if (episodeItemIds.Count == 0)
         {
             return new List<int>();
         }
@@ -358,7 +358,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
                 INNER JOIN PlexEpisode ON PlexEpisode.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                 WHERE PlexEpisode.Key IN @EpisodeKeys",
-                new { LibraryId = library.Id, EpisodeKeys = plexEpisodeKeys })
+                new { LibraryId = library.Id, EpisodeKeys = episodeItemIds })
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(

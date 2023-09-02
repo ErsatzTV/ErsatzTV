@@ -181,7 +181,7 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
             new { Etag = etag, movie.Id }).Map(_ => Unit.Default);
     }
 
-    private async Task UpdateMovie(TvContext dbContext, JellyfinMovie existing, JellyfinMovie incoming)
+    private static async Task UpdateMovie(TvContext dbContext, JellyfinMovie existing, JellyfinMovie incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;

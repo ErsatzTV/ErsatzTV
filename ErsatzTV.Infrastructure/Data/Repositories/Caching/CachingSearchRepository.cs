@@ -10,6 +10,7 @@ public class CachingSearchRepository : ICachingSearchRepository
     private readonly ConcurrentDictionary<List<string>, List<string>> _cache = new();
     private readonly ISearchRepository _searchRepository;
     private readonly SemaphoreSlim _slim = new(1, 1);
+    private bool _disposedValue;
 
     public CachingSearchRepository(ISearchRepository searchRepository) => _searchRepository = searchRepository;
 
@@ -40,4 +41,23 @@ public class CachingSearchRepository : ICachingSearchRepository
     }
 
     public IAsyncEnumerable<MediaItem> GetAllMediaItems() => _searchRepository.GetAllMediaItems();
+    
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _slim.Dispose();
+            }
+
+            _disposedValue = true;
+        }
+    }
 }

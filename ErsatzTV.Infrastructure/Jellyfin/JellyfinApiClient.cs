@@ -367,7 +367,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             _ => None
         };
 
-    private List<JellyfinPathInfo> GetPathInfos(JellyfinLibraryResponse response) =>
+    private static List<JellyfinPathInfo> GetPathInfos(JellyfinLibraryResponse response) =>
         response.LibraryOptions.PathInfos
             .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
             .Map(
@@ -472,7 +472,7 @@ public class JellyfinApiClient : IJellyfinApiClient
             StartTime = TimeSpan.FromTicks(chapterResponse.StartPositionTicks)
         };
 
-    private MovieMetadata ProjectToMovieMetadata(JellyfinLibraryItemResponse item)
+    private static MovieMetadata ProjectToMovieMetadata(JellyfinLibraryItemResponse item)
     {
         DateTime dateAdded = item.DateCreated.UtcDateTime;
         // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -598,7 +598,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private ShowMetadata ProjectToShowMetadata(JellyfinLibraryItemResponse item)
+    private static ShowMetadata ProjectToShowMetadata(JellyfinLibraryItemResponse item)
     {
         DateTime dateAdded = item.DateCreated.UtcDateTime;
         // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -815,7 +815,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private EpisodeMetadata ProjectToEpisodeMetadata(JellyfinLibraryItemResponse item)
+    private static EpisodeMetadata ProjectToEpisodeMetadata(JellyfinLibraryItemResponse item)
     {
         DateTime dateAdded = item.DateCreated.UtcDateTime;
         // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -863,7 +863,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         return metadata;
     }
 
-    private List<MetadataGuid> GuidsFromProviderIds(JellyfinProviderIdsResponse providerIds)
+    private static List<MetadataGuid> GuidsFromProviderIds(JellyfinProviderIdsResponse providerIds)
     {
         var result = new List<MetadataGuid>();
 
@@ -921,14 +921,14 @@ public class JellyfinApiClient : IJellyfinApiClient
                 {
                     isAnamorphic = videoStream.IsAnamorphic.Value;
                 }
-                else if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(":"))
+                else if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(':'))
                 {
                     // if width/height != aspect ratio, is anamorphic
                     double resolutionRatio = width / (double)height;
 
                     string[] split = videoStream.AspectRatio.Split(":");
-                    var num = double.Parse(split[0]);
-                    var den = double.Parse(split[1]);
+                    var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+                    var den = double.Parse(split[1], CultureInfo.InvariantCulture);
                     double aspectRatio = num / den;
 
                     isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;

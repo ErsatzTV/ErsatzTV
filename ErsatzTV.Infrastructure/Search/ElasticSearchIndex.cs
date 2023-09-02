@@ -21,8 +21,6 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public class ElasticSearchIndex : ISearchIndex
 {
-    public static Uri Uri;
-    public static string IndexName;
     private readonly List<CultureInfo> _cultureInfos;
 
     private readonly ILogger<ElasticSearchIndex> _logger;
@@ -34,9 +32,13 @@ public class ElasticSearchIndex : ISearchIndex
         _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
     }
 
+    public static Uri Uri { get; set; }
+    public static string IndexName { get; set; }
+
     public void Dispose()
     {
         // do nothing
+        GC.SuppressFinalize(this);
     }
 
     public async Task<bool> IndexExists()
@@ -302,7 +304,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     Director = metadata.Directors.Map(d => d.Name).ToList(),
                     Writer = metadata.Writers.Map(w => w.Name).ToList(),
-                    TraktList = movie.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList()
+                    TraktList = movie.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture)).ToList()
                 };
 
                 AddStatistics(doc, movie.MediaVersions);
@@ -349,7 +351,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Tag = metadata.Tags.Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
-                    TraktList = show.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList()
+                    TraktList = show.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture)).ToList()
                 };
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
@@ -401,7 +403,7 @@ public class ElasticSearchIndex : ISearchIndex
                     ContentRating = GetContentRatings(showMetadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
-                    TraktList = season.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList(),
+                    TraktList = season.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture)).ToList(),
                     Tag = metadata.Tags.Map(a => a.Name).ToList()
                 };
 
@@ -568,7 +570,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     Director = metadata.Directors.Map(d => d.Name).ToList(),
                     Writer = metadata.Writers.Map(w => w.Name).ToList(),
-                    TraktList = episode.TraktListItems.Map(t => t.TraktList.TraktId.ToString()).ToList()
+                    TraktList = episode.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture)).ToList()
                 };
 
                 // add some show fields to help filter episodes within a particular show
@@ -688,9 +690,9 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private static string GetReleaseDate(DateTime? metadataReleaseDate) => metadataReleaseDate?.ToString("yyyyMMdd");
+    private static string GetReleaseDate(DateTime? metadataReleaseDate) => metadataReleaseDate?.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
-    private static string GetAddedDate(DateTime metadataAddedDate) => metadataAddedDate.ToString("yyyyMMdd");
+    private static string GetAddedDate(DateTime metadataAddedDate) => metadataAddedDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
     private static List<string> GetContentRatings(string metadataContentRating)
     {

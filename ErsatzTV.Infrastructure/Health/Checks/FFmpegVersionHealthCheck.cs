@@ -70,12 +70,12 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
     private Option<HealthCheckResult> ValidateVersion(string version, string app)
     {
-        if (version.StartsWith("3.") || version.StartsWith("4."))
+        if (version.StartsWith("3.", StringComparison.OrdinalIgnoreCase) || version.StartsWith("4.", StringComparison.OrdinalIgnoreCase))
         {
             return FailResult($"{app} version {version} is too old; please install 6.0!");
         }
 
-        if (!version.StartsWith("6.0") && version != BundledVersion && version != BundledVersionVaapi)
+        if (!version.StartsWith("6.0", StringComparison.OrdinalIgnoreCase) && version != BundledVersion && version != BundledVersionVaapi)
         {
             return WarningResult(
                 $"{app} version {version} is unexpected and may have problems; please install 6.0!");

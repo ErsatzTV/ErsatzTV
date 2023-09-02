@@ -37,20 +37,20 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Map(Optional);
     }
 
-    public async Task<List<MediaItem>> GetItems(int collectionId)
+    public async Task<List<MediaItem>> GetItems(int id)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         var result = new List<MediaItem>();
 
-        result.AddRange(await GetMovieItems(dbContext, collectionId));
-        result.AddRange(await GetShowItems(dbContext, collectionId));
-        result.AddRange(await GetSeasonItems(dbContext, collectionId));
-        result.AddRange(await GetEpisodeItems(dbContext, collectionId));
-        result.AddRange(await GetArtistItems(dbContext, collectionId));
-        result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
-        result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
-        result.AddRange(await GetSongItems(dbContext, collectionId));
+        result.AddRange(await GetMovieItems(dbContext, id));
+        result.AddRange(await GetShowItems(dbContext, id));
+        result.AddRange(await GetSeasonItems(dbContext, id));
+        result.AddRange(await GetEpisodeItems(dbContext, id));
+        result.AddRange(await GetArtistItems(dbContext, id));
+        result.AddRange(await GetMusicVideoItems(dbContext, id));
+        result.AddRange(await GetOtherVideoItems(dbContext, id));
+        result.AddRange(await GetSongItems(dbContext, id));
 
         return result.Distinct().ToList();
     }
@@ -334,8 +334,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var showCollections = new Dictionary<int, List<MediaItem>>();
         foreach (Episode episode in items.OfType<Episode>())
         {
-            List<MediaItem> list = showCollections.ContainsKey(episode.Season.ShowId)
-                ? showCollections[episode.Season.ShowId]
+            List<MediaItem> list = showCollections.TryGetValue(episode.Season.ShowId, out List<MediaItem> collection)
+                ? collection
                 : new List<MediaItem>();
 
             if (list.All(i => i.Id != episode.Id))
@@ -360,8 +360,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var artistCollections = new Dictionary<int, List<MediaItem>>();
         foreach (MusicVideo musicVideo in items.OfType<MusicVideo>())
         {
-            List<MediaItem> list = artistCollections.ContainsKey(musicVideo.ArtistId)
-                ? artistCollections[musicVideo.ArtistId]
+            List<MediaItem> list = artistCollections.TryGetValue(musicVideo.ArtistId, out List<MediaItem> collection)
+                ? collection
                 : new List<MediaItem>();
 
             if (list.All(i => i.Id != musicVideo.Id))
@@ -399,8 +399,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         {
             int key = allArtists.IndexOf(song.SongMetadata.HeadOrNone().Match(sm => sm.AlbumArtist, string.Empty));
 
-            List<MediaItem> list = songArtistCollections.ContainsKey(key)
-                ? songArtistCollections[key]
+            List<MediaItem> list = songArtistCollections.TryGetValue(key, out List<MediaItem> collection)
+                ? collection
                 : new List<MediaItem>();
 
             if (list.All(i => i.Id != song.Id))
@@ -441,7 +441,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.Filter(c => c.MediaItems.Any()).ToList();
     }
 
-    private async Task<List<Movie>> GetMovieItems(TvContext dbContext, int collectionId)
+    private static async Task<List<Movie>> GetMovieItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM CollectionItem ci
@@ -462,7 +462,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(m => movieIds.Contains(m.Id))
             .ToListAsync();
 
-    private async Task<List<MusicVideo>> GetArtistItems(TvContext dbContext, int collectionId)
+    private static async Task<List<MusicVideo>> GetArtistItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT MusicVideo.Id FROM CollectionItem ci
@@ -488,7 +488,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(m => musicVideoIds.Contains(m.Id))
             .ToListAsync();
 
-    private async Task<List<MusicVideo>> GetArtistItemsFromArtistId(TvContext dbContext, int artistId)
+    private static async Task<List<MusicVideo>> GetArtistItemsFromArtistId(TvContext dbContext, int artistId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT MusicVideo.Id FROM Artist
@@ -499,7 +499,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return await GetArtistItemsFromMusicVideoIds(dbContext, ids);
     }
 
-    private async Task<List<MusicVideo>> GetMusicVideoItems(TvContext dbContext, int collectionId)
+    private static async Task<List<MusicVideo>> GetMusicVideoItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM CollectionItem ci
@@ -522,7 +522,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(m => musicVideoIds.Contains(m.Id))
             .ToListAsync();
 
-    private async Task<List<OtherVideo>> GetOtherVideoItems(TvContext dbContext, int collectionId)
+    private static async Task<List<OtherVideo>> GetOtherVideoItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT o.Id FROM CollectionItem ci
@@ -543,7 +543,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(m => otherVideoIds.Contains(m.Id))
             .ToListAsync();
 
-    private async Task<List<Song>> GetSongItems(TvContext dbContext, int collectionId)
+    private static async Task<List<Song>> GetSongItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT s.Id FROM CollectionItem ci
@@ -564,7 +564,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(m => songIds.Contains(m.Id))
             .ToListAsync();
 
-    private async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)
+    private static async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             """
@@ -592,7 +592,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(e => episodeIds.Contains(e.Id))
             .ToListAsync();
 
-    private async Task<List<Episode>> GetShowItemsFromShowId(TvContext dbContext, int showId)
+    private static async Task<List<Episode>> GetShowItemsFromShowId(TvContext dbContext, int showId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT Episode.Id FROM Show
@@ -604,7 +604,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return await GetShowItemsFromEpisodeIds(dbContext, ids);
     }
 
-    private async Task<List<Episode>> GetSeasonItems(TvContext dbContext, int collectionId)
+    private static async Task<List<Episode>> GetSeasonItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT Episode.Id FROM CollectionItem ci
@@ -629,7 +629,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Filter(e => episodeIds.Contains(e.Id))
             .ToListAsync();
 
-    private async Task<List<Episode>> GetSeasonItemsFromSeasonId(TvContext dbContext, int seasonId)
+    private static async Task<List<Episode>> GetSeasonItemsFromSeasonId(TvContext dbContext, int seasonId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT Episode.Id FROM Season
@@ -640,7 +640,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return await GetSeasonItemsFromEpisodeIds(dbContext, ids);
     }
 
-    private async Task<List<Episode>> GetEpisodeItems(TvContext dbContext, int collectionId)
+    private static async Task<List<Episode>> GetEpisodeItems(TvContext dbContext, int collectionId)
     {
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT Episode.Id FROM CollectionItem ci

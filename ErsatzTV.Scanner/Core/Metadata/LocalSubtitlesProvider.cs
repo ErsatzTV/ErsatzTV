@@ -173,4 +173,5 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 
             _disposedValue = true;
         }
-    }}
+    }
+}

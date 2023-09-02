@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
@@ -51,12 +52,12 @@ public class MusicVideoCreditsGenerator : IMusicVideoCreditsGenerator
 
             if (!string.IsNullOrWhiteSpace(metadata.Title))
             {
-                sb.Append($"\\N\"{metadata.Title}\"");
+                sb.Append(CultureInfo.InvariantCulture, $"\\N\"{metadata.Title}\"");
             }
 
             if (!string.IsNullOrWhiteSpace(metadata.Album))
             {
-                sb.Append($"\\N{metadata.Album}");
+                sb.Append(CultureInfo.InvariantCulture, $"\\N{metadata.Album}");
             }
 
             string subtitles = await new SubtitleBuilder(_tempFilePool)

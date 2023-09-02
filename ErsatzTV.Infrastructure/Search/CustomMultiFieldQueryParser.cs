@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Globalization;
+using ErsatzTV.Core;
 using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;
@@ -39,7 +40,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
     {
         if (field == "released_onthisday")
         {
-            var todayString = DateTime.Today.ToString("*MMdd");
+            var todayString = DateTime.Today.ToString("*MMdd", CultureInfo.InvariantCulture);
             return base.GetWildcardQuery(LuceneSearchIndex.ReleaseDateField, todayString);
         }
 
@@ -57,30 +58,30 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
     {
         if (field == "released_inthelast" && ParseStart(queryText, out DateTime start))
         {
-            var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
-            var dateString = start.ToString("yyyyMMdd");
+            var todayString = DateTime.UtcNow.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+            var dateString = start.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
             return base.GetRangeQuery(LuceneSearchIndex.ReleaseDateField, dateString, todayString, true, true);
         }
 
         if (field == "released_notinthelast" && ParseStart(queryText, out DateTime finish))
         {
-            var dateString = finish.ToString("yyyyMMdd");
+            var dateString = finish.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
             return base.GetRangeQuery(LuceneSearchIndex.ReleaseDateField, "00000000", dateString, false, false);
         }
 
         if (field == "added_inthelast" && ParseStart(queryText, out DateTime addedStart))
         {
-            var todayString = DateTime.UtcNow.ToString("yyyyMMdd");
-            var dateString = addedStart.ToString("yyyyMMdd");
+            var todayString = DateTime.UtcNow.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+            var dateString = addedStart.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
             return base.GetRangeQuery(LuceneSearchIndex.AddedDateField, dateString, todayString, true, true);
         }
 
         if (field == "added_notinthelast" && ParseStart(queryText, out DateTime addedFinish))
         {
-            var dateString = addedFinish.ToString("yyyyMMdd");
+            var dateString = addedFinish.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
 
             return base.GetRangeQuery(LuceneSearchIndex.AddedDateField, "00000000", dateString, false, false);
         }

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Globalization;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Infrastructure.Extensions;
 
@@ -9,5 +10,5 @@ public static class ConfigElementQueryableExtensions
         ConfigElementKey key) =>
         configElements
             .SelectOneAsync(ce => ce.Key, ce => ce.Key == key.Key)
-            .MapT(ce => (T)Convert.ChangeType(ce.Value, typeof(T)));
+            .MapT(ce => (T)Convert.ChangeType(ce.Value, typeof(T), CultureInfo.InvariantCulture));
 }

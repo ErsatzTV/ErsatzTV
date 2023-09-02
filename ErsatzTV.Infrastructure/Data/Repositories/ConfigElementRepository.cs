@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Globalization;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -58,7 +59,7 @@ public class ConfigElementRepository : IConfigElementRepository
                     return (T)Enum.Parse(typeof(T), ce.Value);
                 }
 
-                return (T)Convert.ChangeType(ce.Value, typeof(T));
+                return (T)Convert.ChangeType(ce.Value, typeof(T), CultureInfo.InvariantCulture);
             });
 
     public async Task Delete(ConfigElement configElement)

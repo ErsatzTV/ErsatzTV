@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Globalization;
 using Dapper;
 
 namespace ErsatzTV.Infrastructure.Sqlite.Data;
@@ -13,7 +14,7 @@ public abstract class SqliteTypeHandler<T> : SqlMapper.TypeHandler<T>
 public class DateTimeOffsetHandler : SqliteTypeHandler<DateTimeOffset>
 {
     public override DateTimeOffset Parse(object value)
-        => DateTimeOffset.Parse((string)value);
+        => DateTimeOffset.Parse((string)value, CultureInfo.InvariantCulture);
 }
 
 public class GuidHandler : SqliteTypeHandler<Guid>
@@ -25,5 +26,5 @@ public class GuidHandler : SqliteTypeHandler<Guid>
 public class TimeSpanHandler : SqliteTypeHandler<TimeSpan>
 {
     public override TimeSpan Parse(object value)
-        => TimeSpan.Parse((string)value);
+        => TimeSpan.Parse((string)value, CultureInfo.InvariantCulture);
 }
