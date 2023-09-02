@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix subtitle scaling when using QSV hardware acceleration
 - Fix log viewer crash when log file contains invalid data
 - Clean channel guide cache on startup (delete channels that no longer exist)
+- Fix Emby movie libraries so local file access is not required
 
 ### Changed
 - Optimize transcoding session to only work ahead (at max speed) for 2 minutes before throttling to realtime
