@@ -89,7 +89,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                @"UPDATE MediaItem SET State = 3 WHERE Id = @Id",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
