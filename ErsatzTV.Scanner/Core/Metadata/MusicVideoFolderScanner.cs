@@ -180,7 +180,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                             Array.Empty<int>()),
                         cancellationToken);
                 }
-                else if (Path.GetFileName(path).StartsWith("._"))
+                else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
@@ -320,7 +320,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
             var allFiles = _localFileSystem.ListFiles(musicVideoFolder)
                 .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-                .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+                .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)

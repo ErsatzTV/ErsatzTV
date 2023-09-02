@@ -134,7 +134,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     protected override IAsyncEnumerable<JellyfinEpisode> GetEpisodeLibraryItems(
         JellyfinLibrary library,
         JellyfinConnectionParameters connectionParameters,
-        JellyfinShow _,
+        JellyfinShow show,
         JellyfinSeason season) =>
         _jellyfinApiClient.GetEpisodeLibraryItems(
             connectionParameters.Address,

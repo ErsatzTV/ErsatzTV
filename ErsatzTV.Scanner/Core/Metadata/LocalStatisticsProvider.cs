@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -137,20 +138,14 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     result.Add(MetadataSongTag.Artist, formatTags.artist);
 
                     // if no album artist is present, use the track artist
-                    if (!result.ContainsKey(MetadataSongTag.AlbumArtist))
-                    {
-                        result.Add(MetadataSongTag.AlbumArtist, formatTags.artist);
-                    }
+                    result.TryAdd(MetadataSongTag.AlbumArtist, formatTags.artist);
                 }
                 else if (!string.IsNullOrWhiteSpace(audioTags.artist))
                 {
                     result.Add(MetadataSongTag.Artist, audioTags.artist);
 
                     // if no album artist is present, use the track artist
-                    if (!result.ContainsKey(MetadataSongTag.AlbumArtist))
-                    {
-                        result.Add(MetadataSongTag.AlbumArtist, audioTags.artist);
-                    }
+                    result.TryAdd(MetadataSongTag.AlbumArtist, audioTags.artist);
                 }
 
                 // date
@@ -217,7 +212,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         return await _metadataRepository.UpdateStatistics(mediaItem, version) && durationChange;
     }
 
-    private async Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
+    private static async Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
     {
         string[] arguments =
         {
@@ -248,10 +243,10 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 string sar = match.Groups[1].Value;
                 string dar = match.Groups[2].Value;
-                foreach (FFprobeStream stream in Optional(ffprobe.streams?.Where(s => s.codec_type == "video").ToList())
+                foreach (FFprobeStreamData stream in Optional(ffprobe.streams?.Where(s => s.codec_type == "video").ToList())
                              .Flatten())
                 {
-                    FFprobeStream replacement = stream with { sample_aspect_ratio = sar, display_aspect_ratio = dar };
+                    FFprobeStreamData replacement = stream with { sample_aspect_ratio = sar, display_aspect_ratio = dar };
                     ffprobe.streams?.Remove(stream);
                     ffprobe.streams?.Add(replacement);
                 }
@@ -296,10 +291,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             startInfo.ArgumentList.Add("null");
             startInfo.ArgumentList.Add("-");
 
-            using var probe = new Process
-            {
-                StartInfo = startInfo
-            };
+            using var probe = new Process();
+            probe.StartInfo = startInfo;
 
             probe.Start();
             string output = await probe.StandardError.ReadToEndAsync();
@@ -366,7 +359,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     //         json.format.duration);
                     // }
 
-                    foreach (FFprobeStream audioStream in json.streams.Filter(s => s.codec_type == "audio"))
+                    foreach (FFprobeStreamData audioStream in json.streams.Filter(s => s.codec_type == "audio"))
                     {
                         var stream = new MediaStream
                         {
@@ -393,7 +386,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    FFprobeStream? videoStream = json.streams?.FirstOrDefault(s => s.codec_type == "video");
+                    FFprobeStreamData? videoStream = json.streams?.FirstOrDefault(s => s.codec_type == "video");
                     if (videoStream != null)
                     {
                         version.SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.sample_aspect_ratio)
@@ -434,7 +427,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    foreach (FFprobeStream subtitleStream in json.streams.Filter(s => s.codec_type == "subtitle"))
+                    foreach (FFprobeStreamData subtitleStream in json.streams.Filter(s => s.codec_type == "subtitle"))
                     {
                         var stream = new MediaStream
                         {
@@ -459,7 +452,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    foreach (FFprobeStream attachmentStream in json.streams.Filter(s => s.codec_type == "attachment"))
+                    foreach (FFprobeStreamData attachmentStream in json.streams.Filter(s => s.codec_type == "attachment"))
                     {
                         var stream = new MediaStream
                         {
@@ -529,7 +522,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     Chapters = new List<MediaChapter>()
                 });
 
-    private VideoScanKind ScanKindFromFieldOrder(string? fieldOrder) =>
+    private static VideoScanKind ScanKindFromFieldOrder(string? fieldOrder) =>
         fieldOrder?.ToLowerInvariant() switch
         {
             "tt" or "bb" or "tb" or "bt" => VideoScanKind.Interlaced,
@@ -538,13 +531,15 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         };
 
     // ReSharper disable InconsistentNaming
-    public record FFprobe(FFprobeFormat? format, List<FFprobeStream>? streams, List<FFprobeChapter>? chapters);
+    public record FFprobe(FFprobeFormat? format, List<FFprobeStreamData>? streams, List<FFprobeChapter>? chapters);
 
     public record FFprobeFormat(string duration, FFprobeTags? tags);
 
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
     public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
-    public record FFprobeStream(
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
+    public record FFprobeStreamData(
         int index,
         string? codec_name,
         string? profile,
@@ -565,6 +560,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         FFprobeDisposition? disposition,
         FFprobeTags? tags);
 
+    [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
     public record FFprobeChapter(
         long id,
         string? start_time,

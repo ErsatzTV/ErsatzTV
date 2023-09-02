@@ -17,6 +17,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
     private readonly IMetadataRepository _metadataRepository;
 
     private readonly SemaphoreSlim _slim = new(1, 1);
+    private bool _disposedValue;
 
     public LocalSubtitlesProvider(
         IMediaItemRepository mediaItemRepository,
@@ -102,7 +103,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
         foreach (string file in _localFileSystem.ListFiles(folder, $"{withoutExtension}*"))
         {
             string fileName = Path.GetFileName(file);
-            if (!fileName.StartsWith(withoutExtension))
+            if (!fileName.StartsWith(withoutExtension, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -154,4 +155,22 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 
         return result;
     }
-}
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _slim.Dispose();
+            }
+
+            _disposedValue = true;
+        }
+    }}

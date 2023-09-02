@@ -110,7 +110,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
                 var allFiles = filesForEtag
                     .Filter(f => AudioFileExtensions.Contains(Path.GetExtension(f)))
-                    .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+                    .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 foreach (string subdirectory in _localFileSystem.ListSubdirectories(songFolder)
@@ -191,7 +191,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                             Array.Empty<int>()),
                         cancellationToken);
                 }
-                else if (Path.GetFileName(path).StartsWith("._"))
+                else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
