@@ -1,5 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
-using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.InputOption;
 
 namespace ErsatzTV.FFmpeg.Format;
 

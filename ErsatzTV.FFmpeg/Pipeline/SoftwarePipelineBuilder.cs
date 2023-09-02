@@ -3,7 +3,8 @@ using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.InputOption;
+using ErsatzTV.FFmpeg.OutputOption;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -322,7 +323,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
-                videoStream.IsAnamorphicEdgeCase);
+                VideoStream.IsAnamorphicEdgeCase);
 
             currentState = scaleStep.NextState(currentState);
 

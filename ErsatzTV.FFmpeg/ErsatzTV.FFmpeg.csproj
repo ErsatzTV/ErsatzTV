@@ -4,6 +4,8 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,5 +14,7 @@
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
     </ItemGroup>
+
+
 
 </Project>

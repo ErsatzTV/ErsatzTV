@@ -1,14 +1,19 @@
-﻿using ErsatzTV.FFmpeg.Format;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg;
 
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 public record MediaStream(int Index, string Codec, StreamKind Kind);
 
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 public record AudioStream(int Index, string Codec, int Channels) : MediaStream(
     Index,
     Codec,
     StreamKind.Audio);
 
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix")]
 public record VideoStream(
     int Index,
     string Codec,
@@ -38,8 +43,8 @@ public record VideoStream(
                 {
                     // if not, assume it's a ratio
                     string[] split = DisplayAspectRatio.Split(':');
-                    var num = double.Parse(split[0]);
-                    var den = double.Parse(split[1]);
+                    var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+                    var den = double.Parse(split[1], CultureInfo.InvariantCulture);
                     dar = num / den;
                 }
 
@@ -49,8 +54,8 @@ public record VideoStream(
 
             {
                 string[] split = MaybeSampleAspectRatio.Split(':');
-                var num = double.Parse(split[0]);
-                var den = double.Parse(split[1]);
+                var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+                var den = double.Parse(split[1], CultureInfo.InvariantCulture);
                 return $"{num}:{den}";
             }
         }
@@ -84,7 +89,7 @@ public record VideoStream(
     }
 
     // TODO: figure out what's really causing this, then re-enable if needed
-    public bool IsAnamorphicEdgeCase => false;
+    public static bool IsAnamorphicEdgeCase => false;
 
     public FrameSize SquarePixelFrameSize(FrameSize resolution)
     {
@@ -126,8 +131,8 @@ public record VideoStream(
             {
                 // if not, assume it's a ratio
                 string[] split = DisplayAspectRatio.Split(':');
-                var num = double.Parse(split[0]);
-                var den = double.Parse(split[1]);
+                var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+                var den = double.Parse(split[1], CultureInfo.InvariantCulture);
                 dar = num / den;
             }
 
@@ -137,8 +142,8 @@ public record VideoStream(
 
         {
             string[] split = MaybeSampleAspectRatio.Split(':');
-            var num = double.Parse(split[0]);
-            var den = double.Parse(split[1]);
+            var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+            var den = double.Parse(split[1], CultureInfo.InvariantCulture);
             return num / den;
         }
     }

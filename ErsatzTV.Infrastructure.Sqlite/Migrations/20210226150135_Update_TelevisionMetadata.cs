@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
@@ -7,7 +8,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF");
+            var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture);
 
             migrationBuilder.Sql(
                 $@"INSERT INTO ShowMetadata (Outline, Plot, Tagline, ShowId, MetadataKind, Title, OriginalTitle, SortTitle, ReleaseDate, DateAdded, DateUpdated)
