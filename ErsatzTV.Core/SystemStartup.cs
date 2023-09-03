@@ -10,6 +10,12 @@ public class SystemStartup : IDisposable
     public bool IsDatabaseReady { get; private set; }
     public bool IsSearchIndexReady { get; private set; }
 
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public event EventHandler OnDatabaseReady;
     public event EventHandler OnSearchIndexReady;
 
@@ -31,12 +37,6 @@ public class SystemStartup : IDisposable
         _searchIndexStartup.Release(100);
         IsSearchIndexReady = true;
         OnSearchIndexReady?.Invoke(this, EventArgs.Empty);
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)

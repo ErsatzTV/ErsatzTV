@@ -1,5 +1,4 @@
-﻿using Dapper;
-using ErsatzTV.Infrastructure.Data;
+﻿using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
 

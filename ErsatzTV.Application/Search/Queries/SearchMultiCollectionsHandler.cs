@@ -19,7 +19,10 @@ public class SearchMultiCollectionsHandler : IRequestHandler<SearchMultiCollecti
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.MultiCollections
             .AsNoTracking()
-            .Where(c => EF.Functions.Like(EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation), $"%{request.Query}%"))
+            .Where(
+                c => EF.Functions.Like(
+                    EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation),
+                    $"%{request.Query}%"))
             .OrderBy(c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation))
             .Take(10)
             .ToListAsync(cancellationToken)

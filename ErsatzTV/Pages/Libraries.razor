@@ -145,7 +145,7 @@
     private IList<LibraryViewModel> _libraries = new List<LibraryViewModel>();
     private IList<LibraryViewModel> _externalCollections = new List<LibraryViewModel>();
     private Dictionary<int, int> _progressByLibrary = new();
-    private bool _showServerNames = false;
+    private bool _showServerNames;
 
     protected override void OnInitialized()
     {
@@ -160,7 +160,7 @@
     {
         _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
         _showServerNames = _libraries.Any(l => l is PlexLibraryViewModel);
-        
+
         _externalCollections = await _mediator.Send(new GetExternalCollections(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }

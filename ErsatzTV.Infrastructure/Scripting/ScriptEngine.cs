@@ -6,8 +6,8 @@ namespace ErsatzTV.Infrastructure.Scripting;
 
 public class ScriptEngine : IScriptEngine
 {
-    private Engine _engine;
     private bool _disposedValue;
+    private Engine _engine;
 
     public ScriptEngine(ILogger<ScriptEngine> logger) =>
         _engine = new Engine(

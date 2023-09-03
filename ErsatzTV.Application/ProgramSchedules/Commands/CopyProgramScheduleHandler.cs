@@ -23,9 +23,7 @@ public class
         {
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-            return await LanguageExtensions.Apply(
-                validation,
-                p => PerformCopy(dbContext, p, request, cancellationToken));
+            return await validation.Apply(p => PerformCopy(dbContext, p, request, cancellationToken));
         }
         catch (Exception ex)
         {

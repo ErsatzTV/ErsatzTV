@@ -243,10 +243,14 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 string sar = match.Groups[1].Value;
                 string dar = match.Groups[2].Value;
-                foreach (FFprobeStreamData stream in Optional(ffprobe.streams?.Where(s => s.codec_type == "video").ToList())
+                foreach (FFprobeStreamData stream in Optional(
+                                 ffprobe.streams?.Where(s => s.codec_type == "video").ToList())
                              .Flatten())
                 {
-                    FFprobeStreamData replacement = stream with { sample_aspect_ratio = sar, display_aspect_ratio = dar };
+                    FFprobeStreamData replacement = stream with
+                    {
+                        sample_aspect_ratio = sar, display_aspect_ratio = dar
+                    };
                     ffprobe.streams?.Remove(stream);
                     ffprobe.streams?.Add(replacement);
                 }
@@ -452,7 +456,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    foreach (FFprobeStreamData attachmentStream in json.streams.Filter(s => s.codec_type == "attachment"))
+                    foreach (FFprobeStreamData attachmentStream in json.streams.Filter(
+                                 s => s.codec_type == "attachment"))
                     {
                         var stream = new MediaStream
                         {

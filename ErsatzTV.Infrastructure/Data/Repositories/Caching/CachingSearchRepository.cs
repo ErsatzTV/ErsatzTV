@@ -41,7 +41,7 @@ public class CachingSearchRepository : ICachingSearchRepository
     }
 
     public IAsyncEnumerable<MediaItem> GetAllMediaItems() => _searchRepository.GetAllMediaItems();
-    
+
     public void Dispose()
     {
         Dispose(true);

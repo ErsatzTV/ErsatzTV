@@ -10,6 +10,8 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
 {
     private readonly CancellationTokenSource _cts = new();
 
+    private bool _disposedValue;
+
     protected CancellationToken CancellationToken => _cts.Token;
 
     [Inject]
@@ -17,8 +19,6 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
 
     [Inject]
     private IJSRuntime JsRuntime { get; set; }
-
-    private bool _disposedValue;
 
     public void Dispose()
     {

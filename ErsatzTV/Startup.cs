@@ -444,7 +444,7 @@ public class Startup
             SqlMapper.AddTypeHandler(new GuidHandler());
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
         }
-        
+
         if (databaseProvider == Provider.MySql.Name)
         {
             TvContext.LastInsertedRowId = "last_insert_id()";

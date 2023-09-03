@@ -8,10 +8,8 @@ public class GetPlexLibrariesBySourceIdHandler : IRequestHandler<GetPlexLibrarie
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPlexLibrariesBySourceIdHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetPlexLibrariesBySourceIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<List<PlexLibraryViewModel>> Handle(
         GetPlexLibrariesBySourceId request,

@@ -19,13 +19,15 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        Option<ConfigElement> maybeFFmpegPath = await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
+        Option<ConfigElement> maybeFFmpegPath =
+            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
         {
             return FailResult("Unable to locate ffmpeg");
         }
 
-        Option<ConfigElement> maybeFFprobePath = await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath);
+        Option<ConfigElement> maybeFFprobePath =
+            await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath);
         if (maybeFFprobePath.IsNone)
         {
             return FailResult("Unable to locate ffprobe");
@@ -70,12 +72,14 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
     private Option<HealthCheckResult> ValidateVersion(string version, string app)
     {
-        if (version.StartsWith("3.", StringComparison.OrdinalIgnoreCase) || version.StartsWith("4.", StringComparison.OrdinalIgnoreCase))
+        if (version.StartsWith("3.", StringComparison.OrdinalIgnoreCase) ||
+            version.StartsWith("4.", StringComparison.OrdinalIgnoreCase))
         {
             return FailResult($"{app} version {version} is too old; please install 6.0!");
         }
 
-        if (!version.StartsWith("6.0", StringComparison.OrdinalIgnoreCase) && version != BundledVersion && version != BundledVersionVaapi)
+        if (!version.StartsWith("6.0", StringComparison.OrdinalIgnoreCase) && version != BundledVersion &&
+            version != BundledVersionVaapi)
         {
             return WarningResult(
                 $"{app} version {version} is unexpected and may have problems; please install 6.0!");

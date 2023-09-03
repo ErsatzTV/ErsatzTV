@@ -2,7 +2,6 @@ using System.Data.Common;
 using System.Xml;
 using Dapper;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

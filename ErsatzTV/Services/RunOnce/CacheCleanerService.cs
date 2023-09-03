@@ -85,7 +85,7 @@ public class CacheCleanerService : BackgroundService
                 {
                     continue;
                 }
-                
+
                 File.Delete(fileName);
             }
         }

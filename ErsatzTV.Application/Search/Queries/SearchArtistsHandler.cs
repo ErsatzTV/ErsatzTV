@@ -1,4 +1,3 @@
-using Dapper;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;

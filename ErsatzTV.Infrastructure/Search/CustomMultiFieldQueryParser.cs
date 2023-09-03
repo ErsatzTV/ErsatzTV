@@ -119,7 +119,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
 
         return base.GetRangeQuery(field, part1, part2, startInclusive, endInclusive);
     }
-    
+
     private static bool ParseStart(string text, out DateTime start)
     {
         start = SystemTime.MinValueUtc;

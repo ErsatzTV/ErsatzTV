@@ -33,10 +33,13 @@ public interface IMetadataRepository
     Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating);
     Task<Unit> MarkAsExternal(MovieMetadata metadata);
     Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating);
+
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     Task<bool> RemoveGuid(MetadataGuid guid);
+
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     Task<bool> AddGuid(Domain.Metadata metadata, MetadataGuid guid);
+
     Task<bool> RemoveDirector(Director director);
     Task<bool> RemoveWriter(Writer writer);
     Task<bool> UpdateSubtitles(Domain.Metadata metadata, List<Subtitle> subtitles);

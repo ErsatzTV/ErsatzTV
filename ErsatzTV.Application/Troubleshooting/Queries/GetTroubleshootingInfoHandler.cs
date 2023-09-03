@@ -75,7 +75,8 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
 
         string nvidiaCapabilities = null;
         string vaapiCapabilities = null;
-        Option<ConfigElement> maybeFFmpegPath = await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
+        Option<ConfigElement> maybeFFmpegPath =
+            await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
         {
             nvidiaCapabilities = "Unable to locate ffmpeg";

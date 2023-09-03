@@ -8,14 +8,14 @@ namespace ErsatzTV.Infrastructure.Data;
 
 public class TvContext : DbContext
 {
-    public static string LastInsertedRowId { get; set; } = "last_insert_rowid()";
-    public static string CaseInsensitiveCollation { get; set; } = "NOCASE";
-    
     private readonly ILoggerFactory _loggerFactory;
 
     public TvContext(DbContextOptions<TvContext> options, ILoggerFactory loggerFactory)
         : base(options) =>
         _loggerFactory = loggerFactory;
+
+    public static string LastInsertedRowId { get; set; } = "last_insert_rowid()";
+    public static string CaseInsensitiveCollation { get; set; } = "NOCASE";
 
     public IDbConnection Connection => Database.GetDbConnection();
 

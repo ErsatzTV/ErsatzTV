@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using ErsatzTV.Application.MediaCards;
+﻿using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Movies;

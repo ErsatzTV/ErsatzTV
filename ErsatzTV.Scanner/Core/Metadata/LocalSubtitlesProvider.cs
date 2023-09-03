@@ -91,6 +91,12 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
         return false;
     }
 
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public List<Subtitle> LocateExternalSubtitles(
         List<CultureInfo> languageCodes,
         string mediaItemPath,
@@ -154,12 +160,6 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 
 
         return result;
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)

@@ -11,9 +11,8 @@ namespace ErsatzTV.Core.Scheduling;
 [SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
 public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> where T : ProgramScheduleItem
 {
-    protected ILogger Logger { get; }
-
     protected PlayoutModeSchedulerBase(ILogger logger) => Logger = logger;
+    protected ILogger Logger { get; }
 
     public abstract Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
         PlayoutBuilderState playoutBuilderState,
