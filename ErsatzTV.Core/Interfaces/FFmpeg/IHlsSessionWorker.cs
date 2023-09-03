@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
-public interface IHlsSessionWorker
+public interface IHlsSessionWorker : IDisposable
 {
     void Touch();
     Task<Option<TrimPlaylistResult>> TrimPlaylist(DateTimeOffset filterBefore, CancellationToken cancellationToken);

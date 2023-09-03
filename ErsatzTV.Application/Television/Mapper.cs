@@ -17,7 +17,8 @@ internal static class Mapper
         new(
             show.Id,
             show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
-            show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
+            show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString(CultureInfo.InvariantCulture) ?? string.Empty)
+                .IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => GetPoster(m, maybeJellyfin, maybeEmby)).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => GetFanArt(m, maybeJellyfin, maybeEmby)).IfNone(string.Empty),
@@ -45,7 +46,8 @@ internal static class Mapper
             season.Id,
             season.ShowId,
             season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
-            season.Show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
+            season.Show.ShowMetadata.HeadOrNone()
+                .Map(m => m.Year?.ToString(CultureInfo.InvariantCulture) ?? string.Empty).IfNone(string.Empty),
             season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}",
             season.SeasonMetadata.HeadOrNone().Map(m => GetPoster(m, maybeJellyfin, maybeEmby))
                 .IfNone(string.Empty),
@@ -73,7 +75,7 @@ internal static class Mapper
         string artwork = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
             .Match(a => a.Path, string.Empty);
 
-        if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
+        if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             Url url = JellyfinUrl.RelativeProxyForArtwork(artwork);
             if (artworkKind == ArtworkKind.Poster)
@@ -83,7 +85,7 @@ internal static class Mapper
 
             artwork = url;
         }
-        else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
+        else if (maybeEmby.IsSome && artwork.StartsWith("emby://", StringComparison.OrdinalIgnoreCase))
         {
             Url url = EmbyUrl.RelativeProxyForArtwork(artwork);
             if (artworkKind == ArtworkKind.Poster)

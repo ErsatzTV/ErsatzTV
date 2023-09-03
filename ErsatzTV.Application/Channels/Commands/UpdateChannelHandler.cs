@@ -31,7 +31,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Channel> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<ChannelViewModel> ApplyUpdateRequest(TvContext dbContext, Channel c, UpdateChannel update)
@@ -92,7 +92,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         return ProjectToViewModel(c);
     }
 
-    private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
+    private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
         (await ChannelMustExist(dbContext, request), ValidateName(request),
             await ValidateNumber(dbContext, request),
             ValidatePreferredAudioLanguage(request))

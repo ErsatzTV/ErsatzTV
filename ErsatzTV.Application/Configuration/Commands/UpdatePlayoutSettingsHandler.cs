@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Globalization;
+using System.Threading.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -45,7 +46,8 @@ public class UpdatePlayoutSettingsHandler : IRequestHandler<UpdatePlayoutSetting
         List<Playout> playouts = await dbContext.Playouts
             .Include(p => p.Channel)
             .ToListAsync();
-        foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)).Map(p => p.Id))
+        foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture))
+                     .Map(p => p.Id))
         {
             await _workerChannel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Continue));
         }

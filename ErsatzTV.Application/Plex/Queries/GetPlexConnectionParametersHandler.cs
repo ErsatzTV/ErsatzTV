@@ -80,7 +80,7 @@ public class GetPlexConnectionParametersHandler : IRequestHandler<GetPlexConnect
             .ToValidation<BaseError>("Plex media source requires a token");
     }
 
-    private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
+    private sealed record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {
         public PlexServerAuthToken PlexServerAuthToken { get; set; }
     }

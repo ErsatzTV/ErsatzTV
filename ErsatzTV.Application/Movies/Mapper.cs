@@ -19,7 +19,7 @@ internal static class Mapper
         MovieMetadata metadata = Optional(movie.MovieMetadata).Flatten().Head();
         return new MovieViewModel(
             metadata.Title,
-            metadata.Year?.ToString(),
+            metadata.Year?.ToString(CultureInfo.InvariantCulture),
             metadata.Plot,
             metadata.Genres.Map(g => g.Name).ToList(),
             metadata.Tags.Map(t => t.Name).ToList(),
@@ -65,7 +65,7 @@ internal static class Mapper
         string artwork = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
             .Match(a => a.Path, string.Empty);
 
-        if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
+        if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             Url url = JellyfinUrl.RelativeProxyForArtwork(artwork);
             if (artworkKind is ArtworkKind.Poster or ArtworkKind.Thumbnail)
@@ -75,7 +75,7 @@ internal static class Mapper
 
             artwork = url;
         }
-        else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
+        else if (maybeEmby.IsSome && artwork.StartsWith("emby://", StringComparison.OrdinalIgnoreCase))
         {
             Url url = EmbyUrl.RelativeProxyForArtwork(artwork);
             if (artworkKind is ArtworkKind.Poster or ArtworkKind.Thumbnail)

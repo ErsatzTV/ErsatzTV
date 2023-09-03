@@ -94,7 +94,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
             .SelectOneAsync(a => a.Id, a => a.Id == request.TargetLibraryId)
             .Map(o => o.ToValidation<BaseError>("LocalLibrary does not exist"));
 
-    private async Task<string> GetPath(TvContext dbContext, MediaItem mediaItem) =>
+    private static async Task<string> GetPath(TvContext dbContext, MediaItem mediaItem) =>
         mediaItem switch
         {
             Movie => await dbContext.Connection.QuerySingleAsync<string>(
@@ -115,5 +115,5 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
             _ => null
         };
 
-    private record Parameters(LibraryPath LibraryPath, LocalLibrary Library);
+    private sealed record Parameters(LibraryPath LibraryPath, LocalLibrary Library);
 }

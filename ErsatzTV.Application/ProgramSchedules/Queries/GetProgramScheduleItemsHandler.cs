@@ -57,7 +57,7 @@ public class GetProgramScheduleItemsHandler :
     }
 
     // shuffled schedule items supports a limited set of properly values
-    private ProgramScheduleItemViewModel EnforceProperties(
+    private static ProgramScheduleItemViewModel EnforceProperties(
         Option<ProgramSchedule> maybeProgramSchedule,
         ProgramScheduleItemViewModel item)
     {

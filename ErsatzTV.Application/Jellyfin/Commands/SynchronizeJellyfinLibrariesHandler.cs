@@ -104,7 +104,7 @@ public class
         return Unit.Default;
     }
 
-    private record ConnectionParameters(
+    private sealed record ConnectionParameters(
         JellyfinMediaSource JellyfinMediaSource,
         JellyfinConnection ActiveConnection)
     {

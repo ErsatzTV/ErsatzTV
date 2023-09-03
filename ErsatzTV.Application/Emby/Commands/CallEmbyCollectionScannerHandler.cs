@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
@@ -69,7 +70,7 @@ public class CallEmbyCollectionScannerHandler : CallLibraryScannerHandler<Synchr
     {
         var arguments = new List<string>
         {
-            "scan-emby-collections", request.EmbyMediaSourceId.ToString()
+            "scan-emby-collections", request.EmbyMediaSourceId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.ForceScan)

@@ -29,7 +29,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, playout => PersistPlayout(dbContext, playout));
+        return await validation.Apply(playout => PersistPlayout(dbContext, playout));
     }
 
     private async Task<CreatePlayoutResponse> PersistPlayout(TvContext dbContext, Playout playout)
@@ -41,7 +41,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
         return new CreatePlayoutResponse(playout.Id);
     }
 
-    private async Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, CreatePlayout request) =>
+    private static async Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, CreatePlayout request) =>
         (await ValidateChannel(dbContext, request), await ValidateProgramSchedule(dbContext, request),
             ValidatePlayoutType(request))
         .Apply(

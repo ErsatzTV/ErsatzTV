@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Xml;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -136,10 +137,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             PlayoutItem finishItem = sorted[finishIndex];
             i = finishIndex;
 
-            string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+            string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                .Replace(":", string.Empty);
             string stop = displayItem.GuideFinishOffset.HasValue
-                ? displayItem.GuideFinishOffset.Value.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty)
-                : finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                ? displayItem.GuideFinishOffset.Value.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                    .Replace(":", string.Empty)
+                : finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                    .Replace(":", string.Empty);
 
             string title = GetTitle(displayItem);
             string subtitle = GetSubtitle(displayItem);
@@ -182,7 +186,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     if (metadata.Year.HasValue)
                     {
                         await xml.WriteStartElementAsync(null, "date", null);
-                        await xml.WriteStringAsync(metadata.Year.Value.ToString());
+                        await xml.WriteStringAsync(metadata.Year.Value.ToString(CultureInfo.InvariantCulture));
                         await xml.WriteEndElementAsync(); // date
                     }
 
@@ -220,7 +224,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     if (metadata.Year.HasValue)
                     {
                         await xml.WriteStartElementAsync(null, "date", null);
-                        await xml.WriteStringAsync(metadata.Year.Value.ToString());
+                        await xml.WriteStringAsync(metadata.Year.Value.ToString(CultureInfo.InvariantCulture));
                         await xml.WriteEndElementAsync(); // date
                     }
 
@@ -370,11 +374,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             _ => 440
         };
 
-        if (artworkPath.StartsWith("jellyfin://"))
+        if (artworkPath.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             artworkPath = JellyfinUrl.PlaceholderProxyForArtwork(artworkPath, artworkKind, height);
         }
-        else if (artworkPath.StartsWith("emby://"))
+        else if (artworkPath.StartsWith("emby://", StringComparison.OrdinalIgnoreCase))
         {
             artworkPath = EmbyUrl.PlaceholderProxyForArtwork(artworkPath, artworkKind, height);
         }
@@ -499,7 +503,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             }).Flatten();
     }
 
-    private string GetPrioritizedArtworkPath(Metadata metadata)
+    private static string GetPrioritizedArtworkPath(Metadata metadata)
     {
         Option<string> maybeArtwork = Optional(metadata.Artwork).Flatten()
             .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
@@ -517,5 +521,5 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         return maybeArtwork.IfNone(string.Empty);
     }
 
-    private record ContentRating(Option<string> System, string Value);
+    private sealed record ContentRating(Option<string> System, string Value);
 }

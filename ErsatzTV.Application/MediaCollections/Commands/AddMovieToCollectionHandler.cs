@@ -73,5 +73,5 @@ public class AddMovieToCollectionHandler :
             .SelectOneAsync(m => m.Id, e => e.Id == request.MovieId)
             .Map(o => o.ToValidation<BaseError>("Movie does not exist"));
 
-    private record Parameters(Collection Collection, Movie Movie);
+    private sealed record Parameters(Collection Collection, Movie Movie);
 }

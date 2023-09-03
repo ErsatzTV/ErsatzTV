@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Globalization;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 
@@ -15,7 +16,10 @@ public class UpdateHDHRTunerCountHandler : IRequestHandler<UpdateHDHRTunerCount,
         UpdateHDHRTunerCount request,
         CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(_ => _configElementRepository.Upsert(ConfigElementKey.HDHRTunerCount, request.TunerCount.ToString()))
+            .MapT(
+                _ => _configElementRepository.Upsert(
+                    ConfigElementKey.HDHRTunerCount,
+                    request.TunerCount.ToString(CultureInfo.InvariantCulture)))
             .Bind(v => v.ToEitherAsync());
 
     private static Task<Validation<BaseError, Unit>> Validate(UpdateHDHRTunerCount request) =>

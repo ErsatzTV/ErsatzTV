@@ -172,7 +172,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
         return result;
     }
 
-    private string GetDriverName(VaapiDriver driver)
+    private static string GetDriverName(VaapiDriver driver)
     {
         switch (driver)
         {

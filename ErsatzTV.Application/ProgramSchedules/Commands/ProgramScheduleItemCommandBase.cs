@@ -111,7 +111,7 @@ public abstract class ProgramScheduleItemCommandBase
         return programSchedule;
     }
 
-    protected Validation<BaseError, ProgramSchedule> CollectionTypeMustBeValid(
+    protected static Validation<BaseError, ProgramSchedule> CollectionTypeMustBeValid(
         IProgramScheduleItemRequest item,
         ProgramSchedule programSchedule)
     {
@@ -166,7 +166,7 @@ public abstract class ProgramScheduleItemCommandBase
         return programSchedule;
     }
 
-    protected ProgramScheduleItem BuildItem(
+    protected static ProgramScheduleItem BuildItem(
         ProgramSchedule programSchedule,
         int index,
         IProgramScheduleItemRequest item) =>

@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Channels;
 using CliWrap;
@@ -18,6 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Subtitles;
 
+[SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
 public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSubtitles, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -178,7 +180,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         }
     }
 
-    private async Task<List<int>> GetMediaItemIdsWithTextSubtitles(
+    private static async Task<List<int>> GetMediaItemIdsWithTextSubtitles(
         TvContext dbContext,
         List<int> mediaItemIds,
         CancellationToken cancellationToken)
@@ -491,12 +493,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         {
             return string.Empty;
         }
-
-        using var md5 = MD5.Create();
         byte[] textData = Encoding.UTF8.GetBytes(text);
-        byte[] hash = md5.ComputeHash(textData);
+        byte[] hash = MD5.HashData(textData);
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
 
-    private record SubtitleToExtract(Subtitle Subtitle, string OutputPath);
+    private sealed record SubtitleToExtract(Subtitle Subtitle, string OutputPath);
 }

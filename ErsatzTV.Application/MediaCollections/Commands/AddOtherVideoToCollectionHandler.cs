@@ -75,5 +75,5 @@ public class AddOtherVideoToCollectionHandler :
             .SelectOneAsync(m => m.Id, e => e.Id == request.OtherVideoId)
             .Map(o => o.ToValidation<BaseError>("OtherVideo does not exist"));
 
-    private record Parameters(Collection Collection, OtherVideo OtherVideo);
+    private sealed record Parameters(Collection Collection, OtherVideo OtherVideo);
 }

@@ -75,5 +75,5 @@ public class AddEpisodeToCollectionHandler :
             .SelectOneAsync(e => e.Id, e => e.Id == request.EpisodeId)
             .Map(o => o.ToValidation<BaseError>("Episode does not exist"));
 
-    private record Parameters(Collection Collection, Episode Episode);
+    private sealed record Parameters(Collection Collection, Episode Episode);
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
@@ -34,6 +35,6 @@ public class SearchTelevisionShowsHandler : IRequestHandler<SearchTelevisionShow
     {
         return new NamedMediaItemViewModel(
             show.ShowId,
-            $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString() : "???")})");
+            $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString(CultureInfo.InvariantCulture) : "???")})");
     }
 }

@@ -72,5 +72,5 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
         // match list items (and update in search index)
     }
 
-    private record Parameters(string User, string List);
+    private sealed record Parameters(string User, string List);
 }

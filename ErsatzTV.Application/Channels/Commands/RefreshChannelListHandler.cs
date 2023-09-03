@@ -113,5 +113,5 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
             : $"{{RequestBase}}/iptv/logos/{channel.ArtworkPath}.jpg{{AccessTokenUri}}";
 
     // ReSharper disable once ClassNeverInstantiated.Local
-    private record ChannelResult(string Number, string Name, string Categories, string ArtworkPath);
+    private sealed record ChannelResult(string Number, string Name, string Categories, string ArtworkPath);
 }

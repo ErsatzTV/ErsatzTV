@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Globalization;
+using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -57,7 +58,9 @@ public class SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePle
         foreach (PlexMediaSource removed in allExisting.Filter(
                      s => servers.All(pms => pms.ClientIdentifier != s.ClientIdentifier)))
         {
-            _logger.LogWarning("Deleting removed Plex server {ServerName}!", removed.Id.ToString());
+            _logger.LogWarning(
+                "Deleting removed Plex server {ServerName}!",
+                removed.Id.ToString(CultureInfo.InvariantCulture));
             await _mediaSourceRepository.DeletePlex(removed);
         }
 

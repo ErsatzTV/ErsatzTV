@@ -33,7 +33,7 @@ public class
         }
     }
 
-    private async Task<ProgramScheduleViewModel> PerformCopy(
+    private static async Task<ProgramScheduleViewModel> PerformCopy(
         TvContext dbContext,
         ProgramSchedule schedule,
         CopyProgramSchedule request,

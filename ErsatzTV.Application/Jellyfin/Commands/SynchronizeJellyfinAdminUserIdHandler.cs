@@ -98,7 +98,7 @@ public class
             .ToValidation<BaseError>("Jellyfin media source requires an api key");
     }
 
-    private record ConnectionParameters(
+    private sealed record ConnectionParameters(
         JellyfinMediaSource JellyfinMediaSource,
         JellyfinConnection ActiveConnection)
     {

@@ -32,7 +32,7 @@ public class CreateFFmpegProfileHandler :
         return new CreateFFmpegProfileResult(ffmpegProfile.Id);
     }
 
-    private async Task<Validation<BaseError, FFmpegProfile>> Validate(
+    private static async Task<Validation<BaseError, FFmpegProfile>> Validate(
         TvContext dbContext,
         CreateFFmpegProfile request) =>
         (ValidateName(request), ValidateThreadCount(request), await ResolutionMustExist(dbContext, request))

@@ -137,9 +137,9 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
         }
     }
 
-    private record RequestParameters(string ChannelNumber, string FFprobePath);
+    private sealed record RequestParameters(string ChannelNumber, string FFprobePath);
 
-    private record TroubleshootingData(IEnumerable<FileInfo> Files, string Playlist, string ProbeOutput)
+    private sealed record TroubleshootingData(IEnumerable<FileInfo> Files, string Playlist, string ProbeOutput)
     {
         public string Serialize()
         {
@@ -151,8 +151,8 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
             return JsonConvert.SerializeObject(data);
         }
 
-        private record FileData(string FileName, long Bytes, DateTime LastWriteTimeUtc);
+        private sealed record FileData(string FileName, long Bytes, DateTime LastWriteTimeUtc);
 
-        private record InternalData(List<FileData> Files, string EncodedPlaylist, string EncodedProbeOutput);
+        private sealed record InternalData(List<FileData> Files, string EncodedPlaylist, string EncodedProbeOutput);
     }
 }

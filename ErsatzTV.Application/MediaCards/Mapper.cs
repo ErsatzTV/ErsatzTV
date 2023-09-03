@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Globalization;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Extensions;
@@ -15,7 +16,7 @@ internal static class Mapper
         new(
             showMetadata.ShowId,
             showMetadata.Title,
-            showMetadata.Year?.ToString(),
+            showMetadata.Year?.ToString(CultureInfo.InvariantCulture),
             showMetadata.SortTitle,
             GetPoster(showMetadata, maybeJellyfin, maybeEmby),
             showMetadata.Show.State);
@@ -33,7 +34,7 @@ internal static class Mapper
             GetSeasonName(season.SeasonNumber),
             season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, maybeJellyfin, maybeEmby))
                 .IfNone(string.Empty),
-            season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString(),
+            season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString(CultureInfo.InvariantCulture),
             season.State);
 
     internal static TelevisionSeasonCardViewModel ProjectToViewModel(
@@ -53,7 +54,9 @@ internal static class Mapper
             GetSeasonName(seasonMetadata.Season.SeasonNumber),
             $"{showTitle}_{seasonMetadata.Season.SeasonNumber:0000}",
             GetPoster(seasonMetadata, maybeJellyfin, maybeEmby),
-            seasonMetadata.Season.SeasonNumber == 0 ? "S" : seasonMetadata.Season.SeasonNumber.ToString(),
+            seasonMetadata.Season.SeasonNumber == 0
+                ? "S"
+                : seasonMetadata.Season.SeasonNumber.ToString(CultureInfo.InvariantCulture),
             seasonMetadata.Season.State);
     }
 
@@ -94,7 +97,7 @@ internal static class Mapper
         new(
             movieMetadata.MovieId,
             movieMetadata.Title,
-            movieMetadata.Year?.ToString(),
+            movieMetadata.Year?.ToString(CultureInfo.InvariantCulture),
             movieMetadata.SortTitle,
             GetPoster(movieMetadata, maybeJellyfin, maybeEmby),
             movieMetadata.Movie.State);
@@ -181,12 +184,12 @@ internal static class Mapper
     {
         string artwork = actor.Artwork?.Path ?? string.Empty;
 
-        if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
+        if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             artwork = JellyfinUrl.RelativeProxyForArtwork(artwork)
                 .SetQueryParam("fillHeight", 440);
         }
-        else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
+        else if (maybeEmby.IsSome && artwork.StartsWith("emby://", StringComparison.OrdinalIgnoreCase))
         {
             artwork = EmbyUrl.RelativeProxyForArtwork(artwork)
                 .SetQueryParam("maxHeight", 440);
@@ -229,12 +232,12 @@ internal static class Mapper
         string poster = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
             .Match(a => a.Path, string.Empty);
 
-        if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://"))
+        if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             poster = JellyfinUrl.RelativeProxyForArtwork(poster)
                 .SetQueryParam("fillHeight", 440);
         }
-        else if (maybeEmby.IsSome && poster.StartsWith("emby://"))
+        else if (maybeEmby.IsSome && poster.StartsWith("emby://", StringComparison.OrdinalIgnoreCase))
         {
             poster = EmbyUrl.RelativeProxyForArtwork(poster)
                 .SetQueryParam("maxHeight", 440);
@@ -251,12 +254,12 @@ internal static class Mapper
         string thumb = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail))
             .Match(a => a.Path, string.Empty);
 
-        if (maybeJellyfin.IsSome && thumb.StartsWith("jellyfin://"))
+        if (maybeJellyfin.IsSome && thumb.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             thumb = JellyfinUrl.RelativeProxyForArtwork(thumb)
                 .SetQueryParam("fillHeight", 220);
         }
-        else if (maybeEmby.IsSome && thumb.StartsWith("emby://"))
+        else if (maybeEmby.IsSome && thumb.StartsWith("emby://", StringComparison.OrdinalIgnoreCase))
         {
             thumb = EmbyUrl.RelativeProxyForArtwork(thumb)
                 .SetQueryParam("maxHeight", 220);

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Timers;
 using Bugsnag;
@@ -34,6 +35,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
     private HlsSessionState _state;
+    private bool _disposedValue;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -195,6 +197,25 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 // do nothing
             }
+        }
+    }
+    
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _timer.Dispose();
+            }
+
+            _disposedValue = true;
         }
     }
 
@@ -453,7 +474,9 @@ public class HlsSessionWorker : IHlsSessionWorker
                 file =>
                 {
                     string fileName = Path.GetFileName(file);
-                    var sequenceNumber = int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]);
+                    var sequenceNumber = int.Parse(
+                        fileName.Replace("live", string.Empty).Split('.')[0],
+                        CultureInfo.InvariantCulture);
                     return new Segment(file, sequenceNumber);
                 })
             .ToList();
@@ -542,5 +565,5 @@ public class HlsSessionWorker : IHlsSessionWorker
         _channelNumber,
         "live.m3u8");
 
-    private record Segment(string File, int SequenceNumber);
+    private sealed record Segment(string File, int SequenceNumber);
 }

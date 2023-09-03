@@ -52,5 +52,5 @@ public class SaveEmbySecretsHandler : IRequestHandler<SaveEmbySecrets, Either<Ba
         return Unit.Default;
     }
 
-    private record Parameters(EmbySecrets Secrets, EmbyServerInformation ServerInformation);
+    private sealed record Parameters(EmbySecrets Secrets, EmbyServerInformation ServerInformation);
 }

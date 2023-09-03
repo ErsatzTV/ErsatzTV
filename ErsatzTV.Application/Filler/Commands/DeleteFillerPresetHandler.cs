@@ -17,7 +17,7 @@ public class DeleteFillerPresetHandler : IRequestHandler<DeleteFillerPreset, Eit
         DeleteFillerPreset request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request);
         return await validation.Apply(ps => DoDeletion(dbContext, ps));
     }
@@ -28,7 +28,7 @@ public class DeleteFillerPresetHandler : IRequestHandler<DeleteFillerPreset, Eit
         return dbContext.SaveChangesAsync().ToUnit();
     }
 
-    private Task<Validation<BaseError, FillerPreset>> FillerPresetMustExist(
+    private static Task<Validation<BaseError, FillerPreset>> FillerPresetMustExist(
         TvContext dbContext,
         DeleteFillerPreset request) =>
         dbContext.FillerPresets
