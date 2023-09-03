@@ -29,7 +29,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => PersistItems(dbContext, request, ps));
+        return await LanguageExtensions.Apply(validation, ps => PersistItems(dbContext, request, ps));
     }
 
     private async Task<IEnumerable<ProgramScheduleItemViewModel>> PersistItems(
@@ -51,7 +51,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
         return programSchedule.Items.Map(ProjectToViewModel);
     }
 
-    private Task<Validation<BaseError, ProgramSchedule>> Validate(
+    private static Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
         ReplaceProgramScheduleItems request) =>
         ProgramScheduleMustExist(dbContext, request.ProgramScheduleId)
@@ -66,7 +66,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
         request.Items.Map(item => PlayoutModeMustBeValid(item, programSchedule)).Sequence()
             .Map(_ => programSchedule);
 
-    private Validation<BaseError, ProgramSchedule> CollectionTypesMustBeValid(
+    private static Validation<BaseError, ProgramSchedule> CollectionTypesMustBeValid(
         ReplaceProgramScheduleItems request,
         ProgramSchedule programSchedule) =>
         request.Items.Map(item => CollectionTypeMustBeValid(item, programSchedule)).Sequence()
@@ -123,7 +123,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
             .ToValidation<BaseError>("A collection must not use multiple playback orders");
     }
 
-    private record CollectionKey(
+    private sealed record CollectionKey(
         ProgramScheduleItemCollectionType CollectionType,
         int? CollectionId,
         int? MediaItemId,

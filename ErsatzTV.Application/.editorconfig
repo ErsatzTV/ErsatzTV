@@ -1,0 +1,3 @@
+[*.{cs,vb}]
+# disable CA1711: Identifiers should not have incorrect suffix
+dotnet_diagnostic.ca1711.severity = none

@@ -1,3 +1,5 @@
 namespace ErsatzTV.Infrastructure.Sqlite;
 
-public abstract class Marker {}
+public abstract class Marker
+{
+}

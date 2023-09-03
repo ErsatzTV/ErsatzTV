@@ -8,7 +8,7 @@ public static class AsyncEnumerable
     /// </summary>
     public static IAsyncEnumerable<T> Empty<T>() => EmptyAsyncEnumerator<T>.Instance;
 
-    private class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>, IAsyncEnumerable<T>
+    private sealed class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>, IAsyncEnumerable<T>
     {
         public static readonly EmptyAsyncEnumerator<T> Instance = new();
 

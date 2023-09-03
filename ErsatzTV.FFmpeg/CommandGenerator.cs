@@ -1,8 +1,9 @@
 ﻿using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
-using ErsatzTV.FFmpeg.Option;
-using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
+using ErsatzTV.FFmpeg.GlobalOption;
+using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
+using ErsatzTV.FFmpeg.InputOption;
 
 namespace ErsatzTV.FFmpeg;
 

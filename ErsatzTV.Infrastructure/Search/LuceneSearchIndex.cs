@@ -80,9 +80,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public const string EpisodeType = "episode";
     public const string OtherVideoType = "other_video";
     public const string SongType = "song";
+    private readonly string _cleanShutdownPath;
 
     private readonly List<CultureInfo> _cultureInfos;
-    private readonly string _cleanShutdownPath;
 
     private readonly ILogger<LuceneSearchIndex> _logger;
 
@@ -183,24 +183,24 @@ public sealed class LuceneSearchIndex : ISearchIndex
     {
         foreach (int id in ids)
         {
-            _writer.DeleteDocuments(new Term(IdField, id.ToString()));
+            _writer.DeleteDocuments(new Term(IdField, id.ToString(CultureInfo.InvariantCulture)));
         }
 
         return Task.FromResult(Unit.Default);
     }
 
-    public Task<SearchResult> Search(IClient client, string searchQuery, int skip, int limit)
+    public Task<SearchResult> Search(IClient client, string query, int skip, int limit)
     {
         var metadata = new Dictionary<string, string>
         {
-            { "searchQuery", searchQuery },
-            { "skip", skip.ToString() },
-            { "limit", limit.ToString() }
+            { "searchQuery", query },
+            { "skip", skip.ToString(CultureInfo.InvariantCulture) },
+            { "limit", limit.ToString(CultureInfo.InvariantCulture) }
         };
 
         client?.Breadcrumbs?.Leave("SearchIndex.Search", BreadcrumbType.State, metadata);
 
-        if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)) ||
+        if (string.IsNullOrWhiteSpace(query.Replace("*", string.Empty).Replace("?", string.Empty)) ||
             _writer.MaxDoc == 0)
         {
             return Task.FromResult(new SearchResult(new List<SearchItem>(), 0));
@@ -209,11 +209,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query query = ParseQuery(searchQuery);
+        Query parsedQuery = ParseQuery(query);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
-        TopFieldDocs topDocs = searcher.Search(query, null, hitsLimit, sort, true, true);
+        TopFieldDocs topDocs = searcher.Search(parsedQuery, null, hitsLimit, sort, true, true);
         IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip);
 
         if (limit is > 0 and < 10_000)
@@ -227,7 +227,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
         if (limit is > 0 and < 10_000)
         {
-            searchResult.PageMap = GetSearchPageMap(searcher, query, null, sort, limit);
+            searchResult.PageMap = GetSearchPageMap(searcher, parsedQuery, null, sort, limit);
         }
 
         return Task.FromResult(searchResult);
@@ -365,7 +365,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 current = allDocs.Length;
             }
 
-            char jumpLetter = searcher.Doc(allDocs[current - 1].Doc).Get(JumpLetterField).Head();
+            char jumpLetter = searcher.Doc(allDocs[current - 1].Doc).Get(JumpLetterField, CultureInfo.InvariantCulture)
+                .Head();
             foreach (char letter in letters.Where(l => letters.IndexOf(l) <= letters.IndexOf(jumpLetter)))
             {
                 if (map[letter] == 0)
@@ -395,12 +396,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, movie.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, MovieType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title, Field.Store.NO),
                     new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, movie.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        movie.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, movie.State.ToString(), Field.Store.NO),
@@ -425,11 +429,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(
                         new StringField(
                             ReleaseDateField,
-                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
                             Field.Store.NO));
                 }
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Plot))
                 {
@@ -468,12 +476,16 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 foreach (TraktListItem item in movie.TraktListItems)
                 {
-                    doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                    doc.Add(
+                        new StringField(
+                            TraktListField,
+                            item.TraktList.TraktId.ToString(CultureInfo.InvariantCulture),
+                            Field.Store.NO));
                 }
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, movie.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -528,12 +540,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, show.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, show.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, ShowType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title, Field.Store.NO),
                     new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, show.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        show.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, show.State.ToString(), Field.Store.NO),
@@ -557,11 +572,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(
                         new StringField(
                             ReleaseDateField,
-                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
                             Field.Store.NO));
                 }
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Plot))
                 {
@@ -590,12 +609,16 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 foreach (TraktListItem item in show.TraktListItems)
                 {
-                    doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                    doc.Add(
+                        new StringField(
+                            TraktListField,
+                            item.TraktList.TraktId.ToString(CultureInfo.InvariantCulture),
+                            Field.Store.NO));
                 }
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, show.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -624,12 +647,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 var doc = new Document
                 {
-                    new StringField(IdField, season.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, season.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, SeasonType, Field.Store.YES),
                     new TextField(TitleField, seasonTitle, Field.Store.NO),
                     new StringField(SortTitleField, sortTitle, Field.Store.NO),
                     new TextField(LibraryNameField, season.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, season.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        season.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, titleAndYear, Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES),
                     new StringField(StateField, season.State.ToString(), Field.Store.NO),
@@ -665,15 +691,23 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(
                         new StringField(
                             ReleaseDateField,
-                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
                             Field.Store.NO));
                 }
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 foreach (TraktListItem item in season.TraktListItems)
                 {
-                    doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                    doc.Add(
+                        new StringField(
+                            TraktListField,
+                            item.TraktList.TraktId.ToString(CultureInfo.InvariantCulture),
+                            Field.Store.NO));
                 }
 
                 foreach (Tag tag in metadata.Tags)
@@ -683,7 +717,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, season.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, season.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -704,12 +738,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, artist.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, artist.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, ArtistType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title, Field.Store.NO),
                     new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, artist.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, artist.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        artist.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
@@ -718,7 +755,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
                 await AddLanguages(searchRepository, doc, languages);
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 foreach (Genre genre in metadata.Genres)
                 {
@@ -737,7 +778,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, artist.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, artist.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -758,12 +799,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, musicVideo.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, musicVideo.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, MusicVideoType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title, Field.Store.NO),
                     new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, musicVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        musicVideo.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, musicVideo.State.ToString(), Field.Store.NO),
@@ -779,11 +823,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(
                         new StringField(
                             ReleaseDateField,
-                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
                             Field.Store.NO));
                 }
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
@@ -832,7 +880,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -864,10 +912,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, episode.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, episode.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, EpisodeType, Field.Store.YES),
                     new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        episode.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, episode.State.ToString(), Field.Store.NO),
@@ -911,11 +962,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(
                         new StringField(
                             ReleaseDateField,
-                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
                             Field.Store.NO));
                 }
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Plot))
                 {
@@ -954,12 +1009,16 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 foreach (TraktListItem item in episode.TraktListItems)
                 {
-                    doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                    doc.Add(
+                        new StringField(
+                            TraktListField,
+                            item.TraktList.TraktId.ToString(CultureInfo.InvariantCulture),
+                            Field.Store.NO));
                 }
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, episode.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, episode.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -980,12 +1039,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, otherVideo.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, otherVideo.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, OtherVideoType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title, Field.Store.NO),
                     new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, otherVideo.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, otherVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        otherVideo.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, otherVideo.State.ToString(), Field.Store.NO),
@@ -1010,11 +1072,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(
                         new StringField(
                             ReleaseDateField,
-                            metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                            metadata.ReleaseDate.Value.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
                             Field.Store.NO));
                 }
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Plot))
                 {
@@ -1053,7 +1119,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, otherVideo.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, otherVideo.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -1074,12 +1140,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             {
                 var doc = new Document
                 {
-                    new StringField(IdField, song.Id.ToString(), Field.Store.YES),
+                    new StringField(IdField, song.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, SongType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title, Field.Store.NO),
                     new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, song.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(LibraryIdField, song.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        song.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, song.State.ToString(), Field.Store.NO),
@@ -1090,7 +1159,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 AddStatistics(doc, song.MediaVersions);
 
-                doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
@@ -1119,7 +1192,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 AddMetadataGuids(metadata, doc);
 
-                _writer.UpdateDocument(new Term(IdField, song.Id.ToString()), doc);
+                _writer.UpdateDocument(new Term(IdField, song.Id.ToString(CultureInfo.InvariantCulture)), doc);
             }
             catch (Exception ex)
             {
@@ -1130,8 +1203,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
     }
 
     private static SearchItem ProjectToSearchItem(Document doc) => new(
-        doc.Get(TypeField),
-        Convert.ToInt32(doc.Get(IdField)));
+        doc.Get(TypeField, CultureInfo.InvariantCulture),
+        Convert.ToInt32(doc.Get(IdField, CultureInfo.InvariantCulture), CultureInfo.InvariantCulture));
 
     internal static Query ParseQuery(string query)
     {
@@ -1162,7 +1235,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return query;
     }
 
-    private void AddStatistics(Document doc, List<MediaVersion> mediaVersions)
+    private static void AddStatistics(Document doc, List<MediaVersion> mediaVersions)
     {
         foreach (MediaVersion version in mediaVersions)
         {

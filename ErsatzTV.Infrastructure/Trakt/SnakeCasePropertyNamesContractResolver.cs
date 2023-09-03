@@ -6,10 +6,10 @@ namespace ErsatzTV.Infrastructure.Trakt;
 
 public class DeliminatorSeparatedPropertyNamesContractResolver : DefaultContractResolver
 {
-    private readonly string separator;
+    private readonly string _separator;
 
     protected DeliminatorSeparatedPropertyNamesContractResolver(char separator) =>
-        this.separator = separator.ToString(CultureInfo.InvariantCulture);
+        _separator = separator.ToString(CultureInfo.InvariantCulture);
 
     protected override string ResolvePropertyName(string propertyName)
     {
@@ -24,7 +24,7 @@ public class DeliminatorSeparatedPropertyNamesContractResolver : DefaultContract
                 currentWord.Clear();
             }
 
-            currentWord.Append(char.ToLower(c));
+            currentWord.Append(char.ToLower(c, CultureInfo.InvariantCulture));
         }
 
         if (currentWord.Length > 0)
@@ -32,7 +32,7 @@ public class DeliminatorSeparatedPropertyNamesContractResolver : DefaultContract
             parts.Add(currentWord.ToString());
         }
 
-        return string.Join(separator, parts.ToArray());
+        return string.Join(_separator, parts.ToArray());
     }
 }
 

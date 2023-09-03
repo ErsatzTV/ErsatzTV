@@ -23,10 +23,10 @@ public class
         _ffmpegProfileRepository.Copy(request.FFmpegProfileId, request.Name)
             .Map(ProjectToViewModel);
 
-    private Task<Validation<BaseError, CopyFFmpegProfile>> Validate(CopyFFmpegProfile request) =>
+    private static Task<Validation<BaseError, CopyFFmpegProfile>> Validate(CopyFFmpegProfile request) =>
         ValidateName(request).AsTask().MapT(_ => request);
 
-    private Validation<BaseError, string> ValidateName(CopyFFmpegProfile request) =>
+    private static Validation<BaseError, string> ValidateName(CopyFFmpegProfile request) =>
         request.NotEmpty(x => x.Name)
             .Bind(_ => request.NotLongerThan(50)(x => x.Name));
 }

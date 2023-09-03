@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -52,10 +53,8 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
             UseShellExecute = false
         };
 
-        using var test = new Process
-        {
-            StartInfo = startInfo
-        };
+        using var test = new Process();
+        test.StartInfo = startInfo;
 
         test.Start();
         string output = await test.StandardOutput.ReadToEndAsync();
@@ -71,7 +70,7 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
         await _configElementRepository.Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath);
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegDefaultProfileId,
-            request.Settings.DefaultFFmpegProfileId.ToString());
+            request.Settings.DefaultFFmpegProfileId.ToString(CultureInfo.InvariantCulture));
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegSaveReports,
             request.Settings.SaveReports.ToString());

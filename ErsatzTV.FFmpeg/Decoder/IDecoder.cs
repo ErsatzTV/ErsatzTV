@@ -1,4 +1,4 @@
-﻿using ErsatzTV.FFmpeg.Option;
+﻿using ErsatzTV.FFmpeg.InputOption;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 

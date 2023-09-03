@@ -31,13 +31,13 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
 
             var discontinuitySequence = 0;
             var i = 0;
-            while (!lines[i].StartsWith("#EXTINF:"))
+            while (!lines[i].StartsWith("#EXTINF:", StringComparison.OrdinalIgnoreCase))
             {
-                if (lines[i].StartsWith("#EXT-X-DISCONTINUITY-SEQUENCE"))
+                if (lines[i].StartsWith("#EXT-X-DISCONTINUITY-SEQUENCE", StringComparison.OrdinalIgnoreCase))
                 {
-                    discontinuitySequence = int.Parse(lines[i].Split(':')[1]);
+                    discontinuitySequence = int.Parse(lines[i].Split(':')[1], CultureInfo.InvariantCulture);
                 }
-                else if (lines[i].StartsWith("#EXT-X-DISCONTINUITY"))
+                else if (lines[i].StartsWith("#EXT-X-DISCONTINUITY", StringComparison.OrdinalIgnoreCase))
                 {
                     items.Add(new PlaylistDiscontinuity());
                 }
@@ -54,7 +54,7 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                     continue;
                 }
 
-                if (line.StartsWith("#EXT-X-DISCONTINUITY"))
+                if (line.StartsWith("#EXT-X-DISCONTINUITY", StringComparison.OrdinalIgnoreCase))
                 {
                     items.Add(new PlaylistDiscontinuity());
                     i++;
@@ -159,8 +159,8 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
         output.AppendLine("#EXTM3U");
         output.AppendLine("#EXT-X-VERSION:6");
         output.AppendLine("#EXT-X-TARGETDURATION:4");
-        output.AppendLine($"#EXT-X-MEDIA-SEQUENCE:{startSequence}");
-        output.AppendLine($"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuitySequence}");
+        output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-MEDIA-SEQUENCE:{startSequence}");
+        output.AppendLine(CultureInfo.InvariantCulture, $"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuitySequence}");
         output.AppendLine("#EXT-X-INDEPENDENT-SEGMENTS");
 
         for (var i = 0; i < items.Count; i++)
@@ -178,8 +178,11 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                     if (allSegments.Contains(segment))
                     {
                         output.AppendLine(segment.ExtInf);
-                        string offset = segment.StartTime.ToString("zzz").Replace(":", string.Empty);
+                        string offset = segment.StartTime
+                            .ToString("zzz", CultureInfo.InvariantCulture)
+                            .Replace(":", string.Empty);
                         output.AppendLine(
+                            CultureInfo.InvariantCulture,
                             $"#EXT-X-PROGRAM-DATE-TIME:{segment.StartTime:yyyy-MM-ddTHH:mm:ss.fff}{offset}");
                         output.AppendLine(segment.Line);
                     }
@@ -200,7 +203,9 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
 
     private record PlaylistSegment(DateTimeOffset StartTime, string ExtInf, string Line) : PlaylistItem
     {
-        public int StartSequence => int.Parse(Line.Replace("live", string.Empty).Split('.')[0]);
+        public int StartSequence => int.Parse(
+            Line.Replace("live", string.Empty).Split('.')[0],
+            CultureInfo.InvariantCulture);
     }
 
     private record PlaylistDiscontinuity : PlaylistItem;

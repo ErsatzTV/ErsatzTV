@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.State;

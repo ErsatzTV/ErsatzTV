@@ -5,9 +5,11 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Option;
-using ErsatzTV.FFmpeg.Option.Metadata;
+using ErsatzTV.FFmpeg.GlobalOption;
+using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.OutputOption;
+using ErsatzTV.FFmpeg.OutputOption.Metadata;
 using ErsatzTV.FFmpeg.Protocol;
 using Microsoft.Extensions.Logging;
 
@@ -141,7 +143,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
-        OutputOption outputOption = new FastStartOutputOption();
+        OutputOption.OutputOption outputOption = new FastStartOutputOption();
         if (ffmpegState.OutputFormat == OutputFormatKind.Mp4)
         {
             outputOption = new Mp4OutputOptions();

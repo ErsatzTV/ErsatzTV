@@ -2,5 +2,5 @@
 
 public record FrameSize(int Width, int Height)
 {
-    public static FrameSize Unknown = new(-1, -1);
+    public static readonly FrameSize Unknown = new(-1, -1);
 }

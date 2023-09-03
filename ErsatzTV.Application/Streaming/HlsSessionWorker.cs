@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Timers;
 using Bugsnag;
@@ -27,13 +28,14 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly object _sync = new();
     private string _channelNumber;
+    private bool _disposedValue;
     private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
+    private HlsSessionState _state;
     private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private HlsSessionState _state;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -100,9 +102,12 @@ public class HlsSessionWorker : IHlsSessionWorker
         return None;
     }
 
-    public void PlayoutUpdated()
+    public void PlayoutUpdated() => _state = HlsSessionState.PlayoutUpdated;
+
+    public void Dispose()
     {
-        _state = HlsSessionState.PlayoutUpdated;
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
@@ -198,10 +203,23 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _timer.Dispose();
+            }
+
+            _disposedValue = true;
+        }
+    }
+
     private HlsSessionState NextState(HlsSessionState state, PlayoutItemProcessModel processModel)
     {
         bool isComplete = processModel?.IsComplete == true;
-        
+
         HlsSessionState result = state switch
         {
             // playout updates should have the channel start over, transcode method will throttle if needed
@@ -224,7 +242,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             // realtime will always complete items, so start next at zero
             HlsSessionState.ZeroAndRealtime => HlsSessionState.ZeroAndRealtime,
-            
+
             // this will never happen with the enum
             _ => throw new InvalidOperationException()
         };
@@ -277,7 +295,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             _logger.LogInformation("HLS session state: {State}", _state);
-            
+
             DateTimeOffset now = _state is HlsSessionState.SeekAndWorkAhead
                 ? DateTimeOffset.Now
                 : _transcodedUntil.AddSeconds(_state is HlsSessionState.SeekAndRealtime ? 0 : 1);
@@ -453,7 +471,9 @@ public class HlsSessionWorker : IHlsSessionWorker
                 file =>
                 {
                     string fileName = Path.GetFileName(file);
-                    var sequenceNumber = int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]);
+                    var sequenceNumber = int.Parse(
+                        fileName.Replace("live", string.Empty).Split('.')[0],
+                        CultureInfo.InvariantCulture);
                     return new Segment(file, sequenceNumber);
                 })
             .ToList();
@@ -542,5 +562,5 @@ public class HlsSessionWorker : IHlsSessionWorker
         _channelNumber,
         "live.m3u8");
 
-    private record Segment(string File, int SequenceNumber);
+    private sealed record Segment(string File, int SequenceNumber);
 }

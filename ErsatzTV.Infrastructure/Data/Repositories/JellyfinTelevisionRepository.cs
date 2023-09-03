@@ -375,7 +375,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         return None;
     }
 
-    private async Task UpdateShow(TvContext dbContext, JellyfinShow existing, JellyfinShow incoming)
+    private static async Task UpdateShow(TvContext dbContext, JellyfinShow existing, JellyfinShow incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -519,7 +519,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task UpdateSeason(TvContext dbContext, JellyfinSeason existing, JellyfinSeason incoming)
+    private static async Task UpdateSeason(TvContext dbContext, JellyfinSeason existing, JellyfinSeason incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -614,7 +614,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateEpisode(TvContext dbContext, JellyfinEpisode existing, JellyfinEpisode incoming)
+    public static async Task UpdateEpisode(TvContext dbContext, JellyfinEpisode existing, JellyfinEpisode incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -748,7 +748,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<JellyfinShow>>> AddShow(
+    private static async Task<Either<BaseError, MediaItemScanResult<JellyfinShow>>> AddShow(
         TvContext dbContext,
         JellyfinLibrary library,
         JellyfinShow show)
@@ -777,7 +777,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<JellyfinSeason>>> AddSeason(
+    private static async Task<Either<BaseError, MediaItemScanResult<JellyfinSeason>>> AddSeason(
         TvContext dbContext,
         JellyfinLibrary library,
         JellyfinSeason season)

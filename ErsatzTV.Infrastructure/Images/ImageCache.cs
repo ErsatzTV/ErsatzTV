@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using Blurhash.ImageSharp;
 using ErsatzTV.Core;
@@ -13,6 +15,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Images;
 
+[SuppressMessage("Security", "CA5350:Do Not Use Weak Cryptographic Algorithms")]
 public class ImageCache : IImageCache
 {
     private static readonly SHA1 Crypto;
@@ -100,7 +103,7 @@ public class ImageCache : IImageCache
     public virtual string GetPathForImage(string fileName, ArtworkKind artworkKind, Option<int> maybeMaxHeight)
     {
         string subfolder = maybeMaxHeight.Match(
-            maxHeight => Path.Combine(maxHeight.ToString(), fileName[..2]),
+            maxHeight => Path.Combine(maxHeight.ToString(CultureInfo.InvariantCulture), fileName[..2]),
             () => fileName[..2]);
 
         string baseFolder = artworkKind switch
@@ -161,6 +164,7 @@ public class ImageCache : IImageCache
         return targetFile;
     }
 
+    [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
     private static async Task<byte[]> ComputeFileHash(string fileName)
     {
         using var md5 = MD5.Create();

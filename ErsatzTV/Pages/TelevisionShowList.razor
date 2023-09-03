@@ -1,12 +1,12 @@
 ﻿@page "/media/tv/shows"
 @page "/media/tv/shows/page/{PageNumber:int}"
+@inherits MultiSelectBase<TelevisionShowList>
+@inject NavigationManager NavigationManager
+@inject PersistentComponentState ApplicationState
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
-@inherits MultiSelectBase<TelevisionShowList>
-@inject NavigationManager NavigationManager
-@inject PersistentComponentState ApplicationState
 @implements IDisposable
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
@@ -104,14 +104,14 @@
             _data = restored;
         }
     }
-    
+
     private Task PersistData()
     {
         ApplicationState.PersistAsJson("_data", _data);
 
         return Task.CompletedTask;
     }
-    
+
     void IDisposable.Dispose()
     {
         _persistingSubscription.Dispose();

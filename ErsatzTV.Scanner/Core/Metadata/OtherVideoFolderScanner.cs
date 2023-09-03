@@ -114,7 +114,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
                 var allFiles = filesForEtag
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-                    .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+                    .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 foreach (string subdirectory in _localFileSystem.ListSubdirectories(otherVideoFolder)
@@ -196,7 +196,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                             Array.Empty<int>()),
                         cancellationToken);
                 }
-                else if (Path.GetFileName(path).StartsWith("._"))
+                else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> otherVideoIds = await _otherVideoRepository.DeleteByPath(libraryPath, path);

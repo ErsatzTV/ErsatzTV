@@ -29,7 +29,7 @@ public class SubtitlesFilter : BaseFilter
                 effectiveFile = effectiveFile
                     .Replace(@"\", @"/\");
 
-                if (!effectiveFile.StartsWith("http"))
+                if (!effectiveFile.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 {
                     effectiveFile = effectiveFile.Replace(@":/", @"\\:/");
                 }

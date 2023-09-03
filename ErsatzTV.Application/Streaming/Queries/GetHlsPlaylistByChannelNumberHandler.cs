@@ -55,7 +55,7 @@ public class GetHlsPlaylistByChannelNumberHandler :
 ".AsTask();
     }
 
-    private Task<Validation<BaseError, Parameters>> Validate(
+    private static Task<Validation<BaseError, Parameters>> Validate(
         TvContext dbContext,
         GetHlsPlaylistByChannelNumber request,
         DateTimeOffset now) =>
@@ -105,9 +105,9 @@ public class GetHlsPlaylistByChannelNumberHandler :
         return index;
     }
 
-    private record ChannelIndexKey(int ChannelId);
+    private sealed record ChannelIndexKey(int ChannelId);
 
-    private record ChannelIndexRecord(long StartTicks, long Index);
+    private sealed record ChannelIndexRecord(long StartTicks, long Index);
 
-    private record Parameters(Channel Channel, PlayoutItem PlayoutItem);
+    private sealed record Parameters(Channel Channel, PlayoutItem PlayoutItem);
 }

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Globalization;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +41,7 @@ public class ConfigElementRepository : IConfigElementRepository
         return Unit.Default;
     }
 
-    public async Task<Option<ConfigElement>> Get(ConfigElementKey key)
+    public async Task<Option<ConfigElement>> GetConfigElement(ConfigElementKey key)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.ConfigElements
@@ -50,7 +51,7 @@ public class ConfigElementRepository : IConfigElementRepository
     }
 
     public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
-        Get(key).MapT(
+        GetConfigElement(key).MapT(
             ce =>
             {
                 if (typeof(T).IsEnum)
@@ -58,7 +59,7 @@ public class ConfigElementRepository : IConfigElementRepository
                     return (T)Enum.Parse(typeof(T), ce.Value);
                 }
 
-                return (T)Convert.ChangeType(ce.Value, typeof(T));
+                return (T)Convert.ChangeType(ce.Value, typeof(T), CultureInfo.InvariantCulture);
             });
 
     public async Task Delete(ConfigElement configElement)

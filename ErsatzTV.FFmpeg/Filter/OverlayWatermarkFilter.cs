@@ -80,5 +80,5 @@ public class OverlayWatermarkFilter : BaseFilter
         return new WatermarkMargins(horizontalMargin, verticalMargin);
     }
 
-    private record WatermarkMargins(double HorizontalMargin, double VerticalMargin);
+    private sealed record WatermarkMargins(double HorizontalMargin, double VerticalMargin);
 }

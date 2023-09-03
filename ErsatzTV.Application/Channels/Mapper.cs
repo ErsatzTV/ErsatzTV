@@ -45,6 +45,6 @@ internal static class Mapper
             StreamingMode.TransportStreamHybrid => "MPEG-TS",
             StreamingMode.HttpLiveStreamingDirect => "HLS Direct",
             StreamingMode.HttpLiveStreamingSegmenter => "HLS Segmenter",
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(channel))
         };
 }

@@ -49,14 +49,16 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         };
 
         // we want to target the emby platform with the network path replacement
-        bool isTargetPlatformWindows = embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        bool isTargetPlatformWindows = embyMediaSource.OperatingSystem.ToLowerInvariant()
+            .StartsWith("windows", StringComparison.OrdinalIgnoreCase);
         return GetReplacementEmbyPath(replacements, path, isTargetPlatformWindows, false);
     }
 
     private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
     {
         bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
-        return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant()
+            .StartsWith("windows", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetReplacementEmbyPath(
@@ -75,8 +77,10 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
                     }
 
                     string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
-                    string prefix = r.EmbyPath.EndsWith(separatorChar) ? r.EmbyPath : r.EmbyPath + separatorChar;
-                    return path.StartsWith(prefix);
+                    string prefix = r.EmbyPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
+                        ? r.EmbyPath
+                        : r.EmbyPath + separatorChar;
+                    return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
                 });
 
         foreach (EmbyPathReplacement replacement in maybeReplacement)

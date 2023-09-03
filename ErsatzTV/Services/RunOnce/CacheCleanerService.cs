@@ -22,12 +22,12 @@ public class CacheCleanerService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
-        await _systemStartup.WaitForDatabase(cancellationToken);
-        if (cancellationToken.IsCancellationRequested)
+        await _systemStartup.WaitForDatabase(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
         {
             return;
         }
@@ -45,7 +45,7 @@ public class CacheCleanerService : BackgroundService
                 .SelectMany(c => c.Artwork)
                 .Where(a => a.ArtworkKind == ArtworkKind.Logo)
                 .Map(a => a.Path)
-                .ToListAsync(cancellationToken);
+                .ToListAsync(stoppingToken);
 
             foreach (string logo in logos)
             {
@@ -77,7 +77,7 @@ public class CacheCleanerService : BackgroundService
                 .AsNoTracking()
                 .Select(c => c.Number)
                 .Map(num => Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{num}.xml"))
-                .ToListAsync(cancellationToken);
+                .ToListAsync(stoppingToken);
 
             foreach (string fileName in localFileSystem.ListFiles(FileSystemLayout.ChannelGuideCacheFolder))
             {
@@ -85,7 +85,7 @@ public class CacheCleanerService : BackgroundService
                 {
                     continue;
                 }
-                
+
                 File.Delete(fileName);
             }
         }

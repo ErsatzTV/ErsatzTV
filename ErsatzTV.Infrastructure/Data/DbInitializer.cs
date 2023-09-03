@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Globalization;
+using System.Reflection;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Infrastructure.Data;
@@ -74,7 +75,7 @@ public static class DbInitializer
         var profileConfig = new ConfigElement
         {
             Key = ConfigElementKey.FFmpegDefaultProfileId.Key,
-            Value = defaultProfile.Id.ToString()
+            Value = defaultProfile.Id.ToString(CultureInfo.InvariantCulture)
         };
         await context.ConfigElements.AddAsync(profileConfig, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);

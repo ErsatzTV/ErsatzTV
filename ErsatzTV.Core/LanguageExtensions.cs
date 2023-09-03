@@ -21,6 +21,7 @@ public static class LanguageExtensions
             async t => await task(t),
             error => Task.FromResult(Left<BaseError, TR>(error.Join())));
 
+    [SuppressMessage("Usage", "CA2254:Template should be a static expression")]
     public static Task<T> LogFailure<T>(
         this TryAsync<T> tryAsync,
         T defaultValue,

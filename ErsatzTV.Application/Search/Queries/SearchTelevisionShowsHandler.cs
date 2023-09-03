@@ -1,3 +1,4 @@
+using System.Globalization;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
@@ -30,10 +31,8 @@ public class SearchTelevisionShowsHandler : IRequestHandler<SearchTelevisionShow
             .Map(list => list.Map(ToNamedMediaItem).ToList());
     }
 
-    private static NamedMediaItemViewModel ToNamedMediaItem(ShowMetadata show)
-    {
-        return new NamedMediaItemViewModel(
+    private static NamedMediaItemViewModel ToNamedMediaItem(ShowMetadata show) =>
+        new(
             show.ShowId,
-            $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString() : "???")})");
-    }
+            $"{show.Title} ({(show.Year.HasValue ? show.Year.Value.ToString(CultureInfo.InvariantCulture) : "???")})");
 }

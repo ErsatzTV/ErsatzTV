@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -84,12 +85,12 @@ public class SongVideoGenerator : ISongVideoGenerator
             {
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                 {
-                    sb.Append($"{{\\fs{largeFontSize}}}{metadata.Title}");
+                    sb.Append(CultureInfo.InvariantCulture, $"{{\\fs{largeFontSize}}}{metadata.Title}");
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
-                    sb.Append($"\\N{{\\fs{fontSize}}}{metadata.Artist}");
+                    sb.Append(CultureInfo.InvariantCulture, $"\\N{{\\fs{fontSize}}}{metadata.Artist}");
                 }
             }
             else
@@ -101,7 +102,7 @@ public class SongVideoGenerator : ISongVideoGenerator
 
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                 {
-                    sb.Append($"\\N\"{metadata.Title}\"");
+                    sb.Append(CultureInfo.InvariantCulture, $"\\N\"{metadata.Title}\"");
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.AlbumArtist) && !string.Equals(
@@ -109,12 +110,12 @@ public class SongVideoGenerator : ISongVideoGenerator
                         metadata.AlbumArtist,
                         StringComparison.Ordinal))
                 {
-                    sb.Append($"\\N{metadata.AlbumArtist}");
+                    sb.Append(CultureInfo.InvariantCulture, $"\\N{metadata.AlbumArtist}");
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
-                    sb.Append($"\\N{metadata.Album}");
+                    sb.Append(CultureInfo.InvariantCulture, $"\\N{metadata.Album}");
                 }
             }
 

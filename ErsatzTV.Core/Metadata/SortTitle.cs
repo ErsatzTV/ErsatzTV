@@ -24,7 +24,7 @@ public static class SortTitle
             return title[3..];
         }
 
-        if (title.StartsWith("Æ"))
+        if (title.StartsWith("Æ", StringComparison.OrdinalIgnoreCase))
         {
             return title.Replace("Æ", "E");
         }

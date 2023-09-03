@@ -43,7 +43,7 @@ public abstract class TraktCommandBase
             .SelectOneAsync(c => c.Id, c => c.Id == traktListId)
             .Map(o => o.ToValidation<BaseError>($"TraktList {traktListId} does not exist."));
 
-    protected async Task<Either<BaseError, TraktList>> SaveList(TvContext dbContext, TraktList list)
+    protected static async Task<Either<BaseError, TraktList>> SaveList(TvContext dbContext, TraktList list)
     {
         Option<TraktList> maybeExisting = await dbContext.TraktLists
             .Include(l => l.Items)
@@ -199,7 +199,7 @@ public abstract class TraktCommandBase
         return result;
     }
 
-    private async Task<Option<int>> IdentifyMovie(TvContext dbContext, TraktListItem item)
+    private static async Task<Option<int>> IdentifyMovie(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();
 
@@ -234,7 +234,7 @@ public abstract class TraktCommandBase
         return None;
     }
 
-    private async Task<Option<int>> IdentifyShow(TvContext dbContext, TraktListItem item)
+    private static async Task<Option<int>> IdentifyShow(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();
 
@@ -269,7 +269,7 @@ public abstract class TraktCommandBase
         return None;
     }
 
-    private async Task<Option<int>> IdentifySeason(TvContext dbContext, TraktListItem item)
+    private static async Task<Option<int>> IdentifySeason(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();
 
@@ -305,7 +305,7 @@ public abstract class TraktCommandBase
         return None;
     }
 
-    private async Task<Option<int>> IdentifyEpisode(TvContext dbContext, TraktListItem item)
+    private static async Task<Option<int>> IdentifyEpisode(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();
 

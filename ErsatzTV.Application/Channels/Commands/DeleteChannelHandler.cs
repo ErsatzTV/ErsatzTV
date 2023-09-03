@@ -35,7 +35,7 @@ public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseEr
     private async Task<Unit> DoDeletion(TvContext dbContext, Channel channel, CancellationToken cancellationToken)
     {
         dbContext.Channels.Remove(channel);
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         // delete channel data from channel guide cache
         string cacheFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channel.Number}.xml");

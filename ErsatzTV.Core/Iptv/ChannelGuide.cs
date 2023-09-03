@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Xml;
 using Microsoft.IO;
@@ -32,7 +33,7 @@ public class ChannelGuide
         xml.WriteRaw(_channelsFragment);
 
         foreach ((string channelNumber, string channelDataFragment) in _channelDataFragments.OrderBy(
-                     kvp => decimal.Parse(kvp.Key)))
+                     kvp => decimal.Parse(kvp.Key, CultureInfo.InvariantCulture)))
         {
             xml.WriteRaw(channelDataFragment);
         }

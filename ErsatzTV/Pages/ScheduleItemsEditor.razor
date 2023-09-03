@@ -228,7 +228,7 @@
                                               @bind-Value="_selectedItem.PlayoutDurationHours"
                                               Adornment="Adornment.End"
                                               AdornmentText="hours"
-                                              Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)" />
+                                              Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
                             </MudItem>
                             <MudItem xs="6">
                                 <MudTextField T="int"
@@ -370,10 +370,7 @@
         _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadScheduleItems();
-    }
+    protected override async Task OnParametersSetAsync() => await LoadScheduleItems();
 
     private async Task LoadScheduleItems()
     {

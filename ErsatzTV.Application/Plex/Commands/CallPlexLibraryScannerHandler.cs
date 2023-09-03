@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Globalization;
+using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
@@ -58,7 +59,7 @@ public class CallPlexLibraryScannerHandler : CallLibraryScannerHandler<ISynchron
     {
         var arguments = new List<string>
         {
-            "scan-plex", request.PlexLibraryId.ToString()
+            "scan-plex", request.PlexLibraryId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.ForceScan)

@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
@@ -100,7 +101,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(string ffmpegPath, string capabilities)
     {
-        var cacheKey = string.Format(FFmpegCapabilitiesCacheKeyFormat, capabilities);
+        var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, capabilities);
         if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedDecoders) &&
             cachedDecoders is not null)
         {
@@ -149,7 +150,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             string driver = vaapiDriver.IfNone(string.Empty);
             string device = vaapiDevice.IfNone(string.Empty);
-            var cacheKey = string.Format(VaapiCacheKeyFormat, driver, device);
+            var cacheKey = string.Format(CultureInfo.InvariantCulture, VaapiCacheKeyFormat, driver, device);
 
             if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
                 profileEntrypoints is not null)

@@ -1,9 +1,11 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using ErsatzTV.Infrastructure.Plex.Models;
 using Microsoft.IO;
 
 namespace ErsatzTV.Infrastructure.Plex;
 
+[SuppressMessage("Security", "CA5350:Do Not Use Weak Cryptographic Algorithms")]
 public class PlexEtag
 {
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;

@@ -8,14 +8,14 @@ namespace ErsatzTV.Infrastructure.Data;
 
 public class TvContext : DbContext
 {
-    public static string LastInsertedRowId = "last_insert_rowid()";
-    public static string CaseInsensitiveCollation = "NOCASE";
-    
     private readonly ILoggerFactory _loggerFactory;
 
     public TvContext(DbContextOptions<TvContext> options, ILoggerFactory loggerFactory)
         : base(options) =>
         _loggerFactory = loggerFactory;
+
+    public static string LastInsertedRowId { get; set; } = "last_insert_rowid()";
+    public static string CaseInsensitiveCollation { get; set; } = "NOCASE";
 
     public IDbConnection Connection => Database.GetDbConnection();
 
@@ -92,10 +92,10 @@ public class TvContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
         optionsBuilder.UseLoggerFactory(_loggerFactory);
 
-    protected override void OnModelCreating(ModelBuilder builder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(builder);
+        base.OnModelCreating(modelBuilder);
 
-        builder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
     }
 }

@@ -73,5 +73,5 @@ public class AddSeasonToCollectionHandler :
             .SelectOneAsync(m => m.Id, e => e.Id == request.SeasonId)
             .Map(o => o.ToValidation<BaseError>("Season does not exist"));
 
-    private record Parameters(Collection Collection, Season Season);
+    private sealed record Parameters(Collection Collection, Season Season);
 }

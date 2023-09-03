@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using ErsatzTV.Core.Interfaces.Metadata;
 
@@ -6,6 +8,7 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public static class FolderEtag
 {
+    [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
     private static readonly MD5 Crypto = MD5.Create();
 
     public static string Calculate(string folder, ILocalFileSystem localFileSystem)
@@ -23,7 +26,7 @@ public static class FolderEtag
         byte[] bytes = Crypto.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
         foreach (byte t in bytes)
         {
-            hash.Append(t.ToString("x2"));
+            hash.Append(t.ToString("x2", CultureInfo.InvariantCulture));
         }
 
         return hash.ToString();
@@ -50,7 +53,7 @@ public static class FolderEtag
         byte[] bytes = Crypto.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
         foreach (byte t in bytes)
         {
-            hash.Append(t.ToString("x2"));
+            hash.Append(t.ToString("x2", CultureInfo.InvariantCulture));
         }
 
         return hash.ToString();

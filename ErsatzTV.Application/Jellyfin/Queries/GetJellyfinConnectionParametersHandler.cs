@@ -60,7 +60,7 @@ public class GetJellyfinConnectionParametersHandler : IRequestHandler<GetJellyfi
             .ToValidation<BaseError>("Jellyfin media source requires an active connection");
     }
 
-    private record ConnectionParameters(
+    private sealed record ConnectionParameters(
         JellyfinMediaSource JellyfinMediaSource,
         JellyfinConnection ActiveConnection);
 }

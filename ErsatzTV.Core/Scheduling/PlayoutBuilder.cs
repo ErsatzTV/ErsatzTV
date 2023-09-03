@@ -487,7 +487,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     "Failed to schedule beyond {Time}; aborting playout build - this is a bug",
                     playoutBuilderState.CurrentTime);
 
-                throw new ApplicationException("Scheduling loop encountered");
+                throw new InvalidOperationException("Scheduling loop encountered");
             }
 
             // _logger.LogDebug("Playout time is {CurrentTime}", playoutBuilderState.CurrentTime);
@@ -527,7 +527,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     nextScheduleItem,
                     playoutFinish,
                     cancellationToken),
-                _ => throw new ArgumentOutOfRangeException(nameof(scheduleItem))
+                _ => throw new NotSupportedException(nameof(scheduleItem))
             };
 
             (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = result;

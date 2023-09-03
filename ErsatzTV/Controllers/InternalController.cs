@@ -180,7 +180,7 @@ public class InternalController : ControllerBase
             Left: _ => new NotFoundResult(),
             Right: r =>
             {
-                if (r.StartsWith("http"))
+                if (r.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 {
                     return new RedirectResult(r);
                 }

@@ -45,6 +45,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 using Exception = System.Exception;
+using IConfiguration = Bugsnag.IConfiguration;
 
 namespace ErsatzTV.Scanner;
 
@@ -80,9 +81,11 @@ public class Program
             .ConfigureServices(
                 (context, services) =>
                 {
-                    string databaseProvider = context.Configuration.GetValue("provider", Provider.Sqlite.Name) ?? string.Empty;
+                    string databaseProvider = context.Configuration.GetValue("provider", Provider.Sqlite.Name) ??
+                                              string.Empty;
                     var sqliteConnectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
-                    string mySqlConnectionString = context.Configuration.GetValue<string>("MySql:ConnectionString") ?? string.Empty;
+                    string mySqlConnectionString =
+                        context.Configuration.GetValue<string>("MySql:ConnectionString") ?? string.Empty;
 
                     services.AddDbContext<TvContext>(
                         options =>
@@ -141,7 +144,7 @@ public class Program
                                 );
                             }
                         });
-                    
+
                     if (databaseProvider == Provider.Sqlite.Name)
                     {
                         TvContext.LastInsertedRowId = "last_insert_rowid()";
@@ -269,6 +272,6 @@ public class Program
 
         public IBreadcrumbs Breadcrumbs => new Breadcrumbs(Configuration);
         public ISessionTracker SessionTracking => new SessionTracker(Configuration);
-        public Bugsnag.IConfiguration Configuration => new Configuration();
+        public IConfiguration Configuration => new Configuration();
     }
 }

@@ -310,7 +310,7 @@ public class EmbyApiClient : IEmbyApiClient
             _ => None
         };
 
-    private List<EmbyPathInfo> GetPathInfos(EmbyLibraryResponse response) =>
+    private static List<EmbyPathInfo> GetPathInfos(EmbyLibraryResponse response) =>
         response.LibraryOptions.PathInfos
             .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
             .Map(
@@ -409,7 +409,7 @@ public class EmbyApiClient : IEmbyApiClient
             StartTime = TimeSpan.FromTicks(chapterResponse.StartPositionTicks)
         };
 
-    private MovieMetadata ProjectToMovieMetadata(EmbyLibraryItemResponse item)
+    private static MovieMetadata ProjectToMovieMetadata(EmbyLibraryItemResponse item)
     {
         DateTime dateAdded = item.DateCreated.UtcDateTime;
         // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -471,7 +471,7 @@ public class EmbyApiClient : IEmbyApiClient
         return metadata;
     }
 
-    private Option<Actor> ProjectToActor(EmbyPersonResponse person, DateTime dateAdded)
+    private static Option<Actor> ProjectToActor(EmbyPersonResponse person, DateTime dateAdded)
     {
         if (person.Type?.ToLowerInvariant() != "actor")
         {
@@ -535,7 +535,7 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private ShowMetadata ProjectToShowMetadata(EmbyLibraryItemResponse item)
+    private static ShowMetadata ProjectToShowMetadata(EmbyLibraryItemResponse item)
     {
         DateTime dateAdded = item.DateCreated.UtcDateTime;
         // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -728,7 +728,7 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private EpisodeMetadata ProjectToEpisodeMetadata(EmbyLibraryItemResponse item)
+    private static EpisodeMetadata ProjectToEpisodeMetadata(EmbyLibraryItemResponse item)
     {
         DateTime dateAdded = item.DateCreated.UtcDateTime;
         // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -776,7 +776,7 @@ public class EmbyApiClient : IEmbyApiClient
         return metadata;
     }
 
-    private List<MetadataGuid> GuidsFromProviderIds(EmbyProviderIdsResponse providerIds)
+    private static List<MetadataGuid> GuidsFromProviderIds(EmbyProviderIdsResponse providerIds)
     {
         var result = new List<MetadataGuid>();
 
@@ -820,14 +820,14 @@ public class EmbyApiClient : IEmbyApiClient
                 int height = videoStream.Height ?? 1;
 
                 var isAnamorphic = false;
-                if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(":"))
+                if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(':'))
                 {
                     // if width/height != aspect ratio, is anamorphic
                     double resolutionRatio = width / (double)height;
 
                     string[] split = videoStream.AspectRatio.Split(":");
-                    var num = double.Parse(split[0]);
-                    var den = double.Parse(split[1]);
+                    var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+                    var den = double.Parse(split[1], CultureInfo.InvariantCulture);
                     double aspectRatio = num / den;
 
                     isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;

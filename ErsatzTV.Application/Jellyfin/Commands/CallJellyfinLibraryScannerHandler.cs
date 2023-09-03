@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Globalization;
+using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
@@ -59,7 +60,7 @@ public class CallJellyfinLibraryScannerHandler : CallLibraryScannerHandler<ISync
     {
         var arguments = new List<string>
         {
-            "scan-jellyfin", request.JellyfinLibraryId.ToString()
+            "scan-jellyfin", request.JellyfinLibraryId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.ForceScan)

@@ -15,9 +15,9 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private int? _discardToFillAttempts;
     private int? _multipleCount;
     private TimeSpan? _playoutDuration;
-    private TimeSpan? _startTime;
     private int _playoutDurationHours;
     private int _playoutDurationMinutes;
+    private TimeSpan? _startTime;
 
     public int Id { get; set; }
     public int Index { get; set; }
@@ -145,7 +145,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private void CheckPlayoutDuration()
     {
         _playoutDuration ??= TimeSpan.Zero;
-        
+
         if (_playoutDuration > TimeSpan.FromHours(24))
         {
             _playoutDuration = TimeSpan.FromHours(24);
@@ -158,7 +158,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 
         _playoutDurationHours = (int)_playoutDuration.Value.TotalHours;
         _playoutDurationMinutes = _playoutDuration.Value.Minutes;
-        
+
         OnPropertyChanged(nameof(PlayoutDuration));
         OnPropertyChanged(nameof(PlayoutDurationHours));
         OnPropertyChanged(nameof(PlayoutDurationMinutes));

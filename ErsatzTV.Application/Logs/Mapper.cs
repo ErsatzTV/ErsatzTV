@@ -3,7 +3,7 @@ using Serilog.Events;
 
 namespace ErsatzTV.Application.Logs;
 
-internal partial class Mapper
+internal sealed partial class Mapper
 {
     [GeneratedRegex(@"(.*)\[(DBG|INF|WRN|ERR|FTL)\](.*)")]
     private static partial Regex LogEntryRegex();

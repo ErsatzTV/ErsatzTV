@@ -1,12 +1,20 @@
 namespace ErsatzTV.Core;
 
-public class SystemStartup
+public class SystemStartup : IDisposable
 {
     private readonly SemaphoreSlim _databaseStartup = new(0, 100);
     private readonly SemaphoreSlim _searchIndexStartup = new(0, 100);
 
+    private bool _disposedValue;
+
     public bool IsDatabaseReady { get; private set; }
     public bool IsSearchIndexReady { get; private set; }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
     public event EventHandler OnDatabaseReady;
     public event EventHandler OnSearchIndexReady;
@@ -29,5 +37,19 @@ public class SystemStartup
         _searchIndexStartup.Release(100);
         IsSearchIndexReady = true;
         OnSearchIndexReady?.Invoke(this, EventArgs.Empty);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _databaseStartup.Dispose();
+                _searchIndexStartup.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 }

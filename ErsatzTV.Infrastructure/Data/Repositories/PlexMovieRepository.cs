@@ -96,9 +96,9 @@ public class PlexMovieRepository : IPlexMovieRepository
         return None;
     }
 
-    public async Task<List<int>> FlagFileNotFound(PlexLibrary library, List<string> plexMovieKeys)
+    public async Task<List<int>> FlagFileNotFound(PlexLibrary library, List<string> movieItemIds)
     {
-        if (plexMovieKeys.Count == 0)
+        if (movieItemIds.Count == 0)
         {
             return new List<int>();
         }
@@ -111,7 +111,7 @@ public class PlexMovieRepository : IPlexMovieRepository
                 INNER JOIN PlexMovie ON PlexMovie.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
                 WHERE PlexMovie.Key IN @MovieKeys",
-                new { LibraryId = library.Id, MovieKeys = plexMovieKeys })
+                new { LibraryId = library.Id, MovieKeys = movieItemIds })
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(

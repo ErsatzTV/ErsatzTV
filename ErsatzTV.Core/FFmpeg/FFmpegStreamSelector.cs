@@ -149,7 +149,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
             subtitles = subtitles
                 .Filter(
-                    s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.InvariantCultureIgnoreCase)))
+                    s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
         }
 
@@ -198,11 +198,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
         var correctLanguage = audioStreams.Filter(
-            s => preferredLanguageCodes.Any(
-                c => string.Equals(
-                    s.Language,
-                    c,
-                    StringComparison.InvariantCultureIgnoreCase))).ToList();
+                s => preferredLanguageCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
 
         if (correctLanguage.Any())
         {

@@ -6,8 +6,8 @@ using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Option;
-using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
+using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
+using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -515,7 +515,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
-                videoStream.IsAnamorphicEdgeCase);
+                VideoStream.IsAnamorphicEdgeCase);
         }
         else
         {
@@ -536,7 +536,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 },
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
-                videoStream.IsAnamorphicEdgeCase);
+                VideoStream.IsAnamorphicEdgeCase);
         }
 
         if (!string.IsNullOrWhiteSpace(scaleStep.Filter))

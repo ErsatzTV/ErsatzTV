@@ -52,5 +52,5 @@ public class SaveJellyfinSecretsHandler : IRequestHandler<SaveJellyfinSecrets, E
         return Unit.Default;
     }
 
-    private record Parameters(JellyfinSecrets Secrets, JellyfinServerInformation ServerInformation);
+    private sealed record Parameters(JellyfinSecrets Secrets, JellyfinServerInformation ServerInformation);
 }

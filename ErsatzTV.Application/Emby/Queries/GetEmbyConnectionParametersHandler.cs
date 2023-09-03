@@ -76,7 +76,7 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
             .ToValidation<BaseError>("Emby media source requires an api key");
     }
 
-    private record ConnectionParameters(
+    private sealed record ConnectionParameters(
         EmbyMediaSource EmbyMediaSource,
         EmbyConnection ActiveConnection)
     {

@@ -19,11 +19,9 @@ public class FFmpegProcessService
     private readonly IImageCache _imageCache;
     private readonly ILogger<FFmpegProcessService> _logger;
     private readonly IMemoryCache _memoryCache;
-    private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
 
     public FFmpegProcessService(
-        FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
         IFFmpegStreamSelector ffmpegStreamSelector,
         IImageCache imageCache,
         ITempFilePool tempFilePool,
@@ -31,7 +29,6 @@ public class FFmpegProcessService
         IMemoryCache memoryCache,
         ILogger<FFmpegProcessService> logger)
     {
-        _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _imageCache = imageCache;
         _tempFilePool = tempFilePool;
@@ -88,12 +85,12 @@ public class FFmpegProcessService
                     watermarkPath);
 
             FFmpegPlaybackSettings playbackSettings =
-                _playbackSettingsCalculator.CalculateErrorSettings(
+                FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(
                     StreamingMode.TransportStream,
                     channel.FFmpegProfile,
                     false);
 
-            FFmpegPlaybackSettings scalePlaybackSettings = _playbackSettingsCalculator.CalculateSettings(
+            FFmpegPlaybackSettings scalePlaybackSettings = FFmpegPlaybackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 channel.FFmpegProfile,
                 videoVersion,
@@ -152,7 +149,7 @@ public class FFmpegProcessService
         }
     }
 
-    private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
+    private static bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
         displaySize.Width != target.Width || displaySize.Height != target.Height;
 
     internal async Task<WatermarkOptions> GetWatermarkOptions(

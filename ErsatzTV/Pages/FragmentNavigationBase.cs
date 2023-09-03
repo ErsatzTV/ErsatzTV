@@ -10,6 +10,8 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
 {
     private readonly CancellationTokenSource _cts = new();
 
+    private bool _disposedValue;
+
     protected CancellationToken CancellationToken => _cts.Token;
 
     [Inject]
@@ -20,10 +22,24 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
 
     public void Dispose()
     {
-        NavManager.LocationChanged -= TryFragmentNavigation;
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-        _cts?.Cancel();
-        _cts?.Dispose();
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                NavManager.LocationChanged -= TryFragmentNavigation;
+
+                _cts?.Cancel();
+                _cts?.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 
     protected override void OnInitialized() => NavManager.LocationChanged += TryFragmentNavigation;

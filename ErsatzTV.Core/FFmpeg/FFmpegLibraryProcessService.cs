@@ -21,12 +21,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
-    private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly ITempFilePool _tempFilePool;
 
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
-        FFmpegPlaybackSettingsCalculator playbackSettingsCalculator,
         IFFmpegStreamSelector ffmpegStreamSelector,
         ITempFilePool tempFilePool,
         IPipelineBuilderFactory pipelineBuilderFactory,
@@ -34,7 +32,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         ILogger<FFmpegLibraryProcessService> logger)
     {
         _ffmpegProcessService = ffmpegProcessService;
-        _playbackSettingsCalculator = playbackSettingsCalculator;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _tempFilePool = tempFilePool;
         _pipelineBuilderFactory = pipelineBuilderFactory;
@@ -82,7 +79,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 preferredAudioLanguage,
                 preferredAudioTitle);
 
-        FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
+        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
             videoVersion,
@@ -373,7 +370,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames)
     {
-        FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateErrorSettings(
+        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateErrorSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
             hlsRealtime);
@@ -637,7 +634,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkWidthPercent,
             cancellationToken);
 
-    private Option<WatermarkInputFile> GetWatermarkInputFile(
+    private static Option<WatermarkInputFile> GetWatermarkInputFile(
         Option<WatermarkOptions> watermarkOptions,
         Option<List<FadePoint>> maybeFadePoints)
     {

@@ -73,5 +73,5 @@ public class AddSongToCollectionHandler :
             .SelectOneAsync(m => m.Id, e => e.Id == request.SongId)
             .Map(o => o.ToValidation<BaseError>("Song does not exist"));
 
-    private record Parameters(Collection Collection, Song Song);
+    private sealed record Parameters(Collection Collection, Song Song);
 }

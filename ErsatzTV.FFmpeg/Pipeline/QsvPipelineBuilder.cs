@@ -6,8 +6,9 @@ using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Option;
-using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
+using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
+using ErsatzTV.FFmpeg.InputOption;
+using ErsatzTV.FFmpeg.OutputOption;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -361,7 +362,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
                     result is [ColorspaceFilter colorspace])
                 {
-                    if (colorspace.Filter.StartsWith("setparams="))
+                    if (colorspace.Filter.StartsWith("setparams=", StringComparison.OrdinalIgnoreCase))
                     {
                         result.Insert(0, new QsvFormatFilter(new PixelFormatQsv(format.Name)));
                     }
@@ -552,7 +553,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
-                videoStream.IsAnamorphicEdgeCase);
+                VideoStream.IsAnamorphicEdgeCase);
         }
         else
         {
@@ -569,7 +570,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 },
                 desiredState.ScaledSize,
                 ffmpegState.QsvExtraHardwareFrames,
-                videoStream.IsAnamorphicEdgeCase,
+                VideoStream.IsAnamorphicEdgeCase,
                 videoStream.SampleAspectRatio);
         }
 

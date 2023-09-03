@@ -22,7 +22,7 @@ public class SearchIndexService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -30,7 +30,7 @@ public class SearchIndexService : BackgroundService
         {
             _logger.LogInformation("Search index worker service started");
 
-            await foreach (ISearchIndexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (ISearchIndexBackgroundServiceRequest request in _channel.ReadAllAsync(stoppingToken))
             {
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
@@ -40,10 +40,10 @@ public class SearchIndexService : BackgroundService
                     switch (request)
                     {
                         case ReindexMediaItems reindexMediaItems:
-                            await mediator.Send(reindexMediaItems, cancellationToken);
+                            await mediator.Send(reindexMediaItems, stoppingToken);
                             break;
                         case RemoveMediaItems removeMediaItems:
-                            await mediator.Send(removeMediaItems, cancellationToken);
+                            await mediator.Send(removeMediaItems, stoppingToken);
                             break;
                     }
                 }

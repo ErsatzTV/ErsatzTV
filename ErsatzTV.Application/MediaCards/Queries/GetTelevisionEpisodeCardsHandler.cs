@@ -4,7 +4,6 @@ using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Search;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.MediaCards;

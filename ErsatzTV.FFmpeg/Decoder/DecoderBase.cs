@@ -22,7 +22,7 @@ public abstract class DecoderBase : IDecoder
 
     public bool AppliesTo(ConcatInputFile concatInputFile) => false;
 
-    protected int InputBitDepth(InputFile inputFile)
+    protected static int InputBitDepth(InputFile inputFile)
     {
         var bitDepth = 8;
 

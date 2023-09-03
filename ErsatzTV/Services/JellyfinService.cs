@@ -27,12 +27,12 @@ public class JellyfinService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
-        await _systemStartup.WaitForDatabase(cancellationToken);
-        if (cancellationToken.IsCancellationRequested)
+        await _systemStartup.WaitForDatabase(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
         {
             return;
         }
@@ -41,7 +41,7 @@ public class JellyfinService : BackgroundService
         {
             if (!File.Exists(FileSystemLayout.JellyfinSecretsPath))
             {
-                await File.WriteAllTextAsync(FileSystemLayout.JellyfinSecretsPath, "{}", cancellationToken);
+                await File.WriteAllTextAsync(FileSystemLayout.JellyfinSecretsPath, "{}", stoppingToken);
             }
 
             _logger.LogInformation(
@@ -49,9 +49,9 @@ public class JellyfinService : BackgroundService
                 FileSystemLayout.JellyfinSecretsPath);
 
             // synchronize sources on startup
-            await SynchronizeSources(new SynchronizeJellyfinMediaSources(), cancellationToken);
+            await SynchronizeSources(new SynchronizeJellyfinMediaSources(), stoppingToken);
 
-            await foreach (IJellyfinBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (IJellyfinBackgroundServiceRequest request in _channel.ReadAllAsync(stoppingToken))
             {
                 try
                 {
@@ -59,7 +59,7 @@ public class JellyfinService : BackgroundService
                     switch (request)
                     {
                         case SynchronizeJellyfinMediaSources synchronizeJellyfinMediaSources:
-                            requestTask = SynchronizeSources(synchronizeJellyfinMediaSources, cancellationToken);
+                            requestTask = SynchronizeSources(synchronizeJellyfinMediaSources, stoppingToken);
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");

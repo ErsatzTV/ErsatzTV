@@ -28,7 +28,7 @@ public class ScannerService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -36,7 +36,7 @@ public class ScannerService : BackgroundService
         {
             _logger.LogInformation("Scanner service started");
 
-            await foreach (IScannerBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (IScannerBackgroundServiceRequest request in _channel.ReadAllAsync(stoppingToken))
             {
                 try
                 {
@@ -44,28 +44,28 @@ public class ScannerService : BackgroundService
                     switch (request)
                     {
                         case ISynchronizePlexLibraryById synchronizePlexLibraryById:
-                            requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
+                            requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, stoppingToken);
                             break;
                         case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
-                            requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, cancellationToken);
+                            requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, stoppingToken);
                             break;
                         case SynchronizeJellyfinLibraries synchronizeJellyfinLibraries:
-                            requestTask = SynchronizeLibraries(synchronizeJellyfinLibraries, cancellationToken);
+                            requestTask = SynchronizeLibraries(synchronizeJellyfinLibraries, stoppingToken);
                             break;
                         case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
-                            requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
+                            requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, stoppingToken);
                             break;
                         case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
-                            requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, cancellationToken);
+                            requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, stoppingToken);
                             break;
                         case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
-                            requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
+                            requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, stoppingToken);
                             break;
                         case SynchronizeEmbyCollections synchronizeEmbyCollections:
-                            requestTask = SynchronizeEmbyCollections(synchronizeEmbyCollections, cancellationToken);
+                            requestTask = SynchronizeEmbyCollections(synchronizeEmbyCollections, stoppingToken);
                             break;
                         case IScanLocalLibrary scanLocalLibrary:
-                            requestTask = SynchronizeLocalLibrary(scanLocalLibrary, cancellationToken);
+                            requestTask = SynchronizeLocalLibrary(scanLocalLibrary, stoppingToken);
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");

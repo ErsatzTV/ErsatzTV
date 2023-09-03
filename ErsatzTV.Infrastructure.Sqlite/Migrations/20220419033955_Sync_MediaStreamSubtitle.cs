@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System.Globalization;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -8,7 +9,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF");
+            var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", CultureInfo.InvariantCulture);
 
             // delete all subtitles
             migrationBuilder.Sql("DELETE FROM Subtitle");

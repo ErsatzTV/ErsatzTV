@@ -4,7 +4,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
-using LanguageExt.UnsafeValueAccess;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;

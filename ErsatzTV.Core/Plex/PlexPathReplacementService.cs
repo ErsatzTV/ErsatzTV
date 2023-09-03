@@ -43,8 +43,10 @@ public class PlexPathReplacementService : IPlexPathReplacementService
                     }
 
                     string separatorChar = IsWindows(r.PlexMediaSource) ? @"\" : @"/";
-                    string prefix = r.PlexPath.EndsWith(separatorChar) ? r.PlexPath : r.PlexPath + separatorChar;
-                    return path.StartsWith(prefix);
+                    string prefix = r.PlexPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
+                        ? r.PlexPath
+                        : r.PlexPath + separatorChar;
+                    return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
                 });
 
         foreach (PlexPathReplacement replacement in maybeReplacement)

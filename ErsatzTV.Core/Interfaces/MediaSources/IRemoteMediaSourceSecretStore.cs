@@ -4,5 +4,5 @@ public interface IRemoteMediaSourceSecretStore<TSecrets>
 {
     Task<Unit> DeleteAll();
     Task<TSecrets> ReadSecrets();
-    Task<Unit> SaveSecrets(TSecrets jellyfinSecrets);
+    Task<Unit> SaveSecrets(TSecrets secrets);
 }

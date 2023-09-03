@@ -11,7 +11,7 @@ public class ChannelRepository : IChannelRepository
     public ChannelRepository(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    public async Task<Option<Channel>> Get(int id)
+    public async Task<Option<Channel>> GetChannel(int id)
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         return await dbContext.Channels

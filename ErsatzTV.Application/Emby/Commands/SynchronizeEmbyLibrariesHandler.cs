@@ -102,9 +102,7 @@ public class SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLi
         return Unit.Default;
     }
 
-    private record ConnectionParameters(
-        EmbyMediaSource EmbyMediaSource,
-        EmbyConnection ActiveConnection)
+    private sealed record ConnectionParameters(EmbyMediaSource EmbyMediaSource, EmbyConnection ActiveConnection)
     {
         public string ApiKey { get; set; }
     }

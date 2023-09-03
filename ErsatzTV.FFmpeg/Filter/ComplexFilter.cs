@@ -257,5 +257,6 @@ public class ComplexFilter : IPipelineStep
         return result;
     }
 
-    private string ProperLabel(string label) => label.StartsWith("[") ? label : $"[{label}]";
+    private static string ProperLabel(string label) =>
+        label.StartsWith("[", StringComparison.OrdinalIgnoreCase) ? label : $"[{label}]";
 }

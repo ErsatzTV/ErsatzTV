@@ -19,6 +19,7 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -164,7 +165,7 @@ internal class FFmpegProcessBuilder
         }
 
         var videoLabel = $"{videoIndex}:{videoStreamIndex}";
-        var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
+        var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(CultureInfo.InvariantCulture), () => "a")}";
 
         Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
             audioPath.IsNone,

@@ -110,5 +110,5 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             .ToUpperInvariant();
 
-    private record Parameters(LocalLibrary Existing, LocalLibrary Incoming);
+    private sealed record Parameters(LocalLibrary Existing, LocalLibrary Incoming);
 }

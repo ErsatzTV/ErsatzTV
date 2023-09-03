@@ -4,14 +4,16 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class FFmpegProcess : Process
 {
-    public static int ProcessCount;
+    private static int _processCount;
 
-    public FFmpegProcess() => Interlocked.Increment(ref ProcessCount);
+    public FFmpegProcess() => Interlocked.Increment(ref _processCount);
+
+    public static int ProcessCount => _processCount;
 
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
 
-        Interlocked.Decrement(ref ProcessCount);
+        Interlocked.Decrement(ref _processCount);
     }
 }

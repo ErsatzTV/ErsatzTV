@@ -5,7 +5,7 @@ namespace ErsatzTV.Services.RunOnce;
 
 public class ResourceExtractorService : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -16,50 +16,50 @@ public class ResourceExtractorService : BackgroundService
 
         Assembly assembly = typeof(ResourceExtractorService).GetTypeInfo().Assembly;
 
-        await ExtractResource(assembly, "background.png", cancellationToken);
-        await ExtractResource(assembly, "song_background_1.png", cancellationToken);
-        await ExtractResource(assembly, "song_background_2.png", cancellationToken);
-        await ExtractResource(assembly, "song_background_3.png", cancellationToken);
-        await ExtractResource(assembly, "ErsatzTV.png", cancellationToken);
+        await ExtractResource(assembly, "background.png", stoppingToken);
+        await ExtractResource(assembly, "song_background_1.png", stoppingToken);
+        await ExtractResource(assembly, "song_background_2.png", stoppingToken);
+        await ExtractResource(assembly, "song_background_3.png", stoppingToken);
+        await ExtractResource(assembly, "ErsatzTV.png", stoppingToken);
 
-        await ExtractFontResource(assembly, "Roboto-Regular.ttf", cancellationToken);
-        await ExtractFontResource(assembly, "OPTIKabel-Heavy.otf", cancellationToken);
+        await ExtractFontResource(assembly, "Roboto-Regular.ttf", stoppingToken);
+        await ExtractFontResource(assembly, "OPTIKabel-Heavy.otf", stoppingToken);
 
         await ExtractTemplateResource(
             assembly,
             "_default.ass.sbntxt",
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
-            cancellationToken);
+            stoppingToken);
 
         await ExtractTemplateResource(
             assembly,
             "_ArtistTitle_LeftMiddle.sbntxt",
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
-            cancellationToken);
+            stoppingToken);
 
         await ExtractTemplateResource(
             assembly,
             "_ArtistTitleAlbum_CenterTop.sbntxt",
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
-            cancellationToken);
+            stoppingToken);
 
         await ExtractScriptResource(
             assembly,
             "_threePartEpisodes.js",
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
-            cancellationToken);
+            stoppingToken);
 
         await ExtractScriptResource(
             assembly,
             "_episode.js",
             FileSystemLayout.AudioStreamSelectorScriptsFolder,
-            cancellationToken);
+            stoppingToken);
 
         await ExtractScriptResource(
             assembly,
             "_movie.js",
             FileSystemLayout.AudioStreamSelectorScriptsFolder,
-            cancellationToken);
+            stoppingToken);
     }
 
     private static async Task ExtractResource(Assembly assembly, string name, CancellationToken cancellationToken)

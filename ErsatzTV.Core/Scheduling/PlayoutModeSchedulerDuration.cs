@@ -59,7 +59,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
             if (itemDuration > scheduleItem.PlayoutDuration)
             {
-                _logger.LogWarning(
+                Logger.LogWarning(
                     "Skipping playout item {Title} with duration {Duration:hh\\:mm\\:ss} that will never fit in schedule item duration {PlayoutDuration:hh\\:mm\\:ss}",
                     PlayoutBuilder.DisplayTitle(mediaItem),
                     itemDuration,
@@ -86,7 +86,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 }
                 else
                 {
-                    _logger.LogDebug(
+                    Logger.LogDebug(
                         "Skipping playout item {Title} with duration {Duration:hh\\:mm\\:ss} that is longer than remaining duration {RemainingDuration:hh\\:mm\\:ss}",
                         PlayoutBuilder.DisplayTitle(mediaItem),
                         itemDuration,
@@ -169,7 +169,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
                     if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
                     {
-                        _logger.LogWarning(
+                        Logger.LogWarning(
                             "Unable to schedule duration block of {DurationBlock:hh\\:mm\\:ss} which is longer than the configured playout duration {PlayoutDuration:hh\\:mm\\:ss}",
                             durationBlock,
                             scheduleItem.PlayoutDuration);

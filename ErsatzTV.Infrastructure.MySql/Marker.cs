@@ -1,3 +1,5 @@
 namespace ErsatzTV.Infrastructure.MySql;
 
-public abstract class Marker {}
+public abstract class Marker
+{
+}

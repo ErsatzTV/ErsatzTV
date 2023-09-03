@@ -17,7 +17,7 @@ public class DeleteProgramScheduleHandler : IRequestHandler<DeleteProgramSchedul
         DeleteProgramSchedule request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ProgramSchedule> validation = await ProgramScheduleMustExist(dbContext, request);
         return await validation.Apply(ps => DoDeletion(dbContext, ps));
     }
@@ -28,7 +28,7 @@ public class DeleteProgramScheduleHandler : IRequestHandler<DeleteProgramSchedul
         return dbContext.SaveChangesAsync().ToUnit();
     }
 
-    private Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
+    private static Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
         TvContext dbContext,
         DeleteProgramSchedule request) =>
         dbContext.ProgramSchedules

@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Globalization;
+using System.Xml.Serialization;
 
 namespace ErsatzTV.Infrastructure.Plex.Models;
 
@@ -13,8 +14,8 @@ public class PlexStreamResponse
     [XmlAttribute("index")]
     public string IndexString
     {
-        get => Index.HasValue ? Index.Value.ToString() : string.Empty;
-        set => Index = !string.IsNullOrEmpty(value) ? int.Parse(value) : null;
+        get => Index.HasValue ? Index.Value.ToString(CultureInfo.InvariantCulture) : string.Empty;
+        set => Index = !string.IsNullOrEmpty(value) ? int.Parse(value, CultureInfo.InvariantCulture) : null;
     }
 
     [XmlAttribute("key")]

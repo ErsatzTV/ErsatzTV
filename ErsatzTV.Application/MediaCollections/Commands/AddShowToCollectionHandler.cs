@@ -73,5 +73,5 @@ public class AddShowToCollectionHandler :
             .SelectOneAsync(m => m.Id, e => e.Id == request.ShowId)
             .Map(o => o.ToValidation<BaseError>("Show does not exist"));
 
-    private record Parameters(Collection Collection, Show Show);
+    private sealed record Parameters(Collection Collection, Show Show);
 }

@@ -161,7 +161,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                             Array.Empty<int>()),
                         cancellationToken);
                 }
-                else if (Path.GetFileName(path).StartsWith("._"))
+                else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     await _televisionRepository.DeleteByPath(libraryPath, path);
@@ -294,7 +294,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             .Flatten()
             .Append(_localFileSystem.ListFiles(seasonPath))
             .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-            .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+            .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
             .OrderBy(identity)
             .ToList();
 

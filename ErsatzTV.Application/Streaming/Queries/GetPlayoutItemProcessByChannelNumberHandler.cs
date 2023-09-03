@@ -545,5 +545,5 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         };
     }
 
-    private record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);
+    private sealed record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);
 }

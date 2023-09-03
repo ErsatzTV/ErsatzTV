@@ -371,7 +371,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         return None;
     }
 
-    private async Task UpdateShow(TvContext dbContext, EmbyShow existing, EmbyShow incoming)
+    private static async Task UpdateShow(TvContext dbContext, EmbyShow existing, EmbyShow incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -515,7 +515,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task UpdateSeason(TvContext dbContext, EmbySeason existing, EmbySeason incoming)
+    private static async Task UpdateSeason(TvContext dbContext, EmbySeason existing, EmbySeason incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
@@ -744,7 +744,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> AddShow(
+    private static async Task<Either<BaseError, MediaItemScanResult<EmbyShow>>> AddShow(
         TvContext dbContext,
         EmbyLibrary library,
         EmbyShow show)
@@ -773,7 +773,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<EmbySeason>>> AddSeason(
+    private static async Task<Either<BaseError, MediaItemScanResult<EmbySeason>>> AddSeason(
         TvContext dbContext,
         EmbyLibrary library,
         EmbySeason season)

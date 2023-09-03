@@ -17,10 +17,10 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FillerPreset> validation = await FillerPresetMustExist(dbContext, request);
-        return await LanguageExtensions.Apply(validation, ps => ApplyUpdateRequest(dbContext, ps, request));
+        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
-    private async Task<Unit> ApplyUpdateRequest(
+    private static async Task<Unit> ApplyUpdateRequest(
         TvContext dbContext,
         FillerPreset existing,
         UpdateFillerPreset request)

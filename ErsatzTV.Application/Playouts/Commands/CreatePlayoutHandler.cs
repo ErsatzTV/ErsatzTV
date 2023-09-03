@@ -41,7 +41,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
         return new CreatePlayoutResponse(playout.Id);
     }
 
-    private async Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, CreatePlayout request) =>
+    private static async Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, CreatePlayout request) =>
         (await ValidateChannel(dbContext, request), await ValidateProgramSchedule(dbContext, request),
             ValidatePlayoutType(request))
         .Apply(

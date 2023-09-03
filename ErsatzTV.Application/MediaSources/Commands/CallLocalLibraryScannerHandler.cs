@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Globalization;
+using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -55,7 +56,7 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
     {
         var arguments = new List<string>
         {
-            "scan-local", request.LibraryId.ToString()
+            "scan-local", request.LibraryId.ToString(CultureInfo.InvariantCulture)
         };
 
         if (request.ForceScan)

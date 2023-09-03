@@ -213,7 +213,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         }
     }
 
-    private async Task UpdateMovie(TvContext dbContext, EmbyMovie existing, EmbyMovie incoming)
+    private static async Task UpdateMovie(TvContext dbContext, EmbyMovie existing, EmbyMovie incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;

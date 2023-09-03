@@ -6,6 +6,7 @@ namespace ErsatzTV.Infrastructure.Scripting;
 
 public class ScriptEngine : IScriptEngine
 {
+    private bool _disposedValue;
     private Engine _engine;
 
     public ScriptEngine(ILogger<ScriptEngine> logger) =>
@@ -37,7 +38,21 @@ public class ScriptEngine : IScriptEngine
 
     public void Dispose()
     {
-        _engine?.Dispose();
-        _engine = null;
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                _engine?.Dispose();
+                _engine = null;
+            }
+
+            _disposedValue = true;
+        }
     }
 }

@@ -177,7 +177,7 @@ public class PlexTelevisionLibraryScanner :
     protected override IAsyncEnumerable<PlexEpisode> GetEpisodeLibraryItems(
         PlexLibrary library,
         PlexConnectionParameters connectionParameters,
-        PlexShow _,
+        PlexShow show,
         PlexSeason season) =>
         _plexServerApiClient.GetSeasonEpisodes(
             library,

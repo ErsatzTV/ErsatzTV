@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -96,7 +97,7 @@ public class FFmpegComplexFilterBuilder
 
         var complexFilter = new StringBuilder();
 
-        var videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
+        var videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString(CultureInfo.InvariantCulture))}";
         string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
         var videoFilterQueue = new List<string>();
@@ -217,7 +218,7 @@ public class FFmpegComplexFilterBuilder
         {
             if (videoFilterQueue.Any())
             {
-                complexFilter.Append($"[{videoLabel}]");
+                complexFilter.Append(CultureInfo.InvariantCulture, $"[{videoLabel}]");
                 var filters = string.Join(",", videoFilterQueue);
                 complexFilter.Append(filters);
             }
@@ -238,7 +239,7 @@ public class FFmpegComplexFilterBuilder
                 if (watermarkPreprocess.Count > 0)
                 {
                     var joined = string.Join(",", watermarkPreprocess);
-                    complexFilter.Append($"{watermarkLabel}{joined}[wmp];");
+                    complexFilter.Append(CultureInfo.InvariantCulture, $"{watermarkLabel}{joined}[wmp];");
                     watermarkLabel = "[wmp]";
                 }
 

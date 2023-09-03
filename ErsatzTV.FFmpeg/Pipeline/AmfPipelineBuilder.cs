@@ -3,8 +3,8 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Amf;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.Option;
-using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
+using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
+using ErsatzTV.FFmpeg.OutputOption;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Pipeline;

@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Globalization;
+using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
@@ -43,12 +44,12 @@ public class SchedulerService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
-        await _systemStartup.WaitForSearchIndex(cancellationToken);
-        if (cancellationToken.IsCancellationRequested)
+        await _systemStartup.WaitForSearchIndex(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
         {
             return;
         }
@@ -60,12 +61,12 @@ public class SchedulerService : BackgroundService
             DateTime firstRun = DateTime.Now;
 
             // run once immediately at startup
-            if (!cancellationToken.IsCancellationRequested)
+            if (!stoppingToken.IsCancellationRequested)
             {
-                await DoWork(cancellationToken);
+                await DoWork(stoppingToken);
             }
 
-            while (!cancellationToken.IsCancellationRequested)
+            while (!stoppingToken.IsCancellationRequested)
             {
                 int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
                 int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
@@ -73,31 +74,31 @@ public class SchedulerService : BackgroundService
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(toWait), stoppingToken);
                 }
                 catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
                 {
                     // do nothing
                 }
 
-                if (!cancellationToken.IsCancellationRequested)
+                if (!stoppingToken.IsCancellationRequested)
                 {
                     var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
                     if (roundedMinute % 30 == 0)
                     {
                         // check for playouts to reset every 30 minutes
-                        await ResetPlayouts(cancellationToken);
+                        await ResetPlayouts(stoppingToken);
                     }
 
                     if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
                     {
                         // do other work every hour (on the hour)
-                        await DoWork(cancellationToken);
+                        await DoWork(stoppingToken);
                     }
                     else if (roundedMinute % 30 == 0)
                     {
                         // release memory every 30 minutes no matter what
-                        await ReleaseMemory(cancellationToken);
+                        await ReleaseMemory(stoppingToken);
                     }
                 }
             }
@@ -161,7 +162,8 @@ public class SchedulerService : BackgroundService
                 .Include(p => p.Channel)
                 .ToListAsync(cancellationToken);
 
-            foreach (Playout playout in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)))
+            foreach (Playout playout in playouts.OrderBy(
+                         p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture)))
             {
                 DateTime now = DateTime.Now;
                 DateTime target = DateTime.Today.Add(playout.DailyRebuildTime ?? TimeSpan.FromDays(7));
@@ -201,7 +203,8 @@ public class SchedulerService : BackgroundService
         List<Playout> playouts = await dbContext.Playouts
             .Include(p => p.Channel)
             .ToListAsync(cancellationToken);
-        foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)).Map(p => p.Id))
+        foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture))
+                     .Map(p => p.Id))
         {
             await _workerChannel.WriteAsync(
                 new BuildPlayout(playoutId, PlayoutBuildMode.Continue),

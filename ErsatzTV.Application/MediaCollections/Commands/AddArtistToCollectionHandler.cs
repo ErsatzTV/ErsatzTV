@@ -73,5 +73,5 @@ public class AddArtistToCollectionHandler :
             .SelectOneAsync(a => a.Id, a => a.Id == request.ArtistId)
             .Map(o => o.ToValidation<BaseError>("Artist does not exist"));
 
-    private record Parameters(Collection Collection, Artist Artist);
+    private sealed record Parameters(Collection Collection, Artist Artist);
 }

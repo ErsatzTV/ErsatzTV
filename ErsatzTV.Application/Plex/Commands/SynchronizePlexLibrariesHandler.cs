@@ -98,7 +98,7 @@ public class
         return Unit.Default;
     }
 
-    private record ConnectionParameters(
+    private sealed record ConnectionParameters(
         PlexMediaSource PlexMediaSource,
         PlexConnection ActiveConnection)
     {

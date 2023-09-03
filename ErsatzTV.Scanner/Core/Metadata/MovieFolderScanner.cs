@@ -113,7 +113,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
                 var allFiles = filesForEtag
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-                    .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+                    .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                     .Filter(
                         f => !ExtraFiles.Any(
                             e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
@@ -208,7 +208,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                         new ScannerProgressUpdate(libraryPath.LibraryId, null, null, ids.ToArray(), Array.Empty<int>()),
                         cancellationToken);
                 }
-                else if (Path.GetFileName(path).StartsWith("._"))
+                else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);

@@ -10,7 +10,9 @@ public class GetAllLanguageCodesHandler : IRequestHandler<GetAllLanguageCodes, L
     public GetAllLanguageCodesHandler(IMediaItemRepository mediaItemRepository) =>
         _mediaItemRepository = mediaItemRepository;
 
-    public async Task<List<LanguageCodeViewModel>> Handle(GetAllLanguageCodes request, CancellationToken cancellationToken)
+    public async Task<List<LanguageCodeViewModel>> Handle(
+        GetAllLanguageCodes request,
+        CancellationToken cancellationToken)
     {
         List<CultureInfo> cultures = await _mediaItemRepository.GetAllLanguageCodeCultures();
         return cultures.Map(c => new LanguageCodeViewModel(c.ThreeLetterISOLanguageName, c.EnglishName)).ToList();

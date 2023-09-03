@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Globalization;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Scheduling;
 
@@ -121,7 +122,7 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
             Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Track ?? string.Empty, () => string.Empty),
             MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone()
                 .Match(mvm => mvm.Track ?? int.MaxValue, () => int.MaxValue)
-                .ToString("D10"),
+                .ToString("D10", CultureInfo.InvariantCulture),
             _ => string.Empty
         };
 
@@ -130,7 +131,7 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
             Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Track ?? string.Empty, () => string.Empty),
             MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone()
                 .Match(mvm => mvm.Track ?? int.MaxValue, () => int.MaxValue)
-                .ToString("D10"),
+                .ToString("D10", CultureInfo.InvariantCulture),
             _ => string.Empty
         };
 

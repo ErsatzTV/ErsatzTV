@@ -13,6 +13,8 @@
         <Configurations>Debug;Release;Debug No Sync</Configurations>
         <Platforms>AnyCPU</Platforms>
         <UserSecretsId>bf31217d-f4ec-4520-8cc3-138059044ede</UserSecretsId>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
@@ -59,7 +61,7 @@
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
       <PackageReference Include="HtmlSanitizer" Version="8.0.692" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.3" />
-      <PackageReference Include="Markdig" Version="0.32.0" />
+      <PackageReference Include="Markdig" Version="0.33.0" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.10" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.10" />

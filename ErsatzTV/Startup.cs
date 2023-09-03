@@ -444,7 +444,7 @@ public class Startup
             SqlMapper.AddTypeHandler(new GuidHandler());
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
         }
-        
+
         if (databaseProvider == Provider.MySql.Name)
         {
             TvContext.LastInsertedRowId = "last_insert_id()";
@@ -564,9 +564,8 @@ public class Startup
             });
     }
 
-    private void CustomServices(IServiceCollection services)
+    private static void CustomServices(IServiceCollection services)
     {
-        services.AddSingleton<FFmpegPlaybackSettingsCalculator>();
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
@@ -701,7 +700,7 @@ public class Startup
         services.AddHostedService<SearchIndexService>();
     }
 
-    private void AddChannel<TMessageType>(IServiceCollection services)
+    private static void AddChannel<TMessageType>(IServiceCollection services)
     {
         services.AddSingleton(
             Channel.CreateUnbounded<TMessageType>(new UnboundedChannelOptions { SingleReader = true }));

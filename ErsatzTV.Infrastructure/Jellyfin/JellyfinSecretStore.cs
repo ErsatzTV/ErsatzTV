@@ -14,8 +14,8 @@ public class JellyfinSecretStore : IJellyfinSecretStore
             .Map(JsonConvert.DeserializeObject<JellyfinSecrets>)
             .Map(s => Optional(s).IfNone(new JellyfinSecrets()));
 
-    public Task<Unit> SaveSecrets(JellyfinSecrets jellyfinSecrets) =>
-        Some(JsonConvert.SerializeObject(jellyfinSecrets)).Match(
+    public Task<Unit> SaveSecrets(JellyfinSecrets secrets) =>
+        Some(JsonConvert.SerializeObject(secrets)).Match(
             s => File.WriteAllTextAsync(FileSystemLayout.JellyfinSecretsPath, s).ToUnit(),
             Task.FromResult(Unit.Default));
 }

@@ -75,5 +75,5 @@ public class AddMusicVideoToCollectionHandler :
             .SelectOneAsync(m => m.Id, e => e.Id == request.MusicVideoId)
             .Map(o => o.ToValidation<BaseError>("MusicVideo does not exist"));
 
-    private record Parameters(Collection Collection, MusicVideo MusicVideo);
+    private sealed record Parameters(Collection Collection, MusicVideo MusicVideo);
 }

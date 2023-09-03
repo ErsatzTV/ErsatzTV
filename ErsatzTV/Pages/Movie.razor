@@ -1,10 +1,10 @@
 ﻿@page "/media/movies/{MovieId:int}"
+@using LanguageExt.UnsafeValueAccess
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.Movies
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.MediaCards
-@using LanguageExt.UnsafeValueAccess
 @implements IDisposable
 @inject IMediator Mediator
 @inject IDialogService Dialog
@@ -243,7 +243,7 @@
     protected override Task OnInitializedAsync()
     {
         _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
-        
+
         return base.OnInitializedAsync();
     }
 
@@ -266,7 +266,7 @@
         _sortedDirectors = _movie?.Directors.OrderBy(d => d).ToList();
         _sortedWriters = _movie?.Writers.OrderBy(w => w).ToList();
     }
-    
+
     private Task PersistData()
     {
         ApplicationState.PersistAsJson("_movie", _movie);

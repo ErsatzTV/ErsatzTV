@@ -67,7 +67,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
         };
 
         var allStreams = version.Streams.OrderBy(s => s.Index).Map(Project).ToList();
-        
+
         // include external subtitles from local libraries
         allStreams.AddRange(subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Sidecar).Map(ProjectToStream));
 

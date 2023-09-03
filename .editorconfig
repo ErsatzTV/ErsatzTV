@@ -83,3 +83,8 @@ tab_width=4
 [*.yml]
 indent_style = space
 indent_size = 2
+
+
+[*.{cs,vb}]
+# disable CA1848: Use the LoggerMessage delegates
+dotnet_diagnostic.ca1848.severity = none

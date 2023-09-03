@@ -92,7 +92,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         return ProjectToViewModel(c);
     }
 
-    private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
+    private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
         (await ChannelMustExist(dbContext, request), ValidateName(request),
             await ValidateNumber(dbContext, request),
             ValidatePreferredAudioLanguage(request))
