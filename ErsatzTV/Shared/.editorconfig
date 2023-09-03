@@ -1,3 +1,3 @@
-[*.{cs,vb}]
+[*.cs]
 # disable CA1716: Identifiers should not match keywords
 dotnet_diagnostic.ca1716.severity = none

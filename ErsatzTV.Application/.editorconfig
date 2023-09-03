@@ -1,3 +1,5 @@
-[*.{cs,vb}]
+[*.cs]
 # disable CA1711: Identifiers should not have incorrect suffix
 dotnet_diagnostic.ca1711.severity = none
+# disable CA1848: Use the LoggerMessage delegates
+dotnet_diagnostic.ca1848.severity = none

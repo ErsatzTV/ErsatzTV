@@ -1,4 +1,4 @@
-[*.{cs,vb}]
+[*.cs]
 # disable CA1069: Enums should not have duplicate values
 dotnet_diagnostic.ca1069.severity = none
 # disable CA1707: Identifiers should not contain underscores
