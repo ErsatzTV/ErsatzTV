@@ -26,10 +26,6 @@
     private readonly ResolutionEditViewModel _model = new();
 
     private void Submit() =>
-    // if (!CanSubmit())
-    // {
-    //     return;
-    // }
         MudDialog.Close(DialogResult.Ok(_model));
 
     private void Cancel(MouseEventArgs e)
