@@ -18,7 +18,7 @@ public class PlatformSettingsService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -31,7 +31,7 @@ public class PlatformSettingsService : BackgroundService
             IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
 
             var devices = localFileSystem.ListFiles("/dev/dri")
-                .Filter(s => s.StartsWith("/dev/dri/render"))
+                .Filter(s => s.StartsWith("/dev/dri/render", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             memoryCache.Set("ffmpeg.render_devices", devices);

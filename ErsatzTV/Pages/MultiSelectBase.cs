@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.MediaCards;
+﻿using System.Globalization;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Core;
 using ErsatzTV.Shared;
@@ -109,7 +110,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
                     musicVideoIds.Count + otherVideoIds.Count + songIds.Count;
 
         var parameters = new DialogParameters
-            { { "EntityType", count.ToString() }, { "EntityName", entityName } };
+            { { "EntityType", count.ToString(CultureInfo.InvariantCulture) }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog =
@@ -148,7 +149,10 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     protected async Task RemoveSelectionFromCollection(int collectionId)
     {
         var parameters = new DialogParameters
-            { { "EntityType", SelectedItems.Count.ToString() }, { "EntityName", "selected items" } };
+        {
+            { "EntityType", SelectedItems.Count.ToString(CultureInfo.InvariantCulture) },
+            { "EntityName", "selected items" }
+        };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = await Dialog.ShowAsync<RemoveFromCollectionDialog>(

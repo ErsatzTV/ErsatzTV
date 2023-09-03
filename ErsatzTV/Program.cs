@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using Destructurama;
 using ErsatzTV.Core;
@@ -21,7 +22,7 @@ public class Program
         IConfigurationBuilder builder = new ConfigurationBuilder();
 
         BasePath = Path.GetDirectoryName(
-            "dotnet".Equals(executable, StringComparison.InvariantCultureIgnoreCase)
+            "dotnet".Equals(executable, StringComparison.OrdinalIgnoreCase)
                 ? typeof(Program).Assembly.Location
                 : executablePath);
 
@@ -60,18 +61,25 @@ public class Program
             .MinimumLevel.ControlledBy(LoggingLevelSwitch)
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
-            .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day);
+            .WriteTo.File(
+                FileSystemLayout.LogFilePath,
+                rollingInterval: RollingInterval.Day,
+                formatProvider: CultureInfo.InvariantCulture);
 
         // for performance reasons, restrict windows console to error logs
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !Debugger.IsAttached)
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(
                 LogEventLevel.Error,
-                theme: AnsiConsoleTheme.Code);
+                theme: AnsiConsoleTheme.Code,
+                formatProvider: CultureInfo.InvariantCulture);
         }
         else
         {
-            loggerConfiguration = loggerConfiguration.WriteTo.Console(theme: AnsiConsoleTheme.Code);
+            loggerConfiguration = loggerConfiguration.WriteTo.Console(
+                theme: AnsiConsoleTheme.Code,
+                formatProvider: CultureInfo.InvariantCulture);
+
             // for troubleshooting log category
             // outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}"
         }

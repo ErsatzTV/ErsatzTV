@@ -27,12 +27,12 @@ public class EmbyService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
-        await _systemStartup.WaitForDatabase(cancellationToken);
-        if (cancellationToken.IsCancellationRequested)
+        await _systemStartup.WaitForDatabase(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
         {
             return;
         }
@@ -41,7 +41,7 @@ public class EmbyService : BackgroundService
         {
             if (!File.Exists(FileSystemLayout.EmbySecretsPath))
             {
-                await File.WriteAllTextAsync(FileSystemLayout.EmbySecretsPath, "{}", cancellationToken);
+                await File.WriteAllTextAsync(FileSystemLayout.EmbySecretsPath, "{}", stoppingToken);
             }
 
             _logger.LogInformation(
@@ -49,9 +49,9 @@ public class EmbyService : BackgroundService
                 FileSystemLayout.EmbySecretsPath);
 
             // synchronize sources on startup
-            await SynchronizeSources(new SynchronizeEmbyMediaSources(), cancellationToken);
+            await SynchronizeSources(new SynchronizeEmbyMediaSources(), stoppingToken);
 
-            await foreach (IEmbyBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (IEmbyBackgroundServiceRequest request in _channel.ReadAllAsync(stoppingToken))
             {
                 try
                 {
@@ -59,7 +59,7 @@ public class EmbyService : BackgroundService
                     switch (request)
                     {
                         case SynchronizeEmbyMediaSources synchronizeEmbyMediaSources:
-                            requestTask = SynchronizeSources(synchronizeEmbyMediaSources, cancellationToken);
+                            requestTask = SynchronizeSources(synchronizeEmbyMediaSources, stoppingToken);
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");

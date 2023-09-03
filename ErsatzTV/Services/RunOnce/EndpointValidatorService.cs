@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Globalization;
+using System.Net;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core;
 
@@ -15,7 +16,7 @@ public class EndpointValidatorService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -30,7 +31,7 @@ public class EndpointValidatorService : BackgroundService
         if (match.Success)
         {
             string hostname = match.Groups[1].Value;
-            Settings.ListenPort = int.Parse(match.Groups[2].Value);
+            Settings.ListenPort = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
 
             // IP address must be 0.0.0.0 or 127.0.0.1
             if (IPAddress.TryParse(hostname, out IPAddress address))

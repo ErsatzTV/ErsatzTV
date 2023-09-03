@@ -18,12 +18,28 @@ public class FragmentNavigationBase : ComponentBase, IDisposable
     [Inject]
     private IJSRuntime JsRuntime { get; set; }
 
+    private bool _disposedValue;
+
     public void Dispose()
     {
-        NavManager.LocationChanged -= TryFragmentNavigation;
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-        _cts?.Cancel();
-        _cts?.Dispose();
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                NavManager.LocationChanged -= TryFragmentNavigation;
+
+                _cts?.Cancel();
+                _cts?.Dispose();
+            }
+
+            _disposedValue = true;
+        }
     }
 
     protected override void OnInitialized() => NavManager.LocationChanged += TryFragmentNavigation;

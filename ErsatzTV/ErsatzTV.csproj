@@ -13,6 +13,8 @@
         <Configurations>Debug;Release;Debug No Sync</Configurations>
         <Platforms>AnyCPU</Platforms>
         <UserSecretsId>bf31217d-f4ec-4520-8cc3-138059044ede</UserSecretsId>
+        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">

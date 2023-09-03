@@ -27,12 +27,12 @@ public class PlexService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
-        await _systemStartup.WaitForDatabase(cancellationToken);
-        if (cancellationToken.IsCancellationRequested)
+        await _systemStartup.WaitForDatabase(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
         {
             return;
         }
@@ -41,7 +41,7 @@ public class PlexService : BackgroundService
         {
             if (!File.Exists(FileSystemLayout.PlexSecretsPath))
             {
-                await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", cancellationToken);
+                await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", stoppingToken);
             }
 
             _logger.LogInformation(
@@ -49,9 +49,9 @@ public class PlexService : BackgroundService
                 FileSystemLayout.PlexSecretsPath);
 
             // synchronize sources on startup
-            await SynchronizeSources(new SynchronizePlexMediaSources(), cancellationToken);
+            await SynchronizeSources(new SynchronizePlexMediaSources(), stoppingToken);
 
-            await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(stoppingToken))
             {
                 try
                 {
@@ -59,13 +59,13 @@ public class PlexService : BackgroundService
                     switch (request)
                     {
                         case TryCompletePlexPinFlow pinRequest:
-                            requestTask = CompletePinFlow(pinRequest, cancellationToken);
+                            requestTask = CompletePinFlow(pinRequest, stoppingToken);
                             break;
                         case SynchronizePlexMediaSources sourcesRequest:
-                            requestTask = SynchronizeSources(sourcesRequest, cancellationToken);
+                            requestTask = SynchronizeSources(sourcesRequest, stoppingToken);
                             break;
                         case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
-                            requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
+                            requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, stoppingToken);
                             break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
@@ -133,10 +133,22 @@ public class PlexService : BackgroundService
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
         Either<BaseError, bool> result = await mediator.Send(request, cancellationToken);
-        result.BiIter(
-            success => _logger.LogInformation(
-                success ? "Successfully authenticated with plex" : "Plex authentication timeout"),
-            error => _logger.LogWarning("Unable to poll plex token: {Error}", error.Value));
+        foreach (bool success in result.RightToSeq())
+        {
+            if (success)
+            {
+                _logger.LogInformation("Successfully authenticated with plex");
+            }
+            else
+            {
+                _logger.LogInformation("Plex authentication timeout");
+            }
+        }
+
+        foreach (BaseError error in result.LeftToSeq())
+        {
+            _logger.LogWarning("Unable to poll plex token: {Error}", error.Value);
+        }
     }
 
     private async Task SynchronizeLibraries(SynchronizePlexLibraries request, CancellationToken cancellationToken)

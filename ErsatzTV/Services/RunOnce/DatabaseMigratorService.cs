@@ -20,7 +20,7 @@ public class DatabaseMigratorService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -28,8 +28,8 @@ public class DatabaseMigratorService : BackgroundService
 
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
-        await dbContext.Database.MigrateAsync(cancellationToken);
-        await DbInitializer.Initialize(dbContext, cancellationToken);
+        await dbContext.Database.MigrateAsync(stoppingToken);
+        await DbInitializer.Initialize(dbContext, stoppingToken);
 
         _systemStartup.DatabaseIsReady();
 

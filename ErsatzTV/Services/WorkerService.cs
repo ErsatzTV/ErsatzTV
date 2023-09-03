@@ -27,7 +27,7 @@ public class WorkerService : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -35,9 +35,9 @@ public class WorkerService : BackgroundService
         {
             _logger.LogInformation("Worker service started");
 
-            await foreach (IBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (IBackgroundServiceRequest request in _channel.ReadAllAsync(stoppingToken))
             {
-                if (cancellationToken.IsCancellationRequested)
+                if (stoppingToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -51,15 +51,15 @@ public class WorkerService : BackgroundService
                     switch (request)
                     {
                         case RefreshChannelList refreshChannelList:
-                            await mediator.Send(refreshChannelList, cancellationToken);
+                            await mediator.Send(refreshChannelList, stoppingToken);
                             break;
                         case RefreshChannelData refreshChannelData:
-                            await mediator.Send(refreshChannelData, cancellationToken);
+                            await mediator.Send(refreshChannelData, stoppingToken);
                             break;
                         case BuildPlayout buildPlayout:
                             var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
                             var linkedTokenSource =
-                                CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken);
+                                CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
 
                             Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
                                 buildPlayout,
@@ -72,29 +72,29 @@ public class WorkerService : BackgroundService
                                     error.Value));
                             break;
                         case DeleteOrphanedArtwork deleteOrphanedArtwork:
-                            await mediator.Send(deleteOrphanedArtwork, cancellationToken);
+                            await mediator.Send(deleteOrphanedArtwork, stoppingToken);
                             break;
                         case DeleteOrphanedSubtitles deleteOrphanedSubtitles:
-                            await mediator.Send(deleteOrphanedSubtitles, cancellationToken);
+                            await mediator.Send(deleteOrphanedSubtitles, stoppingToken);
                             break;
                         case AddTraktList addTraktList:
-                            await mediator.Send(addTraktList, cancellationToken);
+                            await mediator.Send(addTraktList, stoppingToken);
                             break;
                         case DeleteTraktList deleteTraktList:
-                            await mediator.Send(deleteTraktList, cancellationToken);
+                            await mediator.Send(deleteTraktList, stoppingToken);
                             break;
                         case MatchTraktListItems matchTraktListItems:
-                            await mediator.Send(matchTraktListItems, cancellationToken);
+                            await mediator.Send(matchTraktListItems, stoppingToken);
                             break;
                         case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:
-                            await mediator.Send(extractEmbeddedSubtitles, cancellationToken);
+                            await mediator.Send(extractEmbeddedSubtitles, stoppingToken);
                             break;
                         case ReleaseMemory aggressivelyReleaseMemory:
-                            await mediator.Send(aggressivelyReleaseMemory, cancellationToken);
+                            await mediator.Send(aggressivelyReleaseMemory, stoppingToken);
                             break;
                     }
                 }
-                catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
                     // this can happen when we're shutting down
                 }

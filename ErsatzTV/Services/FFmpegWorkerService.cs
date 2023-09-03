@@ -25,7 +25,7 @@ public class FFmpegWorkerService : BackgroundService
         _ffmpegSegmenterService = ffmpegSegmenterService;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
@@ -33,7 +33,7 @@ public class FFmpegWorkerService : BackgroundService
         {
             _logger.LogInformation("FFmpeg worker service started");
 
-            await foreach (IFFmpegWorkerRequest request in _channel.ReadAllAsync(cancellationToken))
+            await foreach (IFFmpegWorkerRequest request in _channel.ReadAllAsync(stoppingToken))
             {
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
 

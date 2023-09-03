@@ -17,12 +17,12 @@ public class LoadLoggingLevelService : BackgroundService
         _systemStartup = systemStartup;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Yield();
 
-        await _systemStartup.WaitForDatabase(cancellationToken);
-        if (cancellationToken.IsCancellationRequested)
+        await _systemStartup.WaitForDatabase(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
         {
             return;
         }
