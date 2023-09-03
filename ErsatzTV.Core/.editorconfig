@@ -1,0 +1,3 @@
+[*.cs]
+# disable CA1848: Use the LoggerMessage delegates
+dotnet_diagnostic.ca1848.severity = none

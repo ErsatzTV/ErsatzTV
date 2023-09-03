@@ -37,7 +37,7 @@ public class
 
     private async Task<Either<BaseError, Unit>> PerformSync(ConnectionParameters parameters)
     {
-        if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{parameters.JellyfinMediaSource.Id}", out string _))
+        if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{parameters.JellyfinMediaSource.Id}", out string? _))
         {
             return Unit.Default;
         }
