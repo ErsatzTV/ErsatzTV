@@ -119,6 +119,13 @@ public class ReplacePlayoutAlternateScheduleItemsHandler :
 
                 await dbContext.SaveChangesAsync(cancellationToken);
 
+                // load newly-added schedules
+                foreach (ProgramScheduleAlternate alternate in playout.ProgramScheduleAlternates
+                             .Where(alternate => alternate.ProgramSchedule is null))
+                {
+                    await dbContext.Entry(alternate).Reference(a => a.ProgramSchedule).LoadAsync(cancellationToken);
+                }
+
                 foreach (PlayoutItem _ in maybeLastPlayoutItem)
                 {
                     foreach (DateTimeOffset dayToCheck in daysToCheck)
