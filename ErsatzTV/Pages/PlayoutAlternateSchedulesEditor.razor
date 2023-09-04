@@ -218,8 +218,8 @@
     public int Id { get; set; }
 
     private string _channelName;
-    private List<PlayoutAlternateScheduleEditViewModel> _items;
-    private List<ProgramScheduleViewModel> _schedules;
+    private List<PlayoutAlternateScheduleEditViewModel> _items = new();
+    private List<ProgramScheduleViewModel> _schedules = new();
 
     private PlayoutAlternateScheduleEditViewModel _selectedItem;
 

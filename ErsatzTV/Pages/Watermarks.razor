@@ -73,7 +73,7 @@
 @code {
     private readonly CancellationTokenSource _cts = new();
 
-    private List<WatermarkViewModel> _watermarks;
+    private List<WatermarkViewModel> _watermarks = new();
 
     public void Dispose()
     {
