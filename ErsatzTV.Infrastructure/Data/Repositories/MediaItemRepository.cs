@@ -201,7 +201,6 @@ public class MediaItemRepository : IMediaItemRepository
     private async Task<List<string>> GetAllLanguageCodes()
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        // TODO: might need to fix this for sqlite
         return await dbContext.Connection.QueryAsync<string>(
                 @"SELECT LanguageCode FROM
                     (SELECT Language AS LanguageCode

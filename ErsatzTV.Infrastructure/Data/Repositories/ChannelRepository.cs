@@ -13,7 +13,7 @@ public class ChannelRepository : IChannelRepository
 
     public async Task<Option<Channel>> GetChannel(int id)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
@@ -24,7 +24,7 @@ public class ChannelRepository : IChannelRepository
 
     public async Task<Option<Channel>> GetByNumber(string number)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Channels
             .Include(c => c.FFmpegProfile)
             .ThenInclude(p => p.Resolution)

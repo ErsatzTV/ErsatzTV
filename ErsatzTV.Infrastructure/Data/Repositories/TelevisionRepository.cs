@@ -24,7 +24,7 @@ public class TelevisionRepository : ITelevisionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QuerySingleAsync<int>(
-                "SELECT COUNT(*) FROM Show WHERE Id in @ShowIds",
+                "SELECT COUNT(*) FROM `Show` WHERE Id in @ShowIds",
                 new { ShowIds = showIds })
             .Map(c => c == showIds.Count);
     }
@@ -502,10 +502,10 @@ public class TelevisionRepository : ITelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT Episode.Id FROM Show
-            INNER JOIN Season ON Season.ShowId = Show.Id
+            @"SELECT Episode.Id FROM `Show`
+            INNER JOIN Season ON Season.ShowId = `Show`.Id
             INNER JOIN Episode ON Episode.SeasonId = Season.Id
-            WHERE Show.Id = @ShowId",
+            WHERE `Show`.Id = @ShowId",
             new { ShowId = showId });
 
         return await dbContext.Episodes

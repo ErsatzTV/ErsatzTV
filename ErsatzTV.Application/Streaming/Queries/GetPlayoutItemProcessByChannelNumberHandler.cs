@@ -180,11 +180,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             TimeSpan duration = finish - effectiveNow;
             var isComplete = true;
 
+            // _logger.LogDebug("PRE Start: {Start}, Finish {Finish}", start, finish);
+            // _logger.LogDebug("PRE in: {In}, out: {Out}", inPoint, outPoint);
             if (!request.HlsRealtime && duration > TimeSpan.FromMinutes(2))
             {
                 finish = effectiveNow + TimeSpan.FromMinutes(2);
-                outPoint = finish - start + TimeSpan.FromMinutes(2);
+                outPoint = finish - start + inPoint;
                 isComplete = false;
+
+                // _logger.LogDebug("POST Start: {Start}, Finish {Finish}", start, finish);
+                // _logger.LogDebug("POST in: {In}, out: {Out}", inPoint, outPoint);
             }
 
             Command process = await _ffmpegProcessService.ForPlayoutItem(

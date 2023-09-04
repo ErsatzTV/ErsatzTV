@@ -21,7 +21,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                 (SELECT mi.Id FROM Library l
                 INNER JOIN LibraryPath lp ON l.Id = lp.LibraryId
                 INNER JOIN MediaItem mi ON lp.Id = mi.LibraryPathId
-                LEFT OUTER JOIN Show s ON mi.Id = s.Id
+                LEFT OUTER JOIN `Show` s ON mi.Id = s.Id
                 LEFT OUTER JOIN Season ssn ON mi.Id = ssn.Id
                 LEFT OUTER JOIN Episode e ON mi.Id = e.Id
                 WHERE l.MediaKind = 2 AND s.Id IS NULL AND ssn.Id IS NULL AND e.Id IS NULL)");

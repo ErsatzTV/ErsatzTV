@@ -25,7 +25,7 @@ public class StreamSelectorRepository : IStreamSelectorRepository
                 EM.Id as EpisodeMetadataId
             from EpisodeMetadata EM
             inner join Episode E on EM.EpisodeId = E.Id
-            inner join Season S on S.Id == E.SeasonId
+            inner join Season S on S.Id = E.SeasonId
             inner join ShowMetadata SM on S.ShowId = SM.ShowId
             where EpisodeId = @Id",
             new { Id = episodeId });

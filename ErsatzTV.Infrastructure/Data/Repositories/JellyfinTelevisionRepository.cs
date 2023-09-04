@@ -614,7 +614,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await dbContext.SaveChangesAsync();
     }
 
-    public static async Task UpdateEpisode(TvContext dbContext, JellyfinEpisode existing, JellyfinEpisode incoming)
+    private static async Task UpdateEpisode(TvContext dbContext, JellyfinEpisode existing, JellyfinEpisode incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
