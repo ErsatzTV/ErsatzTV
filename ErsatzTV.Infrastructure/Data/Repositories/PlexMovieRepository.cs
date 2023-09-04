@@ -26,7 +26,7 @@ public class PlexMovieRepository : IPlexMovieRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT Key, Etag, MI.State FROM PlexMovie
+                @"SELECT `Key`, Etag, MI.State FROM PlexMovie
                       INNER JOIN Movie M on PlexMovie.Id = M.Id
                       INNER JOIN MediaItem MI on M.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id

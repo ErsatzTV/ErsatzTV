@@ -14,7 +14,7 @@ public class FFmpegProfileRepository : IFFmpegProfileRepository
 
     public async Task<FFmpegProfile> Copy(int ffmpegProfileId, string name)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         FFmpegProfile ffmpegProfile = await dbContext.FFmpegProfiles.FindAsync(ffmpegProfileId);
 
         PropertyValues values = dbContext.Entry(ffmpegProfile).CurrentValues.Clone();
