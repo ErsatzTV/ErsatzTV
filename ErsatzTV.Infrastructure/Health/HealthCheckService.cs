@@ -54,7 +54,11 @@ public class HealthCheckService : IHealthCheckService
 
     private HealthCheckResult LogAndReturn(Exception ex, HealthCheckResult failedResult)
     {
-        _logger.LogWarning(ex, "Failed to run health check {Title}", failedResult.Title);
+        if (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Failed to run health check {Title}", failedResult.Title);
+        }
+
         return failedResult;
     }
 }

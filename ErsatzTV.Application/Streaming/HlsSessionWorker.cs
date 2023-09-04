@@ -393,6 +393,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                             if (commandResult.ExitCode == 0)
                             {
+                                _transcodedUntil = processModel.Until;
                                 _state = NextState(_state, null);
 
                                 _hasWrittenSegments = true;
