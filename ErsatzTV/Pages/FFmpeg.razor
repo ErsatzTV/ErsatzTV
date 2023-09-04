@@ -67,7 +67,7 @@
 @code {
     private readonly CancellationTokenSource _cts = new();
 
-    private List<FFmpegProfileViewModel> _ffmpegProfiles;
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
 
     public void Dispose()
     {
