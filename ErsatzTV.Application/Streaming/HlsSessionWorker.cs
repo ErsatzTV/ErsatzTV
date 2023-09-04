@@ -5,7 +5,6 @@ using System.Timers;
 using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
-using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
@@ -22,10 +21,13 @@ public class HlsSessionWorker : IHlsSessionWorker
 {
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
+    private readonly IMediator _mediator;
+    private readonly IClient _client;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<HlsSessionWorker> _logger;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly Option<int> _targetFramerate;
     private readonly object _sync = new();
     private string _channelNumber;
     private bool _disposedValue;
@@ -33,20 +35,27 @@ public class HlsSessionWorker : IHlsSessionWorker
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
     private HlsSessionState _state;
-    private Option<int> _targetFramerate;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private IServiceScope _serviceScope;
 
     public HlsSessionWorker(
-        IHlsPlaylistFilter hlsPlaylistFilter,
         IServiceScopeFactory serviceScopeFactory,
+        IClient client,
+        IHlsPlaylistFilter hlsPlaylistFilter,
+        IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
-        ILogger<HlsSessionWorker> logger)
+        ILogger<HlsSessionWorker> logger,
+        Option<int> targetFramerate)
     {
+        _serviceScope = serviceScopeFactory.CreateScope();
+        _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
+        _client = client;
         _hlsPlaylistFilter = hlsPlaylistFilter;
-        _serviceScopeFactory = serviceScopeFactory;
+        _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
         _logger = logger;
+        _targetFramerate = targetFramerate;
     }
 
     public DateTimeOffset PlaylistStart { get; private set; }
@@ -133,17 +142,11 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             _logger.LogInformation("Starting HLS session for channel {Channel}", channelNumber);
 
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-            ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
-            if (localFileSystem.ListFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber)).Any())
+            if (_localFileSystem.ListFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber)).Any())
             {
                 _logger.LogError("Transcode folder is NOT empty!");
             }
 
-            _targetFramerate = await mediator.Send(
-                new GetChannelFramerate(channelNumber),
-                cancellationToken);
 
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
@@ -210,6 +213,10 @@ public class HlsSessionWorker : IHlsSessionWorker
             if (disposing)
             {
                 _timer.Dispose();
+                _timer = null;
+                
+                _serviceScope.Dispose();
+                _serviceScope = null;
             }
 
             _disposedValue = true;
@@ -256,8 +263,6 @@ public class HlsSessionWorker : IHlsSessionWorker
         bool realtime,
         CancellationToken cancellationToken)
     {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-
         try
         {
             if (!realtime)
@@ -289,9 +294,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
             }
 
-            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-            long ptsOffset = await GetPtsOffset(mediator, _channelNumber, cancellationToken);
+            long ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             _logger.LogInformation("HLS session state: {State}", _state);
@@ -312,7 +315,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             // _logger.LogInformation("Request {@Request}", request);
 
-            Either<BaseError, PlayoutItemProcessModel> result = await mediator.Send(request, cancellationToken);
+            Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request, cancellationToken);
 
             // _logger.LogInformation("Result {Result}", result.ToString());
 
@@ -365,7 +368,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                             commandResult.ExitCode,
                             commandResult.StandardError);
 
-                        Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await mediator.Send(
+                        Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await _mediator.Send(
                             new GetErrorProcess(
                                 _channelNumber,
                                 "segmenter",
@@ -414,8 +417,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             try
             {
-                IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                client.Notify(ex);
+                _client.Notify(ex);
             }
             catch (Exception)
             {
@@ -494,10 +496,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<long> GetPtsOffset(
-        IMediator mediator,
-        string channelNumber,
-        CancellationToken cancellationToken)
+    private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
         await Slim.WaitAsync(cancellationToken);
         try
@@ -510,7 +509,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 return result;
             }
 
-            Either<BaseError, PtsAndDuration> queryResult = await mediator.Send(
+            Either<BaseError, PtsAndDuration> queryResult = await _mediator.Send(
                 new GetLastPtsDuration(channelNumber),
                 cancellationToken);
 
@@ -534,9 +533,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private async Task<int> GetWorkAheadLimit()
     {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
-        return await repo.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
+        return await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
     }
 

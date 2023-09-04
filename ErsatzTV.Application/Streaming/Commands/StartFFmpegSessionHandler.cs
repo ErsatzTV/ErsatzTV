@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Threading.Channels;
+using Bugsnag;
+using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -17,22 +19,34 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly IMediator _mediator;
+    private readonly IClient _client;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<StartFFmpegSessionHandler> _logger;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILogger<HlsSessionWorker> _sessionWorkerLogger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public StartFFmpegSessionHandler(
+        IHlsPlaylistFilter hlsPlaylistFilter,
+        IServiceScopeFactory serviceScopeFactory,
+        IMediator mediator,
+        IClient client,
         ILocalFileSystem localFileSystem,
         ILogger<StartFFmpegSessionHandler> logger,
-        IServiceScopeFactory serviceScopeFactory,
+        ILogger<HlsSessionWorker> sessionWorkerLogger,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IConfigElementRepository configElementRepository,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
+        _hlsPlaylistFilter = hlsPlaylistFilter;
+        _serviceScopeFactory = serviceScopeFactory;
+        _mediator = mediator;
+        _client = client;
         _localFileSystem = localFileSystem;
         _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
+        _sessionWorkerLogger = sessionWorkerLogger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
         _workerChannel = workerChannel;
@@ -52,8 +66,18 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
             .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
 
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        HlsSessionWorker worker = scope.ServiceProvider.GetRequiredService<HlsSessionWorker>();
+        Option<int> targetFramerate = await _mediator.Send(
+            new GetChannelFramerate(request.ChannelNumber),
+            cancellationToken);
+        
+        var worker = new HlsSessionWorker(
+            _serviceScopeFactory,
+            _client,
+            _hlsPlaylistFilter,
+            _configElementRepository,
+            _localFileSystem,
+            _sessionWorkerLogger,
+            targetFramerate);
         _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
 
         // fire and forget worker
@@ -63,7 +87,9 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 {
                     _ffmpegSegmenterService.SessionWorkers.TryRemove(
                         request.ChannelNumber,
-                        out IHlsSessionWorker _);
+                        out IHlsSessionWorker inactiveWorker);
+                    
+                    inactiveWorker?.Dispose();
 
                     _workerChannel.TryWrite(new ReleaseMemory(false));
                 },
@@ -74,8 +100,8 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             request.ChannelNumber,
             "live.m3u8");
 
-        IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
-        int initialSegmentCount = await repo.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
+        int initialSegmentCount = await _configElementRepository
+            .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
 
         await WaitForPlaylistSegments(playlistFileName, initialSegmentCount, worker, cancellationToken);
