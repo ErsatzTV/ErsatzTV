@@ -19,6 +19,8 @@ namespace ErsatzTV.Application.Streaming;
 
 public class HlsSessionWorker : IHlsSessionWorker
 {
+    public static readonly TimeSpan WorkAheadDuration = TimeSpan.FromMinutes(3);
+    
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
     private readonly IMediator _mediator;
@@ -269,17 +271,27 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 Interlocked.Increment(ref _workAheadCount);
                 _logger.LogInformation("HLS segmenter will work ahead for channel {Channel}", _channelNumber);
+                
+                HlsSessionState nextState = _state switch
+                {
+                    HlsSessionState.SeekAndRealtime => HlsSessionState.SeekAndWorkAhead,
+                    HlsSessionState.ZeroAndRealtime => HlsSessionState.ZeroAndWorkAhead,
+                    _ => _state
+                };
+                
+                if (nextState != _state)
+                {
+                    _logger.LogDebug("HLS session state accelerating {Last} => {Next}", _state, nextState);
+                    _state = nextState;
+                }
             }
             else
             {
                 _logger.LogInformation(
                     "HLS segmenter will NOT work ahead for channel {Channel}",
                     _channelNumber);
-            }
 
-            // throttle to realtime if needed
-            if (realtime)
-            {
+                // throttle to realtime if needed
                 HlsSessionState nextState = _state switch
                 {
                     HlsSessionState.SeekAndWorkAhead => HlsSessionState.SeekAndRealtime,

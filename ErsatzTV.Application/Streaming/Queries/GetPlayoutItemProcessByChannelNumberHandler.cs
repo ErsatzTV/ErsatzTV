@@ -182,9 +182,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             // _logger.LogDebug("PRE Start: {Start}, Finish {Finish}", start, finish);
             // _logger.LogDebug("PRE in: {In}, out: {Out}", inPoint, outPoint);
-            if (!request.HlsRealtime && duration > TimeSpan.FromMinutes(2))
+            if (!request.HlsRealtime && duration > HlsSessionWorker.WorkAheadDuration)
             {
-                finish = effectiveNow + TimeSpan.FromMinutes(2);
+                finish = effectiveNow + HlsSessionWorker.WorkAheadDuration;
                 outPoint = finish - start + inPoint;
                 isComplete = false;
 
