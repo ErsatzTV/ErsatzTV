@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix adding alternate schedule
 
 ### Changed
-- Optimize transcoding session to only work ahead (at max speed) for 2 minutes before throttling to realtime
+- Optimize transcoding session to only work ahead (at max speed) for 3 minutes before throttling to realtime
   - This should *greatly* reduce cpu/gpu use when joining a channel, particularly with long content
 - Allow manually editing (typing) schedule item fixed start time
 - Use different control for editing schedule item duration, and allow 24-hour duration

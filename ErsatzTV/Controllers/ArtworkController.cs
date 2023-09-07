@@ -138,9 +138,9 @@ public class ArtworkController : ControllerBase
         CancellationToken cancellationToken)
     {
 #if DEBUG_NO_SYNC
+        await Task.CompletedTask;
         return NotFound();
-#endif
-
+#else
         Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId), cancellationToken);
 
@@ -165,14 +165,15 @@ public class ArtworkController : ControllerBase
                     stream,
                     response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
             });
+#endif
     }
 
     private async Task<IActionResult> GetJellyfinArtwork(string path, CancellationToken cancellationToken)
     {
 #if DEBUG_NO_SYNC
+        await Task.CompletedTask;
         return NotFound();
-#endif
-
+#else
         Either<BaseError, JellyfinConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetJellyfinConnectionParameters(), cancellationToken);
 
@@ -196,14 +197,15 @@ public class ArtworkController : ControllerBase
                     stream,
                     response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
             });
+#endif
     }
 
     private async Task<IActionResult> GetEmbyArtwork(string path, CancellationToken cancellationToken)
     {
 #if DEBUG_NO_SYNC
+        await Task.CompletedTask;
         return NotFound();
-#endif
-
+#else
         Either<BaseError, EmbyConnectionParametersViewModel> connectionParameters =
             await _mediator.Send(new GetEmbyConnectionParameters(), cancellationToken);
 
@@ -227,5 +229,6 @@ public class ArtworkController : ControllerBase
                     stream,
                     response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
             });
+#endif
     }
 }
