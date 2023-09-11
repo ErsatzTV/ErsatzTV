@@ -228,7 +228,7 @@ public class TelevisionRepository : ITelevisionRepository
             .ToListAsync();
     }
 
-    public async Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata)
+    public async Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata, string showFolder)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<int> maybeId = await dbContext.ShowMetadata
@@ -237,6 +237,25 @@ public class TelevisionRepository : ITelevisionRepository
             .SingleOrDefaultAsync()
             .Map(Optional)
             .MapT(sm => sm.ShowId);
+
+        if (maybeId.IsNone)
+        {
+            List<int> maybeShowIds = await dbContext.Episodes
+                .Where(
+                    e => e.MediaVersions.Any(
+                        mv => mv.MediaFiles.Any(
+                            mf => EF.Functions.Like(
+                                EF.Functions.Collate(mf.Path, TvContext.CaseInsensitiveCollation),
+                                $"{showFolder}%"))))
+                .Map(e => e.Season.ShowId)
+                .Distinct()
+                .ToListAsync();
+
+            if (maybeShowIds.Count == 1)
+            {
+                maybeId = maybeShowIds.HeadOrNone();
+            }
+        }
 
         return await maybeId.Match(
             id =>

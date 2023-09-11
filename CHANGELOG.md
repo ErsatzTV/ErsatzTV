@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Clean channel guide cache on startup (delete channels that no longer exist)
 - Fix Emby movie libraries so local file access is not required
 - Fix adding alternate schedule
+- Fix parsing show title from NFO file that also contains season information
 
 ### Changed
 - Optimize transcoding session to only work ahead (at max speed) for 3 minutes before throttling to realtime

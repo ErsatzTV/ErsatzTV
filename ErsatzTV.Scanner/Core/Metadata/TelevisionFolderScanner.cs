@@ -194,7 +194,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         string showFolder)
     {
         ShowMetadata metadata = await _localMetadataProvider.GetMetadataForShow(showFolder);
-        Option<Show> maybeShow = await _televisionRepository.GetShowByMetadata(libraryPathId, metadata);
+        Option<Show> maybeShow = await _televisionRepository.GetShowByMetadata(libraryPathId, metadata, showFolder);
 
         foreach (Show show in maybeShow)
         {
