@@ -41,6 +41,7 @@ public class ShowNfoReader : NfoReader<ShowNfo>, IShowNfoReader
             var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
             using var reader = XmlReader.Create(input, settings);
             var done = false;
+            int showDepth = 0;
 
             while (!done && await reader.ReadAsync())
             {
@@ -51,9 +52,14 @@ public class ShowNfoReader : NfoReader<ShowNfo>, IShowNfoReader
                         {
                             case "tvshow":
                                 nfo = new ShowNfo();
+                                showDepth = reader.Depth;
                                 break;
                             case "title":
-                                await ReadStringContent(reader, nfo, (show, title) => show.Title = title);
+                                if (reader.Depth == showDepth + 1)
+                                {
+                                    await ReadStringContent(reader, nfo, (show, title) => show.Title = title);
+                                }
+
                                 break;
                             case "year":
                                 await ReadIntContent(reader, nfo, (show, year) => show.Year = year);

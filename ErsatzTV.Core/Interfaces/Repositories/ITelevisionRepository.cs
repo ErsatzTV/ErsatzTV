@@ -21,7 +21,7 @@ public interface ITelevisionRepository
     Task<List<Episode>> GetSeasonItems(int seasonId);
     Task<int> GetEpisodeCount(int seasonId);
     Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize);
-    Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata);
+    Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata, string showFolder);
     Task<Either<BaseError, MediaItemScanResult<Show>>> AddShow(int libraryPathId, ShowMetadata metadata);
     Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber);
     Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path);

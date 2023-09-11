@@ -38,7 +38,7 @@ public class FakeTelevisionRepository : ITelevisionRepository
     public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
         throw new NotSupportedException();
 
-    public Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata) =>
+    public Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata, string showName) =>
         throw new NotSupportedException();
 
     public Task<Either<BaseError, MediaItemScanResult<Show>>> AddShow(int libraryPathId, ShowMetadata metadata) =>

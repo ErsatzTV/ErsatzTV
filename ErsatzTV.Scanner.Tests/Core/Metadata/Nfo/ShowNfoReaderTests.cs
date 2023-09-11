@@ -58,6 +58,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     [Test]
     public async Task FullSample_Should_Return_Nfo()
     {
+        // nested "title" in "seasondetails" may cause the last encountered title to be used for the show
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(
                 @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes"" ?>
@@ -132,6 +133,24 @@ https://www.themoviedb.org/movie/11-star-wars"));
         <total>0.000000</total>
     </resume>
     <dateadded>2021-03-12 06:15:51</dateadded>
+    <seasons>
+      <seasondetails>
+        <season>-1</season>
+        <title>* All Seasons</title>
+        <locked>false</locked>
+      </seasondetails>
+      <seasondetails>
+        <season>1</season>
+        <tvdb>1824025</tvdb>
+        <locked>false</locked>
+      </seasondetails>
+      <seasondetails>
+        <season>2</season>
+        <title>Season 02</title>
+        <tvdb>1993428</tvdb>
+        <locked>false</locked>
+      </seasondetails>
+    </seasons>
 </tvshow>"));
 
         Either<BaseError, ShowNfo> result = await _showNfoReader.Read(stream);
