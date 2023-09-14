@@ -19,8 +19,6 @@ namespace ErsatzTV.Application.Streaming;
 
 public class HlsSessionWorker : IHlsSessionWorker
 {
-    public static readonly TimeSpan WorkAheadDuration = TimeSpan.FromMinutes(3);
-    
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
     private readonly IMediator _mediator;
