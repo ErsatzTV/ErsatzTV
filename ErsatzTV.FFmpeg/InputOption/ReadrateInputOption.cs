@@ -1,14 +1,37 @@
-﻿using ErsatzTV.FFmpeg.Environment;
+﻿using System.Globalization;
+using ErsatzTV.FFmpeg.Environment;
 
 namespace ErsatzTV.FFmpeg.InputOption;
 
-public class RealtimeInputOption : IInputOption
+public class ReadrateInputOption : IInputOption
 {
+    private readonly int _initialBurstSeconds;
+
+    public ReadrateInputOption(int initialBurstSeconds = 0)
+    {
+        _initialBurstSeconds = initialBurstSeconds;
+    }
+    
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
 
     public IList<string> GlobalOptions => Array.Empty<string>();
 
-    public IList<string> InputOptions(InputFile inputFile) => new List<string> { "-re" };
+    public IList<string> InputOptions(InputFile inputFile)
+    {
+        var result = new List<string> { "-readrate", "1.0" };
+
+        if (_initialBurstSeconds > 0)
+        {
+            result.AddRange(
+                new[]
+                {
+                    "-readrate_initial_burst",
+                    _initialBurstSeconds.ToString(CultureInfo.InvariantCulture)
+                });
+        }
+
+        return result;
+    }
 
     public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => Array.Empty<string>();

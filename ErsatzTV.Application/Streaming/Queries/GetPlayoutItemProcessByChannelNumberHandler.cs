@@ -178,19 +178,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             TimeSpan outPoint = playoutItemWithPath.PlayoutItem.OutPoint;
             DateTimeOffset effectiveNow = request.StartAtZero ? start : now;
             TimeSpan duration = finish - effectiveNow;
-            var isComplete = true;
-
-            // _logger.LogDebug("PRE Start: {Start}, Finish {Finish}", start, finish);
-            // _logger.LogDebug("PRE in: {In}, out: {Out}", inPoint, outPoint);
-            if (!request.HlsRealtime && duration > HlsSessionWorker.WorkAheadDuration)
-            {
-                finish = effectiveNow + HlsSessionWorker.WorkAheadDuration;
-                outPoint = finish - start + inPoint;
-                isComplete = false;
-
-                // _logger.LogDebug("POST Start: {Start}, Finish {Finish}", start, finish);
-                // _logger.LogDebug("POST in: {In}, out: {Out}", inPoint, outPoint);
-            }
 
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
@@ -223,7 +210,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.DisableWatermarks,
                 _ => { });
 
-            var result = new PlayoutItemProcessModel(process, duration, finish, isComplete);
+            var result = new PlayoutItemProcessModel(process, duration, finish, true);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
