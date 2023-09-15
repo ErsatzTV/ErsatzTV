@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Upgrade ffmpeg to 6.1, which is now *required* for all installs
+- Use new ffmpeg throttling method to minimize cpu/gpu use without impacting audio normalization
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added
