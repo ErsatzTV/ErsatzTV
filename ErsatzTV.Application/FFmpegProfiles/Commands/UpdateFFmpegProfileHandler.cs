@@ -48,7 +48,7 @@ public class
         p.AudioFormat = update.AudioFormat;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
-        p.NormalizeLoudness = update.NormalizeLoudness;
+        p.NormalizeLoudnessMode = update.NormalizeLoudnessMode;
         p.AudioChannels = update.AudioChannels;
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeFramerate = update.NormalizeFramerate;

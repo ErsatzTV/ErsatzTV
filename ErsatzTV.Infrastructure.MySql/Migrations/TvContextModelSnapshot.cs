@@ -574,8 +574,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("NormalizeLoudness")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<int>("NormalizeLoudnessMode")
+                        .HasColumnType("int");
 
                     b.Property<int?>("QsvExtraHardwareFrames")
                         .HasColumnType("int");

@@ -350,9 +350,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private void SetAudioLoudness(AudioInputFile audioInputFile)
     {
-        if (audioInputFile.DesiredState.NormalizeLoudness)
+        if (audioInputFile.DesiredState.NormalizeLoudnessFilter is not AudioFilter.None)
         {
-            _audioInputFile.Iter(f => f.FilterSteps.Add(new NormalizeLoudnessFilter()));
+            _audioInputFile.Iter(
+                f => f.FilterSteps.Add(
+                    new NormalizeLoudnessFilter(audioInputFile.DesiredState.NormalizeLoudnessFilter)));
         }
     }
 
@@ -598,12 +600,25 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private void SetRealtimeInput(VideoInputFile videoInputFile, FrameState desiredState)
     {
-        var initialBurst = 0;
+        int initialBurst;
         if (!desiredState.Realtime)
         {
             initialBurst = 180;
         }
-        
+        else
+        {
+            AudioFilter filter = _audioInputFile
+                .Map(a => a.DesiredState.NormalizeLoudnessFilter)
+                .IfNone(AudioFilter.None);
+                
+            initialBurst = filter switch
+            {
+                AudioFilter.LoudNorm => 5,
+                AudioFilter.DynAudNorm => 15,
+                _ => 0
+            };
+        }
+
         _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(initialBurst)));
         videoInputFile.AddOption(new ReadrateInputOption(initialBurst));
     }

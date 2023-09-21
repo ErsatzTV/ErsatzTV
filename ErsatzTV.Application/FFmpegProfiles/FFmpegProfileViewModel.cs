@@ -21,7 +21,7 @@ public record FFmpegProfileViewModel(
     FFmpegProfileAudioFormat AudioFormat,
     int AudioBitrate,
     int AudioBufferSize,
-    bool NormalizeLoudness,
+    NormalizeLoudnessMode NormalizeLoudnessMode,
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,

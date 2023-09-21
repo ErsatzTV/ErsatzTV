@@ -2,7 +2,19 @@
 
 public class NormalizeLoudnessFilter : BaseFilter
 {
-    public override string Filter => "loudnorm=I=-16:TP=-1.5:LRA=11";
+    private readonly AudioFilter _loudnessFilter;
+
+    public NormalizeLoudnessFilter(AudioFilter loudnessFilter)
+    {
+        _loudnessFilter = loudnessFilter;
+    }
+
+    public override string Filter => _loudnessFilter switch
+    {
+        AudioFilter.LoudNorm => "loudnorm=I=-16:TP=-1.5:LRA=11",
+        AudioFilter.DynAudNorm => "dynaudnorm",
+        _ => string.Empty
+    };
 
     public override FrameState NextState(FrameState currentState) => currentState;
 }

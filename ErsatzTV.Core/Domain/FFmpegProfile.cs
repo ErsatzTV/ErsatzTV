@@ -21,7 +21,7 @@ public record FFmpegProfile
     public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
-    public bool NormalizeLoudness { get; set; }
+    public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
     public int AudioChannels { get; set; }
     public int AudioSampleRate { get; set; }
     public bool NormalizeFramerate { get; set; }
@@ -40,7 +40,7 @@ public record FFmpegProfile
             VideoBufferSize = 4000,
             AudioBitrate = 192,
             AudioBufferSize = 384,
-            NormalizeLoudness = true,
+            NormalizeLoudnessMode = NormalizeLoudnessMode.DynAudNorm,
             AudioChannels = 2,
             AudioSampleRate = 48,
             DeinterlaceVideo = true,

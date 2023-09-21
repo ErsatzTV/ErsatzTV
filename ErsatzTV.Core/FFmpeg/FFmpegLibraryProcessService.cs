@@ -150,7 +150,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
             videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
-            playbackSettings.NormalizeLoudness);
+            playbackSettings.NormalizeLoudnessMode switch
+            {
+                NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
+                NormalizeLoudnessMode.DynAudNorm => AudioFilter.DynAudNorm,
+                _ => AudioFilter.None
+            });
 
         // don't log generated images, or hls direct, which are expected to have unknown format
         bool isUnknownPixelFormatExpected =
@@ -414,7 +419,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
             Option<TimeSpan>.None,
-            false);
+            AudioFilter.None);
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,

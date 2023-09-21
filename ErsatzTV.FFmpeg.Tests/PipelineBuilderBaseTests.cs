@@ -51,7 +51,7 @@ public class PipelineBuilderBaseTests
                 640,
                 48,
                 Option<TimeSpan>.None,
-                false));
+                AudioFilter.None));
 
         var desiredState = new FrameState(
             true,
@@ -139,7 +139,7 @@ public class PipelineBuilderBaseTests
                 640,
                 48,
                 Option<TimeSpan>.None,
-                false));
+                AudioFilter.None));
 
         var desiredState = new FrameState(
             true,
@@ -281,7 +281,7 @@ public class PipelineBuilderBaseTests
                 None,
                 None,
                 None,
-                false));
+                AudioFilter.None));
 
         var desiredState = new FrameState(
             true,

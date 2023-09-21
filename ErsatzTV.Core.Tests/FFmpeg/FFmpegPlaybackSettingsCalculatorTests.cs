@@ -886,7 +886,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                NormalizeLoudness = true
+                NormalizeLoudnessMode = NormalizeLoudnessMode.LoudNorm
             };
 
             FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
@@ -902,7 +902,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.NormalizeLoudness.Should().BeTrue();
+            actual.NormalizeLoudnessMode.Should().Be(NormalizeLoudnessMode.LoudNorm);
         }
     }
 

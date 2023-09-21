@@ -54,7 +54,7 @@ public class CreateFFmpegProfileHandler :
                 AudioFormat = request.AudioFormat,
                 AudioBitrate = request.AudioBitrate,
                 AudioBufferSize = request.AudioBufferSize,
-                NormalizeLoudness = request.NormalizeLoudness,
+                NormalizeLoudnessMode = request.NormalizeLoudnessMode,
                 AudioChannels = request.AudioChannels,
                 AudioSampleRate = request.AudioSampleRate,
                 NormalizeFramerate = request.NormalizeFramerate,
