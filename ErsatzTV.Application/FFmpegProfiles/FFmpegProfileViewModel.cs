@@ -13,6 +13,7 @@ public record FFmpegProfileViewModel(
     string VaapiDevice,
     int? QsvExtraHardwareFrames,
     ResolutionViewModel Resolution,
+    ScalingBehavior ScalingBehavior,
     FFmpegProfileVideoFormat VideoFormat,
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,

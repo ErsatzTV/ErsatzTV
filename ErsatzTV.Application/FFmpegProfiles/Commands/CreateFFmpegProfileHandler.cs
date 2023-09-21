@@ -46,6 +46,7 @@ public class CreateFFmpegProfileHandler :
                 VaapiDevice = request.VaapiDevice,
                 QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
                 ResolutionId = resolutionId,
+                ScalingBehavior = request.ScalingBehavior,
                 VideoFormat = request.VideoFormat,
                 BitDepth = request.BitDepth,
                 VideoBitrate = request.VideoBitrate,

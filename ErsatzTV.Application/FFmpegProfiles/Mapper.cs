@@ -15,6 +15,7 @@ internal static class Mapper
             profile.VaapiDevice,
             profile.QsvExtraHardwareFrames,
             Resolutions.Mapper.ProjectToViewModel(profile.Resolution),
+            profile.ScalingBehavior,
             profile.VideoFormat,
             profile.BitDepth,
             profile.VideoBitrate,

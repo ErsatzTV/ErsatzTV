@@ -24,6 +24,7 @@ public class FFmpegProfileEditViewModel
         NormalizeFramerate = viewModel.NormalizeFramerate;
         DeinterlaceVideo = viewModel.DeinterlaceVideo;
         Resolution = viewModel.Resolution;
+        ScalingBehavior = viewModel.ScalingBehavior;
         ThreadCount = viewModel.ThreadCount;
         HardwareAcceleration = viewModel.HardwareAcceleration;
         VaapiDriver = viewModel.VaapiDriver;
@@ -46,6 +47,7 @@ public class FFmpegProfileEditViewModel
     public bool NormalizeFramerate { get; set; }
     public bool DeinterlaceVideo { get; set; }
     public ResolutionViewModel Resolution { get; set; }
+    public ScalingBehavior ScalingBehavior { get; set; }
     public int ThreadCount { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
@@ -65,6 +67,7 @@ public class FFmpegProfileEditViewModel
             VaapiDevice,
             QsvExtraHardwareFrames,
             Resolution.Id,
+            ScalingBehavior,
             VideoFormat,
             BitDepth,
             VideoBitrate,
@@ -89,6 +92,7 @@ public class FFmpegProfileEditViewModel
             VaapiDevice,
             QsvExtraHardwareFrames,
             Resolution.Id,
+            ScalingBehavior,
             VideoFormat,
             BitDepth,
             VideoBitrate,

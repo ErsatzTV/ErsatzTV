@@ -12,6 +12,7 @@ public record CreateFFmpegProfile(
     string VaapiDevice,
     int? QsvExtraHardwareFrames,
     int ResolutionId,
+    ScalingBehavior ScalingBehavior,
     FFmpegProfileVideoFormat VideoFormat,
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,

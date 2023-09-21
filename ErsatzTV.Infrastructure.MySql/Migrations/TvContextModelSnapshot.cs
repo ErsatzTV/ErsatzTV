@@ -16,7 +16,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.10")
+                .HasAnnotation("ProductVersion", "7.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
@@ -581,6 +581,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ResolutionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScalingBehavior")
                         .HasColumnType("int");
 
                     b.Property<int>("ThreadCount")
