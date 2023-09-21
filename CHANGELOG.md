@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Scaling Behavior` option to FFmpeg Profile
+  - `Scale and Pad`: the default behavior and will maintain aspect ratio of all content
+  - `Stretch`: a new mode that will NOT maintain aspect ratio when normalizing source content to the desired resolution 
+
+### Changed
+- Upgrade ffmpeg to 6.1, which is now *required* for all installs
+- Use new ffmpeg throttling method to minimize cpu/gpu use without impacting audio normalization
+- Change FFmpeg Profile `Normalize Loudness` setting from checkbox to dropdown
+  - `Off`: do not normalize loudness
+  - `loudnorm`: use `loudnorm` filter to normalize loudness (generally higher CPU use)
+  - `dynaudnorm`: use `dynaudnorm` filter to normalize loudness (generally lower CPU use)
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added

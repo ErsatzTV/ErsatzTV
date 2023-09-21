@@ -35,6 +35,7 @@ public class
         p.VaapiDevice = update.VaapiDevice;
         p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;
         p.ResolutionId = update.ResolutionId;
+        p.ScalingBehavior = update.ScalingBehavior;
         p.VideoFormat = update.VideoFormat;
 
         // mpeg2video only supports 8-bit content
@@ -47,7 +48,7 @@ public class
         p.AudioFormat = update.AudioFormat;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
-        p.NormalizeLoudness = update.NormalizeLoudness;
+        p.NormalizeLoudnessMode = update.NormalizeLoudnessMode;
         p.AudioChannels = update.AudioChannels;
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeFramerate = update.NormalizeFramerate;

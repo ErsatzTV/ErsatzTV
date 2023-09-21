@@ -42,6 +42,12 @@
                                             }
                                         </MudSelect>
                                     </MudElement>
+                                    <MudElement HtmlTag="div" Class="mt-3">
+                                        <MudSelect Label="Scaling Behavior" @bind-Value="_model.ScalingBehavior" For="@(() => _model.ScalingBehavior)">
+                                            <MudSelectItem Value="@ScalingBehavior.ScaleAndPad">Scale and Pad</MudSelectItem>
+                                            <MudSelectItem Value="@ScalingBehavior.Stretch">Stretch</MudSelectItem>
+                                        </MudSelect>
+                                    </MudElement>
                                 </MudItem>
                                 <MudItem>
                                     <MudText Typo="Typo.h6">Video</MudText>
@@ -128,7 +134,11 @@
                                         <MudTextField Label="Sample Rate" @bind-Value="_model.AudioSampleRate" For="@(() => _model.AudioSampleRate)" Adornment="Adornment.End" AdornmentText="kHz"/>
                                     </MudElement>
                                     <MudElement HtmlTag="div" Class="mt-3">
-                                        <MudCheckBox Label="Normalize Loudness" @bind-Checked="@_model.NormalizeLoudness" For="@(() => _model.NormalizeLoudness)"/>
+                                        <MudSelect Label="Normalize Loudness" @bind-Value="_model.NormalizeLoudnessMode" For="@(() => _model.NormalizeLoudnessMode)">
+                                            <MudSelectItem Value="@NormalizeLoudnessMode.Off">Off</MudSelectItem>
+                                            <MudSelectItem Value="@NormalizeLoudnessMode.LoudNorm">loudnorm</MudSelectItem>
+                                            <MudSelectItem Value="@NormalizeLoudnessMode.DynAudNorm">dynaudnorm</MudSelectItem>
+                                        </MudSelect>
                                     </MudElement>
                                 </MudItem>
                             </MudGrid>

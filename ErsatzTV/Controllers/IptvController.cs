@@ -149,7 +149,7 @@ public class IptvController : ControllerBase
             Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
             foreach (TrimPlaylistResult result in maybePlaylist)
             {
-                return Content(result.Playlist, "application/x-mpegurl");
+                return Content(result.Playlist, "application/vnd.apple.mpegurl");
             }
 
             // TODO: better error here?
@@ -198,7 +198,7 @@ public class IptvController : ControllerBase
                         _logger.LogDebug(
                             "Session started; returning multi-variant playlist for channel {Channel}",
                             channelNumber);
-                        return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                        return Content(GetMultiVariantPlaylist(channelNumber), "application/vnd.apple.mpegurl");
                         // return Redirect($"~/iptv/session/{channelNumber}/hls.m3u8");
                     },
                     error =>
@@ -209,7 +209,7 @@ public class IptvController : ControllerBase
                                 _logger.LogDebug(
                                     "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
-                                return Content(GetMultiVariantPlaylist(channelNumber), "application/x-mpegurl");
+                                return Content(GetMultiVariantPlaylist(channelNumber), "application/vnd.apple.mpegurl");
                             // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(
@@ -228,7 +228,7 @@ public class IptvController : ControllerBase
                             mode))
                     .Map(
                         r => r.Match<IActionResult>(
-                            playlist => Content(playlist, "application/x-mpegurl"),
+                            playlist => Content(playlist, "application/vnd.apple.mpegurl"),
                             error => BadRequest(error.Value)));
         }
     }

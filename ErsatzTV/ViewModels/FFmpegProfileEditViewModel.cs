@@ -18,12 +18,13 @@ public class FFmpegProfileEditViewModel
         AudioChannels = viewModel.AudioChannels;
         AudioFormat = viewModel.AudioFormat;
         AudioSampleRate = viewModel.AudioSampleRate;
-        NormalizeLoudness = viewModel.NormalizeLoudness;
+        NormalizeLoudnessMode = viewModel.NormalizeLoudnessMode;
         Id = viewModel.Id;
         Name = viewModel.Name;
         NormalizeFramerate = viewModel.NormalizeFramerate;
         DeinterlaceVideo = viewModel.DeinterlaceVideo;
         Resolution = viewModel.Resolution;
+        ScalingBehavior = viewModel.ScalingBehavior;
         ThreadCount = viewModel.ThreadCount;
         HardwareAcceleration = viewModel.HardwareAcceleration;
         VaapiDriver = viewModel.VaapiDriver;
@@ -40,12 +41,13 @@ public class FFmpegProfileEditViewModel
     public int AudioChannels { get; set; }
     public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public int AudioSampleRate { get; set; }
-    public bool NormalizeLoudness { get; set; }
+    public NormalizeLoudnessMode NormalizeLoudnessMode { get; set; }
     public int Id { get; set; }
     public string Name { get; set; }
     public bool NormalizeFramerate { get; set; }
     public bool DeinterlaceVideo { get; set; }
     public ResolutionViewModel Resolution { get; set; }
+    public ScalingBehavior ScalingBehavior { get; set; }
     public int ThreadCount { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
@@ -65,6 +67,7 @@ public class FFmpegProfileEditViewModel
             VaapiDevice,
             QsvExtraHardwareFrames,
             Resolution.Id,
+            ScalingBehavior,
             VideoFormat,
             BitDepth,
             VideoBitrate,
@@ -72,7 +75,7 @@ public class FFmpegProfileEditViewModel
             AudioFormat,
             AudioBitrate,
             AudioBufferSize,
-            NormalizeLoudness,
+            NormalizeLoudnessMode,
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,
@@ -89,6 +92,7 @@ public class FFmpegProfileEditViewModel
             VaapiDevice,
             QsvExtraHardwareFrames,
             Resolution.Id,
+            ScalingBehavior,
             VideoFormat,
             BitDepth,
             VideoBitrate,
@@ -96,7 +100,7 @@ public class FFmpegProfileEditViewModel
             AudioFormat,
             AudioBitrate,
             AudioBufferSize,
-            NormalizeLoudness,
+            NormalizeLoudnessMode,
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,

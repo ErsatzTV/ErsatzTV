@@ -14,7 +14,7 @@ public record FFmpegFullProfileResponseModel(
     int AudioFormat,
     int AudioBitrate,
     int AudioBufferSize,
-    bool NormalizeLoudness,
+    int NormalizeLoudnessMode,
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,
