@@ -155,6 +155,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetPad(videoInputFile, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
 
+        currentState = SetCrop(videoInputFile, desiredState, currentState);
+
         // need to upload for hardware overlay
         bool forceSoftwareOverlay = context is { HasSubtitleOverlay: true, HasWatermark: true }
                                     || ffmpegState.VaapiDriver == "radeonsi";
@@ -482,7 +484,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         FrameState desiredState,
         FrameState currentState)
     {
-        if (currentState.PaddedSize != desiredState.PaddedSize)
+        if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
             IPipelineFilterStep padStep = new PadFilter(
                 currentState,
@@ -515,6 +517,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 VideoStream.IsAnamorphicEdgeCase);
         }
         else
@@ -536,6 +539,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 },
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 VideoStream.IsAnamorphicEdgeCase);
         }
 

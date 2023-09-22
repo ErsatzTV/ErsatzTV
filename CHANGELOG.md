@@ -7,7 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add `Scaling Behavior` option to FFmpeg Profile
   - `Scale and Pad`: the default behavior and will maintain aspect ratio of all content
-  - `Stretch`: a new mode that will NOT maintain aspect ratio when normalizing source content to the desired resolution 
+  - `Stretch`: a new mode that will NOT maintain aspect ratio when normalizing source content to the desired resolution
+  - `Crop`: a new mode that will scale beyond the desired resolution (maintaining aspect ratio), and crop to desired resolution
+    - **This mode does NOT detect black and intelligently crop**
+    - The goal is to fill the canvas by over-scaling and cropping, instead of minimally scaling and padding
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs

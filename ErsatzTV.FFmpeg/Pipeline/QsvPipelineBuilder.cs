@@ -521,7 +521,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         FrameState desiredState,
         FrameState currentState)
     {
-        if (currentState.PaddedSize != desiredState.PaddedSize)
+        if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
             IPipelineFilterStep padStep = new PadFilter(
                 currentState,
@@ -553,6 +553,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 VideoStream.IsAnamorphicEdgeCase);
         }
         else

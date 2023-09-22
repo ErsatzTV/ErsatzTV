@@ -7,17 +7,20 @@ public class ScaleVaapiFilter : BaseFilter
     private readonly FrameState _currentState;
     private readonly bool _isAnamorphicEdgeCase;
     private readonly FrameSize _paddedSize;
+    private readonly Option<FrameSize> _croppedSize;
     private readonly FrameSize _scaledSize;
 
     public ScaleVaapiFilter(
         FrameState currentState,
         FrameSize scaledSize,
         FrameSize paddedSize,
+        Option<FrameSize> croppedSize,
         bool isAnamorphicEdgeCase)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
         _paddedSize = paddedSize;
+        _croppedSize = croppedSize;
         _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
     }
 
@@ -40,7 +43,9 @@ public class ScaleVaapiFilter : BaseFilter
                 string aspectRatio = string.Empty;
                 if (_scaledSize != _paddedSize)
                 {
-                    aspectRatio = ":force_original_aspect_ratio=decrease";
+                    aspectRatio = _croppedSize.IsSome
+                        ? ":force_original_aspect_ratio=increase"
+                        : ":force_original_aspect_ratio=decrease";
                 }
 
                 string squareScale = string.Empty;

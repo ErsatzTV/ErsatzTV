@@ -10,6 +10,7 @@ public record FrameState(
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,
+    Option<FrameSize> CroppedSize,
     bool IsAnamorphic,
     Option<int> FrameRate,
     Option<int> VideoBitrate,

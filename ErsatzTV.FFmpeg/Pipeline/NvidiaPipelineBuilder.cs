@@ -182,6 +182,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                             currentState with { PixelFormat = Some(pixelFormat) },
                             currentState.ScaledSize,
                             currentState.PaddedSize,
+                            Option<FrameSize>.None,
                             false);
                         currentState = filter.NextState(currentState);
                         videoInputFile.FilterSteps.Add(filter);
@@ -517,7 +518,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FrameState desiredState,
         FrameState currentState)
     {
-        if (currentState.PaddedSize != desiredState.PaddedSize)
+        if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
             IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
             currentState = padStep.NextState(currentState);
@@ -555,6 +556,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 VideoStream.IsAnamorphicEdgeCase);
         }
         else
@@ -579,6 +581,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 },
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 VideoStream.IsAnamorphicEdgeCase);
         }
 
