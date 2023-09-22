@@ -504,6 +504,21 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         FrameState desiredState,
         string fontsFolder,
         ICollection<IPipelineStep> pipelineSteps);
+    
+    protected static FrameState SetCrop(
+        VideoInputFile videoInputFile,
+        FrameState desiredState,
+        FrameState currentState)
+    {
+        foreach (FrameSize croppedSize in currentState.CroppedSize)
+        {
+            IPipelineFilterStep cropStep = new CropFilter(currentState, croppedSize);
+            currentState = cropStep.NextState(currentState);
+            videoInputFile.FilterSteps.Add(cropStep);
+        }
+
+        return currentState;
+    }
 
     private static void SetOutputTsOffset(
         FFmpegState ffmpegState,

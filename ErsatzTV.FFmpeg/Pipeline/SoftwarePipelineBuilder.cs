@@ -102,6 +102,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
 
             currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
+            currentState = SetCrop(videoInputFile, desiredState, currentState);
             SetSubtitle(
                 videoInputFile,
                 subtitleInputFile,
@@ -301,7 +302,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         FrameState desiredState,
         FrameState currentState)
     {
-        if (currentState.PaddedSize != desiredState.PaddedSize)
+        if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
             IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
             currentState = padStep.NextState(currentState);
@@ -323,6 +324,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 VideoStream.IsAnamorphicEdgeCase);
 
             currentState = scaleStep.NextState(currentState);

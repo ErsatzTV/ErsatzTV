@@ -120,6 +120,36 @@ public record VideoStream(
 
         return result;
     }
+    
+    public FrameSize SquarePixelFrameSizeForCrop(FrameSize resolution)
+    {
+        int width = FrameSize.Width;
+        int height = FrameSize.Height;
+
+        if (IsAnamorphic)
+        {
+            double sar = GetSAR();
+            bool edgeCase = IsAnamorphicEdgeCase;
+
+            width = edgeCase
+                ? FrameSize.Width
+                : (int)Math.Floor(FrameSize.Width * sar);
+
+            height = edgeCase
+                ? (int)Math.Floor(FrameSize.Height * sar)
+                : FrameSize.Height;
+        }
+
+        double widthPercent = (double)resolution.Width / width;
+        double heightPercent = (double)resolution.Height / height;
+        double maxPercent = Math.Max(widthPercent, heightPercent);
+
+        var result = new FrameSize(
+            (int)Math.Floor(width * maxPercent),
+            (int)Math.Floor(height * maxPercent));
+
+        return result;
+    }
 
     private double GetSAR()
     {

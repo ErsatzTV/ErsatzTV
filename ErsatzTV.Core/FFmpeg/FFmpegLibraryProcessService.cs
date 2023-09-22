@@ -313,9 +313,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             channel.FFmpegProfile.Resolution.Width,
             channel.FFmpegProfile.Resolution.Height);
 
+        Option<FrameSize> cropSize = Option<FrameSize>.None;
+
         if (channel.FFmpegProfile.ScalingBehavior is ScalingBehavior.Stretch)
         {
             scaledSize = paddedSize;
+        }
+
+        if (channel.FFmpegProfile.ScalingBehavior is ScalingBehavior.Crop)
+        {
+            paddedSize = ffmpegVideoStream.SquarePixelFrameSizeForCrop(
+                new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height));
+
+            cropSize = new FrameSize(
+                channel.FFmpegProfile.Resolution.Width,
+                channel.FFmpegProfile.Resolution.Height);
         }
         
         var desiredState = new FrameState(
@@ -326,6 +338,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Optional(playbackSettings.PixelFormat),
             scaledSize,
             paddedSize,
+            cropSize,
             false,
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
@@ -429,6 +442,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             new PixelFormatYuv420P(),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
+            Option<FrameSize>.None,
             false,
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
