@@ -10,6 +10,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 {
     private const string BundledVersion = "N-112071-g00a837c70c";
     private const string BundledVersionVaapi = "N-112071-g00a837c70c";
+    private const string WindowsVersionPrefix = "2023-09-07-git-9c9f48e7f2";
     private readonly IConfigElementRepository _configElementRepository;
 
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
@@ -73,16 +74,19 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
     private Option<HealthCheckResult> ValidateVersion(string version, string app)
     {
         if (version.StartsWith("3.", StringComparison.OrdinalIgnoreCase) ||
-            version.StartsWith("4.", StringComparison.OrdinalIgnoreCase))
+            version.StartsWith("4.", StringComparison.OrdinalIgnoreCase) ||
+            version.StartsWith("5.", StringComparison.OrdinalIgnoreCase))
         {
-            return FailResult($"{app} version {version} is too old; please install 6.0!");
+            return FailResult($"{app} version {version} is too old; please install 6.1 (snapshot)!");
         }
 
-        if (!version.StartsWith("6.0", StringComparison.OrdinalIgnoreCase) && version != BundledVersion &&
+        if (!version.StartsWith("6.1", StringComparison.OrdinalIgnoreCase) &&
+            !version.StartsWith(WindowsVersionPrefix, StringComparison.OrdinalIgnoreCase) &&
+            version != BundledVersion &&
             version != BundledVersionVaapi)
         {
             return WarningResult(
-                $"{app} version {version} is unexpected and may have problems; please install 6.0!");
+                $"{app} version {version} is unexpected and may have problems; please install 6.1 (snapshot)!");
         }
 
         return None;
