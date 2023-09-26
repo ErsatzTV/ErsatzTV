@@ -20,6 +20,7 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
                     request.Host,
                     request.BaseUrl,
                     channels,
+                    request.UserAgent,
                     request.AccessToken));
 
     private static List<Channel> EnsureMode(IEnumerable<Channel> channels, string mode)

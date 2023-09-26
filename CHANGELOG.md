@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Crop`: a new mode that will scale beyond the desired resolution (maintaining aspect ratio), and crop to desired resolution
     - **This mode does NOT detect black and intelligently crop**
     - The goal is to fill the canvas by over-scaling and cropping, instead of minimally scaling and padding
+- Include `inputstream.ffmpegdirect` properties in channels.m3u when requested by Kodi
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
