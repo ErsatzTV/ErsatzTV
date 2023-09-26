@@ -8,6 +8,7 @@ using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
+using ErsatzTV.FFmpeg.OutputOption;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -75,6 +76,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
+        // disable auto scaling when using hw encoding
+        if (encodeCapability is FFmpegCapability.Hardware)
+        {
+            pipelineSteps.Add(new NoAutoScaleOutputOption());
+        }
+        
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
         {
