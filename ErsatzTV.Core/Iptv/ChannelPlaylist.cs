@@ -9,15 +9,23 @@ public class ChannelPlaylist
     private readonly string _accessToken;
     private readonly string _baseUrl;
     private readonly List<Channel> _channels;
+    private readonly string _userAgent;
     private readonly string _host;
     private readonly string _scheme;
 
-    public ChannelPlaylist(string scheme, string host, string baseUrl, List<Channel> channels, string accessToken)
+    public ChannelPlaylist(
+        string scheme,
+        string host,
+        string baseUrl,
+        List<Channel> channels,
+        string userAgent,
+        string accessToken)
     {
         _scheme = scheme;
         _host = host;
         _baseUrl = baseUrl;
         _channels = channels;
+        _userAgent = userAgent;
         _accessToken = accessToken;
     }
 
@@ -37,6 +45,20 @@ public class ChannelPlaylist
         sb.AppendLine(CultureInfo.InvariantCulture, $"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
         foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture)))
         {
+            if ((_userAgent ?? string.Empty).StartsWith("kodi", StringComparison.OrdinalIgnoreCase))
+            {
+                sb.AppendLine("#KODIPROP:inputstream=inputstream.ffmpegdirect");
+
+                string mimeType = channel.StreamingMode switch
+                {
+                    StreamingMode.TransportStream or StreamingMode.TransportStreamHybrid => "video/mp2t",
+                    _ => "application/x-mpegURL"
+                };
+                sb.AppendLine(CultureInfo.InvariantCulture, $"#KODIPROP:mimetype={mimeType}");
+
+                sb.AppendLine("#KODIPROP:inputstream.ffmpegdirect.open_mode=ffmpeg");
+            }
+            
             string logo = Optional(channel.Artwork).Flatten()
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                 .HeadOrNone()

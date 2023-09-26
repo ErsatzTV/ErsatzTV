@@ -45,6 +45,7 @@ public class IptvController : ControllerBase
                     Request.Host.ToString(),
                     Request.PathBase,
                     mode,
+                    Request.Headers.UserAgent,
                     Request.Query["access_token"]))
             .Map<ChannelPlaylist, IActionResult>(Ok);
 
