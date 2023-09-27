@@ -41,6 +41,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     public static DateTimeOffset GetStartTimeAfter(PlayoutBuilderState state, ProgramScheduleItem scheduleItem)
     {
         DateTimeOffset startTime = state.CurrentTime.ToLocalTime();
+        startTime = startTime.AddTicks(-(startTime.Ticks % TimeSpan.TicksPerSecond));
 
         bool isIncomplete = scheduleItem is ProgramScheduleItemMultiple && state.MultipleRemaining.IsSome ||
                             scheduleItem is ProgramScheduleItemDuration && state.DurationFinish.IsSome ||
@@ -50,6 +51,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         if (scheduleItem.StartType == StartType.Fixed && !isIncomplete)
         {
             TimeSpan itemStartTime = scheduleItem.StartTime.GetValueOrDefault();
+            itemStartTime = TimeSpan.FromMilliseconds((int)itemStartTime.TotalMilliseconds);
+
             DateTime date = startTime.Date;
             DateTimeOffset result = new DateTimeOffset(
                     date.Year,
@@ -62,7 +65,11 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local)))
                 .Add(itemStartTime);
 
-            // DateTimeOffset result = startTime.Date + itemStartTime;
+            // Serilog.Log.Logger.Debug(
+            //     "StartTimeOfDay: {StartTimeOfDay} Item Start Time: {ItemStartTime}",
+            //     startTime.TimeOfDay.TotalMilliseconds,
+            //     itemStartTime.TotalMilliseconds);
+
             // need to wrap to the next day if appropriate
             startTime = startTime.TimeOfDay > itemStartTime ? result.AddDays(1) : result;
         }
