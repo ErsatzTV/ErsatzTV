@@ -287,8 +287,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 {
                     _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
 
-                    var hardwareDownload =
-                        new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
+                    // don't try to download from 8-bit to 10-bit
+                    HardwareDownloadFilter hardwareDownload = currentState.BitDepth == 8 &&
+                                                              desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10
+                        ? new HardwareDownloadFilter(currentState)
+                        : new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
+
                     currentState = hardwareDownload.NextState(currentState);
                     result.Add(hardwareDownload);
                 }
