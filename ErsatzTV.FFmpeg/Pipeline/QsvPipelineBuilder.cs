@@ -44,6 +44,10 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         _logger = logger;
     }
 
+    protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) =>
+        ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv ||
+        ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv;
+
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
         FFmpegState ffmpegState,

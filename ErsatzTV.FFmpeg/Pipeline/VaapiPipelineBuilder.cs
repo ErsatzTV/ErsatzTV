@@ -44,6 +44,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         _logger = logger;
     }
 
+    // check for intel vaapi (NOT radeon)
+    protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) =>
+        (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi ||
+         ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi) &&
+        !ffmpegState.VaapiDriver.IfNone(string.Empty).StartsWith("radeon", StringComparison.OrdinalIgnoreCase);
+
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
         FFmpegState ffmpegState,

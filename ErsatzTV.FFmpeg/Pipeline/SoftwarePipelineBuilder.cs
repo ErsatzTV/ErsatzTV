@@ -35,6 +35,8 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         logger) =>
         _logger = logger;
 
+    protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) => false;
+
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
         FFmpegState ffmpegState,

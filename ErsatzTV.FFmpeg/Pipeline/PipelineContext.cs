@@ -6,4 +6,5 @@ public record PipelineContext(
     bool HasSubtitleOverlay,
     bool HasSubtitleText,
     bool ShouldDeinterlace,
-    bool Is10BitOutput);
+    bool Is10BitOutput,
+    bool IsIntelVaapiOrQsv);

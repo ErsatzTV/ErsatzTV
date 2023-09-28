@@ -2,7 +2,6 @@
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.GlobalOption;
-using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
 
 namespace ErsatzTV.FFmpeg;
@@ -17,7 +16,8 @@ public static class CommandGenerator
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<ConcatInputFile> maybeConcatInputFile,
-        IList<IPipelineStep> pipelineSteps)
+        IList<IPipelineStep> pipelineSteps,
+        bool isIntelVaapiOrQsv)
     {
         var arguments = new List<string>();
 
@@ -41,10 +41,7 @@ public static class CommandGenerator
 
         foreach (AudioInputFile audioInputFile in maybeAudioInputFile)
         {
-            bool isVaapiOrQsv =
-                pipelineSteps.Any(s => s is VaapiHardwareAccelerationOption or QsvHardwareAccelerationOption);
-
-            if (!includedPaths.Contains(audioInputFile.Path) || isVaapiOrQsv)
+            if (!includedPaths.Contains(audioInputFile.Path) || isIntelVaapiOrQsv)
             {
                 includedPaths.Add(audioInputFile.Path);
 

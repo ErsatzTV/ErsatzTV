@@ -480,7 +480,8 @@ public class PipelineBuilderBaseTests
             audioInputFile,
             watermarkInputFile,
             concatInputFile,
-            pipeline.PipelineSteps);
+            pipeline.PipelineSteps,
+            pipeline.IsIntelVaapiOrQsv);
 
         var command = string.Join(" ", arguments);
 

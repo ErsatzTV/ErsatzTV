@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Include `inputstream.ffmpegdirect` properties in channels.m3u when requested by Kodi
 
 ### Fixed
-- Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day 
+- Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
