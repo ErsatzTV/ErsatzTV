@@ -475,7 +475,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                         subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
                         // only scale if scaling or padding was used for main video stream
-                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter { IsFormatOnly: false } or PadFilter))
                         {
                             var scaleFilter = new SubtitleScaleNppFilter(desiredState.PaddedSize);
                             subtitle.FilterSteps.Add(scaleFilter);
@@ -484,7 +484,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     else
                     {
                         // only scale if scaling or padding was used for main video stream
-                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter { IsFormatOnly: false } or PadFilter))
                         {
                             var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
                             subtitle.FilterSteps.Add(scaleFilter);

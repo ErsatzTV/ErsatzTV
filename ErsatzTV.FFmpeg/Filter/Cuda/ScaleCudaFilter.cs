@@ -24,6 +24,8 @@ public class ScaleCudaFilter : BaseFilter
         _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
     }
 
+    public bool IsFormatOnly => _currentState.ScaledSize == _scaledSize;
+
     public override string Filter
     {
         get
