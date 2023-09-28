@@ -16,6 +16,7 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 {
+    private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
 
@@ -40,6 +41,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         fontsFolder,
         logger)
     {
+        _ffmpegCapabilities = ffmpegCapabilities;
         _hardwareCapabilities = hardwareCapabilities;
         _logger = logger;
     }
@@ -417,7 +419,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         return currentState;
     }
 
-    private static FrameState SetSubtitle(
+    private FrameState SetSubtitle(
         VideoInputFile videoInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         PipelineContext context,
@@ -466,17 +468,33 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 8)
                 {
-                    var subtitleHardwareUpload = new HardwareUploadCudaFilter(
-                        currentState with { FrameDataLocation = FrameDataLocation.Software });
-                    subtitle.FilterSteps.Add(subtitleHardwareUpload);
-
-                    // only scale if scaling or padding was used for main video stream
-                    if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                    if (_ffmpegCapabilities.HasFilter("scale_npp"))
                     {
-                        var scaleFilter = new SubtitleScaleNppFilter(desiredState.PaddedSize);
-                        subtitle.FilterSteps.Add(scaleFilter);
-                    }
+                        var subtitleHardwareUpload = new HardwareUploadCudaFilter(
+                            currentState with { FrameDataLocation = FrameDataLocation.Software });
+                        subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
+                        // only scale if scaling or padding was used for main video stream
+                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                        {
+                            var scaleFilter = new SubtitleScaleNppFilter(desiredState.PaddedSize);
+                            subtitle.FilterSteps.Add(scaleFilter);
+                        }
+                    }
+                    else
+                    {
+                        // only scale if scaling or padding was used for main video stream
+                        if (videoInputFile.FilterSteps.Any(s => s is ScaleFilter or ScaleCudaFilter or PadFilter))
+                        {
+                            var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
+                            subtitle.FilterSteps.Add(scaleFilter);
+                        }
+                        
+                        var subtitleHardwareUpload = new HardwareUploadCudaFilter(
+                            currentState with { FrameDataLocation = FrameDataLocation.Software });
+                        subtitle.FilterSteps.Add(subtitleHardwareUpload);
+                    }
+                    
                     var subtitlesFilter = new OverlaySubtitleCudaFilter();
                     subtitleOverlayFilterSteps.Add(subtitlesFilter);
                 }
