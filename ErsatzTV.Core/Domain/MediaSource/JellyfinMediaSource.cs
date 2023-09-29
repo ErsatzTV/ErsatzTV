@@ -6,4 +6,5 @@ public class JellyfinMediaSource : MediaSource
     public string OperatingSystem { get; set; }
     public List<JellyfinConnection> Connections { get; set; }
     public List<JellyfinPathReplacement> PathReplacements { get; set; }
+    public DateTime? LastCollectionsScan { get; set; }
 }

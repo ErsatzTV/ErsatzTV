@@ -2469,6 +2469,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.MediaSource");
 
+                    b.Property<DateTime?>("LastCollectionsScan")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OperatingSystem")
                         .HasColumnType("TEXT");
 

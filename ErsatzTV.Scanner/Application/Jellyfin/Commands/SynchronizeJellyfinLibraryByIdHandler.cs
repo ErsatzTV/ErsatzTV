@@ -13,7 +13,6 @@ public class
 {
     private readonly IConfigElementRepository _configElementRepository;
 
-    private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinMovieLibraryScanner _jellyfinMovieLibraryScanner;
 
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
@@ -24,7 +23,6 @@ public class
     private readonly IMediator _mediator;
 
     public SynchronizeJellyfinLibraryByIdHandler(
-        IJellyfinApiClient jellyfinApiClient,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IJellyfinSecretStore jellyfinSecretStore,
@@ -34,7 +32,6 @@ public class
         IConfigElementRepository configElementRepository,
         ILogger<SynchronizeJellyfinLibraryByIdHandler> logger)
     {
-        _jellyfinApiClient = jellyfinApiClient;
         _mediator = mediator;
         _mediaSourceRepository = mediaSourceRepository;
         _jellyfinSecretStore = jellyfinSecretStore;
@@ -96,22 +93,6 @@ public class
             {
                 parameters.Library.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(parameters.Library);
-
-                // need to call get libraries to find library that contains collections (box sets)                
-                await _jellyfinApiClient.GetLibraries(
-                    parameters.ConnectionParameters.ActiveConnection.Address,
-                    parameters.ConnectionParameters.ApiKey);
-
-                Either<BaseError, Unit> collectionResult = await _mediator.Send(
-                    new SynchronizeJellyfinCollections(parameters.Library.MediaSourceId),
-                    cancellationToken);
-
-                collectionResult.BiIter(
-                    _ => _logger.LogDebug("Done synchronizing jellyfin collections"),
-                    error => _logger.LogWarning(
-                        "Unable to synchronize jellyfin collections for source {MediaSourceId}: {Error}",
-                        parameters.Library.MediaSourceId,
-                        error.Value));
             }
 
             foreach (BaseError error in result.LeftToSeq())
@@ -140,16 +121,14 @@ public class
     private async Task<Validation<BaseError, RequestParameters>> Validate(
         SynchronizeJellyfinLibraryById request) =>
         (await ValidateConnection(request), await JellyfinLibraryMustExist(request),
-            await ValidateLibraryRefreshInterval(), await ValidateFFmpegPath(), await ValidateFFprobePath())
+            await ValidateLibraryRefreshInterval())
         .Apply(
-            (connectionParameters, jellyfinLibrary, libraryRefreshInterval, ffmpegPath, ffprobePath) =>
+            (connectionParameters, jellyfinLibrary, libraryRefreshInterval) =>
                 new RequestParameters(
                     connectionParameters,
                     jellyfinLibrary,
                     request.ForceScan,
                     libraryRefreshInterval,
-                    ffmpegPath,
-                    ffprobePath,
                     request.DeepScan
                 ));
 
@@ -194,27 +173,11 @@ public class
             .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
-    private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
-            .FilterT(File.Exists)
-            .Map(
-                ffmpegPath =>
-                    ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
-
-    private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
-            .FilterT(File.Exists)
-            .Map(
-                ffprobePath =>
-                    ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
-
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,
         JellyfinLibrary Library,
         bool ForceScan,
         int LibraryRefreshInterval,
-        string FFmpegPath,
-        string FFprobePath,
         bool DeepScan);
 
     private record ConnectionParameters(JellyfinConnection ActiveConnection)

@@ -12,15 +12,18 @@ public class
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IJellyfinCollectionScanner _scanner;
+    private readonly IConfigElementRepository _configElementRepository;
 
     public SynchronizeJellyfinCollectionsHandler(
         IMediaSourceRepository mediaSourceRepository,
         IJellyfinSecretStore jellyfinSecretStore,
-        IJellyfinCollectionScanner scanner)
+        IJellyfinCollectionScanner scanner,
+        IConfigElementRepository configElementRepository)
     {
         _mediaSourceRepository = mediaSourceRepository;
         _jellyfinSecretStore = jellyfinSecretStore;
         _scanner = scanner;
+        _configElementRepository = configElementRepository;
     }
 
 
@@ -28,23 +31,38 @@ public class
         SynchronizeJellyfinCollections request,
         CancellationToken cancellationToken)
     {
-        Validation<BaseError, ConnectionParameters> validation = await Validate(request);
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
         return await validation.Match(
             SynchronizeCollections,
             error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
     }
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizeJellyfinCollections request) =>
-        MediaSourceMustExist(request)
+    private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizeJellyfinCollections request)
+    {
+        Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
+        
+        return (await mediaSource, await ValidateLibraryRefreshInterval())
+            .Apply(
+                (connectionParameters, libraryRefreshInterval) => new RequestParameters(
+                    connectionParameters,
+                    connectionParameters.MediaSource,
+                    request.ForceScan,
+                    libraryRefreshInterval));
+    }
+    
+    private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
+        _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+            .FilterT(lri => lri is >= 0 and < 1_000_000)
+            .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
     private Task<Validation<BaseError, JellyfinMediaSource>> MediaSourceMustExist(
         SynchronizeJellyfinCollections request) =>
         _mediaSourceRepository.GetJellyfin(request.JellyfinMediaSourceId)
             .Map(o => o.ToValidation<BaseError>("Jellyfin media source does not exist."));
 
-    private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
+    private static Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         JellyfinMediaSource jellyfinMediaSource)
     {
         Option<JellyfinConnection> maybeConnection = jellyfinMediaSource.Connections.HeadOrNone();
@@ -62,15 +80,38 @@ public class
             .ToValidation<BaseError>("Jellyfin media source requires an api key");
     }
 
-    private async Task<Either<BaseError, Unit>> SynchronizeCollections(ConnectionParameters connectionParameters) =>
-        await _scanner.ScanCollections(
-            connectionParameters.ActiveConnection.Address,
-            connectionParameters.ApiKey,
-            connectionParameters.JellyfinMediaSource.Id);
+    private async Task<Either<BaseError, Unit>> SynchronizeCollections(RequestParameters parameters)
+    {
+        var lastScan = new DateTimeOffset(
+            parameters.MediaSource.LastCollectionsScan ?? SystemTime.MinValueUtc,
+            TimeSpan.Zero);
+        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+        if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
+        {
+            Either<BaseError, Unit> result = await _scanner.ScanCollections(
+                parameters.ConnectionParameters.ActiveConnection.Address,
+                parameters.ConnectionParameters.ApiKey,
+                parameters.MediaSource.Id);
 
-    private record ConnectionParameters(
-        JellyfinMediaSource JellyfinMediaSource,
-        JellyfinConnection ActiveConnection)
+            if (result.IsRight)
+            {
+                parameters.MediaSource.LastCollectionsScan = DateTime.UtcNow;
+                await _mediaSourceRepository.UpdateLastCollectionScan(parameters.MediaSource);
+            }
+
+            return result;
+        }
+
+        return Unit.Default;
+    }
+
+    private record RequestParameters(
+        ConnectionParameters ConnectionParameters,
+        JellyfinMediaSource MediaSource,
+        bool ForceScan,
+        int LibraryRefreshInterval);
+
+    private record ConnectionParameters(JellyfinMediaSource MediaSource, JellyfinConnection ActiveConnection)
     {
         public string? ApiKey { get; init; }
     }

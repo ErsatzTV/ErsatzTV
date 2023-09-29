@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day
 - Fix VAAPI transcoding 8-bit source content to 10-bit
 - Fix NVIDIA subtitle scaling when `scale_npp` filter is unavailable
+- Remove ffmpeg and ffprobe as required dependencies for scanning media server libraries
+  - Note that ffmpeg is still *always* required for playback to work
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
@@ -25,6 +27,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Off`: do not normalize loudness
   - `loudnorm`: use `loudnorm` filter to normalize loudness (generally higher CPU use)
   - `dynaudnorm`: use `dynaudnorm` filter to normalize loudness (generally lower CPU use)
+- Jellyfin collection scanning will no longer happen after every (automatic or forced) library scan
+    - Automatic/periodic scans will check collections one time after all libraries have been scanned
+    - There is a new table in the `Media` > `Libraries` page with a button to manually re-scan Jellyfin collections as needed
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added

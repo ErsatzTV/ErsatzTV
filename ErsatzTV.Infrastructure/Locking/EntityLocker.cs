@@ -9,6 +9,7 @@ public class EntityLocker : IEntityLocker
     private readonly ConcurrentDictionary<int, byte> _lockedPlayouts;
     private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
     private bool _embyCollections;
+    private bool _jellyfinCollections;
     private bool _plex;
     private bool _trakt;
 
@@ -24,6 +25,7 @@ public class EntityLocker : IEntityLocker
     public event EventHandler<Type> OnRemoteMediaSourceChanged;
     public event EventHandler OnTraktChanged;
     public event EventHandler OnEmbyCollectionsChanged;
+    public event EventHandler OnJellyfinCollectionsChanged;
     public event EventHandler<int> OnPlayoutChanged;
 
     public bool LockLibrary(int libraryId)
@@ -158,6 +160,32 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool AreEmbyCollectionsLocked() => _embyCollections;
+    
+    public bool LockJellyfinCollections()
+    {
+        if (!_jellyfinCollections)
+        {
+            _jellyfinCollections = true;
+            OnJellyfinCollectionsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool UnlockJellyfinCollections()
+    {
+        if (_jellyfinCollections)
+        {
+            _jellyfinCollections = false;
+            OnJellyfinCollectionsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool AreJellyfinCollectionsLocked() => _jellyfinCollections;
 
     public bool LockPlayout(int playoutId)
     {

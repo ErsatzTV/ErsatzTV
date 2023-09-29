@@ -250,14 +250,25 @@ public class SchedulerService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
+        var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
+
         foreach (JellyfinLibrary library in dbContext.JellyfinLibraries.Filter(l => l.ShouldSyncItems))
         {
+            mediaSourceIds.Add(library.MediaSourceId);
+
             if (_entityLocker.LockLibrary(library.Id))
             {
                 await _scannerWorkerChannel.WriteAsync(
                     new SynchronizeJellyfinLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }
+        }
+        
+        foreach (int mediaSourceId in mediaSourceIds)
+        {
+            await _scannerWorkerChannel.WriteAsync(
+                new SynchronizeJellyfinCollections(mediaSourceId, false),
+                cancellationToken);
         }
     }
 

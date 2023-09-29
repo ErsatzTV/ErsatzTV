@@ -858,11 +858,19 @@ public class MediaSourceRepository : IMediaSourceRepository
         return deletedMediaIds;
     }
 
-    public async Task<Unit> UpdateLastScan(EmbyMediaSource embyMediaSource)
+    public async Task<Unit> UpdateLastCollectionScan(EmbyMediaSource embyMediaSource)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE EmbyMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
             new { embyMediaSource.LastCollectionsScan, embyMediaSource.Id }).ToUnit();
+    }
+
+    public async Task<Unit> UpdateLastCollectionScan(JellyfinMediaSource jellyfinMediaSource)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE JellyfinMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
+            new { jellyfinMediaSource.LastCollectionsScan, jellyfinMediaSource.Id }).ToUnit();
     }
 }

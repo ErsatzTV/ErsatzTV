@@ -151,6 +151,7 @@
     {
         _locker.OnLibraryChanged += LockChanged;
         _locker.OnEmbyCollectionsChanged += LockChanged;
+        _locker.OnJellyfinCollectionsChanged += LockChanged;
         _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
@@ -201,6 +202,12 @@
                     await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
                 }
                 break;
+            case "jellyfin":
+                if (_locker.LockJellyfinCollections())
+                {
+                    await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true));
+                }
+                break;
         }
     }
 
@@ -213,6 +220,8 @@
         {
             case "emby":
                 return _locker.AreEmbyCollectionsLocked();
+            case "jellyfin":
+                return _locker.AreJellyfinCollectionsLocked();
         }
 
         return false;
@@ -238,6 +247,7 @@
     {
         _locker.OnLibraryChanged -= LockChanged;
         _locker.OnEmbyCollectionsChanged -= LockChanged;
+        _locker.OnJellyfinCollectionsChanged -= LockChanged;
         _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
 
         _cts.Cancel();

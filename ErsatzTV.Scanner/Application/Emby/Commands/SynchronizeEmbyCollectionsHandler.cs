@@ -60,7 +60,7 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
         _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId)
             .Map(o => o.ToValidation<BaseError>("Emby media source does not exist."));
 
-    private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
+    private static Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         EmbyMediaSource embyMediaSource)
     {
         Option<EmbyConnection> maybeConnection = embyMediaSource.Connections.HeadOrNone();
@@ -93,7 +93,7 @@ public class SynchronizeEmbyCollectionsHandler : IRequestHandler<SynchronizeEmby
             if (result.IsRight)
             {
                 parameters.MediaSource.LastCollectionsScan = DateTime.UtcNow;
-                await _mediaSourceRepository.UpdateLastScan(parameters.MediaSource);
+                await _mediaSourceRepository.UpdateLastCollectionScan(parameters.MediaSource);
             }
 
             return result;

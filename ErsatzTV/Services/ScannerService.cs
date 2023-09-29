@@ -55,6 +55,9 @@ public class ScannerService : BackgroundService
                         case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
                             requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, stoppingToken);
                             break;
+                        case SynchronizeJellyfinCollections synchronizeJellyfinCollections:
+                            requestTask = SynchronizeJellyfinCollections(synchronizeJellyfinCollections, stoppingToken);
+                            break;
                         case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
                             requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, stoppingToken);
                             break;
@@ -229,6 +232,35 @@ public class ScannerService : BackgroundService
         if (entityLocker.IsLibraryLocked(request.JellyfinLibraryId))
         {
             entityLocker.UnlockLibrary(request.JellyfinLibraryId);
+        }
+    }
+    
+    private async Task SynchronizeJellyfinCollections(
+        SynchronizeJellyfinCollections request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
+
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogDebug("Done synchronizing jellyfin collections"),
+            error =>
+            {
+                if (error is ScanIsNotRequired)
+                {
+                    _logger.LogDebug("Scan is not required for jellyfin collections at this time");
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to synchronize jellyfin collections: {Error}", error.Value);
+                }
+            });
+
+        if (entityLocker.AreJellyfinCollectionsLocked())
+        {
+            entityLocker.UnlockJellyfinCollections();
         }
     }
 
