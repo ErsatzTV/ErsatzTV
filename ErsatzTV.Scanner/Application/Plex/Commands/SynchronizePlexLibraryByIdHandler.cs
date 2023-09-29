@@ -108,17 +108,14 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexLibraryById request) =>
-        (await ValidateConnection(request), await PlexLibraryMustExist(request),
-            await ValidateLibraryRefreshInterval(), await ValidateFFmpegPath(), await ValidateFFprobePath())
+        (await ValidateConnection(request), await PlexLibraryMustExist(request), await ValidateLibraryRefreshInterval())
         .Apply(
-            (connectionParameters, plexLibrary, libraryRefreshInterval, ffmpegPath, ffprobePath) =>
+            (connectionParameters, plexLibrary, libraryRefreshInterval) =>
                 new RequestParameters(
                     connectionParameters,
                     plexLibrary,
                     request.ForceScan,
                     libraryRefreshInterval,
-                    ffmpegPath,
-                    ffprobePath,
                     request.DeepScan
                 ));
 
@@ -163,27 +160,11 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
             .FilterT(lri => lri is >= 0 and < 1_000_000)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
-    private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
-            .FilterT(File.Exists)
-            .Map(
-                ffmpegPath =>
-                    ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
-
-    private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
-            .FilterT(File.Exists)
-            .Map(
-                ffprobePath =>
-                    ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
-
     private record RequestParameters(
         ConnectionParameters ConnectionParameters,
         PlexLibrary Library,
         bool ForceScan,
         int LibraryRefreshInterval,
-        string FFmpegPath,
-        string FFprobePath,
         bool DeepScan);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)

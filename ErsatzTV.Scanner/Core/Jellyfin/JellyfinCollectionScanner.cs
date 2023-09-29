@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
+using ErsatzTV.Scanner.Application.Jellyfin;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Jellyfin;
@@ -30,6 +31,20 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
     {
         try
         {
+            // need the jellyfin admin user id for now
+            Either<BaseError, Unit> syncAdminResult = await _mediator.Send(
+                new SynchronizeJellyfinAdminUserId(mediaSourceId),
+                CancellationToken.None);
+
+            foreach (BaseError error in syncAdminResult.LeftToSeq())
+            {
+                _logger.LogError("Error synchronizing jellyfin admin user id: {Error}", error);
+                return error;
+            }
+
+            // need to call get libraries to find library that contains collections (box sets)                
+            await _jellyfinApiClient.GetLibraries(address, apiKey);
+
             var incomingItemIds = new List<string>();
 
             // get all collections from db (item id, etag)

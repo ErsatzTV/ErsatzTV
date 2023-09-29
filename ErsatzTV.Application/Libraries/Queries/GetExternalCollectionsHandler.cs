@@ -15,20 +15,37 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
         GetExternalCollections request,
         CancellationToken cancellationToken)
     {
+        List<LibraryViewModel> result = new();
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        List<int> mediaSourceIds = await dbContext.EmbyMediaSources
+        result.AddRange(await GetEmbyExternalCollections(dbContext, cancellationToken));
+        result.AddRange(await GetJellyfinExternalCollections(dbContext, cancellationToken));
+
+        return result;
+    }
+
+    private static async Task<IEnumerable<LibraryViewModel>> GetEmbyExternalCollections(
+        TvContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        List<int> embyMediaSourceIds = await dbContext.EmbyMediaSources
             .Filter(ems => ems.Libraries.Any(l => ((EmbyLibrary)l).ShouldSyncItems))
             .Map(ems => ems.Id)
             .ToListAsync(cancellationToken);
 
-        return mediaSourceIds.Map(
-                id => new LibraryViewModel(
-                    "Emby",
-                    0,
-                    "Collections",
-                    0,
-                    id,
-                    string.Empty))
-            .ToList();
+        return embyMediaSourceIds.Map(id => new LibraryViewModel("Emby", 0, "Collections", 0, id, string.Empty));
+    }
+    
+    private static async Task<IEnumerable<LibraryViewModel>> GetJellyfinExternalCollections(
+        TvContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        List<int> jellyfinMediaSourceIds = await dbContext.JellyfinMediaSources
+            .Filter(jms => jms.Libraries.Any(l => ((JellyfinLibrary)l).ShouldSyncItems))
+            .Map(jms => jms.Id)
+            .ToListAsync(cancellationToken);
+
+        return jellyfinMediaSourceIds.Map(
+            id => new LibraryViewModel("Jellyfin", 0, "Collections", 0, id, string.Empty));
     }
 }

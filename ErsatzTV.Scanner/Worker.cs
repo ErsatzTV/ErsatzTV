@@ -84,6 +84,10 @@ public class Worker : BackgroundService
         scanJellyfinCommand.AddOption(forceOption);
         scanJellyfinCommand.AddOption(deepOption);
 
+        var scanJellyfinCollectionsCommand = new Command("scan-jellyfin-collections", "Scan Jellyfin collections");
+        scanJellyfinCollectionsCommand.AddArgument(mediaSourceIdArgument);
+        scanJellyfinCollectionsCommand.AddOption(forceOption);
+
         scanLocalCommand.SetHandler(
             async context =>
             {
@@ -176,6 +180,24 @@ public class Worker : BackgroundService
                     await mediator.Send(scan, context.GetCancellationToken());
                 }
             });
+        
+        scanJellyfinCollectionsCommand.SetHandler(
+            async context =>
+            {
+                if (IsScanningEnabled())
+                {
+                    bool force = context.ParseResult.GetValueForOption(forceOption);
+                    SetProcessPriority(force);
+
+                    int mediaSourceId = context.ParseResult.GetValueForArgument(mediaSourceIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new SynchronizeJellyfinCollections(mediaSourceId, force);
+                    await mediator.Send(scan, context.GetCancellationToken());
+                }
+            });
 
         var rootCommand = new RootCommand();
         rootCommand.AddCommand(scanLocalCommand);
@@ -183,6 +205,7 @@ public class Worker : BackgroundService
         rootCommand.AddCommand(scanEmbyCommand);
         rootCommand.AddCommand(scanEmbyCollectionsCommand);
         rootCommand.AddCommand(scanJellyfinCommand);
+        rootCommand.AddCommand(scanJellyfinCollectionsCommand);
 
         return rootCommand;
     }
