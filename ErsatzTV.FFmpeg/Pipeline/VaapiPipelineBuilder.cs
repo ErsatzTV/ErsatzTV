@@ -8,6 +8,7 @@ using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
+using ErsatzTV.FFmpeg.OutputOption;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -43,6 +44,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         _logger = logger;
     }
 
+    // check for intel vaapi (NOT radeon)
+    protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) =>
+        (ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi ||
+         ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi) &&
+        !ffmpegState.VaapiDriver.IfNone(string.Empty).StartsWith("radeon", StringComparison.OrdinalIgnoreCase);
+
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
         FFmpegState ffmpegState,
@@ -75,6 +82,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
+        // disable auto scaling when using hw encoding
+        if (encodeCapability is FFmpegCapability.Hardware)
+        {
+            pipelineSteps.Add(new NoAutoScaleOutputOption());
+        }
+        
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
         {
@@ -274,8 +287,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 {
                     _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
 
-                    var hardwareDownload =
-                        new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
+                    // don't try to download from 8-bit to 10-bit
+                    HardwareDownloadFilter hardwareDownload = currentState.BitDepth == 8 &&
+                                                              desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10
+                        ? new HardwareDownloadFilter(currentState)
+                        : new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
+
                     currentState = hardwareDownload.NextState(currentState);
                     result.Add(hardwareDownload);
                 }

@@ -73,9 +73,8 @@ public class ComplexFilter : IPipelineStep
         foreach ((string path, _) in _maybeAudioInputFile)
         {
             if (!distinctPaths.Contains(path) ||
-                // use audio as a separate input with vaapi/qsv
-                _pipelineContext.HardwareAccelerationMode is HardwareAccelerationMode.Vaapi
-                    or HardwareAccelerationMode.Qsv)
+                // use audio as a separate input with intel vaapi/qsv
+                _pipelineContext.IsIntelVaapiOrQsv)
             {
                 distinctPaths.Add(path);
             }

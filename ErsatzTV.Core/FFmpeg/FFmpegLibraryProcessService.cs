@@ -762,7 +762,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             watermarkInputFile,
             concatInputFile,
-            pipeline.PipelineSteps);
+            pipeline.PipelineSteps,
+            pipeline.IsIntelVaapiOrQsv);
 
         if (environmentVariables.Any())
         {

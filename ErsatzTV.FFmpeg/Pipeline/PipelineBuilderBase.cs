@@ -66,7 +66,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         pipelineSteps.Add(scaleStep);
         pipelineSteps.Add(new FileNameOutputOption(outputFile));
 
-        return new FFmpegPipeline(pipelineSteps);
+        return new FFmpegPipeline(pipelineSteps, false);
     }
 
     public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
@@ -113,7 +113,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
         }
 
-        return new FFmpegPipeline(pipelineSteps);
+        return new FFmpegPipeline(pipelineSteps, false);
     }
 
     public FFmpegPipeline WrapSegmenter(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
@@ -138,7 +138,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         pipelineSteps.Add(new OutputFormatMpegTs(false));
         pipelineSteps.Add(new PipeProtocol());
 
-        return new FFmpegPipeline(pipelineSteps);
+        return new FFmpegPipeline(pipelineSteps, false);
     }
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
@@ -174,7 +174,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _subtitleInputFile.Map(s => s is { IsImageBased: true, Method: SubtitleMethod.Burn }).IfNone(false),
             _subtitleInputFile.Map(s => s is { IsImageBased: false, Method: SubtitleMethod.Burn }).IfNone(false),
             desiredState.Deinterlaced,
-            desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10);
+            desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10,
+            false);
 
         SetThreadCount(ffmpegState, desiredState, pipelineSteps);
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
@@ -189,6 +190,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             desiredState,
             context,
             pipelineSteps);
+
+        context = context with { IsIntelVaapiOrQsv = IsIntelVaapiOrQsv(ffmpegState) };
 
         if (_audioInputFile.IsNone)
         {
@@ -219,7 +222,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         pipelineSteps.Add(complexFilter);
 
-        return new FFmpegPipeline(pipelineSteps);
+        return new FFmpegPipeline(pipelineSteps, context.IsIntelVaapiOrQsv);
     }
 
     private void LogUnknownDecoder(
@@ -396,6 +399,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             }
         }
     }
+
+    protected abstract bool IsIntelVaapiOrQsv(FFmpegState ffmpegState);
 
     protected abstract FFmpegState SetAccelState(
         VideoStream videoStream,
