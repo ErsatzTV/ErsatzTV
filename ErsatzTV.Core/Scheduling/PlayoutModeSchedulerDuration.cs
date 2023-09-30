@@ -167,7 +167,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     }
 
                     TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
-                    if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
+                    if (durationBlock > scheduleItem.PlayoutDuration)
                     {
                         Logger.LogWarning(
                             "Unable to schedule duration block of {DurationBlock:hh\\:mm\\:ss} which is longer than the configured playout duration {PlayoutDuration:hh\\:mm\\:ss}",

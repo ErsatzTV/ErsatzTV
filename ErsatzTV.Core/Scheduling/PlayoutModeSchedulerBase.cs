@@ -41,7 +41,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     public static DateTimeOffset GetStartTimeAfter(PlayoutBuilderState state, ProgramScheduleItem scheduleItem)
     {
         DateTimeOffset startTime = state.CurrentTime.ToLocalTime();
-        startTime = startTime.AddTicks(-(startTime.Ticks % TimeSpan.TicksPerSecond));
 
         bool isIncomplete = scheduleItem is ProgramScheduleItemMultiple && state.MultipleRemaining.IsSome ||
                             scheduleItem is ProgramScheduleItemDuration && state.DurationFinish.IsSome ||
@@ -51,7 +50,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         if (scheduleItem.StartType == StartType.Fixed && !isIncomplete)
         {
             TimeSpan itemStartTime = scheduleItem.StartTime.GetValueOrDefault();
-            itemStartTime = TimeSpan.FromMilliseconds((int)itemStartTime.TotalMilliseconds);
 
             DateTime date = startTime.Date;
             DateTimeOffset result = new DateTimeOffset(
@@ -352,13 +350,12 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         foreach (FillerPreset padFiller in Optional(
                      allFiller.FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue)))
         {
-            var totalDuration = TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+            var totalDuration = TimeSpan.FromTicks(result.Sum(pi => (pi.Finish - pi.Start).Ticks));
 
             // add primary content to totalDuration only if it hasn't already been added
             if (result.All(pi => pi.MediaItemId != playoutItem.MediaItemId))
             {
-                totalDuration += TimeSpan.FromMilliseconds(
-                    effectiveChapters.Sum(c => (c.EndTime - c.StartTime).TotalMilliseconds));
+                totalDuration += TimeSpan.FromTicks(effectiveChapters.Sum(c => (c.EndTime - c.StartTime).Ticks));
             }
 
             int currentMinute = (playoutItem.StartOffset + totalDuration).Minute;
@@ -402,8 +399,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             padFiller.AllowWatermarks,
                             log,
                             cancellationToken));
-                    totalDuration =
-                        TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+                    totalDuration = TimeSpan.FromTicks(result.Sum(pi => (pi.Finish - pi.Start).Ticks));
                     remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
                     if (remainingToFill > TimeSpan.Zero)
                     {
@@ -493,8 +489,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             padFiller.AllowWatermarks,
                             log,
                             cancellationToken));
-                    totalDuration =
-                        TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+                    totalDuration = TimeSpan.FromTicks(result.Sum(pi => (pi.Finish - pi.Start).Ticks));
                     remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
                     if (remainingToFill > TimeSpan.Zero)
                     {
