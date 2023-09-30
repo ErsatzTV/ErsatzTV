@@ -436,7 +436,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             }
             else if (context.HasSubtitleOverlay)
             {
-                var pixelFormatFilter = new PixelFormatFilter(new PixelFormatArgb());
+                var pixelFormatFilter = new VaapiSubtitlePixelFormatFilter();
                 subtitle.FilterSteps.Add(pixelFormatFilter);
 
                 if (forceSoftwareOverlay)

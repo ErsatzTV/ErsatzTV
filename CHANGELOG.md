@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix NVIDIA subtitle scaling when `scale_npp` filter is unavailable
 - Remove ffmpeg and ffprobe as required dependencies for scanning media server libraries
   - Note that ffmpeg is still *always* required for playback to work
+- Fix PGS subtitle pixel format with Intel VAAPI
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
