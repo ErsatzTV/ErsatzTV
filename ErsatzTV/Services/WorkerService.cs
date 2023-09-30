@@ -86,9 +86,11 @@ public class WorkerService : BackgroundService
                         case MatchTraktListItems matchTraktListItems:
                             await mediator.Send(matchTraktListItems, stoppingToken);
                             break;
+#if !DEBUG_NO_SYNC
                         case ExtractEmbeddedSubtitles extractEmbeddedSubtitles:
                             await mediator.Send(extractEmbeddedSubtitles, stoppingToken);
                             break;
+#endif
                         case ReleaseMemory aggressivelyReleaseMemory:
                             await mediator.Send(aggressivelyReleaseMemory, stoppingToken);
                             break;

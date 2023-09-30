@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day
+- Fix playout bug that prevented padded durations from fitting within a schedule item of the same duration
+  - For example, filler that padded to 30 minutes would often not fit in a 30 minute duration schedule item
 - Fix VAAPI transcoding 8-bit source content to 10-bit
 - Fix NVIDIA subtitle scaling when `scale_npp` filter is unavailable
 - Remove ffmpeg and ffprobe as required dependencies for scanning media server libraries
