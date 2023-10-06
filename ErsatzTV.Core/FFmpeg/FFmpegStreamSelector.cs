@@ -138,6 +138,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             return None;
         }
 
+        var allCodes = new List<string>();
         string language = (preferredSubtitleLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
@@ -146,10 +147,14 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         else
         {
             // filter to preferred language
-            List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
+            allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
+            if (allCodes.Count > 1)
+            {
+                _logger.LogDebug("Preferred subtitle language has multiple codes {Codes}", allCodes);
+            }
+
             subtitles = subtitles
-                .Filter(
-                    s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
+                .Filter(s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
         }
 
@@ -185,7 +190,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             "Found no subtitles for channel {ChannelNumber} with mode {Mode} matching language {Language}",
             channel.Number,
             subtitleMode,
-            preferredSubtitleLanguage);
+            allCodes);
 
         return None;
     }
