@@ -208,7 +208,7 @@ jobs:
         id: downloadffmpeg
         name: Download ffmpeg
         with:
-          url: "https://github.com/GyanD/codexffmpeg/releases/download/2023-09-07-git-9c9f48e7f2/ffmpeg-2023-09-07-git-9c9f48e7f2-full_build.7z"
+          url: "https://github.com/GyanD/codexffmpeg/releases/download/2023-10-04-git-9078dc0c52/ffmpeg-2023-10-04-git-9078dc0c52-full_build.7z"
           target: ffmpeg/
 
       - name: Build

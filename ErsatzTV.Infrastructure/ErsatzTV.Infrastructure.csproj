@@ -12,8 +12,8 @@
     <ItemGroup>
       <PackageReference Include="Blurhash.ImageSharp" Version="3.0.0" />
       <PackageReference Include="CliWrap" Version="3.6.4" />
-      <PackageReference Include="Dapper" Version="2.0.151" />
-      <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.9.3" />
+      <PackageReference Include="Dapper" Version="2.1.4" />
+      <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.10.0" />
       <PackageReference Include="Jint" Version="3.0.0-beta-2052" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />

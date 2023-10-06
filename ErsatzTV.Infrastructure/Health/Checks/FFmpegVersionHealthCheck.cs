@@ -10,7 +10,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 {
     private const string BundledVersion = "N-112071-g00a837c70c";
     private const string BundledVersionVaapi = "N-112071-g00a837c70c";
-    private const string WindowsVersionPrefix = "2023-09-07-git-9c9f48e7f2";
+    private const string WindowsVersionPrefix = "2023-10-04-git-9078dc0c52";
     private readonly IConfigElementRepository _configElementRepository;
 
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
