@@ -79,11 +79,26 @@
     };
     
     window.clipboardCopy = {
-        copyText: function (codeElement) {
-            navigator.clipboard.writeText(codeElement.textContent)
-            .catch(function (error) {
-                console.log(error);
-            });
+        copyText: async function (codeElement) {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(codeElement.textContent);
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = codeElement.textContent;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-999999px";
+                    
+                document.body.prepend(textArea);
+                textArea.select();
+        
+                try {
+                    document.execCommand('copy');
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    textArea.remove();
+                }
+            }
         }
     };
 </script>

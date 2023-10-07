@@ -1,5 +1,6 @@
 ﻿using CliWrap;
 using Dapper;
+using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -83,6 +84,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Episode).Season)
+            .ThenInclude(s => s.Show)
+            .ThenInclude(s => s.ShowMetadata)
+            .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Movie).MovieMetadata)
             .ThenInclude(mm => mm.Subtitles)
             .Include(i => i.MediaItem)
@@ -142,6 +147,22 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         foreach (PlayoutItemWithPath playoutItemWithPath in maybePlayoutItem.RightToSeq())
         {
+            try
+            {
+                PlayoutItemViewModel viewModel = Mapper.ProjectToViewModel(playoutItemWithPath.PlayoutItem);
+                if (!string.IsNullOrWhiteSpace(viewModel.Title))
+                {
+                    _logger.LogDebug(
+                        "Found playout item {Title} with path {Path}",
+                        viewModel.Title,
+                        playoutItemWithPath.Path);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to get playout item title");
+            }
+
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
 
             string videoPath = playoutItemWithPath.Path;

@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - **This mode does NOT detect black and intelligently crop**
     - The goal is to fill the canvas by over-scaling and cropping, instead of minimally scaling and padding
 - Include `inputstream.ffmpegdirect` properties in channels.m3u when requested by Kodi
+- Log playout item title and path when starting a stream
+  - This will help with media server libraries where the URL passed to ffmpeg doesn't indicate which file is streaming
 
 ### Fixed
 - Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day
@@ -22,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove ffmpeg and ffprobe as required dependencies for scanning media server libraries
   - Note that ffmpeg is still *always* required for playback to work
 - Fix PGS subtitle pixel format with Intel VAAPI
+- Fix some cases where `Copy` button would fail to copy to clipboard
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
