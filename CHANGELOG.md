@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Note that ffmpeg is still *always* required for playback to work
 - Fix PGS subtitle pixel format with Intel VAAPI
 - Fix some cases where `Copy` button would fail to copy to clipboard
-- Fix ffmpeg process termination when properly closing ErsatzTV on Windows
+- Fix some cases where ffmpeg process would remain running after properly closing ErsatzTV
 - Fix QSV HLS segment duration
   - This behavior caused extremely slow QSV stream starts
 
