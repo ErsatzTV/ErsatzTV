@@ -274,7 +274,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 desiredState,
                                 videoStream.FrameRate,
                                 segmentTemplate,
-                                playlistPath));
+                                playlistPath,
+                                ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv));
                     }
                 }
 

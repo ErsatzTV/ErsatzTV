@@ -11,6 +11,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Streaming;
@@ -18,6 +19,7 @@ namespace ErsatzTV.Application.Streaming;
 public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -38,6 +40,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         ILogger<HlsSessionWorker> sessionWorkerLogger,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IConfigElementRepository configElementRepository,
+        IHostApplicationLifetime hostApplicationLifetime, 
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _hlsPlaylistFilter = hlsPlaylistFilter;
@@ -49,6 +52,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _sessionWorkerLogger = sessionWorkerLogger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
+        _hostApplicationLifetime = hostApplicationLifetime;
         _workerChannel = workerChannel;
     }
 
@@ -81,7 +85,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
 
         // fire and forget worker
-        _ = worker.Run(request.ChannelNumber, idleTimeout, cancellationToken)
+        _ = worker.Run(request.ChannelNumber, idleTimeout, _hostApplicationLifetime.ApplicationStopping)
             .ContinueWith(
                 _ =>
                 {

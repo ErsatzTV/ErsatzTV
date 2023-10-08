@@ -114,7 +114,6 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             {
                 "-f", "lavfi",
                 "-i", "nullsrc",
-                "-vf", "format=yuv420p,hwupload",
                 "-t", "00:00:01",
                 "-c:v", "h264_qsv",
                 "-f", "null", "-"
