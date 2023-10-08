@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Jellyfin collection scanning will no longer happen after every (automatic or forced) library scan
     - Automatic/periodic scans will check collections one time after all libraries have been scanned
     - There is a new table in the `Media` > `Libraries` page with a button to manually re-scan Jellyfin collections as needed
+- In FFmpeg Profile editor, only display hardware acceleration kinds that are supported by the configured ffmpeg
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added

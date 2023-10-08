@@ -175,8 +175,7 @@ public static class FFmpegPlaybackSettingsCalculator
         bool hlsRealtime) =>
         new()
         {
-            // HardwareAcceleration = ffmpegProfile.HardwareAcceleration,
-            HardwareAcceleration = HardwareAccelerationKind.None,
+            HardwareAcceleration = ffmpegProfile.HardwareAcceleration,
             FormatFlags = CommonFormatFlags,
             VideoFormat = ffmpegProfile.VideoFormat,
             VideoBitrate = ffmpegProfile.VideoBitrate,

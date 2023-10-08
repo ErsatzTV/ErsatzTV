@@ -480,11 +480,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
+        // TODO: ignore accel if this already failed once
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
+        _logger.LogDebug("HW accel mode: {HwAccel}", hwAccel);
 
         var ffmpegState = new FFmpegState(
             false,
-            hwAccel,
+            HardwareAccelerationMode.None, // no hw accel decode since errors loop
             hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),

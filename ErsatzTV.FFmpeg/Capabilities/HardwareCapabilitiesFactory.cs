@@ -28,11 +28,17 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     public async Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath)
     {
-        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders");
-        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters");
-        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders");
+        // TODO: validate qsv somehow
+        // TODO: validate videotoolbox somehow
+        // TODO: validate amf somehow
 
-        return new FFmpegCapabilities(ffmpegDecoders, ffmpegFilters, ffmpegEncoders);
+        IReadOnlySet<string> ffmpegHardwareAccelerations =
+            await GetFFmpegCapabilities(ffmpegPath, "hwaccels", ParseFFmpegAccelLine);
+        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine);
+        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine);
+        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine);
+
+        return new FFmpegCapabilities(ffmpegHardwareAccelerations, ffmpegDecoders, ffmpegFilters, ffmpegEncoders);
     }
 
     public async Task<IHardwareCapabilities> GetHardwareCapabilities(
@@ -40,14 +46,25 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         string ffmpegPath,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<string> vaapiDriver,
-        Option<string> vaapiDevice) =>
-        hardwareAccelerationMode switch
+        Option<string> vaapiDevice)
+    {
+        if (!ffmpegCapabilities.HasHardwareAcceleration(hardwareAccelerationMode))
+        {
+            _logger.LogWarning(
+                "FFmpeg does not support {HardwareAcceleration} acceleration; will use software mode",
+                hardwareAccelerationMode);
+
+            return new NoHardwareCapabilities();
+        }
+        
+        return hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
+    }
 
     public async Task<string> GetNvidiaOutput(string ffmpegPath)
     {
@@ -99,13 +116,16 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         return result.StandardOutput;
     }
 
-    private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(string ffmpegPath, string capabilities)
+    private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(
+        string ffmpegPath,
+        string capabilities,
+        Func<string, Option<string>> parseLine)
     {
         var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, capabilities);
-        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedDecoders) &&
-            cachedDecoders is not null)
+        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
+            cachedCapabilities is not null)
         {
-            return cachedDecoders;
+            return cachedCapabilities;
         }
 
         string[] arguments = { "-hide_banner", $"-{capabilities}" };
@@ -120,8 +140,15 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             : result.StandardOutput;
 
         return output.Split("\n").Map(s => s.Trim())
-            .Bind(l => ParseFFmpegLine(l))
+            .Bind(l => parseLine(l))
             .ToImmutableHashSet();
+    }
+
+    private static Option<string> ParseFFmpegAccelLine(string input)
+    {
+        const string PATTERN = @"^([\w]+)$";
+        Match match = Regex.Match(input, PATTERN);
+        return match.Success ? match.Groups[1].Value : Option<string>.None;
     }
 
     private static Option<string> ParseFFmpegLine(string input)

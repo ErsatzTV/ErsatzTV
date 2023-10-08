@@ -69,7 +69,7 @@
                                     </MudElement>
                                     <MudElement HtmlTag="div" Class="mt-3">
                                         <MudSelect Label="Hardware Acceleration" @bind-Value="_model.HardwareAcceleration" For="@(() => _model.HardwareAcceleration)">
-                                            @foreach (HardwareAccelerationKind hwAccel in Enum.GetValues<HardwareAccelerationKind>())
+                                            @foreach (HardwareAccelerationKind hwAccel in _hardwareAccelerationKinds)
                                             {
                                                 <MudSelectItem Value="@hwAccel">@hwAccel</MudSelectItem>
                                             }
@@ -167,6 +167,7 @@
     private ValidationMessageStore _messageStore;
 
     private List<ResolutionViewModel> _resolutions = new();
+    private List<HardwareAccelerationKind> _hardwareAccelerationKinds = new();
     private List<string> _vaapiDevices = new();
     private PersistingComponentStateSubscription _persistingSubscription;
 
@@ -195,6 +196,15 @@
         {
             _resolutions = restoredResolutions;
         }
+        
+        if (!ApplicationState.TryTakeFromJson("_hardwareAccelerationKinds", out List<HardwareAccelerationKind> restoredHardwareAccelerationKinds))
+        {
+            _hardwareAccelerationKinds = await _mediator.Send(new GetSupportedHardwareAccelerationKinds(), _cts.Token);
+        }
+        else
+        {
+            _hardwareAccelerationKinds = restoredHardwareAccelerationKinds;
+        }
 
         if (IsEdit)
         {
@@ -221,6 +231,11 @@
             _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile(), _cts.Token));
         }
 
+        if (!_hardwareAccelerationKinds.Contains(_model.HardwareAcceleration))
+        {
+            _model.HardwareAcceleration = HardwareAccelerationKind.None;
+        }
+
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
 
@@ -236,6 +251,7 @@
     {
         ApplicationState.PersistAsJson("_model", _model);
         ApplicationState.PersistAsJson("_resolutions", _resolutions);
+        ApplicationState.PersistAsJson("_hardwareAccelerationKinds", _hardwareAccelerationKinds);
 
         return Task.CompletedTask;
     }

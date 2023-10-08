@@ -65,7 +65,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
-            HardwareAccelerationMode.Qsv => new QsvPipelineBuilder(
+            HardwareAccelerationMode.Qsv when capabilities is not NoHardwareCapabilities => new QsvPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
@@ -76,7 +76,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
-            HardwareAccelerationMode.VideoToolbox => new VideoToolboxPipelineBuilder(
+            HardwareAccelerationMode.VideoToolbox when capabilities is not NoHardwareCapabilities => new VideoToolboxPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
@@ -87,7 +87,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
-            HardwareAccelerationMode.Amf => new AmfPipelineBuilder(
+            HardwareAccelerationMode.Amf when capabilities is not NoHardwareCapabilities => new AmfPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
