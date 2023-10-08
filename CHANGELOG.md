@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix some cases where ffmpeg process would remain running after properly closing ErsatzTV
 - Fix QSV HLS segment duration
   - This behavior caused extremely slow QSV stream starts
+- Fix displaying multiple languages in UI for movies, artists, shows
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - In FFmpeg Profile editor, only display hardware acceleration kinds that are supported by the configured ffmpeg
 - Test QSV acceleration if configured, and fallback to software mode if test fails
 - Detect QSV capabilities on Linux (supported decoders, encoders)
+- Use hardware acceleration for error messages/offline messages
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added
