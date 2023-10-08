@@ -88,7 +88,7 @@
                                                 </MudSelect>
                                             </MudElement>
                                         }
-                                        @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi || _model.HardwareAcceleration == HardwareAccelerationKind.Qsv)
+                                        @if (_model.HardwareAcceleration is HardwareAccelerationKind.Vaapi or HardwareAccelerationKind.Qsv)
                                         {
                                             <MudElement HtmlTag="div" Class="mt-3">
                                                 <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv)"

@@ -245,6 +245,7 @@ public class TranscodingTests
                 //new FakeNvidiaCapabilitiesFactory(),
                 new HardwareCapabilitiesFactory(
                     MemoryCache,
+                    new RuntimeInfo(),
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             Substitute.For<IConfigElementRepository>(),
@@ -861,6 +862,7 @@ public class TranscodingTests
                 //new FakeNvidiaCapabilitiesFactory(),
                 new HardwareCapabilitiesFactory(
                     MemoryCache,
+                    new RuntimeInfo(),
                     LoggerFactory.CreateLogger<HardwareCapabilitiesFactory>()),
                 LoggerFactory.CreateLogger<PipelineBuilderFactory>()),
             Substitute.For<IConfigElementRepository>(),

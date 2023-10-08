@@ -10,4 +10,5 @@ public record TroubleshootingInfo(
     IEnumerable<FFmpegProfile> FFmpegProfiles,
     IEnumerable<Channel> Channels,
     string NvidiaCapabilities,
+    string QsvCapabilities,
     string VaapiCapabilities);

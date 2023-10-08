@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Include `inputstream.ffmpegdirect` properties in channels.m3u when requested by Kodi
 - Log playout item title and path when starting a stream
   - This will help with media server libraries where the URL passed to ffmpeg doesn't indicate which file is streaming
+- Add QSV Capabilities to Troubleshooting page
 
 ### Fixed
 - Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day
@@ -37,6 +38,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Automatic/periodic scans will check collections one time after all libraries have been scanned
     - There is a new table in the `Media` > `Libraries` page with a button to manually re-scan Jellyfin collections as needed
 - In FFmpeg Profile editor, only display hardware acceleration kinds that are supported by the configured ffmpeg
+- Test QSV acceleration if configured, and fallback to software mode if test fails
+- Detect QSV capabilities on Linux (supported decoders, encoders)
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added
