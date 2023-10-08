@@ -5,18 +5,36 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class FFmpegCapabilities : IFFmpegCapabilities
 {
+    private readonly IReadOnlySet<string> _ffmpegHardwareAccelerations;
     private readonly IReadOnlySet<string> _ffmpegDecoders;
     private readonly IReadOnlySet<string> _ffmpegEncoders;
     private readonly IReadOnlySet<string> _ffmpegFilters;
 
     public FFmpegCapabilities(
+        IReadOnlySet<string> ffmpegHardwareAccelerations,
         IReadOnlySet<string> ffmpegDecoders,
         IReadOnlySet<string> ffmpegFilters,
         IReadOnlySet<string> ffmpegEncoders)
     {
+        _ffmpegHardwareAccelerations = ffmpegHardwareAccelerations;
         _ffmpegDecoders = ffmpegDecoders;
         _ffmpegFilters = ffmpegFilters;
         _ffmpegEncoders = ffmpegEncoders;
+    }
+
+    public bool HasHardwareAcceleration(HardwareAccelerationMode hardwareAccelerationMode)
+    {
+        string accelToCheck = hardwareAccelerationMode switch
+        {
+            HardwareAccelerationMode.Amf => "amf",
+            HardwareAccelerationMode.Nvenc => "cuda",
+            HardwareAccelerationMode.Qsv => "qsv",
+            HardwareAccelerationMode.Vaapi => "vaapi",
+            HardwareAccelerationMode.VideoToolbox => "videotoolbox",
+            _ => string.Empty
+        };
+
+        return !string.IsNullOrWhiteSpace(accelToCheck) && _ffmpegHardwareAccelerations.Contains(accelToCheck);
     }
 
     public bool HasDecoder(string decoder) => _ffmpegDecoders.Contains(decoder);

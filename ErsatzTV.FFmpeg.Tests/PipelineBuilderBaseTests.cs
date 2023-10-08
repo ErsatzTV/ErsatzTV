@@ -496,6 +496,7 @@ public class PipelineBuilderBaseTests
             : base(
                 new System.Collections.Generic.HashSet<string>(),
                 new System.Collections.Generic.HashSet<string>(),
+                new System.Collections.Generic.HashSet<string>(),
                 new System.Collections.Generic.HashSet<string>())
         {
         }

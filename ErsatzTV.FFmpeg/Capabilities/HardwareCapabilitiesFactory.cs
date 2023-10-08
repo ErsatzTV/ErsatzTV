@@ -1,10 +1,14 @@
 using System.Collections.Immutable;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Capabilities.Vaapi;
+using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
+using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -15,24 +19,35 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
     private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
     private const string VaapiCacheKeyFormat = "ffmpeg.hardware.vaapi.{0}.{1}";
+    private const string QsvCacheKeyFormat = "ffmpeg.hardware.qsv.{0}";
     private const string FFmpegCapabilitiesCacheKeyFormat = "ffmpeg.{0}";
     private readonly ILogger<HardwareCapabilitiesFactory> _logger;
 
     private readonly IMemoryCache _memoryCache;
+    private readonly IRuntimeInfo _runtimeInfo;
 
-    public HardwareCapabilitiesFactory(IMemoryCache memoryCache, ILogger<HardwareCapabilitiesFactory> logger)
+    public HardwareCapabilitiesFactory(
+        IMemoryCache memoryCache,
+        IRuntimeInfo runtimeInfo,
+        ILogger<HardwareCapabilitiesFactory> logger)
     {
         _memoryCache = memoryCache;
+        _runtimeInfo = runtimeInfo;
         _logger = logger;
     }
 
     public async Task<IFFmpegCapabilities> GetFFmpegCapabilities(string ffmpegPath)
     {
-        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders");
-        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters");
-        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders");
+        // TODO: validate videotoolbox somehow
+        // TODO: validate amf somehow
 
-        return new FFmpegCapabilities(ffmpegDecoders, ffmpegFilters, ffmpegEncoders);
+        IReadOnlySet<string> ffmpegHardwareAccelerations =
+            await GetFFmpegCapabilities(ffmpegPath, "hwaccels", ParseFFmpegAccelLine);
+        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine);
+        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine);
+        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine);
+
+        return new FFmpegCapabilities(ffmpegHardwareAccelerations, ffmpegDecoders, ffmpegFilters, ffmpegEncoders);
     }
 
     public async Task<IHardwareCapabilities> GetHardwareCapabilities(
@@ -40,14 +55,31 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         string ffmpegPath,
         HardwareAccelerationMode hardwareAccelerationMode,
         Option<string> vaapiDriver,
-        Option<string> vaapiDevice) =>
-        hardwareAccelerationMode switch
+        Option<string> vaapiDevice)
+    {
+        if (hardwareAccelerationMode is HardwareAccelerationMode.None)
+        {
+            return new NoHardwareCapabilities();
+        }
+        
+        if (!ffmpegCapabilities.HasHardwareAcceleration(hardwareAccelerationMode))
+        {
+            _logger.LogWarning(
+                "FFmpeg does not support {HardwareAcceleration} acceleration; will use software mode",
+                hardwareAccelerationMode);
+
+            return new NoHardwareCapabilities();
+        }
+        
+        return hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
+            HardwareAccelerationMode.Qsv => await GetQsvCapabilities(ffmpegPath, vaapiDevice),
             HardwareAccelerationMode.Vaapi => await GetVaapiCapabilities(vaapiDriver, vaapiDevice),
             HardwareAccelerationMode.Amf => new AmfHardwareCapabilities(),
             _ => new DefaultHardwareCapabilities()
         };
+    }
 
     public async Task<string> GetNvidiaOutput(string ffmpegPath)
     {
@@ -70,6 +102,33 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             : result.StandardOutput;
 
         return output;
+    }
+    
+    public async Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice)
+    {
+        var option = new QsvHardwareAccelerationOption(qsvDevice);
+        var arguments = option.GlobalOptions.ToList();
+
+        arguments.AddRange(
+            new[]
+            {
+                "-f", "lavfi",
+                "-i", "nullsrc",
+                "-t", "00:00:01",
+                "-c:v", "h264_qsv",
+                "-f", "null", "-"
+            });
+        
+        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
+            ? result.StandardError
+            : result.StandardOutput;
+
+        return new QsvOutput(result.ExitCode, output);
     }
 
     public async Task<Option<string>> GetVaapiOutput(Option<string> vaapiDriver, string vaapiDevice)
@@ -99,13 +158,16 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         return result.StandardOutput;
     }
 
-    private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(string ffmpegPath, string capabilities)
+    private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(
+        string ffmpegPath,
+        string capabilities,
+        Func<string, Option<string>> parseLine)
     {
         var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, capabilities);
-        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedDecoders) &&
-            cachedDecoders is not null)
+        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
+            cachedCapabilities is not null)
         {
-            return cachedDecoders;
+            return cachedCapabilities;
         }
 
         string[] arguments = { "-hide_banner", $"-{capabilities}" };
@@ -120,8 +182,15 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             : result.StandardOutput;
 
         return output.Split("\n").Map(s => s.Trim())
-            .Bind(l => ParseFFmpegLine(l))
+            .Bind(l => parseLine(l))
             .ToImmutableHashSet();
+    }
+
+    private static Option<string> ParseFFmpegAccelLine(string input)
+    {
+        const string PATTERN = @"^([\w]+)$";
+        Match match = Regex.Match(input, PATTERN);
+        return match.Success ? match.Groups[1].Value : Option<string>.None;
     }
 
     private static Option<string> ParseFFmpegLine(string input)
@@ -193,6 +262,71 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             "Error detecting VAAPI capabilities; some hardware accelerated features will be unavailable");
 
         return new NoHardwareCapabilities();
+    }
+
+    private async Task<IHardwareCapabilities> GetQsvCapabilities(string ffmpegPath, Option<string> qsvDevice)
+    {
+        try
+        {
+            if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux) && qsvDevice.IsNone)
+            {
+                // this shouldn't really happen
+                _logger.LogError("Cannot detect QSV capabilities without device {Device}", qsvDevice);
+                return new NoHardwareCapabilities();
+            }
+
+            string device = qsvDevice.IfNone(string.Empty);
+            var cacheKey = string.Format(CultureInfo.InvariantCulture, QsvCacheKeyFormat, device);
+
+            if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
+                profileEntrypoints is not null)
+            {
+                return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
+            }
+
+            QsvOutput output = await GetQsvOutput(ffmpegPath, qsvDevice);
+            if (output.ExitCode != 0)
+            {
+                _logger.LogWarning("QSV test failed; some hardware accelerated features will be unavailable");
+                return new NoHardwareCapabilities();
+            }
+
+            if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux))
+            {
+                Option<string> vaapiOutput = await GetVaapiOutput(Option<string>.None, device);
+                if (vaapiOutput.IsNone)
+                {
+                    _logger.LogWarning("Unable to determine QSV capabilities; please install vainfo");
+                    return new DefaultHardwareCapabilities();
+                }
+
+                foreach (string o in vaapiOutput)
+                {
+                    profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
+                }
+
+                if (profileEntrypoints?.Any() ?? false)
+                {
+                    _logger.LogInformation(
+                        "Detected {Count} VAAPI profile entrypoints for using QSV device {Device}",
+                        profileEntrypoints.Count,
+                        device);
+                    
+                    _memoryCache.Set(cacheKey, profileEntrypoints);
+                    return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
+                }
+            }
+
+            // not sure how to check capabilities on windows
+            return new DefaultHardwareCapabilities();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Error detecting QSV capabilities; some hardware accelerated features will be unavailable");
+            return new NoHardwareCapabilities();
+        }
     }
 
     private async Task<IHardwareCapabilities> GetNvidiaCapabilities(

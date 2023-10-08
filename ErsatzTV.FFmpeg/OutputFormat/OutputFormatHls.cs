@@ -7,18 +7,21 @@ public class OutputFormatHls : IPipelineStep
     private readonly FrameState _desiredState;
     private readonly Option<string> _mediaFrameRate;
     private readonly string _playlistPath;
+    private readonly bool _oneSecondGop;
     private readonly string _segmentTemplate;
 
     public OutputFormatHls(
         FrameState desiredState,
         Option<string> mediaFrameRate,
         string segmentTemplate,
-        string playlistPath)
+        string playlistPath,
+        bool oneSecondGop = false)
     {
         _desiredState = desiredState;
         _mediaFrameRate = mediaFrameRate;
         _segmentTemplate = segmentTemplate;
         _playlistPath = playlistPath;
+        _oneSecondGop = oneSecondGop;
     }
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
@@ -33,9 +36,11 @@ public class OutputFormatHls : IPipelineStep
             const int SEGMENT_SECONDS = 4;
             int frameRate = _desiredState.FrameRate.IfNone(GetFrameRateFromMedia);
 
+            int gop = _oneSecondGop ? frameRate : frameRate * SEGMENT_SECONDS;
+            
             return new List<string>
             {
-                "-g", $"{frameRate * SEGMENT_SECONDS}",
+                "-g", $"{gop}",
                 "-keyint_min", $"{frameRate * SEGMENT_SECONDS}",
                 "-force_key_frames", $"expr:gte(t,n_forced*{SEGMENT_SECONDS})",
                 "-f", "hls",

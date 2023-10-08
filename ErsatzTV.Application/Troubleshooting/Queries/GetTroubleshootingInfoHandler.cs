@@ -7,6 +7,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -74,6 +75,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             .ToList();
 
         string nvidiaCapabilities = null;
+        string qsvCapabilities = null;
         string vaapiCapabilities = null;
         Option<ConfigElement> maybeFFmpegPath =
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
@@ -87,6 +89,20 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             {
                 nvidiaCapabilities = await _hardwareCapabilitiesFactory.GetNvidiaOutput(ffmpegPath.Value);
 
+                if (!_memoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
+                {
+                    vaapiDevices = new List<string> { "/dev/dri/renderD128" };
+                }
+
+                foreach (string qsvDevice in vaapiDevices)
+                {
+                    QsvOutput output = await _hardwareCapabilitiesFactory.GetQsvOutput(ffmpegPath.Value, qsvDevice);
+                    qsvCapabilities += $"Checking device {qsvDevice}{Environment.NewLine}";
+                    qsvCapabilities += $"Exit Code: {output.ExitCode}{Environment.NewLine}{Environment.NewLine}";
+                    qsvCapabilities += output.Output;
+                    qsvCapabilities += Environment.NewLine + Environment.NewLine;
+                }
+
                 if (_runtimeInfo.IsOSPlatform(OSPlatform.Linux))
                 {
                     var allDrivers = new List<VaapiDriver>
@@ -94,11 +110,6 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
 
                     foreach (VaapiDriver activeDriver in allDrivers)
                     {
-                        if (!_memoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
-                        {
-                            vaapiDevices = new List<string> { "/dev/dri/renderD128" };
-                        }
-
                         foreach (string vaapiDevice in vaapiDevices)
                         {
                             foreach (string output in await _hardwareCapabilitiesFactory.GetVaapiOutput(
@@ -123,6 +134,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             activeFFmpegProfiles,
             channels,
             nvidiaCapabilities,
+            qsvCapabilities,
             vaapiCapabilities);
     }
 

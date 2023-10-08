@@ -29,6 +29,16 @@
                 Copy
             </MudButton>
         </MudExpansionPanel>
+        <MudExpansionPanel Text="QSV Capabilities" Class="mb-6">
+            <div class="overflow-y-scroll" style="max-height: 500px">
+                <pre>
+                    <code @ref="_qsvView">@_qsvCapabilities</code>
+                </pre>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_qsvView)">
+                Copy
+            </MudButton>
+        </MudExpansionPanel>
         <MudExpansionPanel Text="VAAPI Capabilities">
             <div class="overflow-y-scroll" style="max-height: 500px">
                 <pre>
@@ -46,9 +56,11 @@
     private readonly CancellationTokenSource _cts = new();
     private string _troubleshootingInfo;
     private string _nvidiaCapabilities;
+    private string _qsvCapabilities;
     private string _vaapiCapabilities;
     private ElementReference _troubleshootingView;
     private ElementReference _nvidiaView;
+    private ElementReference _qsvView;
     private ElementReference _vaapiView;
 
     public void Dispose()
@@ -73,6 +85,7 @@
                 });
 
             _nvidiaCapabilities = info.NvidiaCapabilities;
+            _qsvCapabilities = info.QsvCapabilities;
             _vaapiCapabilities = info.VaapiCapabilities;
         }
         catch (Exception ex)
