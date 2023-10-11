@@ -45,6 +45,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string JumpLetterField = "jump_letter";
     internal const string StudioField = "studio";
     internal const string LanguageField = "language";
+    internal const string LanguageTagField = "language_tag";
     internal const string StyleField = "style";
     internal const string MoodField = "mood";
     internal const string ActorField = "actor";
@@ -64,6 +65,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string VideoDynamicRange = "video_dynamic_range";
 
     internal const string MinutesField = "minutes";
+    internal const string SecondsField = "seconds";
     internal const string HeightField = "height";
     internal const string WidthField = "width";
     internal const string SeasonNumberField = "season_number";
@@ -106,7 +108,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 36;
+    public int Version => 37;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -512,6 +514,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     private async Task AddLanguages(ISearchRepository searchRepository, Document doc, List<string> mediaCodes)
     {
+        foreach (string code in mediaCodes.Where(c => !string.IsNullOrWhiteSpace(c)).Distinct())
+        {
+            doc.Add(new TextField(LanguageTagField, code, Field.Store.NO));
+        }
+        
         var englishNames = new System.Collections.Generic.HashSet<string>();
         foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
         {
@@ -1240,6 +1247,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         foreach (MediaVersion version in mediaVersions)
         {
             doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+            doc.Add(new Int32Field(SecondsField, (int)Math.Ceiling(version.Duration.TotalSeconds), Field.Store.NO));
 
             if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video))
             {
