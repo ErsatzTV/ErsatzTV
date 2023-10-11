@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Log playout item title and path when starting a stream
   - This will help with media server libraries where the URL passed to ffmpeg doesn't indicate which file is streaming
 - Add QSV Capabilities to Troubleshooting page
+- Add `language_tag` and `seconds` fields to search index
 
 ### Fixed
 - Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day

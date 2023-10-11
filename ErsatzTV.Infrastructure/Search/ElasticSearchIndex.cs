@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 36;
+    public int Version => 37;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -292,6 +292,7 @@ public class ElasticSearchIndex : ISearchIndex
                     State = movie.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, movie.MediaVersions),
+                    LanguageTag = GetLanguageTags(movie.MediaVersions),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -342,6 +343,7 @@ public class ElasticSearchIndex : ISearchIndex
                     State = show.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForShow(show)),
+                    LanguageTag = await searchRepository.GetLanguagesForShow(show),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -400,6 +402,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Language = await GetLanguages(
                         searchRepository,
                         await searchRepository.GetLanguagesForSeason(season)),
+                    LanguageTag = await searchRepository.GetLanguagesForSeason(season),
                     ContentRating = GetContentRatings(showMetadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -444,6 +447,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Language = await GetLanguages(
                         searchRepository,
                         await searchRepository.GetLanguagesForArtist(artist)),
+                    LanguageTag = await searchRepository.GetLanguagesForArtist(artist),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Style = metadata.Styles.Map(t => t.Name).ToList(),
@@ -484,6 +488,7 @@ public class ElasticSearchIndex : ISearchIndex
                     State = musicVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, musicVideo.MediaVersions),
+                    LanguageTag = GetLanguageTags(musicVideo.MediaVersions),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Album = metadata.Album ?? string.Empty,
@@ -562,6 +567,7 @@ public class ElasticSearchIndex : ISearchIndex
                     SeasonNumber = episode.Season?.SeasonNumber ?? 0,
                     EpisodeNumber = metadata.EpisodeNumber,
                     Language = await GetLanguages(searchRepository, episode.MediaVersions),
+                    LanguageTag = GetLanguageTags(episode.MediaVersions),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Plot = metadata.Plot ?? string.Empty,
@@ -619,6 +625,7 @@ public class ElasticSearchIndex : ISearchIndex
                     State = otherVideo.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, otherVideo.MediaVersions),
+                    LanguageTag = GetLanguageTags(otherVideo.MediaVersions),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -667,6 +674,7 @@ public class ElasticSearchIndex : ISearchIndex
                     State = song.State.ToString(),
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, song.MediaVersions),
+                    LanguageTag = GetLanguageTags(song.MediaVersions),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Album = metadata.Album ?? string.Empty,
                     Artist = !string.IsNullOrWhiteSpace(metadata.Artist) ? new List<string> { metadata.Artist } : null,
@@ -733,7 +741,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         return result;
     }
-
+    
     private async Task<List<string>> GetLanguages(ISearchRepository searchRepository, List<string> mediaCodes)
     {
         var englishNames = new System.Collections.Generic.HashSet<string>();
@@ -749,12 +757,21 @@ public class ElasticSearchIndex : ISearchIndex
 
         return englishNames.ToList();
     }
+    
+    private static List<string> GetLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
+        mediaVersions
+            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio).Map(ms => ms.Language))
+            .Flatten()
+            .Filter(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .ToList();
 
     private static void AddStatistics(ElasticSearchItem doc, IEnumerable<MediaVersion> mediaVersions)
     {
         foreach (MediaVersion version in mediaVersions.HeadOrNone())
         {
             doc.Minutes = (int)Math.Ceiling(version.Duration.TotalMinutes);
+            doc.Seconds = (int)Math.Ceiling(version.Duration.TotalSeconds);
 
             foreach (MediaStream videoStream in version.Streams
                          .Filter(s => s.MediaStreamKind == MediaStreamKind.Video)
