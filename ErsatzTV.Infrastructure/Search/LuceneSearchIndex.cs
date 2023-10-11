@@ -497,19 +497,19 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
     }
 
-    private async Task AddLanguages(ISearchRepository searchRepository, Document doc, List<MediaVersion> mediaVersions)
+    private async Task AddLanguages(
+        ISearchRepository searchRepository,
+        Document doc,
+        IEnumerable<MediaVersion> mediaVersions)
     {
-        Option<MediaVersion> maybeVersion = mediaVersions.HeadOrNone();
-        if (maybeVersion.IsSome)
-        {
-            MediaVersion version = maybeVersion.ValueUnsafe();
-            var mediaCodes = version.Streams
-                .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio)
-                .Map(ms => ms.Language).Distinct()
-                .ToList();
+        var mediaCodes = mediaVersions
+            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio).Map(ms => ms.Language))
+            .Flatten()
+            .Filter(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct()
+            .ToList();
 
-            await AddLanguages(searchRepository, doc, mediaCodes);
-        }
+        await AddLanguages(searchRepository, doc, mediaCodes);
     }
 
     private async Task AddLanguages(ISearchRepository searchRepository, Document doc, List<string> mediaCodes)

@@ -758,21 +758,13 @@ public class ElasticSearchIndex : ISearchIndex
         return englishNames.ToList();
     }
     
-    private static List<string> GetLanguageTags(IEnumerable<MediaVersion> mediaVersions)
-    {
-        var result = new List<string>();
-
-        foreach (MediaVersion version in mediaVersions.HeadOrNone())
-        {
-            result.AddRange(
-                version.Streams
-                    .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio)
-                    .Map(ms => ms.Language)
-                    .Distinct());
-        }
-
-        return result;
-    }
+    private static List<string> GetLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
+        mediaVersions
+            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio).Map(ms => ms.Language))
+            .Flatten()
+            .Filter(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .ToList();
 
     private static void AddStatistics(ElasticSearchItem doc, IEnumerable<MediaVersion> mediaVersions)
     {
