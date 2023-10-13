@@ -52,8 +52,8 @@ public class PlexServerApiClient : IPlexServerApiClient
                 await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
             return directory
                 // .Filter(l => l.Hidden == 0)
-                .Filter(l => (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
                 .Filter(l => l.Type.ToLowerInvariant() is "movie" or "show")
+                .Filter(l => l.Type.ToLowerInvariant() is not "movie" || (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
                 .Map(Project)
                 .Somes()
                 .ToList();
@@ -1018,7 +1018,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             return $"tmdb://{strip2}";
         }
 
-        if (guid.StartsWith("local://", StringComparison.OrdinalIgnoreCase))
+        if (guid.StartsWith("local://", StringComparison.OrdinalIgnoreCase) ||
+            guid.StartsWith("com.plexapp.agents.none://", StringComparison.OrdinalIgnoreCase))
         {
             // _logger.LogDebug("Ignoring local Plex guid: {Guid}", guid);
         }
