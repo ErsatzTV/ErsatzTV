@@ -27,26 +27,31 @@ public class FFmpegCapabilities : IFFmpegCapabilities
 
     public bool HasHardwareAcceleration(HardwareAccelerationMode hardwareAccelerationMode)
     {
-        string accelToCheck = hardwareAccelerationMode switch
+        Option<FFmpegKnownHardwareAcceleration> maybeAccelToCheck = hardwareAccelerationMode switch
         {
-            HardwareAccelerationMode.Amf => "amf",
-            HardwareAccelerationMode.Nvenc => "cuda",
-            HardwareAccelerationMode.Qsv => "qsv",
-            HardwareAccelerationMode.Vaapi => "vaapi",
-            HardwareAccelerationMode.VideoToolbox => "videotoolbox",
-            _ => string.Empty
+            HardwareAccelerationMode.Amf => FFmpegKnownHardwareAcceleration.Amf,
+            HardwareAccelerationMode.Nvenc => FFmpegKnownHardwareAcceleration.Cuda,
+            HardwareAccelerationMode.Qsv => FFmpegKnownHardwareAcceleration.Qsv,
+            HardwareAccelerationMode.Vaapi => FFmpegKnownHardwareAcceleration.Vaapi,
+            HardwareAccelerationMode.VideoToolbox => FFmpegKnownHardwareAcceleration.VideoToolbox,
+            _ => Option<FFmpegKnownHardwareAcceleration>.None
         };
 
-        return !string.IsNullOrWhiteSpace(accelToCheck) && _ffmpegHardwareAccelerations.Contains(accelToCheck);
+        foreach (FFmpegKnownHardwareAcceleration accelToCheck in maybeAccelToCheck)
+        {
+            return _ffmpegHardwareAccelerations.Contains(accelToCheck.Name);
+        }
+
+        return false;
     }
 
-    public bool HasDecoder(string decoder) => _ffmpegDecoders.Contains(decoder);
+    public bool HasDecoder(FFmpegKnownDecoder decoder) => _ffmpegDecoders.Contains(decoder.Name);
 
-    public bool HasEncoder(string encoder) => _ffmpegEncoders.Contains(encoder);
+    public bool HasEncoder(FFmpegKnownEncoder encoder) => _ffmpegEncoders.Contains(encoder.Name);
 
-    public bool HasFilter(string filter) => _ffmpegFilters.Contains(filter);
+    public bool HasFilter(FFmpegKnownFilter filter) => _ffmpegFilters.Contains(filter.Name);
 
-    public bool HasOption(string ffmpegOption) => _ffmpegOptions.Contains(ffmpegOption);
+    public bool HasOption(FFmpegKnownOption ffmpegOption) => _ffmpegOptions.Contains(ffmpegOption.Name);
 
     public Option<IDecoder> SoftwareDecoderForVideoFormat(string videoFormat) =>
         videoFormat switch

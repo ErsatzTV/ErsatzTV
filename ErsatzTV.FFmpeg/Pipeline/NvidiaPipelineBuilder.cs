@@ -468,7 +468,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 8)
                 {
-                    if (_ffmpegCapabilities.HasFilter("scale_npp"))
+                    if (_ffmpegCapabilities.HasFilter(FFmpegKnownFilter.ScaleNpp))
                     {
                         var subtitleHardwareUpload = new HardwareUploadCudaFilter(
                             currentState with { FrameDataLocation = FrameDataLocation.Software });
