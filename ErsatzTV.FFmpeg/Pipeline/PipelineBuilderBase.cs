@@ -84,7 +84,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         };
 
         concatInputFile.AddOption(new ConcatInputFormat());
-        concatInputFile.AddOption(new ReadrateInputOption());
+        concatInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, 0, _logger));
         concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
 
         foreach (int threadCount in ffmpegState.ThreadCount)
@@ -130,7 +130,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new EncoderCopyAll()
         };
 
-        concatInputFile.AddOption(new ReadrateInputOption());
+        concatInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, 0, _logger));
 
         SetMetadataServiceProvider(ffmpegState, pipelineSteps);
         SetMetadataServiceName(ffmpegState, pipelineSteps);
@@ -640,8 +640,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             };
         }
 
-        _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(initialBurst)));
-        videoInputFile.AddOption(new ReadrateInputOption(initialBurst));
+        _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger)));
+        videoInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger));
     }
 
     private static void SetStillImageInfiniteLoop(
