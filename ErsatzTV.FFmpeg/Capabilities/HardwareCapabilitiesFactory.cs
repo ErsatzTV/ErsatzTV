@@ -46,8 +46,14 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine);
         IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine);
         IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine);
+        IReadOnlySet<string> ffmpegOptions = await GetFFmpegOptions(ffmpegPath);
 
-        return new FFmpegCapabilities(ffmpegHardwareAccelerations, ffmpegDecoders, ffmpegFilters, ffmpegEncoders);
+        return new FFmpegCapabilities(
+            ffmpegHardwareAccelerations,
+            ffmpegDecoders,
+            ffmpegFilters,
+            ffmpegEncoders,
+            ffmpegOptions);
     }
 
     public async Task<IHardwareCapabilities> GetHardwareCapabilities(
@@ -185,6 +191,31 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             .Bind(l => parseLine(l))
             .ToImmutableHashSet();
     }
+    
+    private async Task<IReadOnlySet<string>> GetFFmpegOptions(string ffmpegPath)
+    {
+        var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "options");
+        if (_memoryCache.TryGetValue(cacheKey, out IReadOnlySet<string>? cachedCapabilities) &&
+            cachedCapabilities is not null)
+        {
+            return cachedCapabilities;
+        }
+
+        string[] arguments = { "-hide_banner", "-h", "long" };
+
+        BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(Encoding.UTF8);
+
+        string output = string.IsNullOrWhiteSpace(result.StandardOutput)
+            ? result.StandardError
+            : result.StandardOutput;
+
+        return output.Split("\n").Map(s => s.Trim())
+            .Bind(l => ParseFFmpegOptionLine(l))
+            .ToImmutableHashSet();
+    }
 
     private static Option<string> ParseFFmpegAccelLine(string input)
     {
@@ -200,6 +231,13 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         return match.Success ? match.Groups[1].Value : Option<string>.None;
     }
 
+    private static Option<string> ParseFFmpegOptionLine(string input)
+    {
+        const string PATTERN = @"^-([a-z_]+)\s+.*";
+        Match match = Regex.Match(input, PATTERN);
+        return match.Success ? match.Groups[1].Value : Option<string>.None;
+    }
+    
     private async Task<IHardwareCapabilities> GetVaapiCapabilities(
         Option<string> vaapiDriver,
         Option<string> vaapiDevice)

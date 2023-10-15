@@ -9,17 +9,20 @@ public class FFmpegCapabilities : IFFmpegCapabilities
     private readonly IReadOnlySet<string> _ffmpegDecoders;
     private readonly IReadOnlySet<string> _ffmpegEncoders;
     private readonly IReadOnlySet<string> _ffmpegFilters;
+    private readonly IReadOnlySet<string> _ffmpegOptions;
 
     public FFmpegCapabilities(
         IReadOnlySet<string> ffmpegHardwareAccelerations,
         IReadOnlySet<string> ffmpegDecoders,
         IReadOnlySet<string> ffmpegFilters,
-        IReadOnlySet<string> ffmpegEncoders)
+        IReadOnlySet<string> ffmpegEncoders,
+        IReadOnlySet<string> ffmpegOptions)
     {
         _ffmpegHardwareAccelerations = ffmpegHardwareAccelerations;
         _ffmpegDecoders = ffmpegDecoders;
         _ffmpegFilters = ffmpegFilters;
         _ffmpegEncoders = ffmpegEncoders;
+        _ffmpegOptions = ffmpegOptions;
     }
 
     public bool HasHardwareAcceleration(HardwareAccelerationMode hardwareAccelerationMode)
@@ -42,6 +45,8 @@ public class FFmpegCapabilities : IFFmpegCapabilities
     public bool HasEncoder(string encoder) => _ffmpegEncoders.Contains(encoder);
 
     public bool HasFilter(string filter) => _ffmpegFilters.Contains(filter);
+
+    public bool HasOption(string ffmpegOption) => _ffmpegOptions.Contains(ffmpegOption);
 
     public Option<IDecoder> SoftwareDecoderForVideoFormat(string videoFormat) =>
         videoFormat switch

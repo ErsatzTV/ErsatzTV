@@ -1,17 +1,26 @@
 ﻿using System.Globalization;
+using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Environment;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.InputOption;
 
 public class ReadrateInputOption : IInputOption
 {
+    private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly int _initialBurstSeconds;
+    private readonly ILogger _logger;
 
-    public ReadrateInputOption(int initialBurstSeconds = 0)
+    public ReadrateInputOption(
+        IFFmpegCapabilities ffmpegCapabilities,
+        int initialBurstSeconds,
+        ILogger logger)
     {
+        _ffmpegCapabilities = ffmpegCapabilities;
         _initialBurstSeconds = initialBurstSeconds;
+        _logger = logger;
     }
-    
+
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
 
     public IList<string> GlobalOptions => Array.Empty<string>();
@@ -22,6 +31,15 @@ public class ReadrateInputOption : IInputOption
 
         if (_initialBurstSeconds > 0)
         {
+            if (!_ffmpegCapabilities.HasOption("readrate_initial_burst"))
+            {
+                _logger.LogWarning(
+                    "FFmpeg is missing {Option} option; unable to transcode faster than realtime",
+                    "readrate_initial_burst");
+
+                return result;
+            }
+
             result.AddRange(
                 new[]
                 {

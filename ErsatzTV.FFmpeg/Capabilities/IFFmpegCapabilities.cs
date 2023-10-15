@@ -8,5 +8,6 @@ public interface IFFmpegCapabilities
     bool HasDecoder(string decoder);
     bool HasEncoder(string encoder);
     bool HasFilter(string filter);
+    bool HasOption(string ffmpegOption);
     Option<IDecoder> SoftwareDecoderForVideoFormat(string videoFormat);
 }
