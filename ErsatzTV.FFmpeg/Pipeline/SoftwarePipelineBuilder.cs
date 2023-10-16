@@ -37,8 +37,6 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
 
     protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) => false;
 
-    protected override bool IsNvidiaOnWindows(FFmpegState ffmpegState) => false;
-
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
         FFmpegState ffmpegState,
