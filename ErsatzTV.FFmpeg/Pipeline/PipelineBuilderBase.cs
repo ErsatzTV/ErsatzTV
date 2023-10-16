@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
@@ -12,7 +11,6 @@ using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.OutputOption;
 using ErsatzTV.FFmpeg.OutputOption.Metadata;
 using ErsatzTV.FFmpeg.Protocol;
-using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Pipeline;
@@ -404,7 +402,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     }
 
     protected abstract bool IsIntelVaapiOrQsv(FFmpegState ffmpegState);
-    protected abstract bool IsNvidiaOnWindows(FFmpegState ffmpegState);
 
     protected abstract FFmpegState SetAccelState(
         VideoStream videoStream,
@@ -641,13 +638,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 AudioFilter.DynAudNorm => 15,
                 _ => 0
             };
-        }
-
-        // TODO: when ffmpeg/nvenc stops being weird on windows, remove this workaround
-        if (IsNvidiaOnWindows(ffmpegState))
-        {
-            // disable initial burst
-            initialBurst = 0;
         }
 
         _audioInputFile.Iter(a => a.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger)));

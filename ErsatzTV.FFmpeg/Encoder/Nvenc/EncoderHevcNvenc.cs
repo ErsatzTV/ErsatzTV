@@ -19,7 +19,7 @@ public class EncoderHevcNvenc : EncoderBase
     public override StreamKind Kind => StreamKind.Video;
 
     public override IList<string> OutputOptions =>
-        new[] { "-c:v", "hevc_nvenc", "-b_ref_mode", _bFrames ? "1" : "0" };
+        new[] { "-c:v", "hevc_nvenc", "-tag:v", "hvc1", "-b_ref_mode", _bFrames ? "1" : "0" };
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

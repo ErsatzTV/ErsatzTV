@@ -51,11 +51,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         _logger = logger;
     }
 
-    protected override bool IsNvidiaOnWindows(FFmpegState ffmpegState) =>
-        _runtimeInfo.IsOSPlatform(OSPlatform.Windows) &&
-        (ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc ||
-         ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc);
-
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
         FFmpegState ffmpegState,
@@ -101,6 +96,13 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FFmpegState ffmpegState,
         PipelineContext context)
     {
+        if (NeedsNvdecWorkaround(ffmpegState, videoStream.Codec))
+        {
+            var nvdec = new DecoderImplicitCuda();
+            videoInputFile.AddOption(nvdec);
+            return nvdec;
+        }
+
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new DecoderHevcCuvid(HardwareAccelerationMode.Nvenc),
@@ -645,4 +647,15 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         return currentState;
     }
+    
+    // the combination of:
+    // - windows
+    // - ffmpeg 6.1 snapshot (where readrate_initial_burst option is present)
+    // - h264_cuvid
+    // appears to cause jitter, so use implicit nvdec decoder in that specific case
+    private bool NeedsNvdecWorkaround(FFmpegState ffmpegState, string videoFormat) =>
+        _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
+        && _ffmpegCapabilities.HasOption(FFmpegKnownOption.ReadrateInitialBurst)
+        && ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc
+        && videoFormat == VideoFormat.H264;
 }
