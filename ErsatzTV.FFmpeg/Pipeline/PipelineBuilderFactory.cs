@@ -44,6 +44,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         return hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
+                _runtimeInfo,
                 ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
