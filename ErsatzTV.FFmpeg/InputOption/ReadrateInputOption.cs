@@ -31,11 +31,11 @@ public class ReadrateInputOption : IInputOption
 
         if (_initialBurstSeconds > 0)
         {
-            if (!_ffmpegCapabilities.HasOption("readrate_initial_burst"))
+            if (!_ffmpegCapabilities.HasOption(FFmpegKnownOption.ReadrateInitialBurst))
             {
                 _logger.LogWarning(
                     "FFmpeg is missing {Option} option; unable to transcode faster than realtime",
-                    "readrate_initial_burst");
+                    FFmpegKnownOption.ReadrateInitialBurst.Name);
 
                 return result;
             }

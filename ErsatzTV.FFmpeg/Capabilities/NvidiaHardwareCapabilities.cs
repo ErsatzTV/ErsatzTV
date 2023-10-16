@@ -67,13 +67,15 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
         {
             return videoFormat switch
             {
-                VideoFormat.Mpeg2Video => CheckHardwareCodec("mpeg2_cuvid", _ffmpegCapabilities.HasDecoder),
-                VideoFormat.Mpeg4 => CheckHardwareCodec("mpeg4_cuvid", _ffmpegCapabilities.HasDecoder),
-                VideoFormat.Vc1 => CheckHardwareCodec("vc1_cuvid", _ffmpegCapabilities.HasDecoder),
-                VideoFormat.H264 => CheckHardwareCodec("h264_cuvid", _ffmpegCapabilities.HasDecoder),
-                VideoFormat.Hevc => CheckHardwareCodec("hevc_cuvid", _ffmpegCapabilities.HasDecoder),
-                VideoFormat.Vp9 => CheckHardwareCodec("hevc_cuvid", _ffmpegCapabilities.HasDecoder),
-                VideoFormat.Av1 => CheckHardwareCodec("av1_cuvid", _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Mpeg2Video => CheckHardwareCodec(
+                    FFmpegKnownDecoder.Mpeg2Cuvid,
+                    _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Mpeg4 => CheckHardwareCodec(FFmpegKnownDecoder.Mpeg4Cuvid, _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Vc1 => CheckHardwareCodec(FFmpegKnownDecoder.Vc1Cuvid, _ffmpegCapabilities.HasDecoder),
+                VideoFormat.H264 => CheckHardwareCodec(FFmpegKnownDecoder.H264Cuvid, _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Hevc => CheckHardwareCodec(FFmpegKnownDecoder.HevcCuvid, _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Vp9 => CheckHardwareCodec(FFmpegKnownDecoder.Vp9Cuvid, _ffmpegCapabilities.HasDecoder),
+                VideoFormat.Av1 => CheckHardwareCodec(FFmpegKnownDecoder.Av1Cuvid, _ffmpegCapabilities.HasDecoder),
                 _ => FFmpegCapability.Software
             };
         }
@@ -108,14 +110,14 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
     public Option<RateControlMode> GetRateControlMode(string videoFormat, Option<IPixelFormat> maybePixelFormat) =>
         Option<RateControlMode>.None;
 
-    private FFmpegCapability CheckHardwareCodec(string codec, Func<string, bool> check)
+    private FFmpegCapability CheckHardwareCodec(FFmpegKnownDecoder codec, Func<FFmpegKnownDecoder, bool> check)
     {
         if (check(codec))
         {
             return FFmpegCapability.Hardware;
         }
 
-        _logger.LogWarning("FFmpeg does not contain codec {Codec}; will fall back to software codec", codec);
+        _logger.LogWarning("FFmpeg does not contain codec {Codec}; will fall back to software codec", codec.Name);
         return FFmpegCapability.Software;
     }
 }

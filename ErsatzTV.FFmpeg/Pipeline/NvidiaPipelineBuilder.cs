@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Cuvid;
@@ -9,6 +10,7 @@ using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.OutputOption;
+using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -16,11 +18,13 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 {
+    private readonly IRuntimeInfo _runtimeInfo;
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
 
     public NvidiaPipelineBuilder(
+        IRuntimeInfo runtimeInfo,
         IFFmpegCapabilities ffmpegCapabilities,
         IHardwareCapabilities hardwareCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
@@ -41,10 +45,16 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         fontsFolder,
         logger)
     {
+        _runtimeInfo = runtimeInfo;
         _ffmpegCapabilities = ffmpegCapabilities;
         _hardwareCapabilities = hardwareCapabilities;
         _logger = logger;
     }
+
+    protected override bool IsNvidiaOnWindows(FFmpegState ffmpegState) =>
+        _runtimeInfo.IsOSPlatform(OSPlatform.Windows) &&
+        (ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc ||
+         ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc);
 
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
@@ -468,7 +478,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 8)
                 {
-                    if (_ffmpegCapabilities.HasFilter("scale_npp"))
+                    if (_ffmpegCapabilities.HasFilter(FFmpegKnownFilter.ScaleNpp))
                     {
                         var subtitleHardwareUpload = new HardwareUploadCudaFilter(
                             currentState with { FrameDataLocation = FrameDataLocation.Software });

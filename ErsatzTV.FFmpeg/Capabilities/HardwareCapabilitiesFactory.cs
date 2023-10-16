@@ -42,11 +42,20 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         // TODO: validate amf somehow
 
         IReadOnlySet<string> ffmpegHardwareAccelerations =
-            await GetFFmpegCapabilities(ffmpegPath, "hwaccels", ParseFFmpegAccelLine);
-        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine);
-        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine);
-        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine);
-        IReadOnlySet<string> ffmpegOptions = await GetFFmpegOptions(ffmpegPath);
+            await GetFFmpegCapabilities(ffmpegPath, "hwaccels", ParseFFmpegAccelLine)
+                .Map(set => set.Intersect(FFmpegKnownHardwareAcceleration.AllAccels).ToImmutableHashSet());
+
+        IReadOnlySet<string> ffmpegDecoders = await GetFFmpegCapabilities(ffmpegPath, "decoders", ParseFFmpegLine)
+            .Map(set => set.Intersect(FFmpegKnownDecoder.AllDecoders).ToImmutableHashSet());
+
+        IReadOnlySet<string> ffmpegFilters = await GetFFmpegCapabilities(ffmpegPath, "filters", ParseFFmpegLine)
+            .Map(set => set.Intersect(FFmpegKnownFilter.AllFilters).ToImmutableHashSet());
+
+        IReadOnlySet<string> ffmpegEncoders = await GetFFmpegCapabilities(ffmpegPath, "encoders", ParseFFmpegLine)
+            .Map(set => set.Intersect(FFmpegKnownEncoder.AllEncoders).ToImmutableHashSet());
+
+        IReadOnlySet<string> ffmpegOptions = await GetFFmpegOptions(ffmpegPath)
+            .Map(set => set.Intersect(FFmpegKnownOption.AllOptions).ToImmutableHashSet());
 
         return new FFmpegCapabilities(
             ffmpegHardwareAccelerations,
