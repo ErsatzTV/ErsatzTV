@@ -96,11 +96,11 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FFmpegState ffmpegState,
         PipelineContext context)
     {
-        if (NeedsNvdecWorkaround(ffmpegState, videoStream.Codec))
+        if (NeedsCudaWorkaround(ffmpegState, videoStream.Codec))
         {
-            var nvdec = new DecoderImplicitCuda();
-            videoInputFile.AddOption(nvdec);
-            return nvdec;
+            var cuda = new DecoderImplicitCuda();
+            videoInputFile.AddOption(cuda);
+            return cuda;
         }
 
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
@@ -652,8 +652,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     // - windows
     // - ffmpeg 6.1 snapshot (where readrate_initial_burst option is present)
     // - h264_cuvid
-    // appears to cause jitter, so use implicit nvdec decoder in that specific case
-    private bool NeedsNvdecWorkaround(FFmpegState ffmpegState, string videoFormat) =>
+    // appears to cause jitter, so use implicit cuda decoder in that specific case
+    private bool NeedsCudaWorkaround(FFmpegState ffmpegState, string videoFormat) =>
         _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
         && _ffmpegCapabilities.HasOption(FFmpegKnownOption.ReadrateInitialBurst)
         && ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc
