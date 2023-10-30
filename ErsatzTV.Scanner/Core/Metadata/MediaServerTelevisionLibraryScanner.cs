@@ -180,7 +180,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 await televisionRepository.SetEtag(result.Item, MediaServerEtag(incoming));
 
-                if (await televisionRepository.FlagNormal(library, result.Item))
+                Option<int> flagResult = await televisionRepository.FlagNormal(library, result.Item);
+                if (flagResult.IsSome)
                 {
                     result.IsUpdated = true;
                 }
@@ -364,7 +365,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 await televisionRepository.SetEtag(result.Item, MediaServerEtag(incoming));
 
-                if (await televisionRepository.FlagNormal(library, result.Item))
+                Option<int> flagResult = await televisionRepository.FlagNormal(library, result.Item);
+                if (flagResult.IsSome)
                 {
                     result.IsUpdated = true;
                 }
@@ -498,7 +500,8 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 if (_localFileSystem.FileExists(result.LocalPath))
                 {
-                    if (await televisionRepository.FlagNormal(library, result.Item))
+                    Option<int> flagResult = await televisionRepository.FlagNormal(library, result.Item);
+                    if (flagResult.IsSome)
                     {
                         result.IsUpdated = true;
                     }

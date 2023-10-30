@@ -24,49 +24,73 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         _logger = logger;
     }
 
-    public async Task<bool> FlagNormal(PlexLibrary library, PlexEpisode episode)
+    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexEpisode episode)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT PlexEpisode.Id FROM PlexEpisode
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PlexEpisode.Id FROM PlexEpisode
             INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexEpisode.Key = @Key)",
-            new { LibraryId = library.Id, episode.Key }).Map(count => count > 0);
+            WHERE PlexEpisode.Key = @Key",
+            new { LibraryId = library.Id, episode.Key });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
-    public async Task<bool> FlagNormal(PlexLibrary library, PlexSeason season)
+    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexSeason season)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT PlexSeason.Id FROM PlexSeason
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PlexSeason.Id FROM PlexSeason
             INNER JOIN MediaItem MI ON MI.Id = PlexSeason.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexSeason.Key = @Key)",
-            new { LibraryId = library.Id, season.Key }).Map(count => count > 0);
+            WHERE PlexSeason.Key = @Key",
+            new { LibraryId = library.Id, season.Key });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
-    public async Task<bool> FlagNormal(PlexLibrary library, PlexShow show)
+    public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexShow show)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
-
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT PlexShow.Id FROM PlexShow
+        
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PlexShow.Id FROM PlexShow
             INNER JOIN MediaItem MI ON MI.Id = PlexShow.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexShow.Key = @Key)",
-            new { LibraryId = library.Id, show.Key }).Map(count => count > 0);
+            WHERE PlexShow.Key = @Key",
+            new { LibraryId = library.Id, show.Key });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexEpisode episode)

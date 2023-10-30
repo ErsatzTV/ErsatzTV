@@ -32,7 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix QSV HLS segment duration
   - This behavior caused extremely slow QSV stream starts
 - Fix displaying multiple languages in UI for movies, artists, shows
-- Fix MySQL query that could fail during media server library scans
+- Fix MySQL queries that could fail during media server library scans
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs
