@@ -178,7 +178,8 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
 
                 if (_localFileSystem.FileExists(result.LocalPath))
                 {
-                    if (await movieRepository.FlagNormal(library, result.Item))
+                    Option<int> flagResult = await movieRepository.FlagNormal(library, result.Item);
+                    if (flagResult.IsSome)
                     {
                         result.IsUpdated = true;
                     }

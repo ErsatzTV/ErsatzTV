@@ -8,7 +8,7 @@ public interface IMediaServerMovieRepository<in TLibrary, TMovie, TEtag> where T
     where TEtag : MediaServerItemEtag
 {
     Task<List<TEtag>> GetExistingMovies(TLibrary library);
-    Task<bool> FlagNormal(TLibrary library, TMovie movie);
+    Task<Option<int>> FlagNormal(TLibrary library, TMovie movie);
     Task<Option<int>> FlagUnavailable(TLibrary library, TMovie movie);
     Task<Option<int>> FlagRemoteOnly(TLibrary library, TMovie movie);
     Task<List<int>> FlagFileNotFound(TLibrary library, List<string> movieItemIds);

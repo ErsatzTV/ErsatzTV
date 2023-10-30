@@ -35,19 +35,27 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             .Map(result => result.ToList());
     }
 
-    public async Task<bool> FlagNormal(EmbyLibrary library, EmbyMovie movie)
+    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyMovie movie)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         movie.State = MediaItemState.Normal;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT EmbyMovie.Id FROM EmbyMovie
-            INNER JOIN MediaItem MI ON MI.Id = EmbyMovie.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbyMovie.ItemId = @ItemId)",
-            new { LibraryId = library.Id, movie.ItemId }).Map(count => count > 0);
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT EmbyMovie.Id FROM EmbyMovie
+              INNER JOIN MediaItem MI ON MI.Id = EmbyMovie.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+              WHERE EmbyMovie.ItemId = @ItemId",
+            new { LibraryId = library.Id, movie.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<Option<int>> FlagUnavailable(EmbyLibrary library, EmbyMovie movie)
