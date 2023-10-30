@@ -37,19 +37,27 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
             .Map(result => result.ToList());
     }
 
-    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinMovie movie)
+    public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinMovie movie)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         movie.State = MediaItemState.Normal;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT JellyfinMovie.Id FROM JellyfinMovie
-            INNER JOIN MediaItem MI ON MI.Id = JellyfinMovie.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE JellyfinMovie.ItemId = @ItemId)",
-            new { LibraryId = library.Id, movie.ItemId }).Map(count => count > 0);
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT JellyfinMovie.Id FROM JellyfinMovie
+              INNER JOIN MediaItem MI ON MI.Id = JellyfinMovie.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+              WHERE JellyfinMovie.ItemId = @ItemId",
+            new { LibraryId = library.Id, movie.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<Option<int>> FlagUnavailable(JellyfinLibrary library, JellyfinMovie movie)

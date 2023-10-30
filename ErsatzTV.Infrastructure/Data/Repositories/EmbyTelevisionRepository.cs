@@ -205,49 +205,73 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
     }
 
-    public async Task<bool> FlagNormal(EmbyLibrary library, EmbyEpisode episode)
+    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyEpisode episode)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
-
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT EmbyEpisode.Id FROM EmbyEpisode
+        
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT EmbyEpisode.Id FROM EmbyEpisode
             INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbyEpisode.ItemId = @ItemId)",
-            new { LibraryId = library.Id, episode.ItemId }).Map(count => count > 0);
+            WHERE EmbyEpisode.ItemId = @ItemId",
+            new { LibraryId = library.Id, episode.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
-    public async Task<bool> FlagNormal(EmbyLibrary library, EmbySeason season)
+    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbySeason season)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT EmbySeason.Id FROM EmbySeason
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT EmbySeason.Id FROM EmbySeason
             INNER JOIN MediaItem MI ON MI.Id = EmbySeason.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbySeason.ItemId = @ItemId)",
-            new { LibraryId = library.Id, season.ItemId }).Map(count => count > 0);
+            WHERE EmbySeason.ItemId = @ItemId",
+            new { LibraryId = library.Id, season.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
-    public async Task<bool> FlagNormal(EmbyLibrary library, EmbyShow show)
+    public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyShow show)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
-
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT EmbyShow.Id FROM EmbyShow
+        
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT EmbyShow.Id FROM EmbyShow
             INNER JOIN MediaItem MI ON MI.Id = EmbyShow.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbyShow.ItemId = @ItemId)",
-            new { LibraryId = library.Id, show.ItemId }).Map(count => count > 0);
+            WHERE EmbyShow.ItemId = @ItemId",
+            new { LibraryId = library.Id, show.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<List<int>> FlagFileNotFoundShows(EmbyLibrary library, List<string> showItemIds)

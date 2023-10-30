@@ -10,7 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="CliWrap" Version="3.6.4" />
-      <PackageReference Include="LanguageExt.Core" Version="4.4.6" />
+      <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
     </ItemGroup>

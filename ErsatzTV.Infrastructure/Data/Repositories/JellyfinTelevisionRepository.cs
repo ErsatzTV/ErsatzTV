@@ -209,49 +209,73 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
     }
 
-    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinEpisode episode)
+    public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinEpisode episode)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
-
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT JellyfinEpisode.Id FROM JellyfinEpisode
+        
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT JellyfinEpisode.Id FROM JellyfinEpisode
             INNER JOIN MediaItem MI ON MI.Id = JellyfinEpisode.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE JellyfinEpisode.ItemId = @ItemId)",
-            new { LibraryId = library.Id, episode.ItemId }).Map(count => count > 0);
+            WHERE JellyfinEpisode.ItemId = @ItemId",
+            new { LibraryId = library.Id, episode.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
-    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinSeason season)
+    public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinSeason season)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
-
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT JellyfinSeason.Id FROM JellyfinSeason
+        
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT JellyfinSeason.Id FROM JellyfinSeason
             INNER JOIN MediaItem MI ON MI.Id = JellyfinSeason.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE JellyfinSeason.ItemId = @ItemId)",
-            new { LibraryId = library.Id, season.ItemId }).Map(count => count > 0);
+            WHERE JellyfinSeason.ItemId = @ItemId",
+            new { LibraryId = library.Id, season.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
-    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinShow show)
+    public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinShow show)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
-
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT JellyfinShow.Id FROM JellyfinShow
+        
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT JellyfinShow.Id FROM JellyfinShow
             INNER JOIN MediaItem MI ON MI.Id = JellyfinShow.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE JellyfinShow.ItemId = @ItemId)",
-            new { LibraryId = library.Id, show.ItemId }).Map(count => count > 0);
+            WHERE JellyfinShow.ItemId = @ItemId",
+            new { LibraryId = library.Id, show.ItemId });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<List<int>> FlagFileNotFoundShows(JellyfinLibrary library, List<string> showItemIds)
