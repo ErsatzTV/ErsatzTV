@@ -6,6 +6,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     tzdata \
     fontconfig \
     fonts-dejavu \
+    fonts-noto-cjk \
     libgdiplus
 
 # https://hub.docker.com/_/microsoft-dotnet
