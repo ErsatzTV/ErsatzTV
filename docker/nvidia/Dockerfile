@@ -42,6 +42,7 @@ RUN dotnet publish ErsatzTV.csproj --framework net7.0 -c release -o /app -r linu
 # final stage/image
 FROM jasongdove/ersatztv-ffmpeg:6.0-nvidia AS runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
+RUN apt-get update && apt-get install -y fonts-noto-cjk && apt-get clean
 RUN fc-cache update
 WORKDIR /app
 EXPOSE 8409

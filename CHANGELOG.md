@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add QSV Capabilities to Troubleshooting page
 - Add `language_tag` and `seconds` fields to search index
 - Allow synchronizing Plex `TV Show` libraries that use `Personal Media Shows` agent
+- Include Noto CJK Fonts in docker images to support those characters in generated subtitles like songs and music video credits
 
 ### Fixed
 - Fix playout bug that caused some schedule items with fixed start times to be pushed to the next day
