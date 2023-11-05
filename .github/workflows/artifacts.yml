@@ -118,12 +118,8 @@ jobs:
       - name: Notarize
         shell: bash
         run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
-          gon -log-level=debug -log-json ./gon.json
-        env:
-          AC_USERNAME: ${{ secrets.ac_username }}
-          AC_PASSWORD: ${{ secrets.ac_password }}
+          xcrun notarytool submit ErsatzTV.dmg --apple-id "${{ secrets.ac_username }}" --password "${{ secrets.ac_password }}" --team-id 32MB98Q32R --wait
+          xcrun stapler staple ErsatzTV.dmg
 
       - name: Cleanup
         shell: bash
@@ -245,9 +241,6 @@ jobs:
 
           # Delete output directory
           rm -r "$release_name"
-        env:
-          AC_USERNAME: ${{ secrets.ac_username }}
-          AC_PASSWORD: ${{ secrets.ac_password }}
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
@@ -259,6 +252,7 @@ jobs:
           assets: |
             *${{ matrix.target }}.zip
             *${{ matrix.target }}.tar.gz
+
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
