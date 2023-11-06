@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
@@ -14,16 +15,19 @@ namespace ErsatzTV.Infrastructure.Jellyfin;
 public class JellyfinApiClient : IJellyfinApiClient
 {
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+    private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<JellyfinApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
 
     public JellyfinApiClient(
         IMemoryCache memoryCache,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
+        IFallbackMetadataProvider fallbackMetadataProvider,
         ILogger<JellyfinApiClient> logger)
     {
         _memoryCache = memoryCache;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
+        _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
     }
 
@@ -720,6 +724,16 @@ public class JellyfinApiClient : IJellyfinApiClient
             if (item.IndexNumber.HasValue)
             {
                 season.SeasonNumber = item.IndexNumber.Value;
+            }
+            else
+            {
+                Option<int> maybeSeasonNumber =
+                    _fallbackMetadataProvider.GetSeasonNumberForFolder(item.Path ?? string.Empty);
+
+                foreach (int seasonNumber in maybeSeasonNumber)
+                {
+                    season.SeasonNumber = seasonNumber;
+                }
             }
 
             return season;

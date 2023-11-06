@@ -49,6 +49,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Test QSV acceleration if configured, and fallback to software mode if test fails
 - Detect QSV capabilities on Linux (supported decoders, encoders)
 - Use hardware acceleration for error messages/offline messages
+- Try to parse season number from season folder when Jellyfin does not provide season number
+  - This *may* fix issues where Jellyfin libraries show all season numbers as 0 (specials)
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added
