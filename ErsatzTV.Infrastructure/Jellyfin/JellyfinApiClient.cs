@@ -371,15 +371,25 @@ public class JellyfinApiClient : IJellyfinApiClient
             _ => None
         };
 
-    private static List<JellyfinPathInfo> GetPathInfos(JellyfinLibraryResponse response) =>
-        response.LibraryOptions.PathInfos
-            .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
-            .Map(
-                pi => new JellyfinPathInfo
-                {
-                    Path = pi.Path,
-                    NetworkPath = pi.NetworkPath
-                }).ToList();
+    private static List<JellyfinPathInfo> GetPathInfos(JellyfinLibraryResponse response)
+    {
+        var result = new List<JellyfinPathInfo>();
+
+        if (response.LibraryOptions?.PathInfos is not null)
+        {
+            result.AddRange(
+                response.LibraryOptions.PathInfos
+                    .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
+                    .Map(
+                        pi => new JellyfinPathInfo
+                        {
+                            Path = pi.Path,
+                            NetworkPath = pi.NetworkPath
+                        }));
+        }
+
+        return result;
+    }
 
     private Option<JellyfinLibrary> CacheCollectionLibraryId(string itemId)
     {
