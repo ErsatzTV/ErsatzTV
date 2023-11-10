@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -27,7 +27,7 @@
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Serilog" Version="3.0.1" />
+      <PackageReference Include="Serilog" Version="3.1.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
       <PackageReference Include="Serilog.Extensions.Hosting" Version="7.0.0" />
       <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
