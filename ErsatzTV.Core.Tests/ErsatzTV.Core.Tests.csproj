@@ -24,7 +24,7 @@
       <PackageReference Include="NSubstitute" Version="5.1.0" />
       <PackageReference Include="NUnit" Version="3.14.0" />
       <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-      <PackageReference Include="Serilog" Version="3.1.0" />
+      <PackageReference Include="Serilog" Version="3.1.1" />
       <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
       <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     </ItemGroup>
