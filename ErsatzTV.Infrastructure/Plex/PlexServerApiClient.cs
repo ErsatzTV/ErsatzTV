@@ -317,8 +317,20 @@ public class PlexServerApiClient : IPlexServerApiClient
         string key,
         CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Checking for collection items with key {Key}", key);
-        return AsyncEnumerable.Empty<MediaItem>();
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetCollectionItemsCount(key, token.AuthToken);
+        }
+
+        Task<IEnumerable<MediaItem>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetCollectionItems(key, skip, pageSize, token.AuthToken)
+                .Map(r => Optional(r.MediaContainer.Metadata).Flatten())
+                .Map(list => list.Map(ProjectToCollectionMediaItem).Somes());
+        }
     }
 
     private static async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
@@ -409,7 +421,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
             return new PlexCollection
             {
-                Key = item.Key,
+                Key = item.RatingKey,
                 Etag = _plexEtag.ForCollection(item),
                 Name = item.Title
             };
@@ -417,6 +429,26 @@ public class PlexServerApiClient : IPlexServerApiClient
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error projecting Plex collection");
+            return None;
+        }
+    }
+    
+    private Option<MediaItem> ProjectToCollectionMediaItem(PlexCollectionItemMetadataResponse item)
+    {
+        try
+        {
+            return item.Type switch
+            {
+                "movie" => new PlexMovie { Key = item.Key },
+                "show" => new PlexShow { Key = item.Key },
+                "season" => new PlexSeason { Key = item.Key },
+                "episode" => new PlexEpisode { Key = item.Key },
+                _ => None
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Plex collection media item");
             return None;
         }
     }
@@ -516,15 +548,6 @@ public class PlexServerApiClient : IPlexServerApiClient
         else
         {
             metadata.Guids = new List<MetadataGuid>();
-        }
-
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
         }
 
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
@@ -756,15 +779,6 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Studios.Add(new Studio { Name = response.Studio });
         }
 
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
-        }
-
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
         {
             metadata.Tags.Add(
@@ -836,15 +850,6 @@ public class PlexServerApiClient : IPlexServerApiClient
                     metadata.Guids.Add(new MetadataGuid { Guid = guid });
                 }
             }
-        }
-
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
@@ -990,15 +995,6 @@ public class PlexServerApiClient : IPlexServerApiClient
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
         {
             metadata.ReleaseDate = releaseDate;
-        }
-
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))

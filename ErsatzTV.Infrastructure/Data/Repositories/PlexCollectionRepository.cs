@@ -99,37 +99,37 @@ public class PlexCollectionRepository : IPlexCollectionRepository
                     new { movie.Key });
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, MovieMetadataId)
-                      SELECT @Name, @ItemId, Id FROM
+                      SELECT @Name, @Key, Id FROM
                       (SELECT Id FROM MovieMetadata WHERE MovieId = @MovieId) AS A",
                     new { collection.Name, collection.Key, MovieId = movieId });
                 return movieId;
             case PlexShow show:
                 int showId = await dbContext.Connection.ExecuteScalarAsync<int>(
-                    @"SELECT Id FROM PlexShow WHERE `Key` = @ItemId",
+                    @"SELECT Id FROM PlexShow WHERE `Key` = @Key",
                     new { show.Key });
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, ShowMetadataId)
-                      SELECT @Name, @ItemId, Id FROM
+                      SELECT @Name, @Key, Id FROM
                       (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
                     new { collection.Name, collection.Key, ShowId = showId });
                 return showId;
             case PlexSeason season:
                 int seasonId = await dbContext.Connection.ExecuteScalarAsync<int>(
-                    @"SELECT Id FROM PlexSeason WHERE `Key` = @ItemId",
+                    @"SELECT Id FROM PlexSeason WHERE `Key` = @Key",
                     new { season.Key });
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, SeasonMetadataId)
-                      SELECT @Name, @ItemId, Id FROM
+                      SELECT @Name, @Key, Id FROM
                       (SELECT Id FROM SeasonMetadata WHERE SeasonId = @SeasonId) AS A",
                     new { collection.Name, collection.Key, SeasonId = seasonId });
                 return seasonId;
             case PlexEpisode episode:
                 int episodeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-                    @"SELECT Id FROM PlexEpisode WHERE `Key` = @ItemId",
+                    @"SELECT Id FROM PlexEpisode WHERE `Key` = @Key",
                     new { episode.Key });
                 await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Tag (Name, ExternalCollectionId, EpisodeMetadataId)
-                      SELECT @Name, @ItemId, Id FROM
+                      SELECT @Name, @Key, Id FROM
                       (SELECT Id FROM EpisodeMetadata WHERE EpisodeId = @EpisodeId) AS A",
                     new { collection.Name, collection.Key, EpisodeId = episodeId });
                 return episodeId;

@@ -234,14 +234,25 @@ public class SchedulerService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
+        var mediaSourceIds = new System.Collections.Generic.HashSet<int>();
+
         foreach (PlexLibrary library in dbContext.PlexLibraries.Filter(l => l.ShouldSyncItems))
         {
+            mediaSourceIds.Add(library.MediaSourceId);
+
             if (_entityLocker.LockLibrary(library.Id))
             {
                 await _scannerWorkerChannel.WriteAsync(
                     new SynchronizePlexLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
             }
+        }
+        
+        foreach (int mediaSourceId in mediaSourceIds)
+        {
+            await _scannerWorkerChannel.WriteAsync(
+                new SynchronizePlexCollections(mediaSourceId, false),
+                cancellationToken);
         }
     }
 
