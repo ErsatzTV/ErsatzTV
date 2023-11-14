@@ -67,4 +67,15 @@ public interface IPlexServerApiClient
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
+    
+    IAsyncEnumerable<PlexCollection> GetAllCollections(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        CancellationToken cancellationToken);
+
+    IAsyncEnumerable<MediaItem> GetCollectionItems(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        string key,
+        CancellationToken cancellationToken);
 }

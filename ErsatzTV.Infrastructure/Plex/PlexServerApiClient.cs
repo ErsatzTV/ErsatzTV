@@ -290,6 +290,37 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
+    public IAsyncEnumerable<PlexCollection> GetAllCollections(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        CancellationToken cancellationToken)
+    {
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetCollectionCount(token.AuthToken);
+        }
+
+        Task<IEnumerable<PlexCollection>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetCollections(skip, pageSize, token.AuthToken)
+                .Map(r => r.MediaContainer.Metadata)
+                .Map(list => list.Map(m => ProjectToCollection(connection.PlexMediaSource, m)).Somes());
+        }
+    }
+
+    public IAsyncEnumerable<MediaItem> GetCollectionItems(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        string key,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Checking for collection items with key {Key}", key);
+        return AsyncEnumerable.Empty<MediaItem>();
+    }
+
     private static async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
         PlexConnection connection,
         Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
@@ -363,6 +394,32 @@ public class PlexServerApiClient : IPlexServerApiClient
             // TODO: "artist" for music libraries
             _ => None
         };
+
+    private Option<PlexCollection> ProjectToCollection(PlexMediaSource plexMediaSource, PlexMetadataResponse item)
+    {
+        try
+        {
+            // skip collections in libraries that are not synchronized
+            if (plexMediaSource.Libraries.OfType<PlexLibrary>().Any(
+                    l => l.Key == item.LibrarySectionId.ToString(CultureInfo.InvariantCulture) &&
+                         l.ShouldSyncItems == false))
+            {
+                return Option<PlexCollection>.None;
+            }
+
+            return new PlexCollection
+            {
+                Key = item.Key,
+                Etag = _plexEtag.ForCollection(item),
+                Name = item.Title
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Plex collection");
+            return None;
+        }
+    }
 
     private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
     {

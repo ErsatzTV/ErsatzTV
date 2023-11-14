@@ -36,6 +36,15 @@ public class PlexMetadataResponse
 
     [XmlAttribute("updatedAt")]
     public long UpdatedAt { get; set; }
+    
+    [XmlAttribute("childCount")]
+    public string ChildCount { get; set; }
+
+    [XmlAttribute("smart")]
+    public string Smart { get; set; }
+
+    [XmlAttribute("librarySectionId")]
+    public int LibrarySectionId { get; set; }
 
     [XmlAttribute("index")]
     public int Index { get; set; }

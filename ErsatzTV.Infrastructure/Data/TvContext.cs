@@ -62,6 +62,7 @@ public class TvContext : DbContext
     public DbSet<PlexShow> PlexShows { get; set; }
     public DbSet<PlexSeason> PlexSeasons { get; set; }
     public DbSet<PlexEpisode> PlexEpisodes { get; set; }
+    public DbSet<PlexCollection> PlexCollections { get; set; }
     public DbSet<JellyfinMovie> JellyfinMovies { get; set; }
     public DbSet<JellyfinShow> JellyfinShows { get; set; }
     public DbSet<JellyfinSeason> JellyfinSeasons { get; set; }
