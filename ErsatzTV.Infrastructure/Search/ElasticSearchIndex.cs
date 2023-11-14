@@ -480,7 +480,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Id = musicVideo.Id,
                     Type = LuceneSearchIndex.MusicVideoType,
                     Title = metadata.Title,
-                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    SortTitle = (metadata.SortTitle ?? string.Empty).ToLowerInvariant(),
                     LibraryName = musicVideo.LibraryPath.Library.Name,
                     LibraryId = musicVideo.LibraryPath.Library.Id,
                     TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),

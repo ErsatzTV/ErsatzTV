@@ -808,8 +808,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 {
                     new StringField(IdField, musicVideo.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, MusicVideoType, Field.Store.YES),
-                    new TextField(TitleField, metadata.Title, Field.Store.NO),
-                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                    new TextField(TitleField, metadata.Title ?? string.Empty, Field.Store.NO),
+                    new StringField(SortTitleField, (metadata.SortTitle ?? string.Empty).ToLowerInvariant(), Field.Store.NO),
                     new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(
                         LibraryIdField,
@@ -1317,12 +1317,16 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     internal static string GetJumpLetter(Metadata metadata)
     {
-        char c = (metadata.SortTitle ?? " ").ToLowerInvariant().Head();
-        return c switch
+        foreach (char c in (metadata.SortTitle ?? " ").ToLowerInvariant().HeadOrNone())
         {
-            (>= 'a' and <= 'z') => c.ToString(),
-            _ => "#"
-        };
+            return c switch
+            {
+                >= 'a' and <= 'z' => c.ToString(),
+                _ => "#"
+            };
+        }
+
+        return "#";
     }
 
     private static string OtherVideoTitle(OtherVideoMetadata ovm) =>
