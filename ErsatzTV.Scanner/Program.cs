@@ -196,6 +196,7 @@ public class Program
 
                     services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
                     services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
+                    services.AddScoped<IPlexCollectionScanner, PlexCollectionScanner>();
                     services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
                     services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
                     services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();

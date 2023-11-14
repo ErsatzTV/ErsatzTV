@@ -8,10 +8,10 @@
 @using ErsatzTV.Application.Jellyfin
 @using ErsatzTV.Application.Emby
 @implements IDisposable
-@inject IMediator _mediator
-@inject IEntityLocker _locker
-@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel;
-@inject ICourier _courier
+@inject IMediator Mediator
+@inject IEntityLocker Locker
+@inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel;
+@inject ICourier Courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_libraries" Dense="true">
@@ -48,7 +48,7 @@
             <MudTd DataLabel="Media Kind">@context.MediaKind</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
-                    @if (_locker.IsLibraryLocked(context.Id))
+                    @if (Locker.IsLibraryLocked(context.Id))
                     {
                         <div style="width: 48px">
                             @if (_progressByLibrary[context.Id] > 0)
@@ -68,7 +68,7 @@
                         {
                             <MudTooltip Text="Deep Scan Library">
                                 <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
-                                               Disabled="@_locker.IsLibraryLocked(context.Id)"
+                                               Disabled="@Locker.IsLibraryLocked(context.Id)"
                                                OnClick="@(_ => ScanLibrary(context, true))">
                                 </MudIconButton>
                             </MudTooltip>
@@ -79,7 +79,7 @@
                         }
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                           Disabled="@_locker.IsLibraryLocked(context.Id)"
+                                           Disabled="@Locker.IsLibraryLocked(context.Id)"
                                            OnClick="@(_ => ScanLibrary(context))">
                             </MudIconButton>
                         </MudTooltip>
@@ -149,42 +149,44 @@
 
     protected override void OnInitialized()
     {
-        _locker.OnLibraryChanged += LockChanged;
-        _locker.OnEmbyCollectionsChanged += LockChanged;
-        _locker.OnJellyfinCollectionsChanged += LockChanged;
-        _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
+        Locker.OnLibraryChanged += LockChanged;
+        Locker.OnEmbyCollectionsChanged += LockChanged;
+        Locker.OnJellyfinCollectionsChanged += LockChanged;
+        Locker.OnPlexCollectionsChanged += LockChanged;
+        Courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
     protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
 
     private async Task LoadLibraries(CancellationToken cancellationToken)
     {
-        _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
+        _libraries = await Mediator.Send(new GetConfiguredLibraries(), cancellationToken);
         _showServerNames = _libraries.Any(l => l is PlexLibraryViewModel);
 
-        _externalCollections = await _mediator.Send(new GetExternalCollections(), cancellationToken);
+        _externalCollections = await Mediator.Send(new GetExternalCollections(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
     private async Task ScanLibrary(LibraryViewModel library, bool deepScan = false)
     {
-        if (_locker.LockLibrary(library.Id))
+        if (Locker.LockLibrary(library.Id))
         {
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await _scannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
                     break;
                 case PlexLibraryViewModel:
-                    await _scannerWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexLibraries(library.MediaSourceId), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
-                    await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
-                    await _scannerWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case EmbyLibraryViewModel:
-                    await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
-                    await _scannerWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(library.MediaSourceId), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id, deepScan), _cts.Token);
                     break;
             }
 
@@ -197,15 +199,21 @@
         switch (library.LibraryKind.ToLowerInvariant())
         {
             case "emby":
-                if (_locker.LockEmbyCollections())
+                if (Locker.LockEmbyCollections())
                 {
-                    await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
                 }
                 break;
             case "jellyfin":
-                if (_locker.LockJellyfinCollections())
+                if (Locker.LockJellyfinCollections())
                 {
-                    await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true));
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true));
+                }
+                break;
+            case "plex":
+                if (Locker.LockPlexCollections())
+                {
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexCollections(library.MediaSourceId, true));
                 }
                 break;
         }
@@ -219,9 +227,11 @@
         switch (libraryKind.ToLowerInvariant())
         {
             case "emby":
-                return _locker.AreEmbyCollectionsLocked();
+                return Locker.AreEmbyCollectionsLocked();
             case "jellyfin":
-                return _locker.AreJellyfinCollectionsLocked();
+                return Locker.AreJellyfinCollectionsLocked();
+            case "plex":
+                return Locker.ArePlexCollectionsLocked();
         }
 
         return false;
@@ -245,10 +255,11 @@
 
     void IDisposable.Dispose()
     {
-        _locker.OnLibraryChanged -= LockChanged;
-        _locker.OnEmbyCollectionsChanged -= LockChanged;
-        _locker.OnJellyfinCollectionsChanged -= LockChanged;
-        _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
+        Locker.OnLibraryChanged -= LockChanged;
+        Locker.OnEmbyCollectionsChanged -= LockChanged;
+        Locker.OnJellyfinCollectionsChanged -= LockChanged;
+        Locker.OnPlexCollectionsChanged -= LockChanged;
+        Courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
 
         _cts.Cancel();
         _cts.Dispose();

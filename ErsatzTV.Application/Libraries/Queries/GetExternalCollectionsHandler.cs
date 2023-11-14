@@ -20,6 +20,7 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         result.AddRange(await GetEmbyExternalCollections(dbContext, cancellationToken));
         result.AddRange(await GetJellyfinExternalCollections(dbContext, cancellationToken));
+        result.AddRange(await GetPlexExternalCollections(dbContext, cancellationToken));
 
         return result;
     }
@@ -47,5 +48,18 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
 
         return jellyfinMediaSourceIds.Map(
             id => new LibraryViewModel("Jellyfin", 0, "Collections", 0, id, string.Empty));
+    }
+    
+    private static async Task<IEnumerable<LibraryViewModel>> GetPlexExternalCollections(
+        TvContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        List<int> plexMediaSourceIds = await dbContext.PlexMediaSources
+            .Filter(pms => pms.Libraries.Any(l => ((PlexLibrary)l).ShouldSyncItems))
+            .Map(pms => pms.Id)
+            .ToListAsync(cancellationToken);
+
+        return plexMediaSourceIds.Map(
+            id => new LibraryViewModel("Plex", 0, "Collections", 0, id, string.Empty));
     }
 }

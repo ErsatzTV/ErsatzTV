@@ -43,8 +43,14 @@ public class ScannerService : BackgroundService
                     Task requestTask;
                     switch (request)
                     {
+                        case SynchronizePlexLibraries synchronizePlexLibraries:
+                            requestTask = SynchronizeLibraries(synchronizePlexLibraries, stoppingToken);
+                            break;
                         case ISynchronizePlexLibraryById synchronizePlexLibraryById:
                             requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, stoppingToken);
+                            break;
+                        case SynchronizePlexCollections synchronizePlexCollections:
+                            requestTask = SynchronizePlexCollections(synchronizePlexCollections, stoppingToken);
                             break;
                         case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
                             requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, stoppingToken);
@@ -132,6 +138,22 @@ public class ScannerService : BackgroundService
             entityLocker.UnlockLibrary(request.LibraryId);
         }
     }
+    
+    private async Task SynchronizeLibraries(SynchronizePlexLibraries request, CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogInformation(
+                "Successfully synchronized plex libraries for source {MediaSourceId}",
+                request.PlexMediaSourceId),
+            error => _logger.LogWarning(
+                "Unable to synchronize plex libraries for source {MediaSourceId}: {Error}",
+                request.PlexMediaSourceId,
+                error.Value));
+    }
 
     private async Task SynchronizePlexLibrary(
         ISynchronizePlexLibraryById request,
@@ -164,6 +186,35 @@ public class ScannerService : BackgroundService
         if (entityLocker.IsLibraryLocked(request.PlexLibraryId))
         {
             entityLocker.UnlockLibrary(request.PlexLibraryId);
+        }
+    }
+    
+    private async Task SynchronizePlexCollections(
+        SynchronizePlexCollections request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        IEntityLocker entityLocker = scope.ServiceProvider.GetRequiredService<IEntityLocker>();
+
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogDebug("Done synchronizing plex collections"),
+            error =>
+            {
+                if (error is ScanIsNotRequired)
+                {
+                    _logger.LogDebug("Scan is not required for plex collections at this time");
+                }
+                else
+                {
+                    _logger.LogWarning("Unable to synchronize plex collections: {Error}", error.Value);
+                }
+            });
+
+        if (entityLocker.ArePlexCollectionsLocked())
+        {
+            entityLocker.UnlockPlexCollections();
         }
     }
 

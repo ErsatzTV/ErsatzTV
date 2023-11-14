@@ -9,7 +9,7 @@
 @inject ILogger<PlexMediaSources> _logger
 @inject IJSRuntime _jsRuntime
 @inject IPlexSecretStore _plexSecretStore
-@inject ChannelWriter<IPlexBackgroundServiceRequest> _channel
+@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -149,7 +149,8 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task RefreshLibraries(int mediaSourceId) => await _channel.WriteAsync(new SynchronizePlexLibraries(mediaSourceId));
+    private async Task RefreshLibraries(int mediaSourceId) =>
+        await _scannerWorkerChannel.WriteAsync(new SynchronizePlexLibraries(mediaSourceId));
 
     void IDisposable.Dispose() => _locker.OnPlexChanged -= PlexChanged;
 

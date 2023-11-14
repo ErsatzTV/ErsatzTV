@@ -84,4 +84,5 @@ public interface IMediaSourceRepository
     Task<List<int>> DisableEmbyLibrarySync(List<int> libraryIds);
     Task<Unit> UpdateLastCollectionScan(EmbyMediaSource embyMediaSource);
     Task<Unit> UpdateLastCollectionScan(JellyfinMediaSource jellyfinMediaSource);
+    Task<Unit> UpdateLastCollectionScan(PlexMediaSource plexMediaSource);
 }

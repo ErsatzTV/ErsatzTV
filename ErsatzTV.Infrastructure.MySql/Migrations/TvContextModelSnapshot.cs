@@ -16,7 +16,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.11")
+                .HasAnnotation("ProductVersion", "7.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
@@ -1538,6 +1538,26 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.ToTable("PlayoutProgramScheduleAnchor", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlexCollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlexCollection", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexConnection", b =>
                 {
                     b.Property<int>("Id")
@@ -2496,6 +2516,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<string>("ClientIdentifier")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("LastCollectionsScan")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Platform")
                         .HasColumnType("longtext");
