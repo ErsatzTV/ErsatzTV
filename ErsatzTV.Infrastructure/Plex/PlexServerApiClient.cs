@@ -290,6 +290,49 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
+    public IAsyncEnumerable<PlexCollection> GetAllCollections(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        CancellationToken cancellationToken)
+    {
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetCollectionCount(token.AuthToken);
+        }
+
+        Task<IEnumerable<PlexCollection>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetCollections(skip, pageSize, token.AuthToken)
+                .Map(r => r.MediaContainer.Metadata)
+                .Map(list => list.Map(m => ProjectToCollection(connection.PlexMediaSource, m)).Somes());
+        }
+    }
+
+    public IAsyncEnumerable<MediaItem> GetCollectionItems(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        string key,
+        CancellationToken cancellationToken)
+    {
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetCollectionItemsCount(key, token.AuthToken);
+        }
+
+        Task<IEnumerable<MediaItem>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetCollectionItems(key, skip, pageSize, token.AuthToken)
+                .Map(r => Optional(r.MediaContainer.Metadata).Flatten())
+                .Map(list => list.Map(ProjectToCollectionMediaItem).Somes());
+        }
+    }
+
     private static async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
         PlexConnection connection,
         Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
@@ -363,6 +406,52 @@ public class PlexServerApiClient : IPlexServerApiClient
             // TODO: "artist" for music libraries
             _ => None
         };
+
+    private Option<PlexCollection> ProjectToCollection(PlexMediaSource plexMediaSource, PlexMetadataResponse item)
+    {
+        try
+        {
+            // skip collections in libraries that are not synchronized
+            if (plexMediaSource.Libraries.OfType<PlexLibrary>().Any(
+                    l => l.Key == item.LibrarySectionId.ToString(CultureInfo.InvariantCulture) &&
+                         l.ShouldSyncItems == false))
+            {
+                return Option<PlexCollection>.None;
+            }
+
+            return new PlexCollection
+            {
+                Key = item.RatingKey,
+                Etag = _plexEtag.ForCollection(item),
+                Name = item.Title
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Plex collection");
+            return None;
+        }
+    }
+    
+    private Option<MediaItem> ProjectToCollectionMediaItem(PlexCollectionItemMetadataResponse item)
+    {
+        try
+        {
+            return item.Type switch
+            {
+                "movie" => new PlexMovie { Key = item.Key },
+                "show" => new PlexShow { Key = item.Key },
+                "season" => new PlexSeason { Key = item.Key },
+                "episode" => new PlexEpisode { Key = item.Key },
+                _ => None
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Plex collection media item");
+            return None;
+        }
+    }
 
     private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
     {
@@ -459,15 +548,6 @@ public class PlexServerApiClient : IPlexServerApiClient
         else
         {
             metadata.Guids = new List<MetadataGuid>();
-        }
-
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
         }
 
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
@@ -699,15 +779,6 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Studios.Add(new Studio { Name = response.Studio });
         }
 
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
-        }
-
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
         {
             metadata.Tags.Add(
@@ -779,15 +850,6 @@ public class PlexServerApiClient : IPlexServerApiClient
                     metadata.Guids.Add(new MetadataGuid { Guid = guid });
                 }
             }
-        }
-
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
@@ -933,15 +995,6 @@ public class PlexServerApiClient : IPlexServerApiClient
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
         {
             metadata.ReleaseDate = releaseDate;
-        }
-
-        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
-        {
-            metadata.Tags.Add(
-                new Tag
-                {
-                    Name = collection.Tag, ExternalCollectionId = collection.Id.ToString(CultureInfo.InvariantCulture)
-                });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))

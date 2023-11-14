@@ -15,7 +15,7 @@ public class SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePle
 {
     private const string LocalhostUri = "http://localhost:32400";
 
-    private readonly ChannelWriter<IPlexBackgroundServiceRequest> _channel;
+    private readonly ChannelWriter<IScannerBackgroundServiceRequest> _channel;
     private readonly IEntityLocker _entityLocker;
     private readonly ILogger<SynchronizePlexMediaSourcesHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
@@ -28,7 +28,7 @@ public class SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePle
         IPlexTvApiClient plexTvApiClient,
         IPlexServerApiClient plexServerApiClient,
         IPlexSecretStore plexSecretStore,
-        ChannelWriter<IPlexBackgroundServiceRequest> channel,
+        ChannelWriter<IScannerBackgroundServiceRequest> channel,
         IEntityLocker entityLocker,
         ILogger<SynchronizePlexMediaSourcesHandler> logger)
     {

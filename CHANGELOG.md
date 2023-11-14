@@ -53,6 +53,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use hardware acceleration for error messages/offline messages
 - Try to parse season number from season folder when Jellyfin does not provide season number
   - This *may* fix issues where Jellyfin libraries show all season numbers as 0 (specials)
+- Rework Plex collection scanning
+    - Automatic/periodic scans will check collections one time after all libraries have been scanned
+    - There is a table in the `Media` > `Libraries` page with a button to manually re-scan Plex collections as needed
+    - Plex smart collections will now be synchronized as tags, similar to other Plex collections
 
 ## [0.8.2-beta] - 2023-09-14
 ### Added

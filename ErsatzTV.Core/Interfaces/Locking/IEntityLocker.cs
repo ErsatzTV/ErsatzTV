@@ -8,6 +8,7 @@ public interface IEntityLocker
     event EventHandler OnTraktChanged;
     event EventHandler OnEmbyCollectionsChanged;
     event EventHandler OnJellyfinCollectionsChanged;
+    event EventHandler OnPlexCollectionsChanged;
     event EventHandler<int> OnPlayoutChanged;
     bool LockLibrary(int libraryId);
     bool UnlockLibrary(int libraryId);
@@ -27,6 +28,9 @@ public interface IEntityLocker
     bool LockJellyfinCollections();
     bool UnlockJellyfinCollections();
     bool AreJellyfinCollectionsLocked();
+    bool LockPlexCollections();
+    bool UnlockPlexCollections();
+    bool ArePlexCollectionsLocked();
     bool LockPlayout(int playoutId);
     bool UnlockPlayout(int playoutId);
     bool IsPlayoutLocked(int playoutId);

@@ -5,20 +5,14 @@ namespace ErsatzTV.Infrastructure.Locking;
 
 public class EntityLocker : IEntityLocker
 {
-    private readonly ConcurrentDictionary<int, byte> _lockedLibraries;
-    private readonly ConcurrentDictionary<int, byte> _lockedPlayouts;
-    private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
+    private readonly ConcurrentDictionary<int, byte> _lockedLibraries = new();
+    private readonly ConcurrentDictionary<int, byte> _lockedPlayouts = new();
+    private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes = new();
     private bool _embyCollections;
     private bool _jellyfinCollections;
+    private bool _plexCollections;
     private bool _plex;
     private bool _trakt;
-
-    public EntityLocker()
-    {
-        _lockedLibraries = new ConcurrentDictionary<int, byte>();
-        _lockedPlayouts = new ConcurrentDictionary<int, byte>();
-        _lockedRemoteMediaSourceTypes = new ConcurrentDictionary<Type, byte>();
-    }
 
     public event EventHandler OnLibraryChanged;
     public event EventHandler OnPlexChanged;
@@ -26,6 +20,7 @@ public class EntityLocker : IEntityLocker
     public event EventHandler OnTraktChanged;
     public event EventHandler OnEmbyCollectionsChanged;
     public event EventHandler OnJellyfinCollectionsChanged;
+    public event EventHandler OnPlexCollectionsChanged;
     public event EventHandler<int> OnPlayoutChanged;
 
     public bool LockLibrary(int libraryId)
@@ -186,6 +181,32 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool AreJellyfinCollectionsLocked() => _jellyfinCollections;
+    
+    public bool LockPlexCollections()
+    {
+        if (!_plexCollections)
+        {
+            _plexCollections = true;
+            OnPlexCollectionsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool UnlockPlexCollections()
+    {
+        if (_plexCollections)
+        {
+            _plexCollections = false;
+            OnPlexCollectionsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool ArePlexCollectionsLocked() => _plexCollections;
 
     public bool LockPlayout(int playoutId)
     {

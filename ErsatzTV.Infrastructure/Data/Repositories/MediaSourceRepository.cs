@@ -873,4 +873,12 @@ public class MediaSourceRepository : IMediaSourceRepository
             "UPDATE JellyfinMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
             new { jellyfinMediaSource.LastCollectionsScan, jellyfinMediaSource.Id }).ToUnit();
     }
+
+    public async Task<Unit> UpdateLastCollectionScan(PlexMediaSource plexMediaSource)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexMediaSource SET LastCollectionsScan = @LastCollectionsScan WHERE Id = @Id",
+            new { plexMediaSource.LastCollectionsScan, plexMediaSource.Id }).ToUnit();
+    }
 }

@@ -3,4 +3,4 @@
 namespace ErsatzTV.Application.Plex;
 
 public record SynchronizePlexLibraries(int PlexMediaSourceId) : IRequest<Either<BaseError, Unit>>,
-    IPlexBackgroundServiceRequest;
+    IScannerBackgroundServiceRequest;
