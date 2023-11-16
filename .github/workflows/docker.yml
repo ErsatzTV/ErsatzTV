@@ -39,14 +39,14 @@ jobs:
             path: 'vaapi/'
             suffix: '-vaapi'
             qemu: false
-          - name: arm32v7
-            path: 'arm32v7/'
-            suffix: '-arm'
-            qemu: true
-          - name: arm64
-            path: 'arm64/'
-            suffix: '-arm64'
-            qemu: true
+#          - name: arm32v7
+#            path: 'arm32v7/'
+#            suffix: '-arm'
+#            qemu: true
+#          - name: arm64
+#            path: 'arm64/'
+#            suffix: '-arm64'
+#            qemu: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4
