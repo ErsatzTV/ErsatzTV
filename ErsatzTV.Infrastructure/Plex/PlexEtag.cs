@@ -254,7 +254,7 @@ public class PlexEtag
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
     
-    public string ForCollection(PlexMetadataResponse response)
+    public string ForCollection(PlexCollectionMetadataResponse response)
     {
         using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var bw = new BinaryWriter(ms);
