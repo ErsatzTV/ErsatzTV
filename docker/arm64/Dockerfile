@@ -1,13 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-jammy-arm64v8 AS dotnet-runtime
 
-FROM jasongdove/ersatztv-ffmpeg:6.0-arm64 AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:6.1-arm64 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev \
-    tzdata \
-    fontconfig \
-    fonts-dejavu \
-    fonts-noto-cjk \
-    libgdiplus
 
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:7.0-jammy-amd64 AS build
