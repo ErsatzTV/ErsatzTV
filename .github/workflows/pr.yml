@@ -11,7 +11,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 7.0.306
 
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
@@ -46,7 +46,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 7.0.306
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
@@ -74,7 +74,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 7.0.306
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
