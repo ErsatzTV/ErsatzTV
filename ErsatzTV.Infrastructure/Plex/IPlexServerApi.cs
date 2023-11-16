@@ -44,7 +44,7 @@ public interface IPlexServerApi
 
     [Get("/library/all?type=18")]
     [Headers("Accept: application/json")]
-    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
+    public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexCollectionMetadataResponse>>>
         GetCollections(
             [Query] [AliasAs("X-Plex-Container-Start")]
             int skip,

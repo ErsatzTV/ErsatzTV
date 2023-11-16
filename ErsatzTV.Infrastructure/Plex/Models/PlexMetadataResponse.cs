@@ -7,9 +7,6 @@ public class PlexMetadataResponse
     [XmlAttribute("key")]
     public string Key { get; set; }
 
-    [XmlAttribute("ratingKey")]
-    public string RatingKey { get; set; }
-
     [XmlAttribute("title")]
     public string Title { get; set; }
 
@@ -40,15 +37,6 @@ public class PlexMetadataResponse
     [XmlAttribute("updatedAt")]
     public long UpdatedAt { get; set; }
     
-    [XmlAttribute("childCount")]
-    public string ChildCount { get; set; }
-
-    [XmlAttribute("smart")]
-    public string Smart { get; set; }
-
-    [XmlAttribute("librarySectionId")]
-    public int LibrarySectionId { get; set; }
-
     [XmlAttribute("index")]
     public int Index { get; set; }
 

@@ -407,7 +407,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             _ => None
         };
 
-    private Option<PlexCollection> ProjectToCollection(PlexMediaSource plexMediaSource, PlexMetadataResponse item)
+    private Option<PlexCollection> ProjectToCollection(PlexMediaSource plexMediaSource, PlexCollectionMetadataResponse item)
     {
         try
         {
