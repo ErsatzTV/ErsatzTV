@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Cuvid;
@@ -10,7 +9,6 @@ using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.OutputOption;
-using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -18,13 +16,11 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 {
-    private readonly IRuntimeInfo _runtimeInfo;
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
 
     public NvidiaPipelineBuilder(
-        IRuntimeInfo runtimeInfo,
         IFFmpegCapabilities ffmpegCapabilities,
         IHardwareCapabilities hardwareCapabilities,
         HardwareAccelerationMode hardwareAccelerationMode,
@@ -45,7 +41,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         fontsFolder,
         logger)
     {
-        _runtimeInfo = runtimeInfo;
         _ffmpegCapabilities = ffmpegCapabilities;
         _hardwareCapabilities = hardwareCapabilities;
         _logger = logger;
@@ -96,13 +91,6 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FFmpegState ffmpegState,
         PipelineContext context)
     {
-        if (NeedsCudaWorkaround(ffmpegState, videoStream.Codec))
-        {
-            var cuda = new DecoderImplicitCuda();
-            videoInputFile.AddOption(cuda);
-            return cuda;
-        }
-
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new DecoderHevcCuvid(HardwareAccelerationMode.Nvenc),
@@ -647,15 +635,4 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         return currentState;
     }
-    
-    // the combination of:
-    // - windows
-    // - ffmpeg 6.1 snapshot (where readrate_initial_burst option is present)
-    // - h264_cuvid
-    // appears to cause jitter, so use implicit cuda decoder in that specific case
-    private bool NeedsCudaWorkaround(FFmpegState ffmpegState, string videoFormat) =>
-        _runtimeInfo.IsOSPlatform(OSPlatform.Windows)
-        && _ffmpegCapabilities.HasOption(FFmpegKnownOption.ReadrateInitialBurst)
-        && ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Nvenc
-        && videoFormat == VideoFormat.H264;
 }

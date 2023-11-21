@@ -1,5 +1,4 @@
 using ErsatzTV.FFmpeg.Capabilities;
-using ErsatzTV.FFmpeg.Runtime;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Pipeline;
@@ -8,14 +7,11 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
 {
     private readonly IHardwareCapabilitiesFactory _hardwareCapabilitiesFactory;
     private readonly ILogger<PipelineBuilderFactory> _logger;
-    private readonly IRuntimeInfo _runtimeInfo;
 
     public PipelineBuilderFactory(
-        IRuntimeInfo runtimeInfo,
         IHardwareCapabilitiesFactory hardwareCapabilitiesFactory,
         ILogger<PipelineBuilderFactory> logger)
     {
-        _runtimeInfo = runtimeInfo;
         _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
         _logger = logger;
     }
@@ -44,7 +40,6 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         return hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
-                _runtimeInfo,
                 ffmpegCapabilities,
                 capabilities,
                 hardwareAccelerationMode,
