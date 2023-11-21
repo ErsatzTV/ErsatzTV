@@ -15,8 +15,8 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.21" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.13" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.13" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.14" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.14" />
     </ItemGroup>
 
 
