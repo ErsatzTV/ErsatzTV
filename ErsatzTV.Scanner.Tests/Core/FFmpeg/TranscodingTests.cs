@@ -241,7 +241,6 @@ public class TranscodingTests
             new FakeStreamSelector(),
             tempFilePool,
             new PipelineBuilderFactory(
-                new RuntimeInfo(),
                 //new FakeNvidiaCapabilitiesFactory(),
                 new HardwareCapabilitiesFactory(
                     MemoryCache,
@@ -858,7 +857,6 @@ public class TranscodingTests
             new FakeStreamSelector(),
             Substitute.For<ITempFilePool>(),
             new PipelineBuilderFactory(
-                new RuntimeInfo(),
                 //new FakeNvidiaCapabilitiesFactory(),
                 new HardwareCapabilitiesFactory(
                     MemoryCache,
