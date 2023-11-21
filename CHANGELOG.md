@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix MySQL queries that could fail during media server library scans
 - Fix scanning Jellyfin libraries when library options and/or path infos are not returned from Jellyfin API
 - Fix error indexing music videos in `File Not Found` state
+- Fix bug scheduling duration filler when filler collection contains item with zero duration
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs

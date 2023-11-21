@@ -15,7 +15,7 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
     {
         _sortedMediaItems = mediaItems.OrderBy(identity, new SeasonEpisodeMediaComparer()).ToList();
         _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(
-            () => _sortedMediaItems.Bind(i => i.GetDuration()).OrderBy(identity).HeadOrNone());
+            () => _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
 
