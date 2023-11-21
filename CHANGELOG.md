@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix scanning Jellyfin libraries when library options and/or path infos are not returned from Jellyfin API
 - Fix error indexing music videos in `File Not Found` state
 - Fix bug scheduling duration filler when filler collection contains item with zero duration
+- Fix bug displaying television seasons for shows that have no year metadata
 
 ### Changed
 - Upgrade ffmpeg to 6.1, which is now *required* for all installs

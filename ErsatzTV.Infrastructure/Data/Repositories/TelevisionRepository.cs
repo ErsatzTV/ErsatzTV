@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -173,27 +174,35 @@ public class TelevisionRepository : ITelevisionRepository
 
     public async Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
     {
+        var result = new List<Season>();
+        
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        List<int> showIds = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT m1.ShowId
-                FROM ShowMetadata m1
-                LEFT OUTER JOIN ShowMetadata m2 ON m2.ShowId = @ShowId
-                WHERE m1.Title = m2.Title AND m1.Year = m2.Year",
-                new { ShowId = televisionShowId })
-            .Map(results => results.ToList());
+        Option<ShowMetadata> maybeShowMetadata = await dbContext.ShowMetadata
+            .SelectOneAsync(sm => sm.Id, sm => sm.ShowId == televisionShowId);
 
-        return await dbContext.Seasons
-            .AsNoTracking()
-            .Where(s => showIds.Contains(s.ShowId))
-            .Include(s => s.SeasonMetadata)
-            .ThenInclude(sm => sm.Artwork)
-            .Include(s => s.Show)
-            .ThenInclude(s => s.ShowMetadata)
-            .OrderBy(s => s.SeasonNumber)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        foreach (ShowMetadata showMetadata in maybeShowMetadata)
+        {
+            List<int> showIds = await dbContext.ShowMetadata
+                .Filter(sm => sm.Title == showMetadata.Title && sm.Year == showMetadata.Year)
+                .Map(sm => sm.ShowId)
+                .ToListAsync();
+
+            result.AddRange(
+                await dbContext.Seasons
+                    .AsNoTracking()
+                    .Where(s => showIds.Contains(s.ShowId))
+                    .Include(s => s.SeasonMetadata)
+                    .ThenInclude(sm => sm.Artwork)
+                    .Include(s => s.Show)
+                    .ThenInclude(s => s.ShowMetadata)
+                    .OrderBy(s => s.SeasonNumber)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync());
+        }
+
+        return result;
     }
 
     public async Task<int> GetEpisodeCount(int seasonId)
