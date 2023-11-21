@@ -350,7 +350,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
     {
         try
         {
-            const string PATTERN = @"^(.*?)[\s.]+?[.\(](\d{4})[.\)].*$";
+            const string PATTERN = @"^(.*?)[\s.]*?[.\(](\d{4})[.\)].*$";
             Match match = Regex.Match(fileName, PATTERN);
             if (match.Success)
             {
