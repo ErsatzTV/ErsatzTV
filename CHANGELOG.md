@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.3-beta] - 2023-11-22
 ### Added
 - Add `Scaling Behavior` option to FFmpeg Profile
   - `Scale and Pad`: the default behavior and will maintain aspect ratio of all content
@@ -1797,7 +1799,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.2-beta...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.3-beta...HEAD
+[0.8.3-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.2-beta...v0.8.3-beta
 [0.8.2-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.1-beta...v0.8.2-beta
 [0.8.1-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.0-beta...v0.8.1-beta
 [0.8.0-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.7.9-beta...v0.8.0-beta
