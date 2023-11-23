@@ -10,7 +10,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 {
     private const string BundledVersion = "6.1";
     private const string BundledVersionVaapi = "6.1";
-    private const string WindowsVersionPrefix = "6.1";
+    private const string WindowsVersionPrefix = "n6.1";
     private readonly IConfigElementRepository _configElementRepository;
 
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
