@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix playout builder crash with improperly configured pad filler preset
+- Properly validate filler preset mode pad to require `filler pad to nearest minute` value
 
 ## [0.8.3-beta] - 2023-11-22
 ### Added

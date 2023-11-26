@@ -223,6 +223,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             Logger.LogError("Multiple pad-to-nearest-minute values are invalid; no filler will be used");
             return new List<PlayoutItem> { playoutItem };
         }
+        
+        // missing pad-to-nearest-minute value is invalid; use no filler
+        FillerPreset invalidPadFiller = allFiller
+            .FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue == false);
+        if (invalidPadFiller is not null)
+        {
+            Logger.LogError(
+                "Pad filler ({Filler}) without pad-to-nearest-minute value is invalid; no filler will be used",
+                invalidPadFiller.Name);
+            return new List<PlayoutItem> { playoutItem };
+        }
 
         List<MediaChapter> effectiveChapters = chapters;
         if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll) || effectiveChapters.Count <= 1)
