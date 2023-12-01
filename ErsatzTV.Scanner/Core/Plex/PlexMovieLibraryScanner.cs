@@ -318,6 +318,7 @@ public class PlexMovieLibraryScanner :
 
         foreach (Tag tag in existingMetadata.Tags
                      .Filter(g => fullMetadata.Tags.All(g2 => g2.Name != g.Name))
+                     .Filter(g => g.ExternalCollectionId is null)
                      .ToList())
         {
             existingMetadata.Tags.Remove(tag);
