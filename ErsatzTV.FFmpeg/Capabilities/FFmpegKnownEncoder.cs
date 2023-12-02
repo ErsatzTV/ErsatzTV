@@ -9,5 +9,11 @@ public record FFmpegKnownEncoder
         this.Name = Name;
     }
 
-    public static IList<string> AllEncoders => Array.Empty<string>();
+    // only list the encoders that we actually check for
+    public static IList<string> AllEncoders =>
+        new[]
+        {
+            "h264_amf",
+            "hevc_amf"
+        };
 }
