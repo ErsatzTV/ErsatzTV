@@ -43,10 +43,7 @@ fn main() {
             None => {}
             Some(folder) => {
                 fs::create_dir_all(folder).unwrap();
-                let _ = Command::new("cmd")
-                    .creation_flags(CREATE_NO_WINDOW)
-                    .arg("/C")
-                    .arg("start")
+                let _ = Command::new("explorer.exe")
                     .arg(folder)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
