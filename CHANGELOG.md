@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix error loading path replacements when using MySql
+- Fix tray icon shortcut to open logs folder on Windows
 
 ## [0.8.4-beta] - 2023-12-02
 ### Fixed
@@ -11,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly validate filler preset mode pad to require `filler pad to nearest minute` value
 - Fix bug where previously-synchronized collection tags would disappear
   - This bug affected Jellyfin, Emby and Plex collections
-- Fix detection of AMF hardware acceleration on Windows 
+- Fix detection of AMF hardware acceleration on Windows
 
 ## [0.8.3-beta] - 2023-11-22
 ### Added
