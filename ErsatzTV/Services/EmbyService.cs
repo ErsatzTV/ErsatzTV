@@ -101,7 +101,7 @@ public class EmbyService : BackgroundService
         result.Match(
             sources =>
             {
-                if (sources.Any())
+                if (sources.Count != 0)
                 {
                     _logger.LogInformation("Successfully synchronized emby media sources");
                 }

@@ -318,7 +318,7 @@ public class SchedulerService : BackgroundService
         List<TraktList> traktLists = await dbContext.TraktLists
             .ToListAsync(cancellationToken);
 
-        if (traktLists.Any() && _entityLocker.LockTrakt())
+        if (traktLists.Count != 0 && _entityLocker.LockTrakt())
         {
             TraktList last = traktLists.Last();
             foreach (TraktList list in traktLists)
