@@ -25,7 +25,7 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
             .ThenInclude(mv => mv.MediaFiles)
             .ToListAsync(cancellationToken);
 
-        if (episodes.Any())
+        if (episodes.Count != 0)
         {
             var paths = episodes.SelectMany(e => e.MediaVersions.Map(mv => mv.MediaFiles))
                 .Flatten()

@@ -583,7 +583,7 @@ public class MetadataRepository : IMetadataRepository
             //     toRemove.Count,
             //     toUpdate.Count);
 
-            if (toAdd.Any() || toRemove.Any() || toUpdate.Any())
+            if (toAdd.Count != 0 || toRemove.Count != 0 || toUpdate.Count != 0)
             {
                 // add
                 existing.Subtitles.AddRange(toAdd);

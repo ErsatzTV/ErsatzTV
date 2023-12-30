@@ -57,7 +57,7 @@ public class ZeroDurationHealthCheck : BaseHealthCheck, IZeroDurationHealthCheck
             .Append(songs.Map(s => s.GetHeadVersion().MediaFiles.Head().Path))
             .ToList();
 
-        if (all.Any())
+        if (all.Count != 0)
         {
             var paths = all.Take(5).ToList();
 

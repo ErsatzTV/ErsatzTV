@@ -13,6 +13,9 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAccelerationHealthCheck
 {
+    private static readonly string[] FFmpegAccelsArguments = { "-v", "quiet", "-hwaccels" };
+    private static readonly string[] FFmpegEncodersArguments = { "-v", "quiet", "-encoders" };
+
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IRuntimeInfo _runtimeInfo;
@@ -56,13 +59,13 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             }
         }
 
-        if (!accelerationKinds.Any())
+        if (accelerationKinds.Count == 0)
         {
             accelerationKinds.AddRange(
                 await GetSupportedAccelerationKinds(maybeFFmpegPath.ValueUnsafe().Value, cancellationToken));
         }
 
-        if (!accelerationKinds.Any())
+        if (accelerationKinds.Count == 0)
         {
             return InfoResult("No compatible hardware acceleration kinds are supported by ffmpeg");
         }
@@ -86,7 +89,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             .Filter(c => !accelerationKinds.Contains(c.FFmpegProfile.HardwareAcceleration))
             .ToListAsync();
 
-        if (badChannels.Any())
+        if (badChannels.Count != 0)
         {
             var accel = string.Join(", ", accelerationKinds);
             var channels = string.Join(", ", badChannels.Map(c => $"{c.Number} - {c.Name}"));
@@ -103,7 +106,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
     {
         var result = new System.Collections.Generic.HashSet<HardwareAccelerationKind>();
 
-        string output = await GetProcessOutput(ffmpegPath, new[] { "-v", "quiet", "-hwaccels" }, cancellationToken);
+        string output = await GetProcessOutput(ffmpegPath, FFmpegAccelsArguments, cancellationToken);
         foreach (string method in output.Split("\n").Map(s => s.Trim()).Skip(1))
         {
             switch (method)
@@ -130,7 +133,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
         {
             string output2 = await GetProcessOutput(
                 ffmpegPath,
-                new[] { "-v", "quiet", "-encoders" },
+                FFmpegEncodersArguments,
                 cancellationToken);
             foreach (string method in output2.Split("\n").Map(s => s.Trim()))
             {

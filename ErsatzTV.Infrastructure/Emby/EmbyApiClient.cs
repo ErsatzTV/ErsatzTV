@@ -457,7 +457,7 @@ public class EmbyApiClient : IEmbyApiClient
             metadata.Artwork.Add(poster);
         }
 
-        if (item.BackdropImageTags.Any())
+        if (item.BackdropImageTags.Count != 0)
         {
             var fanArt = new Artwork
             {
@@ -591,7 +591,7 @@ public class EmbyApiClient : IEmbyApiClient
             metadata.Artwork.Add(thumb);
         }
 
-        if (item.BackdropImageTags.Any())
+        if (item.BackdropImageTags.Count != 0)
         {
             var fanArt = new Artwork
             {
@@ -635,7 +635,7 @@ public class EmbyApiClient : IEmbyApiClient
                 metadata.Artwork.Add(poster);
             }
 
-            if (item.BackdropImageTags.Any())
+            if (item.BackdropImageTags.Count != 0)
             {
                 var fanArt = new Artwork
                 {

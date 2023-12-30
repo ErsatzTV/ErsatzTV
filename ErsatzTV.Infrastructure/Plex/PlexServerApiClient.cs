@@ -456,7 +456,7 @@ public class PlexServerApiClient : IPlexServerApiClient
     private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
     {
         PlexMediaResponse<PlexPartResponse> media = response.Media
-            .Filter(media => media.Part.Any())
+            .Filter(media => media.Part.Count != 0)
             .MaxBy(media => media.Id);
 
         PlexPartResponse part = media.Part.Head();
@@ -602,7 +602,7 @@ public class PlexServerApiClient : IPlexServerApiClient
     private static Option<MediaVersion> ProjectToMediaVersion(PlexXmlMetadataResponse response)
     {
         PlexMediaResponse<PlexXmlPartResponse> media = response.Media
-            .Filter(media => media.Part.Any())
+            .Filter(media => media.Part.Count != 0)
             .MaxBy(media => media.Id);
 
         List<PlexStreamResponse> streams = media.Part.Head().Stream;
@@ -897,7 +897,7 @@ public class PlexServerApiClient : IPlexServerApiClient
     private PlexEpisode ProjectToEpisode(PlexXmlMetadataResponse response, int mediaSourceId)
     {
         PlexMediaResponse<PlexXmlPartResponse> media = response.Media
-            .Filter(media => media.Part.Any())
+            .Filter(media => media.Part.Count != 0)
             .MaxBy(media => media.Id);
 
         PlexXmlPartResponse part = media.Part.Head();

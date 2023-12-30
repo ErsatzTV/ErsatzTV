@@ -438,7 +438,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 PlaybackOrder.Chronological,
                 false));
 
-        return result.Filter(c => c.MediaItems.Any()).ToList();
+        return result.Filter(c => c.MediaItems.Count != 0).ToList();
     }
 
     private static async Task<List<Movie>> GetMovieItems(TvContext dbContext, int collectionId)
