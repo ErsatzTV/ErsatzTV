@@ -34,10 +34,10 @@ COPY ErsatzTV.Infrastructure.MySql/. ./ErsatzTV.Infrastructure.MySql/
 COPY ErsatzTV.Scanner/. ./ErsatzTV.Scanner/
 ARG INFO_VERSION="unknown"
 WORKDIR /source/ErsatzTV.Scanner
-RUN dotnet publish ErsatzTV.Scanner.csproj --framework net7.0 -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.Scanner.csproj --framework net8.0 -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 WORKDIR /source/ErsatzTV
 RUN sed -i '/Scanner/d' ErsatzTV.csproj
-RUN dotnet publish ErsatzTV.csproj --framework net7.0 -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.csproj --framework net8.0 -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
 FROM jasongdove/ersatztv-ffmpeg:6.1-nvidia AS runtime-base
