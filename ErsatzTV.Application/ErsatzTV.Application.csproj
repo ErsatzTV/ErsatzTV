@@ -12,9 +12,9 @@
       <PackageReference Include="Bugsnag" Version="3.1.0" />
       <PackageReference Include="CliWrap" Version="3.6.4" />
       <PackageReference Include="Humanizer.Core" Version="2.14.1" />
-      <PackageReference Include="MediatR" Version="12.1.1" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
+      <PackageReference Include="MediatR" Version="12.2.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.8.14">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
