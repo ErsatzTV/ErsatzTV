@@ -2,5 +2,5 @@
 
 public class NoStandardInputOption : GlobalOption.GlobalOption
 {
-    public override IList<string> GlobalOptions => new List<string> { "-nostdin" };
+    public override string[] GlobalOptions => new[] { "-nostdin" };
 }

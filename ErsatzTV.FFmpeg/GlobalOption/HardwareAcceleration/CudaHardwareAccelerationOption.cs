@@ -2,5 +2,5 @@
 
 public class CudaHardwareAccelerationOption : GlobalOption
 {
-    public override IList<string> GlobalOptions => new List<string> { "-hwaccel", "cuda" };
+    public override string[] GlobalOptions => new[] { "-hwaccel", "cuda" };
 }

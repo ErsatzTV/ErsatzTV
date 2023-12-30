@@ -13,7 +13,7 @@ public class FFReportVariable : IPipelineStep
         _maybeConcatInputFile = maybeConcatInputFile;
     }
 
-    public IList<EnvironmentVariable> EnvironmentVariables
+    public EnvironmentVariable[] EnvironmentVariables
     {
         get
         {
@@ -31,16 +31,16 @@ public class FFReportVariable : IPipelineStep
                 fileName = fileName.Replace(@":/", @"\:/");
             }
 
-            return new List<EnvironmentVariable>
+            return new[]
             {
-                new("FFREPORT", $"file={fileName}:level=32")
+                new EnvironmentVariable("FFREPORT", $"file={fileName}:level=32")
             };
         }
     }
 
-    public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
-    public IList<string> FilterOptions => Array.Empty<string>();
-    public IList<string> OutputOptions => Array.Empty<string>();
+    public string[] GlobalOptions => Array.Empty<string>();
+    public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
+    public string[] FilterOptions => Array.Empty<string>();
+    public string[] OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;
 }

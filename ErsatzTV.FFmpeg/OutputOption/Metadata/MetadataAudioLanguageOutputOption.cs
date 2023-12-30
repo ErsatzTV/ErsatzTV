@@ -6,6 +6,6 @@ public class MetadataAudioLanguageOutputOption : OutputOption
 
     public MetadataAudioLanguageOutputOption(string audioLanguage) => _audioLanguage = audioLanguage;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
         { "-metadata:s:a:0", $"language={_audioLanguage}" };
 }

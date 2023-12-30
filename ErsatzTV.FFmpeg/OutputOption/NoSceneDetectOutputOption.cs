@@ -8,6 +8,6 @@ public class NoSceneDetectOutputOption : OutputOption
 
     public NoSceneDetectOutputOption(int value) => _value = value;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
         { "-sc_threshold", _value.ToString(CultureInfo.InvariantCulture) };
 }

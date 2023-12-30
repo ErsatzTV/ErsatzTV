@@ -258,7 +258,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         PipelineContext context,
         FrameState desiredState,
         string fontsFolder,
-        ICollection<IPipelineFilterStep> subtitleOverlayFilterSteps)
+        List<IPipelineFilterStep> subtitleOverlayFilterSteps)
     {
         foreach (SubtitleInputFile subtitle in subtitleInputFile)
         {
@@ -306,7 +306,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     {
         if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
-            IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
+            var padStep = new PadFilter(currentState, desiredState.PaddedSize);
             currentState = padStep.NextState(currentState);
             videoInputFile.FilterSteps.Add(padStep);
         }
@@ -322,7 +322,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     {
         if (videoStream.FrameSize != desiredState.ScaledSize)
         {
-            IPipelineFilterStep scaleStep = new ScaleFilter(
+            var scaleStep = new ScaleFilter(
                 currentState,
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,

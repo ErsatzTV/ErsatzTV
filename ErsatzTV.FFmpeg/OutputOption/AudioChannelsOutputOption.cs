@@ -16,13 +16,13 @@ public class AudioChannelsOutputOption : OutputOption
         _desiredChannels = desiredChannels;
     }
 
-    public override IList<string> OutputOptions
+    public override string[] OutputOptions
     {
         get
         {
             if (_sourceChannels != _desiredChannels || _audioFormat == Some(AudioFormat.Aac) && _desiredChannels > 2)
             {
-                return new List<string>
+                return new[]
                 {
                     "-ac", _desiredChannels.ToString(CultureInfo.InvariantCulture)
                 };

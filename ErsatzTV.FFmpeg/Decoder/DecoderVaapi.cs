@@ -8,8 +8,8 @@ public class DecoderVaapi : DecoderBase
 
     public override string Name => "implicit_vaapi";
 
-    public override IList<string> InputOptions(InputFile inputFile) =>
-        new List<string> { "-hwaccel_output_format", "vaapi" };
+    public override string[] InputOptions(InputFile inputFile) =>
+        new[] { "-hwaccel_output_format", "vaapi" };
 
     public override FrameState NextState(FrameState currentState)
     {

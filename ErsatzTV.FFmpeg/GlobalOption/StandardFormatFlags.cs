@@ -2,5 +2,5 @@
 
 public class StandardFormatFlags : GlobalOption
 {
-    public override IList<string> GlobalOptions => new List<string> { "-fflags", "+genpts+discardcorrupt+igndts" };
+    public override string[] GlobalOptions => new[] { "-fflags", "+genpts+discardcorrupt+igndts" };
 }

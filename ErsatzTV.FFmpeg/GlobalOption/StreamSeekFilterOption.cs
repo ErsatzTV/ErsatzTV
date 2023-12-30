@@ -8,11 +8,11 @@ public class StreamSeekFilterOption : IPipelineStep
 
     public StreamSeekFilterOption(TimeSpan start) => _start = start;
 
-    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
+    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+    public string[] GlobalOptions => Array.Empty<string>();
+    public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
 
-    public IList<string> FilterOptions => new List<string> { "-ss", $"{_start:c}" };
-    public IList<string> OutputOptions => Array.Empty<string>();
+    public string[] FilterOptions => new[] { "-ss", $"{_start:c}" };
+    public string[] OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;
 }

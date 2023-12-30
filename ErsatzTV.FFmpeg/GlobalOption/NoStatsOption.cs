@@ -2,5 +2,5 @@
 
 public class NoStatsOption : GlobalOption
 {
-    public override IList<string> GlobalOptions => new List<string> { "-nostats" };
+    public override string[] GlobalOptions => new[] { "-nostats" };
 }

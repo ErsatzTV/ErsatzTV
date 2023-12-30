@@ -6,7 +6,7 @@ public class AudioBufferSizeOutputOption : OutputOption
 
     public AudioBufferSizeOutputOption(int decoderBufferSize) => _decoderBufferSize = decoderBufferSize;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
     {
         "-bufsize:a", $"{_decoderBufferSize}k"
     };

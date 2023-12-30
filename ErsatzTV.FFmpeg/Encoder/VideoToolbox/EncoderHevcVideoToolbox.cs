@@ -11,12 +11,12 @@ public class EncoderHevcVideoToolbox : EncoderBase
     public override string Name => "hevc_videotoolbox";
     public override StreamKind Kind => StreamKind.Video;
 
-    public override IList<string> OutputOptions => base.OutputOptions.Concat(
-        new List<string>
+    public override string[] OutputOptions => base.OutputOptions.Concat(
+        new[]
         {
             "-profile:v",
             _desiredBitDepth == 10 ? "main10" : "main"
-        }).ToList();
+        }).ToArray();
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

@@ -2,5 +2,5 @@
 
 public class FastStartOutputOption : OutputOption
 {
-    public override IList<string> OutputOptions => new List<string> { "-movflags", "+faststart" };
+    public override string[] OutputOptions => new[] { "-movflags", "+faststart" };
 }

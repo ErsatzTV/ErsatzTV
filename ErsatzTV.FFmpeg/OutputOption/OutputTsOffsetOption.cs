@@ -13,7 +13,7 @@ public class OutputTsOffsetOption : OutputOption
         _videoTrackTimeScale = videoTrackTimeScale;
     }
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
     {
         "-output_ts_offset",
         $"{(_ptsOffset / (double)_videoTrackTimeScale).ToString(NumberFormatInfo.InvariantInfo)}"

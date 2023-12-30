@@ -8,15 +8,15 @@ public class VideoFilter : IPipelineStep
 
     public VideoFilter(IEnumerable<IPipelineFilterStep> filterSteps) => _filterSteps = filterSteps;
 
-    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
-    public IList<string> FilterOptions => Arguments();
-    public IList<string> OutputOptions => Array.Empty<string>();
+    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+    public string[] GlobalOptions => Array.Empty<string>();
+    public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
+    public string[] FilterOptions => Arguments();
+    public string[] OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;
 
-    private IList<string> Arguments() =>
-        new List<string>
+    private string[] Arguments() =>
+        new []
         {
             "-vf",
             string.Join(",", _filterSteps.Map(fs => fs.Filter))

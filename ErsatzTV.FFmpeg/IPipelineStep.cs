@@ -4,11 +4,11 @@ namespace ErsatzTV.FFmpeg;
 
 public interface IPipelineStep
 {
-    IList<EnvironmentVariable> EnvironmentVariables { get; }
-    IList<string> GlobalOptions { get; }
-    IList<string> FilterOptions { get; }
-    IList<string> OutputOptions { get; }
-    IList<string> InputOptions(InputFile inputFile);
+    EnvironmentVariable[] EnvironmentVariables { get; }
+    string[] GlobalOptions { get; }
+    string[] FilterOptions { get; }
+    string[] OutputOptions { get; }
+    string[] InputOptions(InputFile inputFile);
 
     FrameState NextState(FrameState currentState);
 }

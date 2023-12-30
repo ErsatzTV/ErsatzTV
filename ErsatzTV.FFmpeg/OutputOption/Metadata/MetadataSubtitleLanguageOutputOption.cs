@@ -6,6 +6,6 @@ public class MetadataSubtitleLanguageOutputOption : OutputOption
 
     public MetadataSubtitleLanguageOutputOption(string subtitleLanguage) => _subtitleLanguage = subtitleLanguage;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
         { "-metadata:s:s:0", $"language={_subtitleLanguage}" };
 }
