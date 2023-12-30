@@ -1,10 +1,10 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-jammy-arm64v8 AS dotnet-runtime
+﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-arm64v8 AS dotnet-runtime
 
 FROM jasongdove/ersatztv-ffmpeg:6.1-arm64 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:7.0-jammy-amd64 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy-amd64 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg
 RUN mkdir -p /etc/apt/keyrings
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
@@ -39,10 +39,10 @@ COPY ErsatzTV.Infrastructure.MySql/. ./ErsatzTV.Infrastructure.MySql/
 COPY ErsatzTV.Scanner/. ./ErsatzTV.Scanner/
 WORKDIR /source/ErsatzTV.Scanner
 ARG INFO_VERSION="unknown"
-RUN dotnet publish ErsatzTV.Scanner.csproj --framework net7.0 -c release -o /app --runtime linux-arm64 --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.Scanner.csproj --framework net8.0 -c release -o /app --runtime linux-arm64 --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
 WORKDIR /source/ErsatzTV
 RUN sed -i '/Scanner/d' ErsatzTV.csproj
-RUN dotnet publish ErsatzTV.csproj --framework net7.0 -c release -o /app --runtime linux-arm64 --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV.csproj --framework net8.0 -c release -o /app --runtime linux-arm64 --no-self-contained --no-restore -p:DebugType=Embedded -p:PublishSingleFile=false -p:PublishTrimmed=false -p:InformationalVersion=${INFO_VERSION}
           
 # final stage/image
 FROM runtime-base
