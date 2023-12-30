@@ -23,7 +23,7 @@ public class ChannelGuide
 
     public string ToXml()
     {
-        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
+        using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         using var xml = XmlWriter.Create(ms);
         xml.WriteStartDocument();
 

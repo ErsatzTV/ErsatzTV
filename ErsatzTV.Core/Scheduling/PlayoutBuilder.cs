@@ -251,7 +251,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     private async Task<Option<PlayoutParameters>> Validate(Playout playout)
     {
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(playout);
-        if (!collectionMediaItems.Any())
+        if (collectionMediaItems.IsEmpty)
         {
             _logger.LogWarning("Playout {Playout} has no items", playout.Channel.Name);
             return None;
@@ -543,7 +543,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         // once more to get playout anchor
         ProgramScheduleItem anchorScheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
 
-        if (playout.Items.Any())
+        if (playout.Items.Count != 0)
         {
             DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
             if (maxStartTime < playoutBuilderState.CurrentTime)
@@ -655,7 +655,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             items.RemoveAll(zeroItems.Contains);
         }
 
-        return collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
+        return collectionMediaItems.Find(c => c.Value.Count == 0).Map(c => c.Key);
     }
 
     private static PlayoutAnchor FindStartAnchor(

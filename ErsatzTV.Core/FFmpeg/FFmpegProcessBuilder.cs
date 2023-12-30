@@ -28,6 +28,8 @@ namespace ErsatzTV.Core.FFmpeg;
 
 internal class FFmpegProcessBuilder
 {
+    private static readonly string[] QuietArguments = { "-hide_banner", "-loglevel", "error", "-nostats" };
+
     private readonly List<string> _arguments = new();
     private readonly string _ffmpegPath;
     private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
@@ -198,7 +200,7 @@ internal class FFmpegProcessBuilder
 
     public FFmpegProcessBuilder WithQuiet()
     {
-        _arguments.AddRange(new[] { "-hide_banner", "-loglevel", "error", "-nostats" });
+        _arguments.AddRange(QuietArguments);
         return this;
     }
 

@@ -206,7 +206,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 s => preferredLanguageCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
-        if (correctLanguage.Any())
+        if (correctLanguage.Count != 0)
         {
             _logger.LogDebug(
                 "Found {Count} audio streams with preferred audio language code(s) {Code}",
@@ -234,7 +234,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         var matchingTitle = streams
             .Filter(ms => (ms.Title ?? string.Empty).Contains(title, StringComparison.OrdinalIgnoreCase))
             .ToList();
-        if (matchingTitle.Any())
+        if (matchingTitle.Count != 0)
         {
             _logger.LogDebug(
                 "Found {Count} audio streams with preferred title {Title}",

@@ -87,7 +87,7 @@ public class ShuffledScheduleItemsEnumerator : IScheduleItemsEnumerator
         return _shuffled[(State.Index + offset) % _scheduleItemsCount];
     }
 
-    private static IList<ProgramScheduleItem> Shuffle(IEnumerable<ProgramScheduleItem> list, CloneableRandom random)
+    private static ProgramScheduleItem[] Shuffle(IEnumerable<ProgramScheduleItem> list, CloneableRandom random)
     {
         ProgramScheduleItem[] copy = list.ToArray();
 

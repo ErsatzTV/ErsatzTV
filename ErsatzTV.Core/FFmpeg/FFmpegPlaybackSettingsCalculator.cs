@@ -211,7 +211,7 @@ public static class FFmpegPlaybackSettingsCalculator
     private static bool IsOddSize(MediaVersion version) =>
         version.Height % 2 == 1 || version.Width % 2 == 1;
 
-    private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
+    private static DisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
     {
         IDisplaySize sarSize = SARSize(version);
         int p = version.Width * sarSize.Width;
@@ -269,7 +269,7 @@ public static class FFmpegPlaybackSettingsCalculator
         return version.DisplayAspectRatio != $"{version.Width}:{version.Height}";
     }
 
-    private static IDisplaySize SARSize(MediaVersion version)
+    private static DisplaySize SARSize(MediaVersion version)
     {
         string[] split = version.SampleAspectRatio.Split(":");
         return new DisplaySize(

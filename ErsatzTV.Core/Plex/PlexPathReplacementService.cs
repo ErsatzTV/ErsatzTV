@@ -77,5 +77,5 @@ public class PlexPathReplacementService : IPlexPathReplacementService
     }
 
     private static bool IsWindows(PlexMediaSource plexMediaSource) =>
-        plexMediaSource.Platform.ToLowerInvariant() == "windows";
+        plexMediaSource.Platform.Equals("windows", StringComparison.OrdinalIgnoreCase);
 }

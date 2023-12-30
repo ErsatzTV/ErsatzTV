@@ -130,7 +130,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
 
         nextState = nextState with
         {
-            InFlood = playoutItems.Any() && nextState.CurrentTime >= hardStop,
+            InFlood = playoutItems.Count != 0 && nextState.CurrentTime >= hardStop,
 
             // only decrement guide group if it was bumped
             NextGuideGroup = playoutItems.Select(pi => pi.GuideGroup).Distinct().Count() != 1

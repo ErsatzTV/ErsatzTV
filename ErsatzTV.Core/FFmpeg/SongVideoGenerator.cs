@@ -189,7 +189,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                     artwork.BlurHash64
                 }.Filter(s => !string.IsNullOrWhiteSpace(s)).ToList();
 
-                if (hashes.Any())
+                if (hashes.Count != 0)
                 {
                     string hash = hashes[NextRandom(hashes.Count)];
 
