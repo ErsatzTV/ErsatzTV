@@ -18,9 +18,9 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 {
     private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
-    private const string VaapiCacheKeyFormat = "ffmpeg.hardware.vaapi.{0}.{1}";
-    private const string QsvCacheKeyFormat = "ffmpeg.hardware.qsv.{0}";
-    private const string FFmpegCapabilitiesCacheKeyFormat = "ffmpeg.{0}";
+    private static readonly CompositeFormat VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}");
+    private static readonly CompositeFormat QsvCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.{0}");
+    private static readonly CompositeFormat FFmpegCapabilitiesCacheKeyFormat = CompositeFormat.Parse("ffmpeg.{0}");
 
     private static readonly string[] QsvArguments =
     {

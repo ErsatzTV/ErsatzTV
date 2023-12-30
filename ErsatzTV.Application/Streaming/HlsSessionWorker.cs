@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Timers;
@@ -113,7 +114,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     public void PlayoutUpdated() => _state = HlsSessionState.PlayoutUpdated;
 
-    public void Dispose()
+    void IDisposable.Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
@@ -123,9 +124,17 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
-        void Cancel(object o, ElapsedEventArgs e)
+        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
+        async void Cancel(object o, ElapsedEventArgs e)
         {
-            cts.Cancel();
+            try
+            {
+                await cts.CancelAsync();
+            }
+            catch (Exception)
+            {
+                // do nothing   
+            }
         }
 
         try
