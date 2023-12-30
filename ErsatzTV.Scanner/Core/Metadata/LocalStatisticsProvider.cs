@@ -508,7 +508,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         }
                     }
 
-                    if (version.Chapters.Any())
+                    if (version.Chapters.Count != 0)
                     {
                         MediaChapter last = version.Chapters.Last();
                         if (last.EndTime != version.Duration)

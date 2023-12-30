@@ -386,7 +386,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         season.SeasonMetadata ??= new List<SeasonMetadata>();
 
-        if (!season.SeasonMetadata.Any())
+        if (season.SeasonMetadata.Count == 0)
         {
             var metadata = new SeasonMetadata
             {
