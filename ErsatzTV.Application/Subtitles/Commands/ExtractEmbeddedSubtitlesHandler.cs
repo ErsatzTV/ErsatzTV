@@ -130,7 +130,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             List<int> mediaItemIdsWithTextSubtitles =
                 await GetMediaItemIdsWithTextSubtitles(dbContext, mediaItemIds, cancellationToken);
 
-            if (mediaItemIdsWithTextSubtitles.Any())
+            if (mediaItemIdsWithTextSubtitles.Count != 0)
             {
                 _logger.LogDebug(
                     "Checking media items {MediaItemIds} for text subtitles or fonts to extract for playouts {PlayoutIds}",

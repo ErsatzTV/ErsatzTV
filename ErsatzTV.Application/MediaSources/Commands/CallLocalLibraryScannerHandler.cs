@@ -73,7 +73,7 @@ public class CallLocalLibraryScannerHandler : CallLibraryScannerHandler<IScanLoc
             .Filter(lp => lp.LibraryId == request.LibraryId)
             .ToListAsync();
 
-        DateTime minDateTime = libraryPaths.Any()
+        DateTime minDateTime = libraryPaths.Count != 0
             ? libraryPaths.Min(lp => lp.LastScan ?? SystemTime.MinValueUtc)
             : SystemTime.MaxValueUtc;
 

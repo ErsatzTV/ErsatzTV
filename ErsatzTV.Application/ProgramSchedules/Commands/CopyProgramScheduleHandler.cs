@@ -92,7 +92,7 @@ public class
         return (result1, result2).Apply((_, _) => request.Name);
     }
 
-    private static void DetachEntity<T>(DbContext db, T entity) where T : class
+    private static void DetachEntity<T>(TvContext db, T entity) where T : class
     {
         db.Entry(entity).State = EntityState.Detached;
         if (entity.GetType().GetProperty("Id") is not null)

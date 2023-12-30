@@ -116,7 +116,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
     private async Task WaitForPlaylistSegments(
         string playlistFileName,
         int initialSegmentCount,
-        IHlsSessionWorker worker,
+        HlsSessionWorker worker,
         CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();

@@ -94,7 +94,7 @@ public class
                 toAdd,
                 toRemove,
                 toUpdate);
-            if (ids.Any())
+            if (ids.Count != 0)
             {
                 await _searchIndex.RemoveItems(ids);
                 _searchIndex.Commit();

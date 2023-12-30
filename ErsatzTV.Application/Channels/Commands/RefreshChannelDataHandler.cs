@@ -88,7 +88,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .ToListAsync(cancellationToken)
             .Map(list => list.Collect(p => p.Items).OrderBy(pi => pi.Start).ToList());
 
-        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
+        await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         await using var xml = XmlWriter.Create(
             ms,
             new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
@@ -492,7 +492,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 string[] split = first.Split(':');
                 if (split.Length == 2)
                 {
-                    return split[0].ToLowerInvariant() == "us"
+                    return split[0].Equals("us", StringComparison.OrdinalIgnoreCase)
                         ? new ContentRating(system, split[1].ToUpperInvariant())
                         : new ContentRating(None, split[1].ToUpperInvariant());
                 }
