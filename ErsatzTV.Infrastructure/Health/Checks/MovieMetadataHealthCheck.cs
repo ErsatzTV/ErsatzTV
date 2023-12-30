@@ -25,7 +25,7 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
             .ThenInclude(mv => mv.MediaFiles)
             .ToListAsync(cancellationToken);
 
-        if (movies.Any())
+        if (movies.Count != 0)
         {
             var paths = movies.SelectMany(e => e.MediaVersions.Map(mv => mv.MediaFiles))
                 .Flatten()

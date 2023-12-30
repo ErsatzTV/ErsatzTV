@@ -13,20 +13,9 @@ public class VaapiHardwareAccelerationOption : GlobalOption
         _decodeCapability = decodeCapability;
     }
 
-    public override IList<string> GlobalOptions
-    {
-        get
-        {
-            var result = new List<string> { "-vaapi_device", _vaapiDevice };
-
-            if (_decodeCapability == FFmpegCapability.Hardware)
-            {
-                result.InsertRange(0, new[] { "-hwaccel", "vaapi" });
-            }
-
-            return result;
-        }
-    }
+    public override string[] GlobalOptions => _decodeCapability == FFmpegCapability.Hardware
+        ? new[] { "-hwaccel", "vaapi", "-vaapi_device", _vaapiDevice }
+        : new[] { "-vaapi_device", _vaapiDevice };
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

@@ -6,7 +6,7 @@ public static class MultiCollectionGrouper
     {
         var result = new List<GroupedMediaItem>();
 
-        foreach (CollectionWithItems collection in collections.Where(collection => collection.MediaItems.Any()))
+        foreach (CollectionWithItems collection in collections.Where(collection => collection.MediaItems.Count != 0))
         {
             if (collection.ScheduleAsGroup)
             {

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
@@ -93,6 +94,7 @@ public class Startup
 
     private IWebHostEnvironment CurrentEnvironment { get; }
 
+    [SuppressMessage("Performance", "CA1861:Avoid constant arrays as arguments")]
     public void ConfigureServices(IServiceCollection services)
     {
         BugsnagConfiguration bugsnagConfig = Configuration.GetSection("Bugsnag").Get<BugsnagConfiguration>();

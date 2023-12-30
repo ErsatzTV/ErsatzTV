@@ -15,7 +15,7 @@ public class QsvHardwareAccelerationOption : GlobalOption
 
     public QsvHardwareAccelerationOption(Option<string> qsvDevice) => _qsvDevice = qsvDevice;
 
-    public override IList<string> GlobalOptions
+    public override string[] GlobalOptions
     {
         get
         {
@@ -42,7 +42,7 @@ public class QsvHardwareAccelerationOption : GlobalOption
 
             result.AddRange(initDevices);
 
-            return result;
+            return result.ToArray();
         }
     }
 

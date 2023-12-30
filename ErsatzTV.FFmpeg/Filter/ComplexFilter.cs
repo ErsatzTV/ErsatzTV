@@ -9,7 +9,6 @@ public class ComplexFilter : IPipelineStep
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
-    private readonly List<string> _outputOptions;
     private readonly PipelineContext _pipelineContext;
 
     public ComplexFilter(
@@ -27,24 +26,22 @@ public class ComplexFilter : IPipelineStep
         _pipelineContext = pipelineContext;
         FilterChain = filterChain;
 
-        _outputOptions = new List<string>();
-
         FilterOptions = Arguments();
     }
 
     // for testing
     public FilterChain FilterChain { get; }
 
-    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
-    public IList<string> FilterOptions { get; }
+    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+    public string[] GlobalOptions => Array.Empty<string>();
+    public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
+    public string[] FilterOptions { get; }
 
-    public IList<string> OutputOptions => _outputOptions;
+    public string[] OutputOptions => Array.Empty<string>();
 
     public FrameState NextState(FrameState currentState) => currentState;
 
-    private List<string> Arguments()
+    private string[] Arguments()
     {
         var audioLabel = "0:a";
         var videoLabel = "0:v";
@@ -162,7 +159,7 @@ public class ComplexFilter : IPipelineStep
         }
 
         // overlay subtitle
-        if (!string.IsNullOrWhiteSpace(subtitleLabel) && FilterChain.SubtitleOverlayFilterSteps.Any())
+        if (!string.IsNullOrWhiteSpace(subtitleLabel) && FilterChain.SubtitleOverlayFilterSteps.Count != 0)
         {
             subtitleOverlayFilterComplex += $"{ProperLabel(videoLabel)}{ProperLabel(subtitleLabel)}";
             subtitleOverlayFilterComplex += string.Join(
@@ -174,7 +171,7 @@ public class ComplexFilter : IPipelineStep
         }
 
         // overlay watermark
-        if (!string.IsNullOrWhiteSpace(watermarkLabel) && FilterChain.WatermarkOverlayFilterSteps.Any())
+        if (!string.IsNullOrWhiteSpace(watermarkLabel) && FilterChain.WatermarkOverlayFilterSteps.Count != 0)
         {
             watermarkOverlayFilterComplex += $"{ProperLabel(videoLabel)}{ProperLabel(watermarkLabel)}";
             watermarkOverlayFilterComplex += string.Join(
@@ -186,7 +183,7 @@ public class ComplexFilter : IPipelineStep
         }
 
         // pixel format
-        if (FilterChain.PixelFormatFilterSteps.Any())
+        if (FilterChain.PixelFormatFilterSteps.Count != 0)
         {
             pixelFormatFilterComplex += $"{ProperLabel(videoLabel)}";
             pixelFormatFilterComplex += string.Join(
@@ -253,7 +250,7 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
-        return result;
+        return result.ToArray();
     }
 
     private static string ProperLabel(string label) =>

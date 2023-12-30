@@ -178,7 +178,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         return GroupedMediaItem.FlattenGroups(copy, _mediaItemCount);
     }
 
-    private static IList<MediaItem> Shuffle(IEnumerable<MediaItem> mediaItems, CloneableRandom random)
+    private static MediaItem[] Shuffle(IEnumerable<MediaItem> mediaItems, CloneableRandom random)
     {
         MediaItem[] copy = mediaItems.ToArray();
 

@@ -2,5 +2,5 @@
 
 public class HideBannerOption : GlobalOption
 {
-    public override IList<string> GlobalOptions => new List<string> { "-hide_banner" };
+    public override string[] GlobalOptions => new[] { "-hide_banner" };
 }

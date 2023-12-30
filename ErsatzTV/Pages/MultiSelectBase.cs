@@ -39,7 +39,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         SelectedItems.Contains(card);
 
     protected bool IsSelectMode() =>
-        SelectedItems.Any();
+        SelectedItems.Count != 0;
 
     protected string SelectionLabel() =>
         $"{SelectedItems.Count} {(SelectedItems.Count == 1 ? "Item" : "Items")} Selected";
@@ -57,11 +57,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         MediaCardViewModel card,
         MouseEventArgs e)
     {
-        if (SelectedItems.Contains(card))
-        {
-            SelectedItems.Remove(card);
-        }
-        else
+        if (!SelectedItems.Remove(card))
         {
             if (e.ShiftKey && _recentlySelected.IsSome)
             {

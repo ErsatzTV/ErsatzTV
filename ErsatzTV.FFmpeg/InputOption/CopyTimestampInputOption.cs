@@ -4,13 +4,13 @@ namespace ErsatzTV.FFmpeg.InputOption;
 
 public class CopyTimestampInputOption : IInputOption
 {
-    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public IList<string> GlobalOptions => Array.Empty<string>();
+    public EnvironmentVariable[] EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+    public string[] GlobalOptions => Array.Empty<string>();
 
-    public IList<string> InputOptions(InputFile inputFile) => new List<string> { "-copyts" };
+    public string[] InputOptions(InputFile inputFile) => new[] { "-copyts" };
 
-    public IList<string> FilterOptions => Array.Empty<string>();
-    public IList<string> OutputOptions => Array.Empty<string>();
+    public string[] FilterOptions => Array.Empty<string>();
+    public string[] OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;
 
     public bool AppliesTo(AudioInputFile audioInputFile) => false;

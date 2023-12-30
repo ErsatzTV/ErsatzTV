@@ -14,6 +14,8 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 
 public class LocalMetadataProvider : ILocalMetadataProvider
 {
+    private static readonly char[] GenreSeparators = { '/', '|', ';', '\\' };
+
     private readonly IArtistNfoReader _artistNfoReader;
     private readonly IArtistRepository _artistRepository;
     private readonly IClient _client;
@@ -1474,8 +1476,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
     private static IEnumerable<string> SplitGenres(string genre)
     {
-        char[] delimiters = new[] { '/', '|', ';', '\\' }
-            .Filter(d => genre.IndexOf(d, StringComparison.OrdinalIgnoreCase) != -1)
+        char[] delimiters = GenreSeparators.Filter(s => genre.Contains(s, StringComparison.OrdinalIgnoreCase))
             .DefaultIfEmpty(',')
             .ToArray();
 

@@ -8,7 +8,7 @@ public class IntCollectionValueConverter : ValueConverter<ICollection<int>, stri
         i => string.Join(",", i),
         s => string.IsNullOrWhiteSpace(s)
             ? Array.Empty<int>()
-            : s.Split(new[] { ',' }).Select(int.Parse).ToArray())
+            : s.Split(',', StringSplitOptions.None).Select(int.Parse).ToArray())
     {
     }
 }

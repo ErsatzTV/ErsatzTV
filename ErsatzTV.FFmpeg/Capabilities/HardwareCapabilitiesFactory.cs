@@ -18,9 +18,19 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 {
     private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
-    private const string VaapiCacheKeyFormat = "ffmpeg.hardware.vaapi.{0}.{1}";
-    private const string QsvCacheKeyFormat = "ffmpeg.hardware.qsv.{0}";
-    private const string FFmpegCapabilitiesCacheKeyFormat = "ffmpeg.{0}";
+    private static readonly CompositeFormat VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}");
+    private static readonly CompositeFormat QsvCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.{0}");
+    private static readonly CompositeFormat FFmpegCapabilitiesCacheKeyFormat = CompositeFormat.Parse("ffmpeg.{0}");
+
+    private static readonly string[] QsvArguments =
+    {
+        "-f", "lavfi",
+        "-i", "nullsrc",
+        "-t", "00:00:01",
+        "-c:v", "h264_qsv",
+        "-f", "null", "-"
+    };
+
     private readonly ILogger<HardwareCapabilitiesFactory> _logger;
 
     private readonly IMemoryCache _memoryCache;
@@ -118,21 +128,13 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
         return output;
     }
-    
+
     public async Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice)
     {
         var option = new QsvHardwareAccelerationOption(qsvDevice);
         var arguments = option.GlobalOptions.ToList();
 
-        arguments.AddRange(
-            new[]
-            {
-                "-f", "lavfi",
-                "-i", "nullsrc",
-                "-t", "00:00:01",
-                "-c:v", "h264_qsv",
-                "-f", "null", "-"
-            });
+        arguments.AddRange(QsvArguments);
         
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
@@ -200,7 +202,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             .Bind(l => parseLine(l))
             .ToImmutableHashSet();
     }
-    
+
     private async Task<IReadOnlySet<string>> GetFFmpegOptions(string ffmpegPath)
     {
         var cacheKey = string.Format(CultureInfo.InvariantCulture, FFmpegCapabilitiesCacheKeyFormat, "options");
@@ -246,7 +248,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         Match match = Regex.Match(input, PATTERN);
         return match.Success ? match.Groups[1].Value : Option<string>.None;
     }
-    
+
     private async Task<IHardwareCapabilities> GetVaapiCapabilities(
         Option<string> vaapiDriver,
         Option<string> vaapiDevice)
@@ -286,7 +288,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
             }
 
-            if (profileEntrypoints?.Any() ?? false)
+            if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
             {
                 _logger.LogInformation(
                     "Detected {Count} VAAPI profile entrypoints for using {Driver} {Device}",
@@ -352,7 +354,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                     profileEntrypoints = VaapiCapabilityParser.ParseFull(o);
                 }
 
-                if (profileEntrypoints?.Any() ?? false)
+                if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
                 {
                     _logger.LogInformation(
                         "Detected {Count} VAAPI profile entrypoints for using QSV device {Device}",

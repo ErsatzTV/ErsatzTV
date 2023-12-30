@@ -427,7 +427,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FrameState currentState,
         FrameState desiredState,
         string fontsFolder,
-        ICollection<IPipelineFilterStep> subtitleOverlayFilterSteps)
+        List<IPipelineFilterStep> subtitleOverlayFilterSteps)
     {
         foreach (SubtitleInputFile subtitle in subtitleInputFile)
         {
@@ -538,7 +538,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     {
         if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
-            IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
+            var padStep = new PadFilter(currentState, desiredState.PaddedSize);
             currentState = padStep.NextState(currentState);
             videoInputFile.FilterSteps.Add(padStep);
         }

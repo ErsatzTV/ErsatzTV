@@ -214,9 +214,9 @@ public class FFmpegComplexFilterBuilder
             videoFilterQueue.Add(subtitle);
         }
 
-        if (videoFilterQueue.Any() || !string.IsNullOrWhiteSpace(watermarkOverlay))
+        if (videoFilterQueue.Count != 0 || !string.IsNullOrWhiteSpace(watermarkOverlay))
         {
-            if (videoFilterQueue.Any())
+            if (videoFilterQueue.Count != 0)
             {
                 complexFilter.Append(CultureInfo.InvariantCulture, $"[{videoLabel}]");
                 var filters = string.Join(",", videoFilterQueue);
@@ -225,7 +225,7 @@ public class FFmpegComplexFilterBuilder
 
             if (!string.IsNullOrWhiteSpace(watermarkOverlay))
             {
-                if (videoFilterQueue.Any())
+                if (videoFilterQueue.Count != 0)
                 {
                     complexFilter.Append("[vt];");
                 }
@@ -244,7 +244,7 @@ public class FFmpegComplexFilterBuilder
                 }
 
                 complexFilter.Append(
-                    videoFilterQueue.Any()
+                    videoFilterQueue.Count != 0
                         ? $"[vt]{watermarkLabel}{watermarkOverlay}"
                         : $"[{videoLabel}]{watermarkLabel}{watermarkOverlay}");
             }

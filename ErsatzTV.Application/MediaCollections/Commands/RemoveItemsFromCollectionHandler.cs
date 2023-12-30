@@ -46,7 +46,7 @@ public class RemoveItemsFromCollectionHandler : IRequestHandler<RemoveItemsFromC
 
         itemsToRemove.ForEach(m => collection.MediaItems.Remove(m));
 
-        if (itemsToRemove.Any() && await dbContext.SaveChangesAsync() > 0)
+        if (itemsToRemove.Count != 0 && await dbContext.SaveChangesAsync() > 0)
         {
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingCollection(collection.Id))

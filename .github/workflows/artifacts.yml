@@ -49,7 +49,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 8.0.x
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -83,8 +83,8 @@ jobs:
         shell: bash
         run: |
           sed -i '' '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=false -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
       - name: Bundle
         shell: bash
@@ -175,7 +175,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 8.0.x
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -216,8 +216,8 @@ jobs:
 
           # Build everything
           sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net7.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then

@@ -813,13 +813,9 @@ public class ElasticSearchIndex : ISearchIndex
             if (split.Length == 2 && !string.IsNullOrWhiteSpace(split[1]))
             {
                 string key = split[0];
-                string value = split[1].ToLowerInvariant();
-                if (!result.ContainsKey(key))
-                {
-                    result.Add(key, new List<string>());
-                }
-
-                result[key].Add(value);
+                string v2 = split[1].ToLowerInvariant();
+                result.TryAdd(key, new List<string>());
+                result[key].Add(v2);
             }
         }
 

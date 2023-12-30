@@ -6,5 +6,5 @@ public class FileNameOutputOption : OutputOption
 
     public FileNameOutputOption(string outputFile) => _outputFile = outputFile;
 
-    public override IList<string> OutputOptions => new List<string> { _outputFile };
+    public override string[] OutputOptions => new[] { _outputFile };
 }

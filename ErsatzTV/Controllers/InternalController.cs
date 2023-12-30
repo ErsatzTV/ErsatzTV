@@ -74,7 +74,7 @@ public class InternalController : ControllerBase
                             }
 
                             var contentType = "video/mp2t";
-                            if (mode.ToLowerInvariant() == "hls-direct")
+                            if (mode.Equals("hls-direct", StringComparison.OrdinalIgnoreCase))
                             {
                                 contentType = "video/mp4";
                             }

@@ -12,11 +12,11 @@ public class EncoderMpeg2Vaapi : EncoderBase
 
     public override StreamKind Kind => StreamKind.Video;
 
-    public override IList<string> OutputOptions
+    public override string[] OutputOptions
     {
         get
         {
-            IList<string> result = base.OutputOptions;
+            var result = new List<string>(base.OutputOptions);
 
             if (_rateControlMode == RateControlMode.CQP)
             {
@@ -24,7 +24,7 @@ public class EncoderMpeg2Vaapi : EncoderBase
                 result.Add("1");
             }
 
-            return result;
+            return result.ToArray();
         }
     }
 

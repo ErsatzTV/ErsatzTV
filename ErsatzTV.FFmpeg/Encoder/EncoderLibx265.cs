@@ -12,7 +12,7 @@ public class EncoderLibx265 : EncoderBase
     public override string Filter => new HardwareDownloadFilter(_currentState).Filter;
 
     // TODO: is tag:v needed for mpegts?
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
         { "-c:v", Name, "-tag:v", "hvc1", "-x265-params", "log-level=error" };
 
     public override string Name => "libx265";

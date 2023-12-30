@@ -6,7 +6,7 @@ public class AudioBitrateOutputOption : OutputOption
 
     public AudioBitrateOutputOption(int bitrate) => _bitrate = bitrate;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
     {
         "-b:a", $"{_bitrate}k",
         "-maxrate:a", $"{_bitrate}k"

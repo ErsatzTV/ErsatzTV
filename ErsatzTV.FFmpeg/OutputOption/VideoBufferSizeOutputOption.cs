@@ -6,7 +6,7 @@ public class VideoBufferSizeOutputOption : OutputOption
 
     public VideoBufferSizeOutputOption(int decoderBufferSize) => _decoderBufferSize = decoderBufferSize;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
     {
         "-bufsize:v", $"{_decoderBufferSize}k"
     };

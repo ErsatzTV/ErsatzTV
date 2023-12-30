@@ -2,5 +2,5 @@
 
 public class NoDemuxDecodeDelayOutputOption : OutputOption
 {
-    public override IList<string> OutputOptions => new List<string> { "-muxdelay", "0", "-muxpreload", "0" };
+    public override string[] OutputOptions => new[] { "-muxdelay", "0", "-muxpreload", "0" };
 }

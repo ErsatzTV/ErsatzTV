@@ -104,7 +104,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 
         dbContext.Entry(plexMediaSource).State = EntityState.Modified;
 
-        if (toAdd.Any() || toDelete.Any())
+        if (toAdd.Count != 0 || toDelete.Count != 0)
         {
             plexMediaSource.Connections.Clear();
             await dbContext.Entry(plexMediaSource).Collection(pms => pms.Connections).LoadAsync();
@@ -401,7 +401,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         return await maybeExisting.Match(
             async jellyfinMediaSource =>
             {
-                if (!jellyfinMediaSource.Connections.Any())
+                if (jellyfinMediaSource.Connections.Count == 0)
                 {
                     jellyfinMediaSource.Connections.Add(new JellyfinConnection { Address = address });
                 }
@@ -637,7 +637,7 @@ public class MediaSourceRepository : IMediaSourceRepository
         return await maybeExisting.Match(
             async embyMediaSource =>
             {
-                if (!embyMediaSource.Connections.Any())
+                if (embyMediaSource.Connections.Count == 0)
                 {
                     embyMediaSource.Connections.Add(new EmbyConnection { Address = address });
                 }

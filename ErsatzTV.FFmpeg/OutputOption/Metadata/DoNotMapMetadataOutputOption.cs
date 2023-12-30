@@ -2,5 +2,5 @@
 
 public class DoNotMapMetadataOutputOption : OutputOption
 {
-    public override IList<string> OutputOptions => new List<string> { "-map_metadata", "-1" };
+    public override string[] OutputOptions => new[] { "-map_metadata", "-1" };
 }

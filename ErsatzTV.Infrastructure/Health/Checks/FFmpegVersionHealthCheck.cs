@@ -11,6 +11,9 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
     private const string BundledVersion = "6.1";
     private const string BundledVersionVaapi = "6.1";
     private const string WindowsVersionPrefix = "n6.1";
+
+    private static readonly string[] FFmpegVersionArguments = { "-version" };
+
     private readonly IConfigElementRepository _configElementRepository;
 
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
@@ -94,7 +97,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
     private static async Task<Option<string>> GetVersion(string path, CancellationToken cancellationToken)
     {
-        Option<string> maybeLine = await GetProcessOutput(path, new[] { "-version" }, cancellationToken)
+        Option<string> maybeLine = await GetProcessOutput(path, FFmpegVersionArguments, cancellationToken)
             .Map(s => s.Split("\n").HeadOrNone().Map(h => h.Trim()));
         foreach (string line in maybeLine)
         {

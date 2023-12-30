@@ -31,7 +31,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
+        await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         await using var xml = XmlWriter.Create(
             ms,
             new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });

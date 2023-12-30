@@ -12,9 +12,9 @@ public abstract class CuvidDecoder : DecoderBase
             ? FrameDataLocation.Software
             : FrameDataLocation.Hardware;
 
-    public override IList<string> InputOptions(InputFile inputFile)
+    public override string[] InputOptions(InputFile inputFile)
     {
-        IList<string> result = base.InputOptions(inputFile);
+        var result = new List<string>(base.InputOptions(inputFile));
 
         if (HardwareAccelerationMode != HardwareAccelerationMode.None)
         {
@@ -27,6 +27,6 @@ public abstract class CuvidDecoder : DecoderBase
             result.Add(InputBitDepth(inputFile) == 10 ? "p010le" : "nv12");
         }
 
-        return result;
+        return result.ToArray();
     }
 }

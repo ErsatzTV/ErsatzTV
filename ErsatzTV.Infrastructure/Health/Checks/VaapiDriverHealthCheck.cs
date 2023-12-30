@@ -33,7 +33,7 @@ public class VaapiDriverHealthCheck : BaseHealthCheck, IVaapiDriverHealthCheck
             .Filter(p => p.VaapiDriver == VaapiDriver.Default)
             .ToList();
 
-        return defaultProfiles.Any()
+        return defaultProfiles.Count != 0
             ? InfoResult(
                 $"{defaultProfiles.Count} FFmpeg Profile{(defaultProfiles.Count > 1 ? "s are" : " is")} set to use Default VAAPI Driver; selecting iHD (Gen 8+) or i965 (up to Gen 9) may offer better performance with Intel iGPU")
             : OkResult();

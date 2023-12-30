@@ -6,7 +6,7 @@ public class VideoBitrateOutputOption : OutputOption
 
     public VideoBitrateOutputOption(int bitrate) => _bitrate = bitrate;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
     {
         "-b:v", $"{_bitrate}k",
         "-maxrate:v", $"{_bitrate}k"

@@ -8,6 +8,6 @@ public class ThreadCountOption : GlobalOption
 
     public ThreadCountOption(int threadCount) => _threadCount = threadCount;
 
-    public override IList<string> GlobalOptions => new List<string>
+    public override string[] GlobalOptions => new[]
         { "-threads", _threadCount.ToString(CultureInfo.InvariantCulture) };
 }

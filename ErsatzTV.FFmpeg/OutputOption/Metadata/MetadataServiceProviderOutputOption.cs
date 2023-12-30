@@ -6,6 +6,6 @@ public class MetadataServiceProviderOutputOption : OutputOption
 
     public MetadataServiceProviderOutputOption(string serviceProvider) => _serviceProvider = serviceProvider;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
         { "-metadata", $"service_provider=\"{_serviceProvider}\"" };
 }

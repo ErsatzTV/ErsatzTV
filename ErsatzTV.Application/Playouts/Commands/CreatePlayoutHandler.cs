@@ -79,7 +79,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
     private static Validation<BaseError, ProgramSchedule> ProgramScheduleMustHaveItems(
         ProgramSchedule programSchedule) =>
         Optional(programSchedule)
-            .Filter(ps => ps.Items.Any())
+            .Filter(ps => ps.Items.Count != 0)
             .ToValidation<BaseError>("Program schedule must have items");
 
     private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(

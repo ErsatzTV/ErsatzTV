@@ -119,12 +119,12 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
         int discontinuitySequence,
         int maxSegments)
     {
-        if (items.Any() && items[0] is PlaylistDiscontinuity)
+        if (items.Count != 0 && items[0] is PlaylistDiscontinuity)
         {
             discontinuitySequence++;
         }
 
-        while (items.Any() && items[0] is PlaylistDiscontinuity)
+        while (items.Count != 0 && items[0] is PlaylistDiscontinuity)
         {
             items.RemoveAt(0);
         }
@@ -148,7 +148,7 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
             .IfNone(0);
 
         // count all discontinuities that were filtered out
-        if (allSegments.Any())
+        if (allSegments.Count != 0)
         {
             int index = items.IndexOf(allSegments.Head());
             int count = items.Take(index + 1).OfType<PlaylistDiscontinuity>().Count();

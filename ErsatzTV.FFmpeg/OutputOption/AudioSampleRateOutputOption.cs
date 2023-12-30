@@ -6,5 +6,5 @@ public class AudioSampleRateOutputOption : OutputOption
 
     public AudioSampleRateOutputOption(int sampleRate) => _sampleRate = sampleRate;
 
-    public override IList<string> OutputOptions => new List<string> { "-ar", $"{_sampleRate}k" };
+    public override string[] OutputOptions => new[] { "-ar", $"{_sampleRate}k" };
 }

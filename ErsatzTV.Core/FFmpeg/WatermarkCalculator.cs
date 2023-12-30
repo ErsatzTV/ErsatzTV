@@ -59,7 +59,7 @@ public static class WatermarkCalculator
         // trim points that are past the end
         result.RemoveAll(fp => fp.Time >= outPoint);
 
-        if (result.Any())
+        if (result.Count != 0)
         {
             for (var i = 0; i < result.Count; i++)
             {

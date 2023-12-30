@@ -88,7 +88,7 @@ public class
                 connectionParameters.PlexMediaSource.Id,
                 toAdd,
                 toRemove);
-            if (ids.Any())
+            if (ids.Count != 0)
             {
                 await _searchIndex.RemoveItems(ids);
                 _searchIndex.Commit();

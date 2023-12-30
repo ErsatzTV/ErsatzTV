@@ -106,7 +106,7 @@ public class PlexService : BackgroundService
         return result.Match(
             sources =>
             {
-                if (sources.Any())
+                if (sources.Count != 0)
                 {
                     _logger.LogInformation("Successfully synchronized plex media sources");
                 }

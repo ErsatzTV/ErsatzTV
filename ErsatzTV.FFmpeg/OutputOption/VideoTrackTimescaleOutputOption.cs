@@ -8,7 +8,7 @@ public class VideoTrackTimescaleOutputOption : OutputOption
 
     public VideoTrackTimescaleOutputOption(int timeScale) => _timeScale = timeScale;
 
-    public override IList<string> OutputOptions => new List<string>
+    public override string[] OutputOptions => new[]
         { "-video_track_timescale", _timeScale.ToString(CultureInfo.InvariantCulture) };
 
     public override FrameState NextState(FrameState currentState) =>
