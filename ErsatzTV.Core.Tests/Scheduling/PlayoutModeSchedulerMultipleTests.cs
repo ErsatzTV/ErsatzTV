@@ -44,14 +44,14 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionOne.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -119,14 +119,14 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionOne.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),
@@ -201,15 +201,15 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionTwo.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
@@ -300,15 +300,15 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionTwo.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionTwo.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionTwo.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.FallbackFiller, enumerator2),
@@ -389,15 +389,15 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionTwo.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
@@ -498,16 +498,16 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionThree.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionThree.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionThree.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
@@ -620,16 +620,16 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             collectionThree.MediaItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems },
-            { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionThree.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems.Count },
+            { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionThree.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(
@@ -708,14 +708,14 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             sortedScheduleItems,
             new CollectionEnumeratorState());
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>
+        var collectionItemCount = new Dictionary<CollectionKey, int>
         {
-            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems }
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count }
         }.ToMap();
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
-        var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, Substitute.For<ILogger>());
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
             CollectionEnumerators(scheduleItem, enumerator),

@@ -406,7 +406,27 @@ public class PlayoutBuilder : IPlayoutBuilder
             : new OrderedScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState);
 
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
-
+        foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
+        {
+            // use configured playback order for primary collection, shuffle for filler
+            Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
+                .FirstOrDefault(item => CollectionKey.ForScheduleItem(item) == collectionKey);
+            PlaybackOrder playbackOrder = maybeScheduleItem
+                .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
+            IMediaCollectionEnumerator enumerator =
+                await GetMediaCollectionEnumerator(
+                    playout,
+                    activeSchedule,
+                    collectionKey,
+                    mediaItems,
+                    playbackOrder,
+                    randomStartPoint,
+                    cancellationToken);
+            collectionEnumerators.Add(collectionKey, enumerator);
+        }
+        
+        var collectionItemCount = collectionMediaItems.Map((k, v) => (k, v.Count)).Values.ToDictionary();
+        
         var scheduleItemsFillGroupEnumerators = new Dictionary<int, IScheduleItemsEnumerator>();
         foreach (ProgramScheduleItem scheduleItem in sortedScheduleItems.Where(si => si.FillWithGroupMode is not FillWithGroupMode.None))
         {
@@ -453,6 +473,9 @@ public class PlayoutBuilder : IPlayoutBuilder
                     cancellationToken);
 
                 collectionEnumerators.Add(key, enumerator);
+                
+                // this makes multiple (0) work - since it needs the number of items in the collection
+                collectionItemCount.Add(key, fakeCollection.MediaItems.Count);
             }
 
             CollectionEnumeratorState enumeratorState =
@@ -475,25 +498,6 @@ public class PlayoutBuilder : IPlayoutBuilder
                     break;
                 }
             }
-        }
-        
-        foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
-        {
-            // use configured playback order for primary collection, shuffle for filler
-            Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
-                .FirstOrDefault(item => CollectionKey.ForScheduleItem(item) == collectionKey);
-            PlaybackOrder playbackOrder = maybeScheduleItem
-                .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
-            IMediaCollectionEnumerator enumerator =
-                await GetMediaCollectionEnumerator(
-                    playout,
-                    activeSchedule,
-                    collectionKey,
-                    mediaItems,
-                    playbackOrder,
-                    randomStartPoint,
-                    cancellationToken);
-            collectionEnumerators.Add(collectionKey, enumerator);
         }
 
         // find start anchor
@@ -537,7 +541,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             currentTime);
 
         var schedulerOne = new PlayoutModeSchedulerOne(_logger);
-        var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionMediaItems, _logger);
+        var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionItemCount.ToMap(), _logger);
         var schedulerDuration = new PlayoutModeSchedulerDuration(_logger);
         var schedulerFlood = new PlayoutModeSchedulerFlood(_logger);
 
