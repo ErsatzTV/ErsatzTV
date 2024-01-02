@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Diagnostics.CodeAnalysis;
+using Bugsnag;
 using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -188,6 +189,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                         result.Add(
                             new CollectionWithItems(
                                 multiCollectionItem.CollectionId,
+                                multiCollectionItem.CollectionId,
                                 sortedItems,
                                 multiCollectionItem.ScheduleAsGroup,
                                 multiCollectionItem.PlaybackOrder,
@@ -198,6 +200,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 {
                     result.Add(
                         new CollectionWithItems(
+                            multiCollectionItem.CollectionId,
                             multiCollectionItem.CollectionId,
                             items,
                             multiCollectionItem.ScheduleAsGroup,
@@ -212,6 +215,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                 result.Add(
                     new CollectionWithItems(
+                        multiCollectionSmartItem.SmartCollectionId,
                         multiCollectionSmartItem.SmartCollectionId,
                         items,
                         multiCollectionSmartItem.ScheduleAsGroup,
@@ -326,7 +330,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         };
     }
 
-    private static List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items)
+    [SuppressMessage("Performance", "CA1822:Mark members as static")]
+    public List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items)
     {
         int id = -1;
         var result = new List<CollectionWithItems>();
@@ -346,11 +351,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             showCollections[episode.Season.ShowId] = list;
         }
 
-        foreach ((int _, List<MediaItem> list) in showCollections)
+        foreach ((int showId, List<MediaItem> list) in showCollections)
         {
             result.Add(
                 new CollectionWithItems(
-                    id--,
+                    showId,
+                    0,
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -372,11 +378,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             artistCollections[musicVideo.ArtistId] = list;
         }
 
-        foreach ((int _, List<MediaItem> list) in artistCollections)
+        foreach ((int artistId, List<MediaItem> list) in artistCollections)
         {
             result.Add(
                 new CollectionWithItems(
-                    id--,
+                    0,
+                    artistId,
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -415,23 +422,29 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         {
             result.Add(
                 new CollectionWithItems(
-                    id--,
+                    id,
+                    id,
                     list,
                     true,
                     PlaybackOrder.Chronological,
                     false));
+
+            id--;
         }
 
         result.Add(
             new CollectionWithItems(
-                id--,
+                id,
+                id,
                 items.OfType<Movie>().Cast<MediaItem>().ToList(),
                 true,
                 PlaybackOrder.Chronological,
                 false));
+        id--;
 
         result.Add(
             new CollectionWithItems(
+                id,
                 id,
                 items.OfType<OtherVideo>().Cast<MediaItem>().ToList(),
                 true,

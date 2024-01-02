@@ -14,6 +14,7 @@ public record ReplaceProgramScheduleItem(
     int? SmartCollectionId,
     int? MediaItemId,
     PlaybackOrder PlaybackOrder,
+    FillWithGroupMode FillWithGroupMode,
     int? MultipleCount,
     TimeSpan? PlayoutDuration,
     TailMode TailMode,

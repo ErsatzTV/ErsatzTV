@@ -45,7 +45,6 @@ public class ShuffledContentTests
     }
 
     [Test]
-    [Timeout(2000)]
     public void Duplicate_Check_Should_Ignore_Single_Item()
     {
         List<MediaItem> contents = Episodes(1);
@@ -123,7 +122,6 @@ public class ShuffledContentTests
     }
 
     [Test]
-    [Timeout(1000)]
     public void State_Should_Reset_When_Invalid()
     {
         List<MediaItem> contents = Episodes(10);

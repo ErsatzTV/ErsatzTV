@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
@@ -258,6 +259,8 @@ public class Startup
                         .AllowAnyHeader();
                 }));
 
+        services.AddLocalization();
+
         services.AddControllers(
                 options =>
                 {
@@ -489,6 +492,16 @@ public class Startup
 
         // app.UseHttpLogging();
         // app.UseSerilogRequestLogging();
+
+        app.UseRequestLocalization(
+            options =>
+            {
+                CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
+                string[] supportedCultures = cinfo.Select(t => t.Name).Distinct().ToArray();
+                options.AddSupportedCultures(supportedCultures)
+                    .AddSupportedUICultures(supportedCultures)
+                    .SetDefaultCulture("en-US");
+            });
 
         app.UseStaticFiles();
 

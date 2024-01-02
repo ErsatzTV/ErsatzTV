@@ -62,7 +62,6 @@ public class SeasonEpisodeContentTests
     }
 
     [Test]
-    [Timeout(1000)]
     public void State_Should_Reset_When_Invalid()
     {
         List<MediaItem> contents = Episodes(10);

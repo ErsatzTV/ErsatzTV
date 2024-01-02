@@ -241,7 +241,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, FillWithGroupMode.None, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"schedules/{schedule.Id}/items");
         }
     }

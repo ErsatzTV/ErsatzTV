@@ -29,7 +29,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, ps => PersistItems(dbContext, request, ps));
+        return await validation.Apply(ps => PersistItems(dbContext, request, ps));
     }
 
     private async Task<IEnumerable<ProgramScheduleItemViewModel>> PersistItems(

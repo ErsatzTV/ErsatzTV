@@ -1536,6 +1536,27 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("PlayoutProgramScheduleAnchor", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutScheduleItemFillGroupIndex", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlayoutId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProgramScheduleItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayoutId");
+
+                    b.HasIndex("ProgramScheduleItemId");
+
+                    b.ToTable("PlayoutScheduleItemFillGroupIndex", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexCollection", b =>
                 {
                     b.Property<int>("Id")
@@ -1678,6 +1699,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("FallbackFillerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FillWithGroupMode")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("GuideMode")
@@ -3439,6 +3463,46 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("SmartCollection");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlayoutScheduleItemFillGroupIndex", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
+                        .WithMany("FillGroupIndices")
+                        .HasForeignKey("PlayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.ProgramScheduleItem", "ProgramScheduleItem")
+                        .WithMany()
+                        .HasForeignKey("ProgramScheduleItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                        {
+                            b1.Property<int>("PlayoutScheduleItemFillGroupIndexId")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Index")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Seed")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("PlayoutScheduleItemFillGroupIndexId");
+
+                            b1.ToTable("FillGroupEnumeratorState", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PlayoutScheduleItemFillGroupIndexId");
+                        });
+
+                    b.Navigation("EnumeratorState");
+
+                    b.Navigation("Playout");
+
+                    b.Navigation("ProgramScheduleItem");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexConnection", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.PlexMediaSource", "PlexMediaSource")
@@ -4276,6 +4340,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
                 {
+                    b.Navigation("FillGroupIndices");
+
                     b.Navigation("Items");
 
                     b.Navigation("ProgramScheduleAlternates");

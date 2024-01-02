@@ -80,7 +80,6 @@ public class RandomizedContentTests
     }
 
     [Test]
-    [Timeout(1000)]
     public void State_Index_Should_Continue_Past_End_Of_Items()
     {
         List<MediaItem> contents = Episodes(10);

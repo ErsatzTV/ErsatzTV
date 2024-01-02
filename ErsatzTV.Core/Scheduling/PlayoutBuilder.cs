@@ -1,9 +1,11 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Reflection;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Map = LanguageExt.Map;
 
 namespace ErsatzTV.Core.Scheduling;
@@ -402,7 +404,79 @@ public class PlayoutBuilder : IPlayoutBuilder
         IScheduleItemsEnumerator scheduleItemsEnumerator = activeSchedule.ShuffleScheduleItems
             ? new ShuffledScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState)
             : new OrderedScheduleItemsEnumerator(activeSchedule.Items, scheduleItemsEnumeratorState);
+
         var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+
+        var scheduleItemsFillGroupEnumerators = new Dictionary<int, IScheduleItemsEnumerator>();
+        foreach (ProgramScheduleItem scheduleItem in sortedScheduleItems.Where(si => si.FillWithGroupMode is not FillWithGroupMode.None))
+        {
+            var collectionKey = CollectionKey.ForScheduleItem(scheduleItem);
+            List<MediaItem> mediaItems = await MediaItemsForCollection.Collect(
+                _mediaCollectionRepository,
+                _televisionRepository,
+                _artistRepository,
+                collectionKey);
+            var fakeCollections = _mediaCollectionRepository.GroupIntoFakeCollections(mediaItems)
+                .Filter(c => c.ShowId > 0 || c.ArtistId > 0)
+                .ToList();
+            List<ProgramScheduleItem> fakeScheduleItems = [];
+            
+            // this will be used to clone a schedule item 
+            MethodInfo generic = typeof(JsonConvert).GetMethods()
+                .FirstOrDefault(
+                    x => x.Name.Equals("DeserializeObject", StringComparison.OrdinalIgnoreCase) && x.IsGenericMethod &&
+                         x.GetParameters().Length == 1)?.MakeGenericMethod(scheduleItem.GetType());
+            
+            foreach (CollectionWithItems fakeCollection in fakeCollections)
+            {
+                var key = new CollectionKey
+                {
+                    CollectionType = fakeCollection.ShowId > 0
+                        ? ProgramScheduleItemCollectionType.TelevisionShow
+                        : ProgramScheduleItemCollectionType.Artist,
+                    MediaItemId = fakeCollection.ShowId > 0 ? fakeCollection.ShowId : fakeCollection.ArtistId
+                };
+
+                string serialized = JsonConvert.SerializeObject(scheduleItem);
+                var copyScheduleItem = generic.Invoke(this, [serialized]) as ProgramScheduleItem;
+                copyScheduleItem.CollectionType = key.CollectionType;
+                copyScheduleItem.MediaItemId = key.MediaItemId;
+                fakeScheduleItems.Add(copyScheduleItem);
+
+                IMediaCollectionEnumerator enumerator = await GetMediaCollectionEnumerator(
+                    playout,
+                    activeSchedule,
+                    key,
+                    fakeCollection.MediaItems,
+                    scheduleItem.PlaybackOrder,
+                    randomStartPoint,
+                    cancellationToken);
+
+                collectionEnumerators.Add(key, enumerator);
+            }
+
+            CollectionEnumeratorState enumeratorState =
+                playout.FillGroupIndices.Any(fgi => fgi.ProgramScheduleItemId == scheduleItem.Id)
+                    ? playout.FillGroupIndices.Find(fgi => fgi.ProgramScheduleItemId == scheduleItem.Id).EnumeratorState
+                    : new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+
+            switch (scheduleItem.FillWithGroupMode)
+            {
+                case FillWithGroupMode.FillWithOrderedGroups:
+                {
+                    var enumerator = new OrderedScheduleItemsEnumerator(fakeScheduleItems, enumeratorState);
+                    scheduleItemsFillGroupEnumerators[scheduleItem.Id] = enumerator;
+                    break;
+                }
+                case FillWithGroupMode.FillWithShuffledGroups:
+                {
+                    var enumerator = new ShuffledScheduleItemsEnumerator(fakeScheduleItems, enumeratorState);
+                    scheduleItemsFillGroupEnumerators[scheduleItem.Id] = enumerator;
+                    break;
+                }
+            }
+        }
+        
         foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
         {
             // use configured playback order for primary collection, shuffle for filler
@@ -494,6 +568,12 @@ public class PlayoutBuilder : IPlayoutBuilder
 
             // get the schedule item out of the sorted list
             ProgramScheduleItem scheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
+            
+            // replace with the fake schedule item when filling with group
+            if (scheduleItem.FillWithGroupMode is not FillWithGroupMode.None)
+            {
+                scheduleItem = scheduleItemsFillGroupEnumerators[scheduleItem.Id].Current;
+            }
 
             ProgramScheduleItem nextScheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Peek(1);
 
@@ -531,6 +611,15 @@ public class PlayoutBuilder : IPlayoutBuilder
             };
 
             (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = result;
+
+            // if we completed a multiple/duration block, move to the next fill group
+            if (scheduleItem.FillWithGroupMode is not FillWithGroupMode.None)
+            {
+                if (nextState.MultipleRemaining.IsNone && nextState.DurationFinish.IsNone)
+                {
+                    scheduleItemsFillGroupEnumerators[scheduleItem.Id].MoveNext();
+                }
+            }
 
             foreach (PlayoutItem playoutItem in playoutItems)
             {
@@ -579,8 +668,43 @@ public class PlayoutBuilder : IPlayoutBuilder
             activeSchedule,
             collectionEnumerators,
             saveAnchorDate);
+        
+        // build fill group indices
+        playout.FillGroupIndices = BuildFillGroupIndices(playout, scheduleItemsFillGroupEnumerators);
 
         return playout;
+    }
+
+    private static List<PlayoutScheduleItemFillGroupIndex> BuildFillGroupIndices(
+        Playout playout,
+        Dictionary<int, IScheduleItemsEnumerator> scheduleItemsFillGroupEnumerators)
+    {
+        var result = playout.FillGroupIndices.ToList();
+        
+        foreach ((int programScheduleItemId, IScheduleItemsEnumerator enumerator) in scheduleItemsFillGroupEnumerators)
+        {
+            Option<PlayoutScheduleItemFillGroupIndex> maybeFgi = Optional(
+                result.FirstOrDefault(fgi => fgi.ProgramScheduleItemId == programScheduleItemId));
+
+            foreach (PlayoutScheduleItemFillGroupIndex fgi in maybeFgi)
+            {
+                fgi.EnumeratorState = enumerator.State;
+            }
+            
+            if (maybeFgi.IsNone)
+            {
+                var fgi = new PlayoutScheduleItemFillGroupIndex
+                {
+                    PlayoutId = playout.Id,
+                    ProgramScheduleItemId = programScheduleItemId,
+                    EnumeratorState = enumerator.State
+                };
+                
+                result.Add(fgi);
+            }
+        }
+
+        return result;
     }
 
     private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(Playout playout)
