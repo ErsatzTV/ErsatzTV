@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Respect browser's `Accept-Language` header for date time display
 - Add new schedule item setting `Fill With Group Mode`
   - This setting is only available when a `Collection`, `Multi-Collection` or `Smart Collection` is scheduled with `Duration` or `Multiple` playout modes
-  - For this setting, groups are *only* television shows and artists
-  - The options are:
+  - Use this setting when you want to schedule a collection containing groups (show or artists), with only videos from a single group (show or artist) being used in each rotation
+  - The options are `None`, `Ordered Groups` and `Shuffled Groups`:
     - `None`: no change to scheduling behavior - all groups (shows and artists) will be shuffled/ordered together
     - `Ordered Groups`: each time this item is scheduled, the entire `Duration` or `Multiple` will be filled with a single group, and the groups will rotate in a fixed order
     - `Shuffled Groups`: each time this item is scheduled, the entire `Duration` or `Multiple` will be filled with a single group, and the groups will rotate in a shuffled order
