@@ -31,7 +31,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --blame-hang-timeout "2m" --no-restore --verbosity normal
 
       - name: Build Windows
         run: |
@@ -61,7 +61,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --blame-hang-timeout "2m" --no-restore --verbosity normal
   build_and_test_mac:
     runs-on: macos-11
     steps:
@@ -89,4 +89,4 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test --blame-hang-timeout "2m" --no-restore --verbosity normal

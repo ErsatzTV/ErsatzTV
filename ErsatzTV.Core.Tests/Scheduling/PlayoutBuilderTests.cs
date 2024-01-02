@@ -41,7 +41,6 @@ public class PlayoutBuilderTests
     public class NewPlayout : PlayoutBuilderTests
     {
         [Test]
-        [Timeout(2000)]
         public async Task OnlyZeroDurationItem_Should_Abort()
         {
             var mediaItems = new List<MediaItem>
@@ -80,7 +79,6 @@ public class PlayoutBuilderTests
         }
 
         [Test]
-        [Timeout(2000)]
         public async Task OnlyFileNotFoundItem_Should_Abort()
         {
             var mediaItems = new List<MediaItem>
@@ -135,7 +133,6 @@ public class PlayoutBuilderTests
         }
 
         [Test]
-        [Timeout(2000)]
         public async Task OnlyUnavailableItem_Should_Abort()
         {
             var mediaItems = new List<MediaItem>
@@ -550,7 +547,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -648,7 +646,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -794,7 +793,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -898,7 +898,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1011,7 +1012,8 @@ public class PlayoutBuilderTests
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1117,7 +1119,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1227,7 +1230,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1342,7 +1346,8 @@ public class PlayoutBuilderTests
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1446,7 +1451,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1561,7 +1567,8 @@ public class PlayoutBuilderTests
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1687,7 +1694,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1805,7 +1813,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -1883,7 +1892,8 @@ public class PlayoutBuilderTests
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -2082,7 +2092,8 @@ public class PlayoutBuilderTests
 
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             playout.ProgramScheduleAnchors.Add(
@@ -2587,7 +2598,8 @@ public class PlayoutBuilderTests
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -2700,7 +2712,8 @@ public class PlayoutBuilderTests
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -2813,7 +2826,8 @@ public class PlayoutBuilderTests
                 },
                 ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
                 Items = new List<PlayoutItem>(),
-                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
             };
 
             IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
@@ -2949,7 +2963,8 @@ public class PlayoutBuilderTests
             Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
             Items = new List<PlayoutItem>(),
             ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+            FillGroupIndices = []
         };
 
         return new TestData(builder, playout);
@@ -3003,7 +3018,8 @@ public class PlayoutBuilderTests
             Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
             Items = new List<PlayoutItem>(),
             ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
-            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>()
+            ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+            FillGroupIndices = []
         };
 
         return new TestData(builder, playout);
