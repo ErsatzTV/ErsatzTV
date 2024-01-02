@@ -40,6 +40,7 @@ internal static class Mapper
                         _ => null
                     },
                     duration.PlaybackOrder,
+                    duration.FillWithGroupMode,
                     duration.PlayoutDuration,
                     duration.TailMode,
                     duration.DiscardToFillAttempts,
@@ -91,6 +92,7 @@ internal static class Mapper
                         _ => null
                     },
                     flood.PlaybackOrder,
+                    flood.FillWithGroupMode,
                     flood.CustomTitle,
                     flood.GuideMode,
                     flood.PreRollFiller != null
@@ -139,6 +141,7 @@ internal static class Mapper
                         _ => null
                     },
                     multiple.PlaybackOrder,
+                    multiple.FillWithGroupMode,
                     multiple.Count,
                     multiple.CustomTitle,
                     multiple.GuideMode,
@@ -188,6 +191,7 @@ internal static class Mapper
                         _ => null
                     },
                     one.PlaybackOrder,
+                    one.FillWithGroupMode,
                     one.CustomTitle,
                     one.GuideMode,
                     one.PreRollFiller != null

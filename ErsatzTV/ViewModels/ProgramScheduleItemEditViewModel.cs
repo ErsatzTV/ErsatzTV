@@ -29,6 +29,13 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         set => _startTime = value;
     }
 
+    public FillWithGroupMode FillWithGroupMode { get; set; }
+
+    public bool CanFillWithGroups =>
+        PlayoutMode is PlayoutMode.Multiple or PlayoutMode.Duration
+        && CollectionType is ProgramScheduleItemCollectionType.Collection
+            or ProgramScheduleItemCollectionType.MultiCollection or ProgramScheduleItemCollectionType.SmartCollection;
+    
     public PlayoutMode PlayoutMode { get; set; }
 
     public ProgramScheduleItemCollectionType CollectionType

@@ -18,6 +18,7 @@ public abstract record ProgramScheduleItemViewModel(
     SmartCollectionViewModel SmartCollection,
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
+    FillWithGroupMode FillWithGroupMode,
     string CustomTitle,
     GuideMode GuideMode,
     FillerPresetViewModel PreRollFiller,

@@ -12,6 +12,7 @@ public interface IProgramScheduleItemRequest
     int? MediaItemId { get; }
     PlayoutMode PlayoutMode { get; }
     PlaybackOrder PlaybackOrder { get; }
+    FillWithGroupMode FillWithGroupMode { get; }
     int? MultipleCount { get; }
     TimeSpan? PlayoutDuration { get; }
     TailMode TailMode { get; }

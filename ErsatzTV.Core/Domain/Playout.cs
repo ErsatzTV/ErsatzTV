@@ -12,5 +12,6 @@ public class Playout
     public List<PlayoutItem> Items { get; set; }
     public PlayoutAnchor Anchor { get; set; }
     public List<PlayoutProgramScheduleAnchor> ProgramScheduleAnchors { get; set; }
+    public List<PlayoutScheduleItemFillGroupIndex> FillGroupIndices { get; set; }
     public TimeSpan? DailyRebuildTime { get; set; }
 }

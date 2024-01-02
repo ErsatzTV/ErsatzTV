@@ -238,6 +238,11 @@
                                               Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
                             </MudItem>
                         </MudGrid>
+                        <MudSelect Class="mt-3" Label="Fill With Group Mode (Show or Artist)" @bind-Value="@_selectedItem.FillWithGroupMode" For="@(() => _selectedItem.FillWithGroupMode)" Disabled="@(_selectedItem.CanFillWithGroups == false)">
+                            <MudSelectItem Value="FillWithGroupMode.None">(none)</MudSelectItem>
+                            <MudSelectItem Value="FillWithGroupMode.FillWithOrderedGroups">Ordered Groups</MudSelectItem>
+                            <MudSelectItem Value="FillWithGroupMode.FillWithShuffledGroups">Shuffled Groups</MudSelectItem>
+                        </MudSelect>
                         <MudSelect Class="mt-3" Label="Tail Mode" @bind-Value="@_selectedItem.TailMode" For="@(() => _selectedItem.TailMode)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)">
                             <MudSelectItem Value="@TailMode.None">(none)</MudSelectItem>
                             <MudSelectItem Value="@TailMode.Offline">Offline</MudSelectItem>
@@ -483,6 +488,7 @@
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
+            FillWithGroupMode = item.FillWithGroupMode,
             CustomTitle = item.CustomTitle,
             GuideMode = item.GuideMode,
             PreRollFiller = item.PreRollFiller,
@@ -560,6 +566,7 @@
             item.SmartCollection?.Id,
             item.MediaItem?.MediaItemId,
             item.PlaybackOrder,
+            item.FillWithGroupMode,
             item.MultipleCount,
             item.PlayoutDuration,
             item.TailMode,

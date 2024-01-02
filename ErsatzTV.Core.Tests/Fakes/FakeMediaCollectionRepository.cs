@@ -34,4 +34,7 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
 
     public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();
     public Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection) => Option<string>.None.AsTask();
+
+    public List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items) =>
+        throw new NotSupportedException();
 }
