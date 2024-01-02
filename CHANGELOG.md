@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix error loading path replacements when using MySql
 - Fix tray icon shortcut to open logs folder on Windows
+- Unlock playout when playout build fails
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8

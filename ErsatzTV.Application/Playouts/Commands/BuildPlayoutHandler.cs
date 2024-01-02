@@ -70,8 +70,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
             }
 
-            _entityLocker.UnlockPlayout(playout.Id);
-
             Option<string> maybeChannelNumber = await dbContext.Connection
                 .QuerySingleOrDefaultAsync<string>(
                     @"select C.Number from Channel C
@@ -102,6 +100,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             _client.Notify(ex);
             return BaseError.New(
                 $"Unexpected error building playout for channel {playout.Channel.Name}: {ex.Message}");
+        }
+        finally
+        {
+            _entityLocker.UnlockPlayout(playout.Id);
         }
 
         return Unit.Default;

@@ -8,11 +8,13 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramScheduleItemMultiple>
 {
-    private readonly Map<CollectionKey, List<MediaItem>> _collectionMediaItems;
+    private readonly Map<CollectionKey, int> _collectionItemCount;
 
-    public PlayoutModeSchedulerMultiple(Map<CollectionKey, List<MediaItem>> collectionMediaItems, ILogger logger)
-        : base(logger) =>
-        _collectionMediaItems = collectionMediaItems;
+    public PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItemCount, ILogger logger)
+        : base(logger)
+    {
+        _collectionItemCount = collectionItemCount;
+    }
 
     public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
         PlayoutBuilderState playoutBuilderState,
@@ -40,7 +42,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
         {
             nextState = nextState with
             {
-                MultipleRemaining = _collectionMediaItems[CollectionKey.ForScheduleItem(scheduleItem)].Count
+                MultipleRemaining = _collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
             };
         }
 
