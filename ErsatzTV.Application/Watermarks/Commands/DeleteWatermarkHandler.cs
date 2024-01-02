@@ -24,7 +24,7 @@ public class DeleteWatermarkHandler : IRequestHandler<DeleteWatermark, Either<Ba
 
     private static async Task<Unit> DoDeletion(TvContext dbContext, ChannelWatermark watermark)
     {
-        await dbContext.Database.ExecuteSqlRawAsync(
+        await dbContext.Database.ExecuteSqlAsync(
             $"UPDATE Channel SET WatermarkId = NULL WHERE WatermarkId = {watermark.Id}");
         dbContext.ChannelWatermarks.Remove(watermark);
         await dbContext.SaveChangesAsync();
