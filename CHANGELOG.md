@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Respect browser's `Accept-Language` header for date time display
+
 ### Fixed
 - Fix error loading path replacements when using MySql
 - Fix tray icon shortcut to open logs folder on Windows
+
+### Changed
+- Upgrade from .NET 7 to .NET 8
 
 ## [0.8.4-beta] - 2023-12-02
 ### Fixed
