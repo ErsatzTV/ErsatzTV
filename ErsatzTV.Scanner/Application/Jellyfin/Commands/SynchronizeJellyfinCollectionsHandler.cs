@@ -9,10 +9,10 @@ namespace ErsatzTV.Scanner.Application.Jellyfin;
 public class
     SynchronizeJellyfinCollectionsHandler : IRequestHandler<SynchronizeJellyfinCollections, Either<BaseError, Unit>>
 {
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IJellyfinCollectionScanner _scanner;
-    private readonly IConfigElementRepository _configElementRepository;
 
     public SynchronizeJellyfinCollectionsHandler(
         IMediaSourceRepository mediaSourceRepository,
@@ -42,7 +42,7 @@ public class
         Task<Validation<BaseError, ConnectionParameters>> mediaSource = MediaSourceMustExist(request)
             .BindT(MediaSourceMustHaveActiveConnection)
             .BindT(MediaSourceMustHaveApiKey);
-        
+
         return (await mediaSource, await ValidateLibraryRefreshInterval())
             .Apply(
                 (connectionParameters, libraryRefreshInterval) => new RequestParameters(
@@ -51,7 +51,7 @@ public class
                     request.ForceScan,
                     libraryRefreshInterval));
     }
-    
+
     private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
         _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
             .FilterT(lri => lri is >= 0 and < 1_000_000)

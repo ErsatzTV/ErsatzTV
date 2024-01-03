@@ -18,15 +18,15 @@ namespace ErsatzTV.Application.Streaming;
 
 public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
+    private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly IMediator _mediator;
-    private readonly IClient _client;
+    private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<StartFFmpegSessionHandler> _logger;
+    private readonly IMediator _mediator;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<HlsSessionWorker> _sessionWorkerLogger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
@@ -40,7 +40,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         ILogger<HlsSessionWorker> sessionWorkerLogger,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IConfigElementRepository configElementRepository,
-        IHostApplicationLifetime hostApplicationLifetime, 
+        IHostApplicationLifetime hostApplicationLifetime,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _hlsPlaylistFilter = hlsPlaylistFilter;
@@ -73,7 +73,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         Option<int> targetFramerate = await _mediator.Send(
             new GetChannelFramerate(request.ChannelNumber),
             cancellationToken);
-        
+
         var worker = new HlsSessionWorker(
             _serviceScopeFactory,
             _client,
@@ -92,7 +92,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                     _ffmpegSegmenterService.SessionWorkers.TryRemove(
                         request.ChannelNumber,
                         out IHlsSessionWorker inactiveWorker);
-                    
+
                     inactiveWorker?.Dispose();
 
                     _workerChannel.TryWrite(new ReleaseMemory(false));

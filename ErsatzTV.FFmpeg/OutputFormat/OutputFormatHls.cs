@@ -6,8 +6,8 @@ public class OutputFormatHls : IPipelineStep
 {
     private readonly FrameState _desiredState;
     private readonly Option<string> _mediaFrameRate;
-    private readonly string _playlistPath;
     private readonly bool _oneSecondGop;
+    private readonly string _playlistPath;
     private readonly string _segmentTemplate;
 
     public OutputFormatHls(
@@ -37,7 +37,7 @@ public class OutputFormatHls : IPipelineStep
             int frameRate = _desiredState.FrameRate.IfNone(GetFrameRateFromMedia);
 
             int gop = _oneSecondGop ? frameRate : frameRate * SEGMENT_SECONDS;
-            
+
             return new[]
             {
                 "-g", $"{gop}",

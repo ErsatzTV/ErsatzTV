@@ -10,10 +10,10 @@ namespace ErsatzTV.Scanner.Core.Plex;
 
 public class PlexCollectionScanner : IPlexCollectionScanner
 {
-    private readonly IPlexServerApiClient _plexServerApiClient;
-    private readonly IPlexCollectionRepository _plexCollectionRepository;
     private readonly ILogger<PlexCollectionScanner> _logger;
     private readonly IMediator _mediator;
+    private readonly IPlexCollectionRepository _plexCollectionRepository;
+    private readonly IPlexServerApiClient _plexServerApiClient;
 
     public PlexCollectionScanner(
         IMediator mediator,

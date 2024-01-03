@@ -741,7 +741,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         return result;
     }
-    
+
     private async Task<List<string>> GetLanguages(ISearchRepository searchRepository, List<string> mediaCodes)
     {
         var englishNames = new System.Collections.Generic.HashSet<string>();
@@ -757,7 +757,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         return englishNames.ToList();
     }
-    
+
     private static List<string> GetLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
         mediaVersions
             .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio).Map(ms => ms.Language))

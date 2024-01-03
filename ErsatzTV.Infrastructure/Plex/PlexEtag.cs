@@ -253,7 +253,7 @@ public class PlexEtag
         byte[] hash = SHA1.Create().ComputeHash(ms);
         return BitConverter.ToString(hash).Replace("-", string.Empty);
     }
-    
+
     public string ForCollection(PlexCollectionMetadataResponse response)
     {
         using MemoryStream ms = _recyclableMemoryStreamManager.GetStream();
@@ -267,7 +267,7 @@ public class PlexEtag
 
         // collection updated at
         bw.Write(response.UpdatedAt);
-        
+
         // collection child count
         bw.Write(response.ChildCount ?? "0");
 
@@ -296,7 +296,7 @@ public class PlexEtag
         Art = 21,
 
         File = 30,
-        
+
         ChildCount = 40,
         Smart = 41 // smart collection bool
     }

@@ -510,7 +510,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         FrameState desiredState,
         string fontsFolder,
         ICollection<IPipelineStep> pipelineSteps);
-    
+
     protected static FrameState SetCrop(
         VideoInputFile videoInputFile,
         FrameState desiredState,
@@ -631,7 +631,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             AudioFilter filter = _audioInputFile
                 .Map(a => a.DesiredState.NormalizeLoudnessFilter)
                 .IfNone(AudioFilter.None);
-                
+
             initialBurst = filter switch
             {
                 AudioFilter.LoudNorm => 5,

@@ -210,7 +210,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
-        
+
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
             @"SELECT EmbyEpisode.Id FROM EmbyEpisode
             INNER JOIN MediaItem MI ON MI.Id = EmbyEpisode.Id
@@ -256,7 +256,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
-        
+
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
             @"SELECT EmbyShow.Id FROM EmbyShow
             INNER JOIN MediaItem MI ON MI.Id = EmbyShow.Id

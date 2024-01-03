@@ -214,7 +214,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
-        
+
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
             @"SELECT JellyfinEpisode.Id FROM JellyfinEpisode
             INNER JOIN MediaItem MI ON MI.Id = JellyfinEpisode.Id
@@ -237,7 +237,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
-        
+
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
             @"SELECT JellyfinSeason.Id FROM JellyfinSeason
             INNER JOIN MediaItem MI ON MI.Id = JellyfinSeason.Id
@@ -260,7 +260,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
-        
+
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
             @"SELECT JellyfinShow.Id FROM JellyfinShow
             INNER JOIN MediaItem MI ON MI.Id = JellyfinShow.Id

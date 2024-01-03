@@ -40,7 +40,9 @@ public class CallJellyfinCollectionScannerHandler : CallLibraryScannerHandler<Sy
             });
     }
 
-    protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, SynchronizeJellyfinCollections request)
+    protected override async Task<DateTimeOffset> GetLastScan(
+        TvContext dbContext,
+        SynchronizeJellyfinCollections request)
     {
         DateTime minDateTime = await dbContext.JellyfinMediaSources
             .SelectOneAsync(l => l.Id, l => l.Id == request.JellyfinMediaSourceId)

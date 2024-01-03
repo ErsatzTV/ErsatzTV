@@ -87,7 +87,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         {
             pipelineSteps.Add(new NoAutoScaleOutputOption());
         }
-        
+
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with
         {

@@ -35,7 +35,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         PlayoutMode is PlayoutMode.Multiple or PlayoutMode.Duration
         && CollectionType is ProgramScheduleItemCollectionType.Collection
             or ProgramScheduleItemCollectionType.MultiCollection or ProgramScheduleItemCollectionType.SmartCollection;
-    
+
     public PlayoutMode PlayoutMode { get; set; }
 
     public ProgramScheduleItemCollectionType CollectionType

@@ -45,7 +45,7 @@ public abstract class SchedulerTestBase
             { CollectionKey.ForFillerPreset(fillerPreset), enumerator2 },
             { CollectionKey.ForFillerPreset(fillerPreset2), enumerator3 }
         };
-    
+
     protected static Dictionary<CollectionKey, IMediaCollectionEnumerator> CollectionEnumerators(
         ProgramScheduleItem scheduleItem,
         IMediaCollectionEnumerator enumerator1,
@@ -98,7 +98,7 @@ public abstract class SchedulerTestBase
             TestMovie(id2, duration, new DateTime(2020, 1, 2), chapterCount)
         }
     };
-    
+
     protected static Collection CollectionOf(IDictionary<int, TimeSpan> idsAndDurations, int chapterCount = 0)
     {
         var mediaItems = new List<MediaItem>();

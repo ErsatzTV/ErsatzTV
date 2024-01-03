@@ -10,8 +10,8 @@ public class EntityLocker : IEntityLocker
     private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes = new();
     private bool _embyCollections;
     private bool _jellyfinCollections;
-    private bool _plexCollections;
     private bool _plex;
+    private bool _plexCollections;
     private bool _trakt;
 
     public event EventHandler OnLibraryChanged;
@@ -155,7 +155,7 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool AreEmbyCollectionsLocked() => _embyCollections;
-    
+
     public bool LockJellyfinCollections()
     {
         if (!_jellyfinCollections)
@@ -181,7 +181,7 @@ public class EntityLocker : IEntityLocker
     }
 
     public bool AreJellyfinCollectionsLocked() => _jellyfinCollections;
-    
+
     public bool LockPlexCollections()
     {
         if (!_plexCollections)

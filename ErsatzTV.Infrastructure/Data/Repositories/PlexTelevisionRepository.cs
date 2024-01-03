@@ -75,7 +75,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
-        
+
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
             @"SELECT PlexShow.Id FROM PlexShow
             INNER JOIN MediaItem MI ON MI.Id = PlexShow.Id

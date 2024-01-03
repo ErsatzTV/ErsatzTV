@@ -120,7 +120,7 @@ public record VideoStream(
 
         return result;
     }
-    
+
     public FrameSize SquarePixelFrameSizeForCrop(FrameSize resolution)
     {
         int width = FrameSize.Width;

@@ -53,7 +53,9 @@ public class PlexServerApiClient : IPlexServerApiClient
             return directory
                 // .Filter(l => l.Hidden == 0)
                 .Filter(l => l.Type.ToLowerInvariant() is "movie" or "show")
-                .Filter(l => l.Type.ToLowerInvariant() is not "movie" || (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
+                .Filter(
+                    l => l.Type.ToLowerInvariant() is not "movie" ||
+                         (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
                 .Map(Project)
                 .Somes()
                 .ToList();
@@ -407,7 +409,9 @@ public class PlexServerApiClient : IPlexServerApiClient
             _ => None
         };
 
-    private Option<PlexCollection> ProjectToCollection(PlexMediaSource plexMediaSource, PlexCollectionMetadataResponse item)
+    private Option<PlexCollection> ProjectToCollection(
+        PlexMediaSource plexMediaSource,
+        PlexCollectionMetadataResponse item)
     {
         try
         {
@@ -432,7 +436,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             return None;
         }
     }
-    
+
     private Option<MediaItem> ProjectToCollectionMediaItem(PlexCollectionItemMetadataResponse item)
     {
         try

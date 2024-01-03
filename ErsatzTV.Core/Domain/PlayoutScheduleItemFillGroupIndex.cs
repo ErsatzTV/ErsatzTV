@@ -10,9 +10,9 @@ public class PlayoutScheduleItemFillGroupIndex
 
     [NotLogged]
     public Playout Playout { get; set; }
-    
+
     public int ProgramScheduleItemId { get; set; }
-    
+
     [NotLogged]
     public ProgramScheduleItem ProgramScheduleItem { get; set; }
 

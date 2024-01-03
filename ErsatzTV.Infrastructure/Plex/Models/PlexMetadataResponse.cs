@@ -36,7 +36,7 @@ public class PlexMetadataResponse
 
     [XmlAttribute("updatedAt")]
     public long UpdatedAt { get; set; }
-    
+
     [XmlAttribute("index")]
     public int Index { get; set; }
 

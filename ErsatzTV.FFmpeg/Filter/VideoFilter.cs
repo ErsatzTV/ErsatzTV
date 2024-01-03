@@ -16,9 +16,8 @@ public class VideoFilter : IPipelineStep
     public FrameState NextState(FrameState currentState) => currentState;
 
     private string[] Arguments() =>
-        new []
-        {
-            "-vf",
+    [
+        "-vf",
             string.Join(",", _filterSteps.Map(fs => fs.Filter))
-        };
+    ];
 }

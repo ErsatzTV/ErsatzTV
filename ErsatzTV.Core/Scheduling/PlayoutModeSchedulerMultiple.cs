@@ -11,10 +11,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
     private readonly Map<CollectionKey, int> _collectionItemCount;
 
     public PlayoutModeSchedulerMultiple(Map<CollectionKey, int> collectionItemCount, ILogger logger)
-        : base(logger)
-    {
+        : base(logger) =>
         _collectionItemCount = collectionItemCount;
-    }
 
     public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
         PlayoutBuilderState playoutBuilderState,

@@ -5,10 +5,10 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 
 public class FFmpegCapabilities : IFFmpegCapabilities
 {
-    private readonly IReadOnlySet<string> _ffmpegHardwareAccelerations;
     private readonly IReadOnlySet<string> _ffmpegDecoders;
     private readonly IReadOnlySet<string> _ffmpegEncoders;
     private readonly IReadOnlySet<string> _ffmpegFilters;
+    private readonly IReadOnlySet<string> _ffmpegHardwareAccelerations;
     private readonly IReadOnlySet<string> _ffmpegOptions;
 
     public FFmpegCapabilities(
@@ -32,8 +32,8 @@ public class FFmpegCapabilities : IFFmpegCapabilities
         {
             return _ffmpegEncoders.Any(
                 e => e.EndsWith($"_{FFmpegKnownHardwareAcceleration.Amf.Name}", StringComparison.OrdinalIgnoreCase));
-        }        
-        
+        }
+
         Option<FFmpegKnownHardwareAcceleration> maybeAccelToCheck = hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => FFmpegKnownHardwareAcceleration.Cuda,

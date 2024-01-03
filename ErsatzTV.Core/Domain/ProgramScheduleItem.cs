@@ -13,8 +13,10 @@ public abstract class ProgramScheduleItem
     public GuideMode GuideMode { get; set; }
     public string CustomTitle { get; set; }
     public int ProgramScheduleId { get; set; }
+
     [JsonIgnore]
     public ProgramSchedule ProgramSchedule { get; set; }
+
     public int? CollectionId { get; set; }
     public Collection Collection { get; set; }
     public int? MediaItemId { get; set; }

@@ -4,8 +4,8 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class CropFilter : BaseFilter
 {
-    private readonly FrameState _currentState;
     private readonly FrameSize _croppedSize;
+    private readonly FrameState _currentState;
 
     public CropFilter(FrameState currentState, FrameSize croppedSize)
     {

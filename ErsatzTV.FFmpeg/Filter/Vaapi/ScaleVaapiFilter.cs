@@ -4,10 +4,10 @@ namespace ErsatzTV.FFmpeg.Filter.Vaapi;
 
 public class ScaleVaapiFilter : BaseFilter
 {
+    private readonly Option<FrameSize> _croppedSize;
     private readonly FrameState _currentState;
     private readonly bool _isAnamorphicEdgeCase;
     private readonly FrameSize _paddedSize;
-    private readonly Option<FrameSize> _croppedSize;
     private readonly FrameSize _scaledSize;
 
     public ScaleVaapiFilter(

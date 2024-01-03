@@ -518,7 +518,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         {
             doc.Add(new TextField(LanguageTagField, code, Field.Store.NO));
         }
-        
+
         var englishNames = new System.Collections.Generic.HashSet<string>();
         foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
         {
@@ -809,7 +809,10 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     new StringField(IdField, musicVideo.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
                     new StringField(TypeField, MusicVideoType, Field.Store.YES),
                     new TextField(TitleField, metadata.Title ?? string.Empty, Field.Store.NO),
-                    new StringField(SortTitleField, (metadata.SortTitle ?? string.Empty).ToLowerInvariant(), Field.Store.NO),
+                    new StringField(
+                        SortTitleField,
+                        (metadata.SortTitle ?? string.Empty).ToLowerInvariant(),
+                        Field.Store.NO),
                     new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(
                         LibraryIdField,
