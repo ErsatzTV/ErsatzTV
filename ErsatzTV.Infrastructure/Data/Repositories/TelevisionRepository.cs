@@ -175,7 +175,7 @@ public class TelevisionRepository : ITelevisionRepository
     public async Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
     {
         var result = new List<Season>();
-        
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<ShowMetadata> maybeShowMetadata = await dbContext.ShowMetadata

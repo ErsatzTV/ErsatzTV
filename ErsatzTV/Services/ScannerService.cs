@@ -138,7 +138,7 @@ public class ScannerService : BackgroundService
             entityLocker.UnlockLibrary(request.LibraryId);
         }
     }
-    
+
     private async Task SynchronizeLibraries(SynchronizePlexLibraries request, CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
@@ -188,7 +188,7 @@ public class ScannerService : BackgroundService
             entityLocker.UnlockLibrary(request.PlexLibraryId);
         }
     }
-    
+
     private async Task SynchronizePlexCollections(
         SynchronizePlexCollections request,
         CancellationToken cancellationToken)
@@ -285,7 +285,7 @@ public class ScannerService : BackgroundService
             entityLocker.UnlockLibrary(request.JellyfinLibraryId);
         }
     }
-    
+
     private async Task SynchronizeJellyfinCollections(
         SynchronizeJellyfinCollections request,
         CancellationToken cancellationToken)

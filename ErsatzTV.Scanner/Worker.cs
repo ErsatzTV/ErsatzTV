@@ -73,7 +73,7 @@ public class Worker : BackgroundService
         var scanPlexCollectionsCommand = new Command("scan-plex-collections", "Scan Plex collections");
         scanPlexCollectionsCommand.AddArgument(mediaSourceIdArgument);
         scanPlexCollectionsCommand.AddOption(forceOption);
-        
+
         var scanEmbyCommand = new Command("scan-emby", "Scan an Emby library");
         scanEmbyCommand.AddArgument(libraryIdArgument);
         scanEmbyCommand.AddOption(forceOption);
@@ -128,7 +128,7 @@ public class Worker : BackgroundService
                     await mediator.Send(scan, context.GetCancellationToken());
                 }
             });
-        
+
         scanPlexCollectionsCommand.SetHandler(
             async context =>
             {
@@ -202,7 +202,7 @@ public class Worker : BackgroundService
                     await mediator.Send(scan, context.GetCancellationToken());
                 }
             });
-        
+
         scanJellyfinCollectionsCommand.SetHandler(
             async context =>
             {

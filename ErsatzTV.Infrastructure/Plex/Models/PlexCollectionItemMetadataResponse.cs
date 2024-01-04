@@ -18,7 +18,7 @@ public class PlexCollectionItemMetadataResponse
 
     [XmlAttribute("updatedAt")]
     public long UpdatedAt { get; set; }
-    
+
     [XmlAttribute("type")]
     public string Type { get; set; }
 }

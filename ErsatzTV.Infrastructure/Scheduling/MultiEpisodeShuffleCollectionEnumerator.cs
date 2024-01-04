@@ -78,7 +78,8 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         _random = new CloneableRandom(state.Seed);
         _shuffled = Shuffle(_random);
         _lazyMinimumDuration =
-            new Lazy<Option<TimeSpan>>(() => _shuffled.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
+            new Lazy<Option<TimeSpan>>(
+                () => _shuffled.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)

@@ -22,7 +22,7 @@ public class
         _dbContextFactory = dbContextFactory;
         _hardwareCapabilitiesFactory = hardwareCapabilitiesFactory;
     }
-    
+
     public async Task<List<HardwareAccelerationKind>> Handle(
         GetSupportedHardwareAccelerationKinds request,
         CancellationToken cancellationToken)

@@ -27,13 +27,13 @@ public class ElasticSearchItem : MinimalElasticSearchItem
 
     [JsonPropertyName(LuceneSearchIndex.LanguageField)]
     public List<string> Language { get; set; }
-    
+
     [JsonPropertyName(LuceneSearchIndex.LanguageTagField)]
     public List<string> LanguageTag { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.MinutesField)]
     public int Minutes { get; set; }
-    
+
     [JsonPropertyName(LuceneSearchIndex.SecondsField)]
     public int Seconds { get; set; }
 

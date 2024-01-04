@@ -196,7 +196,7 @@
         {
             _resolutions = restoredResolutions;
         }
-        
+
         if (!ApplicationState.TryTakeFromJson("_hardwareAccelerationKinds", out List<HardwareAccelerationKind> restoredHardwareAccelerationKinds))
         {
             _hardwareAccelerationKinds = await _mediator.Send(new GetSupportedHardwareAccelerationKinds(), _cts.Token);

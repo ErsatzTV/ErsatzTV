@@ -35,7 +35,7 @@ public interface IPlexServerApi
             int take,
             [Query] [AliasAs("X-Plex-Token")]
             string token);
-    
+
     [Get("/library/all?type=18&X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
     public Task<PlexXmlMediaContainerStatsResponse> GetCollectionCount(
@@ -52,14 +52,14 @@ public interface IPlexServerApi
             int take,
             [Query] [AliasAs("X-Plex-Token")]
             string token);
-    
+
     [Get("/library/collections/{key}/children?X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
     [Headers("Accept: text/xml")]
     public Task<PlexXmlMediaContainerStatsResponse> GetCollectionItemsCount(
         string key,
         [Query] [AliasAs("X-Plex-Token")]
         string token);
-    
+
     [Get("/library/collections/{key}/children")]
     [Headers("Accept: application/json")]
     public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexCollectionItemMetadataResponse>>>

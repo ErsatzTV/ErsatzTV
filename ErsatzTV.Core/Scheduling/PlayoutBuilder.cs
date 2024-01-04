@@ -424,11 +424,12 @@ public class PlayoutBuilder : IPlayoutBuilder
                     cancellationToken);
             collectionEnumerators.Add(collectionKey, enumerator);
         }
-        
+
         var collectionItemCount = collectionMediaItems.Map((k, v) => (k, v.Count)).Values.ToDictionary();
-        
+
         var scheduleItemsFillGroupEnumerators = new Dictionary<int, IScheduleItemsEnumerator>();
-        foreach (ProgramScheduleItem scheduleItem in sortedScheduleItems.Where(si => si.FillWithGroupMode is not FillWithGroupMode.None))
+        foreach (ProgramScheduleItem scheduleItem in sortedScheduleItems.Where(
+                     si => si.FillWithGroupMode is not FillWithGroupMode.None))
         {
             var collectionKey = CollectionKey.ForScheduleItem(scheduleItem);
             List<MediaItem> mediaItems = await MediaItemsForCollection.Collect(
@@ -439,14 +440,15 @@ public class PlayoutBuilder : IPlayoutBuilder
             var fakeCollections = _mediaCollectionRepository.GroupIntoFakeCollections(mediaItems)
                 .Filter(c => c.ShowId > 0 || c.ArtistId > 0)
                 .ToList();
-            List<ProgramScheduleItem> fakeScheduleItems = [];
-            
+            List<ProgramScheduleItem> fakeScheduleItems =  []
+            ;
+
             // this will be used to clone a schedule item 
             MethodInfo generic = typeof(JsonConvert).GetMethods()
                 .FirstOrDefault(
                     x => x.Name.Equals("DeserializeObject", StringComparison.OrdinalIgnoreCase) && x.IsGenericMethod &&
                          x.GetParameters().Length == 1)?.MakeGenericMethod(scheduleItem.GetType());
-            
+
             foreach (CollectionWithItems fakeCollection in fakeCollections)
             {
                 var key = new CollectionKey
@@ -473,7 +475,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     cancellationToken);
 
                 collectionEnumerators.Add(key, enumerator);
-                
+
                 // this makes multiple (0) work - since it needs the number of items in the collection
                 collectionItemCount.Add(key, fakeCollection.MediaItems.Count);
             }
@@ -572,7 +574,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
             // get the schedule item out of the sorted list
             ProgramScheduleItem scheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
-            
+
             // replace with the fake schedule item when filling with group
             if (scheduleItem.FillWithGroupMode is not FillWithGroupMode.None)
             {
@@ -672,7 +674,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             activeSchedule,
             collectionEnumerators,
             saveAnchorDate);
-        
+
         // build fill group indices
         playout.FillGroupIndices = BuildFillGroupIndices(playout, scheduleItemsFillGroupEnumerators);
 
@@ -684,7 +686,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         Dictionary<int, IScheduleItemsEnumerator> scheduleItemsFillGroupEnumerators)
     {
         var result = playout.FillGroupIndices.ToList();
-        
+
         foreach ((int programScheduleItemId, IScheduleItemsEnumerator enumerator) in scheduleItemsFillGroupEnumerators)
         {
             Option<PlayoutScheduleItemFillGroupIndex> maybeFgi = Optional(
@@ -694,7 +696,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             {
                 fgi.EnumeratorState = enumerator.State;
             }
-            
+
             if (maybeFgi.IsNone)
             {
                 var fgi = new PlayoutScheduleItemFillGroupIndex
@@ -703,7 +705,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     ProgramScheduleItemId = programScheduleItemId,
                     EnumeratorState = enumerator.State
                 };
-                
+
                 result.Add(fgi);
             }
         }

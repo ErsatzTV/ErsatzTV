@@ -14,8 +14,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin;
 
 public class JellyfinApiClient : IJellyfinApiClient
 {
-    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILogger<JellyfinApiClient> _logger;
     private readonly IMemoryCache _memoryCache;
 

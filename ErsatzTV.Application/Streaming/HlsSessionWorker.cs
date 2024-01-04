@@ -22,23 +22,23 @@ public class HlsSessionWorker : IHlsSessionWorker
 {
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
-    private readonly IMediator _mediator;
     private readonly IClient _client;
-    private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<HlsSessionWorker> _logger;
-    private readonly Option<int> _targetFramerate;
+    private readonly IMediator _mediator;
     private readonly object _sync = new();
+    private readonly Option<int> _targetFramerate;
     private string _channelNumber;
     private bool _disposedValue;
     private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private DateTimeOffset _lastDelete = DateTimeOffset.MinValue;
+    private IServiceScope _serviceScope;
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private IServiceScope _serviceScope;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -223,7 +223,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 _timer.Dispose();
                 _timer = null;
-                
+
                 _serviceScope.Dispose();
                 _serviceScope = null;
             }
@@ -278,14 +278,14 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 Interlocked.Increment(ref _workAheadCount);
                 _logger.LogInformation("HLS segmenter will work ahead for channel {Channel}", _channelNumber);
-                
+
                 HlsSessionState nextState = _state switch
                 {
                     HlsSessionState.SeekAndRealtime => HlsSessionState.SeekAndWorkAhead,
                     HlsSessionState.ZeroAndRealtime => HlsSessionState.ZeroAndWorkAhead,
                     _ => _state
                 };
-                
+
                 if (nextState != _state)
                 {
                     _logger.LogDebug("HLS session state accelerating {Last} => {Next}", _state, nextState);
@@ -512,7 +512,16 @@ public class HlsSessionWorker : IHlsSessionWorker
 
         foreach (Segment segment in toDelete)
         {
-            File.Delete(segment.File);
+            try
+            {
+                File.Delete(segment.File);
+            }
+            catch (IOException)
+            {
+                // work around lots of:
+                //   The process cannot access the file '...' because it is being used by another process
+                _logger.LogDebug("Failed to delete old segment {File}", segment.File);
+            }
         }
     }
 
@@ -551,11 +560,9 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<int> GetWorkAheadLimit()
-    {
-        return await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
+    private async Task<int> GetWorkAheadLimit() =>
+        await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
-    }
 
     private async Task<Option<string[]>> ReadPlaylistLines(CancellationToken cancellationToken)
     {

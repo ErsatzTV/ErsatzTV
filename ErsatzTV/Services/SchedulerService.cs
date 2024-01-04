@@ -247,7 +247,7 @@ public class SchedulerService : BackgroundService
                     cancellationToken);
             }
         }
-        
+
         foreach (int mediaSourceId in mediaSourceIds)
         {
             await _scannerWorkerChannel.WriteAsync(
@@ -274,7 +274,7 @@ public class SchedulerService : BackgroundService
                     cancellationToken);
             }
         }
-        
+
         foreach (int mediaSourceId in mediaSourceIds)
         {
             await _scannerWorkerChannel.WriteAsync(

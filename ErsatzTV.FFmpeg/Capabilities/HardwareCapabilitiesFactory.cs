@@ -18,7 +18,10 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 {
     private const string ArchitectureCacheKey = "ffmpeg.hardware.nvidia.architecture";
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
-    private static readonly CompositeFormat VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}");
+
+    private static readonly CompositeFormat
+        VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}");
+
     private static readonly CompositeFormat QsvCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.{0}");
     private static readonly CompositeFormat FFmpegCapabilitiesCacheKeyFormat = CompositeFormat.Parse("ffmpeg.{0}");
 
@@ -86,7 +89,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         {
             return new NoHardwareCapabilities();
         }
-        
+
         if (!ffmpegCapabilities.HasHardwareAcceleration(hardwareAccelerationMode))
         {
             _logger.LogWarning(
@@ -95,7 +98,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             return new NoHardwareCapabilities();
         }
-        
+
         return hardwareAccelerationMode switch
         {
             HardwareAccelerationMode.Nvenc => await GetNvidiaCapabilities(ffmpegPath, ffmpegCapabilities),
@@ -135,7 +138,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         var arguments = option.GlobalOptions.ToList();
 
         arguments.AddRange(QsvArguments);
-        
+
         BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
@@ -360,7 +363,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                         "Detected {Count} VAAPI profile entrypoints for using QSV device {Device}",
                         profileEntrypoints.Count,
                         device);
-                    
+
                     _memoryCache.Set(cacheKey, profileEntrypoints);
                     return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
                 }

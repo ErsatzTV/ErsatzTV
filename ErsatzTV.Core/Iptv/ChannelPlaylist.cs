@@ -9,9 +9,9 @@ public class ChannelPlaylist
     private readonly string _accessToken;
     private readonly string _baseUrl;
     private readonly List<Channel> _channels;
-    private readonly string _userAgent;
     private readonly string _host;
     private readonly string _scheme;
+    private readonly string _userAgent;
 
     public ChannelPlaylist(
         string scheme,
@@ -58,7 +58,7 @@ public class ChannelPlaylist
 
                 sb.AppendLine("#KODIPROP:inputstream.ffmpegdirect.open_mode=ffmpeg");
             }
-            
+
             string logo = Optional(channel.Artwork).Flatten()
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                 .HeadOrNone()

@@ -329,7 +329,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 channel.FFmpegProfile.Resolution.Width,
                 channel.FFmpegProfile.Resolution.Height);
         }
-        
+
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             fillerKind == FillerKind.Fallback,

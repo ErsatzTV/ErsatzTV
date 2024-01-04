@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix error loading path replacements when using MySql
 - Fix tray icon shortcut to open logs folder on Windows
 - Unlock playout when playout build fails
+- Ignore errors deleting old HLS segments; this should improve stream reliability
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8

@@ -67,7 +67,7 @@ public interface IPlexServerApiClient
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
-    
+
     IAsyncEnumerable<PlexCollection> GetAllCollections(
         PlexConnection connection,
         PlexServerAuthToken token,

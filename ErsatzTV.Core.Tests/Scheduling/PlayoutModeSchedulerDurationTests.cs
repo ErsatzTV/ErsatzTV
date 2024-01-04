@@ -17,7 +17,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
 
     private CancellationToken _cancellationToken;
     private readonly ILogger<PlayoutModeSchedulerDuration> _logger;
-    
+
     public PlayoutModeSchedulerDurationTests()
     {
         Log.Logger = new LoggerConfiguration()
@@ -725,7 +725,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[6].FillerKind.Should().Be(FillerKind.Fallback);
         playoutItems[6].GuideFinish.HasValue.Should().BeFalse();
     }
-    
+
     [Test]
     public void Should_Not_Have_Gap_With_Post_Roll_Pad_And_Fallback_Filler()
     {
@@ -742,7 +742,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
                 { 10, TimeSpan.Parse("00:00:31.5791160") },
                 { 11, TimeSpan.Parse("00:00:31.2540360") },
                 { 12, TimeSpan.Parse("00:00:36.2231070") },
-                { 13, TimeSpan.Parse("00:02:00.0471430") },
+                { 13, TimeSpan.Parse("00:02:00.0471430") }
             });
         Collection collectionThree = TwoItemCollection(14, 15, TimeSpan.Parse("00:00:55.6349890"));
 
@@ -820,7 +820,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
 
         playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddMinutes(30));
         playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
-        
+
         // THIS IS THE KEY TEST - needs to be exactly 30 minutes
         (playoutItems.Last().FinishOffset - playoutItems.First().StartOffset).Should().Be(TimeSpan.FromMinutes(30));
 

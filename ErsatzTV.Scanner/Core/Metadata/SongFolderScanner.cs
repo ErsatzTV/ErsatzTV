@@ -126,7 +126,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     .HeadOrNone();
 
                 // skip folder if etag matches
-                if (allFiles.Count == 0 || await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
+                if (allFiles.Count == 0 ||
+                    await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
                     etag)
                 {
                     continue;

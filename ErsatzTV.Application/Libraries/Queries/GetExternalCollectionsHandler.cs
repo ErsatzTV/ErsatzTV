@@ -36,7 +36,7 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
 
         return embyMediaSourceIds.Map(id => new LibraryViewModel("Emby", 0, "Collections", 0, id, string.Empty));
     }
-    
+
     private static async Task<IEnumerable<LibraryViewModel>> GetJellyfinExternalCollections(
         TvContext dbContext,
         CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
         return jellyfinMediaSourceIds.Map(
             id => new LibraryViewModel("Jellyfin", 0, "Collections", 0, id, string.Empty));
     }
-    
+
     private static async Task<IEnumerable<LibraryViewModel>> GetPlexExternalCollections(
         TvContext dbContext,
         CancellationToken cancellationToken)

@@ -41,7 +41,7 @@ public class ShowNfoReader : NfoReader<ShowNfo>, IShowNfoReader
             var settings = new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment };
             using var reader = XmlReader.Create(input, settings);
             var done = false;
-            int showDepth = 0;
+            var showDepth = 0;
 
             while (!done && await reader.ReadAsync())
             {
