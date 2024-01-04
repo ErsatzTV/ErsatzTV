@@ -512,7 +512,16 @@ public class HlsSessionWorker : IHlsSessionWorker
 
         foreach (Segment segment in toDelete)
         {
-            File.Delete(segment.File);
+            try
+            {
+                File.Delete(segment.File);
+            }
+            catch (IOException)
+            {
+                // work around lots of:
+                //   The process cannot access the file '...' because it is being used by another process
+                _logger.LogDebug("Failed to delete old segment {File}", segment.File);
+            }
         }
     }
 
