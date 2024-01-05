@@ -438,10 +438,9 @@ public class PlayoutBuilder : IPlayoutBuilder
                 _artistRepository,
                 collectionKey);
             var fakeCollections = _mediaCollectionRepository.GroupIntoFakeCollections(mediaItems)
-                .Filter(c => c.ShowId > 0 || c.ArtistId > 0)
+                .Filter(c => c.ShowId > 0 || c.ArtistId > 0 || !string.IsNullOrWhiteSpace(c.Key))
                 .ToList();
-            List<ProgramScheduleItem> fakeScheduleItems =  []
-            ;
+            List<ProgramScheduleItem> fakeScheduleItems =  [];
 
             // this will be used to clone a schedule item 
             MethodInfo generic = typeof(JsonConvert).GetMethods()
@@ -451,18 +450,36 @@ public class PlayoutBuilder : IPlayoutBuilder
 
             foreach (CollectionWithItems fakeCollection in fakeCollections)
             {
-                var key = new CollectionKey
+                CollectionKey key = (fakeCollection.ShowId, fakeCollection.ArtistId, fakeCollection.Key) switch
                 {
-                    CollectionType = fakeCollection.ShowId > 0
-                        ? ProgramScheduleItemCollectionType.TelevisionShow
-                        : ProgramScheduleItemCollectionType.Artist,
-                    MediaItemId = fakeCollection.ShowId > 0 ? fakeCollection.ShowId : fakeCollection.ArtistId
+                    var (showId, _, _) when showId > 0 => new CollectionKey
+                    {
+                        CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
+                        MediaItemId = showId
+                    },
+                    var (_, artistId, _) when artistId > 0 => new CollectionKey
+                    {
+                        CollectionType = ProgramScheduleItemCollectionType.Artist,
+                        MediaItemId = artistId
+                    },
+                    var (_, _, k) when k is not null => new CollectionKey
+                    {
+                        CollectionType = ProgramScheduleItemCollectionType.FakeCollection,
+                        FakeCollectionKey = k
+                    },
+                    var (_, _, _) => null
                 };
 
+                if (key is null)
+                {
+                    continue;
+                }
+                
                 string serialized = JsonConvert.SerializeObject(scheduleItem);
                 var copyScheduleItem = generic.Invoke(this, [serialized]) as ProgramScheduleItem;
                 copyScheduleItem.CollectionType = key.CollectionType;
                 copyScheduleItem.MediaItemId = key.MediaItemId;
+                copyScheduleItem.FakeCollectionKey = key.FakeCollectionKey;
                 fakeScheduleItems.Add(copyScheduleItem);
 
                 IMediaCollectionEnumerator enumerator = await GetMediaCollectionEnumerator(
@@ -669,11 +686,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         // build program schedule anchors
-        playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(
-            playout,
-            activeSchedule,
-            collectionEnumerators,
-            saveAnchorDate);
+        playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators, saveAnchorDate);
 
         // build fill group indices
         playout.FillGroupIndices = BuildFillGroupIndices(playout, scheduleItemsFillGroupEnumerators);
@@ -817,7 +830,6 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private static List<PlayoutProgramScheduleAnchor> BuildProgramScheduleAnchors(
         Playout playout,
-        ProgramSchedule activeSchedule,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
         bool saveAnchorDate)
     {
@@ -829,6 +841,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 a => a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MediaItemId == collectionKey.MediaItemId
+                     && a.FakeCollectionKey == collectionKey.FakeCollectionKey
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
                      && a.AnchorDate is null);
@@ -850,6 +863,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     MultiCollectionId = collectionKey.MultiCollectionId,
                     SmartCollectionId = collectionKey.SmartCollectionId,
                     MediaItemId = collectionKey.MediaItemId,
+                    FakeCollectionKey = collectionKey.FakeCollectionKey,
                     EnumeratorState = maybeEnumeratorState[collectionKey]
                 });
 

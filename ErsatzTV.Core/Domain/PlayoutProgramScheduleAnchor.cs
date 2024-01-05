@@ -25,5 +25,6 @@ public class PlayoutProgramScheduleAnchor
     public SmartCollection SmartCollection { get; set; }
     public int? MediaItemId { get; set; }
     public MediaItem MediaItem { get; set; }
+    public string FakeCollectionKey { get; set; }
     public CollectionEnumeratorState EnumeratorState { get; set; }
 }

@@ -190,6 +190,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                             new CollectionWithItems(
                                 multiCollectionItem.CollectionId,
                                 multiCollectionItem.CollectionId,
+                                null,
                                 sortedItems,
                                 multiCollectionItem.ScheduleAsGroup,
                                 multiCollectionItem.PlaybackOrder,
@@ -202,6 +203,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                         new CollectionWithItems(
                             multiCollectionItem.CollectionId,
                             multiCollectionItem.CollectionId,
+                            null,
                             items,
                             multiCollectionItem.ScheduleAsGroup,
                             multiCollectionItem.PlaybackOrder,
@@ -217,6 +219,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     new CollectionWithItems(
                         multiCollectionSmartItem.SmartCollectionId,
                         multiCollectionSmartItem.SmartCollectionId,
+                        null,
                         items,
                         multiCollectionSmartItem.ScheduleAsGroup,
                         multiCollectionSmartItem.PlaybackOrder,
@@ -357,6 +360,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 new CollectionWithItems(
                     showId,
                     0,
+                    null,
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -384,6 +388,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 new CollectionWithItems(
                     0,
                     artistId,
+                    null,
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -418,12 +423,13 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             songArtistCollections[key] = list;
         }
 
-        foreach ((int _, List<MediaItem> list) in songArtistCollections)
+        foreach ((int index, List<MediaItem> list) in songArtistCollections)
         {
             result.Add(
                 new CollectionWithItems(
                     id,
                     id,
+                    allArtists[index],
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -436,6 +442,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             new CollectionWithItems(
                 id,
                 id,
+                null,
                 items.OfType<Movie>().Cast<MediaItem>().ToList(),
                 true,
                 PlaybackOrder.Chronological,
@@ -446,6 +453,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             new CollectionWithItems(
                 id,
                 id,
+                null,
                 items.OfType<OtherVideo>().Cast<MediaItem>().ToList(),
                 true,
                 PlaybackOrder.Chronological,
