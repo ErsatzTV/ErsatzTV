@@ -7,5 +7,7 @@ public enum ProgramScheduleItemCollectionType
     TelevisionSeason = 2,
     Artist = 3,
     MultiCollection = 4,
-    SmartCollection = 5
+    SmartCollection = 5,
+    
+    FakeCollection = 100
 }

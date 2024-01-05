@@ -10,6 +10,7 @@ public class CollectionKey : Record<CollectionKey>
     public int? MultiCollectionId { get; set; }
     public int? SmartCollectionId { get; set; }
     public int? MediaItemId { get; set; }
+    public string FakeCollectionKey { get; set; }
 
     public static CollectionKey ForScheduleItem(ProgramScheduleItem item) =>
         item.CollectionType switch
@@ -43,6 +44,11 @@ public class CollectionKey : Record<CollectionKey>
             {
                 CollectionType = item.CollectionType,
                 SmartCollectionId = item.SmartCollectionId
+            },
+            ProgramScheduleItemCollectionType.FakeCollection => new CollectionKey
+            {
+              CollectionType = item.CollectionType,
+              FakeCollectionKey = item.FakeCollectionKey
             },
             _ => throw new ArgumentOutOfRangeException(nameof(item))
         };

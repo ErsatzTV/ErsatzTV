@@ -16,7 +16,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.14")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
@@ -1511,6 +1511,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("CollectionType")
                         .HasColumnType("int");
 
+                    b.Property<string>("FakeCollectionKey")
+                        .HasColumnType("longtext");
+
                     b.Property<int?>("MediaItemId")
                         .HasColumnType("int");
 
@@ -1698,6 +1701,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("CustomTitle")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("FakeCollectionKey")
                         .HasColumnType("longtext");
 
                     b.Property<int?>("FallbackFillerId")
