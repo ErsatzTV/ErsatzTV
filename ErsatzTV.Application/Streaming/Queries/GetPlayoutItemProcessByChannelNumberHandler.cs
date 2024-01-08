@@ -13,6 +13,7 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -28,6 +29,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IExternalJsonPlayoutItemProvider _externalJsonPlayoutItemProvider;
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
@@ -39,6 +41,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService,
         ILocalFileSystem localFileSystem,
+        IExternalJsonPlayoutItemProvider externalJsonPlayoutItemProvider,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
         IEmbyPathReplacementService embyPathReplacementService,
@@ -52,6 +55,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     {
         _ffmpegProcessService = ffmpegProcessService;
         _localFileSystem = localFileSystem;
+        _externalJsonPlayoutItemProvider = externalJsonPlayoutItemProvider;
         _plexPathReplacementService = plexPathReplacementService;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
         _embyPathReplacementService = embyPathReplacementService;
@@ -139,7 +143,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(item => ValidatePlayoutItemPath(dbContext, item));
-
+        
+        if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
+        {
+            maybePlayoutItem = await _externalJsonPlayoutItemProvider.CheckForExternalJson(
+                channel,
+                now,
+                ffmpegPath,
+                ffprobePath);
+        }
+        
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
             maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);
@@ -557,6 +570,4 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             _ => path
         };
     }
-
-    private sealed record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);
 }
