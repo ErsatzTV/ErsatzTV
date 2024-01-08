@@ -32,7 +32,7 @@ public abstract class LocalFolderScanner
 
     public static readonly ImmutableHashSet<string> ImageFileExtensions = new[]
     {
-        "jpg", "jpeg", "png", "gif", "tbn"
+        "jpg", "jpeg", "png", "gif", "tbn", "webp"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> ExtraFiles = new[]

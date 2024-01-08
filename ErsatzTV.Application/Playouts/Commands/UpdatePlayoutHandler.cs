@@ -17,7 +17,7 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
         UpdatePlayout request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
         return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
     }
@@ -38,6 +38,7 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
 
         return new PlayoutNameViewModel(
             playout.Id,
+            playout.ProgramSchedulePlayoutType,
             playout.Channel.Name,
             playout.Channel.Number,
             playout.ProgramSchedule.Name,

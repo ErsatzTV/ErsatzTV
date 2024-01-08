@@ -16,13 +16,16 @@ public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<Playou
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.Playouts
-            .Filter(p => p.Channel != null && p.ProgramSchedule != null)
+            .AsNoTracking()
+            .Include(p => p.ProgramSchedule)
+            .Filter(p => p.Channel != null)
             .Map(
                 p => new PlayoutNameViewModel(
                     p.Id,
+                    p.ProgramSchedulePlayoutType,
                     p.Channel.Name,
                     p.Channel.Number,
-                    p.ProgramSchedule.Name,
+                    p.ProgramScheduleId == null ? string.Empty : p.ProgramSchedule.Name,
                     Optional(p.DailyRebuildTime)))
             .ToListAsync(cancellationToken);
     }

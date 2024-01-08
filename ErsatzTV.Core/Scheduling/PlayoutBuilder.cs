@@ -43,6 +43,16 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
+        if (playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)
+        {
+            _logger.LogDebug(
+                "Skipping external json playout build on channel {Number} - {Name}",
+                playout.Channel.Number,
+                playout.Channel.Name);
+
+            return playout;
+        }
+        
         foreach (PlayoutParameters parameters in await Validate(playout))
         {
             // for testing purposes
