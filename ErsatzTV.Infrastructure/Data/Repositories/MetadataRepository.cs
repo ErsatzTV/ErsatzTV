@@ -28,14 +28,14 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
-    public async Task<bool> Update(Metadata metadata)
+    public async Task<bool> Update(Core.Domain.Metadata metadata)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         dbContext.Entry(metadata).State = EntityState.Modified;
         return await dbContext.SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> Add(Metadata metadata)
+    public async Task<bool> Add(Core.Domain.Metadata metadata)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         dbContext.Entry(metadata).State = EntityState.Added;
@@ -257,7 +257,7 @@ public class MetadataRepository : IMetadataRepository
             }).ToUnit();
     }
 
-    public async Task<Unit> AddArtwork(Metadata metadata, Artwork artwork)
+    public async Task<Unit> AddArtwork(Core.Domain.Metadata metadata, Artwork artwork)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
@@ -308,7 +308,7 @@ public class MetadataRepository : IMetadataRepository
         };
     }
 
-    public async Task<Unit> RemoveArtwork(Metadata metadata, ArtworkKind artworkKind)
+    public async Task<Unit> RemoveArtwork(Core.Domain.Metadata metadata, ArtworkKind artworkKind)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
@@ -318,7 +318,7 @@ public class MetadataRepository : IMetadataRepository
     }
 
     public async Task<bool> CloneArtwork(
-        Metadata metadata,
+        Core.Domain.Metadata metadata,
         Option<Artwork> maybeArtwork,
         ArtworkKind artworkKind,
         string sourcePath,
@@ -436,7 +436,7 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
-    public async Task<bool> AddGuid(Metadata metadata, MetadataGuid guid)
+    public async Task<bool> AddGuid(Core.Domain.Metadata metadata, MetadataGuid guid)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return metadata switch
@@ -487,7 +487,7 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
-    public async Task<bool> UpdateSubtitles(Metadata metadata, List<Subtitle> subtitles)
+    public async Task<bool> UpdateSubtitles(Core.Domain.Metadata metadata, List<Subtitle> subtitles)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await UpdateSubtitles(dbContext, metadata, subtitles);
@@ -536,7 +536,7 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
-    private static async Task<bool> UpdateSubtitles(TvContext dbContext, Metadata metadata, List<Subtitle> subtitles)
+    private static async Task<bool> UpdateSubtitles(TvContext dbContext, Core.Domain.Metadata metadata, List<Subtitle> subtitles)
     {
         // _logger.LogDebug(
         //     "Updating {Count} subtitles; metadata is {Metadata}",
@@ -545,24 +545,24 @@ public class MetadataRepository : IMetadataRepository
 
         int metadataId = metadata.Id;
 
-        Option<Metadata> maybeMetadata = metadata switch
+        Option<Core.Domain.Metadata> maybeMetadata = metadata switch
         {
             EpisodeMetadata => await dbContext.EpisodeMetadata
                 .Include(em => em.Subtitles)
                 .SelectOneAsync(em => em.Id, em => em.Id == metadataId)
-                .MapT(em => (Metadata)em),
+                .MapT(em => (Core.Domain.Metadata)em),
             MovieMetadata => await dbContext.MovieMetadata
                 .Include(mm => mm.Subtitles)
                 .SelectOneAsync(mm => mm.Id, mm => mm.Id == metadataId)
-                .MapT(mm => (Metadata)mm),
+                .MapT(mm => (Core.Domain.Metadata)mm),
             MusicVideoMetadata => await dbContext.MusicVideoMetadata
                 .Include(mvm => mvm.Subtitles)
                 .SelectOneAsync(mvm => mvm.Id, mm => mm.Id == metadataId)
-                .MapT(mvm => (Metadata)mvm),
+                .MapT(mvm => (Core.Domain.Metadata)mvm),
             OtherVideoMetadata => await dbContext.OtherVideoMetadata
                 .Include(ovm => ovm.Subtitles)
                 .SelectOneAsync(ovm => ovm.Id, mm => mm.Id == metadataId)
-                .MapT(ovm => (Metadata)ovm),
+                .MapT(ovm => (Core.Domain.Metadata)ovm),
             _ => None
         };
 
@@ -570,7 +570,7 @@ public class MetadataRepository : IMetadataRepository
         //     "Existing metadata is {Metadata}",
         //     await maybeMetadata.Map(m => m.GetType().Name).IfNoneAsync("[none]"));
 
-        foreach (Metadata existing in maybeMetadata)
+        foreach (Core.Domain.Metadata existing in maybeMetadata)
         {
             var toAdd = subtitles.Filter(s => existing.Subtitles.All(es => es.StreamIndex != s.StreamIndex)).ToList();
             var toRemove = existing.Subtitles.Filter(es => subtitles.All(s => s.StreamIndex != es.StreamIndex))

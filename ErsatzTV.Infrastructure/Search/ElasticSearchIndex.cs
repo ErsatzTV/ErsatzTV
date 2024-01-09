@@ -803,7 +803,7 @@ public class ElasticSearchIndex : ISearchIndex
         }
     }
 
-    private static Dictionary<string, List<string>> GetMetadataGuids(Metadata metadata)
+    private static Dictionary<string, List<string>> GetMetadataGuids(Core.Domain.Metadata metadata)
     {
         var result = new Dictionary<string, List<string>>();
 

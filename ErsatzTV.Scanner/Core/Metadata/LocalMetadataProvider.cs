@@ -5,6 +5,7 @@ using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;

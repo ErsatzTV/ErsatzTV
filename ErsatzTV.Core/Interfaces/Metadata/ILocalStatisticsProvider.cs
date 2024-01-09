@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Scanner.Core.Interfaces.Metadata;
+namespace ErsatzTV.Core.Interfaces.Metadata;
 
 public interface ILocalStatisticsProvider
 {

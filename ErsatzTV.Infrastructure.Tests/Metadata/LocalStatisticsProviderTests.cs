@@ -2,13 +2,13 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Scanner.Core.Metadata;
+using ErsatzTV.Infrastructure.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace ErsatzTV.Scanner.Tests.Core.Metadata;
+namespace ErsatzTV.Infrastructure.Tests.Metadata;
 
 [TestFixture]
 public class LocalStatisticsProviderTests
