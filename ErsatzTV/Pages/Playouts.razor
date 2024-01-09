@@ -9,9 +9,14 @@
 @inject IEntityLocker EntityLocker;
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
-        Add Playout
-    </MudButton>
+    <div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
+            Add Playout
+        </MudButton>
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add/externaljson">
+            Add External Json Playout
+        </MudButton>
+    </div>
     <MudTable Hover="true"
               Dense="true"
               Class="mt-4"
@@ -53,24 +58,44 @@
                             <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
                         }
                     </div>
-                    <MudTooltip Text="Edit Alternate Schedules">
-                        <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
-                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                       Link="@($"playouts/{context.PlayoutId}/alternate-schedules")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Reset Playout">
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                       OnClick="@(_ => ResetPlayout(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Schedule Reset">
-                        <MudIconButton Icon="@Icons.Material.Filled.Update"
-                                       Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                       OnClick="@(_ => ScheduleReset(context))">
-                        </MudIconButton>
-                    </MudTooltip>
+                    @if (context.PlayoutType == ProgramSchedulePlayoutType.Flood)
+                    {
+                        <MudTooltip Text="Edit Alternate Schedules">
+                            <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           Link="@($"playouts/{context.PlayoutId}/alternate-schedules")">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Reset Playout">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => ResetPlayout(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Schedule Reset">
+                            <MudIconButton Icon="@Icons.Material.Filled.Update"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => ScheduleReset(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                    else if (context.PlayoutType == ProgramSchedulePlayoutType.ExternalJson)
+                    {
+                        <MudTooltip Text="Edit External Json File">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => EditExternalJsonFile(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
+                    }
+                    else
+                    {
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
+                    }
                     <MudTooltip Text="Delete Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
@@ -164,10 +189,31 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        _selectedPlayoutId = playout.PlayoutId;
+        // only show details for flood playouts
+        _selectedPlayoutId = playout.PlayoutType == ProgramSchedulePlayoutType.Flood ? playout.PlayoutId : null;
+
         if (_detailTable != null)
         {
             await _detailTable.ReloadServerData();
+        }
+    }
+
+    private async Task EditExternalJsonFile(PlayoutNameViewModel playout)
+    {
+        var parameters = new DialogParameters { { "ExternalJsonFile", $"{playout.ExternalJsonFile}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large };
+
+        IDialogReference dialog = await Dialog.ShowAsync<EditExternalJsonFileDialog>("Edit External Json File", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await Mediator.Send(new UpdateExternalJsonPlayout(playout.PlayoutId, result.Data as string ?? playout.ExternalJsonFile), _cts.Token);
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
+
+            _selectedPlayoutId = null;
         }
     }
 

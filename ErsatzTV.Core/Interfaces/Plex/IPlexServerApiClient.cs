@@ -52,13 +52,13 @@ public interface IPlexServerApiClient
         PlexServerAuthToken token);
 
     Task<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>> GetMovieMetadataAndStatistics(
-        PlexLibrary library,
+        int plexMediaSourceId,
         string key,
         PlexConnection connection,
         PlexServerAuthToken token);
 
     Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
-        PlexLibrary library,
+        int plexMediaSourceId,
         string key,
         PlexConnection connection,
         PlexServerAuthToken token);

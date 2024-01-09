@@ -1,4 +1,5 @@
 ﻿@page "/playouts/add"
+@page "/playouts/add/{kind}"
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.ProgramSchedules
 @implements IDisposable
@@ -8,9 +9,17 @@
 @inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        @if (Kind == "externaljson")
+        {
+            <span>Add External Json Playout</span>
+        }
+        else
+        {
+            <span>Add Playout</span>
+        }
+    </MudText>
     <div style="max-width: 400px;">
-        <MudText Typo="Typo.h4" Class="mb-4">Add Playout</MudText>
-
         <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
             <FluentValidationValidator/>
             <MudCard>
@@ -26,15 +35,22 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="mt-3"
-                               T="ProgramScheduleViewModel"
-                               Label="Schedule"
-                               @bind-value="_model.ProgramSchedule">
-                        @foreach (ProgramScheduleViewModel schedule in _programSchedules)
-                        {
-                            <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
-                        }
-                    </MudSelect>
+                    @if (Kind == "externaljson")
+                    {
+                        <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)" />
+                    }
+                    else
+                    {
+                        <MudSelect Class="mt-3"
+                                   T="ProgramScheduleViewModel"
+                                   Label="Schedule"
+                                   @bind-value="_model.ProgramSchedule">
+                            @foreach (ProgramScheduleViewModel schedule in _programSchedules)
+                            {
+                                <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -50,11 +66,14 @@
     private readonly CancellationTokenSource _cts = new();
 
     private readonly PlayoutEditViewModel _model = new();
-    private List<ChannelViewModel> _channels = new();
-    private List<ProgramScheduleViewModel> _programSchedules = new();
+    private List<ChannelViewModel> _channels = [];
+    private List<ProgramScheduleViewModel> _programSchedules = [];
 
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
+    
+    [Parameter]
+    public string Kind { get; set; }
 
     public void Dispose()
     {
@@ -64,10 +83,16 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        _model.Kind = Kind;
+        
         _channels = await _mediator.Send(new GetAllChannels(), _cts.Token)
             .Map(list => list.OrderBy(vm => decimal.Parse(vm.Number)).ToList());
-        _programSchedules = await _mediator.Send(new GetAllProgramSchedules(), _cts.Token)
-            .Map(list => list.OrderBy(vm => vm.Name).ToList());
+
+        if (Kind != "externaljson")
+        {
+            _programSchedules = await _mediator.Send(new GetAllProgramSchedules(), _cts.Token)
+                .Map(list => list.OrderBy(vm => vm.Name).ToList());
+        }
     }
 
     protected override void OnInitialized()

@@ -16,7 +16,8 @@ public class ProgramScheduleConfiguration : IEntityTypeConfiguration<ProgramSche
         builder.HasMany(ps => ps.Items)
             .WithOne(i => i.ProgramSchedule)
             .HasForeignKey(i => i.ProgramScheduleId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
 
         builder.HasMany(ps => ps.Playouts)
             .WithOne(p => p.ProgramSchedule)

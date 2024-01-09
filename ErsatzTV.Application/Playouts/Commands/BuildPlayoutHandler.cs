@@ -115,7 +115,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private static Validation<BaseError, Playout> DiscardAttemptsMustBeValid(Playout playout)
     {
         foreach (ProgramScheduleItemDuration item in
-                 playout.ProgramSchedule.Items.OfType<ProgramScheduleItemDuration>())
+                 playout.ProgramSchedule?.Items.OfType<ProgramScheduleItemDuration>() ?? [])
         {
             item.DiscardToFillAttempts = item.PlaybackOrder switch
             {

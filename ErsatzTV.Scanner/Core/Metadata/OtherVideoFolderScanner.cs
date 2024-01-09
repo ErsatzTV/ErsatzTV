@@ -150,6 +150,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(UpdateMetadata)
+                        .BindT(video => UpdateThumbnail(video, cancellationToken))
                         .BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
 
@@ -168,7 +169,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                                     libraryPath.LibraryId,
                                     null,
                                     null,
-                                    new[] { result.Item.Id },
+                                    [result.Item.Id],
                                     Array.Empty<int>()),
                                 cancellationToken);
                         }
@@ -285,5 +286,38 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
+    }
+    
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateThumbnail(
+        MediaItemScanResult<OtherVideo> result,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            OtherVideo otherVideo = result.Item;
+
+            Option<string> maybeThumbnail = LocateThumbnail(otherVideo);
+            foreach (string thumbnailFile in maybeThumbnail)
+            {
+                OtherVideoMetadata metadata = otherVideo.OtherVideoMetadata.Head();
+                await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+    
+    private Option<string> LocateThumbnail(OtherVideo otherVideo)
+    {
+        string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
+        return ImageFileExtensions
+            .Map(ext => Path.ChangeExtension(path, ext))
+            .Filter(f => _localFileSystem.FileExists(f))
+            .HeadOrNone();
     }
 }

@@ -3,6 +3,7 @@
 public enum ProgramSchedulePlayoutType
 {
     None = 0,
-    Flood,
-    Daily
+    Flood = 1,
+
+    ExternalJson = 20
 }

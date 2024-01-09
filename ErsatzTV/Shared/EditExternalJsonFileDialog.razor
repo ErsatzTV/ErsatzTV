@@ -1,0 +1,45 @@
+﻿@implements IDisposable
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="mb-6">
+            <MudText>
+                Edit the playout's external json file
+            </MudText>
+        </MudContainer>
+        <MudTextField Label="External Json File" @bind-Value="_externalJsonFile" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(string.IsNullOrWhiteSpace(_externalJsonFile))" OnClick="Submit">
+            Save Changes
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [Parameter]
+    public string ExternalJsonFile { get; set; }
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private string _externalJsonFile;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override void OnParametersSet()
+    {
+        _externalJsonFile = ExternalJsonFile;
+    }
+    
+    private void Submit() => MudDialog.Close(DialogResult.Ok(_externalJsonFile));
+
+    private void Cancel() => MudDialog.Cancel();
+}

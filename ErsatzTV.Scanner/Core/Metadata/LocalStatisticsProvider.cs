@@ -36,6 +36,14 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         _logger = logger;
     }
 
+    public async Task<Either<BaseError, MediaVersion>> GetStatistics(string ffmpegPath, string ffprobePath, string path)
+    {
+        Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, path);
+        return maybeProbe.Match(
+            ffprobe => ProjectToMediaVersion(path, ffprobe),
+            Left<BaseError, MediaVersion>);
+    }
+
     public async Task<Either<BaseError, bool>> RefreshStatistics(
         string ffmpegPath,
         string ffprobePath,
@@ -45,37 +53,6 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         {
             string filePath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
             return await RefreshStatistics(ffmpegPath, ffprobePath, mediaItem, filePath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
-            _client.Notify(ex);
-            return BaseError.New(ex.Message);
-        }
-    }
-
-    public async Task<Either<BaseError, bool>> RefreshStatistics(
-        string ffmpegPath,
-        string ffprobePath,
-        MediaItem mediaItem,
-        string mediaItemPath)
-    {
-        try
-        {
-            Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, mediaItemPath);
-            return await maybeProbe.Match(
-                async ffprobe =>
-                {
-                    MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
-                    if (version.Duration.TotalSeconds < 1)
-                    {
-                        await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
-                    }
-
-                    bool result = await ApplyVersionUpdate(mediaItem, version, mediaItemPath);
-                    return Right<BaseError, bool>(result);
-                },
-                error => Task.FromResult(Left<BaseError, bool>(error)));
         }
         catch (Exception ex)
         {
@@ -199,6 +176,37 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
 
         return BaseError.New("BUG - this should never happen");
+    }
+
+    private async Task<Either<BaseError, bool>> RefreshStatistics(
+        string ffmpegPath,
+        string ffprobePath,
+        MediaItem mediaItem,
+        string mediaItemPath)
+    {
+        try
+        {
+            Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, mediaItemPath);
+            return await maybeProbe.Match(
+                async ffprobe =>
+                {
+                    MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
+                    if (version.Duration.TotalSeconds < 1)
+                    {
+                        await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
+                    }
+
+                    bool result = await ApplyVersionUpdate(mediaItem, version, mediaItemPath);
+                    return Right<BaseError, bool>(result);
+                },
+                error => Task.FromResult(Left<BaseError, bool>(error)));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
+            _client.Notify(ex);
+            return BaseError.New(ex.Message);
+        }
     }
 
     private async Task<bool> ApplyVersionUpdate(MediaItem mediaItem, MediaVersion version, string filePath)

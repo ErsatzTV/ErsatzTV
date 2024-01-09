@@ -5,8 +5,9 @@ public class Playout
     public int Id { get; set; }
     public int ChannelId { get; set; }
     public Channel Channel { get; set; }
-    public int ProgramScheduleId { get; set; }
+    public int? ProgramScheduleId { get; set; }
     public ProgramSchedule ProgramSchedule { get; set; }
+    public string ExternalJsonFile { get; set; }
     public List<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
     public ProgramSchedulePlayoutType ProgramSchedulePlayoutType { get; set; }
     public List<PlayoutItem> Items { get; set; }

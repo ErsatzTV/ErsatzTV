@@ -211,7 +211,7 @@ public class PlexServerApiClient : IPlexServerApiClient
     }
 
     public async Task<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>> GetMovieMetadataAndStatistics(
-        PlexLibrary library,
+        int plexMediaSourceId,
         string key,
         PlexConnection connection,
         PlexServerAuthToken token)
@@ -231,7 +231,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                     Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
                     return maybeVersion.Match<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>>(
                         version => Tuple(
-                            ProjectToMovieMetadata(version, response.Metadata, library.MediaSourceId),
+                            ProjectToMovieMetadata(version, response.Metadata, plexMediaSourceId),
                             version),
                         () => BaseError.New("Unable to locate metadata"));
                 },
@@ -244,7 +244,7 @@ public class PlexServerApiClient : IPlexServerApiClient
     }
 
     public async Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
-        PlexLibrary library,
+        int plexMediaSourceId,
         string key,
         PlexConnection connection,
         PlexServerAuthToken token)
@@ -264,7 +264,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                     Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
                     return maybeVersion.Match<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>>(
                         version => Tuple(
-                            ProjectToEpisodeMetadata(version, response.Metadata, library.MediaSourceId),
+                            ProjectToEpisodeMetadata(version, response.Metadata, plexMediaSourceId),
                             version),
                         () => BaseError.New("Unable to locate metadata"));
                 },
