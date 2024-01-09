@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.Scanner.Core.Metadata;
+﻿namespace ErsatzTV.Infrastructure.Metadata;
 
 public static class MetadataSongTag
 {

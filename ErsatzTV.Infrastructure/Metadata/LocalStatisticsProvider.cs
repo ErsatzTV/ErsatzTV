@@ -11,11 +11,10 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace ErsatzTV.Scanner.Core.Metadata;
+namespace ErsatzTV.Infrastructure.Metadata;
 
 public class LocalStatisticsProvider : ILocalStatisticsProvider
 {
@@ -242,7 +241,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             return BaseError.New($"FFprobe at {ffprobePath} exited with code {probe.ExitCode}");
         }
 
-        FFprobe? ffprobe = JsonConvert.DeserializeObject<FFprobe>(probe.StandardOutput);
+        FFprobe ffprobe = JsonConvert.DeserializeObject<FFprobe>(probe.StandardOutput);
         if (ffprobe is not null)
         {
             const string PATTERN = @"\[SAR\s+([0-9]+:[0-9]+)\s+DAR\s+([0-9]+:[0-9]+)\]";
@@ -338,7 +337,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
     }
 
-    internal MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
+    public MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
         Optional(probeOutput)
             .Filter(json => json is { format: not null, streams: not null })
             .ToValidation<BaseError>("Unable to parse ffprobe output")
@@ -398,7 +397,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    FFprobeStreamData? videoStream = json.streams?.FirstOrDefault(s => s.codec_type == "video");
+                    FFprobeStreamData videoStream = json.streams?.FirstOrDefault(s => s.codec_type == "video");
                     if (videoStream != null)
                     {
                         version.SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.sample_aspect_ratio)
@@ -535,7 +534,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                     Chapters = new List<MediaChapter>()
                 });
 
-    private static VideoScanKind ScanKindFromFieldOrder(string? fieldOrder) =>
+    private static VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
         fieldOrder?.ToLowerInvariant() switch
         {
             "tt" or "bb" or "tb" or "bt" => VideoScanKind.Interlaced,
@@ -544,9 +543,9 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         };
 
     // ReSharper disable InconsistentNaming
-    public record FFprobe(FFprobeFormat? format, List<FFprobeStreamData>? streams, List<FFprobeChapter>? chapters);
+    public record FFprobe(FFprobeFormat format, List<FFprobeStreamData> streams, List<FFprobeChapter> chapters);
 
-    public record FFprobeFormat(string duration, FFprobeTags? tags);
+    public record FFprobeFormat(string duration, FFprobeTags tags);
 
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
     public record FFprobeDisposition(int @default, int forced, int attached_pic);
@@ -554,44 +553,44 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
     public record FFprobeStreamData(
         int index,
-        string? codec_name,
-        string? profile,
-        string? codec_type,
+        string codec_name,
+        string profile,
+        string codec_type,
         int channels,
         int width,
         int height,
-        string? sample_aspect_ratio,
-        string? display_aspect_ratio,
-        string? pix_fmt,
-        string? color_range,
-        string? color_space,
-        string? color_transfer,
-        string? color_primaries,
-        string? field_order,
-        string? r_frame_rate,
-        string? bits_per_raw_sample,
-        FFprobeDisposition? disposition,
-        FFprobeTags? tags);
+        string sample_aspect_ratio,
+        string display_aspect_ratio,
+        string pix_fmt,
+        string color_range,
+        string color_space,
+        string color_transfer,
+        string color_primaries,
+        string field_order,
+        string r_frame_rate,
+        string bits_per_raw_sample,
+        FFprobeDisposition disposition,
+        FFprobeTags tags);
 
     [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores")]
     public record FFprobeChapter(
         long id,
-        string? start_time,
-        string? end_time,
-        FFprobeTags? tags);
+        string start_time,
+        string end_time,
+        FFprobeTags tags);
 
     public record FFprobeTags(
-        string? language,
-        string? title,
-        string? filename,
-        string? mimetype,
-        string? artist,
+        string language,
+        string title,
+        string filename,
+        string mimetype,
+        string artist,
         [property: JsonProperty(PropertyName = "album_artist")]
-        string? albumArtist,
-        string? album,
-        string? track,
-        string? genre,
-        string? date)
+        string albumArtist,
+        string album,
+        string track,
+        string genre,
+        string date)
     {
         public static readonly FFprobeTags Empty = new(null, null, null, null, null, null, null, null, null, null);
     }

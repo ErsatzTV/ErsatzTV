@@ -1285,7 +1285,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
     }
 
-    private static void AddMetadataGuids(Metadata metadata, Document doc)
+    private static void AddMetadataGuids(Core.Domain.Metadata metadata, Document doc)
     {
         foreach (MetadataGuid guid in metadata.Guids)
         {
@@ -1298,7 +1298,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     }
 
     // this is used for filtering duplicate search results
-    internal static string GetTitleAndYear(Metadata metadata) =>
+    internal static string GetTitleAndYear(Core.Domain.Metadata metadata) =>
         metadata switch
         {
             EpisodeMetadata em =>
@@ -1315,10 +1315,10 @@ public sealed class LuceneSearchIndex : ISearchIndex
             _ => $"{Title(metadata)}_{metadata.Year}".ToLowerInvariant()
         };
 
-    private static string Title(Metadata metadata) =>
+    private static string Title(Core.Domain.Metadata metadata) =>
         (metadata.Title ?? string.Empty).Replace(' ', '_');
 
-    internal static string GetJumpLetter(Metadata metadata)
+    internal static string GetJumpLetter(Core.Domain.Metadata metadata)
     {
         foreach (char c in (metadata.SortTitle ?? " ").ToLowerInvariant().HeadOrNone())
         {

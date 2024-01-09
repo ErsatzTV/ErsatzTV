@@ -10,12 +10,11 @@ using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Streaming;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace ErsatzTV.Scanner.Application.Streaming;
+namespace ErsatzTV.Infrastructure.Streaming;
 
 public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 {

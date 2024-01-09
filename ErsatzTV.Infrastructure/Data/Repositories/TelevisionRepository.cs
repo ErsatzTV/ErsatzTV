@@ -583,7 +583,7 @@ public class TelevisionRepository : ITelevisionRepository
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<bool> AddTag(Metadata metadata, Tag tag)
+    public async Task<bool> AddTag(Core.Domain.Metadata metadata, Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
