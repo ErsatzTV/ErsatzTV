@@ -237,7 +237,7 @@ public class PlexTelevisionLibraryScanner :
         {
             Either<BaseError, EpisodeMetadata> maybeMetadata =
                 await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
-                        library,
+                        library.MediaSourceId,
                         incoming.Key.Split("/").Last(),
                         connectionParameters.Connection,
                         connectionParameters.Token)
@@ -264,7 +264,7 @@ public class PlexTelevisionLibraryScanner :
 
         Either<BaseError, MediaVersion> maybeVersion =
             await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
-                    library,
+                    library.MediaSourceId,
                     incoming.Key.Split("/").Last(),
                     connectionParameters.Connection,
                     connectionParameters.Token)
@@ -288,7 +288,7 @@ public class PlexTelevisionLibraryScanner :
 
         Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeResult =
             await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
-                library,
+                library.MediaSourceId,
                 incoming.Key.Split("/").Last(),
                 connectionParameters.Connection,
                 connectionParameters.Token);

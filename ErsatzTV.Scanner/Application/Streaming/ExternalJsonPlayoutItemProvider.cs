@@ -6,6 +6,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Streaming;
+using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Streaming;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -21,6 +22,8 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
+    private readonly IPlexServerApiClient _plexServerApiClient;
+    private readonly IPlexSecretStore _plexSecretStore;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<ExternalJsonPlayoutItemProvider> _logger;
 
@@ -28,12 +31,16 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         IDbContextFactory<TvContext> dbContextFactory,
         ILocalFileSystem localFileSystem,
         IPlexPathReplacementService plexPathReplacementService,
+        IPlexServerApiClient plexServerApiClient,
+        IPlexSecretStore plexSecretStore,
         ILocalStatisticsProvider localStatisticsProvider,
         ILogger<ExternalJsonPlayoutItemProvider> logger)
     {
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
         _plexPathReplacementService = plexPathReplacementService;
+        _plexServerApiClient = plexServerApiClient;
+        _plexSecretStore = plexSecretStore;
         _localStatisticsProvider = localStatisticsProvider;
         _logger = logger;
     }
@@ -85,6 +92,8 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         // must deserialize channel from json
         foreach (ExternalJsonChannel channel in maybeChannel)
         {
+            // TODO: null start time should log and throw
+            
             DateTimeOffset startTime = DateTimeOffset.Parse(
                 channel.StartTime ?? string.Empty,
                 CultureInfo.InvariantCulture,
@@ -119,6 +128,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         // find any library path from the appropriate plex server
         List<LibraryPath> maybeLibraryPath = await dbContext.LibraryPaths
             .Filter(lp => ((PlexMediaSource)((PlexLibrary)lp.Library).MediaSource).ServerName == program.ServerKey)
+            .OrderBy(lp => lp.Id)
             .Take(1)
             .ToListAsync();
 
@@ -133,7 +143,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
                 return await StreamLocally(startTime, program, ffmpegPath, ffprobePath, localPath);
             }
 
-            return await StreamRemotely(startTime, program);
+            return await StreamRemotely(dbContext, startTime, program);
         }
         
         return new UnableToLocatePlayoutItem();
@@ -153,58 +163,140 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         foreach (MediaVersion mediaVersion in maybeMediaVersion.RightToSeq())
         {
             // build playout item
-            return new PlayoutItemWithPath(
-                new PlayoutItem
-                {
-                    Start = startTime.UtcDateTime,
-                    Finish = startTime.AddMilliseconds(program.Duration).UtcDateTime,
-                    FillerKind = FillerKind.None,
-                    ChapterTitle = null,
-                    GuideFinish = null,
-                    GuideGroup = 0,
-                    CustomTitle = null,
-                    InPoint = TimeSpan.Zero,
-                    OutPoint = TimeSpan.FromMilliseconds(program.Duration),
-                    // TODO: other video/filler?
-                    MediaItem = new Episode
+            var episode = new Episode
+            {
+                MediaVersions = [mediaVersion],
+                EpisodeMetadata =
+                [
+                    new EpisodeMetadata
                     {
-                        MediaVersions = [mediaVersion],
-                        EpisodeMetadata =
+                        EpisodeNumber = program.Episode,
+                        Title = program.Title,
+                    },
+                ],
+                Season = new Season
+                {
+                    SeasonNumber = program.Season,
+                    Show = new Show
+                    {
+                        ShowMetadata =
                         [
-                            new EpisodeMetadata
+                            new ShowMetadata
                             {
-                                EpisodeNumber = program.Episode,
-                                Title = program.Title,
-                            },
-                        ],
-                        Season = new Season
-                        {
-                            SeasonNumber = program.Season,
-                            Show = new Show
-                            {
-                                ShowMetadata =
-                                [
-                                    new ShowMetadata
-                                    {
-                                        Title = program.ShowTitle
-                                    }
-                                ]
+                                Title = program.ShowTitle
                             }
-                        }
+                        ]
                     }
-                },
-                localPath);
+                }
+            };
+
+            return new PlayoutItemWithPath(GetPlayoutItem(startTime, episode, program), localPath);
         }
 
         return new UnableToLocatePlayoutItem();
     }
     
-    private static async Task<Either<BaseError, PlayoutItemWithPath>> StreamRemotely(
+    private async Task<Either<BaseError, PlayoutItemWithPath>> StreamRemotely(
+        TvContext dbContext,
         DateTimeOffset startTime,
         ExternalJsonProgram program)
     {
-        await Task.Delay(10);
+        Option<PlexMediaSource> maybeServer = await dbContext.PlexMediaSources
+            .Include(pms => pms.Connections)
+            .SelectOneAsync(pms => pms.ServerName, pms => pms.ServerName == program.ServerKey);
         
-        throw new NotImplementedException();
+        foreach (PlexMediaSource server in maybeServer)
+        {
+            Option<PlexConnection> maybeConnection = server.Connections.SingleOrDefault(c => c.IsActive);
+            foreach (PlexConnection connection in maybeConnection)
+            {
+                Option<PlexServerAuthToken> maybeToken =
+                    await _plexSecretStore.GetServerAuthToken(server.ClientIdentifier);
+
+                foreach (PlexServerAuthToken token in maybeToken)
+                {
+                    MediaItem mediaItem = program.Type switch
+                    {
+                        "episode" => await GetPlexEpisode(server, connection, token, program),
+                        _ => await GetPlexMovie(server, connection, token, program)
+                    };
+
+                    return new PlayoutItemWithPath(
+                        GetPlayoutItem(startTime, mediaItem, program),
+                        $"http://localhost:{Settings.ListenPort}/media/plex/{server.Id}/{program.PlexFile}");
+                }
+            }
+        }
+
+        // TODO: log errors?
+        return new UnableToLocatePlayoutItem();
     }
+
+    private async Task<MediaItem> GetPlexEpisode(
+        PlexMediaSource plexMediaSource,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        ExternalJsonProgram program)
+    {
+        Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
+            await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
+                plexMediaSource.Id,
+                program.RatingKey,
+                connection,
+                token);
+
+        foreach (Tuple<EpisodeMetadata, MediaVersion> result in maybeStatistics.RightToSeq())
+        {
+            return new PlexEpisode
+            {
+                EpisodeMetadata = [result.Item1],
+                MediaVersions = [result.Item2]
+            };
+        }
+
+        throw new NotSupportedException();
+    }
+
+    private async Task<MediaItem> GetPlexMovie(
+        PlexMediaSource plexMediaSource,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        ExternalJsonProgram program)
+    {
+        Either<BaseError, Tuple<MovieMetadata, MediaVersion>> maybeStatistics =
+            await _plexServerApiClient.GetMovieMetadataAndStatistics(
+                plexMediaSource.Id,
+                program.RatingKey,
+                connection,
+                token);
+
+        foreach (Tuple<MovieMetadata, MediaVersion> result in maybeStatistics.RightToSeq())
+        {
+            return new PlexMovie
+            {
+                MovieMetadata = [result.Item1],
+                MediaVersions = [result.Item2]
+            };
+        }
+
+        throw new NotSupportedException();
+    }
+
+    private static PlayoutItem GetPlayoutItem(
+        DateTimeOffset startTime,
+        MediaItem mediaItem,
+        ExternalJsonProgram program) =>
+        new()
+        {
+            Start = startTime.UtcDateTime,
+            Finish = startTime.AddMilliseconds(program.Duration).UtcDateTime,
+            FillerKind = FillerKind.None,
+            ChapterTitle = null,
+            GuideFinish = null,
+            GuideGroup = 0,
+            CustomTitle = null,
+            InPoint = TimeSpan.Zero,
+            OutPoint = TimeSpan.FromMilliseconds(program.Duration),
+            MediaItem = mediaItem
+        };
 }

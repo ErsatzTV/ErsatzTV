@@ -19,6 +19,12 @@ public class ExternalJsonProgram
     [JsonProperty("key")]
     public string Key { get; set; }
     
+    [JsonProperty("ratingKey")]
+    public string RatingKey { get; set; }
+    
+    [JsonProperty("type")]
+    public string Type { get; set; }
+    
     [JsonProperty("duration")]
     public int Duration { get; set; }
     

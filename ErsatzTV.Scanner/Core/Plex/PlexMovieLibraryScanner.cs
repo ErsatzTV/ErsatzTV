@@ -125,7 +125,7 @@ public class PlexMovieLibraryScanner :
 
         Either<BaseError, MediaVersion> maybeVersion =
             await _plexServerApiClient.GetMovieMetadataAndStatistics(
-                    library,
+                    library.MediaSourceId,
                     incoming.Key.Split("/").Last(),
                     connectionParameters.Connection,
                     connectionParameters.Token)
@@ -149,7 +149,7 @@ public class PlexMovieLibraryScanner :
 
         Either<BaseError, Tuple<MovieMetadata, MediaVersion>> maybeResult =
             await _plexServerApiClient.GetMovieMetadataAndStatistics(
-                library,
+                library.MediaSourceId,
                 incoming.Key.Split("/").Last(),
                 connectionParameters.Connection,
                 connectionParameters.Token);
