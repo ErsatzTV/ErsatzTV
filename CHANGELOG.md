@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `None`: no change to scheduling behavior - all groups (shows and artists) will be shuffled/ordered together
     - `Ordered Groups`: each time this item is scheduled, the entire `Duration` or `Multiple` will be filled with a single group, and the groups will rotate in a fixed order
     - `Shuffled Groups`: each time this item is scheduled, the entire `Duration` or `Multiple` will be filled with a single group, and the groups will rotate in a shuffled order
+- Add new playout type `External Json`
+  - Use this playout type when you want to manage the channel schedule using DizqueTV
+  - You must point ErsatzTV to the channel number json file from DizqueTV, e.g. `channels/1.json`
+  - For playback, ErsatzTV will first check for the appropriate media file file locally
+    - If found, ErsatzTV will run ffprobe to get statistics immediately before streaming from disk
+  - When local files are unavailable, ErsatzTV must be logged into the same Plex server as DizqueTV
+    - ErsatzTV will ask Plex for statistics immediately before streaming from Plex
+  - **Note: XMLTV GUIDE DATA IS NOT YET SUPPORTED FOR THIS PLAYOUT TYPE** 
 
 ### Fixed
 - Fix error loading path replacements when using MySql
