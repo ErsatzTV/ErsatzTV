@@ -6,10 +6,12 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Jellyfin;
+using ErsatzTV.Core.Streaming;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
+using Newtonsoft.Json;
 
 namespace ErsatzTV.Application.Channels;
 
@@ -38,7 +40,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        List<PlayoutItem> sorted = await dbContext.Playouts
+        List<Playout> playouts = await dbContext.Playouts
             .AsNoTracking()
             .Filter(pi => pi.Channel.Number == request.ChannelNumber)
             .Include(p => p.Items)
@@ -85,8 +87,22 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Song).SongMetadata)
             .ThenInclude(vm => vm.Artwork)
-            .ToListAsync(cancellationToken)
-            .Map(list => list.Collect(p => p.Items).OrderBy(pi => pi.Start).ToList());
+            .ToListAsync(cancellationToken);
+
+        List<PlayoutItem> sorted = [];
+        
+        foreach (Playout playout in playouts)
+        {
+            switch (playout.ProgramSchedulePlayoutType)
+            {
+                case ProgramSchedulePlayoutType.Flood:
+                    sorted.AddRange(playouts.Collect(p => p.Items).OrderBy(pi => pi.Start));
+                    break;
+                case ProgramSchedulePlayoutType.ExternalJson:
+                    sorted.AddRange(await CollectExternalJsonItems(playout.ExternalJsonFile));
+                    break;
+            }
+        }
 
         await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         await using var xml = XmlWriter.Create(
@@ -374,6 +390,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             _ => 440
         };
 
+        if (artworkPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || artworkPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return artworkPath;
+        }
         if (artworkPath.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             artworkPath = JellyfinUrl.PlaceholderProxyForArtwork(artworkPath, artworkKind, height);
@@ -519,6 +539,148 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         }
 
         return maybeArtwork.IfNone(string.Empty);
+    }
+
+    private async Task<List<PlayoutItem>> CollectExternalJsonItems(string path)
+    {
+        var result = new List<PlayoutItem>();
+
+        if (_localFileSystem.FileExists(path))
+        {
+            Option<ExternalJsonChannel> maybeChannel = JsonConvert.DeserializeObject<ExternalJsonChannel>(
+                await File.ReadAllTextAsync(path));
+
+            // must deserialize channel from json
+            foreach (ExternalJsonChannel channel in maybeChannel)
+            {
+                // TODO: null start time should log and throw
+            
+                DateTimeOffset startTime = DateTimeOffset.Parse(
+                    channel.StartTime ?? string.Empty,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal).ToLocalTime();
+
+                for (var i = 0; i < channel.Programs.Length; i++)
+                {
+                    ExternalJsonProgram program = channel.Programs[i];
+                    int milliseconds = program.Duration;
+                    DateTimeOffset nextStart = startTime + TimeSpan.FromMilliseconds(milliseconds);
+                    if (program.Duration >= channel.GuideMinimumDurationSeconds * 1000)
+                    {
+                        result.Add(BuildPlayoutItem(startTime, program, i));
+                    }
+
+                    startTime = nextStart;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static PlayoutItem BuildPlayoutItem(DateTimeOffset startTime, ExternalJsonProgram program, int count)
+    {
+        MediaItem mediaItem = program.Type switch
+        {
+            "episode" => BuildEpisode(program),
+            _ => BuildMovie(program)
+        };
+
+        return new PlayoutItem
+        {
+            Start = startTime.UtcDateTime,
+            Finish = startTime.AddMilliseconds(program.Duration).UtcDateTime,
+            FillerKind = FillerKind.None,
+            ChapterTitle = null,
+            GuideFinish = null,
+            GuideGroup = count,
+            CustomTitle = null,
+            InPoint = TimeSpan.Zero,
+            OutPoint = TimeSpan.FromMilliseconds(program.Duration),
+            MediaItem = mediaItem
+        };
+    }
+
+    private static Episode BuildEpisode(ExternalJsonProgram program)
+    {
+        var artwork = new List<Artwork>();
+        if (!string.IsNullOrWhiteSpace(program.Icon))
+        {
+            artwork.Add(new Artwork
+            {
+                ArtworkKind = ArtworkKind.Thumbnail,
+                Path = program.Icon,
+                SourcePath = program.Icon
+            });
+        }
+        
+        return new Episode
+        {
+            MediaVersions =
+            [
+                new MediaVersion
+                {
+                    Duration = TimeSpan.FromMilliseconds(program.Duration)
+                }
+            ],
+            EpisodeMetadata =
+            [
+                new EpisodeMetadata
+                {
+                    EpisodeNumber = program.Episode,
+                    Title = program.Title
+                },
+            ],
+            Season = new Season
+            {
+                SeasonNumber = program.Season,
+                Show = new Show
+                {
+                    ShowMetadata =
+                    [
+                        new ShowMetadata
+                        {
+                            Title = program.ShowTitle,
+                            Artwork = artwork
+                        }
+                    ]
+                }
+            }
+        };
+    }
+
+    private static Movie BuildMovie(ExternalJsonProgram program)
+    {
+        var artwork = new List<Artwork>();
+        if (!string.IsNullOrWhiteSpace(program.Icon))
+        {
+            artwork.Add(new Artwork
+            {
+                ArtworkKind = ArtworkKind.Poster,
+                Path = program.Icon,
+                SourcePath = program.Icon
+            });
+        }
+
+        return new Movie
+        {
+            MediaVersions =
+            [
+                new MediaVersion
+                {
+                    Duration = TimeSpan.FromMilliseconds(program.Duration)
+                }
+            ],
+            MovieMetadata =
+            [
+                new MovieMetadata
+                {
+                    Title = program.Title,
+                    Year = program.Year,
+                    Artwork = artwork
+                }
+            ]
+        };
     }
 
     private sealed record ContentRating(Option<string> System, string Value);

@@ -81,7 +81,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             foreach (string channelNumber in maybeChannelNumber)
             {
                 string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
-                if (hasChanges || !File.Exists(fileName))
+                if (hasChanges || !File.Exists(fileName) || playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)
                 {
                     await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
                 }

@@ -1,4 +1,6 @@
-﻿using ErsatzTV.Core;
+﻿using System.Threading.Channels;
+using ErsatzTV.Application.Channels;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -9,9 +11,15 @@ namespace ErsatzTV.Application.Playouts;
 public class UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJsonPlayout, Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
-    public UpdateExternalJsonPlayoutHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public UpdateExternalJsonPlayoutHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ChannelWriter<IBackgroundServiceRequest> workerChannel)
+    {
         _dbContextFactory = dbContextFactory;
+        _workerChannel = workerChannel;
+    }
 
     public async Task<Either<BaseError, PlayoutNameViewModel>> Handle(
         UpdateExternalJsonPlayout request,
@@ -22,14 +30,17 @@ public class UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJs
         return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
     }
 
-    private static async Task<PlayoutNameViewModel> ApplyUpdateRequest(
+    private async Task<PlayoutNameViewModel> ApplyUpdateRequest(
         TvContext dbContext,
         UpdateExternalJsonPlayout request,
         Playout playout)
     {
         playout.ExternalJsonFile = request.ExternalJsonFile;
-        
-        await dbContext.SaveChangesAsync();
+
+        if (await dbContext.SaveChangesAsync() > 0)
+        {
+            await _workerChannel.WriteAsync(new RefreshChannelData(playout.Channel.Number));
+        }
 
         return new PlayoutNameViewModel(
             playout.Id,

@@ -22,6 +22,12 @@ public class ExternalJsonProgram
     [JsonProperty("ratingKey")]
     public string RatingKey { get; set; }
     
+    [JsonProperty("icon")]
+    public string Icon { get; set; }
+    
+    [JsonProperty("year")]
+    public int? Year { get; set; }
+    
     [JsonProperty("type")]
     public string Type { get; set; }
     
