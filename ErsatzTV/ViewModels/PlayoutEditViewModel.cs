@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Application.ProgramSchedules;
-using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels;
 

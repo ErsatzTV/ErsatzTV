@@ -8,4 +8,5 @@ public record PlayoutNameViewModel(
     string ChannelName,
     string ChannelNumber,
     string ScheduleName,
+    string ExternalJsonFile,
     Option<TimeSpan> DailyRebuildTime);

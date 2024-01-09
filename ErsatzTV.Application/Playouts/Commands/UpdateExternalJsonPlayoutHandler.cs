@@ -6,15 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseError, PlayoutNameViewModel>>
+public class UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJsonPlayout, Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public UpdatePlayoutHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public UpdateExternalJsonPlayoutHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, PlayoutNameViewModel>> Handle(
-        UpdatePlayout request,
+        UpdateExternalJsonPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -24,16 +24,11 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
 
     private static async Task<PlayoutNameViewModel> ApplyUpdateRequest(
         TvContext dbContext,
-        UpdatePlayout request,
+        UpdateExternalJsonPlayout request,
         Playout playout)
     {
-        playout.DailyRebuildTime = null;
-
-        foreach (TimeSpan dailyRebuildTime in request.DailyRebuildTime)
-        {
-            playout.DailyRebuildTime = dailyRebuildTime;
-        }
-
+        playout.ExternalJsonFile = request.ExternalJsonFile;
+        
         await dbContext.SaveChangesAsync();
 
         return new PlayoutNameViewModel(
@@ -46,15 +41,14 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
             Optional(playout.DailyRebuildTime));
     }
 
-    private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, UpdatePlayout request) =>
+    private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, UpdateExternalJsonPlayout request) =>
         PlayoutMustExist(dbContext, request);
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
-        UpdatePlayout updatePlayout) =>
+        UpdateExternalJsonPlayout updatePlayout) =>
         dbContext.Playouts
             .Include(p => p.Channel)
-            .Include(p => p.ProgramSchedule)
             .SelectOneAsync(p => p.Id, p => p.Id == updatePlayout.PlayoutId)
             .Map(o => o.ToValidation<BaseError>("Playout does not exist."));
 }

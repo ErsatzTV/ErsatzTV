@@ -79,6 +79,17 @@
                             </MudIconButton>
                         </MudTooltip>
                     }
+                    else if (context.PlayoutType == ProgramSchedulePlayoutType.ExternalJson)
+                    {
+                        <MudTooltip Text="Edit External Json File">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => EditExternalJsonFile(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
+                    }
                     else
                     {
                         <div style="width: 48px"></div>
@@ -184,6 +195,25 @@
         if (_detailTable != null)
         {
             await _detailTable.ReloadServerData();
+        }
+    }
+
+    private async Task EditExternalJsonFile(PlayoutNameViewModel playout)
+    {
+        var parameters = new DialogParameters { { "ExternalJsonFile", $"{playout.ExternalJsonFile}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large };
+
+        IDialogReference dialog = await Dialog.ShowAsync<EditExternalJsonFileDialog>("Edit External Json File", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await Mediator.Send(new UpdateExternalJsonPlayout(playout.PlayoutId, result.Data as string ?? playout.ExternalJsonFile), _cts.Token);
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
+
+            _selectedPlayoutId = null;
         }
     }
 
