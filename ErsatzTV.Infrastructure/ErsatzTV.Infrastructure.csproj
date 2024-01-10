@@ -12,18 +12,18 @@
     <ItemGroup>
       <PackageReference Include="Blurhash.ImageSharp" Version="3.0.0" />
       <PackageReference Include="CliWrap" Version="3.6.4" />
-      <PackageReference Include="Dapper" Version="2.1.24" />
+      <PackageReference Include="Dapper" Version="2.1.28" />
       <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.11.0" />
-      <PackageReference Include="Jint" Version="3.0.0-beta-2058" />
+      <PackageReference Include="Jint" Version="3.0.0-beta-2059" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00016" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.1">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.1" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.8.14">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -31,7 +31,7 @@
       <PackageReference Include="Refit" Version="7.0.0" />
       <PackageReference Include="Refit.Newtonsoft.Json" Version="7.0.0" />
       <PackageReference Include="Refit.Xml" Version="7.0.0" />
-      <PackageReference Include="Scriban.Signed" Version="5.9.0" />
+      <PackageReference Include="Scriban.Signed" Version="5.9.1" />
     </ItemGroup>
 
     <ItemGroup>

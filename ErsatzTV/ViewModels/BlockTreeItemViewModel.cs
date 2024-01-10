@@ -9,6 +9,7 @@ public class BlockTreeItemViewModel
     public BlockTreeItemViewModel(BlockGroupViewModel blockGroup)
     {
         Text = blockGroup.Name;
+        EndText = string.Empty;
         TreeItems = [];
         CanExpand = blockGroup.BlockCount > 0;
         BlockGroupId = blockGroup.Id;
@@ -18,12 +19,15 @@ public class BlockTreeItemViewModel
     public BlockTreeItemViewModel(BlockViewModel block)
     {
         Text = block.Name;
+        EndText = $"{block.Minutes} minutes";
         TreeItems = [];
         CanExpand = false;
         BlockId = block.Id;
     }
     
     public string Text { get; }
+    
+    public string EndText { get; }
     
     public string Icon { get; }
     

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain.Scheduling;
+﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Application.Scheduling;
 
@@ -8,5 +9,26 @@ internal static class Mapper
         new(blockGroup.Id, blockGroup.Name, blockGroup.Blocks.Count);
 
     internal static BlockViewModel ProjectToViewModel(Block block) =>
-        new(block.Id, block.Name);
+        new(block.Id, block.Name, block.Minutes);
+
+    internal static BlockItemViewModel ProjectToViewModel(BlockItem blockItem) =>
+        new(
+            blockItem.Id,
+            blockItem.Index,
+            blockItem.CollectionType,
+            blockItem.Collection is not null ? MediaCollections.Mapper.ProjectToViewModel(blockItem.Collection) : null,
+            blockItem.MultiCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(blockItem.MultiCollection)
+                : null,
+            blockItem.SmartCollection is not null
+                ? MediaCollections.Mapper.ProjectToViewModel(blockItem.SmartCollection)
+                : null,
+            blockItem.MediaItem switch
+            {
+                Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
+                _ => null
+            },
+            blockItem.PlaybackOrder);
 }

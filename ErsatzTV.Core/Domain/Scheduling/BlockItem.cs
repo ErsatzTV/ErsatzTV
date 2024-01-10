@@ -3,6 +3,7 @@ namespace ErsatzTV.Core.Domain.Scheduling;
 public class BlockItem
 {
     public int Id { get; set; }
+    public int Index { get; set; }
     public int BlockId { get; set; }
     public Block Block { get; set; }
     public ProgramScheduleItemCollectionType CollectionType { get; set; }

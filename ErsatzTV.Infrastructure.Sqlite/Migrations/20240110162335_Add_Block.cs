@@ -50,6 +50,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    Index = table.Column<int>(type: "INTEGER", nullable: false),
                     BlockId = table.Column<int>(type: "INTEGER", nullable: false),
                     CollectionType = table.Column<int>(type: "INTEGER", nullable: false),
                     CollectionId = table.Column<int>(type: "INTEGER", nullable: true),

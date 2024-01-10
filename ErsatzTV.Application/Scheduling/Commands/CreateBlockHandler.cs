@@ -26,7 +26,13 @@ public class CreateBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
 
     private static Task<Validation<BaseError, Block>> Validate(CreateBlock request) =>
         Task.FromResult(
-            ValidateName(request).Map(name => new Block { BlockGroupId = request.BlockGroupId, Name = name }));
+            ValidateName(request).Map(
+                name => new Block
+                {
+                    BlockGroupId = request.BlockGroupId,
+                    Name = name,
+                    Minutes = 30
+                }));
 
     private static Validation<BaseError, string> ValidateName(CreateBlock createBlock) =>
         createBlock.NotEmpty(x => x.Name)

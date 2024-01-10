@@ -86,6 +86,7 @@ public class TvContext : DbContext
     public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }
     public DbSet<BlockGroup> BlockGroups { get; set; }
     public DbSet<Block> Blocks { get; set; }
+    public DbSet<BlockItem> BlockItems { get; set; }
     public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
     public DbSet<Resolution> Resolutions { get; set; }
     public DbSet<LanguageCode> LanguageCodes { get; set; }

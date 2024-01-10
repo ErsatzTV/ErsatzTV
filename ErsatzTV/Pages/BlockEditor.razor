@@ -1,0 +1,376 @@
+﻿@page "/blocks/{Id:int}"
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Application.Search
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<BlockEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Edit Block</MudText>
+    <div style="max-width: 400px">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Name" @bind-Value="_block.Name" For="@(() => _block.Name)"/>
+                <MudTextField Label="Duration" @bind-Value="_block.Minutes"
+                              For="@(() => _block.Minutes)"
+                              Adornment="Adornment.End"
+                              AdornmentText="minutes" />
+            </MudCardContent>
+        </MudCard>
+    </div>
+    <MudTable Class="mt-6" Hover="true" Items="_block.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+        @* TODO: edit block name, edit block duration (minutes) *@
+        <ColGroup>
+            <col/>
+            <col style="width: 60px;"/>
+            <col style="width: 60px;"/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Collection</MudTh>
+            <MudTh/>
+            <MudTh/>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Collection">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.CollectionName
+                </MudText>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                               OnClick="@(_ => MoveItemUp(context))"
+                               Disabled="@(_block.Items.All(x => x.Index >= context.Index))">
+                </MudIconButton>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                               OnClick="@(_ => MoveItemDown(context))"
+                               Disabled="@(_block.Items.All(x => x.Index <= context.Index))">
+                </MudIconButton>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(_ => RemoveBlockItem(context))">
+                </MudIconButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddBlockItem())" Class="mt-4">
+    Add Block Item
+</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+    Save Changes
+</MudButton>
+
+@if (_selectedItem is not null)
+{
+    <EditForm Model="_selectedItem">
+        <FluentValidationValidator/>
+        <div style="display: flex; flex-direction: row;" class="mt-6">
+            <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                        </MudSelect>
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
+                        {
+                            <MudAutocomplete Class="mt-3" T="MediaCollectionViewModel" Label="Collection"
+                                             @bind-Value="_selectedItem.Collection" SearchFunc="@SearchCollections"
+                                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                                <MoreItemsTemplate>
+                                    <MudText Align="Align.Center" Class="px-4 py-1">
+                                        Only the first 10 items are shown
+                                    </MudText>
+                                </MoreItemsTemplate>
+                            </MudAutocomplete>
+                        }
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                        {
+                            <MudAutocomplete Class="mt-3" T="MultiCollectionViewModel" Label="Multi Collection"
+                                             @bind-Value="_selectedItem.MultiCollection" SearchFunc="@SearchMultiCollections"
+                                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                                <MoreItemsTemplate>
+                                    <MudText Align="Align.Center" Class="px-4 py-1">
+                                        Only the first 10 items are shown
+                                    </MudText>
+                                </MoreItemsTemplate>
+                            </MudAutocomplete>
+                        }
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+                        {
+                            <MudAutocomplete Class="mt-3" T="SmartCollectionViewModel" Label="Smart Collection"
+                                             @bind-Value="_selectedItem.SmartCollection" SearchFunc="@SearchSmartCollections"
+                                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                                <MoreItemsTemplate>
+                                    <MudText Align="Align.Center" Class="px-4 py-1">
+                                        Only the first 10 items are shown
+                                    </MudText>
+                                </MoreItemsTemplate>
+                            </MudAutocomplete>
+                        }
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+                        {
+                            <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Television Show"
+                                             @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchTelevisionShows"
+                                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
+                                <MoreItemsTemplate>
+                                    <MudText Align="Align.Center" Class="px-4 py-1">
+                                        Only the first 10 items are shown
+                                    </MudText>
+                                </MoreItemsTemplate>
+                            </MudAutocomplete>
+                        }
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+                        {
+                            <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Television Season"
+                                             @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchTelevisionSeasons"
+                                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                                             MaxItems="20">
+                                <MoreItemsTemplate>
+                                    <MudText Align="Align.Center" Class="px-4 py-1">
+                                        Only the first 20 items are shown
+                                    </MudText>
+                                </MoreItemsTemplate>
+                            </MudAutocomplete>
+                        }
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
+                        {
+                            <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Artist"
+                                             @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchArtists"
+                                             ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
+                                             MaxItems="10">
+                                <MoreItemsTemplate>
+                                    <MudText Align="Align.Center" Class="px-4 py-1">
+                                        Only the first 10 items are shown
+                                    </MudText>
+                                </MoreItemsTemplate>
+                            </MudAutocomplete>
+                        }
+                        <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
+                            @switch (_selectedItem.CollectionType)
+                            {
+                                case ProgramScheduleItemCollectionType.MultiCollection:
+                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                    break;
+                                case ProgramScheduleItemCollectionType.Collection:
+                                case ProgramScheduleItemCollectionType.SmartCollection:
+                                    <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                    break;
+                                case ProgramScheduleItemCollectionType.TelevisionShow:
+                                    <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem>
+                                    break;
+                                case ProgramScheduleItemCollectionType.TelevisionSeason:
+                                case ProgramScheduleItemCollectionType.Artist:
+                                case ProgramScheduleItemCollectionType.FakeCollection:
+                                default:
+                                    <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                    break;
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                </MudCard>
+            </div>
+        </div>
+    </EditForm>
+}
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private BlockItemsEditViewModel _block = new();
+    private BlockItemEditViewModel _selectedItem;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync() => await LoadBlockItems();
+
+    private async Task LoadBlockItems()
+    {
+        Option<BlockViewModel> maybeBlock = await Mediator.Send(new GetBlockById(Id), _cts.Token);
+        if (maybeBlock.IsNone)
+        {
+            NavigationManager.NavigateTo("blocks");
+            return;
+        }
+        
+        foreach (BlockViewModel block in maybeBlock)
+        {
+            _block = new BlockItemsEditViewModel
+            {
+                Name = block.Name,
+                Minutes = block.Minutes,
+                Items = []
+            };
+        }
+
+        Option<IEnumerable<BlockItemViewModel>> maybeResults = await Mediator.Send(new GetBlockItems(Id), _cts.Token);
+        foreach (IEnumerable<BlockItemViewModel> items in maybeResults)
+        {
+            _block.Items.AddRange(items.Map(ProjectToEditViewModel));
+            if (_block.Items.Count == 1)
+            {
+                _selectedItem = _block.Items.Head();
+            }
+        }
+    }
+
+    private async Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<MediaCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<MultiCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchMultiCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<SmartCollectionViewModel>();
+        }
+
+        return await Mediator.Send(new SearchSmartCollections(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchTelevisionShows(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchTelevisionSeasons(value), _cts.Token);
+    }
+
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<NamedMediaItemViewModel>();
+        }
+
+        return await Mediator.Send(new SearchArtists(value), _cts.Token);
+    }
+
+    private static BlockItemEditViewModel ProjectToEditViewModel(BlockItemViewModel item) =>
+        new()
+        {
+            Id = item.Id,
+            Index = item.Index,
+            CollectionType = item.CollectionType,
+            Collection = item.Collection,
+            MultiCollection = item.MultiCollection,
+            SmartCollection = item.SmartCollection,
+            MediaItem = item.MediaItem,
+            PlaybackOrder = item.PlaybackOrder
+        };
+
+    private void AddBlockItem()
+    {
+        var item = new BlockItemEditViewModel
+        {
+            Index = _block.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
+            PlaybackOrder = PlaybackOrder.Shuffle,
+            CollectionType = ProgramScheduleItemCollectionType.Collection
+        };
+
+        _block.Items.Add(item);
+        _selectedItem = item;
+    }
+
+    private void RemoveBlockItem(BlockItemEditViewModel item)
+    {
+        _selectedItem = null;
+        _block.Items.Remove(item);
+    }
+
+    private void MoveItemUp(BlockItemEditViewModel item)
+    {
+        // swap with lower index
+        BlockItemEditViewModel toSwap = _block.Items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
+        (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
+    }
+
+    private void MoveItemDown(BlockItemEditViewModel item)
+    {
+        // swap with higher index
+        BlockItemEditViewModel toSwap = _block.Items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
+        (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
+    }
+
+    private async Task SaveChanges()
+    {
+        var items = _block.Items.Map(
+            item => new ReplaceBlockItem(
+                item.Index,
+                item.CollectionType,
+                item.Collection?.Id,
+                item.MultiCollection?.Id,
+                item.SmartCollection?.Id,
+                item.MediaItem?.MediaItemId,
+                item.PlaybackOrder)).ToList();
+
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceBlockItems(Id, _block.Name, _block.Minutes, items), _cts.Token)
+            .Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving block: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving block: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/blocks"));
+    }
+}
