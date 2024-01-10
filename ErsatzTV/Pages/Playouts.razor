@@ -13,7 +13,10 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
             Add Playout
         </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add/externaljson">
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/add/{PlayoutKind.Block}")">
+            Add Block Playout
+        </MudButton>
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/add/{PlayoutKind.ExternalJson}")">
             Add External Json Playout
         </MudButton>
     </div>
@@ -30,6 +33,7 @@
         <ColGroup>
             <col/>
             <col/>
+            <col/>
             <col style="width: 225px;"/>
         </ColGroup>
         <HeaderContent>
@@ -43,13 +47,26 @@
                     Default Schedule
                 </MudTableSortLabel>
             </MudTh>
-            @* <MudTh>Playout Type</MudTh> *@
+            <MudTh>Playout Type</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Channel">@context.ChannelNumber - @context.ChannelName</MudTd>
             <MudTd DataLabel="Schedule">@context.ScheduleName</MudTd>
-            @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
+            <MudTd DataLabel="Playout Type">
+                @switch (context.PlayoutType)
+                {
+                    case ProgramSchedulePlayoutType.Block:
+                        <span>Block</span>
+                        break;
+                    case ProgramSchedulePlayoutType.ExternalJson:
+                        <span>External Json</span>
+                        break;
+                    default:
+                        <span></span>
+                        break;
+                } 
+            </MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
                     <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
@@ -201,7 +218,7 @@
     private async Task EditExternalJsonFile(PlayoutNameViewModel playout)
     {
         var parameters = new DialogParameters { { "ExternalJsonFile", $"{playout.ExternalJsonFile}" } };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
 
         IDialogReference dialog = await Dialog.ShowAsync<EditExternalJsonFileDialog>("Edit External Json File", parameters, options);
         DialogResult result = await dialog.Result;

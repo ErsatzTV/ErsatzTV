@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Domain.Scheduling;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -83,6 +84,8 @@ public class TvContext : DbContext
     public DbSet<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
     public DbSet<PlayoutItem> PlayoutItems { get; set; }
     public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }
+    public DbSet<BlockGroup> BlockGroups { get; set; }
+    public DbSet<Block> Blocks { get; set; }
     public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
     public DbSet<Resolution> Resolutions { get; set; }
     public DbSet<LanguageCode> LanguageCodes { get; set; }

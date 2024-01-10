@@ -43,10 +43,11 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
-        if (playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)
+        if (playout.ProgramSchedulePlayoutType is not ProgramSchedulePlayoutType.Flood)
         {
-            _logger.LogDebug(
-                "Skipping external json playout build on channel {Number} - {Name}",
+            _logger.LogWarning(
+                "Skipping playout build with type {Type} on channel {Number} - {Name}",
+                playout.ProgramSchedulePlayoutType,
                 playout.Channel.Number,
                 playout.Channel.Name);
 

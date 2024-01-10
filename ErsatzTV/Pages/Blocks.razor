@@ -1,0 +1,182 @@
+@page "/blocks"
+@using S=System.Collections.Generic
+@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject ILogger<Blocks> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Blocks</MudText>
+    <MudGrid>
+        <MudItem xs="4">
+            <div style="max-width: 400px;" class="mb-4 mr-4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Class="mt-3 mx-3" Label="Block Group Name" @bind-Value="_blockGroupName" For="@(() => _blockGroupName)"/>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockGroup())" Class="ml-4 mb-4">
+                            Add Block Group
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px;" class="mb-4">
+                <MudCard>
+                    <MudCardContent>
+                        <div class="mx-4">
+                            <MudSelect Label="Block Group" @bind-Value="_selectedBlockGroup" Class="mt-3">
+                                @foreach (BlockGroupViewModel blockGroup in _blockGroups)
+                                {
+                                    <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField Class="mt-3" Label="Block Name" @bind-Value="_blockName" For="@(() => _blockName)"/>
+                        </div>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlock())" Class="ml-4 mb-4">
+                            Add Block
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+    </MudGrid>
+    <MudCard Width="100%">
+        <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true">
+            <ItemTemplate Context="item">
+                <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                    <BodyContent>
+                        <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                            <MudText Style="justify-self: start;">@item.Text</MudText>
+                            <div style="justify-self: end;">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit"/>
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item))" />
+                            </div>
+                        </div>
+                    </BodyContent>
+                </MudTreeViewItem>
+            </ItemTemplate>
+        </MudTreeView>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private S.HashSet<BlockTreeItemViewModel> TreeItems { get; set; } = [];
+    private List<BlockGroupViewModel> _blockGroups = [];
+    private BlockGroupViewModel _selectedBlockGroup;
+    private string _blockGroupName;
+    private string _blockName;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadBlockGroups();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ReloadBlockGroups()
+    {
+        _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
+        TreeItems = _blockGroups.Map(g => new BlockTreeItemViewModel(g)).ToHashSet();
+    }
+
+    private async Task AddBlockGroup()
+    {
+        if (!string.IsNullOrWhiteSpace(_blockGroupName))
+        {
+            Either<BaseError, BlockGroupViewModel> result = await Mediator.Send(new CreateBlockGroup(_blockGroupName), _cts.Token);
+
+            foreach (BaseError error in result.LeftToSeq())
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error adding block group: {Error}", error.Value);
+            }
+
+            foreach (BlockGroupViewModel blockGroup in result.RightToSeq())
+            {
+                TreeItems.Add(new BlockTreeItemViewModel(blockGroup));
+                _blockGroupName = null;
+                
+                _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+    
+    private async Task AddBlock()
+    {
+        if (_selectedBlockGroup is not null && !string.IsNullOrWhiteSpace(_blockName))
+        {
+            Either<BaseError, BlockViewModel> result = await Mediator.Send(new CreateBlock(_selectedBlockGroup.Id, _blockName), _cts.Token);
+        
+            foreach (BaseError error in result.LeftToSeq())
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error adding block: {Error}", error.Value);
+            }
+        
+            foreach (BlockViewModel block in result.RightToSeq())
+            {
+                foreach (BlockTreeItemViewModel item in TreeItems.Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
+                {
+                    item.TreeItems.Add(new BlockTreeItemViewModel(block));
+                }
+
+                _blockName = null;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+    
+    private async Task<S.HashSet<BlockTreeItemViewModel>> LoadServerData(BlockTreeItemViewModel parentNode)
+    {
+        foreach (int blockGroupId in Optional(parentNode.BlockGroupId))
+        {
+            List<BlockViewModel> result = await Mediator.Send(new GetBlocksByBlockGroupId(blockGroupId), _cts.Token);
+            foreach (BlockViewModel block in result)
+            {
+                parentNode.TreeItems.Add(new BlockTreeItemViewModel(block));
+            }
+        }
+
+        return parentNode.TreeItems;
+    }
+
+    private async Task DeleteItem(BlockTreeItemViewModel treeItem)
+    {
+        foreach (int blockGroupId in Optional(treeItem.BlockGroupId))
+        {
+            // TODO: confirmation
+            
+            await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
+            TreeItems.RemoveWhere(i => i.BlockGroupId == blockGroupId);
+            
+            _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
+            await InvokeAsync(StateHasChanged);
+        }
+
+        foreach (int blockId in Optional(treeItem.BlockId))
+        {
+            // TODO: confirmation
+
+            await Mediator.Send(new DeleteBlock(blockId), _cts.Token);
+            foreach (BlockTreeItemViewModel parent in TreeItems)
+            {
+                parent.TreeItems.Remove(treeItem);
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

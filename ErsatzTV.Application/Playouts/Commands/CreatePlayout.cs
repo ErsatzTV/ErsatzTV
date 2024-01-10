@@ -9,5 +9,8 @@ public record CreatePlayout(int ChannelId, ProgramSchedulePlayoutType ProgramSch
 public record CreateFloodPlayout(int ChannelId, int ProgramScheduleId)
     : CreatePlayout(ChannelId, ProgramSchedulePlayoutType.Flood);
 
+public record CreateBlockPlayout(int ChannelId)
+    : CreatePlayout(ChannelId, ProgramSchedulePlayoutType.Block);
+
 public record CreateExternalJsonPlayout(int ChannelId, string ExternalJsonFile)
     : CreatePlayout(ChannelId, ProgramSchedulePlayoutType.ExternalJson);

@@ -101,7 +101,7 @@ public class ScannerService : BackgroundService
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            _logger.LogInformation("Plex service shutting down");
+            _logger.LogInformation("Scanner service shutting down");
         }
     }
 
