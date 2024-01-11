@@ -441,6 +441,14 @@ public class PlexTelevisionLibraryScanner :
             result.IsUpdated = true;
         }
 
+        if (existingMetadata.Year != fullMetadata.Year)
+        {
+            if (await _televisionRepository.UpdateYear(existingMetadata, fullMetadata.Year))
+            {
+                result.IsUpdated = true;
+            }
+        }
+
         if (result.IsUpdated)
         {
             await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);

@@ -41,4 +41,5 @@ public interface ITelevisionRepository
     Task<bool> UpdateTitles(EpisodeMetadata metadata, string title, string sortTitle);
     Task<bool> UpdateOutline(EpisodeMetadata metadata, string outline);
     Task<bool> UpdatePlot(EpisodeMetadata metadata, string plot);
+    Task<bool> UpdateYear(ShowMetadata metadata, int? year);
 }
