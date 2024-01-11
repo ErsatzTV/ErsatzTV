@@ -447,7 +447,15 @@ public class PlayoutBuilder : IPlayoutBuilder
                 _televisionRepository,
                 _artistRepository,
                 collectionKey);
-            var fakeCollections = _mediaCollectionRepository.GroupIntoFakeCollections(mediaItems)
+            string collectionKeyString = JsonConvert.SerializeObject(
+                collectionKey,
+                Formatting.None,
+                new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+            collectionKeyString = $"{scheduleItem.Id}:{collectionKeyString}";
+            var fakeCollections = _mediaCollectionRepository.GroupIntoFakeCollections(mediaItems, collectionKeyString)
                 .Filter(c => c.ShowId > 0 || c.ArtistId > 0 || !string.IsNullOrWhiteSpace(c.Key))
                 .ToList();
             List<ProgramScheduleItem> fakeScheduleItems =  [];
@@ -465,17 +473,19 @@ public class PlayoutBuilder : IPlayoutBuilder
                     var (showId, _, _) when showId > 0 => new CollectionKey
                     {
                         CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
-                        MediaItemId = showId
+                        MediaItemId = showId,
+                        FakeCollectionKey = collectionKeyString
                     },
                     var (_, artistId, _) when artistId > 0 => new CollectionKey
                     {
                         CollectionType = ProgramScheduleItemCollectionType.Artist,
-                        MediaItemId = artistId
+                        MediaItemId = artistId,
+                        FakeCollectionKey = collectionKeyString
                     },
                     var (_, _, k) when k is not null => new CollectionKey
                     {
                         CollectionType = ProgramScheduleItemCollectionType.FakeCollection,
-                        FakeCollectionKey = k
+                        FakeCollectionKey = collectionKeyString
                     },
                     var (_, _, _) => null
                 };

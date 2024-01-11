@@ -334,7 +334,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
     }
 
     [SuppressMessage("Performance", "CA1822:Mark members as static")]
-    public List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items)
+    public List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items, string fakeKey = null)
     {
         int id = -1;
         var result = new List<CollectionWithItems>();
@@ -360,7 +360,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 new CollectionWithItems(
                     showId,
                     0,
-                    null,
+                    fakeKey,
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -388,7 +388,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 new CollectionWithItems(
                     0,
                     artistId,
-                    null,
+                    fakeKey,
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -429,7 +429,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 new CollectionWithItems(
                     id,
                     id,
-                    allArtists[index],
+                    $"{fakeKey}:artist:{allArtists[index]}",
                     list,
                     true,
                     PlaybackOrder.Chronological,
@@ -442,7 +442,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             new CollectionWithItems(
                 id,
                 id,
-                null,
+                fakeKey,
                 items.OfType<Movie>().Cast<MediaItem>().ToList(),
                 true,
                 PlaybackOrder.Chronological,
@@ -453,7 +453,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             new CollectionWithItems(
                 id,
                 id,
-                null,
+                fakeKey,
                 items.OfType<OtherVideo>().Cast<MediaItem>().ToList(),
                 true,
                 PlaybackOrder.Chronological,

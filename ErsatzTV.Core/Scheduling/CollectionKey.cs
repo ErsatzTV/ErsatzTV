@@ -18,37 +18,43 @@ public class CollectionKey : Record<CollectionKey>
             ProgramScheduleItemCollectionType.Collection => new CollectionKey
             {
                 CollectionType = item.CollectionType,
-                CollectionId = item.CollectionId
+                CollectionId = item.CollectionId,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
             {
                 CollectionType = item.CollectionType,
-                MediaItemId = item.MediaItemId
+                MediaItemId = item.MediaItemId,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
             {
                 CollectionType = item.CollectionType,
-                MediaItemId = item.MediaItemId
+                MediaItemId = item.MediaItemId,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.Artist => new CollectionKey
             {
                 CollectionType = item.CollectionType,
-                MediaItemId = item.MediaItemId
+                MediaItemId = item.MediaItemId,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.MultiCollection => new CollectionKey
             {
                 CollectionType = item.CollectionType,
-                MultiCollectionId = item.MultiCollectionId
+                MultiCollectionId = item.MultiCollectionId,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.SmartCollection => new CollectionKey
             {
                 CollectionType = item.CollectionType,
-                SmartCollectionId = item.SmartCollectionId
+                SmartCollectionId = item.SmartCollectionId,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.FakeCollection => new CollectionKey
             {
-              CollectionType = item.CollectionType,
-              FakeCollectionKey = item.FakeCollectionKey
+                CollectionType = item.CollectionType,
+                FakeCollectionKey = item.FakeCollectionKey
             },
             _ => throw new ArgumentOutOfRangeException(nameof(item))
         };
