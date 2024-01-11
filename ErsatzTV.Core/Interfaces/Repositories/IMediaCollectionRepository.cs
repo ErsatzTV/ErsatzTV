@@ -16,5 +16,5 @@ public interface IMediaCollectionRepository
     Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId);
     Task<bool> IsCustomPlaybackOrder(int collectionId);
     Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection);
-    List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items);
+    List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items, string fakeKey = null);
 }
