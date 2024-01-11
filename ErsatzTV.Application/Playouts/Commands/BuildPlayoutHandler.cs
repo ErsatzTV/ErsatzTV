@@ -116,6 +116,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         }
         catch (Exception ex)
         {
+            DebugBreak.Break();
+
             _client.Notify(ex);
             return BaseError.New(
                 $"Unexpected error building playout for channel {playout.Channel.Name}: {ex.Message}");

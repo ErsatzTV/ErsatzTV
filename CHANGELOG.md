@@ -26,9 +26,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix tray icon shortcut to open logs folder on Windows
 - Unlock playout when playout build fails
 - Ignore errors deleting old HLS segments; this should improve stream reliability
+- Update show year when changed within Plex
+- Fix crop scale mode with NVIDIA acceleration
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8
+- In schedule items, disambiguate seasons from shows with the same title by including show year
+  - Old format: `Show Title (Season Number)`
+  - New format: `Show Title (Show Year) - Season Number`
 
 ## [0.8.4-beta] - 2023-12-02
 ### Fixed

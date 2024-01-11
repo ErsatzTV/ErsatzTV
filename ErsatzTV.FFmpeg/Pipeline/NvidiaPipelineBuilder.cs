@@ -160,6 +160,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetDeinterlace(videoInputFile, context, currentState);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
+        currentState = SetCrop(videoInputFile, desiredState, currentState);
 
         if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark)
         {
