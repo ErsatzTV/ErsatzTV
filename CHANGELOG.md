@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Unlock playout when playout build fails
 - Ignore errors deleting old HLS segments; this should improve stream reliability
 - Update show year when changed within Plex
+- Fix crop scale mode with NVIDIA acceleration
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8
