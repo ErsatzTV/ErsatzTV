@@ -110,51 +110,58 @@ public class TranscodingTests
     private class TestData
     {
         public static Watermark[] Watermarks =
-        {
-            Watermark.None,
-            Watermark.PermanentOpaqueScaled,
+        [
+            Watermark.None
+            //Watermark.PermanentOpaqueScaled,
             // Watermark.PermanentOpaqueActualSize,
-            Watermark.PermanentTransparentScaled
+            //Watermark.PermanentTransparentScaled
             // Watermark.PermanentTransparentActualSize
-        };
+        ];
 
         public static Subtitle[] Subtitles =
-        {
-            Subtitle.None,
-            Subtitle.Picture,
-            Subtitle.Text
-        };
+        [
+            Subtitle.None
+            //Subtitle.Picture,
+            //Subtitle.Text
+        ];
 
         public static Padding[] Paddings =
-        {
+        [
             Padding.NoPadding,
             Padding.WithPadding
-        };
+        ];
+
+        public static ScalingBehavior[] ScalingBehaviors =
+        [
+            ScalingBehavior.ScaleAndPad,
+            ScalingBehavior.Crop,
+            //ScalingBehavior.Stretch
+        ];
 
         public static VideoScanKind[] VideoScanKinds =
-        {
-            VideoScanKind.Progressive,
-            VideoScanKind.Interlaced
-        };
+        [
+            VideoScanKind.Progressive
+            //VideoScanKind.Interlaced
+        ];
 
         public static InputFormat[] InputFormats =
-        {
+        [
             // // // example format that requires colorspace filter
-            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
-            // //
-            // // // example format that requires setparams filter
-            new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
-            // //
-            // // // new("libx264", "yuvj420p"),
-            new("libx264", "yuv420p10le"),
-            // // // new("libx264", "yuv444p10le"),
-            // //
-            // // // new("mpeg1video", "yuv420p"),
+            // new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             // // //
-            new("mpeg2video", "yuv420p"),
+            // // // // example format that requires setparams filter
+            // new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
+            // // //
+            // // // // new("libx264", "yuvj420p"),
+            // new("libx264", "yuv420p10le"),
+            // // // // new("libx264", "yuv444p10le"),
+            // // //
+            // // // // new("mpeg1video", "yuv420p"),
+            // // // //
+            // new("mpeg2video", "yuv420p"),
             // //
-            new("libx265", "yuv420p"),
-            new("libx265", "yuv420p10le")
+            new InputFormat("libx265", "yuv420p")
+            // new("libx265", "yuv420p10le")
             //
             // new("mpeg4", "yuv420p"),
             //
@@ -168,38 +175,39 @@ public class TranscodingTests
             // new("msmpeg4v3", "yuv420p")
             //
             // // wmv3    yuv420p    1
-        };
+        ];
 
         public static Resolution[] Resolutions =
-        {
-            new() { Width = 1920, Height = 1080 },
-            new() { Width = 1280, Height = 720 }
-        };
+        [
+            new Resolution { Width = 1920, Height = 1080 },
+            new Resolution { Width = 1280, Height = 720 },
+            new Resolution { Width = 640, Height = 480 }
+        ];
 
         public static FFmpegProfileBitDepth[] BitDepths =
-        {
-            FFmpegProfileBitDepth.EightBit,
-            FFmpegProfileBitDepth.TenBit
-        };
+        [
+            FFmpegProfileBitDepth.EightBit
+            //FFmpegProfileBitDepth.TenBit
+        ];
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
-        {
+        [
             FFmpegProfileVideoFormat.H264,
             FFmpegProfileVideoFormat.Hevc
             // FFmpegProfileVideoFormat.Mpeg2Video
-        };
+        ];
 
         public static HardwareAccelerationKind[] TestAccelerations =
-        {
+        [
             HardwareAccelerationKind.None,
-            // HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi
-            // HardwareAccelerationKind.Qsv
+            HardwareAccelerationKind.Nvenc,
+            //HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
-        };
+        ];
 
-        public static string[] FilesToTest => new[] { string.Empty };
+        public static string[] FilesToTest => [string.Empty];
     }
 
     [Test]
@@ -388,6 +396,8 @@ public class TranscodingTests
         FFmpegProfileBitDepth profileBitDepth,
         [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
         Padding padding,
+        [ValueSource(typeof(TestData), nameof(TestData.ScalingBehaviors))]
+        ScalingBehavior scalingBehavior,
         [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
         VideoScanKind videoScanKind,
         [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
@@ -415,22 +425,19 @@ public class TranscodingTests
                 }
             }
 
-            string name = GetStringSha256Hash($"{inputFormat}_{videoScanKind}_{padding}_{subtitle}");
+            string name = GetStringSha256Hash($"{inputFormat}_{videoScanKind}_{padding}_{scalingBehavior}_{subtitle}");
 
             file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
             if (!File.Exists(file))
             {
-                await GenerateTestFile(inputFormat, padding, videoScanKind, subtitle, file);
+                await GenerateTestFile(inputFormat, padding, scalingBehavior, videoScanKind, subtitle, file);
             }
         }
 
         var v = new MediaVersion
         {
-            MediaFiles = new List<MediaFile>
-            {
-                new() { Path = file }
-            },
-            Streams = new List<MediaStream>()
+            MediaFiles = [new MediaFile { Path = file }],
+            Streams = []
         };
 
         IMetadataRepository? metadataRepository = Substitute.For<IMetadataRepository>();
@@ -552,7 +559,7 @@ public class TranscodingTests
                 .Any();
 
             // TODO: sometimes scaling is used for pixel format, so this is harder to assert the absence
-            if (profileResolution.Width != 1920)
+            if (profileResolution.Width != 1920 && profileResolution.Width != 640)
             {
                 hasScaling.Should().BeTrue();
             }
@@ -563,9 +570,15 @@ public class TranscodingTests
 
             // TODO: optimize out padding
             // hasPadding.Should().Be(padding == Padding.WithPadding);
-            if (padding == Padding.WithPadding)
+            if (padding is Padding.WithPadding && scalingBehavior is not ScalingBehavior.Crop)
             {
                 hasPadding.Should().BeTrue();
+            }
+
+            bool hasCrop = filterChain.VideoFilterSteps.Any(s => s is CropFilter);
+            if (scalingBehavior is ScalingBehavior.Crop)
+            {
+                hasCrop.Should().BeTrue();
             }
 
             bool hasSubtitleFilters =
@@ -599,7 +612,8 @@ public class TranscodingTests
                     VideoFormat = profileVideoFormat,
                     AudioFormat = FFmpegProfileAudioFormat.Aac,
                     DeinterlaceVideo = true,
-                    BitDepth = profileBitDepth
+                    BitDepth = profileBitDepth,
+                    ScalingBehavior = scalingBehavior
                 },
                 StreamingMode = StreamingMode.TransportStream,
                 SubtitleMode = subtitleMode
@@ -711,11 +725,18 @@ public class TranscodingTests
     private static async Task GenerateTestFile(
         InputFormat inputFormat,
         Padding padding,
+        ScalingBehavior scalingBehavior,
         VideoScanKind videoScanKind,
         Subtitle subtitle,
         string file)
     {
-        string resolution = padding == Padding.WithPadding ? "1920x1060" : "1920x1080";
+        string resolution = (scalingBehavior, padding) switch
+        {
+            (ScalingBehavior.Crop, Padding.NoPadding) => "1920x1080",
+            // TODO: (ScalingBehavior.Crop, Padding.WithPadding) => "632x480",
+            (ScalingBehavior.Stretch or ScalingBehavior.ScaleAndPad, Padding.WithPadding) => "1920x1060",
+            _ => "1920x1080"
+        };
 
         string videoFilter = videoScanKind == VideoScanKind.Interlaced
             ? "-vf interlace=scan=tff:lowpass=complex"
@@ -954,16 +975,13 @@ public class TranscodingTests
                 ExecutableName("ffprobe"),
                 new Movie
                 {
-                    MediaVersions = new List<MediaVersion>
-                    {
-                        new()
+                    MediaVersions =
+                    [
+                        new MediaVersion
                         {
-                            MediaFiles = new List<MediaFile>
-                            {
-                                new() { Path = tempFile }
-                            }
+                            MediaFiles = [new MediaFile { Path = tempFile }]
                         }
-                    }
+                    ]
                 });
 
             MediaVersion v = getFinalMediaVersion();

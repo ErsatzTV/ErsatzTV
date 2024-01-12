@@ -165,6 +165,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         // _logger.LogDebug("After scale: {PixelFormat}", currentState.PixelFormat);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
+        currentState = SetCrop(videoInputFile, desiredState, currentState);
 
         // need to download for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
@@ -572,6 +573,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                         : Option<IPixelFormat>.None
                 },
                 desiredState.ScaledSize,
+                desiredState.PaddedSize,
+                desiredState.CroppedSize,
                 ffmpegState.QsvExtraHardwareFrames,
                 VideoStream.IsAnamorphicEdgeCase,
                 videoStream.SampleAspectRatio);
