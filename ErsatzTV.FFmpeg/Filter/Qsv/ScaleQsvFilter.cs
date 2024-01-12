@@ -9,16 +9,22 @@ public class ScaleQsvFilter : BaseFilter
     private readonly bool _isAnamorphicEdgeCase;
     private readonly string _sampleAspectRatio;
     private readonly FrameSize _scaledSize;
+    private readonly FrameSize _paddedSize;
+    private readonly Option<FrameSize> _croppedSize;
 
     public ScaleQsvFilter(
         FrameState currentState,
         FrameSize scaledSize,
+        FrameSize paddedSize,
+        Option<FrameSize> croppedSize,
         int extraHardwareFrames,
         bool isAnamorphicEdgeCase,
         string sampleAspectRatio)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
+        _paddedSize = paddedSize;
+        _croppedSize = croppedSize;
         _extraHardwareFrames = extraHardwareFrames;
         _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
         _sampleAspectRatio = sampleAspectRatio;
@@ -43,7 +49,9 @@ public class ScaleQsvFilter : BaseFilter
             else
             {
                 string squareScale = string.Empty;
-                var targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
+                var targetSize = _croppedSize.IsSome
+                    ? $"w={_paddedSize.Width}:h={_paddedSize.Height}"
+                    : $"w={_scaledSize.Width}:h={_scaledSize.Height}";
                 string format = string.Empty;
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {

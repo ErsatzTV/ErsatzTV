@@ -21,7 +21,7 @@ public abstract class LocalFolderScanner
     public static readonly ImmutableHashSet<string> VideoFileExtensions = new[]
     {
         ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
-        ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts", ".webm"
+        ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".m2ts", ".ts", ".webm"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static readonly ImmutableHashSet<string> AudioFileExtensions = new[]
