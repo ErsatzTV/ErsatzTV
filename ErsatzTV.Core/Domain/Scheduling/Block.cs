@@ -7,5 +7,6 @@ public class Block
     public BlockGroup BlockGroup { get; set; }
     public string Name { get; set; }
     public int Minutes { get; set; }
-    public List<BlockItem> Items { get; set; }
+    public ICollection<BlockItem> Items { get; set; }
+    public ICollection<TemplateItem> TemplateItems { get; set; }
 }

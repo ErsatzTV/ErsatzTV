@@ -17,5 +17,10 @@ public class BlockConfiguration : IEntityTypeConfiguration<Block>
             .WithOne(i => i.Block)
             .HasForeignKey(i => i.BlockId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(b => b.TemplateItems)
+            .WithOne(i => i.Block)
+            .HasForeignKey(i => i.BlockId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

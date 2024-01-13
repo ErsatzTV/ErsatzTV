@@ -34,5 +34,10 @@ public class PlayoutConfiguration : IEntityTypeConfiguration<Playout>
             .WithOne(i => i.Playout)
             .HasForeignKey(i => i.PlayoutId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // builder.HasMany(p => p.Templates)
+        //     .WithOne(i => i.Playout)
+        //     .HasForeignKey(i => i.PlayoutId)
+        //     .IsRequired(false);
     }
 }

@@ -31,4 +31,13 @@ internal static class Mapper
                 _ => null
             },
             blockItem.PlaybackOrder);
+
+    internal static TemplateGroupViewModel ProjectToViewModel(TemplateGroup templateGroup) =>
+        new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);
+
+    internal static TemplateViewModel ProjectToViewModel(Template template) =>
+        new(template.Id, template.Name);
+
+    internal static TemplateItemViewModel ProjectToViewModel(TemplateItem templateItem) =>
+        new(templateItem.Id, templateItem.BlockId, templateItem.Block.Name);
 }

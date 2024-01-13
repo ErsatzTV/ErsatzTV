@@ -1,0 +1,118 @@
+﻿@page "/templates/{Id:int}"
+@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<TemplateEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Edit Template</MudText>
+    <div style="max-width: 400px">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Name" @bind-Value="_template.Name" For="@(() => _template.Name)"/>
+            </MudCardContent>
+        </MudCard>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddTemplateItem())" Class="mt-4">
+        Add Template Item
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+        Save Changes
+    </MudButton>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private TemplateItemsEditViewModel _template = new();
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync() => await LoadTemplateItems();
+
+    private async Task LoadTemplateItems()
+    {
+        Option<TemplateViewModel> maybeTemplate = await Mediator.Send(new GetTemplateById(Id), _cts.Token);
+        if (maybeTemplate.IsNone)
+        {
+            NavigationManager.NavigateTo("templates");
+            return;
+        }
+        
+        foreach (TemplateViewModel template in maybeTemplate)
+        {
+            _template = new TemplateItemsEditViewModel
+            {
+                Name = template.Name,
+                Items = []
+            };
+        }
+
+        Option<IEnumerable<TemplateItemViewModel>> maybeResults = await Mediator.Send(new GetTemplateItems(Id), _cts.Token);
+        foreach (IEnumerable<TemplateItemViewModel> items in maybeResults)
+        {
+            _template.Items.AddRange(items.Map(ProjectToEditViewModel));
+        }
+    }
+
+    private static TemplateItemEditViewModel ProjectToEditViewModel(TemplateItemViewModel item) =>
+        new()
+        {
+            Id = item.Id,
+            BlockId = item.BlockId,
+            BlockName = item.BlockName
+        };
+
+    private void AddTemplateItem()
+    {
+        var item = new TemplateItemEditViewModel();
+        _template.Items.Add(item);
+    }
+
+    // private void RemoveTemplateItem(TemplateItemEditViewModel item)
+    // {
+    //     _selectedItem = null;
+    //     _template.Items.Remove(item);
+    // }
+    //
+    // private void MoveItemUp(TemplateItemEditViewModel item)
+    // {
+    //     // swap with lower index
+    //     TemplateItemEditViewModel toSwap = _template.Items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
+    //     (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
+    // }
+    //
+    // private void MoveItemDown(TemplateItemEditViewModel item)
+    // {
+    //     // swap with higher index
+    //     TemplateItemEditViewModel toSwap = _template.Items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
+    //     (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
+    // }
+
+    private async Task SaveChanges()
+    {
+        await Task.Delay(10);
+
+        var items = _template.Items.Map(item => new ReplaceTemplateItem(item.BlockId)).ToList();
+        
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(Id, _template.Name, items), _cts.Token)
+            .Map(e => e.LeftToSeq());
+        
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving template: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving template: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/templates"));
+    }
+}
