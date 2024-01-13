@@ -1,18 +1,17 @@
 ﻿@page "/playouts/{Id:int}/templates"
 @using System.Globalization
-@using ErsatzTV.Application.ProgramSchedules
-@using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Channels
 @using System.Text
 @using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Core.Domain.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
-@inject ILogger<ScheduleItemsEditor> Logger
+@inject ILogger<PlayoutTemplatesEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+    <MudTable T="PlayoutTemplateEditViewModel" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
         <ToolBarContent>
             <MudText Typo="Typo.h6">@_channelName Templates</MudText>
             <MudSpacer/>
@@ -21,7 +20,7 @@
         <ColGroup>
             <col/>
             <col/>
-            @* <col/> *@
+            <col/>
             <col/>
             <col style="width: 60px;"/>
             <col style="width: 60px;"/>
@@ -30,7 +29,7 @@
         <HeaderContent>
             <MudTh>Template</MudTh>
             <MudTh>Days of the Week</MudTh>
-            @* <MudTh>Days of the Month</MudTh> *@
+            <MudTh>Days of the Month</MudTh>
             <MudTh>Months</MudTh>
             <MudTh/>
             <MudTh/>
@@ -39,7 +38,7 @@
         <RowTemplate>
             <MudTd DataLabel="Template">
                 <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @context.Name
+                    @context.Template?.Name
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Days of the Week">
@@ -47,11 +46,11 @@
                     @ToDaysOfWeekString(context.DaysOfWeek)
                 </MudText>
             </MudTd>
-            @* <MudTd DataLabel="Days of the Month"> *@
-            @*     <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)"> *@
-            @*         @ToDaysOfMonthString(context.DaysOfMonth) *@
-            @*     </MudText> *@
-            @* </MudTd> *@
+            <MudTd DataLabel="Days of the Month">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @ToDaysOfMonthString(context.DaysOfMonth)
+                </MudText>
+            </MudTd>
             <MudTd DataLabel="Months">
                 <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
                     @ToMonthsOfYearString(context.MonthsOfYear)
@@ -80,9 +79,9 @@
     <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddTemplate())" Class="mt-4">
         Add Template
     </MudButton>
-    @* <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4"> *@
-    @*     Save Changes *@
-    @* </MudButton> *@
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+        Save Changes
+    </MudButton>
 
     @if (_selectedItem is not null)
     {
@@ -90,16 +89,24 @@
             <FluentValidationValidator/>
             <div style="display: flex; flex-direction: row;" class="mt-6">
                 <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
-                    @* <MudCard> *@
-                    @*     <MudCardContent> *@
-                    @*         <MudSelect Label="Schedule" @bind-Value="_selectedItem.ProgramSchedule" For="@(() => _selectedItem.ProgramSchedule)"> *@
-                    @*             @foreach (ProgramScheduleViewModel schedule in _schedules) *@
-                    @*             { *@
-                    @*                 <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem> *@
-                    @*             } *@
-                    @*         </MudSelect> *@
-                    @*     </MudCardContent> *@
-                    @* </MudCard> *@
+                    <MudCard>
+                        <MudCardContent>
+                            <MudSelect T="TemplateGroupViewModel" Label="Template Group" Value="@_selectedGroup" ValueChanged="@(vm => UpdateTemplateGroupItems(vm))">
+                                @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
+                                {
+                                    <MudSelectItem Value="@templateGroup">
+                                        @templateGroup.Name
+                                    </MudSelectItem>
+                                }                            
+                            </MudSelect>
+                            <MudSelect Label="Template" @bind-Value="_selectedItem.Template" For="@(() => _selectedItem.Template)">
+                                @foreach (TemplateViewModel template in _templates)
+                                {
+                                    <MudSelectItem Value="@template">@template.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
                     <MudCard Class="mt-4">
                         <MudCardContent>
                             <MudElement HtmlTag="div" Class="mt-3">
@@ -154,30 +161,30 @@
                         </MudCardActions>
                     </MudCard>
                 </div>
-                @* <div style="flex-grow: 1; max-width: 400px;" class="mr-6"> *@
-                @*     <MudCard> *@
-                @*         <MudCardContent> *@
-                @*             <MudGrid Justify="Justify.FlexStart" Class="mt-3"> *@
-                @*                 @foreach (int day in Enumerable.Range(1, 31)) *@
-                @*                 { *@
-                @*                     <MudItem xs="3"> *@
-                @*                         <MudCheckBox T="bool" Label="@day.ToString()" *@
-                @*                                      Checked="@(_selectedItem.DaysOfMonth.Contains(day))" *@
-                @*                                      CheckedChanged="@((bool c) => DayOfMonthChanged(day, c))"/> *@
-                @*                     </MudItem> *@
-                @*                 } *@
-                @*             </MudGrid> *@
-                @*         </MudCardContent> *@
-                @*         <MudCardActions> *@
-                @*             <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfMonth())"> *@
-                @*                 All *@
-                @*             </MudButton> *@
-                @*             <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfMonth())"> *@
-                @*                 None *@
-                @*             </MudButton> *@
-                @*         </MudCardActions> *@
-                @*     </MudCard> *@
-                @* </div> *@
+                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudGrid Justify="Justify.FlexStart" Class="mt-3">
+                                @foreach (int day in Enumerable.Range(1, 31))
+                                {
+                                    <MudItem xs="3">
+                                        <MudCheckBox T="bool" Label="@day.ToString()"
+                                                     Checked="@(_selectedItem.DaysOfMonth.Contains(day))"
+                                                     CheckedChanged="@((bool c) => DayOfMonthChanged(day, c))"/>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfMonth())">
+                                All
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfMonth())">
+                                None
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </div>
                 <div style="flex-grow: 1; max-width: 400px;">
                     <MudCard>
                         <MudCardContent>
@@ -218,9 +225,13 @@
     [Parameter]
     public int Id { get; set; }
 
+    private readonly List<TemplateGroupViewModel> _templateGroups = [];
+    private readonly List<TemplateViewModel> _templates = [];
+
     private string _channelName;
-    private List<TemplateEditViewModel> _items = [];
-    private TemplateEditViewModel _selectedItem;
+    private List<PlayoutTemplateEditViewModel> _items = [];
+    private TemplateGroupViewModel _selectedGroup;
+    private PlayoutTemplateEditViewModel _selectedItem;
 
     public void Dispose()
     {
@@ -234,21 +245,45 @@
     {
         _channelName = (await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token)).IfNone(string.Empty);
 
-        // List<TemplateViewModel> results = await Mediator.Send(new GetTemplates(Id), _cts.Token);
-        // _items = results.Map(ProjectToEditViewModel).ToList();
-        // if (_items.Count == 1)
-        // {
-        //     _selectedItem = _items.Head();
-        // }
+        _templateGroups.Clear();
+        _templateGroups.AddRange(await Mediator.Send(new GetAllTemplateGroups(), _cts.Token));
+
+        List<PlayoutTemplateViewModel> results = await Mediator.Send(new GetPlayoutTemplates(Id), _cts.Token);
+        _items = results.Map(ProjectToEditViewModel).ToList();
+        if (_items.Count == 1)
+        {
+            await SelectedItemChanged(_items.Head());
+        }
     }
 
-    private TemplateEditViewModel ProjectToEditViewModel(TemplateViewModel item) =>
+    private PlayoutTemplateEditViewModel ProjectToEditViewModel(PlayoutTemplateViewModel item) =>
         new()
         {
             Id = item.Id,
-            Name = item.Name,
-            // Index = item.Index
+            Template = item.Template,
+            Index = item.Index,
+            DaysOfWeek = item.DaysOfWeek.ToList(),
+            DaysOfMonth =  item.DaysOfMonth.ToList(),
+            MonthsOfYear = item.MonthsOfYear.ToList() 
         };
+    
+    private async Task UpdateTemplateGroupItems(TemplateGroupViewModel templateGroup)
+    {
+        _selectedGroup = templateGroup;
+
+        _templates.Clear();
+        _templates.AddRange(await Mediator.Send(new GetTemplatesByTemplateGroupId(_selectedGroup.Id), _cts.Token));
+    }
+
+    private async Task SelectedItemChanged(PlayoutTemplateEditViewModel template)
+    {
+        _selectedItem = template;
+
+        foreach (TemplateGroupViewModel group in Optional(_templateGroups.Find(group => group.Id == _selectedItem.Template.TemplateGroupId)))
+        {
+            await UpdateTemplateGroupItems(group);
+        }
+    }
 
     private void DayOfWeekChanged(DayOfWeek dayOfWeek, bool isChecked)
     {
@@ -290,32 +325,32 @@
     private void SelectAllDaysOfWeek()
     {
         _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(ProgramScheduleAlternate.AllDaysOfWeek());
+        _selectedItem.DaysOfWeek.AddRange(PlayoutTemplate.AllDaysOfWeek());
     }
 
     private void SelectNoDaysOfWeek() => _selectedItem.DaysOfWeek.Clear();
 
-    // private void DayOfMonthChanged(int dayOfMonth, bool isChecked)
-    // {
-    //     if (isChecked && !_selectedItem.DaysOfMonth.Contains(dayOfMonth))
-    //     {
-    //         _selectedItem.DaysOfMonth.Add(dayOfMonth);
-    //         _selectedItem.DaysOfMonth.Sort();
-    //     }
-    //
-    //     if (!isChecked)
-    //     {
-    //         _selectedItem.DaysOfMonth.Remove(dayOfMonth);
-    //     }
-    // }
-    //
-    // private void SelectAllDaysOfMonth()
-    // {
-    //     _selectedItem.DaysOfMonth.Clear();
-    //     _selectedItem.DaysOfMonth.AddRange(ProgramScheduleAlternate.AllDaysOfMonth());
-    // }
+    private void DayOfMonthChanged(int dayOfMonth, bool isChecked)
+    {
+        if (isChecked && !_selectedItem.DaysOfMonth.Contains(dayOfMonth))
+        {
+            _selectedItem.DaysOfMonth.Add(dayOfMonth);
+            _selectedItem.DaysOfMonth.Sort();
+        }
+    
+        if (!isChecked)
+        {
+            _selectedItem.DaysOfMonth.Remove(dayOfMonth);
+        }
+    }
+    
+    private void SelectAllDaysOfMonth()
+    {
+        _selectedItem.DaysOfMonth.Clear();
+        _selectedItem.DaysOfMonth.AddRange(PlayoutTemplate.AllDaysOfMonth());
+    }
 
-    // private void SelectNoDaysOfMonth() => _selectedItem.DaysOfMonth.Clear();
+    private void SelectNoDaysOfMonth() => _selectedItem.DaysOfMonth.Clear();
 
     private void MonthOfYearChanged(int monthOfYear, bool isChecked)
     {
@@ -334,65 +369,64 @@
     private void SelectAllMonthsOfYear()
     {
         _selectedItem.MonthsOfYear.Clear();
-        _selectedItem.MonthsOfYear.AddRange(ProgramScheduleAlternate.AllMonthsOfYear());
+        _selectedItem.MonthsOfYear.AddRange(PlayoutTemplate.AllMonthsOfYear());
     }
 
     private void SelectNoMonthsOfYear() => _selectedItem.MonthsOfYear.Clear();
 
     private void AddTemplate()
     {
-        var item = new TemplateEditViewModel
+        var item = new PlayoutTemplateEditViewModel
         {
             Index = _items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
-            DaysOfWeek = ProgramScheduleAlternate.AllDaysOfWeek(),
-            MonthsOfYear = ProgramScheduleAlternate.AllMonthsOfYear()
+            DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
+            DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
+            MonthsOfYear = PlayoutTemplate.AllMonthsOfYear()
         };
 
         _items.Add(item);
         _selectedItem = item;
     }
 
-    private void DeleteTemplate(TemplateEditViewModel item)
+    private void DeleteTemplate(PlayoutTemplateEditViewModel item)
     {
         _selectedItem = null;
         _items.Remove(item);
     }
 
-    private void MoveItemUp(TemplateEditViewModel item)
+    private void MoveItemUp(PlayoutTemplateEditViewModel item)
     {
     // swap with lower index
-        TemplateEditViewModel toSwap = _items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
+        PlayoutTemplateEditViewModel toSwap = _items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
-    private void MoveItemDown(TemplateEditViewModel item)
+    private void MoveItemDown(PlayoutTemplateEditViewModel item)
     {
     // swap with higher index
-        TemplateEditViewModel toSwap = _items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
+        PlayoutTemplateEditViewModel toSwap = _items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private async Task SaveChanges()
     {
-        await Task.Delay(10);
-        // var items = _items.Map(item => new ReplacePlayoutAlternateSchedule(
-        //     item.Id,
-        //     item.Index,
-        //     item.ProgramSchedule.Id,
-        //     item.DaysOfWeek,
-        //     item.DaysOfMonth,
-        //     item.MonthsOfYear)).ToList();
-        //
-        // Seq<BaseError> errorMessages = await Mediator.Send(new ReplacePlayoutAlternateScheduleItems(Id, items), _cts.Token)
-        //     .Map(e => e.LeftToSeq());
-        //
-        // errorMessages.HeadOrNone().Match(
-        //     error =>
-        //     {
-        //         Snackbar.Add($"Unexpected error saving alternate schedules: {error.Value}", Severity.Error);
-        //         Logger.LogError("Unexpected error saving alternate schedules: {Error}", error.Value);
-        //     },
-        //     () => NavigationManager.NavigateTo("/playouts"));
+        var items = _items.Map(item => new ReplacePlayoutTemplate(
+            item.Id,
+            item.Index,
+            item.Template.Id,
+            item.DaysOfWeek,
+            item.DaysOfMonth,
+            item.MonthsOfYear)).ToList();
+
+        Option<BaseError> maybeError = await Mediator.Send(new ReplacePlayoutTemplateItems(Id, items), _cts.Token);
+
+        maybeError.Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving playout templates: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving playout templates: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/playouts"));
     }
 
     private string ToDaysOfWeekString(List<DayOfWeek> daysOfWeek)

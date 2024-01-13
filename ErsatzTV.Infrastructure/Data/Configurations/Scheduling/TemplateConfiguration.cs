@@ -17,5 +17,10 @@ public class TemplateConfiguration : IEntityTypeConfiguration<Template>
             .WithOne(i => i.Template)
             .HasForeignKey(i => i.TemplateId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(t => t.PlayoutTemplates)
+            .WithOne(t => t.Template)
+            .HasForeignKey(t => t.TemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

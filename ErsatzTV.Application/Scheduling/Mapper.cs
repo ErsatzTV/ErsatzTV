@@ -36,7 +36,7 @@ internal static class Mapper
         new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);
 
     internal static TemplateViewModel ProjectToViewModel(Template template) =>
-        new(template.Id, template.Name);
+        new(template.Id, template.TemplateGroupId, template.Name);
 
     internal static TemplateItemViewModel ProjectToViewModel(TemplateItem templateItem)
     {
@@ -44,4 +44,13 @@ internal static class Mapper
         DateTime endTime = startTime.AddMinutes(templateItem.Block.Minutes);
         return new TemplateItemViewModel(templateItem.BlockId, templateItem.Block.Name, startTime, endTime);
     }
+
+    internal static PlayoutTemplateViewModel ProjectToViewModel(PlayoutTemplate playoutTemplate) =>
+        new(
+            playoutTemplate.Id,
+            ProjectToViewModel(playoutTemplate.Template),
+            playoutTemplate.Index,
+            playoutTemplate.DaysOfWeek,
+            playoutTemplate.DaysOfMonth,
+            playoutTemplate.MonthsOfYear);
 }
