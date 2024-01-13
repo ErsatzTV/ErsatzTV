@@ -11,7 +11,7 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable T="PlayoutTemplateEditViewModel" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
+    <MudTable T="PlayoutTemplateEditViewModel" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
         <ToolBarContent>
             <MudText Typo="Typo.h6">@_channelName Templates</MudText>
             <MudSpacer/>
@@ -81,6 +81,9 @@
     </MudButton>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
         Save Changes
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => PreviewCalendar())" Class="mt-4 ml-4">
+        Preview Calendar
     </MudButton>
 
     @if (_selectedItem is not null)
@@ -215,6 +218,16 @@
             </div>
         </EditForm>
     }
+    else
+    {
+        <MudCard Class="mt-4">
+            <MudCalendar ShowWeek="false"
+                         ShowDay="false"
+                         DateRangeChanged="@(range => DateRangeChanged(range))"
+                         MonthCellMinHeight="115"
+                         Items="_previewItems" />
+        </MudCard>
+    }
 </MudContainer>
 
 @code {
@@ -232,6 +245,7 @@
     private List<PlayoutTemplateEditViewModel> _items = [];
     private TemplateGroupViewModel _selectedGroup;
     private PlayoutTemplateEditViewModel _selectedItem;
+    private List<CalendarItem> _previewItems = [];
 
     public void Dispose()
     {
@@ -427,6 +441,46 @@
                 Logger.LogError("Unexpected error saving playout templates: {Error}", error.Value);
             },
             () => NavigationManager.NavigateTo("/playouts"));
+    }
+
+    private async Task PreviewCalendar()
+    {
+        _selectedItem = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DateRangeChanged(DateRange dateRange)
+    {
+        await Task.Delay(10);
+
+        _previewItems.Clear();
+
+        var prioritized = _items.OrderBy(t => t.Index).ToList();
+        
+        if (dateRange.Start.HasValue && dateRange.End.HasValue)
+        {
+            DateTime current = dateRange.Start.Value.Date;
+            while (current <= dateRange.End.Value.Date)
+            {
+                foreach (PlayoutTemplateEditViewModel template in prioritized)
+                {
+                    if (template.AppliesToDate(current))
+                    {
+                        _previewItems.Add(
+                            new CalendarItem
+                            {
+                                AllDay = true,
+                                Start = current,
+                                Text = template.Template.Name
+                            });
+
+                        break;
+                    }
+                }
+
+                current = current.AddDays(1);
+            }
+        }
     }
 
     private string ToDaysOfWeekString(List<DayOfWeek> daysOfWeek)

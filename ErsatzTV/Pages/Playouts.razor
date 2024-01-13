@@ -98,25 +98,30 @@
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.ExternalJson)
                     {
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit External Json File">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                            OnClick="@(_ => EditExternalJsonFile(context))">
                             </MudIconButton>
                         </MudTooltip>
-                        <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
                     {
+                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit Templates">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                            Link="@($"playouts/{context.PlayoutId}/templates")">
                             </MudIconButton>
                         </MudTooltip>
-                        <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
+                        <MudTooltip Text="Reset Playout">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => ResetPlayout(context))">
+                            </MudIconButton>
+                        </MudTooltip>
                     }
                     <MudTooltip Text="Delete Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
