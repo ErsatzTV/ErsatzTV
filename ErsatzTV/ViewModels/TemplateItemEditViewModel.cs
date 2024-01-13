@@ -1,18 +1,22 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using Heron.MudCalendar;
 
 namespace ErsatzTV.ViewModels;
 
-public class TemplateItemEditViewModel : INotifyPropertyChanged
+public class TemplateItemEditViewModel : CalendarItem
 {
-    public event PropertyChangedEventHandler PropertyChanged;
-    
-    public int Id { get; set; }
+    private string _blockName;
     public int BlockId { get; set; }
-    public string BlockName { get; set; }
-    
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+
+    public string BlockName
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        get => _blockName;
+        set
+        {
+            _blockName = value;
+            Text = value;
+        }
     }
+    
+    public DateTime LastStart { get; set; }
+    public DateTime? LastEnd { get; set; }
 }

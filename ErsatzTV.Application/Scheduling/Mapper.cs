@@ -38,6 +38,10 @@ internal static class Mapper
     internal static TemplateViewModel ProjectToViewModel(Template template) =>
         new(template.Id, template.Name);
 
-    internal static TemplateItemViewModel ProjectToViewModel(TemplateItem templateItem) =>
-        new(templateItem.Id, templateItem.BlockId, templateItem.Block.Name);
+    internal static TemplateItemViewModel ProjectToViewModel(TemplateItem templateItem)
+    {
+        DateTime startTime = DateTime.Today.Add(templateItem.StartTime);
+        DateTime endTime = startTime.AddMinutes(templateItem.Block.Minutes);
+        return new TemplateItemViewModel(templateItem.BlockId, templateItem.Block.Name, startTime, endTime);
+    }
 }

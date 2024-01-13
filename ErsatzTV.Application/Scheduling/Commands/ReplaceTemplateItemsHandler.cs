@@ -36,6 +36,12 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
         //     await _channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Refresh));
         // }
 
+        await dbContext.Entry(template)
+            .Collection(t => t.Items)
+            .Query()
+            .Include(i => i.Block)
+            .LoadAsync();
+
         return template.Items.Map(Mapper.ProjectToViewModel).ToList();
     }
 
@@ -44,6 +50,7 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
         {
             TemplateId = template.Id,
             BlockId = item.BlockId,
+            StartTime = item.StartTime
         };
 
     private static Task<Validation<BaseError, Template>> Validate(TvContext dbContext, ReplaceTemplateItems request) =>
