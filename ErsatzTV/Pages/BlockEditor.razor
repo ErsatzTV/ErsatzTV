@@ -202,7 +202,7 @@
     [Parameter]
     public int Id { get; set; }
 
-    private BlockItemsEditViewModel _block = new();
+    private BlockItemsEditViewModel _block = new() { Items = [] };
     private BlockItemEditViewModel _selectedItem;
 
     public void Dispose()
