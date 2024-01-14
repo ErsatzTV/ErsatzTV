@@ -1,6 +1,7 @@
 ﻿@page "/playouts"
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.Scheduling
 @using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject IDialogService Dialog
@@ -109,7 +110,6 @@
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
                     {
-                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit Templates">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
@@ -120,6 +120,12 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                            OnClick="@(_ => ResetPlayout(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Erase Items and History">
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => EraseHistory(context))">
                             </MudIconButton>
                         </MudTooltip>
                     }
@@ -274,6 +280,20 @@
         {
             await _table.ReloadServerData();
         }
+
+        if (_selectedPlayoutId == playout.PlayoutId)
+        {
+            await PlayoutSelected(playout);
+        }
+    }
+
+    private async Task EraseHistory(PlayoutNameViewModel playout)
+    {
+        if (playout.PlayoutType is ProgramSchedulePlayoutType.Block)
+        {
+            await Mediator.Send(new EraseBlockPlayoutHistory(playout.PlayoutId), _cts.Token);
+        }
+        
         if (_selectedPlayoutId == playout.PlayoutId)
         {
             await PlayoutSelected(playout);
