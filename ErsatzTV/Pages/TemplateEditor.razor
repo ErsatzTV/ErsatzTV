@@ -31,9 +31,7 @@
                                    ValueChanged="@(vm => UpdateBlockGroupItems(vm))">
                             @foreach (BlockGroupViewModel blockGroup in _blockGroups)
                             {
-                                <MudSelectItem Value="@blockGroup">
-                                    @blockGroup.Name
-                                </MudSelectItem>
+                                <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
                             }
                         </MudSelect>
                         <MudSelect Class="mt-3"
@@ -60,6 +58,28 @@
                     <MudCardActions>
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockToTemplate())" Disabled="@(_selectedBlock is null)">
                             Add Block To Template
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px">
+                <MudCard>
+                    <MudCardContent>
+                        <MudSelect T="TemplateItemEditViewModel"
+                                   Label="Block To Remove"
+                                   @bind-Value="_blockToRemove">
+                                <MudSelectItem Value="@((TemplateItemEditViewModel)null)">(none)</MudSelectItem>
+                            @foreach (TemplateItemEditViewModel item in _template.Items.OrderBy(i => i.Start))
+                            {
+                                <MudSelectItem Value="@item">@item.Start.ToShortTimeString() - @item.Text</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => RemoveBlockFromTemplate())" Disabled="@(_blockToRemove is null)">
+                            Remove Block From Template
                         </MudButton>
                     </MudCardActions>
                 </MudCard>
@@ -92,6 +112,7 @@
     public int Id { get; set; }
 
     private TemplateItemsEditViewModel _template = new();
+    private TemplateItemEditViewModel _blockToRemove = null;
     private BlockGroupViewModel _selectedBlockGroup;
     private BlockViewModel _selectedBlock;
     private DateTime _selectedBlockStart;
@@ -186,7 +207,18 @@
             maybeStart = maybeStart.AddMinutes(15);
         }
     }
+    
+    private async Task RemoveBlockFromTemplate()
+    {
+        if (_blockToRemove is not null)
+        {
+            _template.Items.Remove(_blockToRemove);
+            _blockToRemove = null;
 
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+    
     private void CalendarItemChanged(CalendarItem calendarItem)
     {
         // don't allow any overlap
