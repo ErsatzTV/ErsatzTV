@@ -651,6 +651,8 @@ public class Startup
         services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
         services.AddScoped<IExternalJsonPlayoutItemProvider, ExternalJsonPlayoutItemProvider>();
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
+        services.AddScoped<IBlockPlayoutBuilder, BlockPlayoutBuilder>();
+        services.AddScoped<IExternalJsonPlayoutBuilder, ExternalJsonPlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();

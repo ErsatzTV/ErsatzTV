@@ -1,0 +1,191 @@
+@page "/templates"
+@using S=System.Collections.Generic
+@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject ILogger<Templates> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Templates</MudText>
+    <MudGrid>
+        <MudItem xs="4">
+            <div style="max-width: 400px;" class="mr-4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Class="mt-3 mx-3" Label="Template Group Name" @bind-Value="_templateGroupName" For="@(() => _templateGroupName)"/>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddTemplateGroup())" Class="ml-4 mb-4">
+                            Add Template Group
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px;" class="mb-6">
+                <MudCard>
+                    <MudCardContent>
+                        <div class="mx-4">
+                            <MudSelect Label="Template Group" @bind-Value="_selectedTemplateGroup" Class="mt-3">
+                                @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
+                                {
+                                    <MudSelectItem Value="@templateGroup">@templateGroup.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField Class="mt-3" Label="Template Name" @bind-Value="_templateName" For="@(() => _templateName)"/>
+                        </div>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddTemplate())" Class="ml-4 mb-4">
+                            Add Template
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="8">
+            <MudCard>
+                <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+                    <ItemTemplate Context="item">
+                        <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                            <BodyContent>
+                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                    <MudGrid Justify="Justify.FlexStart">
+                                        <MudItem xs="3">
+                                            <MudText>@item.Text</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                    <div style="justify-self: end;">
+                                        @foreach (int templateId in Optional(item.TemplateId))
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"templates/{templateId}")"/>
+                                        }
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item))"/>
+                                    </div>
+                                </div>
+                            </BodyContent>
+                        </MudTreeViewItem>
+                    </ItemTemplate>
+                </MudTreeView>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private S.HashSet<TemplateTreeItemViewModel> TreeItems { get; set; } = [];
+    private List<TemplateGroupViewModel> _templateGroups = [];
+    private TemplateGroupViewModel _selectedTemplateGroup;
+    private string _templateGroupName;
+    private string _templateName;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadTemplateGroups();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ReloadTemplateGroups()
+    {
+        _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
+        TreeItems = _templateGroups.Map(g => new TemplateTreeItemViewModel(g)).ToHashSet();
+    }
+
+    private async Task AddTemplateGroup()
+    {
+        if (!string.IsNullOrWhiteSpace(_templateGroupName))
+        {
+            Either<BaseError, TemplateGroupViewModel> result = await Mediator.Send(new CreateTemplateGroup(_templateGroupName), _cts.Token);
+
+            foreach (BaseError error in result.LeftToSeq())
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error adding template group: {Error}", error.Value);
+            }
+
+            foreach (TemplateGroupViewModel templateGroup in result.RightToSeq())
+            {
+                TreeItems.Add(new TemplateTreeItemViewModel(templateGroup));
+                _templateGroupName = null;
+                
+                _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+    
+    private async Task AddTemplate()
+    {
+        if (_selectedTemplateGroup is not null && !string.IsNullOrWhiteSpace(_templateName))
+        {
+            Either<BaseError, TemplateViewModel> result = await Mediator.Send(new CreateTemplate(_selectedTemplateGroup.Id, _templateName), _cts.Token);
+        
+            foreach (BaseError error in result.LeftToSeq())
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error adding template: {Error}", error.Value);
+            }
+        
+            foreach (TemplateViewModel template in result.RightToSeq())
+            {
+                foreach (TemplateTreeItemViewModel item in TreeItems.Where(item => item.TemplateGroupId == _selectedTemplateGroup.Id))
+                {
+                    item.TreeItems.Add(new TemplateTreeItemViewModel(template));
+                }
+
+                _templateName = null;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+    
+    private async Task<S.HashSet<TemplateTreeItemViewModel>> LoadServerData(TemplateTreeItemViewModel parentNode)
+    {
+        foreach (int templateGroupId in Optional(parentNode.TemplateGroupId))
+        {
+            List<TemplateViewModel> result = await Mediator.Send(new GetTemplatesByTemplateGroupId(templateGroupId), _cts.Token);
+            foreach (TemplateViewModel template in result)
+            {
+                parentNode.TreeItems.Add(new TemplateTreeItemViewModel(template));
+            }
+        }
+
+        return parentNode.TreeItems;
+    }
+
+    private async Task DeleteItem(TemplateTreeItemViewModel treeItem)
+    {
+        foreach (int templateGroupId in Optional(treeItem.TemplateGroupId))
+        {
+            // TODO: confirmation
+            
+            await Mediator.Send(new DeleteTemplateGroup(templateGroupId), _cts.Token);
+            TreeItems.RemoveWhere(i => i.TemplateGroupId == templateGroupId);
+            
+            _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
+            await InvokeAsync(StateHasChanged);
+        }
+
+        foreach (int templateId in Optional(treeItem.TemplateId))
+        {
+            // TODO: confirmation
+
+            await Mediator.Send(new DeleteTemplate(templateId), _cts.Token);
+            foreach (TemplateTreeItemViewModel parent in TreeItems)
+            {
+                parent.TreeItems.Remove(treeItem);
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

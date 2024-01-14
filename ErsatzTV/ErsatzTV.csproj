@@ -59,15 +59,16 @@
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
       <PackageReference Include="FluentValidation" Version="11.9.0" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+      <PackageReference Include="Heron.MudCalendar" Version="1.1.0" />
       <PackageReference Include="HtmlSanitizer" Version="8.0.811" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
       <PackageReference Include="Markdig" Version="0.34.0" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.0" /> 
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.1" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.1" /> 
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.1">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -75,7 +76,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.11.2" />
+      <PackageReference Include="MudBlazor" Version="6.12.0" />
       <PackageReference Include="NaturalSort.Extension" Version="4.2.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
       <PackageReference Include="Serilog" Version="3.1.1" />

@@ -16,7 +16,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
@@ -1818,6 +1818,225 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Resolution", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Block", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Minutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockGroupId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Block", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.BlockGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("BlockGroup", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.BlockItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CollectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CollectionType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MediaItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MultiCollectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlaybackOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SmartCollectionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockId");
+
+                    b.HasIndex("CollectionId");
+
+                    b.HasIndex("MediaItemId");
+
+                    b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("SmartCollectionId");
+
+                    b.ToTable("BlockItem", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PlayoutId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("When")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockId");
+
+                    b.HasIndex("PlayoutId");
+
+                    b.ToTable("PlayoutHistory", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("DaysOfMonth")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("DaysOfWeek")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTimeOffset>("EndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MonthsOfYear")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PlayoutId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("StartDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayoutId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("PlayoutTemplate", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Template", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("TemplateGroupId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("TemplateGroupId");
+
+                    b.ToTable("Template", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.TemplateGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("TemplateGroup", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.TemplateItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time(6)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("TemplateItem", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.SeasonMetadata", b =>
@@ -3634,6 +3853,124 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Watermark");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Block", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.BlockGroup", "BlockGroup")
+                        .WithMany("Blocks")
+                        .HasForeignKey("BlockGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlockGroup");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.BlockItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Block", "Block")
+                        .WithMany("Items")
+                        .HasForeignKey("BlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.Collection", "Collection")
+                        .WithMany()
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
+                        .WithMany()
+                        .HasForeignKey("MediaItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "MultiCollection")
+                        .WithMany()
+                        .HasForeignKey("MultiCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
+                        .WithMany()
+                        .HasForeignKey("SmartCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Block");
+
+                    b.Navigation("Collection");
+
+                    b.Navigation("MediaItem");
+
+                    b.Navigation("MultiCollection");
+
+                    b.Navigation("SmartCollection");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutHistory", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Block", "Block")
+                        .WithMany("PlayoutHistory")
+                        .HasForeignKey("BlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
+                        .WithMany("PlayoutHistory")
+                        .HasForeignKey("PlayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Block");
+
+                    b.Navigation("Playout");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutTemplate", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
+                        .WithMany("Templates")
+                        .HasForeignKey("PlayoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Template", "Template")
+                        .WithMany("PlayoutTemplates")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playout");
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Template", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.TemplateGroup", "TemplateGroup")
+                        .WithMany("Templates")
+                        .HasForeignKey("TemplateGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TemplateGroup");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.TemplateItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Block", "Block")
+                        .WithMany("TemplateItems")
+                        .HasForeignKey("BlockId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Template", "Template")
+                        .WithMany("Items")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Block");
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.SeasonMetadata", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Season", "Season")
@@ -4353,9 +4690,13 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Navigation("Items");
 
+                    b.Navigation("PlayoutHistory");
+
                     b.Navigation("ProgramScheduleAlternates");
 
                     b.Navigation("ProgramScheduleAnchors");
+
+                    b.Navigation("Templates");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ProgramSchedule", b =>
@@ -4365,6 +4706,32 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Playouts");
 
                     b.Navigation("ProgramScheduleAlternates");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Block", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("PlayoutHistory");
+
+                    b.Navigation("TemplateItems");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.BlockGroup", b =>
+                {
+                    b.Navigation("Blocks");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Template", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("PlayoutTemplates");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.TemplateGroup", b =>
+                {
+                    b.Navigation("Templates");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.SeasonMetadata", b =>

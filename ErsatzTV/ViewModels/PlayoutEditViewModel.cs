@@ -11,7 +11,11 @@ public class PlayoutEditViewModel
     public ProgramScheduleViewModel ProgramSchedule { get; set; }
     public string ExternalJsonFile { get; set; }
 
-    public CreatePlayout ToCreate() => Kind == "externaljson"
-        ? new CreateExternalJsonPlayout(Channel.Id, ExternalJsonFile)
-        : new CreateFloodPlayout(Channel.Id, ProgramSchedule.Id);
+    public CreatePlayout ToCreate() =>
+        Kind switch
+        {
+            PlayoutKind.ExternalJson => new CreateExternalJsonPlayout(Channel.Id, ExternalJsonFile),
+            PlayoutKind.Block => new CreateBlockPlayout(Channel.Id),
+            _ => new CreateFloodPlayout(Channel.Id, ProgramSchedule.Id)
+        };
 }

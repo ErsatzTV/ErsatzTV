@@ -13,7 +13,10 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
             Add Playout
         </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add/externaljson">
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/add/{PlayoutKind.Block}")">
+            Add Block Playout
+        </MudButton>
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/add/{PlayoutKind.ExternalJson}")">
             Add External Json Playout
         </MudButton>
     </div>
@@ -30,6 +33,7 @@
         <ColGroup>
             <col/>
             <col/>
+            <col/>
             <col style="width: 225px;"/>
         </ColGroup>
         <HeaderContent>
@@ -43,13 +47,26 @@
                     Default Schedule
                 </MudTableSortLabel>
             </MudTh>
-            @* <MudTh>Playout Type</MudTh> *@
+            <MudTh>Playout Type</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Channel">@context.ChannelNumber - @context.ChannelName</MudTd>
             <MudTd DataLabel="Schedule">@context.ScheduleName</MudTd>
-            @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
+            <MudTd DataLabel="Playout Type">
+                @switch (context.PlayoutType)
+                {
+                    case ProgramSchedulePlayoutType.Block:
+                        <span>Block</span>
+                        break;
+                    case ProgramSchedulePlayoutType.ExternalJson:
+                        <span>External Json</span>
+                        break;
+                    default:
+                        <span></span>
+                        break;
+                } 
+            </MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
                     <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
@@ -81,20 +98,30 @@
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.ExternalJson)
                     {
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit External Json File">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
                                            OnClick="@(_ => EditExternalJsonFile(context))">
                             </MudIconButton>
                         </MudTooltip>
-                        <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
                     }
-                    else
+                    else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
                     {
                         <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
+                        <MudTooltip Text="Edit Templates">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           Link="@($"playouts/{context.PlayoutId}/templates")">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Reset Playout">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => ResetPlayout(context))">
+                            </MudIconButton>
+                        </MudTooltip>
                     }
                     <MudTooltip Text="Delete Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
@@ -189,8 +216,10 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        // only show details for flood playouts
-        _selectedPlayoutId = playout.PlayoutType == ProgramSchedulePlayoutType.Flood ? playout.PlayoutId : null;
+        // only show details for flood and block playouts
+        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Flood or ProgramSchedulePlayoutType.Block
+            ? playout.PlayoutId
+            : null;
 
         if (_detailTable != null)
         {
@@ -201,7 +230,7 @@
     private async Task EditExternalJsonFile(PlayoutNameViewModel playout)
     {
         var parameters = new DialogParameters { { "ExternalJsonFile", $"{playout.ExternalJsonFile}" } };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
 
         IDialogReference dialog = await Dialog.ShowAsync<EditExternalJsonFileDialog>("Edit External Json File", parameters, options);
         DialogResult result = await dialog.Result;

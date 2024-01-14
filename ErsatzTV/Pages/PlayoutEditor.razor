@@ -3,20 +3,24 @@
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.ProgramSchedules
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<PlayoutEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<PlayoutEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">
-        @if (Kind == "externaljson")
+        @switch (Kind)
         {
-            <span>Add External Json Playout</span>
-        }
-        else
-        {
-            <span>Add Playout</span>
+            case PlayoutKind.ExternalJson:
+                <span>Add External Json Playout</span>
+                break;
+            case PlayoutKind.Block:
+                <span>Add Block Playout</span>
+                break;
+            default:
+                <span>Add Playout</span>
+                break;
         }
     </MudText>
     <div style="max-width: 400px;">
@@ -35,11 +39,11 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
-                    @if (Kind == "externaljson")
+                    @if (Kind == PlayoutKind.ExternalJson)
                     {
                         <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)" />
                     }
-                    else
+                    else if (string.IsNullOrWhiteSpace(Kind))
                     {
                         <MudSelect Class="mt-3"
                                    T="ProgramScheduleViewModel"
@@ -85,12 +89,12 @@
     {
         _model.Kind = Kind;
         
-        _channels = await _mediator.Send(new GetAllChannels(), _cts.Token)
+        _channels = await Mediator.Send(new GetAllChannels(), _cts.Token)
             .Map(list => list.OrderBy(vm => decimal.Parse(vm.Number)).ToList());
 
-        if (Kind != "externaljson")
+        if (string.IsNullOrWhiteSpace(Kind))
         {
-            _programSchedules = await _mediator.Send(new GetAllProgramSchedules(), _cts.Token)
+            _programSchedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token)
                 .Map(list => list.OrderBy(vm => vm.Name).ToList());
         }
     }
@@ -106,16 +110,15 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Seq<BaseError> errorMessage = (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            Seq<BaseError> errorMessage = (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Unexpected error saving playout: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving playout: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo("/playouts"));
+                () => NavigationManager.NavigateTo("/playouts"));
         }
     }
-
 }

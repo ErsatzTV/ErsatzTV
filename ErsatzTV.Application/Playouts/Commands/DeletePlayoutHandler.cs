@@ -25,9 +25,7 @@ public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseEr
         _localFileSystem = localFileSystem;
     }
 
-    public async Task<Either<BaseError, Unit>> Handle(
-        DeletePlayout request,
-        CancellationToken cancellationToken)
+    public async Task<Either<BaseError, Unit>> Handle(DeletePlayout request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 

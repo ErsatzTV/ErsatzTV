@@ -1,0 +1,254 @@
+﻿@page "/templates/{Id:int}"
+@using ErsatzTV.Application.Scheduling
+@using System.Globalization
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<TemplateEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Edit Template</MudText>
+    <MudGrid>
+        <MudItem xs="4">
+            <div style="max-width: 400px">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Name" @bind-Value="_template.Name" For="@(() => _template.Name)"/>
+                    </MudCardContent>
+                </MudCard>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
+                Save Changes
+            </MudButton>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px">
+                <MudCard>
+                    <MudCardContent>
+                        <MudSelect T="BlockGroupViewModel"
+                                   Label="Block Group"
+                                   ValueChanged="@(vm => UpdateBlockGroupItems(vm))">
+                            @foreach (BlockGroupViewModel blockGroup in _blockGroups)
+                            {
+                                <MudSelectItem Value="@blockGroup">
+                                    @blockGroup.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Class="mt-3"
+                                   T="BlockViewModel"
+                                   Label="Block"
+                                   @bind-value="_selectedBlock">
+                            @foreach (BlockViewModel block in _blocks)
+                            {
+                                <MudSelectItem Value="@block">@block.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Class="mt-3"
+                                   T="DateTime"
+                                   Label="Start Time On Or After"
+                                   @bind-value="_selectedBlockStart">
+                            @foreach (DateTime startTime in _startTimes)
+                            {
+                                <MudSelectItem Value="@startTime">
+                                    @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockToTemplate())" Disabled="@(_selectedBlock is null)">
+                            Add Block To Template
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="8">
+            <MudCalendar Class="mt-4"
+                         Items="@_template.Items"
+                         ShowMonth="false"
+                         ShowWeek="false"
+                         ShowPrevNextButtons="false"
+                         ShowDatePicker="false"
+                         ShowTodayButton="false"
+                         DayTimeInterval="CalendarTimeInterval.Minutes15"
+                         Use24HourClock="@(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern.Contains("H"))"
+                         EnableDragItems="true"
+                         EnableResizeItems="false"
+                         ItemChanged="@(ci => CalendarItemChanged(ci))"/>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private readonly List<BlockGroupViewModel> _blockGroups = [];
+    private readonly List<BlockViewModel> _blocks = [];
+    private readonly List<DateTime> _startTimes = [];
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private TemplateItemsEditViewModel _template = new();
+    private BlockGroupViewModel _selectedBlockGroup;
+    private BlockViewModel _selectedBlock;
+    private DateTime _selectedBlockStart;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadTemplateItems();
+
+        DateTime start = DateTime.Today;
+        _selectedBlockStart = start; 
+        while (start.Date == DateTime.Today.Date)
+        {
+            _startTimes.Add(start);
+            start = start.AddMinutes(15);
+        }
+    }
+
+    private async Task LoadTemplateItems()
+    {
+        Option<TemplateViewModel> maybeTemplate = await Mediator.Send(new GetTemplateById(Id), _cts.Token);
+        if (maybeTemplate.IsNone)
+        {
+            NavigationManager.NavigateTo("templates");
+            return;
+        }
+        
+        foreach (TemplateViewModel template in maybeTemplate)
+        {
+            _template = new TemplateItemsEditViewModel
+            {
+                Name = template.Name,
+                Items = []
+            };
+        }
+
+        Option<IEnumerable<TemplateItemViewModel>> maybeResults = await Mediator.Send(new GetTemplateItems(Id), _cts.Token);
+        foreach (IEnumerable<TemplateItemViewModel> items in maybeResults)
+        {
+            _template.Items.AddRange(items.Map(ProjectToEditViewModel));
+        }
+
+        _blockGroups.AddRange(await Mediator.Send(new GetAllBlockGroups(), _cts.Token));
+    }
+
+    private static TemplateItemEditViewModel ProjectToEditViewModel(TemplateItemViewModel item) =>
+        new()
+        {
+            BlockId = item.BlockId,
+            BlockName = item.BlockName,
+            Start = item.StartTime,
+            End = item.EndTime
+        };
+
+    private async Task UpdateBlockGroupItems(BlockGroupViewModel blockGroup)
+    {
+        _selectedBlockGroup = blockGroup;
+        
+        _blocks.Clear();
+        _blocks.AddRange(await Mediator.Send(new GetBlocksByBlockGroupId(_selectedBlockGroup.Id), _cts.Token));
+    }
+
+    private void AddBlockToTemplate()
+    {
+        // find first time where this block will fit
+        DateTime maybeStart = _selectedBlockStart;
+        while (maybeStart.Date == DateTime.Today)
+        {
+            DateTime maybeEnd = maybeStart.AddMinutes(_selectedBlock.Minutes);
+            if (IntersectsOthers(null, maybeStart, maybeEnd) == false)
+            {
+                var item = new TemplateItemEditViewModel
+                {
+                    BlockId = _selectedBlock.Id,
+                    BlockName = _selectedBlock.Name,
+                    Start = maybeStart,
+                    End = maybeEnd,
+                    LastStart = maybeStart,
+                    LastEnd = maybeEnd
+                };
+
+                _template.Items.Add(item);
+
+                break;
+            }
+
+            maybeStart = maybeStart.AddMinutes(15);
+        }
+    }
+
+    private void CalendarItemChanged(CalendarItem calendarItem)
+    {
+        // don't allow any overlap
+        if (calendarItem is TemplateItemEditViewModel item)
+        {
+            if (item.End.HasValue && IntersectsOthers(item, item.Start, item.End.Value))
+            {
+                // roll back
+                item.Start = item.LastStart;
+                item.End = item.LastEnd;
+            }
+            else
+            {
+                // commit
+                item.LastStart = item.Start;
+                item.LastEnd = item.End;
+            }
+        }
+    }
+
+    private bool IntersectsOthers(TemplateItemEditViewModel item, DateTime start, DateTime end)
+    {
+        var willFit = true;
+        
+        foreach (TemplateItemEditViewModel existing in _template.Items)
+        {
+            if (existing == item)
+            {
+                continue;
+            }
+            
+            if (start < existing.End && existing.Start < end)
+            {
+                willFit = false;
+                break;
+            }
+        }
+
+        return willFit == false;
+    }
+
+    // private void RemoveTemplateItem(TemplateItemEditViewModel item)
+    // {
+    //     _selectedItem = null;
+    //     _template.Items.Remove(item);
+    // }
+
+    private async Task SaveChanges()
+    {
+        await Task.Delay(10);
+
+        var items = _template.Items.Map(item => new ReplaceTemplateItem(item.BlockId, item.Start.TimeOfDay)).ToList();
+        
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(Id, _template.Name, items), _cts.Token)
+            .Map(e => e.LeftToSeq());
+        
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving template: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving template: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/templates"));
+    }
+}

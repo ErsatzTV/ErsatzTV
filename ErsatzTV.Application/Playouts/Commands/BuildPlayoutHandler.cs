@@ -22,12 +22,16 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IEntityLocker _entityLocker;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
+    private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
+    private readonly IExternalJsonPlayoutBuilder _externalJsonPlayoutBuilder;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public BuildPlayoutHandler(
         IClient client,
         IDbContextFactory<TvContext> dbContextFactory,
         IPlayoutBuilder playoutBuilder,
+        IBlockPlayoutBuilder blockPlayoutBuilder,
+        IExternalJsonPlayoutBuilder externalJsonPlayoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
@@ -35,6 +39,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
+        _blockPlayoutBuilder = blockPlayoutBuilder;
+        _externalJsonPlayoutBuilder = externalJsonPlayoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
         _workerChannel = workerChannel;
@@ -59,7 +65,20 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         {
             _entityLocker.LockPlayout(playout.Id);
 
-            await _playoutBuilder.Build(playout, request.Mode, cancellationToken);
+            switch (playout.ProgramSchedulePlayoutType)
+            {
+                case ProgramSchedulePlayoutType.Block:
+                    await _blockPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
+                    break;
+                case ProgramSchedulePlayoutType.ExternalJson:
+                    await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
+                    break;
+                case ProgramSchedulePlayoutType.None:
+                case ProgramSchedulePlayoutType.Flood:
+                default:
+                    await _playoutBuilder.Build(playout, request.Mode, cancellationToken);
+                    break;
+            }
 
             // let any active segmenter processes know that the playout has been modified
             // and therefore the segmenter may need to seek into the next item instead of
@@ -135,6 +154,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.Items)
+            .Include(p => p.PlayoutHistory)
+            .Include(p => p.Templates)
+            .ThenInclude(t => t.Template)
+            .ThenInclude(t => t.Items)
+            .ThenInclude(i => i.Block)
+            .ThenInclude(b => b.Items)
             .Include(p => p.FillGroupIndices)
             .ThenInclude(fgi => fgi.EnumeratorState)
             .Include(p => p.ProgramScheduleAlternates)

@@ -56,7 +56,7 @@ public class GetProgramScheduleItemsHandler :
                     .Map(psi => EnforceProperties(maybeProgramSchedule, psi)).ToList());
     }
 
-    // shuffled schedule items supports a limited set of properly values
+    // shuffled schedule items supports a limited set of property values
     private static ProgramScheduleItemViewModel EnforceProperties(
         Option<ProgramSchedule> maybeProgramSchedule,
         ProgramScheduleItemViewModel item)
