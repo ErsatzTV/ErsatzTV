@@ -33,6 +33,7 @@ using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
+using ErsatzTV.Core.Scheduling.BlockScheduling;
 using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Pipeline;
