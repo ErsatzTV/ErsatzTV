@@ -715,7 +715,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Genre", (string)null);
+                    b.ToTable("Genre");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.JellyfinCollection", b =>
@@ -1168,7 +1168,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Mood", (string)null);
+                    b.ToTable("Mood");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MovieMetadata", b =>
@@ -1276,7 +1276,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("SmartCollectionId");
 
-                    b.ToTable("MultiCollectionSmartItem", (string)null);
+                    b.ToTable("MultiCollectionSmartItem");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoArtist", b =>
@@ -1295,7 +1295,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("MusicVideoMetadataId");
 
-                    b.ToTable("MusicVideoArtist", (string)null);
+                    b.ToTable("MusicVideoArtist");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
@@ -1434,6 +1434,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("BlockKey")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ChapterTitle")
                         .HasColumnType("TEXT");
@@ -1827,6 +1830,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("BlockGroupId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Minutes")
                         .HasColumnType("INTEGER");
 
@@ -1923,7 +1929,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("PlayoutId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("When")
+                    b.Property<DateTime>("When")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1940,6 +1946,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DaysOfMonth")
                         .HasColumnType("TEXT");
@@ -1979,6 +1988,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
@@ -2274,7 +2286,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Style", (string)null);
+                    b.ToTable("Style");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Subtitle", b =>
@@ -2422,7 +2434,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Tag", (string)null);
+                    b.ToTable("Tag");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
@@ -2563,7 +2575,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("EmbyLibraryId");
 
-                    b.ToTable("EmbyPathInfo", (string)null);
+                    b.ToTable("EmbyPathInfo");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Jellyfin.JellyfinPathInfo", b =>
@@ -2585,7 +2597,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("JellyfinLibraryId");
 
-                    b.ToTable("JellyfinPathInfo", (string)null);
+                    b.ToTable("JellyfinPathInfo");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.EmbyLibrary", b =>
@@ -3545,7 +3557,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("ProgramScheduleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.Playout.Anchor#ErsatzTV.Core.Domain.PlayoutAnchor", "Anchor", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutAnchor", "Anchor", b1 =>
                         {
                             b1.Property<int>("PlayoutId")
                                 .HasColumnType("INTEGER");
@@ -3575,7 +3587,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("PlayoutId");
 
-                            b1.OwnsOne("ErsatzTV.Core.Domain.Playout.Anchor#ErsatzTV.Core.Domain.PlayoutAnchor.ScheduleItemsEnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
+                            b1.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
                                 {
                                     b2.Property<int>("PlayoutAnchorPlayoutId")
                                         .HasColumnType("INTEGER");
@@ -3658,7 +3670,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("SmartCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutProgramScheduleAnchor.EnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutProgramScheduleAnchorId")
                                 .HasColumnType("INTEGER");
@@ -3704,7 +3716,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutScheduleItemFillGroupIndex.EnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutScheduleItemFillGroupIndexId")
                                 .HasColumnType("INTEGER");

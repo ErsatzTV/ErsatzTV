@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20240114104626_Fix_BlockMinutes")]
+    partial class Fix_BlockMinutes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1437,9 +1440,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("BlockKey")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("ChapterTitle")
                         .HasColumnType("longtext");
 
@@ -1832,9 +1832,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("BlockGroupId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("Minutes")
                         .HasColumnType("int");
 
@@ -1949,9 +1946,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<string>("DaysOfMonth")
                         .HasColumnType("longtext");
 
@@ -1990,9 +1984,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("DateUpdated")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");

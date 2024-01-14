@@ -5,6 +5,7 @@
 @inject ILogger<Templates> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
+@inject IDialogService Dialog
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">Templates</MudText>
@@ -166,26 +167,38 @@
     {
         foreach (int templateGroupId in Optional(treeItem.TemplateGroupId))
         {
-            // TODO: confirmation
-            
-            await Mediator.Send(new DeleteTemplateGroup(templateGroupId), _cts.Token);
-            TreeItems.RemoveWhere(i => i.TemplateGroupId == templateGroupId);
-            
-            _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
-            await InvokeAsync(StateHasChanged);
+            var parameters = new DialogParameters { { "EntityType", "template group" }, { "EntityName", treeItem.Text } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template Group", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                await Mediator.Send(new DeleteTemplateGroup(templateGroupId), _cts.Token);
+                TreeItems.RemoveWhere(i => i.TemplateGroupId == templateGroupId);
+
+                _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
+                await InvokeAsync(StateHasChanged);
+            }
         }
 
         foreach (int templateId in Optional(treeItem.TemplateId))
         {
-            // TODO: confirmation
+            var parameters = new DialogParameters { { "EntityType", "template" }, { "EntityName", treeItem.Text } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            await Mediator.Send(new DeleteTemplate(templateId), _cts.Token);
-            foreach (TemplateTreeItemViewModel parent in TreeItems)
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Canceled)
             {
-                parent.TreeItems.Remove(treeItem);
-            }
+                await Mediator.Send(new DeleteTemplate(templateId), _cts.Token);
+                foreach (TemplateTreeItemViewModel parent in TreeItems)
+                {
+                    parent.TreeItems.Remove(treeItem);
+                }
 
-            await InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 }

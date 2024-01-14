@@ -24,6 +24,7 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
         Template template)
     {
         template.Name = request.Name;
+        template.DateUpdated = DateTime.UtcNow;
 
         dbContext.RemoveRange(template.Items);
         template.Items = request.Items.Map(i => BuildItem(template, i)).ToList();

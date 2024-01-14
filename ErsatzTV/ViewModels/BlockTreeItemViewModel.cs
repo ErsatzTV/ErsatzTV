@@ -19,7 +19,20 @@ public class BlockTreeItemViewModel
     public BlockTreeItemViewModel(BlockViewModel block)
     {
         Text = block.Name;
-        EndText = $"{block.Minutes} minutes";
+        if (block.Minutes / 60 >= 1)
+        {
+            string plural = block.Minutes / 60 >= 2 ? "s" : string.Empty;
+            EndText = $"{block.Minutes / 60} hour{plural}";
+            if (block.Minutes % 60 != 0)
+            {
+                EndText += $", {block.Minutes % 60} minutes";
+            }
+        }
+        else
+        {
+            EndText = $"{block.Minutes} minutes";
+        }
+
         TreeItems = [];
         CanExpand = false;
         BlockId = block.Id;

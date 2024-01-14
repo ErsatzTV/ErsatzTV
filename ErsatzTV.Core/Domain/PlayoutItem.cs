@@ -27,6 +27,7 @@ public class PlayoutItem
     public string PreferredAudioTitle { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }
     public ChannelSubtitleMode? SubtitleMode { get; set; }
+    public string BlockKey { get; set; }
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
 

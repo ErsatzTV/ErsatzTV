@@ -8,4 +8,5 @@ public class Template
     public string Name { get; set; }
     public ICollection<TemplateItem> Items { get; set; }
     public ICollection<PlayoutTemplate> PlayoutTemplates { get; set; }
+    public DateTime DateUpdated { get; set; }
 }
