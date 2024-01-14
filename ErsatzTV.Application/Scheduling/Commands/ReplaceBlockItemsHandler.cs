@@ -67,8 +67,8 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
     
     private static Validation<BaseError, Block> MinutesMustBeValid(ReplaceBlockItems request, Block block) =>
         Optional(block)
-            .Filter(_ => request.Minutes % 15 == 0)
-            .ToValidation<BaseError>("Block Minutes must be a multiple of 15");
+            .Filter(_ => request.Minutes > 0 && request.Minutes % 15 == 0)
+            .ToValidation<BaseError>("Block Minutes must be a positive multiple of 15");
 
     private static Validation<BaseError, Block> CollectionTypesMustBeValid(ReplaceBlockItems request, Block block) =>
         request.Items.Map(item => CollectionTypeMustBeValid(item, block)).Sequence().Map(_ => block);

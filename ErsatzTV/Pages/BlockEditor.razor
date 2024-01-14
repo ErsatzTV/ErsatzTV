@@ -15,10 +15,23 @@
         <MudCard>
             <MudCardContent>
                 <MudTextField Label="Name" @bind-Value="_block.Name" For="@(() => _block.Name)"/>
-                <MudTextField Label="Duration" @bind-Value="_block.Minutes"
-                              For="@(() => _block.Minutes)"
-                              Adornment="Adornment.End"
-                              AdornmentText="minutes" />
+                <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                    <MudItem xs="6">
+                        <MudTextField T="int"
+                                      Label="Duration"
+                                      @bind-Value="_durationHours"
+                                      Adornment="Adornment.End"
+                                      AdornmentText="hours"/>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudSelect T="int" @bind-Value="_durationMinutes" Adornment="Adornment.End" AdornmentText="minutes">
+                            <MudSelectItem Value="0" />
+                            <MudSelectItem Value="15" />
+                            <MudSelectItem Value="30" />
+                            <MudSelectItem Value="45" />
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
             </MudCardContent>
         </MudCard>
     </div>
@@ -204,6 +217,8 @@
 
     private BlockItemsEditViewModel _block = new() { Items = [] };
     private BlockItemEditViewModel _selectedItem;
+    private int _durationHours = 0;
+    private int _durationMinutes = 15;
 
     public void Dispose()
     {
@@ -230,6 +245,9 @@
                 Minutes = block.Minutes,
                 Items = []
             };
+
+            _durationHours = _block.Minutes / 60;
+            _durationMinutes = _block.Minutes % 60;
         }
 
         Option<IEnumerable<BlockItemViewModel>> maybeResults = await Mediator.Send(new GetBlockItems(Id), _cts.Token);
@@ -361,7 +379,10 @@
                 item.MediaItem?.MediaItemId,
                 item.PlaybackOrder)).ToList();
 
-        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceBlockItems(Id, _block.Name, _block.Minutes, items), _cts.Token)
+        _block.Minutes = _durationHours * 60 + _durationMinutes;
+
+        Seq<BaseError> errorMessages = await Mediator
+            .Send(new ReplaceBlockItems(Id, _block.Name, _block.Minutes, items), _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(
