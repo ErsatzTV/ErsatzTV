@@ -20,6 +20,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - If found, ErsatzTV will run ffprobe to get statistics immediately before streaming from disk
   - When local files are unavailable, ErsatzTV must be logged into the same Plex server as DizqueTV
     - ErsatzTV will ask Plex for statistics immediately before streaming from Plex
+- Add new *experimental* playout type `Block`
+  - **This playout type is under active development and updates may reset or delete related playout data**
+  - Many planned features are missing, incomplete, or result in errors. This is expected.
+  - Block playouts consist of:
+    - `Blocks` - ordered list of items to play within the specified duration
+    - `Templates` - a generic "day" that consists of blocks scheduled at specific times
+    - `Playout Templates` - templates to schedule using the specified criteria. Only one template will be selected each day
+  - Much more to come on this feature as development continues 
 
 ### Fixed
 - Fix error loading path replacements when using MySql
