@@ -42,6 +42,8 @@ public class ReplacePlayoutTemplateItemsHandler(
                     playout.Templates.Remove(remove);
                 }
 
+                var now = DateTime.UtcNow;
+
                 foreach (ReplacePlayoutTemplate add in toAdd)
                 {
                     playout.Templates.Add(
@@ -52,7 +54,8 @@ public class ReplacePlayoutTemplateItemsHandler(
                             TemplateId = add.TemplateId,
                             DaysOfWeek = add.DaysOfWeek,
                             DaysOfMonth = add.DaysOfMonth,
-                            MonthsOfYear = add.MonthsOfYear
+                            MonthsOfYear = add.MonthsOfYear,
+                            DateUpdated = now
                         });
                 }
 
@@ -65,6 +68,7 @@ public class ReplacePlayoutTemplateItemsHandler(
                         ex.DaysOfWeek = update.DaysOfWeek;
                         ex.DaysOfMonth = update.DaysOfMonth;
                         ex.MonthsOfYear = update.MonthsOfYear;
+                        ex.DateUpdated = now;
                     }
                 }
                 

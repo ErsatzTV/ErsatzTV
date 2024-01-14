@@ -26,6 +26,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
     {
         block.Name = request.Name;
         block.Minutes = request.Minutes;
+        block.DateUpdated = DateTime.UtcNow;
         
         dbContext.RemoveRange(block.Items);
         block.Items = request.Items.Map(i => BuildItem(block, i.Index, i)).ToList();

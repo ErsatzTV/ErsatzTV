@@ -1435,6 +1435,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("BlockKey")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ChapterTitle")
                         .HasColumnType("TEXT");
 
@@ -1827,6 +1830,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("BlockGroupId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Minutes")
                         .HasColumnType("INTEGER");
 
@@ -1941,6 +1947,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DaysOfMonth")
                         .HasColumnType("TEXT");
 
@@ -1979,6 +1988,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");

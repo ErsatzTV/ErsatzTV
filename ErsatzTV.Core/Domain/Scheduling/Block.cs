@@ -10,4 +10,5 @@ public class Block
     public ICollection<BlockItem> Items { get; set; }
     public ICollection<TemplateItem> TemplateItems { get; set; }
     public ICollection<PlayoutHistory> PlayoutHistory { get; set; }
+    public DateTime DateUpdated { get; set; }
 }

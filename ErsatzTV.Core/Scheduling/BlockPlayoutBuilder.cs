@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -17,6 +18,11 @@ public class BlockPlayoutBuilder(
     ILogger<BlockPlayoutBuilder> logger)
     : IBlockPlayoutBuilder
 {
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        NullValueHandling = NullValueHandling.Ignore
+    };
+    
     public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
         logger.LogDebug(
@@ -26,6 +32,9 @@ public class BlockPlayoutBuilder(
             playout.Channel.Name);
 
         DateTimeOffset start = DateTimeOffset.Now;
+        DateTimeOffset lastScheduledItem = playout.Items.Count == 0
+        ? SystemTime.MinValueUtc
+        : playout.Items.Max(i => i.StartOffset);
         
         // get blocks to schedule
         List<RealBlock> blocksToSchedule = await GetBlocksToSchedule(playout, start);
@@ -33,20 +42,49 @@ public class BlockPlayoutBuilder(
         // get all collection items for the playout
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(blocksToSchedule);
         
-        // TODO: REMOVE THIS !!!
-        playout.Items.Clear();
-        
-        // TODO: REMOVE THIS !!!
-        var historyToRemove = playout.PlayoutHistory
-            .Filter(h => h.When > start.UtcDateTime)
-            .ToList();
-        foreach (PlayoutHistory remove in historyToRemove)
+        var itemBlockKeys = new Dictionary<PlayoutItem, BlockKey>();
+        foreach (PlayoutItem item in playout.Items)
         {
-            playout.PlayoutHistory.Remove(remove);
+            if (!string.IsNullOrWhiteSpace(item.BlockKey))
+            {
+                BlockKey blockKey = JsonConvert.DeserializeObject<BlockKey>(item.BlockKey);
+                itemBlockKeys.Add(item, blockKey);
+            }
         }
 
+        // remove items without a block key (shouldn't happen often, just upgrades)
+        playout.Items.RemoveAll(i => !itemBlockKeys.ContainsKey(i));
+        
+        // remove playout items with block keys that aren't part of blocksToSchedule
+        // this could happen if block, template or playout template were updated
+        foreach ((PlayoutItem item, BlockKey blockKey) in itemBlockKeys)
+        {
+            if (blocksToSchedule.All(realBlock => realBlock.BlockKey != blockKey))
+            {
+                logger.LogDebug(
+                    "Removing playout item {Title} with block key {@Key} that is no longer present",
+                    GetDisplayTitle(item),
+                    blockKey);
+
+                playout.Items.Remove(item);
+            }
+        }
+        
         foreach (RealBlock realBlock in blocksToSchedule)
         {
+            // skip blocks to schedule that are covered by existing playout items
+            // this means the block, template and playout template has NOT been updated
+            // importantly, only skip BEFORE the last scheduled playout item
+            if (realBlock.Start <= lastScheduledItem && itemBlockKeys.ContainsValue(realBlock.BlockKey))
+            {
+                logger.LogDebug(
+                    "Skipping unchanged block {Block} at {Start}",
+                    realBlock.Block.Name,
+                    realBlock.Start);
+
+                continue;
+            }
+
             logger.LogDebug(
                 "Will schedule block {Block} at {Start}",
                 realBlock.Block.Name,
@@ -62,14 +100,9 @@ public class BlockPlayoutBuilder(
                     continue;
                 }
                 
-                // TODO: check if change is needed - if not, skip building
-                // - block can change
-                // - template can change
-                // - playout templates can change
-                
-                // TODO: check for playout history for this collection
+                // check for playout history for this collection
                 string historyKey = HistoryKey.ForBlockItem(blockItem);
-                logger.LogDebug("History key for block item {Item} is {Key}", blockItem.Id, historyKey);
+                //logger.LogDebug("History key for block item {Item} is {Key}", blockItem.Id, historyKey);
 
                 DateTime historyTime = currentTime.UtcDateTime;
                 Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
@@ -144,8 +177,8 @@ public class BlockPlayoutBuilder(
                     logger.LogDebug("current item: {Id} / {Title}", mediaItem.Id, mediaItem is Episode e ? GetTitle(e) : string.Empty);
 
                     TimeSpan itemDuration = DurationForMediaItem(mediaItem);
-
-                    // TODO: create a playout item
+                    
+                    // create a playout item
                     var playoutItem = new PlayoutItem
                     {
                         MediaItemId = mediaItem.Id,
@@ -160,11 +193,12 @@ public class BlockPlayoutBuilder(
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
+                        BlockKey = JsonConvert.SerializeObject(realBlock.BlockKey)
                     };
 
                     playout.Items.Add(playoutItem);
                     
-                    // TODO: create a playout history record
+                    // create a playout history record
                     var nextHistory = new PlayoutHistory
                     {
                         PlayoutId = playout.Id,
@@ -204,6 +238,64 @@ public class BlockPlayoutBuilder(
 
         return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
     }
+    
+    private static string GetDisplayTitle(PlayoutItem playoutItem)
+    {
+        switch (playoutItem.MediaItem)
+        {
+            case Episode e:
+                string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
+                    .Map(sm => $"{sm.Title} - ").IfNone(string.Empty);
+                var episodeNumbers = e.EpisodeMetadata.Map(em => em.EpisodeNumber).ToList();
+                var episodeTitles = e.EpisodeMetadata.Map(em => em.Title).ToList();
+                if (episodeNumbers.Count == 0 || episodeTitles.Count == 0)
+                {
+                    return "[unknown episode]";
+                }
+
+                var numbersString = $"e{string.Join('e', episodeNumbers.Map(n => $"{n:00}"))}";
+                var titlesString = $"{string.Join('/', episodeTitles)}";
+                if (!string.IsNullOrWhiteSpace(playoutItem.ChapterTitle))
+                {
+                    titlesString += $" ({playoutItem.ChapterTitle})";
+                }
+
+                return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
+            case Movie m:
+                return m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]");
+            case MusicVideo mv:
+                string artistName = mv.Artist.ArtistMetadata.HeadOrNone()
+                    .Map(am => $"{am.Title} - ").IfNone(string.Empty);
+                return mv.MusicVideoMetadata.HeadOrNone()
+                    .Map(mvm => $"{artistName}{mvm.Title}")
+                    .Map(
+                        s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                            ? s
+                            : $"{s} ({playoutItem.ChapterTitle})")
+                    .IfNone("[unknown music video]");
+            case OtherVideo ov:
+                return ov.OtherVideoMetadata.HeadOrNone()
+                    .Map(ovm => ovm.Title ?? string.Empty)
+                    .Map(
+                        s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                            ? s
+                            : $"{s} ({playoutItem.ChapterTitle})")
+                    .IfNone("[unknown video]");
+            case Song s:
+                string songArtist = s.SongMetadata.HeadOrNone()
+                    .Map(sm => string.IsNullOrWhiteSpace(sm.Artist) ? string.Empty : $"{sm.Artist} - ")
+                    .IfNone(string.Empty);
+                return s.SongMetadata.HeadOrNone()
+                    .Map(sm => $"{songArtist}{sm.Title ?? string.Empty}")
+                    .Map(
+                        t => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                            ? t
+                            : $"{s} ({playoutItem.ChapterTitle})")
+                    .IfNone("[unknown song]");
+            default:
+                return string.Empty;
+        }
+    }
 
     private async Task<List<RealBlock>> GetBlocksToSchedule(Playout playout, DateTimeOffset start)
     {
@@ -227,6 +319,7 @@ public class BlockPlayoutBuilder(
                 {
                     var realBlock = new RealBlock(
                         templateItem.Block,
+                        new BlockKey(templateItem.Block, templateItem.Template, playoutTemplate),
                         new DateTimeOffset(
                             current.Year,
                             current.Month,
@@ -266,7 +359,7 @@ public class BlockPlayoutBuilder(
 
         foreach ((string key, List<PlayoutHistory> group) in groups)
         {
-            logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
+            //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
 
             IEnumerable<PlayoutHistory> toDelete = group
                 .Filter(h => h.When < start.UtcDateTime)
@@ -307,15 +400,36 @@ public class BlockPlayoutBuilder(
         return version.Duration;
     }
 
-    private record RealBlock(Block Block, DateTimeOffset Start);
+    private record RealBlock(Block Block, BlockKey BlockKey, DateTimeOffset Start);
+
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    private record BlockKey
+    {
+        public BlockKey()
+        {
+        }
+
+        public BlockKey(Block block, Template template, PlayoutTemplate playoutTemplate)
+        {
+            b = block.Id;
+            bt = block.DateUpdated.Ticks;
+            t = template.Id;
+            tt = template.DateUpdated.Ticks;
+            pt = playoutTemplate.Id;
+            ptt = playoutTemplate.DateUpdated.Ticks;
+        }
+        
+        public int b { get; set; }
+        public int t { get; set; }
+        public int pt { get; set; }
+        
+        public long bt { get; set; }
+        public long tt { get; set; }
+        public long ptt { get; set; }
+    }
 
     private static class HistoryKey
     {
-        private static readonly JsonSerializerSettings Settings = new()
-        {
-            NullValueHandling = NullValueHandling.Ignore
-        };
-        
         public static string ForBlockItem(BlockItem blockItem)
         {
             dynamic key = new
@@ -329,17 +443,12 @@ public class BlockPlayoutBuilder(
                 blockItem.MediaItemId
             };
 
-            return JsonConvert.SerializeObject(key, Formatting.None, Settings);
+            return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
         }
     }
 
     private static class HistoryDetails
     {
-        private static readonly JsonSerializerSettings Settings = new()
-        {
-            NullValueHandling = NullValueHandling.Ignore
-        };
-        
         public static string ForMediaItem(MediaItem mediaItem)
         {
             Details details = mediaItem switch
@@ -348,7 +457,7 @@ public class BlockPlayoutBuilder(
                 _ => new Details(mediaItem.Id, null, null, null)
             };
             
-            return JsonConvert.SerializeObject(details, Formatting.None, Settings);
+            return JsonConvert.SerializeObject(details, Formatting.None, JsonSettings);
         }
 
         private static Details ForEpisode(Episode e)
