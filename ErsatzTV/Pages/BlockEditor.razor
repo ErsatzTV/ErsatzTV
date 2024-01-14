@@ -89,12 +89,12 @@
                     <MudCard>
                         <MudCardContent>
                             <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
-                                <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
+                                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem> *@
                                 <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
                                 <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
-                                <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
-                                <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
-                                <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem> *@
+                                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
+                                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem> *@
                             </MudSelect>
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
                             {
@@ -339,7 +339,7 @@
         var item = new BlockItemEditViewModel
         {
             Index = _block.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
-            PlaybackOrder = PlaybackOrder.Shuffle,
+            PlaybackOrder = PlaybackOrder.Chronological,
             CollectionType = ProgramScheduleItemCollectionType.Collection
         };
 
