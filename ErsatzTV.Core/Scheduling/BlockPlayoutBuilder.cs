@@ -174,6 +174,7 @@ public class BlockPlayoutBuilder(
                         Details = HistoryDetails.ForMediaItem(mediaItem)
                     };
                     
+                    //logger.LogDebug("Adding history item: {When}: {History}", nextHistory.When, nextHistory.Details);
                     playout.PlayoutHistory.Add(nextHistory);
 
                     currentTime += itemDuration;
@@ -243,6 +244,7 @@ public class BlockPlayoutBuilder(
         }
 
         realBlocks.RemoveAll(b => b.Start.AddMinutes(b.Block.Minutes) < start || b.Start > finish);
+        realBlocks = realBlocks.OrderBy(rb => rb.Start).ToList();
 
         return realBlocks;
     }
