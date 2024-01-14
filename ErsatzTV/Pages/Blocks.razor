@@ -5,6 +5,7 @@
 @inject ILogger<Blocks> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
+@inject IDialogService Dialog
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">Blocks</MudText>
@@ -172,26 +173,38 @@
     {
         foreach (int blockGroupId in Optional(treeItem.BlockGroupId))
         {
-            // TODO: confirmation
+            var parameters = new DialogParameters { { "EntityType", "block group" }, { "EntityName", treeItem.Text } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block Group", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
+                TreeItems.RemoveWhere(i => i.BlockGroupId == blockGroupId);
             
-            await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
-            TreeItems.RemoveWhere(i => i.BlockGroupId == blockGroupId);
-            
-            _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
-            await InvokeAsync(StateHasChanged);
+                _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
+                await InvokeAsync(StateHasChanged);
+            }
         }
 
         foreach (int blockId in Optional(treeItem.BlockId))
         {
-            // TODO: confirmation
+            var parameters = new DialogParameters { { "EntityType", "block" }, { "EntityName", treeItem.Text } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            await Mediator.Send(new DeleteBlock(blockId), _cts.Token);
-            foreach (BlockTreeItemViewModel parent in TreeItems)
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Canceled)
             {
-                parent.TreeItems.Remove(treeItem);
-            }
+                await Mediator.Send(new DeleteBlock(blockId), _cts.Token);
+                foreach (BlockTreeItemViewModel parent in TreeItems)
+                {
+                    parent.TreeItems.Remove(treeItem);
+                }
 
-            await InvokeAsync(StateHasChanged);
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 }
