@@ -25,6 +25,13 @@ public class BlockPlayoutBuilder(
             playout.Channel.Number,
             playout.Channel.Name);
 
+        List<PlaybackOrder> allowedPlaybackOrders =
+        [
+            PlaybackOrder.Chronological,
+            PlaybackOrder.SeasonEpisode,
+            PlaybackOrder.Random
+        ];
+
         DateTimeOffset start = DateTimeOffset.Now;
 
         int daysToBuild = await configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
@@ -58,10 +65,10 @@ public class BlockPlayoutBuilder(
 
             DateTimeOffset currentTime = effectiveBlock.Start;
 
-            foreach (BlockItem blockItem in effectiveBlock.Block.Items)
+            foreach (BlockItem blockItem in effectiveBlock.Block.Items.OrderBy(i => i.Index))
             {
                 // TODO: support other playback orders
-                if (blockItem.PlaybackOrder is not PlaybackOrder.SeasonEpisode and not PlaybackOrder.Chronological)
+                if (!allowedPlaybackOrders.Contains(blockItem.PlaybackOrder))
                 {
                     continue;
                 }
@@ -82,61 +89,27 @@ public class BlockPlayoutBuilder(
 
                 var collectionKey = CollectionKey.ForBlockItem(blockItem);
                 List<MediaItem> collectionItems = collectionMediaItems[collectionKey];
+
                 // get enumerator
-                var enumerator = new SeasonEpisodeMediaCollectionEnumerator(collectionItems, state);
+                IMediaCollectionEnumerator enumerator = blockItem.PlaybackOrder switch
+                {
+                    PlaybackOrder.Chronological => new ChronologicalMediaCollectionEnumerator(collectionItems, state),
+                    PlaybackOrder.SeasonEpisode => new SeasonEpisodeMediaCollectionEnumerator(collectionItems, state),
+                    _ => new RandomizedMediaCollectionEnumerator(
+                        collectionItems,
+                        new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 })
+                };
 
                 // seek to the appropriate place in the collection enumerator
                 foreach (PlayoutHistory history in maybeHistory)
                 {
                     logger.LogDebug("History is applicable: {When}: {History}", history.When, history.Details);
 
-                    // find next media item
-                    HistoryDetails.Details details =
-                        JsonConvert.DeserializeObject<HistoryDetails.Details>(history.Details);
-                    if (details.SeasonNumber.HasValue && details.EpisodeNumber.HasValue)
-                    {
-                        Option<MediaItem> maybeMatchedItem = Optional(
-                            collectionItems.Find(
-                                ci => ci is Episode e &&
-                                      e.EpisodeMetadata.Any(em => em.EpisodeNumber == details.EpisodeNumber.Value) &&
-                                      e.Season.SeasonNumber == details.SeasonNumber.Value));
-
-                        var copy = collectionItems.ToList();
-
-                        if (maybeMatchedItem.IsNone)
-                        {
-                            var fakeItem = new Episode
-                            {
-                                Season = new Season { SeasonNumber = details.SeasonNumber.Value },
-                                EpisodeMetadata =
-                                [
-                                    new EpisodeMetadata
-                                    {
-                                        EpisodeNumber = details.EpisodeNumber.Value,
-                                        ReleaseDate = details.ReleaseDate
-                                    }
-                                ]
-                            };
-
-                            copy.Add(fakeItem);
-                            maybeMatchedItem = fakeItem;
-                        }
-
-                        foreach (MediaItem matchedItem in maybeMatchedItem)
-                        {
-                            IComparer<MediaItem> comparer = blockItem.PlaybackOrder switch
-                            {
-                                PlaybackOrder.Chronological => new ChronologicalMediaComparer(),
-                                _ => new SeasonEpisodeMediaComparer()
-                            };
-
-                            copy.Sort(comparer);
-
-                            state.Index = copy.IndexOf(matchedItem);
-                            enumerator.ResetState(state);
-                            enumerator.MoveNext();
-                        }
-                    }
+                    HistoryDetails.MoveToNextItem(
+                        collectionItems,
+                        history.Details,
+                        enumerator,
+                        blockItem.PlaybackOrder);
                 }
 
                 foreach (MediaItem mediaItem in enumerator.Current)
