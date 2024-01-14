@@ -161,30 +161,30 @@
                                 @switch (_selectedItem.CollectionType)
                                 {
                                     case ProgramScheduleItemCollectionType.MultiCollection:
-                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                        @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+                                        @* <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> *@
                                         break;
                                     case ProgramScheduleItemCollectionType.Collection:
                                     case ProgramScheduleItemCollectionType.SmartCollection:
                                         <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                        @* <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+                                        @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+                                        @* <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> *@
                                         break;
                                     case ProgramScheduleItemCollectionType.TelevisionShow:
                                         <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
                                         <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem>
+                                        @* <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+                                        @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
+                                        @* <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem> *@
                                         break;
                                     case ProgramScheduleItemCollectionType.TelevisionSeason:
                                     case ProgramScheduleItemCollectionType.Artist:
                                     case ProgramScheduleItemCollectionType.FakeCollection:
                                     default:
                                         <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        @* <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+                                        @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
                                         break;
                                 }
                             </MudSelect>

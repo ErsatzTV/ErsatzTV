@@ -216,8 +216,10 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        // only show details for flood playouts
-        _selectedPlayoutId = playout.PlayoutType == ProgramSchedulePlayoutType.Flood ? playout.PlayoutId : null;
+        // only show details for flood and block playouts
+        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Flood or ProgramSchedulePlayoutType.Block
+            ? playout.PlayoutId
+            : null;
 
         if (_detailTable != null)
         {

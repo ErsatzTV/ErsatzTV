@@ -154,6 +154,12 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         dbContext.Playouts
             .Include(p => p.Channel)
             .Include(p => p.Items)
+            .Include(p => p.PlayoutHistory)
+            .Include(p => p.Templates)
+            .ThenInclude(t => t.Template)
+            .ThenInclude(t => t.Items)
+            .ThenInclude(i => i.Block)
+            .ThenInclude(b => b.Items)
             .Include(p => p.FillGroupIndices)
             .ThenInclude(fgi => fgi.EnumeratorState)
             .Include(p => p.ProgramScheduleAlternates)

@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20240113190523_Add_PlayoutHistory")]
+    partial class Add_PlayoutHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.1");
@@ -715,7 +718,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Genre", (string)null);
+                    b.ToTable("Genre");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.JellyfinCollection", b =>
@@ -1168,7 +1171,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Mood", (string)null);
+                    b.ToTable("Mood");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MovieMetadata", b =>
@@ -1276,7 +1279,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("SmartCollectionId");
 
-                    b.ToTable("MultiCollectionSmartItem", (string)null);
+                    b.ToTable("MultiCollectionSmartItem");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoArtist", b =>
@@ -1295,7 +1298,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("MusicVideoMetadataId");
 
-                    b.ToTable("MusicVideoArtist", (string)null);
+                    b.ToTable("MusicVideoArtist");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
@@ -2274,7 +2277,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Style", (string)null);
+                    b.ToTable("Style");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Subtitle", b =>
@@ -2422,7 +2425,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Tag", (string)null);
+                    b.ToTable("Tag");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
@@ -2563,7 +2566,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("EmbyLibraryId");
 
-                    b.ToTable("EmbyPathInfo", (string)null);
+                    b.ToTable("EmbyPathInfo");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Jellyfin.JellyfinPathInfo", b =>
@@ -2585,7 +2588,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("JellyfinLibraryId");
 
-                    b.ToTable("JellyfinPathInfo", (string)null);
+                    b.ToTable("JellyfinPathInfo");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.EmbyLibrary", b =>
@@ -3545,7 +3548,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("ProgramScheduleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.Playout.Anchor#ErsatzTV.Core.Domain.PlayoutAnchor", "Anchor", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutAnchor", "Anchor", b1 =>
                         {
                             b1.Property<int>("PlayoutId")
                                 .HasColumnType("INTEGER");
@@ -3575,7 +3578,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("PlayoutId");
 
-                            b1.OwnsOne("ErsatzTV.Core.Domain.Playout.Anchor#ErsatzTV.Core.Domain.PlayoutAnchor.ScheduleItemsEnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
+                            b1.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
                                 {
                                     b2.Property<int>("PlayoutAnchorPlayoutId")
                                         .HasColumnType("INTEGER");
@@ -3658,7 +3661,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("SmartCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutProgramScheduleAnchor.EnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutProgramScheduleAnchorId")
                                 .HasColumnType("INTEGER");
@@ -3704,7 +3707,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutScheduleItemFillGroupIndex.EnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutScheduleItemFillGroupIndexId")
                                 .HasColumnType("INTEGER");
