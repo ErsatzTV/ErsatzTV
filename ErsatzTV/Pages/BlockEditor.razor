@@ -89,12 +89,12 @@
                     <MudCard>
                         <MudCardContent>
                             <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
-                                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem> *@
+                                <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
                                 <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
                                 <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
                                 @* <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem> *@
                                 @* <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem> *@
-                                @* <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem> *@
+                                <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
                             </MudSelect>
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
                             {
@@ -180,14 +180,14 @@
                                     case ProgramScheduleItemCollectionType.Collection:
                                     case ProgramScheduleItemCollectionType.SmartCollection:
                                         <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                                        @* <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                                         @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
                                         @* <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem> *@
                                         break;
                                     case ProgramScheduleItemCollectionType.TelevisionShow:
                                         <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
                                         <MudSelectItem Value="PlaybackOrder.SeasonEpisode">Season, Episode</MudSelectItem>
-                                        @* <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                                         @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
                                         @* <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem> *@
                                         break;
@@ -196,7 +196,7 @@
                                     case ProgramScheduleItemCollectionType.FakeCollection:
                                     default:
                                         <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                                        @* <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem> *@
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                                         @* <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem> *@
                                         break;
                                 }
