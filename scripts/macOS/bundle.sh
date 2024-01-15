@@ -18,6 +18,17 @@ cp -R "$REPO_ROOT/ErsatzTV-macOS/build/Release/ErsatzTV-macOS.app" "$APP_NAME"
 
 cp -a "$PUBLISH_OUTPUT_DIRECTORY" "$APP_NAME/Contents/MacOS"
 
+# codesign fails with some files in directories that have periods in them, so move to resources and symlink
+pushd "$APP_NAME"/Contents/MacOS/wwwroot/_content/ || exit
+for file in *; do
+    if test -d "$file" && test ! -L "$file"; then
+        FOLDER=$(basename "$file")
+        mv "$file" "$APP_NAME/Contents/Resources/"
+        ln -s "../../../Resources/$FOLDER" "$file"
+    fi
+done
+popd || exit
+
 chmod +x "$APP_NAME/Contents/MacOS/ErsatzTV"
 chmod +x "$APP_NAME/Contents/MacOS/ErsatzTV.Scanner"
 chmod +x "$APP_NAME/Contents/MacOS/ErsatzTV-macOS"
