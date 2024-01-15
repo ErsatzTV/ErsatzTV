@@ -12,6 +12,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -20,6 +21,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
+    private readonly ILogger<BuildPlayoutHandler> _logger;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
@@ -34,6 +36,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IExternalJsonPlayoutBuilder externalJsonPlayoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
+        ILogger<BuildPlayoutHandler> logger,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _client = client;
@@ -43,6 +46,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _externalJsonPlayoutBuilder = externalJsonPlayoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
+        _logger = logger;
         _workerChannel = workerChannel;
     }
 
@@ -68,7 +72,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             switch (playout.ProgramSchedulePlayoutType)
             {
                 case ProgramSchedulePlayoutType.Block:
-                    await _blockPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
+                    await _blockPlayoutBuilder.Build(playout, request.Mode, _logger, cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
                     await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
