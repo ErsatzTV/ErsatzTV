@@ -56,14 +56,29 @@ public class BlockPlayoutBuilder(
             BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem);
         }
 
+        DateTimeOffset currentTime = start;
+
         foreach (EffectiveBlock effectiveBlock in updatedEffectiveBlocks)
         {
-            logger.LogDebug(
-                "Will schedule block {Block} at {Start}",
-                effectiveBlock.Block.Name,
-                effectiveBlock.Start);
+            if (currentTime < effectiveBlock.Start)
+            {
+                currentTime = effectiveBlock.Start;
 
-            DateTimeOffset currentTime = effectiveBlock.Start;
+                logger.LogDebug(
+                    "Will schedule block {Block} at {Start}",
+                    effectiveBlock.Block.Name,
+                    effectiveBlock.Start);
+            }
+            else
+            {
+                logger.LogDebug(
+                    "Will schedule block {Block} with start {Start} at {ActualStart}",
+                    effectiveBlock.Block.Name,
+                    effectiveBlock.Start,
+                    currentTime);
+            }
+
+            DateTimeOffset blockFinish = effectiveBlock.Start.AddMinutes(effectiveBlock.Block.Minutes);
 
             foreach (BlockItem blockItem in effectiveBlock.Block.Items.OrderBy(i => i.Index))
             {
@@ -71,6 +86,17 @@ public class BlockPlayoutBuilder(
                 if (!allowedPlaybackOrders.Contains(blockItem.PlaybackOrder))
                 {
                     continue;
+                }
+
+                if (currentTime >= blockFinish)
+                {
+                    logger.LogDebug(
+                        "Current time {Time} for block {Block} is beyond block finish {Finish}; will stop with this block's items",
+                        currentTime,
+                        effectiveBlock.Block.Name,
+                        blockFinish);
+
+                    break;
                 }
 
                 // check for playout history for this collection
