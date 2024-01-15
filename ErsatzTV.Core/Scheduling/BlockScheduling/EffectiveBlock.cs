@@ -38,9 +38,9 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
 
                     effectiveBlocks.Add(effectiveBlock);
                 }
-
-                current = current.AddDays(1);
             }
+
+            current = current.AddDays(1);
         }
 
         effectiveBlocks.RemoveAll(b => b.Start.AddMinutes(b.Block.Minutes) < start || b.Start > finish);
