@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -5,13 +6,13 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ErsatzTV.Application.Scheduling;
 
+[SuppressMessage("ReSharper", "SuggestBaseTypeForParameterInConstructor")]
 public class PreviewBlockPlayoutHandler(
     IDbContextFactory<TvContext> dbContextFactory,
-    IBlockPlayoutBuilder blockPlayoutBuilder)
+    IBlockPlayoutPreviewBuilder blockPlayoutBuilder)
     : IRequestHandler<PreviewBlockPlayout, List<PlayoutItemPreviewViewModel>>
 {
     public async Task<List<PlayoutItemPreviewViewModel>> Handle(
@@ -55,13 +56,7 @@ public class PreviewBlockPlayoutHandler(
             ]
         };
 
-        await blockPlayoutBuilder.Build(
-            playout,
-            PlayoutBuildMode.Reset,
-            NullLogger.Instance,
-            1,
-            randomizeStartPoints: true,
-            cancellationToken);
+        await blockPlayoutBuilder.Build(playout, PlayoutBuildMode.Reset, cancellationToken);
 
         // load playout item details for title
         foreach (PlayoutItem playoutItem in playout.Items)

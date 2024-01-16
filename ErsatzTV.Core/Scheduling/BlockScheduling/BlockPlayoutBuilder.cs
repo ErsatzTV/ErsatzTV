@@ -19,24 +19,7 @@ public class BlockPlayoutBuilder(
 {
     public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
-        int daysToBuild = await configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
-            .IfNoneAsync(2);
-
-        return await Build(playout, mode, logger, daysToBuild, randomizeStartPoints: false, cancellationToken);
-    }
-
-    public async Task<Playout> Build(
-        Playout playout,
-        PlayoutBuildMode mode,
-        ILogger customLogger,
-        int daysToBuild,
-        bool randomizeStartPoints,
-        CancellationToken cancellationToken)
-    {
-        // ReSharper disable once LocalVariableHidesPrimaryConstructorParameter
-        ILogger log = customLogger ?? logger;
-
-        log.LogDebug(
+        Logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
             playout.Id,
             playout.Channel.Number,
@@ -51,6 +34,7 @@ public class BlockPlayoutBuilder(
 
         DateTimeOffset start = DateTimeOffset.Now;
 
+        int daysToBuild = await GetDaysToBuild();
 
         // get blocks to schedule
         List<EffectiveBlock> blocksToSchedule = EffectiveBlock.GetEffectiveBlocks(playout, start, daysToBuild);
@@ -80,14 +64,14 @@ public class BlockPlayoutBuilder(
             {
                 currentTime = effectiveBlock.Start;
 
-                log.LogDebug(
+                Logger.LogDebug(
                     "Will schedule block {Block} at {Start}",
                     effectiveBlock.Block.Name,
                     effectiveBlock.Start);
             }
             else
             {
-                log.LogDebug(
+                Logger.LogDebug(
                     "Will schedule block {Block} with start {Start} at {ActualStart}",
                     effectiveBlock.Block.Name,
                     effectiveBlock.Start,
@@ -106,7 +90,7 @@ public class BlockPlayoutBuilder(
 
                 if (currentTime >= blockFinish)
                 {
-                    log.LogDebug(
+                    Logger.LogDebug(
                         "Current time {Time} for block {Block} is beyond block finish {Finish}; will stop with this block's items",
                         currentTime,
                         effectiveBlock.Block.Name,
@@ -119,54 +103,16 @@ public class BlockPlayoutBuilder(
                 string historyKey = HistoryDetails.KeyForBlockItem(blockItem);
                 //logger.LogDebug("History key for block item {Item} is {Key}", blockItem.Id, historyKey);
 
-                DateTime historyTime = currentTime.UtcDateTime;
-                Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
-                    .Filter(h => h.BlockId == blockItem.BlockId)
-                    .Filter(h => h.Key == historyKey)
-                    .Filter(h => h.When < historyTime)
-                    .OrderByDescending(h => h.When)
-                    .HeadOrNone();
-
-                var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
-
-                var collectionKey = CollectionKey.ForBlockItem(blockItem);
-                List<MediaItem> collectionItems = collectionMediaItems[collectionKey];
-
-                // get enumerator
-                IMediaCollectionEnumerator enumerator = blockItem.PlaybackOrder switch
-                {
-                    PlaybackOrder.Chronological => new ChronologicalMediaCollectionEnumerator(collectionItems, state),
-                    PlaybackOrder.SeasonEpisode => new SeasonEpisodeMediaCollectionEnumerator(collectionItems, state),
-                    _ => new RandomizedMediaCollectionEnumerator(
-                        collectionItems,
-                        new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 })
-                };
-
-                // seek to the appropriate place in the collection enumerator
-                foreach (PlayoutHistory history in maybeHistory)
-                {
-                    log.LogDebug("History is applicable: {When}: {History}", history.When, history.Details);
-
-                    HistoryDetails.MoveToNextItem(
-                        collectionItems,
-                        history.Details,
-                        enumerator,
-                        blockItem.PlaybackOrder);
-                }
-
-                if (maybeHistory.IsNone && randomizeStartPoints)
-                {
-                    enumerator.ResetState(
-                        new CollectionEnumeratorState
-                        {
-                            Seed = new Random().Next(),
-                            Index = new Random().Next(collectionItems.Count)
-                        });
-                }
+                IMediaCollectionEnumerator enumerator = GetEnumerator(
+                    playout,
+                    blockItem,
+                    currentTime,
+                    historyKey,
+                    collectionMediaItems);
 
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
-                    log.LogDebug(
+                    Logger.LogDebug(
                         "current item: {Id} / {Title}",
                         mediaItem.Id,
                         mediaItem is Episode e ? GetTitle(e) : string.Empty);
@@ -215,6 +161,60 @@ public class BlockPlayoutBuilder(
         CleanUpHistory(playout, start);
 
         return playout;
+    }
+
+    protected virtual ILogger Logger => logger;
+
+    protected virtual async Task<int> GetDaysToBuild()
+    {
+        return await configElementRepository
+            .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+            .IfNoneAsync(2);
+    }
+
+    protected virtual IMediaCollectionEnumerator GetEnumerator(
+        Playout playout,
+        BlockItem blockItem,
+        DateTimeOffset currentTime,
+        string historyKey,
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems)
+    {
+        DateTime historyTime = currentTime.UtcDateTime;
+        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+            .Filter(h => h.BlockId == blockItem.BlockId)
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When < historyTime)
+            .OrderByDescending(h => h.When)
+            .HeadOrNone();
+
+        var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
+
+        var collectionKey = CollectionKey.ForBlockItem(blockItem);
+        List<MediaItem> collectionItems = collectionMediaItems[collectionKey];
+
+        // get enumerator
+        IMediaCollectionEnumerator enumerator = blockItem.PlaybackOrder switch
+        {
+            PlaybackOrder.Chronological => new ChronologicalMediaCollectionEnumerator(collectionItems, state),
+            PlaybackOrder.SeasonEpisode => new SeasonEpisodeMediaCollectionEnumerator(collectionItems, state),
+            _ => new RandomizedMediaCollectionEnumerator(
+                collectionItems,
+                new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 })
+        };
+
+        // seek to the appropriate place in the collection enumerator
+        foreach (PlayoutHistory history in maybeHistory)
+        {
+            Logger.LogDebug("History is applicable: {When}: {History}", history.When, history.Details);
+
+            HistoryDetails.MoveToNextItem(
+                collectionItems,
+                history.Details,
+                enumerator,
+                blockItem.PlaybackOrder);
+        }
+
+        return enumerator;
     }
 
     private static string GetTitle(Episode e)
