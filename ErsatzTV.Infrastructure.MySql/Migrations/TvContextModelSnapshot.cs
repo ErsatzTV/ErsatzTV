@@ -1841,6 +1841,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<int>("StopScheduling")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BlockGroupId");

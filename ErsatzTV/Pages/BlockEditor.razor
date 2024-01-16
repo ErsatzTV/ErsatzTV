@@ -3,6 +3,7 @@
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Scheduling
 @using ErsatzTV.Application.Search
+@using ErsatzTV.Core.Domain.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<BlockEditor> Logger
@@ -32,6 +33,13 @@
                         </MudSelect>
                     </MudItem>
                 </MudGrid>
+                <MudSelect T="BlockStopScheduling"
+                           @bind-Value="_block.StopScheduling"
+                           For="@(() => _block.StopScheduling)"
+                           Label="Stop scheduling block items">
+                    <MudSelectItem Value="BlockStopScheduling.BeforeDurationEnd">Before Duration End</MudSelectItem>
+                    <MudSelectItem Value="BlockStopScheduling.AfterDurationEnd">After Duration End</MudSelectItem>
+                </MudSelect>
             </MudCardContent>
         </MudCard>
     </div>
@@ -293,6 +301,7 @@
             {
                 Name = block.Name,
                 Minutes = block.Minutes,
+                StopScheduling = block.StopScheduling,
                 Items = []
             };
 
@@ -468,7 +477,7 @@
 
         _block.Minutes = _durationHours * 60 + _durationMinutes;
 
-        return new ReplaceBlockItems(Id, _block.Name, _block.Minutes, items);
+        return new ReplaceBlockItems(Id, _block.Name, _block.Minutes, _block.StopScheduling, items);
     }
 
     private async Task PreviewPlayout()

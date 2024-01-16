@@ -9,7 +9,7 @@ internal static class Mapper
         new(blockGroup.Id, blockGroup.Name, blockGroup.Blocks.Count);
 
     internal static BlockViewModel ProjectToViewModel(Block block) =>
-        new(block.Id, block.Name, block.Minutes);
+        new(block.Id, block.Name, block.Minutes, block.StopScheduling);
 
     internal static BlockItemViewModel ProjectToViewModel(BlockItem blockItem) =>
         new(

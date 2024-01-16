@@ -93,9 +93,10 @@ public class PreviewBlockPlayoutHandler(
     private static Block MapToBlock(ReplaceBlockItems request) =>
         new()
         {
-            Minutes = request.Minutes,
             Name = request.Name,
-            Items = request.Items.Map(MapToBlockItem).ToList(),
+            Minutes = request.Minutes,
+            StopScheduling = request.StopScheduling,
+            Items = request.Items.Map(MapToBlockItem).ToList()
         };
 
     private static BlockItem MapToBlockItem(int id, ReplaceBlockItem request) =>

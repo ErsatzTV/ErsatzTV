@@ -137,6 +137,18 @@ public class BlockPlayoutBuilder(
                         BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey)
                     };
 
+                    if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
+                        && playoutItem.FinishOffset > blockFinish)
+                    {
+                        Logger.LogDebug(
+                            "Current time {Time} for block {Block} would go beyond block finish {Finish}; will not schedule more items",
+                            currentTime,
+                            effectiveBlock.Block.Name,
+                            blockFinish);
+
+                        break;
+                    }
+
                     playout.Items.Add(playoutItem);
 
                     // create a playout history record
