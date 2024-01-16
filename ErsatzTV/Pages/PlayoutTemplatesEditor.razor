@@ -70,8 +70,7 @@
             </MudTd>
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               OnClick="@(_ => DeleteTemplate(context))"
-                               Disabled="@(_items.Count == 1)">
+                               OnClick="@(_ => DeleteTemplate(context))">
                 </MudIconButton>
             </MudTd>
         </RowTemplate>
@@ -424,6 +423,12 @@
 
     private async Task SaveChanges()
     {
+        if (_items.Any(i => i.Template is null))
+        {
+            Snackbar.Add("Unable to save; item has no template selected", Severity.Error);
+            return;
+        }
+        
         var items = _items.Map(item => new ReplacePlayoutTemplate(
             item.Id,
             item.Index,
@@ -455,7 +460,7 @@
 
         _previewItems.Clear();
 
-        var prioritized = _items.OrderBy(t => t.Index).ToList();
+        var prioritized = _items.Filter(i => i.Template is not null).OrderBy(t => t.Index).ToList();
         
         if (dateRange.Start.HasValue && dateRange.End.HasValue)
         {
