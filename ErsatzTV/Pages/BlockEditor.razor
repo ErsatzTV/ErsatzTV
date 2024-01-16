@@ -53,10 +53,12 @@
                     <col style="width: 60px;"/>
                     <col style="width: 60px;"/>
                     <col style="width: 60px;"/>
+                    <col style="width: 60px;"/>
                 </ColGroup>
                 <HeaderContent>
                     <MudTh>Collection</MudTh>
                     <MudTh>Playback Order</MudTh>
+                    <MudTh/>
                     <MudTh/>
                     <MudTh/>
                     <MudTh/>
@@ -71,6 +73,11 @@
                         <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
                             @context.PlaybackOrder
                         </MudText>
+                    </MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(_ => CopyItem(context))">
+                        </MudIconButton>
                     </MudTd>
                     <MudTd>
                         <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
@@ -388,6 +395,28 @@
 
         _block.Items.Add(item);
         _selectedItem = item;
+    }
+
+    private void CopyItem(BlockItemEditViewModel item)
+    {
+        var newItem = new BlockItemEditViewModel
+        {
+            Index = item.Index + 1,
+            PlaybackOrder = item.PlaybackOrder,
+            CollectionType = item.CollectionType,
+            Collection = item.Collection,
+            MultiCollection = item.MultiCollection,
+            SmartCollection = item.SmartCollection,
+            MediaItem = item.MediaItem
+        };
+
+        foreach (BlockItemEditViewModel i in _block.Items.Filter(bi => bi.Index >= newItem.Index))
+        {
+            i.Index += 1;
+        }
+
+        _block.Items.Add(newItem);
+        _selectedItem = newItem;
     }
 
     private void RemoveBlockItem(BlockItemEditViewModel item)

@@ -17,7 +17,7 @@ public class BlockPlayoutBuilder(
     ILogger<BlockPlayoutBuilder> logger)
     : IBlockPlayoutBuilder
 {
-    public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
+    public virtual async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
         Logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
