@@ -288,12 +288,6 @@ public class Startup
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<Startup>();
 
-        string v2 = Environment.GetEnvironmentVariable("ETV_UI_V2");
-        if (!CurrentEnvironment.IsDevelopment() && !string.IsNullOrWhiteSpace(v2))
-        {
-            services.AddSpaStaticFiles(options => options.RootPath = "wwwroot/v2");
-        }
-
         services.AddMemoryCache();
 
         services.AddRazorPages(
@@ -535,51 +529,12 @@ public class Startup
             app.UseAuthorization();
         }
 
-        string v2 = Environment.GetEnvironmentVariable("ETV_UI_V2");
-        if (!env.IsDevelopment() && !string.IsNullOrWhiteSpace(v2))
-        {
-            app.Map(
-                "/v2",
-                app2 =>
-                {
-                    if (string.IsNullOrWhiteSpace(env.WebRootPath))
-                    {
-                        env.WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                    }
-
-                    app2.UseRouting();
-
-                    if (OidcHelper.IsEnabled)
-                    {
-                        app.UseAuthentication();
-                        app.UseAuthorization();
-                    }
-
-                    app2.UseEndpoints(e => e.MapFallbackToFile("index.html"));
-                    app2.UseFileServer(
-                        new FileServerOptions
-                        {
-                            FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "v2"))
-                        });
-                });
-        }
-
         app.UseEndpoints(
             endpoints =>
             {
                 endpoints.MapControllers();
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
-
-                // if (env.IsDevelopment())
-                // {
-                //     endpoints.MapToVueCliProxy(
-                //         "/v2/{*path}",
-                //         new SpaOptions { SourcePath = "client-app" },
-                //         "serve",
-                //         regex: "Compiled successfully",
-                //         forceKill: true);
-                // }
             });
     }
 

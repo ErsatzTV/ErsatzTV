@@ -6,10 +6,6 @@ COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy-amd64 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg
-RUN mkdir -p /etc/apt/keyrings
-RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
-RUN apt-get update && apt-get install -y nodejs
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
@@ -18,7 +14,6 @@ COPY nuget.config .
 COPY lib/nuget/* ./lib/nuget/
 COPY artwork/* ./artwork/
 COPY ErsatzTV/*.csproj ./ErsatzTV/
-COPY ErsatzTV/client-app/package*.json ./ErsatzTV/client-app/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
 COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
