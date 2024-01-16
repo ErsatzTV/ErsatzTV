@@ -25,67 +25,80 @@
                     </MudItem>
                     <MudItem xs="6">
                         <MudSelect T="int" @bind-Value="_durationMinutes" Adornment="Adornment.End" AdornmentText="minutes">
-                            <MudSelectItem Value="0" />
-                            <MudSelectItem Value="15" />
-                            <MudSelectItem Value="30" />
-                            <MudSelectItem Value="45" />
+                            <MudSelectItem Value="0"/>
+                            <MudSelectItem Value="15"/>
+                            <MudSelectItem Value="30"/>
+                            <MudSelectItem Value="45"/>
                         </MudSelect>
                     </MudItem>
                 </MudGrid>
             </MudCardContent>
         </MudCard>
     </div>
-    <MudTable Class="mt-6" Hover="true" Items="_block.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
-        <ColGroup>
-            <col/>
-            <col style="width: 60px;"/>
-            <col style="width: 60px;"/>
-            <col style="width: 60px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Collection</MudTh>
-            <MudTh/>
-            <MudTh/>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Collection">
-                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @context.CollectionName
-                </MudText>
-            </MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
-                               OnClick="@(_ => MoveItemUp(context))"
-                               Disabled="@(_block.Items.All(x => x.Index >= context.Index))">
-                </MudIconButton>
-            </MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
-                               OnClick="@(_ => MoveItemDown(context))"
-                               Disabled="@(_block.Items.All(x => x.Index <= context.Index))">
-                </MudIconButton>
-            </MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               OnClick="@(_ => RemoveBlockItem(context))">
-                </MudIconButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
     <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddBlockItem())" Class="mt-4">
         Add Block Item
     </MudButton>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
         Save Changes
     </MudButton>
-
-    @if (_selectedItem is not null)
-    {
-        <EditForm Model="_selectedItem">
-            <FluentValidationValidator/>
-            <div style="display: flex; flex-direction: row;" class="mt-6">
-                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => PreviewPlayout())" Class="mt-4 ml-4">
+        Preview Block Playout
+    </MudButton>
+    <MudGrid>
+        <MudItem xs="8">
+            <MudTable Class="mt-6" Hover="true" Items="_block.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+                <ColGroup>
+                    <col/>
+                    <col/>
+                    <col style="width: 60px;"/>
+                    <col style="width: 60px;"/>
+                    <col style="width: 60px;"/>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Collection</MudTh>
+                    <MudTh>Playback Order</MudTh>
+                    <MudTh/>
+                    <MudTh/>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Collection">
+                        <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                            @context.CollectionName
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Playback Order">
+                        <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                            @context.PlaybackOrder
+                        </MudText>
+                    </MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                                       OnClick="@(_ => MoveItemUp(context))"
+                                       Disabled="@(_block.Items.All(x => x.Index >= context.Index))">
+                        </MudIconButton>
+                    </MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                                       OnClick="@(_ => MoveItemDown(context))"
+                                       Disabled="@(_block.Items.All(x => x.Index <= context.Index))">
+                        </MudIconButton>
+                    </MudTd>
+                    <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => RemoveBlockItem(context))">
+                        </MudIconButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+    <div class="mt-4">
+        @if (_selectedItem is not null)
+        {
+            <EditForm Model="_selectedItem">
+                <FluentValidationValidator/>
+                <div style="max-width: 400px;" class="mr-6">
                     <MudCard>
                         <MudCardContent>
                             <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
@@ -108,6 +121,7 @@
                                     </MoreItemsTemplate>
                                 </MudAutocomplete>
                             }
+
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
                             {
                                 <MudAutocomplete Class="mt-3" T="MultiCollectionViewModel" Label="Multi Collection"
@@ -120,6 +134,7 @@
                                     </MoreItemsTemplate>
                                 </MudAutocomplete>
                             }
+
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
                             {
                                 <MudAutocomplete Class="mt-3" T="SmartCollectionViewModel" Label="Smart Collection"
@@ -132,6 +147,7 @@
                                     </MoreItemsTemplate>
                                 </MudAutocomplete>
                             }
+
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                             {
                                 <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Television Show"
@@ -144,6 +160,7 @@
                                     </MoreItemsTemplate>
                                 </MudAutocomplete>
                             }
+
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
                             {
                                 <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Television Season"
@@ -157,6 +174,7 @@
                                     </MoreItemsTemplate>
                                 </MudAutocomplete>
                             }
+
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
                             {
                                 <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel" Label="Artist"
@@ -170,6 +188,7 @@
                                     </MoreItemsTemplate>
                                 </MudAutocomplete>
                             }
+
                             <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
                                 @switch (_selectedItem.CollectionType)
                                 {
@@ -204,8 +223,31 @@
                         </MudCardContent>
                     </MudCard>
                 </div>
-            </div>
-        </EditForm>
+            </EditForm>
+        }
+    </div>
+    @if (_previewItems != null)
+    {
+        <MudTable Class="mt-8"
+                  Hover="true"
+                  Dense="true"
+                  Items="_previewItems">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Block Playout Preview</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Start</MudTh>
+                <MudTh>Finish</MudTh>
+                <MudTh>Media Item</MudTh>
+                <MudTh>Duration</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Start">@context.Start.ToString(@"hh\:mm\:ss")</MudTd>
+                <MudTd DataLabel="Finish">@context.Finish.ToString(@"hh\:mm\:ss")</MudTd>
+                <MudTd DataLabel="Media Item">@context.Title</MudTd>
+                <MudTd DataLabel="Duration">@context.Duration</MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 </MudContainer>
 
@@ -217,6 +259,7 @@
 
     private BlockItemsEditViewModel _block = new() { Items = [] };
     private BlockItemEditViewModel _selectedItem;
+    private List<PlayoutItemPreviewViewModel> _previewItems;
     private int _durationHours = 0;
     private int _durationMinutes = 15;
 
@@ -369,6 +412,21 @@
 
     private async Task SaveChanges()
     {
+        Seq<BaseError> errorMessages = await Mediator
+            .Send(GenerateReplaceRequest(), _cts.Token)
+            .Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving block: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving block: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/blocks"));
+    }
+
+    private ReplaceBlockItems GenerateReplaceRequest()
+    {
         var items = _block.Items.Map(
             item => new ReplaceBlockItem(
                 item.Index,
@@ -381,16 +439,12 @@
 
         _block.Minutes = _durationHours * 60 + _durationMinutes;
 
-        Seq<BaseError> errorMessages = await Mediator
-            .Send(new ReplaceBlockItems(Id, _block.Name, _block.Minutes, items), _cts.Token)
-            .Map(e => e.LeftToSeq());
+        return new ReplaceBlockItems(Id, _block.Name, _block.Minutes, items);
+    }
 
-        errorMessages.HeadOrNone().Match(
-            error =>
-            {
-                Snackbar.Add($"Unexpected error saving block: {error.Value}", Severity.Error);
-                Logger.LogError("Unexpected error saving block: {Error}", error.Value);
-            },
-            () => NavigationManager.NavigateTo("/blocks"));
+    private async Task PreviewPlayout()
+    {
+        _selectedItem = null;
+        _previewItems = await Mediator.Send(new PreviewBlockPlayout(GenerateReplaceRequest()), _cts.Token);
     }
 }

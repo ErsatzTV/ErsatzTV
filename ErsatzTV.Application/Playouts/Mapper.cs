@@ -22,7 +22,7 @@ internal static class Mapper
             programScheduleAlternate.DaysOfMonth,
             programScheduleAlternate.MonthsOfYear);
 
-    private static string GetDisplayTitle(PlayoutItem playoutItem)
+    internal static string GetDisplayTitle(PlayoutItem playoutItem)
     {
         switch (playoutItem.MediaItem)
         {
@@ -80,7 +80,7 @@ internal static class Mapper
         }
     }
 
-    private static string GetDisplayDuration(TimeSpan duration) =>
+    internal static string GetDisplayDuration(TimeSpan duration) =>
         string.Format(
             CultureInfo.InvariantCulture,
             duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
