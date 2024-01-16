@@ -444,8 +444,6 @@
 
     private async Task PreviewPlayout()
     {
-        await Task.Delay(10);
-
         _selectedItem = null;
         _previewItems = await Mediator.Send(new PreviewBlockPlayout(GenerateReplaceRequest()), _cts.Token);
     }
