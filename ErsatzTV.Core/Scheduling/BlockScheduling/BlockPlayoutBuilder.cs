@@ -17,10 +17,20 @@ public class BlockPlayoutBuilder(
     ILogger<BlockPlayoutBuilder> logger)
     : IBlockPlayoutBuilder
 {
+    public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
+    {
+        int daysToBuild = await configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
+            .IfNoneAsync(2);
+
+        return await Build(playout, mode, logger, daysToBuild, randomizeStartPoints: false, cancellationToken);
+    }
+
     public async Task<Playout> Build(
         Playout playout,
         PlayoutBuildMode mode,
         ILogger customLogger,
+        int daysToBuild,
+        bool randomizeStartPoints,
         CancellationToken cancellationToken)
     {
         // ReSharper disable once LocalVariableHidesPrimaryConstructorParameter
@@ -41,8 +51,6 @@ public class BlockPlayoutBuilder(
 
         DateTimeOffset start = DateTimeOffset.Now;
 
-        int daysToBuild = await configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
-            .IfNoneAsync(2);
 
         // get blocks to schedule
         List<EffectiveBlock> blocksToSchedule = EffectiveBlock.GetEffectiveBlocks(playout, start, daysToBuild);
@@ -144,6 +152,16 @@ public class BlockPlayoutBuilder(
                         history.Details,
                         enumerator,
                         blockItem.PlaybackOrder);
+                }
+
+                if (maybeHistory.IsNone && randomizeStartPoints)
+                {
+                    enumerator.ResetState(
+                        new CollectionEnumeratorState
+                        {
+                            Seed = new Random().Next(),
+                            Index = new Random().Next(collectionItems.Count)
+                        });
                 }
 
                 foreach (MediaItem mediaItem in enumerator.Current)

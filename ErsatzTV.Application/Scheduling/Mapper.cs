@@ -53,4 +53,11 @@ internal static class Mapper
             playoutTemplate.DaysOfWeek,
             playoutTemplate.DaysOfMonth,
             playoutTemplate.MonthsOfYear);
+
+    internal static PlayoutItemPreviewViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
+        new(
+            Playouts.Mapper.GetDisplayTitle(playoutItem),
+            playoutItem.StartOffset.TimeOfDay,
+            playoutItem.FinishOffset.TimeOfDay,
+            Playouts.Mapper.GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
 }
