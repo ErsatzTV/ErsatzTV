@@ -96,6 +96,8 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                     return trimResult;
                 }
+
+                _logger.LogWarning("HlsSessionWorker.TrimPlaylist read empty playlist?");
             }
             finally
             {
@@ -107,6 +109,11 @@ public class HlsSessionWorker : IHlsSessionWorker
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             // do nothing
+            _logger.LogInformation("HlsSessionWorker.TrimPlaylist was canceled");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error trimming playlist");
         }
 
         return None;
@@ -572,6 +579,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             return await File.ReadAllLinesAsync(fileName, cancellationToken);
         }
 
+        _logger.LogInformation("Playlist does not exist at expected location {File}", fileName);
         return None;
     }
 
