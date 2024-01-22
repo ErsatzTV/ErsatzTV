@@ -23,22 +23,65 @@ internal static class BlockPlayoutChangeDetection
     }
 
     public static Tuple<List<EffectiveBlock>, List<PlayoutItem>> FindUpdatedItems(
-        Playout playout,
+        List<PlayoutItem> playoutItems,
         Dictionary<PlayoutItem, BlockKey> itemBlockKeys,
-        List<EffectiveBlock> blocksToSchedule)
+        List<EffectiveBlock> blocksToSchedule,
+        Map<CollectionKey, string> collectionEtags)
     {
-        DateTimeOffset lastScheduledItem = playout.Items.Count == 0
+        DateTimeOffset lastScheduledItem = playoutItems.Count == 0
             ? SystemTime.MinValueUtc
-            : playout.Items.Max(i => i.StartOffset);
+            : playoutItems.Max(i => i.StartOffset);
 
         var existingBlockKeys = itemBlockKeys.Values.ToImmutableHashSet();
         var blockKeysToSchedule = blocksToSchedule.Map(b => b.BlockKey).ToImmutableHashSet();
-        var updatedBlocks = new List<EffectiveBlock>();
-        var updatedItems = new List<PlayoutItem>();
+        var updatedBlocks = new System.Collections.Generic.HashSet<EffectiveBlock>();
+        var updatedItemIds = new System.Collections.Generic.HashSet<int>();
 
         var earliestEffectiveBlocks = new Dictionary<BlockKey, DateTimeOffset>();
         var earliestBlocks = new Dictionary<int, DateTimeOffset>();
         
+        // check for changed collections
+        foreach (EffectiveBlock effectiveBlock in blocksToSchedule.OrderBy(b => b.Start))
+        {
+            foreach (PlayoutItem playoutItem in playoutItems)
+            {
+                int blockId = itemBlockKeys[playoutItem].b;
+                if (effectiveBlock.Block.Id != blockId)
+                {
+                    continue;
+                }
+
+                bool isUpdated = string.IsNullOrWhiteSpace(playoutItem.CollectionKey);
+                if (!isUpdated)
+                {
+                    CollectionKey collectionKey = JsonConvert.DeserializeObject<CollectionKey>(playoutItem.CollectionKey);
+
+                    // collection is no longer present or collection has been modified
+                    isUpdated = !collectionEtags.ContainsKey(collectionKey) ||
+                                collectionEtags[collectionKey] != playoutItem.CollectionEtag;
+                }
+                
+                if (isUpdated)
+                {
+                    // playout item needs to be removed/re-added
+                    updatedItemIds.Add(playoutItem.Id);
+                    
+                    // block needs to be scheduled again
+                    updatedBlocks.Add(effectiveBlock);
+
+                    if (!earliestEffectiveBlocks.ContainsKey(effectiveBlock.BlockKey))
+                    {
+                        earliestEffectiveBlocks[effectiveBlock.BlockKey] = effectiveBlock.Start;
+                    }
+
+                    if (!earliestBlocks.ContainsKey(effectiveBlock.Block.Id))
+                    {
+                        earliestBlocks[effectiveBlock.Block.Id] = effectiveBlock.Start;
+                    }
+                }
+            }
+        }
+
         // process in sorted order to simplify checks
         foreach (EffectiveBlock effectiveBlock in blocksToSchedule.OrderBy(b => b.Start))
         {
@@ -80,7 +123,7 @@ internal static class BlockPlayoutChangeDetection
         }
 
         // find affected playout items
-        foreach (PlayoutItem item in playout.Items)
+        foreach (PlayoutItem item in playoutItems)
         {
             BlockKey blockKey = itemBlockKeys[item];
 
@@ -92,11 +135,11 @@ internal static class BlockPlayoutChangeDetection
             
             if (!blockKeysToSchedule.Contains(blockKey) || blockKeyIsAffected || blockIdIsAffected)
             {
-                updatedItems.Add(item);
+                updatedItemIds.Add(item.Id);
             }
         }
-        
-        return Tuple(updatedBlocks, updatedItems);
+
+        return Tuple(updatedBlocks.ToList(), playoutItems.Filter(i => updatedItemIds.Contains(i.Id)).ToList());
     }
 
     public static void RemoveItemAndHistory(Playout playout, PlayoutItem playoutItem)

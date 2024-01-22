@@ -1443,6 +1443,12 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("ChapterTitle")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("CollectionEtag")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CollectionKey")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("CustomTitle")
                         .HasColumnType("longtext");
 

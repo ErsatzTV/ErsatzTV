@@ -602,6 +602,7 @@ public class Startup
         services.AddScoped<ILibraryRepository, LibraryRepository>();
         services.AddScoped<IMetadataRepository, MetadataRepository>();
         services.AddScoped<IArtworkRepository, ArtworkRepository>();
+        services.AddScoped<ICollectionEtag, CollectionEtag>();
         services.AddScoped<IFFmpegLocator, FFmpegLocator>();
         services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
         services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
