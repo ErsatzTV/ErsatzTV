@@ -31,7 +31,11 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
                 .Include(i => (i as Movie).MovieMetadata)
                 .ThenInclude(mv => mv.Subtitles)
                 .Include(i => (i as Movie).MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
+                .Include(i => (i as Movie).MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(i => (i as Episode).MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Include(i => (i as Episode).MediaVersions)
                 .ThenInclude(mv => mv.Streams)
                 .Include(i => (i as Episode).EpisodeMetadata)
@@ -71,6 +75,8 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
         // include external subtitles from local libraries
         allStreams.AddRange(subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Sidecar).Map(ProjectToStream));
 
+        var allChapters = (version.Chapters ?? []).OrderBy(c => c.StartTime).Map(Project).ToList();
+
         return new MediaItemInfo(
             mediaItem.Id,
             mediaItem.GetType().Name,
@@ -85,7 +91,8 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             version.VideoScanKind,
             version.Width,
             version.Height,
-            allStreams);
+            allStreams,
+            allChapters);
     }
 
     private static MediaItemInfoStream Project(MediaStream mediaStream) =>
@@ -129,4 +136,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             null,
             string.IsNullOrWhiteSpace(subtitle.Path) ? null : Path.GetFileName(subtitle.Path),
             null);
+
+    private static MediaItemInfoChapter Project(MediaChapter chapter) =>
+        new(chapter.Title, chapter.StartTime, chapter.EndTime);
 }

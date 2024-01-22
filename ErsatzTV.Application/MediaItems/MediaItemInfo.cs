@@ -16,4 +16,5 @@ public record MediaItemInfo(
     VideoScanKind VideoScanKind,
     int Width,
     int Height,
-    List<MediaItemInfoStream> Streams);
+    List<MediaItemInfoStream> Streams,
+    List<MediaItemInfoChapter> Chapters);
