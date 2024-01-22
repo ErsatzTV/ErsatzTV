@@ -1,5 +1,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
@@ -12,11 +13,13 @@ public class BlockPlayoutPreviewBuilder(
     IMediaCollectionRepository mediaCollectionRepository,
     ITelevisionRepository televisionRepository,
     IArtistRepository artistRepository,
+    ICollectionEtag collectionEtag,
     ILogger<BlockPlayoutBuilder> logger) : BlockPlayoutBuilder(
     configElementRepository,
     mediaCollectionRepository,
     televisionRepository,
     artistRepository,
+    collectionEtag,
     logger), IBlockPlayoutPreviewBuilder
 {
     private readonly Dictionary<Guid, System.Collections.Generic.HashSet<CollectionKey>> _randomizedCollections = [];

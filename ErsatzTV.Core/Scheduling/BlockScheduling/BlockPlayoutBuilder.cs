@@ -2,6 +2,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
@@ -14,9 +15,15 @@ public class BlockPlayoutBuilder(
     IMediaCollectionRepository mediaCollectionRepository,
     ITelevisionRepository televisionRepository,
     IArtistRepository artistRepository,
+    ICollectionEtag collectionEtag,
     ILogger<BlockPlayoutBuilder> logger)
     : IBlockPlayoutBuilder
 {
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        NullValueHandling = NullValueHandling.Ignore
+    };
+
     public virtual async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
         Logger.LogDebug(
@@ -37,19 +44,29 @@ public class BlockPlayoutBuilder(
         int daysToBuild = await GetDaysToBuild();
 
         // get blocks to schedule
-        List<EffectiveBlock> blocksToSchedule = EffectiveBlock.GetEffectiveBlocks(playout, start, daysToBuild);
+        List<EffectiveBlock> blocksToSchedule =
+            EffectiveBlock.GetEffectiveBlocks(playout.Templates, start, daysToBuild);
 
         // get all collection items for the playout
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(blocksToSchedule);
+        Map<CollectionKey, string> collectionEtags = GetCollectionEtags(collectionMediaItems);
 
         Dictionary<PlayoutItem, BlockKey> itemBlockKeys =
             BlockPlayoutChangeDetection.GetPlayoutItemToBlockKeyMap(playout);
 
         // remove items without a block key (shouldn't happen often, just upgrades)
         playout.Items.RemoveAll(i => !itemBlockKeys.ContainsKey(i));
+        
+        // remove old items
+        // importantly, this should not remove their history
+        playout.Items.RemoveAll(i => i.FinishOffset < start);
 
         (List<EffectiveBlock> updatedEffectiveBlocks, List<PlayoutItem> playoutItemsToRemove) =
-            BlockPlayoutChangeDetection.FindUpdatedItems(playout, itemBlockKeys, blocksToSchedule);
+            BlockPlayoutChangeDetection.FindUpdatedItems(
+                playout.Items,
+                itemBlockKeys,
+                blocksToSchedule,
+                collectionEtags);
 
         foreach (PlayoutItem playoutItem in playoutItemsToRemove)
         {
@@ -119,6 +136,8 @@ public class BlockPlayoutBuilder(
 
                     TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
+                    var collectionKey = CollectionKey.ForBlockItem(blockItem);
+                    
                     // create a playout item
                     var playoutItem = new PlayoutItem
                     {
@@ -134,7 +153,9 @@ public class BlockPlayoutBuilder(
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
-                        BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey)
+                        BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
+                        CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
+                        CollectionEtag = collectionEtags[collectionKey]
                     };
 
                     if (effectiveBlock.Block.StopScheduling is BlockStopScheduling.BeforeDurationEnd
@@ -297,6 +318,19 @@ public class BlockPlayoutBuilder(
                     collectionKey))).SequenceParallel();
 
         return LanguageExt.Map.createRange(tuples);
+    }
+
+    private Map<CollectionKey, string> GetCollectionEtags(
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems)
+    {
+        var result = new Map<CollectionKey, string>();
+
+        foreach ((CollectionKey key, List<MediaItem> items) in collectionMediaItems)
+        {
+            result = result.Add(key, collectionEtag.ForCollectionItems(items));
+        }
+
+        return result;
     }
 
     private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
