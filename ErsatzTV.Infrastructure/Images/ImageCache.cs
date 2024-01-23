@@ -40,6 +40,9 @@ public class ImageCache : IImageCache
             // ReSharper disable once UseAwaitUsing
             using (var fs = new FileStream(tempFileName, FileMode.OpenOrCreate, FileAccess.Write))
             {
+                // overwrite anything that's already there
+                fs.SetLength(0);
+
                 await stream.CopyToAsync(fs);
             }
 
