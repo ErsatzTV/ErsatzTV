@@ -39,6 +39,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix crop scale behavior with NVIDIA, QSV acceleration
 - Fix bug that corrupted uploaded images (watermarks, channel logos)
   - Re-uploading images should fix them 
+- Recreate XMLTV channel list (including logos) when channels are edited in ErsatzTV
+  - This bug caused the ErsatzTV logo to be used instead of channel logos in some cases 
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8

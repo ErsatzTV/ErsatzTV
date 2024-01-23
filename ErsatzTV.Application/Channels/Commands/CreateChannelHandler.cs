@@ -1,33 +1,35 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Channels;
 
-public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseError, CreateChannelResult>>
+public class CreateChannelHandler(
+    ChannelWriter<IBackgroundServiceRequest> workerChannel,
+    IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<CreateChannel, Either<BaseError, CreateChannelResult>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public CreateChannelHandler(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
-
     public async Task<Either<BaseError, CreateChannelResult>> Handle(
         CreateChannel request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Channel> validation = await Validate(dbContext, request);
         return await validation.Apply(c => PersistChannel(dbContext, c));
     }
 
-    private static async Task<CreateChannelResult> PersistChannel(TvContext dbContext, Channel channel)
+    private async Task<CreateChannelResult> PersistChannel(TvContext dbContext, Channel channel)
     {
         await dbContext.Channels.AddAsync(channel);
         await dbContext.SaveChangesAsync();
+        await workerChannel.WriteAsync(new RefreshChannelList());
         return new CreateChannelResult(channel.Id);
     }
 
