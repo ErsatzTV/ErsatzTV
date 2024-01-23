@@ -37,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ignore errors deleting old HLS segments; this should improve stream reliability
 - Update show year when changed within Plex
 - Fix crop scale behavior with NVIDIA, QSV acceleration
+- Fix bug that corrupted uploaded images (watermarks, channel logos)
+  - Re-uploading images should fix them 
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8
