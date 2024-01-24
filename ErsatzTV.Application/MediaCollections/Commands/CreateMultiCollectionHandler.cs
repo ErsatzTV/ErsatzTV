@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
@@ -10,25 +11,30 @@ public class CreateMultiCollectionHandler :
     IRequestHandler<CreateMultiCollection, Either<BaseError, MultiCollectionViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchTargets _searchTargets;
 
-    public CreateMultiCollectionHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public CreateMultiCollectionHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    {
         _dbContextFactory = dbContextFactory;
+        _searchTargets = searchTargets;
+    }
 
     public async Task<Either<BaseError, MultiCollectionViewModel>> Handle(
         CreateMultiCollection request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
         return await validation.Apply(c => PersistCollection(dbContext, c));
     }
 
-    private static async Task<MultiCollectionViewModel> PersistCollection(
+    private async Task<MultiCollectionViewModel> PersistCollection(
         TvContext dbContext,
         MultiCollection multiCollection)
     {
         await dbContext.MultiCollections.AddAsync(multiCollection);
         await dbContext.SaveChangesAsync();
+        _searchTargets.SearchTargetsChanged();
         await dbContext.Entry(multiCollection)
             .Collection(c => c.MultiCollectionItems)
             .Query()

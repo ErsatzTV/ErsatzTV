@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +11,13 @@ public class CreateFFmpegProfileHandler :
     IRequestHandler<CreateFFmpegProfile, Either<BaseError, CreateFFmpegProfileResult>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchTargets _searchTargets;
 
-    public CreateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public CreateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    {
         _dbContextFactory = dbContextFactory;
+        _searchTargets = searchTargets;
+    }
 
     public async Task<Either<BaseError, CreateFFmpegProfileResult>> Handle(
         CreateFFmpegProfile request,
@@ -23,12 +28,13 @@ public class CreateFFmpegProfileHandler :
         return await validation.Apply(profile => PersistFFmpegProfile(dbContext, profile));
     }
 
-    private static async Task<CreateFFmpegProfileResult> PersistFFmpegProfile(
+    private async Task<CreateFFmpegProfileResult> PersistFFmpegProfile(
         TvContext dbContext,
         FFmpegProfile ffmpegProfile)
     {
         await dbContext.FFmpegProfiles.AddAsync(ffmpegProfile);
         await dbContext.SaveChangesAsync();
+        _searchTargets.SearchTargetsChanged();
         return new CreateFFmpegProfileResult(ffmpegProfile.Id);
     }
 

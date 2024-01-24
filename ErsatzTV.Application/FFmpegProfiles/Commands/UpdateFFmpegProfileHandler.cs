@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +11,13 @@ public class
     UpdateFFmpegProfileHandler : IRequestHandler<UpdateFFmpegProfile, Either<BaseError, UpdateFFmpegProfileResult>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchTargets _searchTargets;
 
-    public UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    {
         _dbContextFactory = dbContextFactory;
+        _searchTargets = searchTargets;
+    }
 
     public async Task<Either<BaseError, UpdateFFmpegProfileResult>> Handle(
         UpdateFFmpegProfile request,
@@ -23,7 +28,7 @@ public class
         return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
     }
 
-    private static async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(
+    private async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(
         TvContext dbContext,
         FFmpegProfile p,
         UpdateFFmpegProfile update)
@@ -54,6 +59,9 @@ public class
         p.NormalizeFramerate = update.NormalizeFramerate;
         p.DeinterlaceVideo = update.DeinterlaceVideo;
         await dbContext.SaveChangesAsync();
+        
+        _searchTargets.SearchTargetsChanged();
+        
         return new UpdateFFmpegProfileResult(p.Id);
     }
 

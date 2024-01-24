@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Re-uploading images should fix them 
 - Recreate XMLTV channel list (including logos) when channels are edited in ErsatzTV
   - This bug caused the ErsatzTV logo to be used instead of channel logos in some cases 
+- Update drop down search results in main search bar when items are created/edited/removed 
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8

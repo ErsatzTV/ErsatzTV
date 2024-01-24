@@ -544,6 +544,7 @@ public class Startup
         services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
         services.AddSingleton<IEntityLocker, EntityLocker>();
+        services.AddSingleton<ISearchTargets, SearchTargets>();
 
         if (SearchHelper.IsElasticSearchEnabled)
         {
