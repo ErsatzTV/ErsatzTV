@@ -86,49 +86,18 @@ public static class BlockPlayoutEnumerator
         BlockItem blockItem,
         string historyKey)
     {
-        // need a new shuffled media collection enumerator that can "hide" items for one iteration, then include all items again
-        // maybe take a "masked items" hash set, then clear it after shuffling
-        
         DateTime historyTime = currentTime.UtcDateTime;
-        var maskedMediaItemIds = new System.Collections.Generic.HashSet<int>();
-        List<PlayoutHistory> history = playout.PlayoutHistory
+        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
             .Filter(h => h.BlockId == blockItem.BlockId)
             .Filter(h => h.Key == historyKey)
             .Filter(h => h.When < historyTime)
             .OrderByDescending(h => h.When)
-            .ToList();
+            .HeadOrNone();
 
-        if (history.Count > 0)
+        var state = new CollectionEnumeratorState { Seed = playout.Id, Index = 0 };
+        foreach (PlayoutHistory h in maybeHistory)
         {
-            int currentSeed = history[0].Seed;
-            history = history.Filter(h => h.Seed == currentSeed).ToList();
-        }
-
-        var knownMediaIds = collectionItems.Map(ci => ci.Id).ToImmutableHashSet();
-        foreach (PlayoutHistory h in history)
-        {
-            HistoryDetails.Details details = JsonConvert.DeserializeObject<HistoryDetails.Details>(h.Details);
-            foreach (int mediaItemId in Optional(details.MediaItemId))
-            {
-                if (knownMediaIds.Contains(mediaItemId))
-                {
-                    maskedMediaItemIds.Add(mediaItemId);
-                }
-            }
-        }
-
-        var state = new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 };
-
-        // keep the current seed if one exists 
-        if (maskedMediaItemIds.Count > 0 && maskedMediaItemIds.Count < collectionItems.Count && history.Count > 0)
-        {
-            state.Seed = history[0].Seed;
-        }
-
-        // if everything is masked, nothing is masked
-        if (maskedMediaItemIds.Count == collectionItems.Count)
-        {
-            maskedMediaItemIds.Clear();
+            state.Index = h.Index + 1;
         }
 
         // TODO: fix multi-collection groups, keep multi-part episodes together
@@ -136,17 +105,8 @@ public static class BlockPlayoutEnumerator
             .Map(mi => new GroupedMediaItem(mi, null))
             .ToList();
 
-        Serilog.Log.Logger.Debug(
-            "scheduling {X} media items with {Y} masked",
-            mediaItems.Count,
-            maskedMediaItemIds.Count);
-
         // it shouldn't matter which order the remaining items are shuffled in,
         // as long as already-played items are not included
-        return new MaskedShuffledMediaCollectionEnumerator(
-            mediaItems,
-            maskedMediaItemIds,
-            state,
-            CancellationToken.None);
+        return new BlockPlayoutShuffledMediaCollectionEnumerator(mediaItems, state);
     }
 }

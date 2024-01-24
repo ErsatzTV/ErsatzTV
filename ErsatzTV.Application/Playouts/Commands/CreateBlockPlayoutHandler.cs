@@ -41,7 +41,8 @@ public class CreateBlockPlayoutHandler(
             (channel, playoutType) => new Playout
             {
                 ChannelId = channel.Id,
-                ProgramSchedulePlayoutType = playoutType
+                ProgramSchedulePlayoutType = playoutType,
+                Seed = new Random().Next()
             });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(

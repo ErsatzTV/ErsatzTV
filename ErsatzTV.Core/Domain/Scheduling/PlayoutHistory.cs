@@ -10,7 +10,7 @@ public class PlayoutHistory
     public int BlockId { get; set; }
     public Block Block { get; set; }
     public PlaybackOrder PlaybackOrder { get; set; }
-    public int Seed { get; set; }
+    public int Index { get; set; }
     
     // something that uniquely identifies the collection within the block 
     public string Key { get; set; }

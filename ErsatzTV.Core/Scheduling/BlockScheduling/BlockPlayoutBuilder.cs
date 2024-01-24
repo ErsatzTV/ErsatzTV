@@ -179,7 +179,7 @@ public class BlockPlayoutBuilder(
                         PlayoutId = playout.Id,
                         BlockId = blockItem.BlockId,
                         PlaybackOrder = blockItem.PlaybackOrder,
-                        Seed = enumerator.State.Seed,
+                        Index = enumerator.State.Index,
                         When = currentTime.UtcDateTime,
                         Key = historyKey,
                         Details = HistoryDetails.ForMediaItem(mediaItem)
@@ -287,20 +287,8 @@ public class BlockPlayoutBuilder(
 
             IEnumerable<PlayoutHistory> toDelete = group
                 .Filter(h => h.When < start.UtcDateTime)
-                .OrderByDescending(h => h.When);
-
-            // chronological and season, episode only need to keep most recent entry
-            if (group.Count > 0 && group[0].PlaybackOrder is PlaybackOrder.Chronological or PlaybackOrder.SeasonEpisode)
-            {
-                toDelete = toDelete.Tail();
-            }
-
-            // shuffle needs to keep all entries with current seed
-            if (group.Count > 0 && group[0].PlaybackOrder is PlaybackOrder.Shuffle)
-            {
-                int currentSeed = group[0].Seed;
-                toDelete = toDelete.Filter(h => h.Seed != currentSeed);
-            }
+                .OrderByDescending(h => h.When)
+                .Tail();
 
             foreach (PlayoutHistory delete in toDelete)
             {

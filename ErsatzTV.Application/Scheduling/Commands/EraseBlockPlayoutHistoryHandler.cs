@@ -13,17 +13,22 @@ public class EraseBlockPlayoutHistoryHandler(IDbContextFactory<TvContext> dbCont
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playout> maybePlayout = await dbContext.Playouts
-            .Include(p => p.Items)
-            .Include(p => p.PlayoutHistory)
             .Filter(p => p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Block)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
 
         foreach (Playout playout in maybePlayout)
         {
-            playout.Items.Clear();
-            playout.PlayoutHistory.Clear();
-
+            int nextSeed = new Random().Next();
+            playout.Seed = nextSeed;
             await dbContext.SaveChangesAsync(cancellationToken);
+
+            await dbContext.Database.ExecuteSqlAsync(
+                $"DELETE FROM PlayoutItem WHERE PlayoutId = {playout.Id}",
+                cancellationToken);
+
+            await dbContext.Database.ExecuteSqlAsync(
+                $"DELETE FROM PlayoutHistory WHERE PlayoutId = {playout.Id}",
+                cancellationToken);
         }
     }
 }
