@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,25 +9,30 @@ namespace ErsatzTV.Application.Watermarks;
 public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<BaseError, CreateWatermarkResult>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchTargets _searchTargets;
 
-    public CreateWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public CreateWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    {
         _dbContextFactory = dbContextFactory;
+        _searchTargets = searchTargets;
+    }
 
     public async Task<Either<BaseError, CreateWatermarkResult>> Handle(
         CreateWatermark request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ChannelWatermark> validation = Validate(request);
         return await validation.Apply(profile => PersistChannelWatermark(dbContext, profile));
     }
 
-    private static async Task<CreateWatermarkResult> PersistChannelWatermark(
+    private async Task<CreateWatermarkResult> PersistChannelWatermark(
         TvContext dbContext,
         ChannelWatermark watermark)
     {
         await dbContext.ChannelWatermarks.AddAsync(watermark);
         await dbContext.SaveChangesAsync();
+        _searchTargets.SearchTargetsChanged();
         return new CreateWatermarkResult(watermark.Id);
     }
 

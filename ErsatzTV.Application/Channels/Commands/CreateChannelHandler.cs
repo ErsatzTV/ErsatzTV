@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ namespace ErsatzTV.Application.Channels;
 
 public class CreateChannelHandler(
     ChannelWriter<IBackgroundServiceRequest> workerChannel,
-    IDbContextFactory<TvContext> dbContextFactory)
+    IDbContextFactory<TvContext> dbContextFactory,
+    ISearchTargets searchTargets)
     : IRequestHandler<CreateChannel, Either<BaseError, CreateChannelResult>>
 {
     public async Task<Either<BaseError, CreateChannelResult>> Handle(
@@ -29,6 +31,7 @@ public class CreateChannelHandler(
     {
         await dbContext.Channels.AddAsync(channel);
         await dbContext.SaveChangesAsync();
+        searchTargets.SearchTargetsChanged();
         await workerChannel.WriteAsync(new RefreshChannelList());
         return new CreateChannelResult(channel.Id);
     }

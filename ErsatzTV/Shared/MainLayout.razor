@@ -2,10 +2,12 @@
 @using System.Reflection
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.Search
+@using ErsatzTV.Core.Interfaces.Search
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
 @inject SystemStartup SystemStartup
+@inject ISearchTargets SearchTargets;
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
@@ -158,12 +160,16 @@
     {
         SystemStartup.OnDatabaseReady += OnStartupProgress;
         SystemStartup.OnSearchIndexReady += OnStartupProgress;
+        
+        SearchTargets.OnSearchTargetsChanged += OnSearchTargetsChanged;
     }
 
     public void Dispose()
     {
         SystemStartup.OnDatabaseReady -= OnStartupProgress;
         SystemStartup.OnSearchIndexReady -= OnStartupProgress;
+        
+        SearchTargets.OnSearchTargetsChanged -= OnSearchTargetsChanged;
 
         _cts.Cancel();
         _cts.Dispose();
@@ -229,6 +235,11 @@
         {
             _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
         }
+    }
+
+    protected async void OnSearchTargetsChanged(object sender, EventArgs e)
+    {
+        _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
     }
 
     private void PerformSearch()

@@ -1937,7 +1937,13 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Key")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("PlaybackOrder")
+                        .HasColumnType("int");
+
                     b.Property<int>("PlayoutId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Seed")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("When")

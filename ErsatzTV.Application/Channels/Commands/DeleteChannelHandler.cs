@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -12,30 +13,34 @@ public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseEr
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ISearchTargets _searchTargets;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public DeleteChannelHandler(
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         IDbContextFactory<TvContext> dbContextFactory,
-        ILocalFileSystem localFileSystem)
+        ILocalFileSystem localFileSystem,
+        ISearchTargets searchTargets)
     {
         _workerChannel = workerChannel;
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
+        _searchTargets = searchTargets;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(DeleteChannel request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Channel> validation = await ChannelMustExist(dbContext, request);
-
-        return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c, cancellationToken));
+        return await validation.Apply(c => DoDeletion(dbContext, c, cancellationToken));
     }
 
     private async Task<Unit> DoDeletion(TvContext dbContext, Channel channel, CancellationToken cancellationToken)
     {
         dbContext.Channels.Remove(channel);
         await dbContext.SaveChangesAsync(cancellationToken);
+        
+        _searchTargets.SearchTargetsChanged();
 
         // delete channel data from channel guide cache
         string cacheFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channel.Number}.xml");

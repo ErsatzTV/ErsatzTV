@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -9,9 +10,13 @@ namespace ErsatzTV.Application.Watermarks;
 public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<BaseError, UpdateWatermarkResult>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchTargets _searchTargets;
 
-    public UpdateWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public UpdateWatermarkHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    {
         _dbContextFactory = dbContextFactory;
+        _searchTargets = searchTargets;
+    }
 
     public async Task<Either<BaseError, UpdateWatermarkResult>> Handle(
         UpdateWatermark request,
@@ -22,7 +27,7 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
         return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
     }
 
-    private static async Task<UpdateWatermarkResult> ApplyUpdateRequest(
+    private async Task<UpdateWatermarkResult> ApplyUpdateRequest(
         TvContext dbContext,
         ChannelWatermark p,
         UpdateWatermark update)
@@ -41,6 +46,7 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
         p.Opacity = update.Opacity;
         p.PlaceWithinSourceContent = update.PlaceWithinSourceContent;
         await dbContext.SaveChangesAsync();
+        _searchTargets.SearchTargetsChanged();
         return new UpdateWatermarkResult(p.Id);
     }
 

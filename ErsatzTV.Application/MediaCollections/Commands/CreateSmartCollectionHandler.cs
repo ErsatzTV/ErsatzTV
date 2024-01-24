@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
@@ -10,25 +11,30 @@ public class CreateSmartCollectionHandler :
     IRequestHandler<CreateSmartCollection, Either<BaseError, SmartCollectionViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchTargets _searchTargets;
 
-    public CreateSmartCollectionHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public CreateSmartCollectionHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    {
         _dbContextFactory = dbContextFactory;
+        _searchTargets = searchTargets;
+    }
 
     public async Task<Either<BaseError, SmartCollectionViewModel>> Handle(
         CreateSmartCollection request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, SmartCollection> validation = await Validate(dbContext, request);
         return await validation.Apply(c => PersistCollection(dbContext, c));
     }
 
-    private static async Task<SmartCollectionViewModel> PersistCollection(
+    private async Task<SmartCollectionViewModel> PersistCollection(
         TvContext dbContext,
         SmartCollection smartCollection)
     {
         await dbContext.SmartCollections.AddAsync(smartCollection);
         await dbContext.SaveChangesAsync();
+        _searchTargets.SearchTargetsChanged();
         return ProjectToViewModel(smartCollection);
     }
 

@@ -36,6 +36,7 @@ public class BlockPlayoutBuilder(
         [
             PlaybackOrder.Chronological,
             PlaybackOrder.SeasonEpisode,
+            PlaybackOrder.Shuffle,
             PlaybackOrder.Random
         ];
 
@@ -177,6 +178,8 @@ public class BlockPlayoutBuilder(
                     {
                         PlayoutId = playout.Id,
                         BlockId = blockItem.BlockId,
+                        PlaybackOrder = blockItem.PlaybackOrder,
+                        Seed = enumerator.State.Seed,
                         When = currentTime.UtcDateTime,
                         Key = historyKey,
                         Details = HistoryDetails.ForMediaItem(mediaItem)
@@ -212,40 +215,36 @@ public class BlockPlayoutBuilder(
         string historyKey,
         Map<CollectionKey, List<MediaItem>> collectionMediaItems)
     {
-        DateTime historyTime = currentTime.UtcDateTime;
-        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
-            .Filter(h => h.BlockId == blockItem.BlockId)
-            .Filter(h => h.Key == historyKey)
-            .Filter(h => h.When < historyTime)
-            .OrderByDescending(h => h.When)
-            .HeadOrNone();
-
-        var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
-
         var collectionKey = CollectionKey.ForBlockItem(blockItem);
         List<MediaItem> collectionItems = collectionMediaItems[collectionKey];
 
         // get enumerator
         IMediaCollectionEnumerator enumerator = blockItem.PlaybackOrder switch
         {
-            PlaybackOrder.Chronological => new ChronologicalMediaCollectionEnumerator(collectionItems, state),
-            PlaybackOrder.SeasonEpisode => new SeasonEpisodeMediaCollectionEnumerator(collectionItems, state),
+            PlaybackOrder.Chronological => BlockPlayoutEnumerator.Chronological(
+                collectionItems,
+                currentTime,
+                playout,
+                blockItem,
+                historyKey,
+                Logger),
+            PlaybackOrder.SeasonEpisode => BlockPlayoutEnumerator.SeasonEpisode(
+                collectionItems,
+                currentTime,
+                playout,
+                blockItem,
+                historyKey,
+                Logger),
+            PlaybackOrder.Shuffle => BlockPlayoutEnumerator.Shuffle(
+                collectionItems,
+                currentTime,
+                playout,
+                blockItem,
+                historyKey),
             _ => new RandomizedMediaCollectionEnumerator(
                 collectionItems,
                 new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 })
         };
-
-        // seek to the appropriate place in the collection enumerator
-        foreach (PlayoutHistory history in maybeHistory)
-        {
-            Logger.LogDebug("History is applicable: {When}: {History}", history.When, history.Details);
-
-            HistoryDetails.MoveToNextItem(
-                collectionItems,
-                history.Details,
-                enumerator,
-                blockItem.PlaybackOrder);
-        }
 
         return enumerator;
     }
@@ -288,8 +287,20 @@ public class BlockPlayoutBuilder(
 
             IEnumerable<PlayoutHistory> toDelete = group
                 .Filter(h => h.When < start.UtcDateTime)
-                .OrderByDescending(h => h.When)
-                .Tail();
+                .OrderByDescending(h => h.When);
+
+            // chronological and season, episode only need to keep most recent entry
+            if (group.Count > 0 && group[0].PlaybackOrder is PlaybackOrder.Chronological or PlaybackOrder.SeasonEpisode)
+            {
+                toDelete = toDelete.Tail();
+            }
+
+            // shuffle needs to keep all entries with current seed
+            if (group.Count > 0 && group[0].PlaybackOrder is PlaybackOrder.Shuffle)
+            {
+                int currentSeed = group[0].Seed;
+                toDelete = toDelete.Filter(h => h.Seed != currentSeed);
+            }
 
             foreach (PlayoutHistory delete in toDelete)
             {

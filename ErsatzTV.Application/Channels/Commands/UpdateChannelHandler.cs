@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,8 @@ namespace ErsatzTV.Application.Channels;
 
 public class UpdateChannelHandler(
     ChannelWriter<IBackgroundServiceRequest> workerChannel,
-    IDbContextFactory<TvContext> dbContextFactory)
+    IDbContextFactory<TvContext> dbContextFactory,
+    ISearchTargets searchTargets)
     : IRequestHandler<UpdateChannel, Either<BaseError, ChannelViewModel>>
 {
     public async Task<Either<BaseError, ChannelViewModel>> Handle(
@@ -69,6 +71,8 @@ public class UpdateChannelHandler(
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
         await dbContext.SaveChangesAsync();
+        
+        searchTargets.SearchTargetsChanged();
 
         if (c.SubtitleMode != ChannelSubtitleMode.None)
         {

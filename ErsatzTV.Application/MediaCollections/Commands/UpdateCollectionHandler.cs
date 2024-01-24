@@ -3,6 +3,7 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -13,17 +14,20 @@ namespace ErsatzTV.Application.MediaCollections;
 public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+    private readonly ISearchTargets _searchTargets;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
     public UpdateCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IMediaCollectionRepository mediaCollectionRepository,
-        ChannelWriter<IBackgroundServiceRequest> channel)
+        ChannelWriter<IBackgroundServiceRequest> channel,
+        ISearchTargets searchTargets)
     {
         _dbContextFactory = dbContextFactory;
         _mediaCollectionRepository = mediaCollectionRepository;
         _channel = channel;
+        _searchTargets = searchTargets;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -32,7 +36,7 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, Collection c, UpdateCollection request)
@@ -52,6 +56,8 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
                 await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
+        
+        _searchTargets.SearchTargetsChanged();
 
         return Unit.Default;
     }
