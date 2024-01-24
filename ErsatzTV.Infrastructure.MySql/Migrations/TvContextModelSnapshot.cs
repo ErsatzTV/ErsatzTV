@@ -1422,6 +1422,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("ProgramSchedulePlayoutType")
                         .HasColumnType("int");
 
+                    b.Property<int>("Seed")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChannelId");
@@ -1934,6 +1937,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Details")
                         .HasColumnType("longtext");
 
+                    b.Property<int>("Index")
+                        .HasColumnType("int");
+
                     b.Property<string>("Key")
                         .HasColumnType("longtext");
 
@@ -1941,9 +1947,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("PlayoutId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Seed")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("When")

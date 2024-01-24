@@ -18,5 +18,6 @@ public class Playout
     public List<PlayoutScheduleItemFillGroupIndex> FillGroupIndices { get; set; }
     public ICollection<PlayoutTemplate> Templates { get; set; }
     public ICollection<PlayoutHistory> PlayoutHistory { get; set; }
+    public int Seed { get; set; }
     public TimeSpan? DailyRebuildTime { get; set; }
 }
