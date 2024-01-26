@@ -635,7 +635,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             initialBurst = filter switch
             {
                 AudioFilter.LoudNorm => 5,
-                AudioFilter.DynAudNorm => 15,
                 _ => 0
             };
         }

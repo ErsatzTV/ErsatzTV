@@ -48,6 +48,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - In schedule items, disambiguate seasons from shows with the same title by including show year
   - Old format: `Show Title (Season Number)`
   - New format: `Show Title (Show Year) - Season Number`
+- Remove FFmpeg Profile `Normalize Loudness` option `dynaudnorm` as it often caused streams to fail to start
+- Disable loudness normalization by default in new FFmpeg Profiles
+- Use AAC audio format by default in new FFmpeg Profiles
 
 ## [0.8.4-beta] - 2023-12-02
 ### Fixed

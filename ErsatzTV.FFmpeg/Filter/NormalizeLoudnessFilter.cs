@@ -9,7 +9,6 @@ public class NormalizeLoudnessFilter : BaseFilter
     public override string Filter => _loudnessFilter switch
     {
         AudioFilter.LoudNorm => "loudnorm=I=-16:TP=-1.5:LRA=11",
-        AudioFilter.DynAudNorm => "dynaudnorm",
         _ => string.Empty
     };
 
