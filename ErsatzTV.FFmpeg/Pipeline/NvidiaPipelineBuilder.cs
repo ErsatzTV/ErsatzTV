@@ -214,6 +214,16 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             fontsFolder,
             subtitleOverlayFilterSteps);
 
+        // need to use software overlay for watermark with fade points
+        // because `-loop 1` seems to cause a green line at the bottom of the resulting video with overlay_cuda
+        if (context.HasWatermark && watermarkInputFile
+                .Map(wm => wm.DesiredState.MaybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)).IfNone(false))
+        {
+            var hardwareDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat, None);
+            currentState = hardwareDownload.NextState(currentState);
+            videoInputFile.FilterSteps.Add(hardwareDownload);
+        }
+
         currentState = SetWatermark(
             videoStream,
             watermarkInputFile,
@@ -404,17 +414,42 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 watermark.FilterSteps.AddRange(fadePoints.Map(fp => new WatermarkFadeFilter(fp)));
             }
 
-            watermark.FilterSteps.Add(
-                new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
+            // if we're in software, it's because we need to overlay in software (watermark with fade points - loop)
+            if (currentState.FrameDataLocation is FrameDataLocation.Software)
+            {
+                foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+                {
+                    IPixelFormat pf = desiredPixelFormat;
+                    if (desiredPixelFormat is PixelFormatNv12 nv12)
+                    {
+                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                        {
+                            pf = availablePixelFormat;
+                        }
+                    }
 
-            var watermarkFilter = new OverlayWatermarkCudaFilter(
-                watermark.DesiredState,
-                desiredState.PaddedSize,
-                videoStream.SquarePixelFrameSize(currentState.PaddedSize),
-                _logger);
-            watermarkOverlayFilterSteps.Add(watermarkFilter);
+                    var watermarkFilter = new OverlayWatermarkFilter(
+                        watermark.DesiredState,
+                        desiredState.PaddedSize,
+                        videoStream.SquarePixelFrameSize(currentState.PaddedSize),
+                        pf,
+                        _logger);
+                    watermarkOverlayFilterSteps.Add(watermarkFilter);
+                }
+            }
+            else
+            {
+                watermark.FilterSteps.Add(
+                    new HardwareUploadCudaFilter(currentState with { FrameDataLocation = FrameDataLocation.Software }));
 
-            currentState = watermarkFilter.NextState(currentState);
+                var watermarkFilter = new OverlayWatermarkCudaFilter(
+                    watermark.DesiredState,
+                    desiredState.PaddedSize,
+                    videoStream.SquarePixelFrameSize(currentState.PaddedSize),
+                    _logger);
+                watermarkOverlayFilterSteps.Add(watermarkFilter);
+                currentState = watermarkFilter.NextState(currentState);
+            }
         }
 
         return currentState;
