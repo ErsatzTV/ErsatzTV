@@ -153,7 +153,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.NormalizeLoudnessMode switch
             {
                 NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
-                NormalizeLoudnessMode.DynAudNorm => AudioFilter.DynAudNorm,
                 _ => AudioFilter.None
             });
 
