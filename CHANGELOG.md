@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where previously-synchronized collection tags would disappear
   - This bug affected Jellyfin, Emby and Plex collections
 - Fix detection of AMF hardware acceleration on Windows
+- Fix green line at bottom of video when NVIDIA accel is used with intermittent watermark
 
 ## [0.8.3-beta] - 2023-11-22
 ### Added
