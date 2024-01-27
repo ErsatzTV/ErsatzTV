@@ -58,7 +58,7 @@ jobs:
         run: dotnet restore -r "${{ matrix.target}}"
 
       - name: Import Code-Signing Certificates
-        uses: Apple-Actions/import-codesign-certs@v1
+        uses: Apple-Actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.apple_developer_certificate_p12_base64 }}
           p12-password: ${{ secrets.apple_developer_certificate_password }}
@@ -166,12 +166,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-        if: ${{ matrix.kind == 'windows' }}
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear

@@ -13,11 +13,6 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
