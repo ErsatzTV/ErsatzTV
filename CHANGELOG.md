@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Recreate XMLTV channel list (including logos) when channels are edited in ErsatzTV
   - This bug caused the ErsatzTV logo to be used instead of channel logos in some cases 
 - Update drop down search results in main search bar when items are created/edited/removed 
+- Fix green line at bottom of video when NVIDIA accel is used with intermittent watermark
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8
@@ -59,7 +60,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where previously-synchronized collection tags would disappear
   - This bug affected Jellyfin, Emby and Plex collections
 - Fix detection of AMF hardware acceleration on Windows
-- Fix green line at bottom of video when NVIDIA accel is used with intermittent watermark
 
 ## [0.8.3-beta] - 2023-11-22
 ### Added
