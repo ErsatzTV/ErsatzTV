@@ -29,6 +29,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `Playout Templates` - templates to schedule using the specified criteria. Only one template will be selected each day
   - Much more to come on this feature as development continues
 - Show chapter markers in movie and episode media info
+- Add two new API endpoints for interacting with transcoding sessions (MPEG-TS and HLS Segmenter):
+  - GET `/api/sessions`
+    - Show brief info about all active sessions
+  - DELETE `/api/session/{channel-number}`
+    - Stop the session for the given channel number 
 
 ### Fixed
 - Fix error loading path replacements when using MySql

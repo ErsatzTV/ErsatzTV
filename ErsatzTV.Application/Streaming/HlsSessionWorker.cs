@@ -39,6 +39,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
+    private CancellationTokenSource _cancellationTokenSource;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -60,6 +61,21 @@ public class HlsSessionWorker : IHlsSessionWorker
     }
 
     public DateTimeOffset PlaylistStart { get; private set; }
+
+    public async Task Cancel(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("API termination request for HLS session for channel {Channel}", _channelNumber);
+
+        await Slim.WaitAsync(cancellationToken);
+        try
+        {
+            await _cancellationTokenSource.CancelAsync();
+        }
+        finally
+        {
+            Slim.Release();
+        }
+    }
 
     public void Touch()
     {
@@ -120,6 +136,8 @@ public class HlsSessionWorker : IHlsSessionWorker
     }
 
     public void PlayoutUpdated() => _state = HlsSessionState.PlayoutUpdated;
+    
+    public HlsSessionModel GetModel() => new(_channelNumber, _state.ToString(), _transcodedUntil, _lastAccess);
 
     void IDisposable.Dispose()
     {
@@ -129,14 +147,14 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
     {
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
+        _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
         [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
         async void Cancel(object o, ElapsedEventArgs e)
         {
             try
             {
-                await cts.CancelAsync();
+                await _cancellationTokenSource.CancelAsync();
             }
             catch (Exception)
             {
@@ -154,7 +172,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 _timer.Elapsed += Cancel;
             }
 
-            CancellationToken cancellationToken = cts.Token;
+            CancellationToken cancellationToken = _cancellationTokenSource.Token;
 
             _logger.LogInformation("Starting HLS session for channel {Channel}", channelNumber);
 
@@ -495,7 +513,10 @@ public class HlsSessionWorker : IHlsSessionWorker
         // delete old segments
         var allSegments = Directory.GetFiles(
                 Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
-                "live*.ts")
+                "live*.ts").Append(
+                Directory.GetFiles(
+                    Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
+                    "live*.mp4"))
             .Map(
                 file =>
                 {
