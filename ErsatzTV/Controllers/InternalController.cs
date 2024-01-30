@@ -53,7 +53,7 @@ public class InternalController : ControllerBase
                         {
                             Command command = processModel.Process;
 
-                            _logger.LogInformation("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+                            _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", command.Arguments);
                             var process = new FFmpegProcess
                             {
                                 StartInfo = new ProcessStartInfo

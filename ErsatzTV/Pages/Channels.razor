@@ -183,8 +183,6 @@
             string currentUri = NavigationManager.Uri;
             string streamUri = currentUri.Replace("/channels", $"/iptv/channel/{channel.Number}.m3u8?mode=segmenter");
 
-            Serilog.Log.Logger.Information("Stream uri: {StreamUri}", streamUri);
-
             var parameters = new DialogParameters { { "StreamUri", streamUri } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
             await Dialog.ShowAsync<ChannelPreviewDialog>("Channel Preview", parameters, options);

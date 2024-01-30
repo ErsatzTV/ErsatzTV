@@ -293,7 +293,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
             {
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "Detected {Count} VAAPI profile entrypoints for using {Driver} {Device}",
                     profileEntrypoints.Count,
                     driver,
@@ -359,7 +359,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
                 if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
                 {
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         "Detected {Count} VAAPI profile entrypoints for using QSV device {Device}",
                         profileEntrypoints.Count,
                         device);
@@ -408,7 +408,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 const string MODEL_PATTERN = @"(GTX\s+[0-9a-zA-Z]+[\sTtIi]+)";
                 Match modelMatch = Regex.Match(line, MODEL_PATTERN);
                 string model = modelMatch.Success ? modelMatch.Groups[1].Value.Trim() : "unknown";
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "Detected NVIDIA GPU model {Model} architecture SM {Architecture}",
                     model,
                     architecture);

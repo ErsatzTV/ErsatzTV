@@ -121,9 +121,36 @@
         <MudCardContent>
             <MudForm>
                 <MudSelect Class="mt-3"
-                           Label="Minimum Log Level"
-                           @bind-Value="_generalSettings.MinimumLogLevel"
-                           For="@(() => _generalSettings.MinimumLogLevel)">
+                           Label="Default Minimum Log Level"
+                           @bind-Value="_generalSettings.DefaultMinimumLogLevel"
+                           For="@(() => _generalSettings.DefaultMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Scanning Minimum Log Level"
+                           @bind-Value="_generalSettings.ScanningMinimumLogLevel"
+                           For="@(() => _generalSettings.ScanningMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Scheduling Minimum Log Level"
+                           @bind-Value="_generalSettings.SchedulingMinimumLogLevel"
+                           For="@(() => _generalSettings.SchedulingMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Streaming Minimum Log Level"
+                           @bind-Value="_generalSettings.StreamingMinimumLogLevel"
+                           For="@(() => _generalSettings.StreamingMinimumLogLevel)">
                     <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
@@ -132,7 +159,9 @@
             </MudForm>
         </MudCardContent>
         <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveGeneralSettings())">Save Settings</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveGeneralSettings())" StartIcon="@Icons.Material.Filled.Save">
+                Save Settings
+            </MudButton>
         </MudCardActions>
     </MudCard>
     <MudCard Class="mb-6" Style="width: 350px">

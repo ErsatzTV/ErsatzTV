@@ -659,7 +659,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         if (ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.None ||
             ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.None)
         {
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "Forcing {Threads} ffmpeg thread when hardware acceleration is used",
                 1);
 
@@ -667,7 +667,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
         else if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
         {
-            _logger.LogInformation(
+            _logger.LogDebug(
                 "Forcing {Threads} ffmpeg thread due to buggy combination of stream seek and realtime output",
                 1);
 
