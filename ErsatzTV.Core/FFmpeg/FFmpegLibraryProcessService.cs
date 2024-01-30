@@ -228,7 +228,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
             subtitle =>
             {
-                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded && !subtitle.IsExtracted)
+                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded && (!subtitle.IsExtracted || string.IsNullOrWhiteSpace(subtitle.Path)))
                 {
                     _logger.LogWarning("Subtitles are not yet available for this item");
                     return None;
