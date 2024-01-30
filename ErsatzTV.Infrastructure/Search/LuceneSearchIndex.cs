@@ -60,6 +60,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string ShowTitleField = "show_title";
     internal const string ShowGenreField = "show_genre";
     internal const string ShowTagField = "show_tag";
+    internal const string ShowStudioField = "show_studio";
     internal const string MetadataKindField = "metadata_kind";
     internal const string VideoCodecField = "video_codec";
     internal const string VideoDynamicRange = "video_dynamic_range";
@@ -108,7 +109,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 37;
+    public int Version => 38;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -681,6 +682,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
                 }
 
+                foreach (Studio studio in showMetadata.Studios)
+                {
+                    doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
+                }
+
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);
                 await AddLanguages(searchRepository, doc, languages);
 
@@ -950,6 +956,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     foreach (Tag tag in showMetadata.Tags)
                     {
                         doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
+                    }
+                    
+                    foreach (Studio studio in showMetadata.Studios)
+                    {
+                        doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
                     }
                 }
 

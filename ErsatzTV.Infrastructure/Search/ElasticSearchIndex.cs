@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 37;
+    public int Version => 38;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -231,6 +231,7 @@ public class ElasticSearchIndex : ISearchIndex
                         .Text(t => t.ShowTitle, t => t.Store(false))
                         .Text(t => t.ShowGenre, t => t.Store(false))
                         .Text(t => t.ShowTag, t => t.Store(false))
+                        .Text(t => t.ShowStudio, t => t.Store(false))
                         .Text(t => t.Style, t => t.Store(false))
                         .Text(t => t.Mood, t => t.Store(false))
                         .Text(t => t.Album, t => t.Store(false))
@@ -399,6 +400,7 @@ public class ElasticSearchIndex : ISearchIndex
                     ShowTitle = showMetadata.Title,
                     ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList(),
                     ShowTag = showMetadata.Tags.Map(t => t.Name).ToList(),
+                    ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList(),
                     Language = await GetLanguages(
                         searchRepository,
                         await searchRepository.GetLanguagesForSeason(season)),
@@ -587,6 +589,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.ShowTitle = showMetadata.Title;
                     doc.ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList();
                     doc.ShowTag = showMetadata.Tags.Map(t => t.Name).ToList();
+                    doc.ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList();
                 }
 
                 AddStatistics(doc, episode.MediaVersions);
