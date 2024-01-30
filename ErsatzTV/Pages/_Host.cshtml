@@ -20,6 +20,8 @@
     <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/media-chrome@1/+esm"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
     @await Html.PartialAsync("../Shared/_Favicons")
     <script>
         function sortableCollection(collectionId) {
@@ -47,6 +49,35 @@
         function styleMarkdown() {
             $("h2").addClass("mud-typography mud-typography-h4");
             $("h3").addClass("mud-typography mud-typography-h5");
+        }
+        
+        function previewChannel(uri) {
+          var video = document.getElementById('video');
+          if (Hls.isSupported()) {
+            var hls = new Hls({
+              debug: true,
+            });
+            hls.loadSource(uri);
+            if (uri.endsWith('ts')) {
+                hls.on(Hls.Events.MEDIA_ATTACHED, function () {
+                  video.play();
+                });
+            } else {
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                  video.play();
+                });
+            }
+            hls.attachMedia(video);
+          }
+          // hls.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
+          // When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element through the `src` property.
+          // This is using the built-in support of the plain video element, without using hls.js.
+          else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = uri;
+            video.addEventListener('canplay', function () {
+              video.play();
+            });
+          }
         }
     </script>
 </head>
