@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.5-beta] - 2024-01-30
 ### Added
 - Respect browser's `Accept-Language` header for date time display
 - Add new schedule item setting `Fill With Group Mode`
@@ -1871,7 +1873,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.4-beta...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.5-beta...HEAD
+[0.8.5-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.4-beta...v0.8.5-beta
 [0.8.4-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.3-beta...v0.8.4-beta
 [0.8.3-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.2-beta...v0.8.3-beta
 [0.8.2-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.1-beta...v0.8.2-beta
