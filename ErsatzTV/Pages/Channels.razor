@@ -3,10 +3,12 @@
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.FFmpegProfiles
 @using System.Globalization
+@using ErsatzTV.Core.Interfaces.FFmpeg
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
+@inject IFFmpegSegmenterService SegmenterService
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true"
@@ -23,7 +25,7 @@
             <col style="width: 15%"/>
             <col style="width: 15%"/>
             <col style="width: 15%"/>
-            <col style="width: 180px;"/>
+            <col style="width: 240px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>
@@ -72,6 +74,18 @@
                             </MudIconButton>
                         </MudTooltip>
                     }
+                    @if (SegmenterService.IsActive(context.Number))
+                    {
+                        <MudTooltip Text="Stop Transcode Session">
+                            <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                           OnClick="@(_ => StopChannel(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <div style="width: 48px"></div>
+                    }
                     <MudTooltip Text="Edit Channel">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Link="@($"channels/{context.Id}")">
@@ -102,8 +116,18 @@
 
     private int _rowsPerPage = 10;
 
+    protected override void OnInitialized()
+    {
+        SegmenterService.OnWorkersChanged += WorkersChanged;
+    }
+    
+    private void WorkersChanged(object sender, EventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
     public void Dispose()
     {
+        SegmenterService.OnWorkersChanged -= WorkersChanged;
+
         _cts.Cancel();
         _cts.Dispose();
     }
@@ -113,6 +137,11 @@
         _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
         _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    }
+
+    private async Task StopChannel(ChannelViewModel channel)
+    {
+        await SegmenterService.StopChannel(channel.Number, _cts.Token);
     }
 
     private bool CanPreviewChannel(ChannelViewModel channel)

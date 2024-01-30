@@ -57,6 +57,7 @@
             var hls = new Hls({
               debug: true,
             });
+            $('#video').data('hls', hls);
             hls.loadSource(uri);
             if (uri.endsWith('ts')) {
                 hls.on(Hls.Events.MEDIA_ATTACHED, function () {
@@ -78,6 +79,11 @@
               video.play();
             });
           }
+        }
+        
+        function stopPreview() {
+            var hls = $('#video').data('hls');
+            hls && hls.destroy();
         }
     </script>
 </head>

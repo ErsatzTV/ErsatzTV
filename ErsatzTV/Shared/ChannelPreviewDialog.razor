@@ -45,5 +45,18 @@
         await base.OnAfterRenderAsync(true);
     }
 
-    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+    private void Close()
+    {
+        try
+        {
+            JsRuntime.InvokeVoidAsync("stopPreview");
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+        
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
 }

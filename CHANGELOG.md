@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Channels MUST use `H264` video format and `AAC` audio format
   - Channels MUST use `MPEG-TS` or `HLS Segmenter` streaming modes
     - Since `MPEG-TS` uses `HLS Segmenter` under the hood, the preview player will use `HLS Segmenter`, so it's not 100% equivalent, but it should be representative 
+- Add button to stop transcoding session for each channel that has an active session
 
 ### Fixed
 - Fix error loading path replacements when using MySql
