@@ -96,8 +96,7 @@ public class Program
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(
                 theme: AnsiConsoleTheme.Code,
-                formatProvider: CultureInfo.InvariantCulture,
-                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}");
+                formatProvider: CultureInfo.InvariantCulture);
 
             // for troubleshooting log category
             // outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}"

@@ -109,6 +109,9 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonPropertyName(LuceneSearchIndex.ShowTagField)]
     public List<string> ShowTag { get; set; }
 
+    [JsonPropertyName(LuceneSearchIndex.ShowStudioField)]
+    public List<string> ShowStudio { get; set; }
+
     [JsonPropertyName(LuceneSearchIndex.StyleField)]
     public List<string> Style { get; set; }
 
