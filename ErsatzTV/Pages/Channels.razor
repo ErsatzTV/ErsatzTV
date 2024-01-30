@@ -167,7 +167,7 @@
 
     private async Task PreviewChannel(ChannelViewModel channel)
     {
-        if (channel.StreamingMode is StreamingMode.HttpLiveStreamingDirect or StreamingMode.TransportStream)
+        if (!CanPreviewChannel(channel))
         {
             return;
         }
