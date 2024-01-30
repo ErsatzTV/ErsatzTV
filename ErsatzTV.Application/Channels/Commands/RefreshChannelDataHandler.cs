@@ -96,6 +96,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             switch (playout.ProgramSchedulePlayoutType)
             {
                 case ProgramSchedulePlayoutType.Flood:
+                case ProgramSchedulePlayoutType.Block:
                     sorted.AddRange(playouts.Collect(p => p.Items).OrderBy(pi => pi.Start));
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
