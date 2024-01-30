@@ -13,12 +13,24 @@ public class GetGeneralSettingsHandler : IRequestHandler<GetGeneralSettings, Gen
 
     public async Task<GeneralSettingsViewModel> Handle(GetGeneralSettings request, CancellationToken cancellationToken)
     {
-        Option<LogEventLevel> maybeLogLevel =
+        Option<LogEventLevel> maybeDefaultLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevel);
+        
+        Option<LogEventLevel> maybeScanningLevel =
+            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScanning);
 
+        Option<LogEventLevel> maybeSchedulingLevel =
+            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScheduling);
+        
+        Option<LogEventLevel> maybeStreamingLevel =
+            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelStreaming);
+        
         return new GeneralSettingsViewModel
         {
-            MinimumLogLevel = await maybeLogLevel.IfNoneAsync(LogEventLevel.Information)
+            DefaultMinimumLogLevel = await maybeDefaultLevel.IfNoneAsync(LogEventLevel.Information),
+            ScanningMinimumLogLevel = await maybeScanningLevel.IfNoneAsync(LogEventLevel.Information),
+            SchedulingMinimumLogLevel = await maybeSchedulingLevel.IfNoneAsync(LogEventLevel.Information),
+            StreamingMinimumLogLevel = await maybeStreamingLevel.IfNoneAsync(LogEventLevel.Information),
         };
     }
 }

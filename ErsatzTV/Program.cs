@@ -35,12 +35,12 @@ public class Program
             .AddEnvironmentVariables()
             .Build();
 
-        LoggingLevelSwitch = new LoggingLevelSwitch();
+        LoggingLevelSwitches = new LoggingLevelSwitches();
     }
 
     private static IConfiguration Configuration { get; }
 
-    private static LoggingLevelSwitch LoggingLevelSwitch { get; }
+    private static LoggingLevelSwitches LoggingLevelSwitches { get; }
 
     public static async Task<int> Main(string[] args)
     {
@@ -54,11 +54,29 @@ public class Program
             return 1;
         }
 
-        LoggingLevelSwitch.MinimumLevel = LogEventLevel.Information;
+        LoggingLevelSwitches.DefaultLevelSwitch.MinimumLevel = LogEventLevel.Information;
+        LoggingLevelSwitches.ScanningLevelSwitch.MinimumLevel = LogEventLevel.Information;
+        LoggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = LogEventLevel.Information;
+        LoggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = LogEventLevel.Information;
 
         LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
-            .MinimumLevel.ControlledBy(LoggingLevelSwitch)
+            
+            .MinimumLevel.ControlledBy(LoggingLevelSwitches.DefaultLevelSwitch)
+
+            // scanning
+            .MinimumLevel.Override("ErsatzTV.Services.ScannerService", LoggingLevelSwitches.ScanningLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Scanner", LoggingLevelSwitches.ScanningLevelSwitch)
+
+            // scheduling
+            .MinimumLevel.Override("ErsatzTV.Core.Scheduling", LoggingLevelSwitches.SchedulingLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Application.Subtitles.ExtractEmbeddedSubtitlesHandler", LoggingLevelSwitches.SchedulingLevelSwitch)
+            
+            // streaming
+            .MinimumLevel.Override("ErsatzTV.Application.Streaming", LoggingLevelSwitches.StreamingLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Controllers.IptvController", LoggingLevelSwitches.StreamingLevelSwitch)
+            
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
             .WriteTo.File(
@@ -78,7 +96,8 @@ public class Program
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(
                 theme: AnsiConsoleTheme.Code,
-                formatProvider: CultureInfo.InvariantCulture);
+                formatProvider: CultureInfo.InvariantCulture,
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}");
 
             // for troubleshooting log category
             // outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}"
@@ -104,7 +123,7 @@ public class Program
 
     private static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitch))
+            .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitches))
             .ConfigureWebHostDefaults(
                 webBuilder => webBuilder.UseStartup<Startup>()
                     .UseConfiguration(Configuration)

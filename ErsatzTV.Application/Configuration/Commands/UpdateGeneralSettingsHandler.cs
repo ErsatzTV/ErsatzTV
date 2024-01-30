@@ -1,20 +1,19 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using Serilog.Core;
 
 namespace ErsatzTV.Application.Configuration;
 
 public class UpdateGeneralSettingsHandler : IRequestHandler<UpdateGeneralSettings, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly LoggingLevelSwitch _loggingLevelSwitch;
+    private readonly LoggingLevelSwitches _loggingLevelSwitches;
 
     public UpdateGeneralSettingsHandler(
-        LoggingLevelSwitch loggingLevelSwitch,
+        LoggingLevelSwitches loggingLevelSwitches,
         IConfigElementRepository configElementRepository)
     {
-        _loggingLevelSwitch = loggingLevelSwitch;
+        _loggingLevelSwitches = loggingLevelSwitches;
         _configElementRepository = configElementRepository;
     }
 
@@ -24,8 +23,17 @@ public class UpdateGeneralSettingsHandler : IRequestHandler<UpdateGeneralSetting
 
     private async Task<Unit> ApplyUpdate(GeneralSettingsViewModel generalSettings)
     {
-        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevel, generalSettings.MinimumLogLevel);
-        _loggingLevelSwitch.MinimumLevel = generalSettings.MinimumLogLevel;
+        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevel, generalSettings.DefaultMinimumLogLevel);
+        _loggingLevelSwitches.DefaultLevelSwitch.MinimumLevel = generalSettings.DefaultMinimumLogLevel;
+
+        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelScanning, generalSettings.ScanningMinimumLogLevel);
+        _loggingLevelSwitches.ScanningLevelSwitch.MinimumLevel = generalSettings.ScanningMinimumLogLevel;
+
+        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelScheduling, generalSettings.SchedulingMinimumLogLevel);
+        _loggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = generalSettings.SchedulingMinimumLogLevel;
+        
+        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelStreaming, generalSettings.StreamingMinimumLogLevel);
+        _loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = generalSettings.StreamingMinimumLogLevel;
 
         return Unit.Default;
     }

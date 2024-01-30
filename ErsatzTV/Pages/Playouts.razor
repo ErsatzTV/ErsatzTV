@@ -14,12 +14,16 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
             Add Playout
         </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/add/{PlayoutKind.Block}")">
-            Add Block Playout
-        </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/add/{PlayoutKind.ExternalJson}")">
-            Add External Json Playout
-        </MudButton>
+        <MudTooltip Text="This feature is experimental">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Link="@($"playouts/add/{PlayoutKind.Block}")">
+                Add Block Playout
+            </MudButton>
+        </MudTooltip>
+        <MudTooltip Text="This feature is experimental">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Link="@($"playouts/add/{PlayoutKind.ExternalJson}")">
+                Add External Json Playout
+            </MudButton>
+        </MudTooltip>
     </div>
     <MudTable Hover="true"
               Dense="true"

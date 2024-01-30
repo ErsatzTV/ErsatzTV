@@ -125,7 +125,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             // do nothing
-            _logger.LogInformation("HlsSessionWorker.TrimPlaylist was canceled");
+            _logger.LogDebug("HlsSessionWorker.TrimPlaylist was canceled");
         }
         catch (Exception ex)
         {
@@ -302,7 +302,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             if (!realtime)
             {
                 Interlocked.Increment(ref _workAheadCount);
-                _logger.LogInformation("HLS segmenter will work ahead for channel {Channel}", _channelNumber);
+                _logger.LogDebug("HLS segmenter will work ahead for channel {Channel}", _channelNumber);
 
                 HlsSessionState nextState = _state switch
                 {
@@ -319,7 +319,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
             else
             {
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "HLS segmenter will NOT work ahead for channel {Channel}",
                     _channelNumber);
 
@@ -341,7 +341,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             long ptsOffset = await GetPtsOffset(_channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
-            _logger.LogInformation("HLS session state: {State}", _state);
+            _logger.LogDebug("HLS session state: {State}", _state);
 
             DateTimeOffset now = _state is HlsSessionState.SeekAndWorkAhead
                 ? DateTimeOffset.Now
@@ -379,7 +379,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 Command process = processModel.Process;
 
-                _logger.LogInformation("ffmpeg hls arguments {FFmpegArguments}", process.Arguments);
+                _logger.LogDebug("ffmpeg hls arguments {FFmpegArguments}", process.Arguments);
 
                 try
                 {
@@ -389,7 +389,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                     if (commandResult.ExitCode == 0)
                     {
-                        _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
+                        _logger.LogDebug("HLS process has completed for channel {Channel}", _channelNumber);
                         _logger.LogDebug("Transcoded until: {Until}", processModel.Until);
                         _transcodedUntil = processModel.Until;
                         _state = NextState(_state, processModel);
@@ -427,7 +427,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         {
                             Command errorProcess = errorProcessModel.Process;
 
-                            _logger.LogInformation(
+                            _logger.LogDebug(
                                 "ffmpeg hls error arguments {FFmpegArguments}",
                                 errorProcess.Arguments);
 
@@ -451,7 +451,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
                 catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
                 {
-                    _logger.LogInformation("Terminating HLS process for channel {Channel}", _channelNumber);
+                    _logger.LogInformation("Terminating HLS session for channel {Channel}", _channelNumber);
                     return false;
                 }
             }
@@ -600,7 +600,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             return await File.ReadAllLinesAsync(fileName, cancellationToken);
         }
 
-        _logger.LogInformation("Playlist does not exist at expected location {File}", fileName);
+        _logger.LogDebug("Playlist does not exist at expected location {File}", fileName);
         return None;
     }
 

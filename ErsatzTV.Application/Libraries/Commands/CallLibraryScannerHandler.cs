@@ -84,7 +84,16 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 // because the compact json writer used by the scanner
                 // writes in UTC
                 LogEvent logEvent = LogEventReader.ReadFromString(s);
-                Log.Write(
+
+                ILogger log = Log.Logger;
+                if (logEvent.Properties.TryGetValue("SourceContext", out LogEventPropertyValue property))
+                {
+                    log = log.ForContext(
+                        Serilog.Core.Constants.SourceContextPropertyName,
+                        property.ToString().Trim('"'));
+                }
+                
+                log.Write(
                     new LogEvent(
                         logEvent.Timestamp.ToLocalTime(),
                         logEvent.Level,
