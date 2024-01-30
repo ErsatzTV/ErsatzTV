@@ -3,9 +3,12 @@
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.FFmpegProfiles
 @using System.Globalization
+@using ErsatzTV.Core.Interfaces.FFmpeg
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IMediator _mediator
+@inject IDialogService Dialog
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject IFFmpegSegmenterService SegmenterService
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true"
@@ -22,7 +25,7 @@
             <col style="width: 15%"/>
             <col style="width: 15%"/>
             <col style="width: 15%"/>
-            <col style="width: 120px;"/>
+            <col style="width: 240px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>
@@ -56,6 +59,33 @@
             </MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
+                    @if (CanPreviewChannel(context))
+                    {
+                        <MudTooltip Text="Preview Channel">
+                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
+                                           OnClick="@(_ => PreviewChannel(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudTooltip Text="Channel preview requires MPEG-TS/HLS Segmenter and H264/AAC">
+                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Disabled="true">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                    @if (SegmenterService.IsActive(context.Number))
+                    {
+                        <MudTooltip Text="Stop Transcode Session">
+                            <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                           OnClick="@(_ => StopChannel(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <div style="width: 48px"></div>
+                    }
                     <MudTooltip Text="Edit Channel">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Link="@($"channels/{context.Id}")">
@@ -86,17 +116,74 @@
 
     private int _rowsPerPage = 10;
 
+    protected override void OnInitialized()
+    {
+        SegmenterService.OnWorkersChanged += WorkersChanged;
+    }
+    
+    private void WorkersChanged(object sender, EventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
     public void Dispose()
     {
+        SegmenterService.OnWorkersChanged -= WorkersChanged;
+
         _cts.Cancel();
         _cts.Dispose();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
-        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), _cts.Token)
+        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
+        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    }
+
+    private async Task StopChannel(ChannelViewModel channel)
+    {
+        await SegmenterService.StopChannel(channel.Number, _cts.Token);
+    }
+
+    private bool CanPreviewChannel(ChannelViewModel channel)
+    {
+        if (channel.StreamingMode is StreamingMode.HttpLiveStreamingDirect or StreamingMode.TransportStream)
+        {
+            return false;
+        }
+
+        Option<FFmpegProfileViewModel> maybeProfile = Optional(_ffmpegProfiles.Find(p => p.Id == channel.FFmpegProfileId));
+        foreach (FFmpegProfileViewModel profile in maybeProfile)
+        {
+            return profile.VideoFormat is FFmpegProfileVideoFormat.H264 && profile.AudioFormat is FFmpegProfileAudioFormat.Aac;
+        }
+
+        return false;
+    }
+
+    private async Task PreviewChannel(ChannelViewModel channel)
+    {
+        if (channel.StreamingMode is StreamingMode.HttpLiveStreamingDirect or StreamingMode.TransportStream)
+        {
+            return;
+        }
+
+        Option<FFmpegProfileViewModel> maybeProfile = Optional(_ffmpegProfiles.Find(p => p.Id == channel.FFmpegProfileId));
+        foreach (FFmpegProfileViewModel profile in maybeProfile)
+        {
+            if (profile.VideoFormat == FFmpegProfileVideoFormat.Hevc)
+            {
+                return;
+            }
+            
+            string currentUri = NavigationManager.Uri;
+            string streamUri = currentUri.Replace("/channels", $"/iptv/channel/{channel.Number}.m3u8?mode=segmenter");
+
+            Serilog.Log.Logger.Information("Stream uri: {StreamUri}", streamUri);
+
+            var parameters = new DialogParameters { { "StreamUri", streamUri } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+            await Dialog.ShowAsync<ChannelPreviewDialog>("Channel Preview", parameters, options);
+        }
     }
 
     private async Task DeleteChannelAsync(ChannelViewModel channel)
@@ -104,11 +191,11 @@
         var parameters = new DialogParameters { { "EntityType", "channel" }, { "EntityName", channel.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Channel", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Channel", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeleteChannel(channel.Id), _cts.Token);
+            await Mediator.Send(new DeleteChannel(channel.Id), _cts.Token);
             if (_table != null)
             {
                 await _table.ReloadServerData();
@@ -118,9 +205,9 @@
 
     private async Task<TableData<ChannelViewModel>> ServerReload(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        List<ChannelViewModel> channels = await _mediator.Send(new GetAllChannels(), _cts.Token);
+        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels(), _cts.Token);
         IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number));
 
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
@@ -146,11 +233,12 @@
         };
     }
 
-    private static string GetStreamingMode(StreamingMode streamingMode) => streamingMode switch {
+    private static string GetStreamingMode(StreamingMode streamingMode) => streamingMode switch
+    {
         StreamingMode.HttpLiveStreamingDirect => "HLS Direct",
         StreamingMode.HttpLiveStreamingSegmenter => "HLS Segmenter",
         StreamingMode.TransportStreamHybrid => "MPEG-TS",
         _ => "MPEG-TS (Legacy)"
-        };
+    };
 
 }

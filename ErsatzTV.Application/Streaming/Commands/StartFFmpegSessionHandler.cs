@@ -82,16 +82,14 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             _localFileSystem,
             _sessionWorkerLogger,
             targetFramerate);
-        _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
+        _ffmpegSegmenterService.AddOrUpdateWorker(request.ChannelNumber, worker);
 
         // fire and forget worker
         _ = worker.Run(request.ChannelNumber, idleTimeout, _hostApplicationLifetime.ApplicationStopping)
             .ContinueWith(
                 _ =>
                 {
-                    _ffmpegSegmenterService.SessionWorkers.TryRemove(
-                        request.ChannelNumber,
-                        out IHlsSessionWorker inactiveWorker);
+                    _ffmpegSegmenterService.RemoveWorker(request.ChannelNumber, out IHlsSessionWorker inactiveWorker);
 
                     inactiveWorker?.Dispose();
 
@@ -169,12 +167,12 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
 
     private Task<Validation<BaseError, Unit>> SessionMustBeInactive(StartFFmpegSession request)
     {
-        var result = Optional(_ffmpegSegmenterService.SessionWorkers.TryAdd(request.ChannelNumber, null))
+        var result = Optional(_ffmpegSegmenterService.TryAddWorker(request.ChannelNumber, null))
             .Where(success => success)
             .Map(_ => Unit.Default)
             .ToValidation<BaseError>(new ChannelSessionAlreadyActive());
 
-        if (result.IsFail && _ffmpegSegmenterService.SessionWorkers.TryGetValue(
+        if (result.IsFail && _ffmpegSegmenterService.TryGetWorker(
                 request.ChannelNumber,
                 out IHlsSessionWorker worker))
         {

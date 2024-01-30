@@ -10,15 +10,14 @@ public class SessionController(IFFmpegSegmenterService ffmpegSegmenterService)
     [HttpGet("api/sessions")]
     public List<HlsSessionModel> GetSessions()
     {
-        return ffmpegSegmenterService.SessionWorkers.Values.Map(w => w.GetModel()).ToList();
+        return ffmpegSegmenterService.Workers.Map(w => w.GetModel()).ToList();
     }
 
     [HttpDelete("api/session/{channelNumber}")]
     public async Task<IActionResult> StopSession(string channelNumber, CancellationToken cancellationToken)
     {
-        if (ffmpegSegmenterService.SessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
+        if (await ffmpegSegmenterService.StopChannel(channelNumber, cancellationToken))
         {
-            await worker.Cancel(cancellationToken);
             return new NoContentResult();
         }
 
