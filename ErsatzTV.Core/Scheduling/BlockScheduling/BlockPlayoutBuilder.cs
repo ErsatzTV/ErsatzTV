@@ -32,6 +32,8 @@ public class BlockPlayoutBuilder(
             playout.Channel.Number,
             playout.Channel.Name);
 
+        var random = new Random();
+
         List<PlaybackOrder> allowedPlaybackOrders =
         [
             PlaybackOrder.Chronological,
@@ -154,6 +156,7 @@ public class BlockPlayoutBuilder(
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
+                        GuideGroup = random.Next(),
                         BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
                         CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                         CollectionEtag = collectionEtags[collectionKey]

@@ -69,7 +69,7 @@
                     }
                     else
                     {
-                        <MudTooltip Text="Channel preview requires MPEG-TS/HLS Segmenter and H264/AAC">
+                        <MudTooltip Text="Channel preview requires playout, MPEG-TS/HLS Segmenter, and H264/AAC">
                             <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Disabled="true">
                             </MudIconButton>
                         </MudTooltip>
@@ -147,6 +147,11 @@
     private bool CanPreviewChannel(ChannelViewModel channel)
     {
         if (channel.StreamingMode is StreamingMode.HttpLiveStreamingDirect or StreamingMode.TransportStream)
+        {
+            return false;
+        }
+
+        if (channel.PlayoutCount < 1)
         {
             return false;
         }
