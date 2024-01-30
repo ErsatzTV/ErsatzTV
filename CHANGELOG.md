@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This bug caused the ErsatzTV logo to be used instead of channel logos in some cases 
 - Update drop down search results in main search bar when items are created/edited/removed 
 - Fix green line at bottom of video when NVIDIA accel is used with intermittent watermark
+- Fix error starting streaming session when subtitles are still being extracted for the current item
 
 ### Changed
 - Upgrade from .NET 7 to .NET 8
