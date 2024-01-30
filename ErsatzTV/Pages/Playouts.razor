@@ -78,6 +78,8 @@
                     </div>
                     @if (context.PlayoutType == ProgramSchedulePlayoutType.Flood)
                     {
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit Alternate Schedules">
                             <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
@@ -107,9 +109,23 @@
                                            OnClick="@(_ => EditExternalJsonFile(context))">
                             </MudIconButton>
                         </MudTooltip>
+                        <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
                     {
+                        <MudTooltip Text="Erase Items">
+                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => EraseItems(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Erase Items and History">
+                            <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => EraseHistory(context))">
+                            </MudIconButton>
+                        </MudTooltip>
                         <MudTooltip Text="Edit Templates">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
@@ -122,12 +138,7 @@
                                            OnClick="@(_ => ResetPlayout(context))">
                             </MudIconButton>
                         </MudTooltip>
-                        <MudTooltip Text="Erase Items and History">
-                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
-                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           OnClick="@(_ => EraseHistory(context))">
-                            </MudIconButton>
-                        </MudTooltip>
+                        <div style="width: 48px"></div>
                     }
                     <MudTooltip Text="Delete Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
@@ -279,6 +290,19 @@
         if (_table != null)
         {
             await _table.ReloadServerData();
+        }
+
+        if (_selectedPlayoutId == playout.PlayoutId)
+        {
+            await PlayoutSelected(playout);
+        }
+    }
+
+    private async Task EraseItems(PlayoutNameViewModel playout)
+    {
+        if (playout.PlayoutType is ProgramSchedulePlayoutType.Block)
+        {
+            await Mediator.Send(new EraseBlockPlayoutItems(playout.PlayoutId), _cts.Token);
         }
 
         if (_selectedPlayoutId == playout.PlayoutId)
