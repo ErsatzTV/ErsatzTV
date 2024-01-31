@@ -195,8 +195,6 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
         incoming.LibraryPath = existing.LibraryPath;
         incoming.Id = existing.Id;
 
-        existing.Etag = incoming.Etag;
-
         // metadata
         MovieMetadata metadata = existing.MovieMetadata.Head();
         MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
