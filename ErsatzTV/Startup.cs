@@ -71,6 +71,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
@@ -132,6 +133,8 @@ public class Startup
                     configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
 #endif
             });
+        
+        services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
         OidcHelper.Init(Configuration);
         JwtHelper.Init(Configuration);

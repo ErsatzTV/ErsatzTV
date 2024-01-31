@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
 - Add `show_studio` to search index for seasons and episodes
+
+### Fixed
+- Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
+  - Data protection keys will now be persisted under ErsatzTV's config folder instead of being recreated at startup 
 
 ## [0.8.5-beta] - 2024-01-30
 ### Added
