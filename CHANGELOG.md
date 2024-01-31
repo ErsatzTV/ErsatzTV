@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
   - Data protection keys will now be persisted under ErsatzTV's config folder instead of being recreated at startup 
 
+### Changed
+- Pass through `access_token` query param from `Channels` page url to streaming endpoints
+  - This parameter isn't normally needed on the `Channels` page, since the web UI is not protected with JWT
+  - Its only purpose is to allow playback of authenticated channels in the web UI
+
 ## [0.8.5-beta] - 2024-01-30
 ### Added
 - Respect browser's `Accept-Language` header for date time display
