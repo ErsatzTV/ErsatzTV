@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using System.Globalization
 @using ErsatzTV.Core.Interfaces.FFmpeg
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
@@ -179,11 +181,17 @@
             {
                 return;
             }
-            
-            string currentUri = NavigationManager.Uri;
-            string streamUri = currentUri.Replace("/channels", $"/iptv/channel/{channel.Number}.m3u8?mode=segmenter");
 
-            var parameters = new DialogParameters { { "StreamUri", streamUri } };
+            var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
+            uri.Path = uri.Path.Replace("/channels", $"/iptv/channel/{channel.Number}.m3u8");
+            string query = uri.Query;
+            uri.Query = "?mode=segmenter";
+            if (QueryHelpers.ParseQuery(query).TryGetValue("access_token", out StringValues token))
+            {
+                uri.Query += $"&access_token={token.ToString()}";
+            }
+
+            var parameters = new DialogParameters { { "StreamUri", uri.ToString() } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
             await Dialog.ShowAsync<ChannelPreviewDialog>("Channel Preview", parameters, options);
         }
