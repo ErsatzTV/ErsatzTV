@@ -63,17 +63,20 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
             _ => null
         };
 
-        List<Subtitle> subtitles = mediaItem switch
-        {
-            Movie m => m.MovieMetadata.Map(mm => mm.Subtitles).Flatten().ToList(),
-            Episode e => e.EpisodeMetadata.Map(mm => mm.Subtitles).Flatten().ToList(),
-            _ => new List<Subtitle>()
-        };
-
         var allStreams = version.Streams.OrderBy(s => s.Index).Map(Project).ToList();
 
         // include external subtitles from local libraries
-        allStreams.AddRange(subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Sidecar).Map(ProjectToStream));
+        if (mediaItem.LibraryPath.Library is LocalLibrary)
+        {
+             List<Subtitle> subtitles = mediaItem switch
+             {
+                 Movie m => m.MovieMetadata.Map(mm => mm.Subtitles).Flatten().ToList(),
+                 Episode e => e.EpisodeMetadata.Map(mm => mm.Subtitles).Flatten().ToList(),
+                 _ => new List<Subtitle>()
+             };
+
+            allStreams.AddRange(subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Sidecar).Map(ProjectToStream));
+        }
 
         var allChapters = (version.Chapters ?? []).OrderBy(c => c.StartTime).Map(Project).ToList();
 

@@ -9,7 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
-  - Data protection keys will now be persisted under ErsatzTV's config folder instead of being recreated at startup 
+  - Data protection keys will now be persisted under ErsatzTV's config folder instead of being recreated at startup
+- Fix bug updating/replacing Jellyfin movies
+  - A deep scan can be used to fix all movies, otherwise any future updates made to JF movies will correctly sync to ETV
 
 ### Changed
 - Pass through `access_token` query param from `Channels` page url to streaming endpoints
