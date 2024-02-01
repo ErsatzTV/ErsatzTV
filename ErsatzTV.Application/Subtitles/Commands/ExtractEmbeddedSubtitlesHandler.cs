@@ -263,7 +263,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     .Filter(
                         s => s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
                              s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs")
-                    .Filter(s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path));
+                    .Filter(s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path) || FileDoesntExist(mediaItem.Id, s));
 
                 // find cache paths for each subtitle
                 foreach (Subtitle subtitle in subtitles)
@@ -314,8 +314,8 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                         subtitle.Subtitle.Path = subtitle.OutputPath;
                     }
 
-                    int count = await dbContext.SaveChangesAsync(cancellationToken);
-                    _logger.LogDebug("Successfully extracted {Count} subtitles", count);
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                    _logger.LogDebug("Successfully extracted {Count} subtitles", subtitlesToExtract.Count);
                 }
                 else
                 {
@@ -323,6 +323,16 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 }
             }
         }
+    }
+
+    private bool FileDoesntExist(int mediaItemId, Subtitle subtitle)
+    {
+        foreach (string path in GetRelativeOutputPath(mediaItemId, subtitle))
+        {
+            return _localFileSystem.FileExists(path) == false;
+        }
+        
+        return false;
     }
 
     private static async Task<Option<MediaItem>> GetMediaItem(TvContext dbContext, int mediaItemId) =>
