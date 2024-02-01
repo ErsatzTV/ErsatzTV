@@ -15,6 +15,8 @@ public class ConfigElementKey
     public static ConfigElementKey FFmpegDefaultProfileId => new("ffmpeg.default_profile_id");
     public static ConfigElementKey FFmpegDefaultResolutionId => new("ffmpeg.default_resolution_id");
     public static ConfigElementKey FFmpegSaveReports => new("ffmpeg.save_reports");
+    public static ConfigElementKey FFmpegUseEmbeddedSubtitles => new("ffmpeg.use_embedded_subtitles");
+    public static ConfigElementKey FFmpegExtractEmbeddedSubtitles => new("ffmpeg.extract_embedded_subtitles");
     public static ConfigElementKey FFmpegPreferredLanguageCode => new("ffmpeg.preferred_language_code");
     public static ConfigElementKey FFmpegGlobalWatermarkId => new("ffmpeg.global_watermark_id");
     public static ConfigElementKey FFmpegGlobalFallbackFillerId => new("ffmpeg.global_fallback_filler_id");

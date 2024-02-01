@@ -23,6 +23,10 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
         Option<string> preferredAudioLanguageCode =
             await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
+        Option<bool> useEmbeddedSubtitles =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles);
+        Option<bool> extractEmbeddedSubtitles =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles);
         Option<int> watermark =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
         Option<int> fallbackFiller =
@@ -42,6 +46,8 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             FFprobePath = await ffprobePath.IfNoneAsync(string.Empty),
             DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
             SaveReports = await saveReports.IfNoneAsync(false),
+            UseEmbeddedSubtitles = await useEmbeddedSubtitles.IfNoneAsync(true),
+            ExtractEmbeddedSubtitles = await extractEmbeddedSubtitles.IfNoneAsync(false),
             PreferredAudioLanguageCode = await preferredAudioLanguageCode.IfNoneAsync("eng"),
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),

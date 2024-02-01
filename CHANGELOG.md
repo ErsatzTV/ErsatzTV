@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add `show_studio` to search index for seasons and episodes
+- Add two new global subtitle settings:
+  - `Use embedded subtitles`
+    - Default value: `true`
+    - When disabled, embedded subtitles will not be considered for extraction (text subtitles), or playback (all embedded subtitles)
+  - `Extract and use embedded (text) subtitles`
+    - Default value: `false`
+    - When enabled, embedded text subtitles will be periodically extracted, and considered for playback
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts

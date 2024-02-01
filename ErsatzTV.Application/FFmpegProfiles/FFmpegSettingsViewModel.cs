@@ -8,6 +8,8 @@ public class FFmpegSettingsViewModel
     public string FFprobePath { get; set; }
     public int DefaultFFmpegProfileId { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
+    public bool UseEmbeddedSubtitles { get; set; }
+    public bool ExtractEmbeddedSubtitles { get; set; }
     public bool SaveReports { get; set; }
     public int? GlobalWatermarkId { get; set; }
     public int? GlobalFallbackFillerId { get; set; }

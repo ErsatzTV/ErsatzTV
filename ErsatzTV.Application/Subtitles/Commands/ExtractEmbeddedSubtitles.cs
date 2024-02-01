@@ -2,5 +2,4 @@
 
 namespace ErsatzTV.Application.Subtitles;
 
-public record ExtractEmbeddedSubtitles(Option<int> PlayoutId) : IRequest<Either<BaseError, Unit>>,
-    IBackgroundServiceRequest;
+public record ExtractEmbeddedSubtitles(Option<int> PlayoutId) : IRequest<Option<BaseError>>, IBackgroundServiceRequest;

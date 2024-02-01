@@ -138,6 +138,36 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             return None;
         }
 
+        bool useEmbeddedSubtitles = await _configElementRepository
+            .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles)
+            .IfNoneAsync(true);
+
+        if (!useEmbeddedSubtitles)
+        {
+            _logger.LogDebug("Ignoring embedded subtitles for channel {Number}", channel.Number);
+            subtitles = subtitles.Filter(s => s.SubtitleKind is not SubtitleKind.Embedded).ToList();
+        }
+
+        foreach (Subtitle subtitle in subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage).ToList())
+        {
+            if (subtitle.IsExtracted == false)
+            {
+                _logger.LogDebug(
+                    "Ignoring embedded subtitle with index {Index} that has not been extracted",
+                    subtitle.StreamIndex);
+
+                subtitles.Remove(subtitle);
+            }
+            else if (string.IsNullOrWhiteSpace(subtitle.Path))
+            {
+                _logger.LogDebug(
+                    "BUG: ignoring embedded subtitle with index {Index} that is missing a path",
+                    subtitle.StreamIndex);
+
+                subtitles.Remove(subtitle);
+            }
+        }
+        
         var allCodes = new List<string>();
         string language = (preferredSubtitleLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
@@ -160,29 +190,29 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         if (subtitles.Count > 0)
         {
-            switch (subtitleMode)
+            Option<Subtitle> maybeSelectedSubtitle = subtitleMode switch
             {
-                case ChannelSubtitleMode.Forced:
-                    foreach (Subtitle subtitle in subtitles.OrderBy(s => s.StreamIndex).Find(s => s.Forced))
-                    {
-                        return subtitle;
-                    }
+                ChannelSubtitleMode.Forced => subtitles
+                    .OrderBy(s => s.StreamIndex)
+                    .Find(s => s.Forced)
+                    .HeadOrNone(),
 
-                    break;
-                case ChannelSubtitleMode.Default:
-                    foreach (Subtitle subtitle in subtitles.OrderBy(s => s.Default ? 0 : 1).ThenBy(s => s.StreamIndex))
-                    {
-                        return subtitle;
-                    }
+                ChannelSubtitleMode.Default => subtitles
+                    .OrderBy(s => s.Default ? 0 : 1)
+                    .ThenBy(s => s.StreamIndex)
+                    .HeadOrNone(),
 
-                    break;
-                case ChannelSubtitleMode.Any:
-                    foreach (Subtitle subtitle in subtitles.OrderBy(s => s.StreamIndex).HeadOrNone())
-                    {
-                        return subtitle;
-                    }
+                ChannelSubtitleMode.Any => subtitles
+                    .OrderBy(s => s.StreamIndex)
+                    .HeadOrNone(),
 
-                    break;
+                _ => Option<Subtitle>.None
+            };
+
+            foreach (Subtitle subtitle in maybeSelectedSubtitle)
+            {
+                _logger.LogDebug("Selecting subtitle {@Subtitle}", subtitle);
+                return subtitle;
             }
         }
 

@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Channels;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -11,13 +13,16 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public UpdateFFmpegSettingsHandler(
         IConfigElementRepository configElementRepository,
-        ILocalFileSystem localFileSystem)
+        ILocalFileSystem localFileSystem,
+        ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
         _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
+        _workerChannel = workerChannel;
     }
 
     public Task<Either<BaseError, Unit>> Handle(
@@ -86,6 +91,26 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegPreferredLanguageCode,
             request.Settings.PreferredAudioLanguageCode);
+
+        await _configElementRepository.Upsert(
+            ConfigElementKey.FFmpegUseEmbeddedSubtitles,
+            request.Settings.UseEmbeddedSubtitles);
+
+        // do not extract when subtitles are not used
+        if (request.Settings.UseEmbeddedSubtitles == false)
+        {
+            request.Settings.ExtractEmbeddedSubtitles = false;
+        }
+        
+        await _configElementRepository.Upsert(
+            ConfigElementKey.FFmpegExtractEmbeddedSubtitles,
+            request.Settings.ExtractEmbeddedSubtitles);
+        
+        // queue extracting all embedded subtitles
+        if (request.Settings.ExtractEmbeddedSubtitles)
+        {
+            await _workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(Option<int>.None));
+        }
 
         if (request.Settings.GlobalWatermarkId is not null)
         {
