@@ -19,5 +19,8 @@ public record MediaItemInfoStream(
     string ColorTransfer,
     string ColorPrimaries,
     int? BitsPerRawSample,
-    string FileName,
-    string MimeType);
+    string MimeType)
+{
+    public string FileName { get; set; }
+    public bool? IsExtracted { get; set; }
+}
