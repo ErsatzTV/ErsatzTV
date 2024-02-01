@@ -45,6 +45,19 @@
             </MudSelect>
             <MudElement HtmlTag="div" Class="mt-3">
                 <MudSwitch T="bool"
+                           Label="Use embedded subtitles"
+                           Color="Color.Primary"
+                           @bind-Checked="@_ffmpegSettings.UseEmbeddedSubtitles"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudSwitch T="bool"
+                           Label="Extract and use embedded (text) subtitles"
+                           Color="Color.Primary"
+                           @bind-Checked="@_ffmpegSettings.ExtractEmbeddedSubtitles"
+                           Disabled="@(_ffmpegSettings.UseEmbeddedSubtitles == false)"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudSwitch T="bool"
                            Label="Save troubleshooting reports to disk"
                            Color="Color.Primary"
                            @bind-Checked="@_ffmpegSettings.SaveReports"/>

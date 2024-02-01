@@ -12,6 +12,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +21,11 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Subtitles;
 
 [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
-public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSubtitles, Either<BaseError, Unit>>
+public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSubtitles, Option<BaseError>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<ExtractEmbeddedSubtitlesHandler> _logger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
@@ -32,17 +34,19 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         IDbContextFactory<TvContext> dbContextFactory,
         ILocalFileSystem localFileSystem,
         IEntityLocker entityLocker,
+        IConfigElementRepository configElementRepository,
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
         ILogger<ExtractEmbeddedSubtitlesHandler> logger)
     {
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
         _entityLocker = entityLocker;
+        _configElementRepository = configElementRepository;
         _workerChannel = workerChannel;
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, Unit>> Handle(
+    public async Task<Option<BaseError>> Handle(
         ExtractEmbeddedSubtitles request,
         CancellationToken cancellationToken)
     {
@@ -51,14 +55,14 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         return await validation.Match(
             async ffmpegPath =>
             {
-                Either<BaseError, Unit> result = await ExtractAll(dbContext, request, ffmpegPath, cancellationToken);
+                Option<BaseError> result = await ExtractAll(dbContext, request, ffmpegPath, cancellationToken);
                 await _workerChannel.WriteAsync(new ReleaseMemory(false), cancellationToken);
                 return result;
             },
-            error => Task.FromResult<Either<BaseError, Unit>>(error.Join()));
+            error => Task.FromResult<Option<BaseError>>(error.Join()));
     }
 
-    private async Task<Either<BaseError, Unit>> ExtractAll(
+    private async Task<Option<BaseError>> ExtractAll(
         TvContext dbContext,
         ExtractEmbeddedSubtitles request,
         string ffmpegPath,
@@ -66,6 +70,26 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
     {
         try
         {
+            bool useEmbeddedSubtitles = await _configElementRepository
+                .GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles)
+                .IfNoneAsync(true);
+
+            if (!useEmbeddedSubtitles)
+            {
+                _logger.LogDebug("Embedded subtitles are NOT enabled; nothing to extract");
+                return Option<BaseError>.None;
+            }
+            
+            bool extractEmbeddedSubtitles = await _configElementRepository
+                .GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles)
+                .IfNoneAsync(false);
+
+            if (!extractEmbeddedSubtitles)
+            {
+                _logger.LogDebug("Embedded subtitle extraction is NOT enabled");
+                return Option<BaseError>.None;
+            }
+            
             DateTime now = DateTime.UtcNow;
             DateTime until = now.AddHours(1);
 
@@ -102,11 +126,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     _logger.LogDebug(
                         "Playout {PlayoutId} does not have subtitles enabled; nothing to extract",
                         playoutId);
-                    return Unit.Default;
+                    return Option<BaseError>.None;
                 }
 
                 _logger.LogDebug("No playouts have subtitles enabled; nothing to extract");
-                return Unit.Default;
+                return Option<BaseError>.None;
             }
 
             foreach (int playoutId in playoutIdsToCheck)
@@ -157,7 +181,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return Unit.Default;
+                    return Option<BaseError>.None;
                 }
 
                 // extract subtitles and fonts for each item and update db
@@ -171,13 +195,13 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             {
                 _entityLocker.UnlockPlayout(playoutId);
             }
-
-            return Unit.Default;
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            return Unit.Default;
+            // do nothing
         }
+
+        return Option<BaseError>.None;
     }
 
     private static async Task<List<int>> GetMediaItemIdsWithTextSubtitles(

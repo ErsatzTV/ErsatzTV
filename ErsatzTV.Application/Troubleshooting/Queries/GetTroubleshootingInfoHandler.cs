@@ -8,6 +8,7 @@ using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Capabilities.Qsv;
+using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -149,6 +150,10 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
         Option<string> preferredAudioLanguageCode =
             await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
+        Option<bool> useEmbeddedSubtitles =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseEmbeddedSubtitles);
+        Option<bool> extractEmbeddedSubtitles =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles);
         Option<int> watermark =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
         Option<int> fallbackFiller =
@@ -159,6 +164,8 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
         Option<int> initialSegmentCount =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount);
+        Option<OutputFormatKind> outputFormatKind =
+            await _configElementRepository.GetValue<OutputFormatKind>(ConfigElementKey.FFmpegHlsDirectOutputFormat);
 
         var result = new FFmpegSettingsViewModel
         {
@@ -166,10 +173,13 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             FFprobePath = await ffprobePath.IfNoneAsync(string.Empty),
             DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
             SaveReports = await saveReports.IfNoneAsync(false),
+            UseEmbeddedSubtitles = await useEmbeddedSubtitles.IfNoneAsync(true),
+            ExtractEmbeddedSubtitles = await extractEmbeddedSubtitles.IfNoneAsync(false),
             PreferredAudioLanguageCode = await preferredAudioLanguageCode.IfNoneAsync("eng"),
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
-            InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1)
+            InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
+            HlsDirectOutputFormat = await outputFormatKind.IfNoneAsync(OutputFormatKind.MpegTs)
         };
 
         foreach (int watermarkId in watermark)
