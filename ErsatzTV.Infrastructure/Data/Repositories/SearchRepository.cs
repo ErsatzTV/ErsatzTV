@@ -157,6 +157,19 @@ public class SearchRepository : ISearchRepository
                     WHERE MediaStreamKind = 2 AND S.ShowId = @ShowId",
             new { ShowId = show.Id }).Map(result => result.ToList());
     }
+    
+    public async Task<List<string>> GetSubLanguagesForShow(Show show)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
+            @"SELECT DISTINCT Language
+                    FROM MediaStream
+                    INNER JOIN MediaVersion MV ON MediaStream.MediaVersionId = MV.Id
+                    INNER JOIN Episode E ON MV.EpisodeId = E.Id
+                    INNER JOIN Season S ON E.SeasonId = S.Id
+                    WHERE MediaStreamKind = 3 AND S.ShowId = @ShowId",
+            new { ShowId = show.Id }).Map(result => result.ToList());
+    }
 
     public async Task<List<string>> GetLanguagesForSeason(Season season)
     {
@@ -167,6 +180,18 @@ public class SearchRepository : ISearchRepository
                     INNER JOIN MediaVersion MV ON MediaStream.MediaVersionId = MV.Id
                     INNER JOIN Episode E ON MV.EpisodeId = E.Id
                     WHERE MediaStreamKind = 2 AND E.SeasonId = @SeasonId",
+            new { SeasonId = season.Id }).Map(result => result.ToList());
+    }
+    
+    public async Task<List<string>> GetSubLanguagesForSeason(Season season)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
+            @"SELECT DISTINCT Language
+                    FROM MediaStream
+                    INNER JOIN MediaVersion MV ON MediaStream.MediaVersionId = MV.Id
+                    INNER JOIN Episode E ON MV.EpisodeId = E.Id
+                    WHERE MediaStreamKind = 3 AND E.SeasonId = @SeasonId",
             new { SeasonId = season.Id }).Map(result => result.ToList());
     }
 
@@ -180,6 +205,19 @@ public class SearchRepository : ISearchRepository
                     INNER JOIN MusicVideo MV ON V.MusicVideoId = MV.Id
                     INNER JOIN Artist A on MV.ArtistId = A.Id
                     WHERE MediaStreamKind = 2 AND A.Id = @ArtistId",
+            new { ArtistId = artist.Id }).Map(result => result.ToList());
+    }
+    
+    public async Task<List<string>> GetSubLanguagesForArtist(Artist artist)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
+            @"SELECT DISTINCT Language
+                    FROM MediaStream
+                    INNER JOIN MediaVersion V ON MediaStream.MediaVersionId = V.Id
+                    INNER JOIN MusicVideo MV ON V.MusicVideoId = MV.Id
+                    INNER JOIN Artist A on MV.ArtistId = A.Id
+                    WHERE MediaStreamKind = 3 AND A.Id = @ArtistId",
             new { ArtistId = artist.Id }).Map(result => result.ToList());
     }
 

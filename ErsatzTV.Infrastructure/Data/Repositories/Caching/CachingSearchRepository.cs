@@ -17,10 +17,17 @@ public class CachingSearchRepository : ICachingSearchRepository
     public Task<Option<MediaItem>> GetItemToIndex(int id) => _searchRepository.GetItemToIndex(id);
 
     public Task<List<string>> GetLanguagesForShow(Show show) => _searchRepository.GetLanguagesForShow(show);
+    public Task<List<string>> GetSubLanguagesForShow(Show show) => _searchRepository.GetSubLanguagesForShow(show);
 
     public Task<List<string>> GetLanguagesForSeason(Season season) => _searchRepository.GetLanguagesForSeason(season);
 
+    public Task<List<string>> GetSubLanguagesForSeason(Season season) =>
+        _searchRepository.GetSubLanguagesForSeason(season);
+
     public Task<List<string>> GetLanguagesForArtist(Artist artist) => _searchRepository.GetLanguagesForArtist(artist);
+
+    public Task<List<string>> GetSubLanguagesForArtist(Artist artist) =>
+        _searchRepository.GetSubLanguagesForArtist(artist);
 
     public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
     {
