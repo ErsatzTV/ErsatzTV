@@ -26,6 +26,11 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexEpisode episode)
     {
+        if (episode.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
@@ -40,7 +45,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -49,6 +54,11 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexSeason season)
     {
+        if (season.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
@@ -63,7 +73,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -72,6 +82,11 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(PlexLibrary library, PlexShow show)
     {
+        if (show.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
@@ -86,7 +101,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -95,6 +110,11 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
     public async Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexEpisode episode)
     {
+        if (episode.State is MediaItemState.Unavailable)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Unavailable;
@@ -109,7 +129,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -118,6 +138,11 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
 
     public async Task<Option<int>> FlagRemoteOnly(PlexLibrary library, PlexEpisode episode)
     {
+        if (episode.State is MediaItemState.RemoteOnly)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.RemoteOnly;
@@ -132,7 +157,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 3 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -321,7 +346,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     {
         if (showItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -346,7 +371,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     {
         if (seasonItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -371,7 +396,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
     {
         if (episodeItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

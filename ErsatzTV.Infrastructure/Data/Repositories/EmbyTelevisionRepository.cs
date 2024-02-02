@@ -207,6 +207,11 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyEpisode episode)
     {
+        if (episode.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
@@ -221,7 +226,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -230,6 +235,11 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbySeason season)
     {
+        if (season.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
@@ -244,7 +254,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -253,6 +263,11 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(EmbyLibrary library, EmbyShow show)
     {
+        if (show.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
@@ -267,7 +282,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -278,7 +293,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
     {
         if (showItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -293,7 +308,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
             new { Ids = ids });
 
         return ids;
@@ -303,7 +318,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
     {
         if (seasonItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -318,7 +333,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
             new { Ids = ids });
 
         return ids;
@@ -328,7 +343,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
     {
         if (episodeItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -343,7 +358,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
             new { Ids = ids });
 
         return ids;
@@ -351,6 +366,11 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
     public async Task<Option<int>> FlagUnavailable(EmbyLibrary library, EmbyEpisode episode)
     {
+        if (episode.State is MediaItemState.Unavailable)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Unavailable;
@@ -365,7 +385,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -374,6 +394,11 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 
     public async Task<Option<int>> FlagRemoteOnly(EmbyLibrary library, EmbyEpisode episode)
     {
+        if (episode.State is MediaItemState.RemoteOnly)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.RemoteOnly;
@@ -388,7 +413,7 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 3 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
