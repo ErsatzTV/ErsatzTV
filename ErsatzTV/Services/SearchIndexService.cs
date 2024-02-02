@@ -9,13 +9,13 @@ namespace ErsatzTV.Services;
 public class SearchIndexService : BackgroundService
 {
     private readonly ChannelReader<ISearchIndexBackgroundServiceRequest> _channel;
-    private readonly ILogger<WorkerService> _logger;
+    private readonly ILogger<SearchIndexService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public SearchIndexService(
         ChannelReader<ISearchIndexBackgroundServiceRequest> channel,
         IServiceScopeFactory serviceScopeFactory,
-        ILogger<WorkerService> logger)
+        ILogger<SearchIndexService> logger)
     {
         _channel = channel;
         _serviceScopeFactory = serviceScopeFactory;
@@ -40,9 +40,11 @@ public class SearchIndexService : BackgroundService
                     switch (request)
                     {
                         case ReindexMediaItems reindexMediaItems:
+                            _logger.LogDebug("Reindexing media items: {MediaItemIds}", reindexMediaItems.MediaItemIds);
                             await mediator.Send(reindexMediaItems, stoppingToken);
                             break;
                         case RemoveMediaItems removeMediaItems:
+                            _logger.LogDebug("Removing media items: {MediaItemIds}", removeMediaItems.MediaItemIds);
                             await mediator.Send(removeMediaItems, stoppingToken);
                             break;
                     }

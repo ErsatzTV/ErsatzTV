@@ -25,6 +25,9 @@ public abstract class CallLibraryScannerHandler<TRequest>
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediator _mediator;
     private readonly IRuntimeInfo _runtimeInfo;
+    private readonly List<int> _toReindex = [];
+    private readonly List<int> _toRemove = [];
+    private readonly int _batchSize = 100;
     private string _libraryName;
 
     protected CallLibraryScannerHandler(
@@ -64,6 +67,18 @@ public abstract class CallLibraryScannerHandler<TRequest>
             if (process.ExitCode != 0)
             {
                 return BaseError.New($"ErsatzTV.Scanner exited with code {process.ExitCode}");
+            }
+
+            if (_toReindex.Count > 0)
+            {
+                await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()), cancellationToken);
+                _toReindex.Clear();
+            }
+                    
+            if (_toRemove.Count > 0)
+            {
+                await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()), cancellationToken);
+                _toRemove.Clear();
             }
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
@@ -122,6 +137,20 @@ public abstract class CallLibraryScannerHandler<TRequest>
                         _libraryName = progressUpdate.LibraryName;
                     }
 
+                    _toReindex.AddRange(progressUpdate.ItemsToReindex);
+                    if (_toReindex.Count >= _batchSize)
+                    {
+                        await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()));
+                        _toReindex.Clear();
+                    }
+                    
+                    _toRemove.AddRange(progressUpdate.ItemsToRemove);
+                    if (_toRemove.Count >= _batchSize)
+                    {
+                        await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()));
+                        _toRemove.Clear();
+                    }
+
                     if (progressUpdate.PercentComplete is not null)
                     {
                         var progress = new LibraryScanProgress(
@@ -129,18 +158,6 @@ public abstract class CallLibraryScannerHandler<TRequest>
                             progressUpdate.PercentComplete.Value);
 
                         await _mediator.Publish(progress);
-                    }
-
-                    if (progressUpdate.ItemsToReindex.Length > 0)
-                    {
-                        var reindex = new ReindexMediaItems(progressUpdate.ItemsToReindex);
-                        await _channel.WriteAsync(reindex);
-                    }
-
-                    if (progressUpdate.ItemsToRemove.Length > 0)
-                    {
-                        var remove = new RemoveMediaItems(progressUpdate.ItemsToRemove);
-                        await _channel.WriteAsync(remove);
                     }
                 }
             }

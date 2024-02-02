@@ -66,6 +66,7 @@ public class Program
 
             // scanning
             .MinimumLevel.Override("ErsatzTV.Services.ScannerService", LoggingLevelSwitches.ScanningLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Services.SearchIndexService", LoggingLevelSwitches.ScanningLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Scanner", LoggingLevelSwitches.ScanningLevelSwitch)
 
             // scheduling
