@@ -13,19 +13,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Extract and use embedded (text) subtitles`
     - Default value: `false`
     - When enabled, embedded text subtitles will be periodically extracted, and considered for playback
+- Add `sub_language` and `sub_language_tag` fields to search index
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
   - Data protection keys will now be persisted under ErsatzTV's config folder instead of being recreated at startup
 - Fix bug updating/replacing Jellyfin movies
   - A deep scan can be used to fix all movies, otherwise any future updates made to JF movies will correctly sync to ETV
-- Automatically generate JWT tokens to allow channel previews of protected streams 
+- Automatically generate JWT tokens to allow channel previews of protected streams
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
 - Batch search index updates to keep pace with library scans
   - Previously, search index updates would slowly process over minutes/hours after library scans completed
   - Search index updates should now complete at the same time as library scans
+- Do not unnecessarily update the search index during media server library scans
 
 ## [0.8.5-beta] - 2024-01-30
 ### Added
