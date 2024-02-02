@@ -46,6 +46,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string StudioField = "studio";
     internal const string LanguageField = "language";
     internal const string LanguageTagField = "language_tag";
+    internal const string SubLanguageField = "sub_language";
+    internal const string SubLanguageTagField = "sub_language_tag";
     internal const string StyleField = "style";
     internal const string MoodField = "mood";
     internal const string ActorField = "actor";
@@ -109,7 +111,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 38;
+    public int Version => 39;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -501,7 +503,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     private async Task AddLanguages(
         ISearchRepository searchRepository,
         Document doc,
-        IEnumerable<MediaVersion> mediaVersions)
+        ICollection<MediaVersion> mediaVersions)
     {
         var mediaCodes = mediaVersions
             .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio).Map(ms => ms.Language))
@@ -511,6 +513,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
             .ToList();
 
         await AddLanguages(searchRepository, doc, mediaCodes);
+        
+        var subMediaCodes = mediaVersions
+            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Subtitle).Map(ms => ms.Language))
+            .Flatten()
+            .Filter(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct()
+            .ToList();
+
+        await AddSubLanguages(searchRepository, doc, subMediaCodes);
     }
 
     private async Task AddLanguages(ISearchRepository searchRepository, Document doc, List<string> mediaCodes)
@@ -534,6 +545,30 @@ public sealed class LuceneSearchIndex : ISearchIndex
         foreach (string englishName in englishNames)
         {
             doc.Add(new TextField(LanguageField, englishName, Field.Store.NO));
+        }
+    }
+    
+    private async Task AddSubLanguages(ISearchRepository searchRepository, Document doc, List<string> mediaCodes)
+    {
+        foreach (string code in mediaCodes.Where(c => !string.IsNullOrWhiteSpace(c)).Distinct())
+        {
+            doc.Add(new TextField(SubLanguageTagField, code, Field.Store.NO));
+        }
+
+        var englishNames = new System.Collections.Generic.HashSet<string>();
+        foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
+        {
+            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
+                ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
+            foreach (CultureInfo cultureInfo in maybeCultureInfo)
+            {
+                englishNames.Add(cultureInfo.EnglishName);
+            }
+        }
+
+        foreach (string englishName in englishNames)
+        {
+            doc.Add(new TextField(SubLanguageField, englishName, Field.Store.NO));
         }
     }
 
@@ -565,6 +600,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 List<string> languages = await searchRepository.GetLanguagesForShow(show);
                 await AddLanguages(searchRepository, doc, languages);
+
+                List<string> subLanguages = await searchRepository.GetSubLanguagesForShow(show);
+                await AddSubLanguages(searchRepository, doc, subLanguages);
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                 {
@@ -690,6 +728,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);
                 await AddLanguages(searchRepository, doc, languages);
 
+                List<string> subLanguages = await searchRepository.GetSubLanguagesForSeason(season);
+                await AddSubLanguages(searchRepository, doc, subLanguages);
+
                 if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
                 {
                     foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
@@ -767,6 +808,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
                 await AddLanguages(searchRepository, doc, languages);
+
+                List<string> subLanguages = await searchRepository.GetSubLanguagesForArtist(artist);
+                await AddSubLanguages(searchRepository, doc, subLanguages);
 
                 doc.Add(
                     new StringField(

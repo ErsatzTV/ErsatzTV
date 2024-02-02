@@ -211,6 +211,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinEpisode episode)
     {
+        if (episode.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Normal;
@@ -225,7 +230,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -234,6 +239,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinSeason season)
     {
+        if (season.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         season.State = MediaItemState.Normal;
@@ -248,7 +258,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -257,6 +267,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<int>> FlagNormal(JellyfinLibrary library, JellyfinShow show)
     {
+        if (show.State is MediaItemState.Normal)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         show.State = MediaItemState.Normal;
@@ -271,7 +286,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 0 WHERE Id = @Id AND State != 0",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -282,7 +297,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         if (showItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -297,7 +312,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
             new { Ids = ids });
 
         return ids;
@@ -307,7 +322,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         if (seasonItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -322,7 +337,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
             new { Ids = ids });
 
         return ids;
@@ -332,7 +347,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         if (episodeItemIds.Count == 0)
         {
-            return new List<int>();
+            return [];
         }
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -347,7 +362,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             .Map(result => result.ToList());
 
         await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+            "UPDATE MediaItem SET State = 1 WHERE Id IN @Ids AND State != 1",
             new { Ids = ids });
 
         return ids;
@@ -355,6 +370,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<int>> FlagUnavailable(JellyfinLibrary library, JellyfinEpisode episode)
     {
+        if (episode.State is MediaItemState.Unavailable)
+        {
+            return Option<int>.None;
+        }
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Unavailable;
@@ -369,7 +389,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 2 WHERE Id = @Id AND State != 2",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 
@@ -378,6 +398,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<int>> FlagRemoteOnly(JellyfinLibrary library, JellyfinEpisode episode)
     {
+        if (episode.State is MediaItemState.RemoteOnly)
+        {
+            return Option<int>.None;
+        }
+        
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.RemoteOnly;
@@ -392,7 +417,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         foreach (int id in maybeId)
         {
             return await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 3 WHERE Id = @Id",
+                "UPDATE MediaItem SET State = 3 WHERE Id = @Id AND State != 3",
                 new { Id = id }).Map(count => count > 0 ? Some(id) : None);
         }
 

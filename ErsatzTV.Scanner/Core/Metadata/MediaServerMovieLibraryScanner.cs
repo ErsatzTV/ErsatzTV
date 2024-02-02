@@ -307,20 +307,26 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
             {
                 if (ServerSupportsRemoteStreaming)
                 {
-                    foreach (int id in await movieRepository.FlagRemoteOnly(library, incoming))
+                    if (existingState is not MediaItemState.RemoteOnly)
                     {
-                        await _mediator.Publish(
-                            new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
-                            CancellationToken.None);
+                        foreach (int id in await movieRepository.FlagRemoteOnly(library, incoming))
+                        {
+                            await _mediator.Publish(
+                                new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
+                                CancellationToken.None);
+                        }
                     }
                 }
                 else
                 {
-                    foreach (int id in await movieRepository.FlagUnavailable(library, incoming))
+                    if (existingState is not MediaItemState.Unavailable)
                     {
-                        await _mediator.Publish(
-                            new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
-                            CancellationToken.None);
+                        foreach (int id in await movieRepository.FlagUnavailable(library, incoming))
+                        {
+                            await _mediator.Publish(
+                                new ScannerProgressUpdate(library.Id, null, null, new[] { id }, Array.Empty<int>()),
+                                CancellationToken.None);
+                        }
                     }
                 }
             }

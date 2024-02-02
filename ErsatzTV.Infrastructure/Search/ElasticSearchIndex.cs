@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 38;
+    public int Version => 39;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -211,6 +211,9 @@ public class ElasticSearchIndex : ISearchIndex
                         .Keyword(t => t.State, t => t.Store(false))
                         .Text(t => t.MetadataKind, t => t.Store(false))
                         .Text(t => t.Language, t => t.Store(false))
+                        .Text(t => t.LanguageTag, t => t.Store(false))
+                        .Text(t => t.SubLanguage, t => t.Store(false))
+                        .Text(t => t.SubLanguageTag, t => t.Store(false))
                         .IntegerNumber(t => t.Height, t => t.Store(false))
                         .IntegerNumber(t => t.Width, t => t.Store(false))
                         .Keyword(t => t.VideoCodec, t => t.Store(false))
@@ -294,6 +297,8 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, movie.MediaVersions),
                     LanguageTag = GetLanguageTags(movie.MediaVersions),
+                    SubLanguage = await GetSubLanguages(searchRepository, movie.MediaVersions),
+                    SubLanguageTag = GetSubLanguageTags(movie.MediaVersions),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -345,6 +350,8 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForShow(show)),
                     LanguageTag = await searchRepository.GetLanguagesForShow(show),
+                    SubLanguage = await GetLanguages(searchRepository, await searchRepository.GetSubLanguagesForShow(show)),
+                    SubLanguageTag = await searchRepository.GetSubLanguagesForShow(show),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -405,6 +412,10 @@ public class ElasticSearchIndex : ISearchIndex
                         searchRepository,
                         await searchRepository.GetLanguagesForSeason(season)),
                     LanguageTag = await searchRepository.GetLanguagesForSeason(season),
+                    SubLanguage = await GetLanguages(
+                        searchRepository,
+                        await searchRepository.GetSubLanguagesForSeason(season)),
+                    SubLanguageTag = await searchRepository.GetSubLanguagesForSeason(season),
                     ContentRating = GetContentRatings(showMetadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -450,6 +461,10 @@ public class ElasticSearchIndex : ISearchIndex
                         searchRepository,
                         await searchRepository.GetLanguagesForArtist(artist)),
                     LanguageTag = await searchRepository.GetLanguagesForArtist(artist),
+                    SubLanguage = await GetLanguages(
+                        searchRepository,
+                        await searchRepository.GetSubLanguagesForArtist(artist)),
+                    SubLanguageTag = await searchRepository.GetSubLanguagesForArtist(artist),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Style = metadata.Styles.Map(t => t.Name).ToList(),
@@ -491,6 +506,8 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, musicVideo.MediaVersions),
                     LanguageTag = GetLanguageTags(musicVideo.MediaVersions),
+                    SubLanguage = await GetSubLanguages(searchRepository, musicVideo.MediaVersions),
+                    SubLanguageTag = GetSubLanguageTags(musicVideo.MediaVersions),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Album = metadata.Album ?? string.Empty,
@@ -570,6 +587,8 @@ public class ElasticSearchIndex : ISearchIndex
                     EpisodeNumber = metadata.EpisodeNumber,
                     Language = await GetLanguages(searchRepository, episode.MediaVersions),
                     LanguageTag = GetLanguageTags(episode.MediaVersions),
+                    SubLanguage = await GetSubLanguages(searchRepository, episode.MediaVersions),
+                    SubLanguageTag = GetSubLanguageTags(episode.MediaVersions),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Plot = metadata.Plot ?? string.Empty,
@@ -629,6 +648,8 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, otherVideo.MediaVersions),
                     LanguageTag = GetLanguageTags(otherVideo.MediaVersions),
+                    SubLanguage = await GetSubLanguages(searchRepository, otherVideo.MediaVersions),
+                    SubLanguageTag = GetSubLanguageTags(otherVideo.MediaVersions),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
                     AddedDate = GetAddedDate(metadata.DateAdded),
@@ -678,6 +699,8 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, song.MediaVersions),
                     LanguageTag = GetLanguageTags(song.MediaVersions),
+                    SubLanguage = await GetSubLanguages(searchRepository, song.MediaVersions),
+                    SubLanguageTag = GetSubLanguageTags(song.MediaVersions),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Album = metadata.Album ?? string.Empty,
                     Artist = !string.IsNullOrWhiteSpace(metadata.Artist) ? new List<string> { metadata.Artist } : null,
@@ -744,6 +767,26 @@ public class ElasticSearchIndex : ISearchIndex
 
         return result;
     }
+    
+    private async Task<List<string>> GetSubLanguages(
+        ISearchRepository searchRepository,
+        IEnumerable<MediaVersion> mediaVersions)
+    {
+        var result = new List<string>();
+
+        foreach (MediaVersion version in mediaVersions.HeadOrNone())
+        {
+            var mediaCodes = version.Streams
+                .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Subtitle)
+                .Map(ms => ms.Language)
+                .Distinct()
+                .ToList();
+
+            result.AddRange(await GetLanguages(searchRepository, mediaCodes));
+        }
+
+        return result;
+    }
 
     private async Task<List<string>> GetLanguages(ISearchRepository searchRepository, List<string> mediaCodes)
     {
@@ -764,6 +807,14 @@ public class ElasticSearchIndex : ISearchIndex
     private static List<string> GetLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
         mediaVersions
             .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio).Map(ms => ms.Language))
+            .Flatten()
+            .Filter(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .ToList();
+
+    private static List<string> GetSubLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
+        mediaVersions
+            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Subtitle).Map(ms => ms.Language))
             .Flatten()
             .Filter(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
