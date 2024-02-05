@@ -76,6 +76,7 @@ public class Program
             // streaming
             .MinimumLevel.Override("ErsatzTV.Application.Streaming", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
+            .MinimumLevel.Override("ErsatzTV.Core.FFmpeg.FFmpegLibraryProcessService", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.IptvController", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("Serilog.AspNetCore.RequestLoggingMiddleware", LoggingLevelSwitches.StreamingLevelSwitch)
             
@@ -98,7 +99,8 @@ public class Program
         {
             loggerConfiguration = loggerConfiguration.WriteTo.Console(
                 theme: AnsiConsoleTheme.Code,
-                formatProvider: CultureInfo.InvariantCulture);
+                formatProvider: CultureInfo.InvariantCulture,
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}");
 
             // for troubleshooting log category
             // outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <{SourceContext:l}> {NewLine}{Exception}"
