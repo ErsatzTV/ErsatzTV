@@ -327,49 +327,26 @@ public class Startup
             "https://github.com/ErsatzTV/ErsatzTV",
             "https://discord.gg/hHaJm3yGy6");
 
-        if (!Directory.Exists(FileSystemLayout.AppDataFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.AppDataFolder);
-        }
+        List<string> directoriesToCreate =
+        [
+            FileSystemLayout.AppDataFolder,
+            FileSystemLayout.TranscodeFolder,
+            FileSystemLayout.TempFilePoolFolder,
+            FileSystemLayout.FontsCacheFolder,
+            FileSystemLayout.TemplatesFolder,
+            FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            FileSystemLayout.ChannelGuideTemplatesFolder,
+            FileSystemLayout.ScriptsFolder,
+            FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
+            FileSystemLayout.AudioStreamSelectorScriptsFolder
+        ];
 
-        if (!Directory.Exists(FileSystemLayout.TranscodeFolder))
+        foreach (string directory in directoriesToCreate)
         {
-            Directory.CreateDirectory(FileSystemLayout.TranscodeFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.TempFilePoolFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.TempFilePoolFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.FontsCacheFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.FontsCacheFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.TemplatesFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.TemplatesFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.MusicVideoCreditsTemplatesFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.MusicVideoCreditsTemplatesFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.ScriptsFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.ScriptsFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.MultiEpisodeShuffleTemplatesFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.MultiEpisodeShuffleTemplatesFolder);
-        }
-
-        if (!Directory.Exists(FileSystemLayout.AudioStreamSelectorScriptsFolder))
-        {
-            Directory.CreateDirectory(FileSystemLayout.AudioStreamSelectorScriptsFolder);
+            if (directory is not null && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
         }
 
         // until we add a setting for a file-specific scheme://host:port to access

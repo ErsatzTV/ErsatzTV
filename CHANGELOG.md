@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - When enabled, embedded text subtitles will be periodically extracted, and considered for playback
 - Add `sub_language` and `sub_language_tag` fields to search index
 - Add `/iptv` request logging to streaming log category at debug level
+- Add channel guide (XMLTV) template system
+    - Templates should be copied from `_channel.sbntxt`, `_movie.sbntxt`, or `_episode.sbntxt` which are located in the config subfolder `templates/channel-guide`
+        - Copy the file, remove the leading underscore from the name, and only make edits to the copied file
+    - The default templates will be extracted and overwritten every time ErsatzTV is started
+    - The templates use [scribian](https://github.com/scriban/scriban/tree/master/doc) template syntax
+    - The templates contain comments describing which fields are available for use in the templates
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
