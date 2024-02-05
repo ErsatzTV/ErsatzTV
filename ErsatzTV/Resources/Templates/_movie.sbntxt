@@ -1,0 +1,56 @@
+{{ ##
+
+Available values:
+  - programme_start
+  - programme_stop
+  - channel_number
+  - has_custom_title
+  - custom_title
+  - movie_title
+  - movie_has_plot
+  - movie_plot
+  - movie_has_year
+  - movie_year
+  - movie_genres
+  - movie_has_artwork
+  - movie_artwork_url
+  - movie_has_content_rating
+  - movie_content_rating
+  - movie_guids
+ 
+The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
+
+## }}
+
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_number }}.etv">
+  {{ if has_custom_title }}
+      <title lang="en">{{ custom_title }}</title>
+  {{ else }}
+      <title lang="en">{{ movie_title }}</title>
+      {{ if movie_has_plot }}
+        <desc lang="en">{{ movie_plot }}</desc>
+      {{ end }}
+      {{ if movie_has_year }}
+        <date>{{ movie_year }}</date>
+      {{ end }}
+      <category lang="en">Movie</category>
+      {{ for genre in movie_genres }}
+        <category lang="en">{{ genre }}</category>
+      {{ end }}
+      {{ if movie_has_artwork }}
+        <icon src="{{ movie_artwork_url }}" />
+      {{ end }}
+  {{ end }}
+  {{ if movie_has_content_rating }}
+    {{ for rating in movie_content_rating | string.split '/' }}
+        {{ if rating | string.starts_with 'us:' }}
+          <rating system="MPAA"> 
+        {{ else }}
+          <rating>
+        {{ end }}
+          <value>{{ rating | string.replace 'us:' '' }}</value>
+        </rating>
+    {{ end }}
+  {{ end }}
+  <previously-shown />
+</programme>

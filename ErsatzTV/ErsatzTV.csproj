@@ -74,6 +74,7 @@
       <EmbeddedResource Include="Resources\Templates\_ArtistTitle_LeftMiddle.sbntxt" />
       <EmbeddedResource Include="Resources\Templates\_ArtistTitleAlbum_CenterTop.sbntxt" />
       <EmbeddedResource Include="Resources\Templates\_channel.sbntxt" />
+      <EmbeddedResource Include="Resources\Templates\_movie.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>

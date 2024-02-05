@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using Newtonsoft.Json;
+using Scriban;
+using WebMarkupMin.Core;
 
 namespace ErsatzTV.Application.Channels;
 
@@ -37,6 +39,23 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
     public async Task Handle(RefreshChannelData request, CancellationToken cancellationToken)
     {
         _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
+
+        string movieTemplateFileName = GetMovieTemplateFileName();
+        if (movieTemplateFileName is null)
+        {
+            return;
+        }
+        
+        var minifier = new XmlMinifier(
+            new XmlMinificationSettings
+            {
+                MinifyWhitespace = true,
+                RemoveXmlComments = true,
+                CollapseTagsWithoutContent = true
+            });
+        
+        string movieText = await File.ReadAllTextAsync(movieTemplateFileName, cancellationToken);
+        var movieTemplate = Template.Parse(movieText, movieTemplateFileName);
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -66,6 +85,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MovieMetadata)
             .ThenInclude(mm => mm.Genres)
+            .Include(p => p.Items)
+            .ThenInclude(i => i.MediaItem)
+            .ThenInclude(i => (i as Movie).MovieMetadata)
+            .ThenInclude(mm => mm.Guids)
             .Include(p => p.Items)
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
@@ -166,6 +189,44 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             string subtitle = GetSubtitle(displayItem);
             string description = GetDescription(displayItem);
             Option<ContentRating> contentRating = GetContentRating(displayItem);
+
+            if (displayItem.MediaItem is Movie templateMovie)
+            {
+                foreach (MovieMetadata metadata in templateMovie.MovieMetadata.HeadOrNone())
+                {
+                    string poster = Optional(metadata.Artwork).Flatten()
+                        .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+                        .HeadOrNone()
+                        .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
+
+                    string result = await movieTemplate.RenderAsync(
+                        new
+                        {
+                            ProgrammeStart = start,
+                            ProgrammeStop = stop,
+                            ChannelNumber = request.ChannelNumber,
+                            HasCustomTitle = hasCustomTitle,
+                            CustomTitle = displayItem.CustomTitle,
+                            MovieTitle = title,
+                            MovieHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                            MoviePlot = metadata.Plot,
+                            MovieHasYear = metadata.Year.HasValue,
+                            MovieYear = metadata.Year,
+                            MovieGenres = metadata.Genres.Map(g => g.Name).ToList(),
+                            MovieHasArtwork = !string.IsNullOrWhiteSpace(poster),
+                            MovieArtworkUrl = poster,
+                            MovieHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
+                            MovieContentRating = metadata.ContentRating,
+                            MovieGuids = metadata.Guids.Map(g => g.Guid)
+                        });
+
+                    MarkupMinificationResult minified = minifier.Minify(result);
+                    await xml.WriteRawAsync(minified.MinifiedContent);
+                }
+
+                i++;
+                continue;
+            }
 
             await xml.WriteStartElementAsync(null, "programme", null);
             await xml.WriteAttributeStringAsync(null, "start", null, start);
@@ -379,6 +440,29 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         File.Move(tempFile, targetFile, true);
+    }
+
+    private string GetMovieTemplateFileName()
+    {
+        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "movie.sbntxt");
+        
+        // fall back to default template
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_movie.sbntxt");
+        }
+        
+        // fail if file doesn't exist
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            _logger.LogError(
+                "Unable to generate movie XMLTV fragment without template file {File}; please restart ErsatzTV",
+                templateFileName);
+
+            return null;
+        }
+
+        return templateFileName;
     }
 
     private static string GetArtworkUrl(Artwork artwork, ArtworkKind artworkKind)
