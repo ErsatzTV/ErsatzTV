@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Default value: `false`
     - When enabled, embedded text subtitles will be periodically extracted, and considered for playback
 - Add `sub_language` and `sub_language_tag` fields to search index
+- Add `/iptv` request logging to streaming log category at debug level 
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts

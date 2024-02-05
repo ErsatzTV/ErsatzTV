@@ -85,6 +85,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
 using Serilog;
+using Serilog.Events;
 
 namespace ErsatzTV;
 
@@ -492,7 +493,34 @@ public class Startup
         app.UseForwardedHeaders();
 
         // app.UseHttpLogging();
-        // app.UseSerilogRequestLogging();
+        app.UseSerilogRequestLogging(
+            options =>
+            {
+                options.IncludeQueryInRequestPath = true;
+
+                // Emit debug-level events instead of the defaults
+                options.GetLevel = (httpContext, elapsed, ex) =>
+                {
+                    if (ex is not null)
+                    {
+                        return LogEventLevel.Error;
+                    }
+
+                    if (httpContext.Response.StatusCode > 499)
+                    {
+                        return LogEventLevel.Error;
+                    }
+
+                    if (httpContext.Request.Path.ToUriComponent().StartsWith(
+                            "/iptv",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        return LogEventLevel.Debug;
+                    }
+
+                    return LogEventLevel.Verbose;
+                };
+            });
 
         app.UseRequestLocalization(
             options =>
