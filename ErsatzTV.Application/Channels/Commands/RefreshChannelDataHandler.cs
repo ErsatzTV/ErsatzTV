@@ -41,7 +41,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
 
         string movieTemplateFileName = GetMovieTemplateFileName();
-        if (movieTemplateFileName is null)
+        string episodeTemplateFileName = GetEpisodeTemplateFileName();
+        if (movieTemplateFileName is null || episodeTemplateFileName is null)
         {
             return;
         }
@@ -57,6 +58,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string movieText = await File.ReadAllTextAsync(movieTemplateFileName, cancellationToken);
         var movieTemplate = Template.Parse(movieText, movieTemplateFileName);
 
+        string episodeText = await File.ReadAllTextAsync(episodeTemplateFileName, cancellationToken);
+        var episodeTemplate = Template.Parse(episodeText, episodeTemplateFileName);
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Playout> playouts = await dbContext.Playouts
@@ -65,6 +69,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .Include(p => p.Items)
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Episode).EpisodeMetadata)
+            .ThenInclude(em => em.Guids)
             .Include(p => p.Items)
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Episode).Season)
@@ -76,7 +81,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .ThenInclude(i => (i as Episode).Season)
             .ThenInclude(s => s.Show)
             .ThenInclude(s => s.ShowMetadata)
-            .ThenInclude(em => em.Genres)
+            .ThenInclude(sm => sm.Genres)
+            .Include(p => p.Items)
+            .ThenInclude(i => i.MediaItem)
+            .ThenInclude(i => (i as Episode).Season)
+            .ThenInclude(s => s.Show)
+            .ThenInclude(s => s.ShowMetadata)
+            .ThenInclude(sm => sm.Guids)
             .Include(p => p.Items)
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MovieMetadata)
@@ -194,6 +205,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             {
                 foreach (MovieMetadata metadata in templateMovie.MovieMetadata.HeadOrNone())
                 {
+                    metadata.Genres ??= [];
+                    metadata.Guids ??= [];
+                    
                     string poster = Optional(metadata.Artwork).Flatten()
                         .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                         .HeadOrNone()
@@ -212,7 +226,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                             MoviePlot = metadata.Plot,
                             MovieHasYear = metadata.Year.HasValue,
                             MovieYear = metadata.Year,
-                            MovieGenres = metadata.Genres.Map(g => g.Name).ToList(),
+                            MovieGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
                             MovieHasArtwork = !string.IsNullOrWhiteSpace(poster),
                             MovieArtworkUrl = poster,
                             MovieHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
@@ -224,6 +238,56 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     await xml.WriteRawAsync(minified.MinifiedContent);
                 }
 
+                i++;
+                continue;
+            }
+
+            if (displayItem.MediaItem is Episode templateEpisode)
+            {
+                foreach (EpisodeMetadata metadata in templateEpisode.EpisodeMetadata.HeadOrNone())
+                {
+                    metadata.Genres ??= [];
+                    metadata.Guids ??= [];
+
+                    foreach (ShowMetadata showMetadata in Optional(
+                                 templateEpisode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten())
+                    {
+                        showMetadata.Genres ??= [];
+                        showMetadata.Guids ??= [];
+
+                        string artworkPath = GetPrioritizedArtworkPath(metadata);
+
+                        string result = await episodeTemplate.RenderAsync(
+                            new
+                            {
+                                ProgrammeStart = start,
+                                ProgrammeStop = stop,
+                                ChannelNumber = request.ChannelNumber,
+                                HasCustomTitle = hasCustomTitle,
+                                CustomTitle = displayItem.CustomTitle,
+                                ShowTitle = title,
+                                EpisodeHasTitle = !string.IsNullOrWhiteSpace(subtitle),
+                                EpisodeTitle = subtitle,
+                                EpisodeHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                                EpisodePlot = metadata.Plot,
+                                ShowHasYear = showMetadata.Year.HasValue,
+                                ShowYear = showMetadata.Year,
+                                ShowGenres = showMetadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                                EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                                EpisodeArtworkUrl = artworkPath,
+                                SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
+                                EpisodeNumber = metadata.EpisodeNumber,
+                                ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
+                                ShowContentRating = showMetadata.ContentRating,
+                                ShowGuids = showMetadata.Guids.Map(g => g.Guid),
+                                EpisodeGuids = metadata.Guids.Map(g => g.Guid)
+                            });
+
+                        MarkupMinificationResult minified = minifier.Minify(result);
+                        await xml.WriteRawAsync(minified.MinifiedContent);
+                    }
+                }
+                
                 i++;
                 continue;
             }
@@ -457,6 +521,29 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         {
             _logger.LogError(
                 "Unable to generate movie XMLTV fragment without template file {File}; please restart ErsatzTV",
+                templateFileName);
+
+            return null;
+        }
+
+        return templateFileName;
+    }
+    
+    private string GetEpisodeTemplateFileName()
+    {
+        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "episode.sbntxt");
+        
+        // fall back to default template
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_episode.sbntxt");
+        }
+        
+        // fail if file doesn't exist
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            _logger.LogError(
+                "Unable to generate episode XMLTV fragment without template file {File}; please restart ErsatzTV",
                 templateFileName);
 
             return null;

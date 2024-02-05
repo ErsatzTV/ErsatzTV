@@ -1,0 +1,63 @@
+{{ ##
+
+Available values:
+  - programme_start
+  - programme_stop
+  - channel_number
+  - has_custom_title
+  - custom_title
+  - show_title
+  - episode_has_title
+  - episode_title
+  - episode_has_plot
+  - episode_plot
+  - show_has_year
+  - show_year
+  - show_genres
+  - episode_has_artwork
+  - episode_artwork_url
+  - season_number
+  - episode_number
+  - show_has_content_rating
+  - show_content_rating
+  - show_guids
+  - episode_guids
+ 
+The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
+
+## }}
+
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_number }}.etv">
+  {{ if has_custom_title }}
+      <title lang="en">{{ custom_title }}</title>
+  {{ else }}
+      <title lang="en">{{ show_title }}</title>
+      {{ if episode_has_title }}
+        <sub-title lang="en">{{ episode_title }}</sub-title>
+      {{ end }}
+      {{ if episode_has_plot }}
+        <desc lang="en">{{ episode_plot }}</desc>
+      {{ end }}
+      <category lang="en">Series</category>
+      {{ for genre in show_genres }}
+        <category lang="en">{{ genre }}</category>
+      {{ end }}
+      {{ if episode_has_artwork }}
+        <icon src="{{ episode_artwork_url }}" />
+      {{ end }}
+  {{ end }}
+  <episode-num system="onscreen">S{{ season_number | math.format '00' }}E{{ episode_number | math.format '00' }}</episode-num>
+  <episode-num system="xmltv_ns">{{ season_number - 1 }}.{{ episode_number - 1 }}.0/1</episode-num>
+  {{ if show_has_content_rating }}
+    {{ for rating in show_content_rating | string.split '/' }}
+        {{ if rating | string.downcase | string.starts_with 'us:' }}
+          <rating system="VCHIP"> 
+        {{ else }}
+          <rating>
+        {{ end }}
+          <value>{{ rating | string.replace 'us:' '' | string.replace 'US:' '' }}</value>
+        </rating>
+    {{ end }}
+  {{ end }}
+  <previously-shown />
+</programme>
