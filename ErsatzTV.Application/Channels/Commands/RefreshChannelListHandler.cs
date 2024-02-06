@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using Scriban;
+using Scriban.Runtime;
 using WebMarkupMin.Core;
 
 namespace ErsatzTV.Application.Channels;
@@ -65,6 +66,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         
         string text = await File.ReadAllTextAsync(templateFileName, cancellationToken);
         var template = Template.Parse(text, templateFileName);
+        var templateContext = new XmlTemplateContext();
         
         await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         await using var xml = XmlWriter.Create(
@@ -73,15 +75,20 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
 
         await foreach (ChannelResult channel in GetChannels(dbContext).WithCancellation(cancellationToken))
         {
-            string result = await template.RenderAsync(
-                new
-                {
-                    ChannelNumber = channel.Number,
-                    ChannelName = channel.Name,
-                    ChannelCategories = GetCategories(channel.Categories),
-                    ChannelHasArtwork = !string.IsNullOrWhiteSpace(channel.ArtworkPath),
-                    ChannelArtworkPath = channel.ArtworkPath
-                });
+            var data = new
+            {
+                ChannelNumber = channel.Number,
+                ChannelName = channel.Name,
+                ChannelCategories = GetCategories(channel.Categories),
+                ChannelHasArtwork = !string.IsNullOrWhiteSpace(channel.ArtworkPath),
+                ChannelArtworkPath = channel.ArtworkPath
+            };
+            
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(data);
+            templateContext.PushGlobal(scriptObject);
+
+            string result = await template.RenderAsync(templateContext);
 
             MarkupMinificationResult minified = minifier.Minify(result);
             await xml.WriteRawAsync(minified.MinifiedContent);

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using Newtonsoft.Json;
 using Scriban;
+using Scriban.Runtime;
 using WebMarkupMin.Core;
 
 namespace ErsatzTV.Application.Channels;
@@ -54,6 +55,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 RemoveXmlComments = true,
                 CollapseTagsWithoutContent = true
             });
+
+        var templateContext = new XmlTemplateContext();
         
         string movieText = await File.ReadAllTextAsync(movieTemplateFileName, cancellationToken);
         var movieTemplate = Template.Parse(movieText, movieTemplateFileName);
@@ -213,26 +216,31 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         .HeadOrNone()
                         .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
 
-                    string result = await movieTemplate.RenderAsync(
-                        new
-                        {
-                            ProgrammeStart = start,
-                            ProgrammeStop = stop,
-                            ChannelNumber = request.ChannelNumber,
-                            HasCustomTitle = hasCustomTitle,
-                            CustomTitle = displayItem.CustomTitle,
-                            MovieTitle = title,
-                            MovieHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
-                            MoviePlot = metadata.Plot,
-                            MovieHasYear = metadata.Year.HasValue,
-                            MovieYear = metadata.Year,
-                            MovieGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
-                            MovieHasArtwork = !string.IsNullOrWhiteSpace(poster),
-                            MovieArtworkUrl = poster,
-                            MovieHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
-                            MovieContentRating = metadata.ContentRating,
-                            MovieGuids = metadata.Guids.Map(g => g.Guid)
-                        });
+                    var data = new
+                    {
+                        ProgrammeStart = start,
+                        ProgrammeStop = stop,
+                        ChannelNumber = request.ChannelNumber,
+                        HasCustomTitle = hasCustomTitle,
+                        CustomTitle = displayItem.CustomTitle,
+                        MovieTitle = title,
+                        MovieHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                        MoviePlot = metadata.Plot,
+                        MovieHasYear = metadata.Year.HasValue,
+                        MovieYear = metadata.Year,
+                        MovieGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                        MovieHasArtwork = !string.IsNullOrWhiteSpace(poster),
+                        MovieArtworkUrl = poster,
+                        MovieHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
+                        MovieContentRating = metadata.ContentRating,
+                        MovieGuids = metadata.Guids.Map(g => g.Guid)
+                    };
+
+                    var scriptObject = new ScriptObject();
+                    scriptObject.Import(data);
+                    templateContext.PushGlobal(scriptObject);
+
+                    string result = await movieTemplate.RenderAsync(templateContext);
 
                     MarkupMinificationResult minified = minifier.Minify(result);
                     await xml.WriteRawAsync(minified.MinifiedContent);
@@ -257,31 +265,36 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
                         string artworkPath = GetPrioritizedArtworkPath(metadata);
 
-                        string result = await episodeTemplate.RenderAsync(
-                            new
-                            {
-                                ProgrammeStart = start,
-                                ProgrammeStop = stop,
-                                ChannelNumber = request.ChannelNumber,
-                                HasCustomTitle = hasCustomTitle,
-                                CustomTitle = displayItem.CustomTitle,
-                                ShowTitle = title,
-                                EpisodeHasTitle = !string.IsNullOrWhiteSpace(subtitle),
-                                EpisodeTitle = subtitle,
-                                EpisodeHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
-                                EpisodePlot = metadata.Plot,
-                                ShowHasYear = showMetadata.Year.HasValue,
-                                ShowYear = showMetadata.Year,
-                                ShowGenres = showMetadata.Genres.Map(g => g.Name).OrderBy(n => n),
-                                EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
-                                EpisodeArtworkUrl = artworkPath,
-                                SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
-                                EpisodeNumber = metadata.EpisodeNumber,
-                                ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
-                                ShowContentRating = showMetadata.ContentRating,
-                                ShowGuids = showMetadata.Guids.Map(g => g.Guid),
-                                EpisodeGuids = metadata.Guids.Map(g => g.Guid)
-                            });
+                        var data = new
+                        {
+                            ProgrammeStart = start,
+                            ProgrammeStop = stop,
+                            ChannelNumber = request.ChannelNumber,
+                            HasCustomTitle = hasCustomTitle,
+                            CustomTitle = displayItem.CustomTitle,
+                            ShowTitle = title,
+                            EpisodeHasTitle = !string.IsNullOrWhiteSpace(subtitle),
+                            EpisodeTitle = subtitle,
+                            EpisodeHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                            EpisodePlot = metadata.Plot,
+                            ShowHasYear = showMetadata.Year.HasValue,
+                            ShowYear = showMetadata.Year,
+                            ShowGenres = showMetadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                            EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                            EpisodeArtworkUrl = artworkPath,
+                            SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
+                            EpisodeNumber = metadata.EpisodeNumber,
+                            ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
+                            ShowContentRating = showMetadata.ContentRating,
+                            ShowGuids = showMetadata.Guids.Map(g => g.Guid),
+                            EpisodeGuids = metadata.Guids.Map(g => g.Guid)
+                        };
+                        
+                        var scriptObject = new ScriptObject();
+                        scriptObject.Import(data);
+                        templateContext.PushGlobal(scriptObject);
+
+                        string result = await episodeTemplate.RenderAsync(templateContext);
 
                         MarkupMinificationResult minified = minifier.Minify(result);
                         await xml.WriteRawAsync(minified.MinifiedContent);
