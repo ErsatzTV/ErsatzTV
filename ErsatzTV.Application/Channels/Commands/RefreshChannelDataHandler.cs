@@ -43,7 +43,8 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string movieTemplateFileName = GetMovieTemplateFileName();
         string episodeTemplateFileName = GetEpisodeTemplateFileName();
-        if (movieTemplateFileName is null || episodeTemplateFileName is null)
+        string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
+        if (movieTemplateFileName is null || episodeTemplateFileName is null || musicVideoTemplateFileName is null)
         {
             return;
         }
@@ -63,6 +64,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string episodeText = await File.ReadAllTextAsync(episodeTemplateFileName, cancellationToken);
         var episodeTemplate = Template.Parse(episodeText, episodeTemplateFileName);
+
+        string musicVideoText = await File.ReadAllTextAsync(musicVideoTemplateFileName, cancellationToken);
+        var musicVideoTemplate = Template.Parse(musicVideoText, musicVideoTemplateFileName);
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -304,6 +308,62 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 i++;
                 continue;
             }
+            
+            if (displayItem.MediaItem is MusicVideo templateMusicVideo)
+            {
+                foreach (MusicVideoMetadata metadata in templateMusicVideo.MusicVideoMetadata.HeadOrNone())
+                {
+                    metadata.Genres ??= [];
+                    metadata.Artists ??= [];
+                    metadata.Studios ??= [];
+                    metadata.Directors ??= [];
+                    
+                    string artworkPath = GetPrioritizedArtworkPath(metadata);
+
+                    Option<ArtistMetadata> maybeMetadata =
+                        Optional(templateMusicVideo.Artist?.ArtistMetadata.HeadOrNone()).Flatten();
+
+                    var data = new
+                    {
+                        ProgrammeStart = start,
+                        ProgrammeStop = stop,
+                        ChannelNumber = request.ChannelNumber,
+                        HasCustomTitle = hasCustomTitle,
+                        CustomTitle = displayItem.CustomTitle,
+                        ArtistTitle = title,
+                        MusicVideoTitle = subtitle,
+                        MusicVideoHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                        MusicVideoPlot = metadata.Plot,
+                        MusicVideoHasYear = metadata.Year.HasValue,
+                        MusicVideoYear = metadata.Year,
+                        MusicVideoGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                        ArtistGenres = maybeMetadata.SelectMany(m => m.Genres.Map(g => g.Name)).OrderBy(n => n),
+                        MusicVideoHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                        MusicVideoArtworkUrl = artworkPath,
+                        MusicVideoHasTrack = metadata.Track.HasValue,
+                        MusicVideoTrack = metadata.Track,
+                        MusicVideoHasAlbum = !string.IsNullOrWhiteSpace(metadata.Album),
+                        MusicVideoAlbum = metadata.Album,
+                        MusicVideoHasReleaseDate = metadata.ReleaseDate.HasValue,
+                        MusicVideoReleaseDate = metadata.ReleaseDate,
+                        MusicVideoAllArtists = metadata.Artists.Map(a => a.Name),
+                        MusicVideoStudios = metadata.Studios.Map(s => s.Name),
+                        MusicVideoDirectors = metadata.Directors.Map(d => d.Name)
+                    };
+
+                    var scriptObject = new ScriptObject();
+                    scriptObject.Import(data);
+                    templateContext.PushGlobal(scriptObject);
+
+                    string result = await musicVideoTemplate.RenderAsync(templateContext);
+
+                    MarkupMinificationResult minified = minifier.Minify(result);
+                    await xml.WriteRawAsync(minified.MinifiedContent);
+                }
+
+                i++;
+                continue;
+            }
 
             await xml.WriteStartElementAsync(null, "programme", null);
             await xml.WriteAttributeStringAsync(null, "start", null, start);
@@ -334,93 +394,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 }
             }
 
-            if (!hasCustomTitle && displayItem.MediaItem is Movie movie)
-            {
-                foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
-                {
-                    if (metadata.Year.HasValue)
-                    {
-                        await xml.WriteStartElementAsync(null, "date", null);
-                        await xml.WriteStringAsync(metadata.Year.Value.ToString(CultureInfo.InvariantCulture));
-                        await xml.WriteEndElementAsync(); // date
-                    }
-
-                    await xml.WriteStartElementAsync(null, "category", null);
-                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                    await xml.WriteStringAsync("Movie");
-                    await xml.WriteEndElementAsync(); // category
-
-                    foreach (Genre genre in Optional(metadata.Genres).Flatten().OrderBy(g => g.Name))
-                    {
-                        await xml.WriteStartElementAsync(null, "category", null);
-                        await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                        await xml.WriteStringAsync(genre.Name);
-                        await xml.WriteEndElementAsync(); // category
-                    }
-
-                    string poster = Optional(metadata.Artwork).Flatten()
-                        .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
-                        .HeadOrNone()
-                        .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
-
-                    if (!string.IsNullOrWhiteSpace(poster))
-                    {
-                        await xml.WriteStartElementAsync(null, "icon", null);
-                        await xml.WriteAttributeStringAsync(null, "src", null, poster);
-                        await xml.WriteEndElementAsync(); // icon
-                    }
-                }
-            }
-
-            if (!hasCustomTitle && displayItem.MediaItem is MusicVideo musicVideo)
-            {
-                foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
-                {
-                    if (metadata.Year.HasValue)
-                    {
-                        await xml.WriteStartElementAsync(null, "date", null);
-                        await xml.WriteStringAsync(metadata.Year.Value.ToString(CultureInfo.InvariantCulture));
-                        await xml.WriteEndElementAsync(); // date
-                    }
-
-                    await xml.WriteStartElementAsync(null, "category", null);
-                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                    await xml.WriteStringAsync("Music");
-                    await xml.WriteEndElementAsync(); // category
-
-                    // music video genres
-                    foreach (Genre genre in Optional(metadata.Genres).Flatten().OrderBy(g => g.Name))
-                    {
-                        await xml.WriteStartElementAsync(null, "category", null);
-                        await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                        await xml.WriteStringAsync(genre.Name);
-                        await xml.WriteEndElementAsync(); // category
-                    }
-
-                    // artist genres
-                    Option<ArtistMetadata> maybeMetadata =
-                        Optional(musicVideo.Artist?.ArtistMetadata.HeadOrNone()).Flatten();
-                    foreach (ArtistMetadata artistMetadata in maybeMetadata)
-                    {
-                        foreach (Genre genre in Optional(artistMetadata.Genres).Flatten().OrderBy(g => g.Name))
-                        {
-                            await xml.WriteStartElementAsync(null, "category", null);
-                            await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                            await xml.WriteStringAsync(genre.Name);
-                            await xml.WriteEndElementAsync(); // category
-                        }
-                    }
-
-                    string artworkPath = GetPrioritizedArtworkPath(metadata);
-                    if (!string.IsNullOrWhiteSpace(artworkPath))
-                    {
-                        await xml.WriteStartElementAsync(null, "icon", null);
-                        await xml.WriteAttributeStringAsync(null, "src", null, artworkPath);
-                        await xml.WriteEndElementAsync(); // icon
-                    }
-                }
-            }
-
             if (!hasCustomTitle && displayItem.MediaItem is Song song)
             {
                 await xml.WriteStartElementAsync(null, "category", null);
@@ -436,54 +409,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         await xml.WriteStartElementAsync(null, "icon", null);
                         await xml.WriteAttributeStringAsync(null, "src", null, artworkPath);
                         await xml.WriteEndElementAsync(); // icon
-                    }
-                }
-            }
-
-            if (displayItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
-            {
-                Option<ShowMetadata> maybeMetadata =
-                    Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();
-                foreach (ShowMetadata metadata in maybeMetadata)
-                {
-                    await xml.WriteStartElementAsync(null, "category", null);
-                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                    await xml.WriteStringAsync("Series");
-                    await xml.WriteEndElementAsync(); // category
-
-                    foreach (Genre genre in Optional(metadata.Genres).Flatten().OrderBy(g => g.Name))
-                    {
-                        await xml.WriteStartElementAsync(null, "category", null);
-                        await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                        await xml.WriteStringAsync(genre.Name);
-                        await xml.WriteEndElementAsync(); // category
-                    }
-
-                    string artworkPath = GetPrioritizedArtworkPath(metadata);
-                    if (!string.IsNullOrWhiteSpace(artworkPath))
-                    {
-                        await xml.WriteStartElementAsync(null, "icon", null);
-                        await xml.WriteAttributeStringAsync(null, "src", null, artworkPath);
-                        await xml.WriteEndElementAsync(); // icon
-                    }
-                }
-
-                if (!isSameCustomShow)
-                {
-                    int s = await Optional(episode.Season?.SeasonNumber).IfNoneAsync(-1);
-                    // TODO: multi-episode?
-                    int e = episode.EpisodeMetadata.HeadOrNone().Match(em => em.EpisodeNumber, -1);
-                    if (s >= 0 && e > 0)
-                    {
-                        await xml.WriteStartElementAsync(null, "episode-num", null);
-                        await xml.WriteAttributeStringAsync(null, "system", null, "onscreen");
-                        await xml.WriteStringAsync($"S{s:00}E{e:00}");
-                        await xml.WriteEndElementAsync(); // episode-num
-
-                        await xml.WriteStartElementAsync(null, "episode-num", null);
-                        await xml.WriteAttributeStringAsync(null, "system", null, "xmltv_ns");
-                        await xml.WriteStringAsync($"{s - 1}.{e - 1}.0/1");
-                        await xml.WriteEndElementAsync(); // episode-num
                     }
                 }
             }
@@ -557,6 +482,29 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         {
             _logger.LogError(
                 "Unable to generate episode XMLTV fragment without template file {File}; please restart ErsatzTV",
+                templateFileName);
+
+            return null;
+        }
+
+        return templateFileName;
+    }
+    
+    private string GetMusicVideoTemplateFileName()
+    {
+        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "musicVideo.sbntxt");
+        
+        // fall back to default template
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_musicVideo.sbntxt");
+        }
+        
+        // fail if file doesn't exist
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            _logger.LogError(
+                "Unable to generate music video XMLTV fragment without template file {File}; please restart ErsatzTV",
                 templateFileName);
 
             return null;

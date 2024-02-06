@@ -1,0 +1,57 @@
+{{ ##
+
+Available values:
+  - programme_start
+  - programme_stop
+  - channel_number
+  - has_custom_title
+  - custom_title
+  - artist_title
+  - music_video_title
+  - music_video_has_plot
+  - music_video_plot
+  - music_video_has_year
+  - music_video_year
+  - music_video_genres
+  - artist_genres
+  - music_video_has_artwork
+  - music_video_artwork_url
+  - music_video_has_track
+  - music_video_track
+  - music_video_has_album
+  - music_video_album
+  - music_video_has_release_date
+  - music_video_release_date
+  - music_video_all_artists
+  - music_video_studios
+  - music_video_directors
+ 
+The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
+
+## }}
+
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_number }}.etv">
+  {{ if has_custom_title }}
+      <title lang="en">{{ custom_title }}</title>
+  {{ else }}
+      <title lang="en">{{ artist_title }}</title>
+      <sub-title lang="en">{{ music_video_title }}</sub-title>
+      {{ if music_video_has_plot }}
+        <desc lang="en">{{ music_video_plot }}</desc>
+      {{ end }}
+      {{ if music_video_has_year }}
+        <date>{{ music_video_year }}</date>
+      {{ end }}
+      <category lang="en">Music</category>
+      {{ for genre in music_video_genres }}
+        <category lang="en">{{ genre }}</category>
+      {{ end }}
+      {{ for genre in artist_genres }}
+        <category lang="en">{{ genre }}</category>
+      {{ end }}
+      {{ if music_video_has_artwork }}
+        <icon src="{{ music_video_artwork_url }}" />
+      {{ end }}
+  {{ end }}
+  <previously-shown />
+</programme>
