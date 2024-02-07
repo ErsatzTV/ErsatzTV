@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 39;
+    public int Version => 40;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -777,7 +777,7 @@ public class ElasticSearchIndex : ISearchIndex
         foreach (MediaVersion version in mediaVersions.HeadOrNone())
         {
             var mediaCodes = version.Streams
-                .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Subtitle)
+                .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
                 .Map(ms => ms.Language)
                 .Distinct()
                 .ToList();
@@ -814,7 +814,10 @@ public class ElasticSearchIndex : ISearchIndex
 
     private static List<string> GetSubLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
         mediaVersions
-            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Subtitle).Map(ms => ms.Language))
+            .Map(
+                mv => mv.Streams
+                    .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+                    .Map(ms => ms.Language))
             .Flatten()
             .Filter(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()

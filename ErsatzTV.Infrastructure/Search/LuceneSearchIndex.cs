@@ -111,7 +111,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 39;
+    public int Version => 40;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -513,9 +513,12 @@ public sealed class LuceneSearchIndex : ISearchIndex
             .ToList();
 
         await AddLanguages(searchRepository, doc, mediaCodes);
-        
+
         var subMediaCodes = mediaVersions
-            .Map(mv => mv.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Subtitle).Map(ms => ms.Language))
+            .Map(
+                mv => mv.Streams
+                    .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+                    .Map(ms => ms.Language))
             .Flatten()
             .Filter(c => !string.IsNullOrWhiteSpace(c))
             .Distinct()
