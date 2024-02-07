@@ -25,12 +25,16 @@ public class GetGeneralSettingsHandler : IRequestHandler<GetGeneralSettings, Gen
         Option<LogEventLevel> maybeStreamingLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelStreaming);
         
+        Option<LogEventLevel> maybeHttpLevel =
+            await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelHttp);
+
         return new GeneralSettingsViewModel
         {
             DefaultMinimumLogLevel = await maybeDefaultLevel.IfNoneAsync(LogEventLevel.Information),
             ScanningMinimumLogLevel = await maybeScanningLevel.IfNoneAsync(LogEventLevel.Information),
             SchedulingMinimumLogLevel = await maybeSchedulingLevel.IfNoneAsync(LogEventLevel.Information),
             StreamingMinimumLogLevel = await maybeStreamingLevel.IfNoneAsync(LogEventLevel.Information),
+            HttpMinimumLogLevel = await maybeHttpLevel.IfNoneAsync(LogEventLevel.Information)
         };
     }
 }

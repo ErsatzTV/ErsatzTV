@@ -11,4 +11,6 @@ public class LoggingLevelSwitches
     public LoggingLevelSwitch SchedulingLevelSwitch { get; } = new();
 
     public LoggingLevelSwitch StreamingLevelSwitch { get; } = new();
+
+    public LoggingLevelSwitch HttpLevelSwitch { get; } = new();
 }

@@ -58,6 +58,7 @@ public class Program
         LoggingLevelSwitches.ScanningLevelSwitch.MinimumLevel = LogEventLevel.Information;
         LoggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = LogEventLevel.Information;
         LoggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = LogEventLevel.Information;
+        LoggingLevelSwitches.HttpLevelSwitch.MinimumLevel = LogEventLevel.Information;
 
         LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
@@ -78,7 +79,9 @@ public class Program
             .MinimumLevel.Override("ErsatzTV.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Core.FFmpeg.FFmpegLibraryProcessService", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.IptvController", LoggingLevelSwitches.StreamingLevelSwitch)
-            .MinimumLevel.Override("Serilog.AspNetCore.RequestLoggingMiddleware", LoggingLevelSwitches.StreamingLevelSwitch)
+            
+            // http
+            .MinimumLevel.Override("Serilog.AspNetCore.RequestLoggingMiddleware", LoggingLevelSwitches.HttpLevelSwitch)
             
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
