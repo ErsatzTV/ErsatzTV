@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Default value: `false`
     - When enabled, embedded text subtitles will be periodically extracted, and considered for playback
 - Add `sub_language` and `sub_language_tag` fields to search index
-- Add `/iptv` request logging to streaming log category at debug level
+- Add `/iptv` request logging in its own log category at debug level
 - Add channel guide (XMLTV) template system
     - Templates should be copied from `_channel.sbntxt`, `_movie.sbntxt`, `_episode.sbntxt`, or `_musicVideo.sbntxt` which are located in the config subfolder `templates/channel-guide`
         - Copy the file, remove the leading underscore from the name, and only make edits to the copied file

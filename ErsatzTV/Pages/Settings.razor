@@ -169,6 +169,15 @@
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
                 </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Request Logging Minimum Log Level"
+                           @bind-Value="_generalSettings.HttpMinimumLogLevel"
+                           For="@(() => _generalSettings.HttpMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
             </MudForm>
         </MudCardContent>
         <MudCardActions>

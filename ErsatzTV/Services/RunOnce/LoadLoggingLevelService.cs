@@ -54,5 +54,11 @@ public class LoadLoggingLevelService : BackgroundService
             LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
             loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = logLevel;
         }
+
+        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelHttp))
+        {
+            LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
+            loggingLevelSwitches.HttpLevelSwitch.MinimumLevel = logLevel;
+        }
     }
 }

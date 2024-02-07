@@ -35,6 +35,9 @@ public class UpdateGeneralSettingsHandler : IRequestHandler<UpdateGeneralSetting
         await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelStreaming, generalSettings.StreamingMinimumLogLevel);
         _loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = generalSettings.StreamingMinimumLogLevel;
 
+        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelHttp, generalSettings.HttpMinimumLogLevel);
+        _loggingLevelSwitches.HttpLevelSwitch.MinimumLevel = generalSettings.HttpMinimumLogLevel;
+
         return Unit.Default;
     }
 }

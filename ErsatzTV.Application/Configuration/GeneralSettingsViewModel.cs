@@ -8,4 +8,5 @@ public class GeneralSettingsViewModel
     public LogEventLevel ScanningMinimumLogLevel { get; set; }
     public LogEventLevel SchedulingMinimumLogLevel { get; set; }
     public LogEventLevel StreamingMinimumLogLevel { get; set; }
+    public LogEventLevel HttpMinimumLogLevel { get; set; }
 }
