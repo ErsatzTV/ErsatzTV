@@ -2188,13 +2188,13 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("Album")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("AlbumArtist")
+                    b.Property<string>("AlbumArtists")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Artist")
+                    b.Property<string>("Artists")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Date")
+                    b.Property<string>("Comment")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateAdded")

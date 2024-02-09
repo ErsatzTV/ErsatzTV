@@ -111,7 +111,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 40;
+    public int Version => 41;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1238,14 +1238,14 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     doc.Add(new TextField(AlbumField, metadata.Album, Field.Store.NO));
                 }
 
-                if (!string.IsNullOrWhiteSpace(metadata.Artist))
+                foreach (string artist in metadata.Artists)
                 {
-                    doc.Add(new TextField(ArtistField, metadata.Artist, Field.Store.NO));
+                    doc.Add(new TextField(ArtistField, artist, Field.Store.NO));
                 }
-
-                if (!string.IsNullOrWhiteSpace(metadata.AlbumArtist))
+                
+                foreach (string albumArtist in metadata.AlbumArtists)
                 {
-                    doc.Add(new TextField(AlbumArtistField, metadata.AlbumArtist, Field.Store.NO));
+                    doc.Add(new TextField(AlbumArtistField, albumArtist, Field.Store.NO));
                 }
 
                 foreach (Tag tag in metadata.Tags)

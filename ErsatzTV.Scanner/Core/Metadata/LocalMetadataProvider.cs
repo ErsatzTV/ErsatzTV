@@ -198,7 +198,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
     public async Task<bool> RefreshTagMetadata(Song song, string ffprobePath)
     {
-        Option<SongMetadata> maybeMetadata = await LoadSongMetadata(song, ffprobePath);
+        Option<SongMetadata> maybeMetadata = LoadSongMetadata(song, ffprobePath);
         foreach (SongMetadata metadata in maybeMetadata)
         {
             return await ApplyMetadataUpdate(song, metadata);
@@ -296,19 +296,17 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
     }
 
-    private async Task<Option<SongMetadata>> LoadSongMetadata(Song song, string ffprobePath)
+    private Option<SongMetadata> LoadSongMetadata(Song song, string ffprobePath)
     {
         string path = song.GetHeadVersion().MediaFiles.Head().Path;
 
         try
         {
-            Either<BaseError, Dictionary<string, string>> maybeTags =
-                await _localStatisticsProvider.GetSongTags(ffprobePath, song);
+            var maybeTags = _localStatisticsProvider.GetSongTags(ffprobePath, song);
 
-            foreach (Dictionary<string, string> tags in maybeTags.RightToSeq())
+            foreach (List<SongTag> tags in maybeTags.RightToSeq())
             {
-                Option<SongMetadata> maybeFallbackMetadata =
-                    _fallbackMetadataProvider.GetFallbackMetadata(song);
+                Option<SongMetadata> maybeFallbackMetadata = _fallbackMetadataProvider.GetFallbackMetadata(song);
 
                 var result = new SongMetadata
                 {
@@ -316,46 +314,42 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     DateAdded = DateTime.UtcNow,
                     DateUpdated = File.GetLastWriteTimeUtc(path),
 
-                    Artwork = new List<Artwork>(),
-                    Actors = new List<Actor>(),
-                    Genres = new List<Genre>(),
-                    Studios = new List<Studio>(),
-                    Tags = new List<Tag>()
+                    Artists = [],
+                    AlbumArtists = [],
+
+                    Artwork = [],
+                    Actors = [],
+                    Genres = [],
+                    Studios = [],
+                    Tags = []
                 };
 
-                if (tags.TryGetValue(MetadataSongTag.Album, out string? album))
+                foreach (SongTag tag in tags)
                 {
-                    result.Album = album;
-                }
-
-                if (tags.TryGetValue(MetadataSongTag.Artist, out string? artist))
-                {
-                    result.Artist = artist;
-                }
-
-                if (tags.TryGetValue(MetadataSongTag.AlbumArtist, out string? albumArtist))
-                {
-                    result.AlbumArtist = albumArtist;
-                }
-
-                if (tags.TryGetValue(MetadataSongTag.Date, out string? date))
-                {
-                    result.Date = date;
-                }
-
-                if (tags.TryGetValue(MetadataSongTag.Genre, out string? genre))
-                {
-                    result.Genres.AddRange(SplitGenres(genre).Map(n => new Genre { Name = n }));
-                }
-
-                if (tags.TryGetValue(MetadataSongTag.Title, out string? title))
-                {
-                    result.Title = title;
-                }
-
-                if (tags.TryGetValue(MetadataSongTag.Track, out string? track))
-                {
-                    result.Track = track;
+                    switch (tag.Tag)
+                    {
+                        case MetadataSongTag.Album:
+                            result.Album = tag.Value;
+                            break;
+                        case MetadataSongTag.Artist:
+                            result.Artists.Add(tag.Value);
+                            break;
+                        case MetadataSongTag.AlbumArtist:
+                            result.AlbumArtists.Add(tag.Value);
+                            break;
+                        case MetadataSongTag.Genre:
+                            result.Genres.Add(new Genre { Name = tag.Value });
+                            break;
+                        case MetadataSongTag.Title:
+                            result.Title = tag.Value;
+                            break;
+                        case MetadataSongTag.Track:
+                            result.Track = tag.Value;
+                            break;
+                        case MetadataSongTag.Comment:
+                            result.Comment = tag.Value;
+                            break;
+                    }
                 }
 
                 foreach (SongMetadata fallbackMetadata in maybeFallbackMetadata)
@@ -981,11 +975,11 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         foreach (SongMetadata existing in maybeMetadata)
         {
             existing.Title = metadata.Title;
-            existing.Artist = metadata.Artist;
-            existing.AlbumArtist = metadata.AlbumArtist;
+            existing.Artists = metadata.Artists;
+            existing.AlbumArtists = metadata.AlbumArtists;
             existing.Album = metadata.Album;
-            existing.Date = metadata.Date;
             existing.Track = metadata.Track;
+            existing.Comment = metadata.Comment;
 
             if (existing.DateAdded == SystemTime.MinValueUtc)
             {

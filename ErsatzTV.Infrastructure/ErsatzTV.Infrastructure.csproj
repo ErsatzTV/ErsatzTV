@@ -32,6 +32,7 @@
       <PackageReference Include="Refit.Newtonsoft.Json" Version="7.0.0" />
       <PackageReference Include="Refit.Xml" Version="7.0.0" />
       <PackageReference Include="Scriban.Signed" Version="5.9.1" />
+      <PackageReference Include="TagLibSharp" Version="2.3.0" />
     </ItemGroup>
 
     <ItemGroup>

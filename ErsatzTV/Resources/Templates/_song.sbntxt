@@ -1,0 +1,49 @@
+{{ ##
+
+Available values:
+  - programme_start
+  - programme_stop
+  - channel_number
+  - has_custom_title
+  - custom_title
+  - song_title
+  - song_artists
+  - song_album_artists
+  - song_has_year
+  - song_year
+  - song_genres
+  - song_has_artwork
+  - song_artwork_url
+  - song_has_track
+  - song_track
+  - song_has_comment
+  - song_comment
+  - song_has_album
+  - song_album
+  - song_has_release_date
+  - song_release_date
+  - song_studios
+ 
+The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
+
+## }}
+
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_number }}.etv">
+  {{ if has_custom_title }}
+      <title lang="en">{{ custom_title }}</title>
+  {{ else }}
+      <title lang="en">{{ song_artists | array.join ', ' }}</title>
+      <sub-title lang="en">{{ song_title }}</sub-title>
+      {{ if song_has_year }}
+        <date>{{ song_year }}</date>
+      {{ end }}
+      <category lang="en">Music</category>
+      {{ for genre in song_genres }}
+        <category lang="en">{{ genre }}</category>
+      {{ end }}
+      {{ if song_has_artwork }}
+        <icon src="{{ song_artwork_url }}" />
+      {{ end }}
+  {{ end }}
+  <previously-shown />
+</programme>

@@ -71,7 +71,7 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     public string Album { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.AlbumArtistField)]
-    public string AlbumArtist { get; set; }
+    public List<string> AlbumArtist { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.PlotField)]
     public string Plot { get; set; }

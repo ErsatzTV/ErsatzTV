@@ -25,8 +25,6 @@ using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Metadata;
 using ErsatzTV.Infrastructure.Runtime;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
-using ErsatzTV.Scanner.Core.Metadata;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -290,16 +288,16 @@ public class TranscodingTests
 
         var song = new Song
         {
-            SongMetadata = new List<SongMetadata>
-            {
-                new()
+            SongMetadata =
+            [
+                new SongMetadata
                 {
                     Title = "Song Title",
-                    Artist = "Song Artist",
-                    Artwork = new List<Artwork>()
+                    Artists = ["Song Artist"],
+                    Artwork = []
                 }
-            },
-            MediaVersions = new List<MediaVersion> { songVersion }
+            ],
+            MediaVersions = [songVersion]
         };
 
         (string videoPath, MediaVersion videoVersion) = await songVideoGenerator.GenerateSongVideo(

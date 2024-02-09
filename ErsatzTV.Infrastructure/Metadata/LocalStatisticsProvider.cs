@@ -11,8 +11,10 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using Lucene.Net.Util.Fst;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using File = TagLib.File;
 
 namespace ErsatzTV.Infrastructure.Metadata;
 
@@ -61,111 +63,44 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
     }
 
-    public async Task<Either<BaseError, Dictionary<string, string>>> GetSongTags(
-        string ffprobePath,
-        MediaItem mediaItem)
+    public Either<BaseError, List<SongTag>> GetSongTags(string ffprobePath, MediaItem mediaItem)
     {
         try
         {
+
             string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
-            Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, mediaItemPath);
-            foreach (BaseError error in maybeProbe.LeftToSeq())
+            var song = File.Create(mediaItemPath);
+
+            var result = new List<SongTag>();
+
+            // album
+            if (!string.IsNullOrWhiteSpace(song.Tag.Album))
             {
-                return error;
+                result.Add(new SongTag(MetadataSongTag.Album, song.Tag.Album));
             }
+            
+            // album artist(s)
+            IEnumerable<string> albumArtists = song.Tag.AlbumArtists.Filter(a => !string.IsNullOrWhiteSpace(a));
+            result.AddRange(albumArtists.Map(albumArtist => new SongTag(MetadataSongTag.AlbumArtist, albumArtist)));
+            
+            // artist(s)
+            IEnumerable<string> artists = song.Tag.Performers.Filter(p => !string.IsNullOrWhiteSpace(p));
+            result.AddRange(artists.Map(artist => new SongTag(MetadataSongTag.Artist, artist)));
 
-            Option<FFprobeTags> maybeFormatTags = maybeProbe.RightToSeq()
-                .Map(p => p?.format?.tags ?? FFprobeTags.Empty)
-                .HeadOrNone();
+            // genre(s)
+            IEnumerable<string> genres = song.Tag.Genres.Filter(g => !string.IsNullOrWhiteSpace(g));
+            result.AddRange(genres.Map(genre => new SongTag(MetadataSongTag.Genre, genre)));
 
-            Option<FFprobeTags> maybeAudioTags = maybeProbe.RightToSeq()
-                .Bind(p => p.streams.Filter(s => s.codec_type == "audio").HeadOrNone())
-                .Map(s => s.tags ?? FFprobeTags.Empty)
-                .HeadOrNone();
-
-            foreach (FFprobeTags formatTags in maybeFormatTags)
-            foreach (FFprobeTags audioTags in maybeAudioTags)
+            // title
+            if (!string.IsNullOrWhiteSpace(song.Tag.Title))
             {
-                var result = new Dictionary<string, string>();
-
-                // album
-                if (!string.IsNullOrWhiteSpace(formatTags.album))
-                {
-                    result.Add(MetadataSongTag.Album, formatTags.album);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.album))
-                {
-                    result.Add(MetadataSongTag.Album, audioTags.album);
-                }
-
-                // album artist
-                if (!string.IsNullOrWhiteSpace(formatTags.albumArtist))
-                {
-                    result.Add(MetadataSongTag.AlbumArtist, formatTags.albumArtist);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.albumArtist))
-                {
-                    result.Add(MetadataSongTag.AlbumArtist, audioTags.albumArtist);
-                }
-
-                // artist
-                if (!string.IsNullOrWhiteSpace(formatTags.artist))
-                {
-                    result.Add(MetadataSongTag.Artist, formatTags.artist);
-
-                    // if no album artist is present, use the track artist
-                    result.TryAdd(MetadataSongTag.AlbumArtist, formatTags.artist);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.artist))
-                {
-                    result.Add(MetadataSongTag.Artist, audioTags.artist);
-
-                    // if no album artist is present, use the track artist
-                    result.TryAdd(MetadataSongTag.AlbumArtist, audioTags.artist);
-                }
-
-                // date
-                if (!string.IsNullOrWhiteSpace(formatTags.date))
-                {
-                    result.Add(MetadataSongTag.Date, formatTags.date);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.date))
-                {
-                    result.Add(MetadataSongTag.Date, audioTags.date);
-                }
-
-                // genre
-                if (!string.IsNullOrWhiteSpace(formatTags.genre))
-                {
-                    result.Add(MetadataSongTag.Genre, formatTags.genre);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.genre))
-                {
-                    result.Add(MetadataSongTag.Genre, audioTags.genre);
-                }
-
-                // title
-                if (!string.IsNullOrWhiteSpace(formatTags.title))
-                {
-                    result.Add(MetadataSongTag.Title, formatTags.title);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.title))
-                {
-                    result.Add(MetadataSongTag.Title, audioTags.title);
-                }
-
-                // track
-                if (!string.IsNullOrWhiteSpace(formatTags.track))
-                {
-                    result.Add(MetadataSongTag.Track, formatTags.track);
-                }
-                else if (!string.IsNullOrWhiteSpace(audioTags.track))
-                {
-                    result.Add(MetadataSongTag.Track, audioTags.track);
-                }
-
-                return result;
+                result.Add(new SongTag(MetadataSongTag.Title, song.Tag.Title));
             }
+            
+            // track
+            result.Add(new SongTag(MetadataSongTag.Track, song.Tag.Track.ToString(CultureInfo.InvariantCulture)));
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -173,8 +108,6 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
-
-        return BaseError.New("BUG - this should never happen");
     }
 
     private async Task<Either<BaseError, bool>> RefreshStatistics(
