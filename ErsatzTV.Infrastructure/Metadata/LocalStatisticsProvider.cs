@@ -96,6 +96,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 result.Add(new SongTag(MetadataSongTag.Title, song.Tag.Title));
             }
+
+            if (!string.IsNullOrWhiteSpace(song.Tag.Comment))
+            {
+                result.Add(new SongTag(MetadataSongTag.Comment, song.Tag.Comment));
+            }
             
             // track
             result.Add(new SongTag(MetadataSongTag.Track, song.Tag.Track.ToString(CultureInfo.InvariantCulture)));
