@@ -220,163 +220,55 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             string description = GetDescription(displayItem);
             Option<ContentRating> contentRating = GetContentRating(displayItem);
 
-            if (displayItem.MediaItem is Movie templateMovie)
+            Option<string> maybeTemplateOutput = displayItem.MediaItem switch
             {
-                foreach (MovieMetadata metadata in templateMovie.MovieMetadata.HeadOrNone())
-                {
-                    metadata.Genres ??= [];
-                    metadata.Guids ??= [];
-                    
-                    string poster = Optional(metadata.Artwork).Flatten()
-                        .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
-                        .HeadOrNone()
-                        .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
+                Movie templateMovie => await ProcessMovieTemplate(
+                    request,
+                    templateMovie,
+                    start,
+                    stop,
+                    hasCustomTitle,
+                    displayItem,
+                    title,
+                    templateContext,
+                    movieTemplate),
+                Episode templateEpisode => await ProcessEpisodeTemplate(
+                    request,
+                    templateEpisode,
+                    start,
+                    stop,
+                    hasCustomTitle,
+                    displayItem,
+                    title,
+                    subtitle,
+                    templateContext,
+                    episodeTemplate),
+                MusicVideo templateMusicVideo => await ProcessMusicVideoTemplate(
+                    request,
+                    templateMusicVideo,
+                    start,
+                    stop,
+                    hasCustomTitle,
+                    displayItem,
+                    title,
+                    subtitle,
+                    templateContext,
+                    musicVideoTemplate),
+                _ => Option<string>.None
+            };
 
-                    var data = new
-                    {
-                        ProgrammeStart = start,
-                        ProgrammeStop = stop,
-                        ChannelNumber = request.ChannelNumber,
-                        HasCustomTitle = hasCustomTitle,
-                        CustomTitle = displayItem.CustomTitle,
-                        MovieTitle = title,
-                        MovieHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
-                        MoviePlot = metadata.Plot,
-                        MovieHasYear = metadata.Year.HasValue,
-                        MovieYear = metadata.Year,
-                        MovieGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
-                        MovieHasArtwork = !string.IsNullOrWhiteSpace(poster),
-                        MovieArtworkUrl = poster,
-                        MovieHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
-                        MovieContentRating = metadata.ContentRating,
-                        MovieGuids = metadata.Guids.Map(g => g.Guid)
-                    };
-
-                    var scriptObject = new ScriptObject();
-                    scriptObject.Import(data);
-                    templateContext.PushGlobal(scriptObject);
-
-                    string result = await movieTemplate.RenderAsync(templateContext);
-
-                    MarkupMinificationResult minified = minifier.Minify(result);
-                    await xml.WriteRawAsync(minified.MinifiedContent);
-                }
-
-                i++;
-                continue;
+            foreach (string templateOutput in maybeTemplateOutput)
+            {
+                MarkupMinificationResult minified = minifier.Minify(templateOutput);
+                await xml.WriteRawAsync(minified.MinifiedContent);
             }
 
-            if (displayItem.MediaItem is Episode templateEpisode)
+            if (maybeTemplateOutput.IsSome)
             {
-                foreach (EpisodeMetadata metadata in templateEpisode.EpisodeMetadata.HeadOrNone())
-                {
-                    metadata.Genres ??= [];
-                    metadata.Guids ??= [];
-
-                    foreach (ShowMetadata showMetadata in Optional(
-                                 templateEpisode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten())
-                    {
-                        showMetadata.Genres ??= [];
-                        showMetadata.Guids ??= [];
-
-                        string artworkPath = GetPrioritizedArtworkPath(metadata);
-
-                        var data = new
-                        {
-                            ProgrammeStart = start,
-                            ProgrammeStop = stop,
-                            ChannelNumber = request.ChannelNumber,
-                            HasCustomTitle = hasCustomTitle,
-                            CustomTitle = displayItem.CustomTitle,
-                            ShowTitle = title,
-                            EpisodeHasTitle = !string.IsNullOrWhiteSpace(subtitle),
-                            EpisodeTitle = subtitle,
-                            EpisodeHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
-                            EpisodePlot = metadata.Plot,
-                            ShowHasYear = showMetadata.Year.HasValue,
-                            ShowYear = showMetadata.Year,
-                            ShowGenres = showMetadata.Genres.Map(g => g.Name).OrderBy(n => n),
-                            EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
-                            EpisodeArtworkUrl = artworkPath,
-                            SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
-                            EpisodeNumber = metadata.EpisodeNumber,
-                            ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
-                            ShowContentRating = showMetadata.ContentRating,
-                            ShowGuids = showMetadata.Guids.Map(g => g.Guid),
-                            EpisodeGuids = metadata.Guids.Map(g => g.Guid)
-                        };
-                        
-                        var scriptObject = new ScriptObject();
-                        scriptObject.Import(data);
-                        templateContext.PushGlobal(scriptObject);
-
-                        string result = await episodeTemplate.RenderAsync(templateContext);
-
-                        MarkupMinificationResult minified = minifier.Minify(result);
-                        await xml.WriteRawAsync(minified.MinifiedContent);
-                    }
-                }
-                
                 i++;
                 continue;
             }
             
-            if (displayItem.MediaItem is MusicVideo templateMusicVideo)
-            {
-                foreach (MusicVideoMetadata metadata in templateMusicVideo.MusicVideoMetadata.HeadOrNone())
-                {
-                    metadata.Genres ??= [];
-                    metadata.Artists ??= [];
-                    metadata.Studios ??= [];
-                    metadata.Directors ??= [];
-                    
-                    string artworkPath = GetPrioritizedArtworkPath(metadata);
-
-                    Option<ArtistMetadata> maybeMetadata =
-                        Optional(templateMusicVideo.Artist?.ArtistMetadata.HeadOrNone()).Flatten();
-
-                    var data = new
-                    {
-                        ProgrammeStart = start,
-                        ProgrammeStop = stop,
-                        ChannelNumber = request.ChannelNumber,
-                        HasCustomTitle = hasCustomTitle,
-                        CustomTitle = displayItem.CustomTitle,
-                        ArtistTitle = title,
-                        MusicVideoTitle = subtitle,
-                        MusicVideoHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
-                        MusicVideoPlot = metadata.Plot,
-                        MusicVideoHasYear = metadata.Year.HasValue,
-                        MusicVideoYear = metadata.Year,
-                        MusicVideoGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
-                        ArtistGenres = maybeMetadata.SelectMany(m => m.Genres.Map(g => g.Name)).OrderBy(n => n),
-                        MusicVideoHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
-                        MusicVideoArtworkUrl = artworkPath,
-                        MusicVideoHasTrack = metadata.Track.HasValue,
-                        MusicVideoTrack = metadata.Track,
-                        MusicVideoHasAlbum = !string.IsNullOrWhiteSpace(metadata.Album),
-                        MusicVideoAlbum = metadata.Album,
-                        MusicVideoHasReleaseDate = metadata.ReleaseDate.HasValue,
-                        MusicVideoReleaseDate = metadata.ReleaseDate,
-                        MusicVideoAllArtists = metadata.Artists.Map(a => a.Name),
-                        MusicVideoStudios = metadata.Studios.Map(s => s.Name),
-                        MusicVideoDirectors = metadata.Directors.Map(d => d.Name)
-                    };
-
-                    var scriptObject = new ScriptObject();
-                    scriptObject.Import(data);
-                    templateContext.PushGlobal(scriptObject);
-
-                    string result = await musicVideoTemplate.RenderAsync(templateContext);
-
-                    MarkupMinificationResult minified = minifier.Minify(result);
-                    await xml.WriteRawAsync(minified.MinifiedContent);
-                }
-
-                i++;
-                continue;
-            }
-
             await xml.WriteStartElementAsync(null, "programme", null);
             await xml.WriteAttributeStringAsync(null, "start", null, start);
             await xml.WriteAttributeStringAsync(null, "stop", null, stop);
@@ -454,6 +346,180 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         File.Move(tempFile, targetFile, true);
+    }
+
+    private static async Task<Option<string>> ProcessMovieTemplate(
+        RefreshChannelData request,
+        Movie templateMovie,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        PlayoutItem displayItem,
+        string title,
+        XmlTemplateContext templateContext,
+        Template movieTemplate)
+    {
+        foreach (MovieMetadata metadata in templateMovie.MovieMetadata.HeadOrNone())
+        {
+            metadata.Genres ??= [];
+            metadata.Guids ??= [];
+                    
+            string poster = Optional(metadata.Artwork).Flatten()
+                .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+                .HeadOrNone()
+                .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
+
+            var data = new
+            {
+                ProgrammeStart = start,
+                ProgrammeStop = stop,
+                ChannelNumber = request.ChannelNumber,
+                HasCustomTitle = hasCustomTitle,
+                CustomTitle = displayItem.CustomTitle,
+                MovieTitle = title,
+                MovieHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                MoviePlot = metadata.Plot,
+                MovieHasYear = metadata.Year.HasValue,
+                MovieYear = metadata.Year,
+                MovieGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                MovieHasArtwork = !string.IsNullOrWhiteSpace(poster),
+                MovieArtworkUrl = poster,
+                MovieHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
+                MovieContentRating = metadata.ContentRating,
+                MovieGuids = metadata.Guids.Map(g => g.Guid)
+            };
+
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(data);
+            templateContext.PushGlobal(scriptObject);
+
+            return await movieTemplate.RenderAsync(templateContext);
+        }
+
+        return Option<string>.None;
+    }
+    
+    private static async Task<Option<string>> ProcessEpisodeTemplate(
+        RefreshChannelData request,
+        Episode templateEpisode,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        PlayoutItem displayItem,
+        string title,
+        string subtitle,
+        XmlTemplateContext templateContext,
+        Template episodeTemplate)
+    {
+        foreach (EpisodeMetadata metadata in templateEpisode.EpisodeMetadata.HeadOrNone())
+        {
+            metadata.Genres ??= [];
+            metadata.Guids ??= [];
+
+            foreach (ShowMetadata showMetadata in Optional(
+                         templateEpisode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten())
+            {
+                showMetadata.Genres ??= [];
+                showMetadata.Guids ??= [];
+
+                string artworkPath = GetPrioritizedArtworkPath(metadata);
+
+                var data = new
+                {
+                    ProgrammeStart = start,
+                    ProgrammeStop = stop,
+                    ChannelNumber = request.ChannelNumber,
+                    HasCustomTitle = hasCustomTitle,
+                    CustomTitle = displayItem.CustomTitle,
+                    ShowTitle = title,
+                    EpisodeHasTitle = !string.IsNullOrWhiteSpace(subtitle),
+                    EpisodeTitle = subtitle,
+                    EpisodeHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                    EpisodePlot = metadata.Plot,
+                    ShowHasYear = showMetadata.Year.HasValue,
+                    ShowYear = showMetadata.Year,
+                    ShowGenres = showMetadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                    EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                    EpisodeArtworkUrl = artworkPath,
+                    SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
+                    EpisodeNumber = metadata.EpisodeNumber,
+                    ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
+                    ShowContentRating = showMetadata.ContentRating,
+                    ShowGuids = showMetadata.Guids.Map(g => g.Guid),
+                    EpisodeGuids = metadata.Guids.Map(g => g.Guid)
+                };
+                
+                var scriptObject = new ScriptObject();
+                scriptObject.Import(data);
+                templateContext.PushGlobal(scriptObject);
+
+                return await episodeTemplate.RenderAsync(templateContext);
+            }
+        }
+
+        return Option<string>.None;
+    }
+
+    private static async Task<Option<string>> ProcessMusicVideoTemplate(
+        RefreshChannelData request,
+        MusicVideo templateMusicVideo,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        PlayoutItem displayItem,
+        string title,
+        string subtitle,
+        XmlTemplateContext templateContext,
+        Template musicVideoTemplate)
+    {
+        foreach (MusicVideoMetadata metadata in templateMusicVideo.MusicVideoMetadata.HeadOrNone())
+        {
+            metadata.Genres ??= [];
+            metadata.Artists ??= [];
+            metadata.Studios ??= [];
+            metadata.Directors ??= [];
+
+            string artworkPath = GetPrioritizedArtworkPath(metadata);
+
+            Option<ArtistMetadata> maybeMetadata =
+                Optional(templateMusicVideo.Artist?.ArtistMetadata.HeadOrNone()).Flatten();
+
+            var data = new
+            {
+                ProgrammeStart = start,
+                ProgrammeStop = stop,
+                ChannelNumber = request.ChannelNumber,
+                HasCustomTitle = hasCustomTitle,
+                CustomTitle = displayItem.CustomTitle,
+                ArtistTitle = title,
+                MusicVideoTitle = subtitle,
+                MusicVideoHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                MusicVideoPlot = metadata.Plot,
+                MusicVideoHasYear = metadata.Year.HasValue,
+                MusicVideoYear = metadata.Year,
+                MusicVideoGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                ArtistGenres = maybeMetadata.SelectMany(m => m.Genres.Map(g => g.Name)).OrderBy(n => n),
+                MusicVideoHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                MusicVideoArtworkUrl = artworkPath,
+                MusicVideoHasTrack = metadata.Track.HasValue,
+                MusicVideoTrack = metadata.Track,
+                MusicVideoHasAlbum = !string.IsNullOrWhiteSpace(metadata.Album),
+                MusicVideoAlbum = metadata.Album,
+                MusicVideoHasReleaseDate = metadata.ReleaseDate.HasValue,
+                MusicVideoReleaseDate = metadata.ReleaseDate,
+                MusicVideoAllArtists = metadata.Artists.Map(a => a.Name),
+                MusicVideoStudios = metadata.Studios.Map(s => s.Name),
+                MusicVideoDirectors = metadata.Directors.Map(d => d.Name)
+            };
+
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(data);
+            templateContext.PushGlobal(scriptObject);
+
+            return await musicVideoTemplate.RenderAsync(templateContext);
+        }
+
+        return Option<string>.None;
     }
 
     private string GetMovieTemplateFileName()
