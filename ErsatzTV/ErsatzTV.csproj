@@ -77,6 +77,7 @@
       <EmbeddedResource Include="Resources\Templates\_episode.sbntxt" />
       <EmbeddedResource Include="Resources\Templates\_movie.sbntxt" />
       <EmbeddedResource Include="Resources\Templates\_musicVideo.sbntxt" />
+      <EmbeddedResource Include="Resources\Templates\_song.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>

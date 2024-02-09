@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 40;
+    public int Version => 41;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -703,8 +703,8 @@ public class ElasticSearchIndex : ISearchIndex
                     SubLanguageTag = GetSubLanguageTags(song.MediaVersions),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Album = metadata.Album ?? string.Empty,
-                    Artist = !string.IsNullOrWhiteSpace(metadata.Artist) ? new List<string> { metadata.Artist } : null,
-                    AlbumArtist = metadata.AlbumArtist,
+                    Artist = metadata.Artists.ToList(),
+                    AlbumArtist = metadata.AlbumArtists.ToList(),
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList()
                 };

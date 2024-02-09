@@ -45,23 +45,6 @@ internal class ChronologicalMediaComparer : IComparer<MediaItem>
             return date1.CompareTo(date2);
         }
 
-        string songDate1 = x switch
-        {
-            Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Date ?? string.Empty, () => string.Empty),
-            _ => string.Empty
-        };
-
-        string songDate2 = y switch
-        {
-            Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Date ?? string.Empty, () => string.Empty),
-            _ => string.Empty
-        };
-
-        if (songDate1 != songDate2)
-        {
-            return string.Compare(songDate1, songDate2, StringComparison.Ordinal);
-        }
-
         int season1 = x switch
         {
             Episode e => e.Season?.SeasonNumber ?? int.MaxValue,

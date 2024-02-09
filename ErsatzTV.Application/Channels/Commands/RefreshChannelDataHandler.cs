@@ -44,11 +44,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string movieTemplateFileName = GetMovieTemplateFileName();
         string episodeTemplateFileName = GetEpisodeTemplateFileName();
         string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
-        if (movieTemplateFileName is null || episodeTemplateFileName is null || musicVideoTemplateFileName is null)
+        string songTemplateFileName = GetSongTemplateFileName();
+        if (movieTemplateFileName is null || episodeTemplateFileName is null || musicVideoTemplateFileName is null ||
+            songTemplateFileName is null)
         {
             return;
         }
-        
+
         var minifier = new XmlMinifier(
             new XmlMinificationSettings
             {
@@ -67,6 +69,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string musicVideoText = await File.ReadAllTextAsync(musicVideoTemplateFileName, cancellationToken);
         var musicVideoTemplate = Template.Parse(musicVideoText, musicVideoTemplateFileName);
+
+        string songText = await File.ReadAllTextAsync(songTemplateFileName, cancellationToken);
+        var songTemplate = Template.Parse(songText, songTemplateFileName);
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -140,6 +145,14 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .ThenInclude(i => i.MediaItem)
             .ThenInclude(i => (i as Song).SongMetadata)
             .ThenInclude(vm => vm.Artwork)
+            .Include(p => p.Items)
+            .ThenInclude(i => i.MediaItem)
+            .ThenInclude(i => (i as Song).SongMetadata)
+            .ThenInclude(sm => sm.Genres)
+            .Include(p => p.Items)
+            .ThenInclude(i => i.MediaItem)
+            .ThenInclude(i => (i as Song).SongMetadata)
+            .ThenInclude(sm => sm.Studios)
             .ToListAsync(cancellationToken);
 
         List<PlayoutItem> sorted = [];
@@ -254,6 +267,17 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     subtitle,
                     templateContext,
                     musicVideoTemplate),
+                Song templateSong => await ProcessSongTemplate(
+                    request,
+                    templateSong,
+                    start,
+                    stop,
+                    hasCustomTitle,
+                    displayItem,
+                    title,
+                    subtitle,
+                    templateContext,
+                    songTemplate),
                 _ => Option<string>.None
             };
 
@@ -295,25 +319,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     await xml.WriteAttributeStringAsync(null, "lang", null, "en");
                     await xml.WriteStringAsync(description);
                     await xml.WriteEndElementAsync(); // desc
-                }
-            }
-
-            if (!hasCustomTitle && displayItem.MediaItem is Song song)
-            {
-                await xml.WriteStartElementAsync(null, "category", null);
-                await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                await xml.WriteStringAsync("Music");
-                await xml.WriteEndElementAsync(); // category
-
-                foreach (SongMetadata metadata in song.SongMetadata.HeadOrNone())
-                {
-                    string artworkPath = GetPrioritizedArtworkPath(metadata);
-                    if (!string.IsNullOrWhiteSpace(artworkPath))
-                    {
-                        await xml.WriteStartElementAsync(null, "icon", null);
-                        await xml.WriteAttributeStringAsync(null, "src", null, artworkPath);
-                        await xml.WriteEndElementAsync(); // icon
-                    }
                 }
             }
 
@@ -521,6 +526,61 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return Option<string>.None;
     }
+    
+    private async Task<Option<string>> ProcessSongTemplate(
+        RefreshChannelData request,
+        Song templateSong,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        PlayoutItem displayItem,
+        string title,
+        string subtitle,
+        XmlTemplateContext templateContext,
+        Template songTemplate)
+    {
+        foreach (SongMetadata metadata in templateSong.SongMetadata.HeadOrNone())
+        {
+            metadata.Genres ??= [];
+            metadata.Studios ??= [];
+
+            string artworkPath = GetPrioritizedArtworkPath(metadata);
+
+            var data = new
+            {
+                ProgrammeStart = start,
+                ProgrammeStop = stop,
+                ChannelNumber = request.ChannelNumber,
+                HasCustomTitle = hasCustomTitle,
+                CustomTitle = displayItem.CustomTitle,
+                SongTitle = subtitle,
+                SongArtists = metadata.Artists,
+                SongAlbumArtists = metadata.AlbumArtists,
+                SongHasYear = metadata.Year.HasValue,
+                SongYear = metadata.Year,
+                SongGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                SongHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
+                SongArtworkUrl = artworkPath,
+                SongHasTrack = !string.IsNullOrWhiteSpace(metadata.Track),
+                SongTrack = metadata.Track,
+                SongHasComment = !string.IsNullOrWhiteSpace(metadata.Comment),
+                SongComment = metadata.Comment,
+                SongHasAlbum = !string.IsNullOrWhiteSpace(metadata.Album),
+                SongAlbum = metadata.Album,
+                SongHasReleaseDate = metadata.ReleaseDate.HasValue,
+                SongReleaseDate = metadata.ReleaseDate,
+                SongStudios = metadata.Studios.Map(s => s.Name),
+            };
+
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(data);
+            templateContext.PushGlobal(scriptObject);
+
+            return await songTemplate.RenderAsync(templateContext);
+        }
+
+        return Option<string>.None;
+    }
 
     private string GetMovieTemplateFileName()
     {
@@ -590,6 +650,29 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return templateFileName;
     }
+    
+    private string GetSongTemplateFileName()
+    {
+        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "song.sbntxt");
+        
+        // fall back to default template
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_song.sbntxt");
+        }
+        
+        // fail if file doesn't exist
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            _logger.LogError(
+                "Unable to generate song XMLTV fragment without template file {File}; please restart ErsatzTV",
+                templateFileName);
+
+            return null;
+        }
+
+        return templateFileName;
+    }
 
     private static string GetArtworkUrl(Artwork artwork, ArtworkKind artworkKind)
     {
@@ -644,8 +727,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 .IfNone("[unknown artist]"),
             OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Map(vm => vm.Title ?? string.Empty)
                 .IfNone("[unknown video]"),
-            Song s => s.SongMetadata.HeadOrNone().Map(sm => sm.Artist ?? string.Empty)
-                .IfNone("[unknown artist]"),
             _ => "[unknown]"
         };
     }

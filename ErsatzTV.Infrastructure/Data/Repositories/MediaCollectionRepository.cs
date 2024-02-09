@@ -397,7 +397,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         var allArtists = items.OfType<Song>()
             .SelectMany(s => s.SongMetadata)
-            .Map(sm => sm.AlbumArtist)
+            .Map(sm => sm.AlbumArtists.HeadOrNone().Match(aa => aa, string.Empty))
             .Distinct()
             .ToList();
 
@@ -409,11 +409,16 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         var songArtistCollections = new Dictionary<int, List<MediaItem>>();
         foreach (Song song in items.OfType<Song>())
         {
-            int key = allArtists.IndexOf(song.SongMetadata.HeadOrNone().Match(sm => sm.AlbumArtist, string.Empty));
+            string firstArtist = song.SongMetadata
+                .SelectMany(sm => sm.AlbumArtists)
+                .HeadOrNone()
+                .Match(aa => aa, string.Empty);
+
+            int key = allArtists.IndexOf(firstArtist);
 
             List<MediaItem> list = songArtistCollections.TryGetValue(key, out List<MediaItem> collection)
                 ? collection
-                : new List<MediaItem>();
+                : [];
 
             if (list.All(i => i.Id != song.Id))
             {

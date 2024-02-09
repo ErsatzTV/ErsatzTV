@@ -66,7 +66,7 @@ internal static class Mapper
                     .IfNone("[unknown video]");
             case Song s:
                 string songArtist = s.SongMetadata.HeadOrNone()
-                    .Map(sm => string.IsNullOrWhiteSpace(sm.Artist) ? string.Empty : $"{sm.Artist} - ")
+                    .Map(sm => $"{string.Join(", ", sm.Artists)} - ")
                     .IfNone(string.Empty);
                 return s.SongMetadata.HeadOrNone()
                     .Map(sm => $"{songArtist}{sm.Title ?? string.Empty}")
