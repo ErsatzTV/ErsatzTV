@@ -45,8 +45,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string episodeTemplateFileName = GetEpisodeTemplateFileName();
         string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
         string songTemplateFileName = GetSongTemplateFileName();
+        string otherVideoTemplateFileName = GetOtherVideoTemplateFileName();
         if (movieTemplateFileName is null || episodeTemplateFileName is null || musicVideoTemplateFileName is null ||
-            songTemplateFileName is null)
+            songTemplateFileName is null || otherVideoTemplateFileName is null)
         {
             return;
         }
@@ -72,6 +73,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string songText = await File.ReadAllTextAsync(songTemplateFileName, cancellationToken);
         var songTemplate = Template.Parse(songText, songTemplateFileName);
+
+        string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
+        var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -230,8 +234,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
             string title = GetTitle(displayItem);
             string subtitle = GetSubtitle(displayItem);
-            string description = GetDescription(displayItem);
-            Option<ContentRating> contentRating = GetContentRating(displayItem);
 
             Option<string> maybeTemplateOutput = displayItem.MediaItem switch
             {
@@ -278,6 +280,16 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     subtitle,
                     templateContext,
                     songTemplate),
+                OtherVideo templateOtherVideo => await ProcessOtherVideoTemplate(
+                    request,
+                    templateOtherVideo,
+                    start,
+                    stop,
+                    hasCustomTitle,
+                    displayItem,
+                    title,
+                    templateContext,
+                    otherVideoTemplate),
                 _ => Option<string>.None
             };
 
@@ -286,60 +298,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 MarkupMinificationResult minified = minifier.Minify(templateOutput);
                 await xml.WriteRawAsync(minified.MinifiedContent);
             }
-
-            if (maybeTemplateOutput.IsSome)
-            {
-                i++;
-                continue;
-            }
-            
-            await xml.WriteStartElementAsync(null, "programme", null);
-            await xml.WriteAttributeStringAsync(null, "start", null, start);
-            await xml.WriteAttributeStringAsync(null, "stop", null, stop);
-            await xml.WriteAttributeStringAsync(null, "channel", null, $"{request.ChannelNumber}.etv");
-
-            await xml.WriteStartElementAsync(null, "title", null);
-            await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-            await xml.WriteStringAsync(title);
-            await xml.WriteEndElementAsync(); // title
-
-            if (!string.IsNullOrWhiteSpace(subtitle))
-            {
-                await xml.WriteStartElementAsync(null, "sub-title", null);
-                await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                await xml.WriteStringAsync(subtitle);
-                await xml.WriteEndElementAsync(); // subtitle
-            }
-
-            if (!isSameCustomShow)
-            {
-                if (!string.IsNullOrWhiteSpace(description))
-                {
-                    await xml.WriteStartElementAsync(null, "desc", null);
-                    await xml.WriteAttributeStringAsync(null, "lang", null, "en");
-                    await xml.WriteStringAsync(description);
-                    await xml.WriteEndElementAsync(); // desc
-                }
-            }
-
-            await xml.WriteStartElementAsync(null, "previously-shown", null);
-            await xml.WriteEndElementAsync(); // previously-shown
-
-            foreach (ContentRating rating in contentRating)
-            {
-                await xml.WriteStartElementAsync(null, "rating", null);
-                foreach (string system in rating.System)
-                {
-                    await xml.WriteAttributeStringAsync(null, "system", null, system);
-                }
-
-                await xml.WriteStartElementAsync(null, "value", null);
-                await xml.WriteStringAsync(rating.Value);
-                await xml.WriteEndElementAsync(); // value
-                await xml.WriteEndElementAsync(); // rating
-            }
-
-            await xml.WriteEndElementAsync(); // programme
 
             i++;
         }
@@ -581,6 +539,49 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return Option<string>.None;
     }
+    
+    private static async Task<Option<string>> ProcessOtherVideoTemplate(
+        RefreshChannelData request,
+        OtherVideo templateOtherVideo,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        PlayoutItem displayItem,
+        string title,
+        XmlTemplateContext templateContext,
+        Template otherVideoTemplate)
+    {
+        foreach (OtherVideoMetadata metadata in templateOtherVideo.OtherVideoMetadata.HeadOrNone())
+        {
+            metadata.Genres ??= [];
+            metadata.Guids ??= [];
+                    
+            var data = new
+            {
+                ProgrammeStart = start,
+                ProgrammeStop = stop,
+                ChannelNumber = request.ChannelNumber,
+                HasCustomTitle = hasCustomTitle,
+                CustomTitle = displayItem.CustomTitle,
+                OtherVideoTitle = title,
+                OtherVideoHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
+                OtherVideoPlot = metadata.Plot,
+                OtherVideoHasYear = metadata.Year.HasValue,
+                OtherVideoYear = metadata.Year,
+                OtherVideoGenres = metadata.Genres.Map(g => g.Name).OrderBy(n => n),
+                OtherVideoHasContentRating = !string.IsNullOrWhiteSpace(metadata.ContentRating),
+                OtherVideoContentRating = metadata.ContentRating
+            };
+
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(data);
+            templateContext.PushGlobal(scriptObject);
+
+            return await otherVideoTemplate.RenderAsync(templateContext);
+        }
+
+        return Option<string>.None;
+    }
 
     private string GetMovieTemplateFileName()
     {
@@ -666,6 +667,29 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         {
             _logger.LogError(
                 "Unable to generate song XMLTV fragment without template file {File}; please restart ErsatzTV",
+                templateFileName);
+
+            return null;
+        }
+
+        return templateFileName;
+    }
+    
+    private string GetOtherVideoTemplateFileName()
+    {
+        string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "otherVideo.sbntxt");
+        
+        // fall back to default template
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_otherVideo.sbntxt");
+        }
+        
+        // fail if file doesn't exist
+        if (!_localFileSystem.FileExists(templateFileName))
+        {
+            _logger.LogError(
+                "Unable to generate other video XMLTV fragment without template file {File}; please restart ErsatzTV",
                 templateFileName);
 
             return null;
