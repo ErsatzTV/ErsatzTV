@@ -255,10 +255,11 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
             metadata.Title = match.Success
                 ? match.Groups[2].Value.Trim()
                 : Path.GetFileNameWithoutExtension(fileName);
-            metadata.Artists = new List<MusicVideoArtist>();
-            metadata.Genres = new List<Genre>();
-            metadata.Tags = new List<Tag>();
-            metadata.Studios = new List<Studio>();
+            metadata.Artists = [];
+            metadata.Genres = [];
+            metadata.Tags = [];
+            metadata.Studios = [];
+            metadata.Directors = [];
             metadata.DateUpdated = DateTime.UtcNow;
 
             return metadata;
