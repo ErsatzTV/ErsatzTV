@@ -1895,6 +1895,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("CollectionType")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IncludeInProgramGuide")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("Index")
                         .HasColumnType("int");
 

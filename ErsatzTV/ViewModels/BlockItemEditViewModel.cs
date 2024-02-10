@@ -59,6 +59,8 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
     };
 
     public PlaybackOrder PlaybackOrder { get; set; }
+    
+    public bool IncludeInProgramGuide { get; set; }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {

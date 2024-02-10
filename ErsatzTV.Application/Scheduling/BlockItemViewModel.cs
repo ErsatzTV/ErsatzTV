@@ -12,4 +12,5 @@ public record BlockItemViewModel(
     MultiCollectionViewModel MultiCollection,
     SmartCollectionViewModel SmartCollection,
     NamedMediaItemViewModel MediaItem,
-    PlaybackOrder PlaybackOrder);
+    PlaybackOrder PlaybackOrder,
+    bool IncludeInProgramGuide);
