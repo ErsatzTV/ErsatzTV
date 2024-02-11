@@ -64,8 +64,8 @@ public static class BlockPlayoutChangeDetectionTests
 
             List<EffectiveBlock> effectiveBlocks =
             [
-                new EffectiveBlock(block1, blockKey1, GetLocalDate(2024, 1, 17).AddHours(9)),
-                new EffectiveBlock(block2, blockKey2, GetLocalDate(2024, 1, 17).AddHours(13)),
+                new EffectiveBlock(block1, blockKey1, GetLocalDate(2024, 1, 17).AddHours(9), 1),
+                new EffectiveBlock(block2, blockKey2, GetLocalDate(2024, 1, 17).AddHours(13), 2),
             ];
 
             Map<CollectionKey, string> collectionEtags = LanguageExt.Map<CollectionKey, string>.Empty;

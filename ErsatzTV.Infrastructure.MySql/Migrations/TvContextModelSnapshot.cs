@@ -1470,6 +1470,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("GuideGroup")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("GuideStart")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<TimeSpan>("InPoint")
                         .HasColumnType("time(6)");
 

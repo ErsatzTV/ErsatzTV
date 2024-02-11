@@ -2,7 +2,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
-internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset Start)
+internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset Start, int TemplateItemId)
 {
     public static List<EffectiveBlock> GetEffectiveBlocks(
         ICollection<PlayoutTemplate> templates,
@@ -27,6 +27,7 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
                 
                 var newBlocks = playoutTemplate.Template.Items
                     .Map(i => ToEffectiveBlock(playoutTemplate, i, today, start))
+                    .Map(NormalizeGuideMode)
                     .ToList();
 
                 effectiveBlocks.AddRange(newBlocks);
@@ -56,5 +57,20 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
                 templateItem.StartTime.Hours,
                 templateItem.StartTime.Minutes,
                 0,
-                start.Offset));
+                start.Offset),
+            templateItem.Id);
+
+    private static EffectiveBlock NormalizeGuideMode(EffectiveBlock effectiveBlock)
+    {
+        if (effectiveBlock.Block.Items is not null &&
+            effectiveBlock.Block.Items.All(bi => bi.IncludeInProgramGuide == false))
+        {
+            foreach (BlockItem blockItem in effectiveBlock.Block.Items)
+            {
+                blockItem.IncludeInProgramGuide = true;
+            }
+        }
+
+        return effectiveBlock;
+    }
 }

@@ -32,8 +32,6 @@ public class BlockPlayoutBuilder(
             playout.Channel.Number,
             playout.Channel.Name);
 
-        var random = new Random();
-
         List<PlaybackOrder> allowedPlaybackOrders =
         [
             PlaybackOrder.Chronological,
@@ -149,14 +147,16 @@ public class BlockPlayoutBuilder(
                         Finish = currentTime.UtcDateTime + itemDuration,
                         InPoint = TimeSpan.Zero,
                         OutPoint = itemDuration,
-                        FillerKind = FillerKind.None,
+                        FillerKind = blockItem.IncludeInProgramGuide ? FillerKind.None : FillerKind.GuideMode,
                         //CustomTitle = scheduleItem.CustomTitle,
                         //WatermarkId = scheduleItem.WatermarkId,
                         //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
-                        GuideGroup = random.Next(),
+                        GuideGroup = effectiveBlock.TemplateItemId,
+                        GuideStart = effectiveBlock.Start.UtcDateTime,
+                        GuideFinish = blockFinish.UtcDateTime,
                         BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
                         CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                         CollectionEtag = collectionEtags[collectionKey]
