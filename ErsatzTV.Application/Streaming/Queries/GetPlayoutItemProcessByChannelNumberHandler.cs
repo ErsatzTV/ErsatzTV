@@ -139,6 +139,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Song).SongMetadata)
             .ThenInclude(sm => sm.Artwork)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Image).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Image).MediaVersions)
+            .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Image).ImageMetadata)
             .Include(i => i.Watermark)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
@@ -146,11 +154,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
-            maybePlayoutItem = await _externalJsonPlayoutItemProvider.CheckForExternalJson(
-                channel,
-                now,
-                ffmpegPath,
-                ffprobePath);
+            maybePlayoutItem = await _externalJsonPlayoutItemProvider.CheckForExternalJson(channel, now, ffprobePath);
         }
         
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
@@ -200,6 +204,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     ffmpegPath,
                     ffprobePath,
                     cancellationToken);
+            }
+
+            if (playoutItemWithPath.PlayoutItem.MediaItem is Image)
+            {
+                audioPath = string.Empty;
             }
 
             bool saveReports = await dbContext.ConfigElements

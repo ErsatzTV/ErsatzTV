@@ -15,30 +15,30 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
 
-public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
+public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
-    private readonly ILogger<SongFolderScanner> _logger;
+    private readonly ILogger<ImageFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly ISongRepository _songRepository;
+    private readonly IImageRepository _imageRepository;
 
-    public SongFolderScanner(
+    public ImageFolderScanner(
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         IMediator mediator,
-        ISongRepository songRepository,
+        IImageRepository imageRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IFFmpegPngService ffmpegPngService,
         ITempFilePool tempFilePool,
         IClient client,
-        ILogger<SongFolderScanner> logger) : base(
+        ILogger<ImageFolderScanner> logger) : base(
         localFileSystem,
         localStatisticsProvider,
         metadataRepository,
@@ -52,7 +52,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
         _mediator = mediator;
-        _songRepository = songRepository;
+        _imageRepository = imageRepository;
         _libraryRepository = libraryRepository;
         _client = client;
         _logger = logger;
@@ -60,8 +60,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
-        string ffprobePath,
         string ffmpegPath,
+        string ffprobePath,
         decimal progressMin,
         decimal progressMax,
         CancellationToken cancellationToken)
@@ -72,15 +72,17 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
             var foldersCompleted = 0;
 
+            var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
-            if (ShouldIncludeFolder(libraryPath.Path))
+            if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
                 folderQueue.Enqueue(libraryPath.Path);
             }
 
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
                          .Filter(ShouldIncludeFolder)
+                         .Filter(allFolders.Add)
                          .OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
@@ -103,26 +105,27 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                         Array.Empty<int>()),
                     cancellationToken);
 
-                string songFolder = folderQueue.Dequeue();
+                string imageFolder = folderQueue.Dequeue();
                 foldersCompleted++;
 
-                var filesForEtag = _localFileSystem.ListFiles(songFolder).ToList();
+                var filesForEtag = _localFileSystem.ListFiles(imageFolder).ToList();
 
                 var allFiles = filesForEtag
-                    .Filter(f => AudioFileExtensions.Contains(Path.GetExtension(f)))
+                    .Filter(f => ImageFileExtensions.Contains(Path.GetExtension(f).Replace(".", string.Empty)))
                     .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                foreach (string subdirectory in _localFileSystem.ListSubdirectories(songFolder)
+                foreach (string subdirectory in _localFileSystem.ListSubdirectories(imageFolder)
                              .Filter(ShouldIncludeFolder)
+                             .Filter(allFolders.Add)
                              .OrderBy(identity))
                 {
                     folderQueue.Enqueue(subdirectory);
                 }
 
-                string etag = FolderEtag.Calculate(songFolder, _localFileSystem);
+                string etag = FolderEtag.Calculate(imageFolder, _localFileSystem);
                 Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                    .Filter(f => f.Path == songFolder)
+                    .Filter(f => f.Path == imageFolder)
                     .HeadOrNone();
 
                 // skip folder if etag matches
@@ -135,26 +138,27 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
                 _logger.LogDebug(
                     "UPDATE: Etag has changed for folder {Folder}",
-                    songFolder);
+                    imageFolder);
 
                 var hasErrors = false;
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
-                    Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
+                    Either<BaseError, MediaItemScanResult<Image>> maybeVideo = await _imageRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(UpdateMetadata)
-                        .BindT(video => UpdateThumbnail(video, ffmpegPath, cancellationToken))
+                        //.BindT(video => UpdateThumbnail(video, cancellationToken))
+                        //.BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
 
-                    foreach (BaseError error in maybeSong.LeftToSeq())
+                    foreach (BaseError error in maybeVideo.LeftToSeq())
                     {
-                        _logger.LogWarning("Error processing song at {Path}: {Error}", file, error.Value);
+                        _logger.LogWarning("Error processing image at {Path}: {Error}", file, error.Value);
                         hasErrors = true;
                     }
 
-                    foreach (MediaItemScanResult<Song> result in maybeSong.RightToSeq())
+                    foreach (MediaItemScanResult<Image> result in maybeVideo.RightToSeq())
                     {
                         if (result.IsAdded || result.IsUpdated)
                         {
@@ -163,7 +167,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                                     libraryPath.LibraryId,
                                     null,
                                     null,
-                                    new[] { result.Item.Id },
+                                    [result.Item.Id],
                                     Array.Empty<int>()),
                                 cancellationToken);
                         }
@@ -173,36 +177,36 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 // only do this once per folder and only if all files processed successfully
                 if (!hasErrors)
                 {
-                    await _libraryRepository.SetEtag(libraryPath, knownFolder, songFolder, etag);
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, imageFolder, etag);
                 }
             }
 
-            foreach (string path in await _songRepository.FindSongPaths(libraryPath))
+            foreach (string path in await _imageRepository.FindImagePaths(libraryPath))
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Flagging missing song at {Path}", path);
-                    List<int> songIds = await FlagFileNotFound(libraryPath, path);
+                    _logger.LogInformation("Flagging missing image at {Path}", path);
+                    List<int> imageIds = await FlagFileNotFound(libraryPath, path);
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
                             null,
                             null,
-                            songIds.ToArray(),
+                            imageIds.ToArray(),
                             Array.Empty<int>()),
                         cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogInformation("Removing dot underscore file at {Path}", path);
-                    List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
+                    List<int> imageIds = await _imageRepository.DeleteByPath(libraryPath, path);
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
                             libraryPath.LibraryId,
                             null,
                             null,
                             Array.Empty<int>(),
-                            songIds.ToArray()),
+                            imageIds.ToArray()),
                         cancellationToken);
                 }
             }
@@ -217,24 +221,25 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateMetadata(MediaItemScanResult<Song> result)
+    private async Task<Either<BaseError, MediaItemScanResult<Image>>> UpdateMetadata(
+        MediaItemScanResult<Image> result)
     {
         try
         {
-            Song song = result.Item;
-            string path = song.GetHeadVersion().MediaFiles.Head().Path;
+            Image image = result.Item;
+            string path = image.GetHeadVersion().MediaFiles.Head().Path;
 
-            bool shouldUpdate = Optional(song.SongMetadata).Flatten().HeadOrNone().Match(
+            bool shouldUpdate = Optional(image.ImageMetadata).Flatten().HeadOrNone().Match(
                 m => m.MetadataKind == MetadataKind.Fallback ||
                      m.DateUpdated != _localFileSystem.GetLastWriteTime(path),
                 true);
 
             if (shouldUpdate)
             {
-                song.SongMetadata ??= new List<SongMetadata>();
+                image.ImageMetadata ??= [];
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
-                if (await _localMetadataProvider.RefreshTagMetadata(song))
+                if (await _localMetadataProvider.RefreshTagMetadata(image))
                 {
                     result.IsUpdated = true;
                 }
@@ -246,85 +251,6 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         {
             _client.Notify(ex);
             return BaseError.New(ex.ToString());
-        }
-    }
-
-    private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
-        MediaItemScanResult<Song> result,
-        string ffmpegPath,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            // reload the song from the database at this point
-            if (result.IsAdded)
-            {
-                LibraryPath libraryPath = result.Item.LibraryPath;
-                string path = result.Item.GetHeadVersion().MediaFiles.Head().Path;
-                foreach (MediaItemScanResult<Song> s in (await _songRepository.GetOrAdd(libraryPath, path))
-                         .RightToSeq())
-                {
-                    result.Item = s.Item;
-                }
-            }
-
-            Song song = result.Item;
-            Option<string> maybeThumbnail = LocateThumbnail(song);
-            if (maybeThumbnail.IsNone)
-            {
-                await ExtractEmbeddedArtwork(song, ffmpegPath, cancellationToken);
-            }
-
-
-            foreach (string thumbnailFile in maybeThumbnail)
-            {
-                SongMetadata metadata = song.SongMetadata.Head();
-                await RefreshArtwork(
-                    thumbnailFile,
-                    metadata,
-                    ArtworkKind.Thumbnail,
-                    ffmpegPath,
-                    None,
-                    cancellationToken);
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _client.Notify(ex);
-            return BaseError.New(ex.ToString());
-        }
-    }
-
-    private Option<string> LocateThumbnail(Song song)
-    {
-        string path = song.MediaVersions.Head().MediaFiles.Head().Path;
-        Option<DirectoryInfo> parent = Optional(Directory.GetParent(path));
-
-        return parent.Map(
-            di =>
-            {
-                string coverPath = Path.Combine(di.FullName, "cover.jpg");
-                return ImageFileExtensions
-                    .Map(ext => Path.ChangeExtension(coverPath, ext))
-                    .Filter(f => _localFileSystem.FileExists(f))
-                    .HeadOrNone();
-            }).Flatten();
-    }
-
-    private async Task ExtractEmbeddedArtwork(Song song, string ffmpegPath, CancellationToken cancellationToken)
-    {
-        Option<MediaStream> maybeArtworkStream = Optional(song.GetHeadVersion().Streams.Find(ms => ms.AttachedPic));
-        foreach (MediaStream artworkStream in maybeArtworkStream)
-        {
-            await RefreshArtwork(
-                song.GetHeadVersion().MediaFiles.Head().Path,
-                song.SongMetadata.Head(),
-                ArtworkKind.Thumbnail,
-                ffmpegPath,
-                artworkStream.Index,
-                cancellationToken);
         }
     }
 }

@@ -11,7 +11,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using Lucene.Net.Util.Fst;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using File = TagLib.File;
@@ -37,7 +36,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, MediaVersion>> GetStatistics(string ffmpegPath, string ffprobePath, string path)
+    public async Task<Either<BaseError, MediaVersion>> GetStatistics(string ffprobePath, string path)
     {
         Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, path);
         return maybeProbe.Match(
@@ -63,7 +62,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         }
     }
 
-    public Either<BaseError, List<SongTag>> GetSongTags(string ffprobePath, MediaItem mediaItem)
+    public Either<BaseError, List<SongTag>> GetSongTags(MediaItem mediaItem)
     {
         try
         {
@@ -128,7 +127,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 async ffprobe =>
                 {
                     MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
-                    if (version.Duration.TotalSeconds < 1)
+                    if (mediaItem is not Image && version.Duration.TotalSeconds < 1)
                     {
                         await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
                     }

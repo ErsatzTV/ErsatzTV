@@ -300,8 +300,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             return None;
         }
 
-        playout.Items ??= new List<PlayoutItem>();
-        playout.ProgramScheduleAnchors ??= new List<PlayoutProgramScheduleAnchor>();
+        playout.Items ??= [];
+        playout.ProgramScheduleAnchors ??= [];
 
         Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
 
@@ -791,6 +791,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                         .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                     Song s => await s.MediaVersions.Map(v => v.Duration).HeadOrNone()
                         .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
+                    Image => false,
                     _ => true
                 };
 
@@ -1095,6 +1096,10 @@ public class PlayoutBuilder : IPlayoutBuilder
                     () => "[unknown video]");
             case Song s:
                 return s.SongMetadata.HeadOrNone().Match(
+                    sm => sm.Title ?? string.Empty,
+                    () => "[unknown song]");
+            case Image i:
+                return i.ImageMetadata.HeadOrNone().Match(
                     sm => sm.Title ?? string.Empty,
                     () => "[unknown song]");
             default:

@@ -16,11 +16,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `sub_language` and `sub_language_tag` fields to search index
 - Add `/iptv` request logging in its own log category at debug level
 - Add channel guide (XMLTV) template system
-    - Templates should be copied from `_channel.sbntxt`, `_movie.sbntxt`, `_episode.sbntxt`, `_musicVideo.sbntxt`, `_song.sbntxt`, or `_otherVideo.sbntxt` which are located in the config subfolder `templates/channel-guide`
-        - Copy the file, remove the leading underscore from the name, and only make edits to the copied file
-    - The default templates will be extracted and overwritten every time ErsatzTV is started
-    - The templates use [scribian](https://github.com/scriban/scriban/tree/master/doc) template syntax
-    - The templates contain comments describing which fields are available for use in the templates
+  - Templates should be copied from `_channel.sbntxt`, `_movie.sbntxt`, `_episode.sbntxt`, `_musicVideo.sbntxt`, `_song.sbntxt`, or `_otherVideo.sbntxt` which are located in the config subfolder `templates/channel-guide`
+    - Copy the file, remove the leading underscore from the name, and only make edits to the copied file
+  - The default templates will be extracted and overwritten every time ErsatzTV is started
+  - The templates use [scribian](https://github.com/scriban/scriban/tree/master/doc) template syntax
+  - The templates contain comments describing which fields are available for use in the templates
+- Add *experimental* and *incomplete* `Images` library kind
+  - Image libraries have fallback metadata added like Other Video libraries (every folder is a tag)
+  - Image library items currently *all* have a duration of 15 seconds
+    - Future updates will allow custom/distinct durations
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
@@ -29,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - A deep scan can be used to fix all movies, otherwise any future updates made to JF movies will correctly sync to ETV
 - Automatically generate JWT tokens to allow channel previews of protected streams
 - Fix bug applying music video fallback metadata
+- Fix playback of media items with no audio streams
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date

@@ -85,6 +85,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     public const string EpisodeType = "episode";
     public const string OtherVideoType = "other_video";
     public const string SongType = "song";
+    public const string ImageType = "image";
     private readonly string _cleanShutdownPath;
 
     private readonly List<CultureInfo> _cultureInfos;
@@ -177,6 +178,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     break;
                 case Song song:
                     await UpdateSong(searchRepository, song);
+                    break;
+                case Image image:
+                    await UpdateImage(searchRepository, image);
                     break;
             }
         }
@@ -339,6 +343,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 break;
             case Song song:
                 await UpdateSong(searchRepository, song);
+                break;
+            case Image image:
+                await UpdateImage(searchRepository, image);
                 break;
         }
     }
@@ -1269,6 +1276,64 @@ public sealed class LuceneSearchIndex : ISearchIndex
             }
         }
     }
+    
+    private async Task UpdateImage(ISearchRepository searchRepository, Image image)
+    {
+        Option<ImageMetadata> maybeMetadata = image.ImageMetadata.HeadOrNone();
+        if (maybeMetadata.IsSome)
+        {
+            ImageMetadata metadata = maybeMetadata.ValueUnsafe();
+
+            try
+            {
+                var doc = new Document
+                {
+                    new StringField(IdField, image.Id.ToString(CultureInfo.InvariantCulture), Field.Store.YES),
+                    new StringField(TypeField, ImageType, Field.Store.YES),
+                    new TextField(TitleField, metadata.Title, Field.Store.NO),
+                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                    new TextField(LibraryNameField, image.LibraryPath.Library.Name, Field.Store.NO),
+                    new StringField(
+                        LibraryIdField,
+                        image.LibraryPath.Library.Id.ToString(CultureInfo.InvariantCulture),
+                        Field.Store.NO),
+                    new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                    new StringField(StateField, image.State.ToString(), Field.Store.NO),
+                    new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
+                };
+
+                await AddLanguages(searchRepository, doc, image.MediaVersions);
+
+                AddStatistics(doc, image.MediaVersions);
+
+                doc.Add(
+                    new StringField(
+                        AddedDateField,
+                        metadata.DateAdded.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+                        Field.Store.NO));
+
+                foreach (Tag tag in metadata.Tags)
+                {
+                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                }
+
+                foreach (Genre genre in metadata.Genres)
+                {
+                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                }
+
+                AddMetadataGuids(metadata, doc);
+
+                _writer.UpdateDocument(new Term(IdField, image.Id.ToString(CultureInfo.InvariantCulture)), doc);
+            }
+            catch (Exception ex)
+            {
+                metadata.Image = null;
+                _logger.LogWarning(ex, "Error indexing image with metadata {@Metadata}", metadata);
+            }
+        }
+    }
 
     private static SearchItem ProjectToSearchItem(Document doc) => new(
         doc.Get(TypeField, CultureInfo.InvariantCulture),
@@ -1365,6 +1430,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             OtherVideoMetadata ovm => $"{OtherVideoTitle(ovm).Replace(' ', '_')}_{ovm.Year}_{ovm.OtherVideo.State}"
                 .ToLowerInvariant(),
             SongMetadata sm => $"{Title(sm)}_{sm.Year}_{sm.Song.State}".ToLowerInvariant(),
+            ImageMetadata im => $"{Title(im)}_{im.Year}_{im.Image.State}".ToLowerInvariant(),
             MovieMetadata mm => $"{Title(mm)}_{mm.Year}_{mm.Movie.State}".ToLowerInvariant(),
             ArtistMetadata am => $"{Title(am)}_{am.Year}_{am.Artist.State}".ToLowerInvariant(),
             MusicVideoMetadata mvm => $"{Title(mvm)}_{mvm.Year}_{mvm.MusicVideo.State}".ToLowerInvariant(),

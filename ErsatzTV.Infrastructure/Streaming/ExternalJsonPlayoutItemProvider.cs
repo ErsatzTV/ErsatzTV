@@ -47,7 +47,6 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
     public async Task<Either<BaseError, PlayoutItemWithPath>> CheckForExternalJson(
         Channel channel,
         DateTimeOffset now,
-        string ffmpegPath,
         string ffprobePath)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -64,7 +63,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
                 // json file must exist
                 if (_localFileSystem.FileExists(playout.ExternalJsonFile))
                 {
-                    return await GetExternalJsonPlayoutItem(dbContext, playout, now, ffmpegPath, ffprobePath);
+                    return await GetExternalJsonPlayoutItem(dbContext, playout, now, ffprobePath);
                 }
 
                 _logger.LogWarning(
@@ -82,7 +81,6 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         TvContext dbContext,
         Playout playout,
         DateTimeOffset now,
-        string ffmpegPath,
         string ffprobePath)
     {
         Option<ExternalJsonChannel> maybeChannel = JsonConvert.DeserializeObject<ExternalJsonChannel>(
@@ -107,7 +105,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
                 if (nextStart > now)
                 {
                     //_logger.LogDebug("should play program {@Program}", program);
-                    return await BuildPlayoutItem(dbContext, startTime, program, ffmpegPath, ffprobePath);
+                    return await BuildPlayoutItem(dbContext, startTime, program, ffprobePath);
                 }
 
                 startTime = nextStart;
@@ -121,7 +119,6 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         TvContext dbContext,
         DateTimeOffset startTime,
         ExternalJsonProgram program,
-        string ffmpegPath,
         string ffprobePath)
     {
         // find any library path from the appropriate plex server
@@ -139,7 +136,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 
             if (_localFileSystem.FileExists(localPath))
             {
-                return await StreamLocally(startTime, program, ffmpegPath, ffprobePath, localPath);
+                return await StreamLocally(startTime, program, ffprobePath, localPath);
             }
 
             return await StreamRemotely(dbContext, startTime, program);
@@ -151,13 +148,12 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
     private async Task<Either<BaseError, PlayoutItemWithPath>> StreamLocally(
         DateTimeOffset startTime,
         ExternalJsonProgram program,
-        string ffmpegPath,
         string ffprobePath,
         string localPath)
     {
         // ffprobe on demand
         Either<BaseError, MediaVersion> maybeMediaVersion =
-            await _localStatisticsProvider.GetStatistics(ffmpegPath, ffprobePath, localPath);
+            await _localStatisticsProvider.GetStatistics(ffprobePath, localPath);
 
         foreach (MediaVersion mediaVersion in maybeMediaVersion.RightToSeq())
         {

@@ -34,6 +34,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly IShowNfoReader _showNfoReader;
     private readonly ISongRepository _songRepository;
+    private readonly IImageRepository _imageRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
     public LocalMetadataProvider(
@@ -44,6 +45,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         IMusicVideoRepository musicVideoRepository,
         IOtherVideoRepository otherVideoRepository,
         ISongRepository songRepository,
+        IImageRepository imageRepository,
         IFallbackMetadataProvider fallbackMetadataProvider,
         ILocalFileSystem localFileSystem,
         IMovieNfoReader movieNfoReader,
@@ -63,6 +65,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         _musicVideoRepository = musicVideoRepository;
         _otherVideoRepository = otherVideoRepository;
         _songRepository = songRepository;
+        _imageRepository = imageRepository;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _localFileSystem = localFileSystem;
         _movieNfoReader = movieNfoReader;
@@ -196,15 +199,26 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return await RefreshFallbackMetadata(otherVideo);
     }
 
-    public async Task<bool> RefreshTagMetadata(Song song, string ffprobePath)
+    public async Task<bool> RefreshTagMetadata(Song song)
     {
-        Option<SongMetadata> maybeMetadata = LoadSongMetadata(song, ffprobePath);
+        Option<SongMetadata> maybeMetadata = LoadSongMetadata(song);
         foreach (SongMetadata metadata in maybeMetadata)
         {
             return await ApplyMetadataUpdate(song, metadata);
         }
 
         return await RefreshFallbackMetadata(song);
+    }
+
+    public async Task<bool> RefreshTagMetadata(Image image)
+    {
+        Option<ImageMetadata> maybeMetadata = LoadImageMetadata(image);
+        foreach (ImageMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(image, metadata);
+        }
+
+        return await RefreshFallbackMetadata(image);
     }
 
     public Task<bool> RefreshFallbackMetadata(Movie movie) =>
@@ -233,6 +247,17 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         foreach (SongMetadata metadata in maybeMetadata)
         {
             return await ApplyMetadataUpdate(song, metadata);
+        }
+
+        return false;
+    }
+
+    public async Task<bool> RefreshFallbackMetadata(Image image)
+    {
+        Option<ImageMetadata> maybeMetadata = _fallbackMetadataProvider.GetFallbackMetadata(image);
+        foreach (ImageMetadata metadata in maybeMetadata)
+        {
+            return await ApplyMetadataUpdate(image, metadata);
         }
 
         return false;
@@ -296,13 +321,13 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
     }
 
-    private Option<SongMetadata> LoadSongMetadata(Song song, string ffprobePath)
+    private Option<SongMetadata> LoadSongMetadata(Song song)
     {
         string path = song.GetHeadVersion().MediaFiles.Head().Path;
 
         try
         {
-            var maybeTags = _localStatisticsProvider.GetSongTags(ffprobePath, song);
+            Either<BaseError, List<SongTag>> maybeTags = _localStatisticsProvider.GetSongTags(song);
 
             foreach (List<SongTag> tags in maybeTags.RightToSeq())
             {
@@ -372,6 +397,73 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             }
 
             return Option<SongMetadata>.None;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation(ex, "Failed to read embedded song metadata from {Path}", path);
+            _client.Notify(ex);
+            return None;
+        }
+    }
+    
+    private Option<ImageMetadata> LoadImageMetadata(Image image)
+    {
+        string path = image.GetHeadVersion().MediaFiles.Head().Path;
+
+        try
+        {
+            Either<BaseError, List<SongTag>> maybeTags = _localStatisticsProvider.GetSongTags(image);
+
+            foreach (List<SongTag> tags in maybeTags.RightToSeq())
+            {
+                Option<ImageMetadata> maybeFallbackMetadata = _fallbackMetadataProvider.GetFallbackMetadata(image);
+
+                var result = new ImageMetadata
+                {
+                    MetadataKind = MetadataKind.Embedded,
+                    DateAdded = DateTime.UtcNow,
+                    DateUpdated = File.GetLastWriteTimeUtc(path),
+
+                    Artwork = [],
+                    Actors = [],
+                    Genres = [],
+                    Studios = [],
+                    Tags = []
+                };
+
+                foreach (SongTag tag in tags)
+                {
+                    switch (tag.Tag)
+                    {
+                        case MetadataSongTag.Genre:
+                            result.Genres.Add(new Genre { Name = tag.Value });
+                            break;
+                        case MetadataSongTag.Title:
+                            result.Title = tag.Value;
+                            break;
+                    }
+                }
+
+                foreach (ImageMetadata fallbackMetadata in maybeFallbackMetadata)
+                {
+                    if (string.IsNullOrWhiteSpace(result.Title))
+                    {
+                        result.Title = fallbackMetadata.Title;
+                    }
+
+                    result.OriginalTitle = fallbackMetadata.OriginalTitle;
+
+                    // preserve folder tagging
+                    foreach (Tag tag in fallbackMetadata.Tags)
+                    {
+                        result.Tags.Add(tag);
+                    }
+                }
+
+                return result;
+            }
+
+            return Option<ImageMetadata>.None;
         }
         catch (Exception ex)
         {
@@ -1009,6 +1101,49 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             : metadata.SortTitle;
         metadata.SongId = song.Id;
         song.SongMetadata = new List<SongMetadata> { metadata };
+
+        return await _metadataRepository.Add(metadata);
+    }
+    
+    private async Task<bool> ApplyMetadataUpdate(Image image, ImageMetadata metadata)
+    {
+        Option<ImageMetadata> maybeMetadata = Optional(image.ImageMetadata).Flatten().HeadOrNone();
+        foreach (ImageMetadata existing in maybeMetadata)
+        {
+            existing.DurationSeconds = metadata.DurationSeconds;
+            existing.Title = metadata.Title;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
+            {
+                existing.DateAdded = metadata.DateAdded;
+            }
+
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.OriginalTitle = metadata.OriginalTitle;
+            existing.ReleaseDate = metadata.ReleaseDate;
+            existing.Year = metadata.Year;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? SortTitle.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
+            existing.OriginalTitle = metadata.OriginalTitle;
+
+            bool updated = await UpdateMetadataCollections(
+                existing,
+                metadata,
+                (_, _) => Task.FromResult(false),
+                _imageRepository.AddTag,
+                (_, _) => Task.FromResult(false),
+                (_, _) => Task.FromResult(false));
+
+            return await _metadataRepository.Update(existing) || updated;
+        }
+
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? SortTitle.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.ImageId = image.Id;
+        image.ImageMetadata = [metadata];
 
         return await _metadataRepository.Add(metadata);
     }

@@ -6,5 +6,6 @@ public enum LibraryMediaKind
     Shows = 2,
     MusicVideos = 3,
     OtherVideos = 4,
-    Songs = 5
+    Songs = 5,
+    Images = 6
 }

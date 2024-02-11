@@ -79,6 +79,8 @@ public class PreviewBlockPlayoutHandler(
                 .Include(mi => (mi as OtherVideo).MediaVersions)
                 .Include(mi => (mi as Song).SongMetadata)
                 .Include(mi => (mi as Song).MediaVersions)
+                .Include(mi => (mi as Image).ImageMetadata)
+                .Include(mi => (mi as Image).MediaVersions)
                 .SelectOneAsync(mi => mi.Id, mi => mi.Id == playoutItem.MediaItemId);
 
             foreach (MediaItem mediaItem in maybeMediaItem)

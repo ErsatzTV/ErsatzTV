@@ -52,6 +52,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         result.AddRange(await GetMusicVideoItems(dbContext, id));
         result.AddRange(await GetOtherVideoItems(dbContext, id));
         result.AddRange(await GetSongItems(dbContext, id));
+        result.AddRange(await GetImageItems(dbContext, id));
 
         return result.Distinct().ToList();
     }
@@ -79,6 +80,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
                 result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
                 result.AddRange(await GetSongItems(dbContext, collectionId));
+                result.AddRange(await GetImageItems(dbContext, collectionId));
             }
 
             foreach (int smartCollectionId in multiCollection.SmartCollections.Map(c => c.Id))
@@ -150,6 +152,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetSongItems(dbContext, songIds));
+            
+            var imageIds = searchResults.Items
+                .Filter(i => i.Type == LuceneSearchIndex.ImageType)
+                .Map(i => i.Id)
+                .ToList();
+            result.AddRange(await GetImageItems(dbContext, imageIds));
         }
 
         return result.DistinctBy(x => x.Id).ToList();
@@ -583,6 +591,27 @@ public class MediaCollectionRepository : IMediaCollectionRepository
     private static Task<List<Song>> GetSongItems(TvContext dbContext, IEnumerable<int> songIds) =>
         dbContext.Songs
             .Include(m => m.SongMetadata)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.Chapters)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Filter(m => songIds.Contains(m.Id))
+            .ToListAsync();
+
+    private static async Task<List<Image>> GetImageItems(TvContext dbContext, int collectionId)
+    {
+        IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
+            @"SELECT i.Id FROM CollectionItem ci
+            INNER JOIN Image i ON i.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+            new { CollectionId = collectionId });
+
+        return await GetImageItems(dbContext, ids);
+    }
+
+    private static Task<List<Image>> GetImageItems(TvContext dbContext, IEnumerable<int> songIds) =>
+        dbContext.Images
+            .Include(m => m.ImageMetadata)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)

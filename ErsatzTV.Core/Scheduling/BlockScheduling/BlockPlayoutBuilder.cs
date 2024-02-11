@@ -75,6 +75,10 @@ public class BlockPlayoutBuilder(
         }
 
         DateTimeOffset currentTime = start;
+        if (updatedEffectiveBlocks.Count > 0)
+        {
+            currentTime = updatedEffectiveBlocks.Min(eb => eb.Start);
+        }
 
         foreach (EffectiveBlock effectiveBlock in updatedEffectiveBlocks)
         {
@@ -128,6 +132,8 @@ public class BlockPlayoutBuilder(
                     historyKey,
                     collectionMediaItems);
 
+                bool pastTime = false;
+
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
                     Logger.LogDebug(
@@ -171,6 +177,7 @@ public class BlockPlayoutBuilder(
                             effectiveBlock.Block.Name,
                             blockFinish);
 
+                        pastTime = true;
                         break;
                     }
 
@@ -193,6 +200,11 @@ public class BlockPlayoutBuilder(
 
                     currentTime += itemDuration;
                     enumerator.MoveNext();
+                }
+                
+                if (pastTime)
+                {
+                    break;
                 }
             }
         }
@@ -337,6 +349,11 @@ public class BlockPlayoutBuilder(
 
     private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
     {
+        if (mediaItem is Image)
+        {
+            return TimeSpan.FromSeconds(Domain.Image.DefaultSeconds);
+        }
+
         MediaVersion version = mediaItem.GetHeadVersion();
         return version.Duration;
     }

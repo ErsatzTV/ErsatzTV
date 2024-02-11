@@ -1,10 +1,10 @@
-﻿@page "/media/other/videos"
-@page "/media/other/videos/page/{PageNumber:int}"
+﻿@page "/media/images"
+@page "/media/images/page/{PageNumber:int}"
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
-@inherits MultiSelectBase<OtherVideoList>
+@inherits MultiSelectBase<ImageList>
 @inject NavigationManager NavigationManager
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
@@ -51,7 +51,7 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        <FragmentLetterAnchor TCard="OtherVideoCardViewModel" Cards="@_data.Cards">
+        <FragmentLetterAnchor TCard="ImageCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
                        Link=""
                        ArtworkKind="ArtworkKind.Thumbnail"
@@ -65,7 +65,7 @@
 @if (_data.PageMap is not null)
 {
     <LetterBar PageMap="@_data.PageMap"
-               BaseUri="media/other/videos"
+               BaseUri="media/images"
                Query="@_query"/>
 }
 
@@ -75,7 +75,7 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private OtherVideoCardResultsViewModel _data = new(0, new List<OtherVideoCardViewModel>(), null);
+    private ImageCardResultsViewModel _data = new(0, new List<ImageCardViewModel>(), null);
     private string _query;
 
     protected override async Task OnParametersSetAsync()
@@ -92,13 +92,13 @@
 
     protected override async Task RefreshData()
     {
-        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:other_video" : $"type:other_video AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexOtherVideos(searchQuery, PageNumber, PageSize), CancellationToken);
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:image" : $"type:image AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexImages(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
     {
-        var uri = $"media/other/videos/page/{PageNumber - 1}";
+        var uri = $"media/images/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -109,7 +109,7 @@
 
     private void NextPage()
     {
-        var uri = $"media/other/videos/page/{PageNumber + 1}";
+        var uri = $"media/images/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -130,24 +130,24 @@
 
     private async Task AddToCollection(MediaCardViewModel card)
     {
-        if (card is OtherVideoCardViewModel otherVideo)
+        if (card is ImageCardViewModel image)
         {
-            var parameters = new DialogParameters { { "EntityType", "other video" }, { "EntityName", otherVideo.Title } };
+            var parameters = new DialogParameters { { "EntityType", "image" }, { "EntityName", image.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddOtherVideoToCollection(collection.Id, otherVideo.OtherVideoId);
+                var request = new AddImageToCollection(collection.Id, image.ImageId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding other video to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding other video to collection: {Error}", error.Value);
+                        Snackbar.Add($"Unexpected error adding image to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding image to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {otherVideo.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add($"Added {image.Title} to collection {collection.Name}", Severity.Success));
             }
         }
     }

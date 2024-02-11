@@ -19,6 +19,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
     private readonly IOtherVideoFolderScanner _otherVideoFolderScanner;
     private readonly ISongFolderScanner _songFolderScanner;
+    private readonly IImageFolderScanner _imageFolderScanner;
     private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
     public ScanLocalLibraryHandler(
@@ -29,6 +30,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         IMusicVideoFolderScanner musicVideoFolderScanner,
         IOtherVideoFolderScanner otherVideoFolderScanner,
         ISongFolderScanner songFolderScanner,
+        IImageFolderScanner imageFolderScanner,
         IMediator mediator,
         ILogger<ScanLocalLibraryHandler> logger)
     {
@@ -39,6 +41,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         _musicVideoFolderScanner = musicVideoFolderScanner;
         _otherVideoFolderScanner = otherVideoFolderScanner;
         _songFolderScanner = songFolderScanner;
+        _imageFolderScanner = imageFolderScanner;
         _mediator = mediator;
         _logger = logger;
     }
@@ -110,6 +113,14 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
                             libraryPath,
                             ffprobePath,
                             ffmpegPath,
+                            progressMin,
+                            progressMax,
+                            cancellationToken),
+                    LibraryMediaKind.Images =>
+                        await _imageFolderScanner.ScanFolder(
+                            libraryPath,
+                            ffprobePath,
+                            ffprobePath,
                             progressMin,
                             progressMax,
                             cancellationToken),

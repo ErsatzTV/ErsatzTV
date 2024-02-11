@@ -66,6 +66,12 @@
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")">@_data.SongCards.Count Songs</MudLink>
             }
+
+            @if (_data?.ImageCards.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#images")">@_data.ImageCards.Count Images</MudLink>
+            }
+                        
             @if (SupportsCustomOrdering())
             {
                 <div style="margin-left: auto">
@@ -275,6 +281,30 @@
             }
         </MudContainer>
     }
+    
+    @if (_data?.ImageCards.Count > 0)
+    {
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "images" } })">
+            Images
+        </MudText>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (ImageCardViewModel card in _data.ImageCards.OrderBy(e => e.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@RemoveImageFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
@@ -452,6 +482,19 @@
             await RemoveItemsWithConfirmation("song", $"{song.Title}", request);
         }
     }
+    
+    private async Task RemoveImageFromCollection(MediaCardViewModel vm)
+    {
+        if (vm is ImageCardViewModel image)
+        {
+            var request = new RemoveItemsFromCollection(Id)
+            {
+                MediaItemIds = [image.ImageId]
+            };
+
+            await RemoveItemsWithConfirmation("image", $"{image.Title}", request);
+        }
+    }
 
     private async Task RemoveItemsWithConfirmation(
         string entityType,
@@ -461,7 +504,7 @@
         var parameters = new DialogParameters { { "EntityType", entityType }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<RemoveFromCollectionDialog>("Remove From Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<RemoveFromCollectionDialog>("Remove From Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {

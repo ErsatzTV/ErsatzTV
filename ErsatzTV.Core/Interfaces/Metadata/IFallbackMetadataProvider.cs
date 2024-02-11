@@ -12,4 +12,5 @@ public interface IFallbackMetadataProvider
     Option<MusicVideoMetadata> GetFallbackMetadata(MusicVideo musicVideo);
     Option<OtherVideoMetadata> GetFallbackMetadata(OtherVideo otherVideo);
     Option<SongMetadata> GetFallbackMetadata(Song song);
+    Option<ImageMetadata> GetFallbackMetadata(Image image);
 }

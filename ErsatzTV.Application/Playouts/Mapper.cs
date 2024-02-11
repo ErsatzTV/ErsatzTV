@@ -75,6 +75,8 @@ internal static class Mapper
                             ? t
                             : $"{s} ({playoutItem.ChapterTitle})")
                     .IfNone("[unknown song]");
+            case Image i:
+                return i.ImageMetadata.HeadOrNone().Map(im => im.Title ?? string.Empty).IfNone("[unknown image]");
             default:
                 return string.Empty;
         }
