@@ -440,7 +440,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             ? None
             : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
-        SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
+        //SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
         SetRealtimeInput(videoInputFile, ffmpegState, desiredState);
         SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);
         SetFrameRateOutput(desiredState, pipelineSteps);
@@ -643,14 +643,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         videoInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger));
     }
 
-    private static void SetStillImageInfiniteLoop(
-        VideoInputFile videoInputFile,
-        VideoStream videoStream,
-        FFmpegState ffmpegState)
+    protected static void SetStillImageLoop(VideoInputFile videoInputFile, VideoStream videoStream)
     {
         if (videoStream.StillImage)
         {
-            videoInputFile.AddOption(new InfiniteLoopInputOption(ffmpegState.EncoderHardwareAccelerationMode));
+            videoInputFile.FilterSteps.Add(new LoopFilter());
         }
     }
 

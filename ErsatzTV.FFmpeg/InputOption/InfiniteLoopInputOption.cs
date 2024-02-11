@@ -17,11 +17,11 @@ public class InfiniteLoopInputOption : IInputOption
         // loop 1 for still images
         if (inputFile.Streams.OfType<VideoStream>().Any(s => s.StillImage))
         {
-            return new[] { "-loop", "1" };
+            return ["-loop", "1"];
         }
 
         // stream_loop for looped video i.e. filler
-        return new[] { "-stream_loop", "-1" };
+        return ["-stream_loop", "-1"];
     }
 
     public string[] FilterOptions => Array.Empty<string>();
