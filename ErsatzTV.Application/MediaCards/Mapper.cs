@@ -161,30 +161,38 @@ internal static class Mapper
             Option<JellyfinMediaSource> maybeJellyfin,
             Option<EmbyMediaSource> maybeEmby) =>
         new(
-            collection.Name,
-            collection.MediaItems.OfType<Movie>().Map(
-                m => ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin, maybeEmby) with
-                {
-                    CustomIndex = GetCustomIndex(collection, m.Id)
-                }).ToList(),
-            collection.MediaItems.OfType<Show>()
-                .Map(s => ProjectToViewModel(s.ShowMetadata.Head(), maybeJellyfin, maybeEmby))
-                .ToList(),
-            collection.MediaItems.OfType<Season>().Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby))
-                .ToList(),
-            // collection view doesn't use local paths
-            collection.MediaItems.OfType<Episode>()
-                .Map(e => ProjectToViewModel(e.EpisodeMetadata.Head(), maybeJellyfin, maybeEmby, false, string.Empty))
-                .ToList(),
-            collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
-            // collection view doesn't use local paths
-            collection.MediaItems.OfType<MusicVideo>()
-                .Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head(), string.Empty))
-                .ToList(),
-            collection.MediaItems.OfType<OtherVideo>().Map(ov => ProjectToViewModel(ov.OtherVideoMetadata.Head()))
-                .ToList(),
-            collection.MediaItems.OfType<Song>().Map(s => ProjectToViewModel(s.SongMetadata.Head()))
-                .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
+                collection.Name,
+                collection.MediaItems.OfType<Movie>().Map(
+                    m => ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin, maybeEmby) with
+                    {
+                        CustomIndex = GetCustomIndex(collection, m.Id)
+                    }).ToList(),
+                collection.MediaItems.OfType<Show>()
+                    .Map(s => ProjectToViewModel(s.ShowMetadata.Head(), maybeJellyfin, maybeEmby))
+                    .ToList(),
+                collection.MediaItems.OfType<Season>().Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby))
+                    .ToList(),
+                // collection view doesn't use local paths
+                collection.MediaItems.OfType<Episode>()
+                    .Map(
+                        e => ProjectToViewModel(
+                            e.EpisodeMetadata.Head(),
+                            maybeJellyfin,
+                            maybeEmby,
+                            false,
+                            string.Empty))
+                    .ToList(),
+                collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
+                // collection view doesn't use local paths
+                collection.MediaItems.OfType<MusicVideo>()
+                    .Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head(), string.Empty))
+                    .ToList(),
+                collection.MediaItems.OfType<OtherVideo>().Map(ov => ProjectToViewModel(ov.OtherVideoMetadata.Head()))
+                    .ToList(),
+                collection.MediaItems.OfType<Song>().Map(s => ProjectToViewModel(s.SongMetadata.Head()))
+                    .ToList(),
+                collection.MediaItems.OfType<Image>().Map(i => ProjectToViewModel(i.ImageMetadata.Head())).ToList())
+            { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 
     internal static ActorCardViewModel ProjectToViewModel(
         Actor actor,

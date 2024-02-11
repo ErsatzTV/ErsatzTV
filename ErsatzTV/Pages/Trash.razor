@@ -5,7 +5,6 @@
 @using ErsatzTV.Application.Maintenance
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -68,6 +67,11 @@
             if (_songs?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
+            }
+
+            if (_images?.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count Images</MudLink>
             }
 
             if (IsNotEmpty)
@@ -328,6 +332,7 @@
     private MusicVideoCardResultsViewModel _musicVideos;
     private OtherVideoCardResultsViewModel _otherVideos;
     private SongCardResultsViewModel _songs;
+    private ImageCardResultsViewModel _images;
     private ArtistCardResultsViewModel _artists;
 
     protected override Task OnInitializedAsync() => RefreshData();
@@ -344,6 +349,7 @@
             _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), CancellationToken);
             _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), CancellationToken);
             _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), CancellationToken);
+            _images = await Mediator.Send(new QuerySearchIndexImages($"type:image AND ({_query})", 1, 50), CancellationToken);
             _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
         }
     }
@@ -465,7 +471,8 @@
         SelectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
         SelectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
         SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
-        SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList());
+        SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList(),
+        SelectedItems.OfType<ImageCardViewModel>().Map(i => i.ImageId).ToList());
 
     private async Task DeleteItemsFromDatabase(
         List<int> movieIds,
@@ -476,16 +483,17 @@
         List<int> musicVideoIds,
         List<int> otherVideoIds,
         List<int> songIds,
+        List<int> imageIds,
         string entityName = "selected items")
     {
         int count = movieIds.Count + showIds.Count + seasonIds.Count + episodeIds.Count + artistIds.Count +
-                    musicVideoIds.Count + otherVideoIds.Count + songIds.Count;
+                    musicVideoIds.Count + otherVideoIds.Count + songIds.Count + imageIds.Count;
 
         var parameters = new DialogParameters
         { { "EntityType", count.ToString() }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -497,6 +505,7 @@
                     .Append(musicVideoIds)
                     .Append(otherVideoIds)
                     .Append(songIds)
+                    .Append(imageIds)
                     .ToList());
 
             Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);

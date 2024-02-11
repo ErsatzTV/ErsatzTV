@@ -351,7 +351,7 @@ public class BlockPlayoutBuilder(
     {
         if (mediaItem is Image)
         {
-            return TimeSpan.FromSeconds(600);
+            return TimeSpan.FromSeconds(Domain.Image.DefaultSeconds);
         }
 
         MediaVersion version = mediaItem.GetHeadVersion();

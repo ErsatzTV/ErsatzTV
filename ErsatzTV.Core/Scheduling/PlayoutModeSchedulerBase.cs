@@ -181,7 +181,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
     {
         if (mediaItem is Image)
         {
-            return TimeSpan.FromSeconds(600);
+            return TimeSpan.FromSeconds(Domain.Image.DefaultSeconds);
         }
 
         MediaVersion version = mediaItem.GetHeadVersion();
