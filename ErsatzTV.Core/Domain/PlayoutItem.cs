@@ -11,6 +11,7 @@ public class PlayoutItem
     public MediaItem MediaItem { get; set; }
     public DateTime Start { get; set; }
     public DateTime Finish { get; set; }
+    public DateTime? GuideStart { get; set; }
     public DateTime? GuideFinish { get; set; }
     public string CustomTitle { get; set; }
     public int GuideGroup { get; set; }

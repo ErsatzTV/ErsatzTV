@@ -53,7 +53,8 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
             MultiCollectionId = item.MultiCollectionId,
             SmartCollectionId = item.SmartCollectionId,
             MediaItemId = item.MediaItemId,
-            PlaybackOrder = item.PlaybackOrder
+            PlaybackOrder = item.PlaybackOrder,
+            IncludeInProgramGuide = item.IncludeInProgramGuide
         };
 
     private static Task<Validation<BaseError, Block>> Validate(TvContext dbContext, ReplaceBlockItems request) =>

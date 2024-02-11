@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ public class GetBlockItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await dbContext.BlockItems
+        List<BlockItem> allItems = await dbContext.BlockItems
             .AsNoTracking()
             .Filter(i => i.BlockId == request.BlockId)
             .Include(i => i.Collection)
@@ -30,7 +31,16 @@ public class GetBlockItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Artist).ArtistMetadata)
             .ThenInclude(am => am.Artwork)
-            .ToListAsync(cancellationToken)
-            .Map(items => items.Map(Mapper.ProjectToViewModel).ToList());
+            .ToListAsync(cancellationToken);
+
+        if (allItems.All(bi => bi.IncludeInProgramGuide == false))
+        {
+            foreach (BlockItem bi in allItems)
+            {
+                bi.IncludeInProgramGuide = true;
+            }
+        }
+
+        return allItems.Map(Mapper.ProjectToViewModel).ToList();
     }
 }

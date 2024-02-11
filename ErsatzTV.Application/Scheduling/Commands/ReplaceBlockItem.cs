@@ -9,4 +9,5 @@ public record ReplaceBlockItem(
     int? MultiCollectionId,
     int? SmartCollectionId,
     int? MediaItemId,
-    PlaybackOrder PlaybackOrder);
+    PlaybackOrder PlaybackOrder,
+    bool IncludeInProgramGuide);

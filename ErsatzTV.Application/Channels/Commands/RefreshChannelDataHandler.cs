@@ -159,27 +159,81 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             .ThenInclude(sm => sm.Studios)
             .ToListAsync(cancellationToken);
 
-        List<PlayoutItem> sorted = [];
-        
-        foreach (Playout playout in playouts)
-        {
-            switch (playout.ProgramSchedulePlayoutType)
-            {
-                case ProgramSchedulePlayoutType.Flood:
-                case ProgramSchedulePlayoutType.Block:
-                    sorted.AddRange(playouts.Collect(p => p.Items).OrderBy(pi => pi.Start));
-                    break;
-                case ProgramSchedulePlayoutType.ExternalJson:
-                    sorted.AddRange(await CollectExternalJsonItems(playout.ExternalJsonFile));
-                    break;
-            }
-        }
-
         await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         await using var xml = XmlWriter.Create(
             ms,
             new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
 
+        foreach (Playout playout in playouts)
+        {
+            switch (playout.ProgramSchedulePlayoutType)
+            {
+                case ProgramSchedulePlayoutType.Flood:
+                    var floodSorted = playouts.Collect(p => p.Items).OrderBy(pi => pi.Start).ToList();
+                    await WritePlayoutXml(
+                        request,
+                        floodSorted,
+                        templateContext,
+                        movieTemplate,
+                        episodeTemplate,
+                        musicVideoTemplate,
+                        songTemplate,
+                        otherVideoTemplate,
+                        minifier,
+                        xml);
+                    break;
+                case ProgramSchedulePlayoutType.Block:
+                    var blockSorted = playouts.Collect(p => p.Items).OrderBy(pi => pi.Start).ToList();
+                    await WriteBlockPlayoutXml(
+                        request,
+                        blockSorted,
+                        templateContext,
+                        movieTemplate,
+                        episodeTemplate,
+                        musicVideoTemplate,
+                        songTemplate,
+                        otherVideoTemplate,
+                        minifier,
+                        xml);
+                    break;
+                case ProgramSchedulePlayoutType.ExternalJson:
+                    List<PlayoutItem> externalJsonSorted = await CollectExternalJsonItems(playout.ExternalJsonFile);
+                    await WritePlayoutXml(
+                        request,
+                        externalJsonSorted,
+                        templateContext,
+                        movieTemplate,
+                        episodeTemplate,
+                        musicVideoTemplate,
+                        songTemplate,
+                        otherVideoTemplate,
+                        minifier,
+                        xml);
+                    break;
+            }
+        }
+
+        await xml.FlushAsync();
+
+        string tempFile = Path.GetTempFileName();
+        await File.WriteAllBytesAsync(tempFile, ms.ToArray(), cancellationToken);
+
+        string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
+        File.Move(tempFile, targetFile, true);
+    }
+
+    private async Task WritePlayoutXml(
+        RefreshChannelData request,
+        List<PlayoutItem> sorted,
+        XmlTemplateContext templateContext,
+        Template movieTemplate,
+        Template episodeTemplate,
+        Template musicVideoTemplate,
+        Template songTemplate,
+        Template otherVideoTemplate,
+        XmlMinifier minifier,
+        XmlWriter xml)
+    {
         // skip all filler that isn't pre-roll
         var i = 0;
         while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None &&
@@ -232,83 +286,159 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 : finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
                     .Replace(":", string.Empty);
 
-            string title = GetTitle(displayItem);
-            string subtitle = GetSubtitle(displayItem);
-
-            Option<string> maybeTemplateOutput = displayItem.MediaItem switch
-            {
-                Movie templateMovie => await ProcessMovieTemplate(
-                    request,
-                    templateMovie,
-                    start,
-                    stop,
-                    hasCustomTitle,
-                    displayItem,
-                    title,
-                    templateContext,
-                    movieTemplate),
-                Episode templateEpisode => await ProcessEpisodeTemplate(
-                    request,
-                    templateEpisode,
-                    start,
-                    stop,
-                    hasCustomTitle,
-                    displayItem,
-                    title,
-                    subtitle,
-                    templateContext,
-                    episodeTemplate),
-                MusicVideo templateMusicVideo => await ProcessMusicVideoTemplate(
-                    request,
-                    templateMusicVideo,
-                    start,
-                    stop,
-                    hasCustomTitle,
-                    displayItem,
-                    title,
-                    subtitle,
-                    templateContext,
-                    musicVideoTemplate),
-                Song templateSong => await ProcessSongTemplate(
-                    request,
-                    templateSong,
-                    start,
-                    stop,
-                    hasCustomTitle,
-                    displayItem,
-                    title,
-                    subtitle,
-                    templateContext,
-                    songTemplate),
-                OtherVideo templateOtherVideo => await ProcessOtherVideoTemplate(
-                    request,
-                    templateOtherVideo,
-                    start,
-                    stop,
-                    hasCustomTitle,
-                    displayItem,
-                    title,
-                    templateContext,
-                    otherVideoTemplate),
-                _ => Option<string>.None
-            };
-
-            foreach (string templateOutput in maybeTemplateOutput)
-            {
-                MarkupMinificationResult minified = minifier.Minify(templateOutput);
-                await xml.WriteRawAsync(minified.MinifiedContent);
-            }
+            await WriteItemToXml(
+                request,
+                displayItem,
+                start,
+                stop,
+                hasCustomTitle,
+                templateContext,
+                movieTemplate,
+                episodeTemplate,
+                musicVideoTemplate,
+                songTemplate,
+                otherVideoTemplate,
+                minifier,
+                xml);
 
             i++;
         }
+    }
+    
+    private async Task WriteBlockPlayoutXml(
+        RefreshChannelData request,
+        List<PlayoutItem> sorted,
+        XmlTemplateContext templateContext,
+        Template movieTemplate,
+        Template episodeTemplate,
+        Template musicVideoTemplate,
+        Template songTemplate,
+        Template otherVideoTemplate,
+        XmlMinifier minifier,
+        XmlWriter xml)
+    {
+        var groups = sorted.GroupBy(s => new { s.GuideStart, s.GuideFinish, s.GuideGroup });
+        foreach (var group in groups)
+        {
+            DateTime groupStart = group.Key.GuideStart!.Value;
+            DateTime groupFinish = group.Key.GuideFinish!.Value;
+            TimeSpan groupDuration = groupFinish - groupStart;
 
-        await xml.FlushAsync();
+            var itemsToInclude = group.Filter(g => g.FillerKind is FillerKind.None).ToList();
+            TimeSpan perItem = groupDuration / itemsToInclude.Count;
 
-        string tempFile = Path.GetTempFileName();
-        await File.WriteAllBytesAsync(tempFile, ms.ToArray(), cancellationToken);
+            DateTimeOffset currentStart = new DateTimeOffset(groupStart, TimeSpan.Zero).ToLocalTime();
+            DateTimeOffset currentFinish = currentStart + perItem;
 
-        string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
-        File.Move(tempFile, targetFile, true);
+            foreach (PlayoutItem item in itemsToInclude)
+            {
+                string start = currentStart.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                    .Replace(":", string.Empty);
+                string stop = currentFinish.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                    .Replace(":", string.Empty);
+
+                await WriteItemToXml(
+                    request,
+                    item,
+                    start,
+                    stop,
+                    hasCustomTitle: false,
+                    templateContext,
+                    movieTemplate,
+                    episodeTemplate,
+                    musicVideoTemplate,
+                    songTemplate,
+                    otherVideoTemplate,
+                    minifier,
+                    xml);
+
+                currentStart = currentFinish;
+                currentFinish += perItem;
+            }
+        }
+    }
+
+    private async Task WriteItemToXml(
+        RefreshChannelData request,
+        PlayoutItem displayItem,
+        string start,
+        string stop,
+        bool hasCustomTitle,
+        XmlTemplateContext templateContext,
+        Template movieTemplate,
+        Template episodeTemplate,
+        Template musicVideoTemplate,
+        Template songTemplate,
+        Template otherVideoTemplate,
+        XmlMinifier minifier,
+        XmlWriter xml)
+    {
+        string title = GetTitle(displayItem);
+        string subtitle = GetSubtitle(displayItem);
+
+        Option<string> maybeTemplateOutput = displayItem.MediaItem switch
+        {
+            Movie templateMovie => await ProcessMovieTemplate(
+                request,
+                templateMovie,
+                start,
+                stop,
+                hasCustomTitle,
+                displayItem,
+                title,
+                templateContext,
+                movieTemplate),
+            Episode templateEpisode => await ProcessEpisodeTemplate(
+                request,
+                templateEpisode,
+                start,
+                stop,
+                hasCustomTitle,
+                displayItem,
+                title,
+                subtitle,
+                templateContext,
+                episodeTemplate),
+            MusicVideo templateMusicVideo => await ProcessMusicVideoTemplate(
+                request,
+                templateMusicVideo,
+                start,
+                stop,
+                hasCustomTitle,
+                displayItem,
+                title,
+                subtitle,
+                templateContext,
+                musicVideoTemplate),
+            Song templateSong => await ProcessSongTemplate(
+                request,
+                templateSong,
+                start,
+                stop,
+                hasCustomTitle,
+                displayItem,
+                title,
+                subtitle,
+                templateContext,
+                songTemplate),
+            OtherVideo templateOtherVideo => await ProcessOtherVideoTemplate(
+                request,
+                templateOtherVideo,
+                start,
+                stop,
+                hasCustomTitle,
+                displayItem,
+                title,
+                templateContext,
+                otherVideoTemplate),
+            _ => Option<string>.None
+        };
+
+        foreach (string templateOutput in maybeTemplateOutput)
+        {
+            MarkupMinificationResult minified = minifier.Minify(templateOutput);
+            await xml.WriteRawAsync(minified.MinifiedContent);
+        }
     }
 
     private static async Task<Option<string>> ProcessMovieTemplate(

@@ -30,7 +30,8 @@ internal static class Mapper
                 Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                 _ => null
             },
-            blockItem.PlaybackOrder);
+            blockItem.PlaybackOrder,
+            blockItem.IncludeInProgramGuide);
 
     internal static TemplateGroupViewModel ProjectToViewModel(TemplateGroup templateGroup) =>
         new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);
