@@ -170,6 +170,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
         currentState = SetCrop(videoInputFile, desiredState, currentState);
 
+        SetStillImageLoop(videoInputFile, videoStream);
+
         // need to upload for hardware overlay
         bool forceSoftwareOverlay = context is { HasSubtitleOverlay: true, HasWatermark: true }
                                     || ffmpegState.VaapiDriver == "radeonsi";
