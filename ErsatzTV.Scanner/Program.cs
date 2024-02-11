@@ -172,6 +172,7 @@ public class Program
                     services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
                     services.AddScoped<IOtherVideoRepository, OtherVideoRepository>();
                     services.AddScoped<ISongRepository, SongRepository>();
+                    services.AddScoped<IImageRepository, ImageRepository>();
                     services.AddScoped<ILibraryRepository, LibraryRepository>();
                     services.AddScoped<ISearchRepository, SearchRepository>();
                     services.AddScoped<ICachingSearchRepository, CachingSearchRepository>();
@@ -186,6 +187,7 @@ public class Program
                     services.AddScoped<IMusicVideoFolderScanner, MusicVideoFolderScanner>();
                     services.AddScoped<IOtherVideoFolderScanner, OtherVideoFolderScanner>();
                     services.AddScoped<ISongFolderScanner, SongFolderScanner>();
+                    services.AddScoped<IImageFolderScanner, ImageFolderScanner>();
                     services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
                     services.AddScoped<IMovieNfoReader, MovieNfoReader>();
                     services.AddScoped<IArtistNfoReader, ArtistNfoReader>();

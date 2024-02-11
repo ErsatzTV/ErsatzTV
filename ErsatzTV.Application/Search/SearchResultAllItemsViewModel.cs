@@ -8,4 +8,5 @@ public record SearchResultAllItemsViewModel(
     List<int> ArtistIds,
     List<int> MusicVideoIds,
     List<int> OtherVideoIds,
-    List<int> SongIds);
+    List<int> SongIds,
+    List<int> ImageIds);

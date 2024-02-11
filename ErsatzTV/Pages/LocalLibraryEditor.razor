@@ -18,7 +18,7 @@
             <MudCard>
                 <MudCardContent>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudSelect Disabled="IsEdit" Label="MediaKind" @bind-Value="_model.MediaKind" For="@(() => _model.MediaKind)">
+                    <MudSelect Disabled="IsEdit" Label="Media Kind" @bind-Value="_model.MediaKind" For="@(() => _model.MediaKind)">
                         @foreach (LibraryMediaKind mediaKind in Enum.GetValues<LibraryMediaKind>())
                         {
                             <MudSelectItem Value="@mediaKind">@mediaKind</MudSelectItem>

@@ -199,6 +199,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
+        // when no audio streams are available, use null audio source
+        if (!audioVersion.MediaVersion.Streams.Any(s => s.MediaStreamKind is MediaStreamKind.Audio))
+        {
+            audioInputFile = new NullAudioInputFile(audioState);
+        }
+
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
         switch (channel.StreamingMode)
         {

@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - A deep scan can be used to fix all movies, otherwise any future updates made to JF movies will correctly sync to ETV
 - Automatically generate JWT tokens to allow channel previews of protected streams
 - Fix bug applying music video fallback metadata
+- Fix playback of media items with no audio streams
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date

@@ -7,6 +7,5 @@ public interface IExternalJsonPlayoutItemProvider
     Task<Either<BaseError, PlayoutItemWithPath>> CheckForExternalJson(
         Channel channel,
         DateTimeOffset now,
-        string ffmpegPath,
         string ffprobePath);
 }

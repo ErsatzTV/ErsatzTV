@@ -137,6 +137,15 @@ internal static class Mapper
             songMetadata.Song.State);
     }
 
+    internal static ImageCardViewModel ProjectToViewModel(ImageMetadata imageMetadata) =>
+        new(
+            imageMetadata.ImageId,
+            imageMetadata.Title,
+            imageMetadata.OriginalTitle,
+            imageMetadata.SortTitle,
+            string.Empty, // TODO: thumbnail?
+            imageMetadata.Image.State);
+
     internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
         new(
             artistMetadata.ArtistId,

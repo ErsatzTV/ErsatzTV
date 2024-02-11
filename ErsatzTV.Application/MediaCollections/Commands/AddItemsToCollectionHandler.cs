@@ -39,7 +39,7 @@ public class AddItemsToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => ApplyAddItemsRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyAddItemsRequest(dbContext, c, request));
     }
 
     private async Task<Unit> ApplyAddItemsRequest(
@@ -55,6 +55,7 @@ public class AddItemsToCollectionHandler :
             .Append(request.MusicVideoIds)
             .Append(request.OtherVideoIds)
             .Append(request.SongIds)
+            .Append(request.ImageIds)
             .ToList();
 
         var toAddIds = allItems.Where(item => collection.MediaItems.All(mi => mi.Id != item)).ToList();

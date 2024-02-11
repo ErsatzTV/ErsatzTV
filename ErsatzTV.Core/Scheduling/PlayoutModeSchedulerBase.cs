@@ -179,6 +179,11 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
     protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)
     {
+        if (mediaItem is Image)
+        {
+            return TimeSpan.FromSeconds(600);
+        }
+
         MediaVersion version = mediaItem.GetHeadVersion();
         return version.Duration;
     }
