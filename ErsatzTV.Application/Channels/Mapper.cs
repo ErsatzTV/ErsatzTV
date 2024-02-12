@@ -34,6 +34,9 @@ internal static class Mapper
             channel.PreferredAudioLanguageCode,
             GetStreamingMode(channel));
 
+    internal static ResolutionViewModel ProjectToViewModel(Resolution resolution) =>
+        new(resolution.Height, resolution.Width);
+
     private static string GetLogo(Channel channel) =>
         Optional(channel.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo))
             .Match(a => a.Path, string.Empty);

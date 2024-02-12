@@ -181,7 +181,6 @@ public class HlsSessionWorker : IHlsSessionWorker
                 _logger.LogError("Transcode folder is NOT empty!");
             }
 
-
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
@@ -577,7 +576,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach ((long pts, long duration) in queryResult.RightToSeq())
             {
-                result = pts + duration;
+                result = pts + duration + 1;
             }
 
             return result;
