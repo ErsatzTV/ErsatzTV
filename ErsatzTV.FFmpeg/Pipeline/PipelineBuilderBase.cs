@@ -275,6 +275,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 videoStream.FrameRate,
                                 segmentTemplate,
                                 playlistPath,
+                                isFirstTranscode: ffmpegState.PtsOffset == 0,
                                 ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv));
                     }
                 }

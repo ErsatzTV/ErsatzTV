@@ -191,6 +191,7 @@ public class IptvController : ControllerBase
         switch (mode)
         {
             case "segmenter":
+                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber);
                 _logger.LogDebug("Maybe starting ffmpeg session for channel {Channel}", channelNumber);
                 Either<BaseError, Unit> result = await _mediator.Send(new StartFFmpegSession(channelNumber, false));
                 return result.Match<IActionResult>(
@@ -199,7 +200,7 @@ public class IptvController : ControllerBase
                         _logger.LogDebug(
                             "Session started; returning multi-variant playlist for channel {Channel}",
                             channelNumber);
-                        return Content(GetMultiVariantPlaylist(channelNumber), "application/vnd.apple.mpegurl");
+                        return Content(multiVariantPlaylist, "application/vnd.apple.mpegurl");
                         // return Redirect($"~/iptv/session/{channelNumber}/hls.m3u8");
                     },
                     error =>
@@ -210,7 +211,7 @@ public class IptvController : ControllerBase
                                 _logger.LogDebug(
                                     "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
-                                return Content(GetMultiVariantPlaylist(channelNumber), "application/vnd.apple.mpegurl");
+                                return Content(multiVariantPlaylist, "application/vnd.apple.mpegurl");
                             // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
                             default:
                                 _logger.LogWarning(
@@ -246,12 +247,20 @@ public class IptvController : ControllerBase
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
 
-    // TODO: include resolution here?
-    private string GetMultiVariantPlaylist(string channelNumber) =>
-        $@"#EXTM3U
+    private async Task<string> GetMultiVariantPlaylist(string channelNumber)
+    {
+        Option<ResolutionViewModel> maybeResolution = await _mediator.Send(new GetChannelResolution(channelNumber));
+        string resolution = string.Empty;
+        foreach (ResolutionViewModel res in maybeResolution)
+        {
+            resolution = $",RESOLUTION={res.Width}x{res.Height}";
+        }
+        
+        return $@"#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000{resolution}
 {Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8{AccessTokenQuery()}";
+    }
 
     private string AccessTokenQuery() => string.IsNullOrWhiteSpace(Request.Query["access_token"])
         ? string.Empty
