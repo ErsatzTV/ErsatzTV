@@ -142,7 +142,7 @@ public class IptvController : ControllerBase
     {
         // _logger.LogDebug("Checking for session worker for channel {Channel}", channelNumber);
 
-        if (_ffmpegSegmenterService.TryGetWorker(channelNumber, out IHlsSessionWorker worker))
+        if (_ffmpegSegmenterService.TryGetWorker(channelNumber, out IHlsSessionWorker worker) && worker is not null)
         {
             // _logger.LogDebug("Trimming playlist for channel {Channel}", channelNumber);
 
