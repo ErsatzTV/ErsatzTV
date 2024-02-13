@@ -222,7 +222,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         File.Move(tempFile, targetFile, true);
     }
 
-    private async Task WritePlayoutXml(
+    private static async Task WritePlayoutXml(
         RefreshChannelData request,
         List<PlayoutItem> sorted,
         XmlTemplateContext templateContext,
@@ -305,7 +305,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         }
     }
     
-    private async Task WriteBlockPlayoutXml(
+    private static async Task WriteBlockPlayoutXml(
         RefreshChannelData request,
         List<PlayoutItem> sorted,
         XmlTemplateContext templateContext,
@@ -358,7 +358,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         }
     }
 
-    private async Task WriteItemToXml(
+    private static async Task WriteItemToXml(
         RefreshChannelData request,
         PlayoutItem displayItem,
         string start,
@@ -615,7 +615,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         return Option<string>.None;
     }
     
-    private async Task<Option<string>> ProcessSongTemplate(
+    private static async Task<Option<string>> ProcessSongTemplate(
         RefreshChannelData request,
         Song templateSong,
         string start,
