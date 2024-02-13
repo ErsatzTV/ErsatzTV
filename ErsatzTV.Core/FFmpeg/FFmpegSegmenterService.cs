@@ -17,8 +17,25 @@ public class FFmpegSegmenterService(ILogger<FFmpegSegmenterService> logger) : IF
 
     public bool TryAddWorker(string channelNumber, IHlsSessionWorker worker)
     {
-        bool result = _sessionWorkers.TryAdd(channelNumber, worker);
-
+        var result = false;
+        
+        // check for worker
+        if (TryGetWorker(channelNumber, out IHlsSessionWorker existing))
+        {
+            // if worker is null, pretend we added it
+            if (existing is null)
+            {
+                result = true;
+            }
+            
+            // if worker is not null, we cannot add one (so result should stay false)
+        }
+        else
+        {
+            // worker does not exist, so try adding a null one
+            result = _sessionWorkers.TryAdd(channelNumber, worker);
+        }
+        
         if (result)
         {
             OnWorkersChanged?.Invoke(this, EventArgs.Empty);
