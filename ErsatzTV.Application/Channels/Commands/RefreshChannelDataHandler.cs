@@ -515,7 +515,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 showMetadata.Genres ??= [];
                 showMetadata.Guids ??= [];
 
-                string artworkPath = GetPrioritizedArtworkPath(metadata);
+                string artworkPath = GetPrioritizedArtworkPath(showMetadata);
 
                 var data = new
                 {
