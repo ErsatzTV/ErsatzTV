@@ -41,6 +41,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string PlotField = "plot";
     internal const string LibraryNameField = "library_name";
     internal const string LibraryIdField = "library_id";
+    internal const string LibraryFolderIdField = "library_folder_id";
     internal const string TitleAndYearField = "title_and_year";
     internal const string JumpLetterField = "jump_letter";
     internal const string StudioField = "studio";
@@ -1302,6 +1303,19 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     new StringField(StateField, image.State.ToString(), Field.Store.NO),
                     new TextField(MetadataKindField, metadata.MetadataKind.ToString(), Field.Store.NO)
                 };
+
+                IEnumerable<int> libraryFolderIds = image.MediaVersions
+                    .SelectMany(mv => mv.MediaFiles)
+                    .SelectMany(mf => Optional(mf.LibraryFolderId));
+                
+                foreach (int libraryFolderId in libraryFolderIds)
+                {
+                    doc.Add(
+                        new StringField(
+                            LibraryFolderIdField,
+                            libraryFolderId.ToString(CultureInfo.InvariantCulture),
+                            Field.Store.NO));
+                }
 
                 await AddLanguages(searchRepository, doc, image.MediaVersions);
 

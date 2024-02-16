@@ -148,6 +148,8 @@ public class SearchRepository : ISearchRepository
             .ThenInclude(mm => mm.Guids)
             .Include(mi => (mi as Image).MediaVersions)
             .ThenInclude(mm => mm.Streams)
+            .Include(mi => (mi as Image).MediaVersions)
+            .ThenInclude(mm => mm.MediaFiles)
             .Include(mi => mi.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
             .SelectOneAsync(mi => mi.Id, mi => mi.Id == id);
@@ -371,6 +373,8 @@ public class SearchRepository : ISearchRepository
             .ThenInclude(mm => mm.Guids)
             .Include(mi => (mi as Image).MediaVersions)
             .ThenInclude(mm => mm.Streams)
+            .Include(mi => (mi as Image).MediaVersions)
+            .ThenInclude(mm => mm.MediaFiles)
             .Include(mi => mi.TraktListItems)
             .ThenInclude(tli => tli.TraktList)
             .AsAsyncEnumerable();

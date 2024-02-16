@@ -32,6 +32,7 @@ public class LibraryRepository : ILibraryRepository
         return await dbContext.Libraries
             .Include(l => l.Paths)
             .ThenInclude(p => p.LibraryFolders)
+            .ThenInclude(lf => lf.ImageFolderDuration)
             .OrderBy(l => l.Id)
             .SingleOrDefaultAsync(l => l.Id == libraryId)
             .Map(Optional);
@@ -185,7 +186,7 @@ public class LibraryRepository : ILibraryRepository
             await dbContext.LibraryFolders.AddAsync(knownFolder);
             await dbContext.SaveChangesAsync();
         }
-
+        
         return knownFolder;
     }
 

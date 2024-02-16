@@ -123,4 +123,7 @@ public class ElasticSearchItem : MinimalElasticSearchItem
 
     [JsonPropertyName(LuceneSearchIndex.MoodField)]
     public List<string> Mood { get; set; }
+    
+    [JsonPropertyName(LuceneSearchIndex.LibraryFolderIdField)]
+    public int LibraryFolderId { get; set; }
 }

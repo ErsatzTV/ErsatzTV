@@ -137,6 +137,9 @@ public class ElasticSearchIndex : ISearchIndex
                 case Song song:
                     await UpdateSong(searchRepository, song);
                     break;
+                case Image image:
+                    await UpdateImage(searchRepository, image);
+                    break;
             }
         }
 
@@ -722,6 +725,59 @@ public class ElasticSearchIndex : ISearchIndex
             {
                 metadata.Song = null;
                 _logger.LogWarning(ex, "Error indexing song with metadata {@Metadata}", metadata);
+            }
+        }
+    }
+    
+    private async Task UpdateImage(ISearchRepository searchRepository, Image image)
+    {
+        foreach (ImageMetadata metadata in image.ImageMetadata.HeadOrNone())
+        {
+            try
+            {
+                var doc = new ElasticSearchItem
+                {
+                    Id = image.Id,
+                    Type = LuceneSearchIndex.ImageType,
+                    Title = metadata.Title,
+                    SortTitle = metadata.SortTitle.ToLowerInvariant(),
+                    LibraryName = image.LibraryPath.Library.Name,
+                    LibraryId = image.LibraryPath.Library.Id,
+                    TitleAndYear = LuceneSearchIndex.GetTitleAndYear(metadata),
+                    JumpLetter = LuceneSearchIndex.GetJumpLetter(metadata),
+                    State = image.State.ToString(),
+                    MetadataKind = metadata.MetadataKind.ToString(),
+                    Language = await GetLanguages(searchRepository, image.MediaVersions),
+                    LanguageTag = GetLanguageTags(image.MediaVersions),
+                    SubLanguage = await GetSubLanguages(searchRepository, image.MediaVersions),
+                    SubLanguageTag = GetSubLanguageTags(image.MediaVersions),
+                    AddedDate = GetAddedDate(metadata.DateAdded),
+                    Genre = metadata.Genres.Map(g => g.Name).ToList(),
+                    Tag = metadata.Tags.Map(t => t.Name).ToList()
+                };
+                
+                IEnumerable<int> libraryFolderIds = image.MediaVersions
+                    .SelectMany(mv => mv.MediaFiles)
+                    .SelectMany(mf => Optional(mf.LibraryFolderId));
+                
+                foreach (int libraryFolderId in libraryFolderIds)
+                {
+                    doc.LibraryFolderId = libraryFolderId;
+                }
+
+                AddStatistics(doc, image.MediaVersions);
+
+                foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
+                {
+                    doc.AdditionalProperties.Add(key, value);
+                }
+
+                await _client.IndexAsync(doc, IndexName);
+            }
+            catch (Exception ex)
+            {
+                metadata.Image = null;
+                _logger.LogWarning(ex, "Error indexing image with metadata {@Metadata}", metadata);
             }
         }
     }

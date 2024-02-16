@@ -10,5 +10,6 @@ public class LibraryFolder
     public LibraryFolder Parent { get; set; }
     public ICollection<LibraryFolder> Children { get; set; }
     public ICollection<MediaFile> MediaFiles { get; set; }
+    public ImageFolderDuration ImageFolderDuration { get; set; }
     public string Etag { get; set; }
 }

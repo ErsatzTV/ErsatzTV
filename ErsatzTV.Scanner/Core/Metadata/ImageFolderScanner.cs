@@ -144,7 +144,27 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 {
                     continue;
                 }
+                
+                // walk up to get duration, if needed
+                LibraryFolder? currentFolder = knownFolder;
+                int? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
+                while (durationSeconds is null && currentFolder?.ParentId is not null)
+                {
+                    Option<LibraryFolder> maybeParent = libraryPath.LibraryFolders
+                        .Find(lf => lf.Id == currentFolder.ParentId);
 
+                    if (maybeParent.IsNone)
+                    {
+                        currentFolder = null;
+                    }
+                
+                    foreach (LibraryFolder parent in maybeParent)
+                    {
+                        currentFolder = parent;
+                        durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
+                    }
+                }
+                
                 _logger.LogDebug("UPDATE: Etag has changed for folder {Folder}", imageFolder);
 
                 var hasErrors = false;
@@ -155,7 +175,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                         .GetOrAdd(libraryPath, knownFolder, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))
-                        .BindT(UpdateMetadata)
+                        .BindT(video => UpdateMetadata(video, durationSeconds))
                         //.BindT(video => UpdateThumbnail(video, cancellationToken))
                         //.BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
@@ -244,7 +264,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<Image>>> UpdateMetadata(
-        MediaItemScanResult<Image> result)
+        MediaItemScanResult<Image> result,
+        int? durationSeconds)
     {
         try
         {
@@ -253,7 +274,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 
             bool shouldUpdate = Optional(image.ImageMetadata).Flatten().HeadOrNone().Match(
                 m => m.MetadataKind == MetadataKind.Fallback ||
-                     m.DateUpdated != _localFileSystem.GetLastWriteTime(path),
+                     m.DateUpdated != _localFileSystem.GetLastWriteTime(path) ||
+                     m.DurationSeconds != durationSeconds,
                 true);
 
             if (shouldUpdate)
@@ -261,7 +283,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 image.ImageMetadata ??= [];
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
-                if (await _localMetadataProvider.RefreshTagMetadata(image))
+                if (await _localMetadataProvider.RefreshTagMetadata(image, durationSeconds))
                 {
                     result.IsUpdated = true;
                 }
