@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -74,6 +75,14 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         try
         {
             decimal progressSpread = progressMax - progressMin;
+
+            string normalizedLibraryPath = libraryPath.Path.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar);
+            if (libraryPath.Path != normalizedLibraryPath)
+            {
+                await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
+            }
 
             var allArtistFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
                 .Filter(ShouldIncludeFolder)
@@ -316,6 +325,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             }
 
             string musicVideoFolder = folderQueue.Dequeue();
+            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(musicVideoFolder);
+
             // _logger.LogDebug("Scanning music video folder {Folder}", musicVideoFolder);
 
             var allFiles = _localFileSystem.ListFiles(musicVideoFolder)
@@ -323,19 +334,19 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)
-                         .OrderBy(identity))
+            foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder).OrderBy(identity))
             {
                 folderQueue.Enqueue(subdirectory);
             }
 
             string etag = FolderEtag.Calculate(musicVideoFolder, _localFileSystem);
-            Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                .Filter(f => f.Path == musicVideoFolder)
-                .HeadOrNone();
+            LibraryFolder knownFolder = await _libraryRepository.GetOrAddFolder(
+                libraryPath,
+                maybeParentFolder,
+                musicVideoFolder);
 
             // skip folder if etag matches
-            if (await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag)
+            if (knownFolder.Etag == etag)
             {
                 continue;
             }
@@ -346,8 +357,9 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             {
                 // TODO: figure out how to rebuild playouts
                 Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo = await _musicVideoRepository
-                    .GetOrAdd(artist, libraryPath, file)
+                    .GetOrAdd(artist, libraryPath, knownFolder, file)
                     .BindT(musicVideo => UpdateStatistics(musicVideo, ffmpegPath, ffprobePath))
+                    .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                     .BindT(UpdateMetadata)
                     .BindT(result => UpdateThumbnail(result, cancellationToken))
                     .BindT(UpdateSubtitles)
@@ -383,6 +395,20 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         }
 
         return Unit.Default;
+    }
+    
+    private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateLibraryFolderId(
+        MediaItemScanResult<MusicVideo> video,
+        LibraryFolder libraryFolder)
+    {
+        MediaFile mediaFile = video.Item.GetHeadVersion().MediaFiles.Head();
+        if (mediaFile.LibraryFolderId != libraryFolder.Id)
+        {
+            await _libraryRepository.UpdateLibraryFolderId(mediaFile, libraryFolder.Id);
+            video.IsUpdated = true;
+        }
+
+        return video;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateMetadata(

@@ -75,6 +75,14 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
             var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
+            string normalizedLibraryPath = libraryPath.Path.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar);
+            if (libraryPath.Path != normalizedLibraryPath)
+            {
+                await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
+            }
+            
             if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
                 folderQueue.Enqueue(libraryPath.Path);
@@ -106,6 +114,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                     cancellationToken);
 
                 string imageFolder = folderQueue.Dequeue();
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(imageFolder);
+                
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(imageFolder).ToList();
@@ -124,29 +134,27 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 }
 
                 string etag = FolderEtag.Calculate(imageFolder, _localFileSystem);
-                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                    .Filter(f => f.Path == imageFolder)
-                    .HeadOrNone();
+                LibraryFolder knownFolder = await _libraryRepository.GetOrAddFolder(
+                    libraryPath,
+                    maybeParentFolder,
+                    imageFolder);
 
                 // skip folder if etag matches
-                if (allFiles.Count == 0 ||
-                    await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                    etag)
+                if (allFiles.Count == 0 || knownFolder.Etag == etag)
                 {
                     continue;
                 }
 
-                _logger.LogDebug(
-                    "UPDATE: Etag has changed for folder {Folder}",
-                    imageFolder);
+                _logger.LogDebug("UPDATE: Etag has changed for folder {Folder}", imageFolder);
 
                 var hasErrors = false;
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<Image>> maybeVideo = await _imageRepository
-                        .GetOrAdd(libraryPath, file)
+                        .GetOrAdd(libraryPath, knownFolder, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
+                        .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                         .BindT(UpdateMetadata)
                         //.BindT(video => UpdateThumbnail(video, cancellationToken))
                         //.BindT(UpdateSubtitles)
@@ -219,6 +227,20 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         {
             return new ScanCanceled();
         }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<Image>>> UpdateLibraryFolderId(
+        MediaItemScanResult<Image> video,
+        LibraryFolder libraryFolder)
+    {
+        MediaFile mediaFile = video.Item.GetHeadVersion().MediaFiles.Head();
+        if (mediaFile.LibraryFolderId != libraryFolder.Id)
+        {
+            await _libraryRepository.UpdateLibraryFolderId(mediaFile, libraryFolder.Id);
+            video.IsUpdated = true;
+        }
+
+        return video;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<Image>>> UpdateMetadata(

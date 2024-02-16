@@ -12,5 +12,11 @@ public class MediaFileConfiguration : IEntityTypeConfiguration<MediaFile>
 
         builder.HasIndex(f => f.Path)
             .IsUnique();
+
+        builder.HasOne(f => f.LibraryFolder)
+            .WithMany(f => f.MediaFiles)
+            .HasForeignKey(f => f.LibraryFolderId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

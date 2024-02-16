@@ -7,7 +7,12 @@ public interface IMovieRepository
 {
     Task<bool> AllMoviesExist(List<int> movieIds);
     Task<Option<Movie>> GetMovie(int movieId);
-    Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(LibraryPath libraryPath, string path);
+
+    Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(
+        LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
+        string path);
+
     Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids);
     Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);

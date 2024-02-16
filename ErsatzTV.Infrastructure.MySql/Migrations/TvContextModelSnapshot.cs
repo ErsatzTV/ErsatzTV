@@ -904,12 +904,17 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("LibraryPathId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Path")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LibraryPathId");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("LibraryFolder", (string)null);
                 });
@@ -970,6 +975,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int?>("LibraryFolderId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MediaVersionId")
                         .HasColumnType("int");
 
@@ -977,6 +985,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LibraryFolderId");
 
                     b.HasIndex("MediaVersionId");
 
@@ -3470,7 +3480,14 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.LibraryFolder", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("LibraryPath");
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.LibraryPath", b =>
@@ -3497,11 +3514,18 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MediaFile", b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.LibraryFolder", "LibraryFolder")
+                        .WithMany("MediaFiles")
+                        .HasForeignKey("LibraryFolderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ErsatzTV.Core.Domain.MediaVersion", "MediaVersion")
                         .WithMany("MediaFiles")
                         .HasForeignKey("MediaVersionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("LibraryFolder");
 
                     b.Navigation("MediaVersion");
                 });
@@ -4787,6 +4811,13 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.Library", b =>
                 {
                     b.Navigation("Paths");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.LibraryFolder", b =>
+                {
+                    b.Navigation("Children");
+
+                    b.Navigation("MediaFiles");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.LibraryPath", b =>

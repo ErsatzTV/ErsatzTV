@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of media items with no audio streams
 - Fix timestamp continuity in `HLS Segmenter` sessions
   - This should make *some* clients happier 
+- Fix `Other Video`, `Song` and `Image` fallback metadata tags to always include parent folder (folder added to library) 
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
