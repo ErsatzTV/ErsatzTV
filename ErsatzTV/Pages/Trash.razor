@@ -321,6 +321,35 @@
             }
         </MudContainer>
     }
+    
+    @if (_images?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "images" } })">
+                Songs
+            </MudText>
+            @if (_images.Count > 50)
+            {
+                <MudLink Href="@GetImagesLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (ImageCardViewModel card in _images.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
@@ -355,7 +384,7 @@
     }
 
     private bool IsNotEmpty =>
-        _movies?.Count > 0 || _shows?.Count > 0 || _seasons?.Count > 0 || _episodes?.Count > 0 || _musicVideos?.Count > 0 || _otherVideos?.Count > 0 || _songs?.Count > 0 || _artists?.Count > 0;
+        _movies?.Count > 0 || _shows?.Count > 0 || _seasons?.Count > 0 || _episodes?.Count > 0 || _musicVideos?.Count > 0 || _otherVideos?.Count > 0 || _songs?.Count > 0 || _artists?.Count > 0 || _images?.Count > 0;
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
@@ -369,6 +398,7 @@
                 .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
                 .Append(_otherVideos.Cards.OrderBy(ov => ov.SortTitle))
                 .Append(_songs.Cards.OrderBy(ov => ov.SortTitle))
+                .Append(_images.Cards.OrderBy(i => i.SortTitle))
                 .ToList();
         }
 
@@ -455,6 +485,17 @@
     private string GetSongsLink()
     {
         var uri = "media/music/songs/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
+        }
+        return uri;
+    }
+
+    private string GetImagesLink()
+    {
+        var uri = "media/images/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -563,6 +604,10 @@
                 request = new DeleteItemsFromDatabase(new List<int> { song.SongId });
                 await DeleteItemsWithConfirmation("song", $"{song.Title} ({song.Subtitle})", request);
                 break;
+            case ImageCardViewModel image:
+                request = new DeleteItemsFromDatabase(new List<int> { image.ImageId });
+                await DeleteItemsWithConfirmation("image", $"{image.Title} ({image.Subtitle})", request);
+                break;
         }
     }
 
@@ -586,7 +631,7 @@
     private async Task EmptyTrash()
     {
         int count = _movies.Count + _shows.Count + _seasons.Count + _episodes.Count + _artists.Count +
-                    _musicVideos.Count + _otherVideos.Count + _songs.Count;
+                    _musicVideos.Count + _otherVideos.Count + _songs.Count + _images.Count;
 
         var parameters = new DialogParameters { { "EntityType", count.ToString() }, { "EntityName", "missing items" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };

@@ -210,9 +210,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         return await RefreshFallbackMetadata(song);
     }
 
-    public async Task<bool> RefreshTagMetadata(Image image)
+    public async Task<bool> RefreshTagMetadata(Image image, int? durationSeconds)
     {
-        Option<ImageMetadata> maybeMetadata = LoadImageMetadata(image);
+        Option<ImageMetadata> maybeMetadata = LoadImageMetadata(image, durationSeconds);
         foreach (ImageMetadata metadata in maybeMetadata)
         {
             return await ApplyMetadataUpdate(image, metadata);
@@ -406,7 +406,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         }
     }
     
-    private Option<ImageMetadata> LoadImageMetadata(Image image)
+    private Option<ImageMetadata> LoadImageMetadata(Image image, int? durationSeconds)
     {
         string path = image.GetHeadVersion().MediaFiles.Head().Path;
 
@@ -423,6 +423,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     MetadataKind = MetadataKind.Embedded,
                     DateAdded = DateTime.UtcNow,
                     DateUpdated = File.GetLastWriteTimeUtc(path),
+                    DurationSeconds = durationSeconds,
 
                     Artwork = [],
                     Actors = [],

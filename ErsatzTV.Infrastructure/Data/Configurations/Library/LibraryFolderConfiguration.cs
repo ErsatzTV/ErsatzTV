@@ -15,5 +15,11 @@ public class LibraryFolderConfiguration : IEntityTypeConfiguration<LibraryFolder
             .HasForeignKey(f => f.ParentId)
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(f => f.ImageFolderDuration)
+            .WithOne(ifd => ifd.LibraryFolder)
+            .HasForeignKey<ImageFolderDuration>(ifd => ifd.LibraryFolderId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

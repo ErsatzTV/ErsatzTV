@@ -72,7 +72,7 @@ public class MediaItemRepository : IMediaItemRepository
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT M.Id
                 FROM MediaItem M
-                INNER JOIN MediaVersion MV on M.Id = COALESCE(MovieId, MusicVideoId, OtherVideoId, SongId, EpisodeId)
+                INNER JOIN MediaVersion MV on M.Id = COALESCE(MovieId, MusicVideoId, OtherVideoId, SongId, ImageId, EpisodeId)
                 INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
                 WHERE M.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
                 new { LibraryPathId = libraryPath.Id, Path = path })

@@ -1,0 +1,102 @@
+﻿@page "/media/browser/images"
+@using S=System.Collections.Generic
+@using ErsatzTV.Application.Images
+@using System.Net
+@implements IDisposable
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudGrid>
+        <MudItem xs="8">
+            <MudCard>
+                <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+                    <ItemTemplate Context="item">
+                        <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                            <BodyContent>
+                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                    <div style="justify-self: start;">
+                                        <MudText>@item.Text</MudText>
+                                    </div>
+                                    <div style="justify-self: end;">
+                                        <span>@item.EndText</span>
+                                        <MudTooltip Text="Edit Image Folder Duration" ShowOnHover="true" ShowOnClick="false" ShowOnFocus="false">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                           OnClick="@(_ => EditImageFolderDuration(item))">
+                                            </MudIconButton>
+                                        </MudTooltip>
+                                        @{
+                                            string query = GetSearchQuery(item);
+                                            if (!string.IsNullOrWhiteSpace(query))
+                                            {
+                                                <MudIconButton
+                                                    Icon="@Icons.Material.Filled.Search"
+                                                    Link="@($"search?query={query}")"/>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </BodyContent>
+                        </MudTreeViewItem>
+                    </ItemTemplate>
+                </MudTreeView>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private S.HashSet<ImageTreeItemViewModel> TreeItems { get; set; } = [];
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await ReloadImageFolders();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ReloadImageFolders()
+    {
+        List<ImageFolderViewModel> imageFolders = await Mediator.Send(new GetImageFolders(Option<int>.None), _cts.Token);
+        TreeItems = imageFolders.Map(g => new ImageTreeItemViewModel(g)).ToHashSet();
+    }
+
+    private async Task<S.HashSet<ImageTreeItemViewModel>> LoadServerData(ImageTreeItemViewModel parentNode)
+    {
+        List<ImageFolderViewModel> result = await Mediator.Send(new GetImageFolders(parentNode.LibraryFolderId), _cts.Token);
+        foreach (ImageFolderViewModel imageFolder in result)
+        {
+            parentNode.TreeItems.Add(new ImageTreeItemViewModel(imageFolder));
+        }
+
+        return parentNode.TreeItems;
+    }
+
+    private static string GetSearchQuery(ImageTreeItemViewModel item)
+    {
+        var query = $"library_folder_id:{item.LibraryFolderId}";
+        return WebUtility.UrlEncode(query);
+    }
+    
+    private async Task EditImageFolderDuration(ImageTreeItemViewModel item)
+    {
+        var parameters = new DialogParameters { { "ImageFolderDuration", item.ImageFolderDuration } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+
+        IDialogReference dialog = await Dialog.ShowAsync<EditImageFolderDurationDialog>("Edit Image Folder Duration", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            var duration = result.Data as int?;
+            await Mediator.Send(new UpdateImageFolderDuration(item.LibraryFolderId, duration), _cts.Token);
+            item.UpdateDuration(duration);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
