@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -76,6 +77,14 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
             var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
+            
+            string normalizedLibraryPath = libraryPath.Path.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar);
+            if (libraryPath.Path != normalizedLibraryPath)
+            {
+                await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
+            }
 
             if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
@@ -108,6 +117,8 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     cancellationToken);
 
                 string otherVideoFolder = folderQueue.Dequeue();
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(otherVideoFolder);
+
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(otherVideoFolder).ToList();
@@ -126,14 +137,13 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 }
 
                 string etag = FolderEtag.Calculate(otherVideoFolder, _localFileSystem);
-                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                    .Filter(f => f.Path == otherVideoFolder)
-                    .HeadOrNone();
+                LibraryFolder knownFolder = await _libraryRepository.GetOrAddFolder(
+                    libraryPath,
+                    maybeParentFolder,
+                    otherVideoFolder);
 
                 // skip folder if etag matches
-                if (allFiles.Count == 0 ||
-                    await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                    etag)
+                if (allFiles.Count == 0 || knownFolder.Etag == etag)
                 {
                     continue;
                 }
@@ -147,8 +157,9 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
-                        .GetOrAdd(libraryPath, file)
+                        .GetOrAdd(libraryPath, knownFolder, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
+                        .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                         .BindT(UpdateMetadata)
                         .BindT(video => UpdateThumbnail(video, cancellationToken))
                         .BindT(UpdateSubtitles)
@@ -221,6 +232,20 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         {
             return new ScanCanceled();
         }
+    }
+    
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateLibraryFolderId(
+        MediaItemScanResult<OtherVideo> video,
+        LibraryFolder libraryFolder)
+    {
+        MediaFile mediaFile = video.Item.GetHeadVersion().MediaFiles.Head();
+        if (mediaFile.LibraryFolderId != libraryFolder.Id)
+        {
+            await _libraryRepository.UpdateLibraryFolderId(mediaFile, libraryFolder.Id);
+            video.IsUpdated = true;
+        }
+
+        return video;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateMetadata(

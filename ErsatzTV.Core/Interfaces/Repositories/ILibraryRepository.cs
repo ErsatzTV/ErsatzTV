@@ -12,6 +12,10 @@ public interface ILibraryRepository
     Task<Unit> UpdateLastScan(LibraryPath libraryPath);
     Task<List<LibraryPath>> GetLocalPaths(int libraryId);
     Task<int> CountMediaItemsByPath(int libraryPathId);
-    Task<Unit> SetEtag(LibraryPath libraryPath, Option<LibraryFolder> knownFolder, string path, string etag);
-    Task<Unit> CleanEtagsForLibraryPath(LibraryPath libraryPath);
+    Task SetEtag(LibraryPath libraryPath, Option<LibraryFolder> knownFolder, string path, string etag);
+    Task CleanEtagsForLibraryPath(LibraryPath libraryPath);
+    Task<Option<int>> GetParentFolderId(string folder);
+    Task<LibraryFolder> GetOrAddFolder(LibraryPath libraryPath, Option<int> maybeParentFolder, string folder);
+    Task UpdateLibraryFolderId(MediaFile mediaFile, int libraryFolderId);
+    Task UpdatePath(LibraryPath libraryPath, string normalizedLibraryPath);
 }

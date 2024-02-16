@@ -22,6 +22,7 @@ public class ImageRepository : IImageRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<Image>>> GetOrAdd(
         LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
         string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -55,7 +56,7 @@ public class ImageRepository : IImageRepository
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<Image>>(
                     new MediaItemScanResult<Image>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddImage(dbContext, libraryPath.Id, path));
+            async () => await AddImage(dbContext, libraryPath.Id, libraryFolder.Id, path));
     }
 
     public async Task<IEnumerable<string>> FindImagePaths(LibraryPath libraryPath)
@@ -124,6 +125,7 @@ public class ImageRepository : IImageRepository
     private async Task<Either<BaseError, MediaItemScanResult<Image>>> AddImage(
         TvContext dbContext,
         int libraryPathId,
+        int libraryFolderId,
         string path)
     {
         try
@@ -133,14 +135,14 @@ public class ImageRepository : IImageRepository
                 return new MediaFileAlreadyExists();
             }
 
-            var otherVideo = new Image
+            var image = new Image
             {
                 LibraryPathId = libraryPathId,
                 MediaVersions =
                 [
                     new MediaVersion
                     {
-                        MediaFiles = [new MediaFile { Path = path }],
+                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
                         Streams = []
                     }
                 ],
@@ -150,11 +152,11 @@ public class ImageRepository : IImageRepository
                 }
             };
 
-            await dbContext.Images.AddAsync(otherVideo);
+            await dbContext.Images.AddAsync(image);
             await dbContext.SaveChangesAsync();
-            await dbContext.Entry(otherVideo).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(otherVideo.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            return new MediaItemScanResult<Image>(otherVideo) { IsAdded = true };
+            await dbContext.Entry(image).Reference(m => m.LibraryPath).LoadAsync();
+            await dbContext.Entry(image.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            return new MediaItemScanResult<Image>(image) { IsAdded = true };
         }
         catch (Exception ex)
         {

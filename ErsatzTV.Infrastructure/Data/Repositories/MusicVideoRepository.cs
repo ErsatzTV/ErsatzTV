@@ -16,6 +16,7 @@ public class MusicVideoRepository : IMusicVideoRepository
     public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
         Artist artist,
         LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
         string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -62,7 +63,7 @@ public class MusicVideoRepository : IMusicVideoRepository
                 return Right<BaseError, MediaItemScanResult<MusicVideo>>(
                     new MediaItemScanResult<MusicVideo>(mediaItem) { IsAdded = false });
             },
-            async () => await AddMusicVideo(dbContext, artist, libraryPath.Id, path));
+            async () => await AddMusicVideo(dbContext, artist, libraryPath.Id, libraryFolder.Id, path));
     }
 
     public async Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath)
@@ -219,6 +220,7 @@ public class MusicVideoRepository : IMusicVideoRepository
         TvContext dbContext,
         Artist artist,
         int libraryPathId,
+        int libraryFolderId,
         string path)
     {
         try
@@ -227,18 +229,18 @@ public class MusicVideoRepository : IMusicVideoRepository
             {
                 ArtistId = artist.Id,
                 LibraryPathId = libraryPathId,
-                MediaVersions = new List<MediaVersion>
-                {
-                    new()
+                MediaVersions =
+                [
+                    new MediaVersion
                     {
-                        MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = path }
-                        },
-                        Streams = new List<MediaStream>()
+                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
+                        Streams = []
                     }
-                },
-                TraktListItems = new List<TraktListItem>()
+                ],
+                TraktListItems = new List<TraktListItem>
+                {
+                    Capacity = 0
+                }
             };
 
             await dbContext.MusicVideos.AddAsync(musicVideo);

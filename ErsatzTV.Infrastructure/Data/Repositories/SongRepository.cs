@@ -15,6 +15,7 @@ public class SongRepository : ISongRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<Song>>> GetOrAdd(
         LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
         string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -44,7 +45,7 @@ public class SongRepository : ISongRepository
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<Song>>(
                     new MediaItemScanResult<Song>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddSong(dbContext, libraryPath.Id, path));
+            async () => await AddSong(dbContext, libraryPath.Id, libraryFolder.Id, path));
     }
 
     public async Task<IEnumerable<string>> FindSongPaths(LibraryPath libraryPath)
@@ -121,6 +122,7 @@ public class SongRepository : ISongRepository
     private static async Task<Either<BaseError, MediaItemScanResult<Song>>> AddSong(
         TvContext dbContext,
         int libraryPathId,
+        int libraryFolderId,
         string path)
     {
         try
@@ -128,18 +130,15 @@ public class SongRepository : ISongRepository
             var song = new Song
             {
                 LibraryPathId = libraryPathId,
-                MediaVersions = new List<MediaVersion>
-                {
-                    new()
+                MediaVersions =
+                [
+                    new MediaVersion
                     {
-                        MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = path }
-                        },
-                        Streams = new List<MediaStream>()
+                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
+                        Streams = []
                     }
-                },
-                TraktListItems = new List<TraktListItem>()
+                ],
+                TraktListItems = []
             };
 
             await dbContext.Songs.AddAsync(song);

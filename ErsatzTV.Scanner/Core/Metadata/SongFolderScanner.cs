@@ -73,6 +73,14 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
+            
+            string normalizedLibraryPath = libraryPath.Path.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar);
+            if (libraryPath.Path != normalizedLibraryPath)
+            {
+                await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
+            }
 
             if (ShouldIncludeFolder(libraryPath.Path))
             {
@@ -104,6 +112,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     cancellationToken);
 
                 string songFolder = folderQueue.Dequeue();
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(songFolder);
+
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(songFolder).ToList();
@@ -121,14 +131,13 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 }
 
                 string etag = FolderEtag.Calculate(songFolder, _localFileSystem);
-                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
-                    .Filter(f => f.Path == songFolder)
-                    .HeadOrNone();
+                LibraryFolder knownFolder = await _libraryRepository.GetOrAddFolder(
+                    libraryPath,
+                    maybeParentFolder,
+                    songFolder);
 
                 // skip folder if etag matches
-                if (allFiles.Count == 0 ||
-                    await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                    etag)
+                if (allFiles.Count == 0 || knownFolder.Etag == etag)
                 {
                     continue;
                 }
@@ -142,10 +151,11 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
-                        .GetOrAdd(libraryPath, file)
+                        .GetOrAdd(libraryPath, knownFolder, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
+                        .BindT(video => UpdateLibraryFolderId(video, knownFolder))
                         .BindT(UpdateMetadata)
-                        .BindT(video => UpdateThumbnail(video, ffmpegPath, cancellationToken))
+                        .BindT(video => UpdateThumbnail(video, knownFolder, ffmpegPath, cancellationToken))
                         .BindT(FlagNormal);
 
                     foreach (BaseError error in maybeSong.LeftToSeq())
@@ -216,6 +226,20 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             return new ScanCanceled();
         }
     }
+    
+    private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateLibraryFolderId(
+        MediaItemScanResult<Song> result,
+        LibraryFolder libraryFolder)
+    {
+        MediaFile mediaFile = result.Item.GetHeadVersion().MediaFiles.Head();
+        if (mediaFile.LibraryFolderId != libraryFolder.Id)
+        {
+            await _libraryRepository.UpdateLibraryFolderId(mediaFile, libraryFolder.Id);
+            result.IsUpdated = true;
+        }
+
+        return result;
+    }
 
     private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateMetadata(MediaItemScanResult<Song> result)
     {
@@ -251,6 +275,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
     private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
         MediaItemScanResult<Song> result,
+        LibraryFolder knownFolder,
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
@@ -261,7 +286,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             {
                 LibraryPath libraryPath = result.Item.LibraryPath;
                 string path = result.Item.GetHeadVersion().MediaFiles.Head().Path;
-                foreach (MediaItemScanResult<Song> s in (await _songRepository.GetOrAdd(libraryPath, path))
+                foreach (MediaItemScanResult<Song> s in (await _songRepository.GetOrAdd(libraryPath, knownFolder, path))
                          .RightToSeq())
                 {
                     result.Item = s.Item;

@@ -22,6 +22,7 @@ public class OtherVideoRepository : IOtherVideoRepository
 
     public async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> GetOrAdd(
         LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
         string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -59,7 +60,7 @@ public class OtherVideoRepository : IOtherVideoRepository
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<OtherVideo>>(
                     new MediaItemScanResult<OtherVideo>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddOtherVideo(dbContext, libraryPath.Id, path));
+            async () => await AddOtherVideo(dbContext, libraryPath.Id, libraryFolder.Id, path));
     }
 
     public async Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath)
@@ -189,6 +190,7 @@ public class OtherVideoRepository : IOtherVideoRepository
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> AddOtherVideo(
         TvContext dbContext,
         int libraryPathId,
+        int libraryFolderId,
         string path)
     {
         try
@@ -201,18 +203,15 @@ public class OtherVideoRepository : IOtherVideoRepository
             var otherVideo = new OtherVideo
             {
                 LibraryPathId = libraryPathId,
-                MediaVersions = new List<MediaVersion>
-                {
-                    new()
+                MediaVersions =
+                [
+                    new MediaVersion
                     {
-                        MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = path }
-                        },
-                        Streams = new List<MediaStream>()
+                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
+                        Streams = []
                     }
-                },
-                TraktListItems = new List<TraktListItem>()
+                ],
+                TraktListItems = []
             };
 
             await dbContext.OtherVideos.AddAsync(otherVideo);

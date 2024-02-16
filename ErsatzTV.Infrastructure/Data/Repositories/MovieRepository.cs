@@ -57,7 +57,10 @@ public class MovieRepository : IMovieRepository
             .Map(Optional);
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(LibraryPath libraryPath, string path)
+    public async Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(
+        LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
+        string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<Movie> maybeExisting = await dbContext.Movies
@@ -96,7 +99,7 @@ public class MovieRepository : IMovieRepository
             mediaItem =>
                 Right<BaseError, MediaItemScanResult<Movie>>(
                     new MediaItemScanResult<Movie>(mediaItem) { IsAdded = false }).AsTask(),
-            async () => await AddMovie(dbContext, libraryPath.Id, path));
+            async () => await AddMovie(dbContext, libraryPath.Id, libraryFolder.Id, path));
     }
 
     public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
@@ -232,6 +235,7 @@ public class MovieRepository : IMovieRepository
     private async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
         TvContext dbContext,
         int libraryPathId,
+        int libraryFolderId,
         string path)
     {
         try
@@ -244,18 +248,15 @@ public class MovieRepository : IMovieRepository
             var movie = new Movie
             {
                 LibraryPathId = libraryPathId,
-                MediaVersions = new List<MediaVersion>
-                {
-                    new()
+                MediaVersions =
+                [
+                    new MediaVersion
                     {
-                        MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = path }
-                        },
-                        Streams = new List<MediaStream>()
+                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
+                        Streams = []
                     }
-                },
-                TraktListItems = new List<TraktListItem>()
+                ],
+                TraktListItems = []
             };
             await dbContext.Movies.AddAsync(movie);
             await dbContext.SaveChangesAsync();

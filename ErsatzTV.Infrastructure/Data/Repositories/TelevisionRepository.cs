@@ -356,6 +356,7 @@ public class TelevisionRepository : ITelevisionRepository
     public async Task<Either<BaseError, Episode>> GetOrAddEpisode(
         Season season,
         LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
         string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -407,7 +408,7 @@ public class TelevisionRepository : ITelevisionRepository
 
                 return episode;
             },
-            async () => await AddEpisode(dbContext, season, libraryPath.Id, path));
+            async () => await AddEpisode(dbContext, season, libraryPath.Id, libraryFolder.Id, path));
     }
 
     public async Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath)
@@ -723,6 +724,7 @@ public class TelevisionRepository : ITelevisionRepository
         TvContext dbContext,
         Season season,
         int libraryPathId,
+        int libraryFolderId,
         string path)
     {
         try
@@ -736,34 +738,31 @@ public class TelevisionRepository : ITelevisionRepository
             {
                 LibraryPathId = libraryPathId,
                 SeasonId = season.Id,
-                EpisodeMetadata = new List<EpisodeMetadata>
-                {
-                    new()
+                EpisodeMetadata =
+                [
+                    new EpisodeMetadata
                     {
                         DateAdded = DateTime.UtcNow,
                         DateUpdated = SystemTime.MinValueUtc,
                         MetadataKind = MetadataKind.Fallback,
-                        Actors = new List<Actor>(),
-                        Guids = new List<MetadataGuid>(),
-                        Writers = new List<Writer>(),
-                        Directors = new List<Director>(),
-                        Genres = new List<Genre>(),
-                        Tags = new List<Tag>(),
-                        Studios = new List<Studio>()
+                        Actors = [],
+                        Guids = [],
+                        Writers = [],
+                        Directors = [],
+                        Genres = [],
+                        Tags = [],
+                        Studios = []
                     }
-                },
-                MediaVersions = new List<MediaVersion>
-                {
-                    new()
+                ],
+                MediaVersions =
+                [
+                    new MediaVersion
                     {
-                        MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = path }
-                        },
-                        Streams = new List<MediaStream>()
+                        MediaFiles = [new MediaFile { Path = path, LibraryFolderId = libraryFolderId }],
+                        Streams = []
                     }
-                },
-                TraktListItems = new List<TraktListItem>()
+                ],
+                TraktListItems = []
             };
             await dbContext.Episodes.AddAsync(episode);
             await dbContext.SaveChangesAsync();

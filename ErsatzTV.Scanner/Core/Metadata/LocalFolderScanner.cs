@@ -128,7 +128,7 @@ public abstract class LocalFolderScanner
             return BaseError.New(ex.Message);
         }
     }
-
+    
     protected async Task<bool> RefreshArtwork(
         string artworkFile,
         ErsatzTV.Core.Domain.Metadata metadata,

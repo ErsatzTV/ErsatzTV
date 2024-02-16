@@ -47,7 +47,11 @@ public class FakeTelevisionRepository : ITelevisionRepository
     public Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber) =>
         throw new NotSupportedException();
 
-    public Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path) =>
+    public Task<Either<BaseError, Episode>> GetOrAddEpisode(
+        Season season,
+        LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
+        string path) =>
         throw new NotSupportedException();
 
     public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) => throw new NotSupportedException();

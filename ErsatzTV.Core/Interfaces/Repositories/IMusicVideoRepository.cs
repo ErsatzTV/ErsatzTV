@@ -8,6 +8,7 @@ public interface IMusicVideoRepository
     Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
         Artist artist,
         LibraryPath libraryPath,
+        LibraryFolder libraryFolder,
         string path);
 
     Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath);
