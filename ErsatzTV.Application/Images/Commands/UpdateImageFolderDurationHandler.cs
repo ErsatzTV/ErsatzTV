@@ -6,12 +6,17 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Images;
 
 public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<UpdateImageFolderDuration>
+    : IRequestHandler<UpdateImageFolderDuration, int?>
 {
-    public async Task Handle(UpdateImageFolderDuration request, CancellationToken cancellationToken)
+    public async Task<int?> Handle(UpdateImageFolderDuration request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        if (request.ImageFolderDuration.IfNone(1) < 1)
+        {
+            request = request with { ImageFolderDuration = 1 };
+        }
+        
         // delete entry if null
         if (request.ImageFolderDuration is null)
         {
@@ -111,6 +116,8 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
                 queue.Enqueue(new FolderWithParentDuration(child, effectiveDuration));
             }
         }
+
+        return request.ImageFolderDuration;
     }
 
     private sealed record FolderWithParentDuration(LibraryFolder LibraryFolder, int? ParentDuration);

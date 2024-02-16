@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix timestamp continuity in `HLS Segmenter` sessions
   - This should make *some* clients happier 
 - Fix `Other Video`, `Song` and `Image` fallback metadata tags to always include parent folder (folder added to library) 
+- Allow playback of items with a duration of 1 second
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
