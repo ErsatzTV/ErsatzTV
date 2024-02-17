@@ -7,15 +7,16 @@
                 Edit the image folder duration
             </MudText>
         </MudContainer>
-        <MudTextField Label="Duration" @bind-Value="@_imageDurationSeconds"
-                      For="@(() => _imageDurationSeconds)"
+        <MudNumericField T="double?" Label="Duration" @bind-Value="@_imageDurationSeconds"
                       Adornment="Adornment.End"
                       AdornmentText="seconds"
+                      Min="0.01"
+                      Step="0.01"
                       Immediate="true"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(_imageDurationSeconds == ImageFolderDuration)" OnClick="Submit">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
             Save Changes
         </MudButton>
     </DialogActions>
@@ -25,12 +26,12 @@
     private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
-    public int? ImageFolderDuration { get; set; }
+    public double? ImageFolderDuration { get; set; }
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
 
-    private int? _imageDurationSeconds;
+    private double? _imageDurationSeconds;
 
     public void Dispose()
     {

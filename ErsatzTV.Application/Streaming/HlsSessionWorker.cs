@@ -342,9 +342,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             _logger.LogDebug("HLS session state: {State}", _state);
 
-            DateTimeOffset now = _state is HlsSessionState.SeekAndWorkAhead
-                ? DateTimeOffset.Now
-                : _transcodedUntil.AddSeconds(_state is HlsSessionState.SeekAndRealtime ? 0 : 0.5);
+            DateTimeOffset now = _state is HlsSessionState.SeekAndWorkAhead ? DateTimeOffset.Now : _transcodedUntil;
             bool startAtZero = _state is HlsSessionState.ZeroAndWorkAhead or HlsSessionState.ZeroAndRealtime;
 
             var request = new GetPlayoutItemProcessByChannelNumber(

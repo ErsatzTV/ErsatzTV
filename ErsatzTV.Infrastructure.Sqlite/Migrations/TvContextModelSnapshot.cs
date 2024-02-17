@@ -739,8 +739,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("DurationSeconds")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("DurationSeconds")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("LibraryFolderId")
                         .HasColumnType("INTEGER");
@@ -765,8 +765,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("DurationSeconds")
-                        .HasColumnType("INTEGER");
+                    b.Property<double?>("DurationSeconds")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("ImageId")
                         .HasColumnType("INTEGER");

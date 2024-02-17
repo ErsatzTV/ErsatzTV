@@ -14,5 +14,5 @@ public static class Mapper
             libraryFolder.Path,
             childCount,
             imageCount,
-            libraryFolder.ImageFolderDuration?.DurationSeconds ?? Option<int>.None);
+            libraryFolder.ImageFolderDuration?.DurationSeconds ?? Option<double>.None);
 }

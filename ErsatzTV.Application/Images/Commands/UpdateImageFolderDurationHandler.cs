@@ -6,15 +6,15 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Images;
 
 public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<UpdateImageFolderDuration, int?>
+    : IRequestHandler<UpdateImageFolderDuration, double?>
 {
-    public async Task<int?> Handle(UpdateImageFolderDuration request, CancellationToken cancellationToken)
+    public async Task<double?> Handle(UpdateImageFolderDuration request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        if (request.ImageFolderDuration.IfNone(1) < 1)
+        if (request.ImageFolderDuration.IfNone(1) < 0.01)
         {
-            request = request with { ImageFolderDuration = 1 };
+            request = request with { ImageFolderDuration = 0.01 };
         }
         
         // delete entry if null
@@ -61,7 +61,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
             LibraryFolder currentFolder = libraryFolder;
             
             // walk up to get duration, if needed
-            int? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
+            double? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
             while (durationSeconds is null && currentFolder?.ParentId is not null)
             {
                 Option<LibraryFolder> maybeParent = await dbContext.LibraryFolders
@@ -86,8 +86,8 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
         
         while (queue.Count > 0)
         {
-            (LibraryFolder currentFolder, int? parentDuration) = queue.Dequeue();
-            int? effectiveDuration = currentFolder.ImageFolderDuration?.DurationSeconds ?? parentDuration;
+            (LibraryFolder currentFolder, double? parentDuration) = queue.Dequeue();
+            double? effectiveDuration = currentFolder.ImageFolderDuration?.DurationSeconds ?? parentDuration;
 
             // Serilog.Log.Logger.Information(
             //     "Updating folder {Id} with parent duration {ParentDuration}, effective duration {EffectiveDuration}",
@@ -120,5 +120,5 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
         return request.ImageFolderDuration;
     }
 
-    private sealed record FolderWithParentDuration(LibraryFolder LibraryFolder, int? ParentDuration);
+    private sealed record FolderWithParentDuration(LibraryFolder LibraryFolder, double? ParentDuration);
 }

@@ -6,7 +6,7 @@ namespace ErsatzTV.ViewModels;
 
 public class ImageTreeItemViewModel
 {
-    private string _imageCount;
+    private readonly string _imageCount;
     
     public ImageTreeItemViewModel(ImageFolderViewModel imageFolder)
     {
@@ -23,7 +23,7 @@ public class ImageTreeItemViewModel
             _ => string.Empty
         };
 
-        foreach (int durationSeconds in imageFolder.DurationSeconds)
+        foreach (double durationSeconds in imageFolder.DurationSeconds)
         {
             ImageFolderDuration = durationSeconds;
         }
@@ -42,24 +42,24 @@ public class ImageTreeItemViewModel
     public string Icon { get; }
     
     public int LibraryFolderId { get; }
-    public int? ImageFolderDuration { get; private set; }
+    public double? ImageFolderDuration { get; private set; }
     
     public bool CanExpand { get; }
     
     public S.HashSet<ImageTreeItemViewModel> TreeItems { get; }
 
-    public void UpdateDuration(int? imageFolderDuration)
+    public void UpdateDuration(double? imageFolderDuration)
     {
         ImageFolderDuration = imageFolderDuration;
 
         string duration = string.Empty;
         
-        foreach (int durationSeconds in Optional(imageFolderDuration))
+        foreach (double durationSeconds in Optional(imageFolderDuration))
         {
             duration = durationSeconds switch
             {
-                > 1 => $"{durationSeconds} seconds",
                 1 => "1 second",
+                > 0 => $"{durationSeconds:0.##} seconds",
                 _ => string.Empty
             };
 
