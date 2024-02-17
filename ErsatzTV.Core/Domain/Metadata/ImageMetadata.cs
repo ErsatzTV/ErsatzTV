@@ -2,7 +2,7 @@
 
 public class ImageMetadata : Metadata
 {
-    public int? DurationSeconds { get; set; }
+    public double? DurationSeconds { get; set; }
     public int ImageId { get; set; }
     public Image Image { get; set; }
 }

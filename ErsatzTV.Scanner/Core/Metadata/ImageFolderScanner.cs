@@ -147,7 +147,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 
                 // walk up to get duration, if needed
                 LibraryFolder? currentFolder = knownFolder;
-                int? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
+                double? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
                 while (durationSeconds is null && currentFolder?.ParentId is not null)
                 {
                     Option<LibraryFolder> maybeParent = libraryPath.LibraryFolders
@@ -265,19 +265,25 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 
     private async Task<Either<BaseError, MediaItemScanResult<Image>>> UpdateMetadata(
         MediaItemScanResult<Image> result,
-        int? durationSeconds)
+        double? durationSeconds)
     {
         try
         {
             Image image = result.Item;
             string path = image.GetHeadVersion().MediaFiles.Head().Path;
+            bool shouldUpdate = true;
 
-            bool shouldUpdate = Optional(image.ImageMetadata).Flatten().HeadOrNone().Match(
-                m => m.MetadataKind == MetadataKind.Fallback ||
-                     m.DateUpdated != _localFileSystem.GetLastWriteTime(path) ||
-                     m.DurationSeconds != durationSeconds,
-                true);
+            foreach (ImageMetadata imageMetadata in Optional(image.ImageMetadata).Flatten().HeadOrNone())
+            {
+                bool durationsAreDifferent =
+                    imageMetadata.DurationSeconds.HasValue != durationSeconds.HasValue ||
+                    Math.Abs(imageMetadata.DurationSeconds.IfNone(1) - durationSeconds.IfNone(1)) > 0.01;
 
+                shouldUpdate = imageMetadata.MetadataKind == MetadataKind.Fallback ||
+                               imageMetadata.DateUpdated != _localFileSystem.GetLastWriteTime(path) ||
+                               durationsAreDifferent;
+            }
+            
             if (shouldUpdate)
             {
                 image.ImageMetadata ??= [];

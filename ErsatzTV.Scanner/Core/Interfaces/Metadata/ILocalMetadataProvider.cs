@@ -13,7 +13,7 @@ public interface ILocalMetadataProvider
     Task<bool> RefreshSidecarMetadata(MusicVideo musicVideo, string nfoFileName);
     Task<bool> RefreshSidecarMetadata(OtherVideo otherVideo, string nfoFileName);
     Task<bool> RefreshTagMetadata(Song song);
-    Task<bool> RefreshTagMetadata(Image image, int? durationSeconds);
+    Task<bool> RefreshTagMetadata(Image image, double? durationSeconds);
     Task<bool> RefreshFallbackMetadata(Movie movie);
     Task<bool> RefreshFallbackMetadata(Episode episode);
     Task<bool> RefreshFallbackMetadata(Artist artist, string artistFolder);

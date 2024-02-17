@@ -6,4 +6,4 @@ public record ImageFolderViewModel(
     string FullPath,
     int SubfolderCount,
     int ImageCount,
-    Option<int> DurationSeconds);
+    Option<double> DurationSeconds);

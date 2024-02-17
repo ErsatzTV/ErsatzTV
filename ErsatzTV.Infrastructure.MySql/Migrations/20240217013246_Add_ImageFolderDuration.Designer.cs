@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20240217013246_Add_ImageFolderDuration")]
+    partial class Add_ImageFolderDuration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -741,8 +744,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<double>("DurationSeconds")
-                        .HasColumnType("double");
+                    b.Property<int>("DurationSeconds")
+                        .HasColumnType("int");
 
                     b.Property<int>("LibraryFolderId")
                         .HasColumnType("int");
@@ -767,8 +770,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<double?>("DurationSeconds")
-                        .HasColumnType("double");
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
 
                     b.Property<int>("ImageId")
                         .HasColumnType("int");
