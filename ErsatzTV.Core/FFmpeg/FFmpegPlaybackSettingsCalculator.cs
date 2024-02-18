@@ -63,11 +63,11 @@ public static class FFmpegPlaybackSettingsCalculator
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                StreamingMode.HttpLiveStreamingSegmenterV2 => hlsRealtime,
                 _ => true
-            }
+            },
+            ThreadCount = ffmpegProfile.ThreadCount
         };
-
-        result.ThreadCount = ffmpegProfile.ThreadCount;
 
         if (now != start || inPoint != TimeSpan.Zero)
         {
@@ -189,6 +189,7 @@ public static class FFmpegPlaybackSettingsCalculator
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                StreamingMode.HttpLiveStreamingSegmenterV2 => hlsRealtime,
                 _ => true
             },
             VideoTrackTimeScale = 90000,

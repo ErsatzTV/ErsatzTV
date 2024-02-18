@@ -139,7 +139,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
         
         pipelineSteps.Add(new NoSceneDetectOutputOption(0));
-        pipelineSteps.Add(new EncoderCopyAll());
+        pipelineSteps.Add(new EncoderLibx264());
+        pipelineSteps.Add(new EncoderAac());
+        //pipelineSteps.Add(new EncoderCopyAll());
         
         if (ffmpegState.DoNotMapMetadata)
         {
@@ -393,14 +395,15 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         SetAudioBufferSize(audioInputFile, pipelineSteps);
         SetAudioSampleRate(audioInputFile, pipelineSteps);
         SetAudioLoudness(audioInputFile);
-        SetAudioPad(audioInputFile);
+        SetAudioPad(audioInputFile, pipelineSteps);
     }
 
-    private void SetAudioPad(AudioInputFile audioInputFile)
+    private void SetAudioPad(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
         foreach (TimeSpan desiredDuration in audioInputFile.DesiredState.AudioDuration)
         {
             _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter(desiredDuration)));
+            pipelineSteps.Add(new ShortestOutputOption());
         }
     }
 
@@ -695,11 +698,21 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         videoInputFile.AddOption(new ReadrateInputOption(_ffmpegCapabilities, initialBurst, _logger));
     }
 
-    protected static void SetStillImageLoop(VideoInputFile videoInputFile, VideoStream videoStream)
+    protected static void SetStillImageLoop(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FrameState desiredState,
+        ICollection<IPipelineStep> pipelineSteps)
     {
         if (videoStream.StillImage)
         {
             videoInputFile.FilterSteps.Add(new LoopFilter());
+            if (desiredState.Realtime)
+            {
+                videoInputFile.FilterSteps.Add(new RealtimeFilter());
+            }
+
+            pipelineSteps.Add(new ShortestOutputOption());
         }
     }
 

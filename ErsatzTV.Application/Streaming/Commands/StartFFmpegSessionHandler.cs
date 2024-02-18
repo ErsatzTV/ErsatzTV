@@ -93,16 +93,11 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
                 },
                 TaskScheduler.Default);
 
-        string playlistFileName = Path.Combine(
-            FileSystemLayout.TranscodeFolder,
-            request.ChannelNumber,
-            "live.m3u8");
-
         int initialSegmentCount = await _configElementRepository
             .GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
 
-        await worker.WaitForPlaylistSegments(playlistFileName, initialSegmentCount, cancellationToken);
+        await worker.WaitForPlaylistSegments(initialSegmentCount, cancellationToken);
 
         return Unit.Default;
     }
@@ -112,8 +107,6 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         {
             "segmenter-v2" => new HlsSessionWorkerV2(
                 _serviceScopeFactory,
-                _client,
-                _hlsPlaylistFilter,
                 _configElementRepository,
                 _localFileSystem,
                 _sessionWorkerV2Logger,

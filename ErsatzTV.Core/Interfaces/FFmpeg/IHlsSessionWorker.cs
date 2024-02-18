@@ -10,5 +10,5 @@ public interface IHlsSessionWorker : IDisposable
     void PlayoutUpdated();
     HlsSessionModel GetModel();
     Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken);
-    Task WaitForPlaylistSegments(string playlistFileName, int initialSegmentCount, CancellationToken cancellationToken);
+    Task WaitForPlaylistSegments(int initialSegmentCount, CancellationToken cancellationToken);
 }

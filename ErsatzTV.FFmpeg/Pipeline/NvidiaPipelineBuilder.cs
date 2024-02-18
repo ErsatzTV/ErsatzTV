@@ -161,7 +161,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
-        SetStillImageLoop(videoInputFile, videoStream);
+        SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
 
         if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark)
         {

@@ -548,7 +548,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
         var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
+            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}?mode=ts-legacy",
             resolution);
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
@@ -580,7 +580,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
         var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
+            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}?mode=segmenter-v2",
             resolution);
 
         Option<string> hlsSegmentTemplate = Path.Combine(

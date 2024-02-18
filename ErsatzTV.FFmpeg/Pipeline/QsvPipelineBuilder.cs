@@ -166,7 +166,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
-        SetStillImageLoop(videoInputFile, videoStream);
+        SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
 
         // need to download for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&

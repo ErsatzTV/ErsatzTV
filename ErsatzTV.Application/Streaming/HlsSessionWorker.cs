@@ -242,7 +242,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     }
     
     public async Task WaitForPlaylistSegments(
-        string playlistFileName,
         int initialSegmentCount,
         CancellationToken cancellationToken)
     {
@@ -251,6 +250,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             DateTimeOffset start = DateTimeOffset.Now;
             DateTimeOffset finish = start.AddSeconds(8);
+            
+            string playlistFileName = Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber, "live.m3u8");
 
             _logger.LogDebug("Waiting for playlist to exist");
             while (!_localFileSystem.FileExists(playlistFileName))
