@@ -570,6 +570,45 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
     }
 
+    public async Task<Command> ConcatSegmenterChannel(
+        string ffmpegPath,
+        bool saveReports,
+        Channel channel,
+        string scheme,
+        string host)
+    {
+        var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
+
+        var concatInputFile = new ConcatInputFile(
+            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
+            resolution);
+
+        Option<string> hlsSegmentTemplate = Path.Combine(
+            FileSystemLayout.TranscodeFolder,
+            channel.Number,
+            "live%06d.ts");
+
+        Option<string> hlsPlaylistPath = Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8");
+
+        IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
+            HardwareAccelerationMode.None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
+            ffmpegPath);
+
+        FFmpegPipeline pipeline = pipelineBuilder.ConcatSegmenter(
+            concatInputFile,
+            FFmpegState.ConcatSegmenter(saveReports, channel.Name, hlsPlaylistPath, hlsSegmentTemplate));
+
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
+    }
+
     public async Task<Command> WrapSegmenter(
         string ffmpegPath,
         bool saveReports,

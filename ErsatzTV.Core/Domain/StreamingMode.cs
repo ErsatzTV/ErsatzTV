@@ -7,5 +7,6 @@ public enum StreamingMode
 
 //        HttpLiveStreamingHybrid = 3,
     HttpLiveStreamingSegmenter = 4,
-    TransportStreamHybrid = 5
+    TransportStreamHybrid = 5,
+    HttpLiveStreamingSegmenterV2 = 6
 }

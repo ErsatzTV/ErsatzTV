@@ -18,7 +18,7 @@ using Timer = System.Timers.Timer;
 
 namespace ErsatzTV.Application.Streaming;
 
-public class HlsSessionWorker : IHlsSessionWorker
+public class HlsSessionWorkerV2 : IHlsSessionWorker
 {
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
@@ -26,10 +26,12 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly ILogger<HlsSessionWorker> _logger;
+    private readonly ILogger<HlsSessionWorkerV2> _logger;
     private readonly IMediator _mediator;
     private readonly object _sync = new();
     private readonly Option<int> _targetFramerate;
+    private readonly string _scheme;
+    private readonly string _host;
     private string _channelNumber;
     private bool _disposedValue;
     private bool _hasWrittenSegments;
@@ -41,14 +43,16 @@ public class HlsSessionWorker : IHlsSessionWorker
     private DateTimeOffset _transcodedUntil;
     private CancellationTokenSource _cancellationTokenSource;
 
-    public HlsSessionWorker(
+    public HlsSessionWorkerV2(
         IServiceScopeFactory serviceScopeFactory,
         IClient client,
         IHlsPlaylistFilter hlsPlaylistFilter,
         IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
-        ILogger<HlsSessionWorker> logger,
-        Option<int> targetFramerate)
+        ILogger<HlsSessionWorkerV2> logger,
+        Option<int> targetFramerate,
+        string scheme,
+        string host)
     {
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
@@ -58,7 +62,12 @@ public class HlsSessionWorker : IHlsSessionWorker
         _localFileSystem = localFileSystem;
         _logger = logger;
         _targetFramerate = targetFramerate;
+        _scheme = scheme;
+        _host = host;
     }
+    
+    // TODO: start long-lived concat/segmenter process (do NOT limit to realtime)
+    // TODO: check how often ffmpeg requests items from the playlist, can we use requests to determine which item we need to play?
 
     public DateTimeOffset PlaylistStart { get; private set; }
 
@@ -161,7 +170,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
 
-            _logger.LogInformation("Starting HLS session for channel {Channel}", channelNumber);
+            _logger.LogInformation("Starting HLS V2 session for channel {Channel}", channelNumber);
 
             if (_localFileSystem.ListFiles(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber)).Any())
             {
@@ -172,41 +181,45 @@ public class HlsSessionWorker : IHlsSessionWorker
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
 
-            bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-            _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
+            // start concat/segmenter process
+            // other transcode processes will be started by incoming requests from concat/segmenter process
 
-            if (!await Transcode(!initialWorkAhead, cancellationToken))
+            var request = new GetConcatSegmenterProcessByChannelNumber(_scheme, _host, _channelNumber);
+            Either<BaseError, PlayoutItemProcessModel> maybeSegmenterProcess =
+                await _mediator.Send(request, cancellationToken);
+
+            foreach (BaseError error in maybeSegmenterProcess.LeftToSeq())
             {
+                _logger.LogError(
+                    "Failed to start concat segmenter for channel {ChannelNumber}: {Error}",
+                    _channelNumber,
+                    error.ToString());
+
                 return;
             }
 
-            while (!cancellationToken.IsCancellationRequested)
+            foreach (PlayoutItemProcessModel processModel in maybeSegmenterProcess.RightAsEnumerable())
             {
-                if (DateTimeOffset.Now - _lastAccess > idleTimeout)
-                {
-                    _logger.LogInformation("Stopping idle HLS session for channel {Channel}", channelNumber);
-                    return;
-                }
+                Command process = processModel.Process;
 
-                var transcodedBuffer = TimeSpan.FromSeconds(
-                    Math.Max(0, _transcodedUntil.Subtract(DateTimeOffset.Now).TotalSeconds));
-                if (transcodedBuffer <= TimeSpan.FromMinutes(1))
+                _logger.LogDebug("ffmpeg concat segmenter arguments {FFmpegArguments}", process.Arguments);
+
+                try
                 {
-                    // only use realtime encoding when we're at least 30 seconds ahead
-                    bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
-                    bool subsequentWorkAhead =
-                        !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-                    if (!await Transcode(!subsequentWorkAhead, cancellationToken))
-                    {
-                        return;
-                    }
+                    BufferedCommandResult commandResult = await process
+                        .WithValidation(CommandResultValidation.None)
+                        .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
                 }
-                else
+                catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
                 {
-                    await TrimAndDelete(cancellationToken);
-                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                    // TODO: handle result? this will probably *always* be canceled
+                    _logger.LogDebug("ffmpeg concat segmenter finished (canceled)");
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Unexpected error in HLS Session Worker V2");
         }
         finally
         {
@@ -240,7 +253,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
         }
     }
-    
+
     public async Task WaitForPlaylistSegments(
         string playlistFileName,
         int initialSegmentCount,
@@ -259,6 +272,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
 
             _logger.LogDebug("Playlist exists");
+            string segmentFolder = new DirectoryInfo(playlistFileName).FullName;
 
             var segmentCount = 0;
             int lastSegmentCount = -1;
@@ -275,12 +289,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
 
-                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
-                Option<TrimPlaylistResult> maybeResult = await TrimPlaylist(now, cancellationToken);
-                foreach (TrimPlaylistResult result in maybeResult)
-                {
-                    segmentCount = result.SegmentCount;
-                }
+                segmentCount = _localFileSystem.ListFiles(segmentFolder, "*.ts").Count();
             }
         }
         finally

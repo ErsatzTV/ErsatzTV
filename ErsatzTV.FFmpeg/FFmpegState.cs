@@ -46,4 +46,30 @@ public record FFmpegState(
             0,
             Option<int>.None,
             Option<int>.None);
+
+    public static FFmpegState ConcatSegmenter(
+        bool saveReport,
+        string channelName,
+        Option<string> hlsPlaylistPath,
+        Option<string> hlsSegmentTemplate) =>
+        new(
+            saveReport,
+            HardwareAccelerationMode.None,
+            HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
+            true, // do not map metadata
+            "ErsatzTV",
+            channelName,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None,
+            OutputFormatKind.Hls,
+            hlsPlaylistPath,
+            hlsSegmentTemplate,
+            0,
+            Option<int>.None,
+            Option<int>.None);
 }

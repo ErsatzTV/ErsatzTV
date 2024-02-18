@@ -83,6 +83,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 break;
             case StreamingMode.TransportStreamHybrid:
             case StreamingMode.HttpLiveStreamingSegmenter:
+            case StreamingMode.HttpLiveStreamingSegmenterV2:
             case StreamingMode.TransportStream:
                 result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 

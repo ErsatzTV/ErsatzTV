@@ -136,7 +136,7 @@ public class IptvController : ControllerBase
                     },
                     error => BadRequest(error.Value)));
     }
-
+    
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
@@ -182,6 +182,9 @@ public class IptvController : ControllerBase
                     case StreamingMode.HttpLiveStreamingSegmenter:
                         mode = "segmenter";
                         break;
+                    case StreamingMode.HttpLiveStreamingSegmenterV2:
+                        mode = "segmenter-v2";
+                        break;
                     default:
                         return Redirect($"~/iptv/channel/{channelNumber}.ts{AccessTokenQuery()}");
                 }
@@ -191,9 +194,11 @@ public class IptvController : ControllerBase
         switch (mode)
         {
             case "segmenter":
-                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber);
+            case "segmenter-v2":
+                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber, mode);
                 _logger.LogDebug("Maybe starting ffmpeg session for channel {Channel}", channelNumber);
-                Either<BaseError, Unit> result = await _mediator.Send(new StartFFmpegSession(channelNumber, false));
+                var request = new StartFFmpegSession(channelNumber, mode, Request.Scheme, Request.Host.ToString());
+                Either<BaseError, Unit> result = await _mediator.Send(request);
                 return result.Match<IActionResult>(
                     _ =>
                     {
@@ -247,8 +252,16 @@ public class IptvController : ControllerBase
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
 
-    private async Task<string> GetMultiVariantPlaylist(string channelNumber)
+    private async Task<string> GetMultiVariantPlaylist(string channelNumber, string mode)
     {
+        string file = mode switch
+        {
+            // this serves the unmodified playlist from disk
+            "segmenter-v2" => "live.m3u8",
+
+            _ => "hls.m3u8"
+        };
+        
         Option<ResolutionViewModel> maybeResolution = await _mediator.Send(new GetChannelResolution(channelNumber));
         string resolution = string.Empty;
         foreach (ResolutionViewModel res in maybeResolution)
@@ -259,7 +272,7 @@ public class IptvController : ControllerBase
         return $@"#EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000{resolution}
-{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/hls.m3u8{AccessTokenQuery()}";
+{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/{file}{AccessTokenQuery()}";
     }
 
     private string AccessTokenQuery() => string.IsNullOrWhiteSpace(Request.Query["access_token"])

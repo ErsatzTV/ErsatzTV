@@ -52,6 +52,7 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
                     {
                         "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
                         "segmenter" => StreamingMode.HttpLiveStreamingSegmenter,
+                        "segmenter-v2" => StreamingMode.HttpLiveStreamingSegmenterV2,
                         "ts" => StreamingMode.TransportStreamHybrid,
                         "ts-legacy" => StreamingMode.TransportStream,
                         _ => channel.StreamingMode

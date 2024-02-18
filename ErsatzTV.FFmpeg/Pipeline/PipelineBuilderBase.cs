@@ -115,6 +115,57 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         return new FFmpegPipeline(pipelineSteps, false);
     }
+    
+    public FFmpegPipeline ConcatSegmenter(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
+    {
+        var pipelineSteps = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new HideBannerOption(),
+            new NoStatsOption(),
+            new LoglevelErrorOption(),
+            new StandardFormatFlags(),
+            new NoDemuxDecodeDelayOutputOption(),
+            new FastStartOutputOption(),
+            new ClosedGopOutputOption()
+        };
+        
+        concatInputFile.AddOption(new ConcatInputFormat());
+        concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
+        
+        foreach (int threadCount in ffmpegState.ThreadCount)
+        {
+            pipelineSteps.Insert(0, new ThreadCountOption(threadCount));
+        }
+        
+        pipelineSteps.Add(new NoSceneDetectOutputOption(0));
+        pipelineSteps.Add(new EncoderCopyAll());
+        
+        if (ffmpegState.DoNotMapMetadata)
+        {
+            pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+        }
+        
+        pipelineSteps.AddRange(
+            ffmpegState.MetadataServiceProvider.Map(sp => new MetadataServiceProviderOutputOption(sp)));
+        
+        pipelineSteps.AddRange(ffmpegState.MetadataServiceName.Map(sn => new MetadataServiceNameOutputOption(sn)));
+
+        foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
+        {
+            foreach (string playlistPath in ffmpegState.HlsPlaylistPath)
+            {
+                pipelineSteps.Add(new OutputFormatConcatHls(segmentTemplate, playlistPath));
+            }
+        }
+        
+        if (ffmpegState.SaveReport)
+        {
+            pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
+        }
+        
+        return new FFmpegPipeline(pipelineSteps, false);
+    }
 
     public FFmpegPipeline WrapSegmenter(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
     {
