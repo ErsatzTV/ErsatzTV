@@ -4,6 +4,8 @@ namespace ErsatzTV.FFmpeg.OutputFormat;
 
 public class OutputFormatHls : IPipelineStep
 {
+    public const int SegmentSeconds = 4;
+    
     private readonly FrameState _desiredState;
     private readonly Option<string> _mediaFrameRate;
     private readonly bool _oneSecondGop;
@@ -36,18 +38,17 @@ public class OutputFormatHls : IPipelineStep
     {
         get
         {
-            const int SEGMENT_SECONDS = 4;
-            int frameRate = _desiredState.FrameRate.IfNone(GetFrameRateFromMedia);
+            int frameRate = _desiredState.FrameRate.IfNone(() => GetFrameRateFromMedia(_mediaFrameRate));
 
-            int gop = _oneSecondGop ? frameRate : frameRate * SEGMENT_SECONDS;
+            int gop = _oneSecondGop ? frameRate : frameRate * SegmentSeconds;
 
             List<string> result =
             [
                 "-g", $"{gop}",
-                "-keyint_min", $"{frameRate * SEGMENT_SECONDS}",
-                "-force_key_frames", $"expr:gte(t,n_forced*{SEGMENT_SECONDS})",
+                "-keyint_min", $"{frameRate * SegmentSeconds}",
+                "-force_key_frames", $"expr:gte(t,n_forced*{SegmentSeconds})",
                 "-f", "hls",
-                "-hls_time", $"{SEGMENT_SECONDS}",
+                "-hls_time", $"{SegmentSeconds}",
                 "-hls_list_size", "0",
                 "-segment_list_flags", "+live",
                 "-hls_segment_filename",
@@ -78,11 +79,11 @@ public class OutputFormatHls : IPipelineStep
 
     public FrameState NextState(FrameState currentState) => currentState;
 
-    private int GetFrameRateFromMedia()
+    public static int GetFrameRateFromMedia(Option<string> mediaFrameRate)
     {
         var frameRate = 24;
 
-        foreach (string rFrameRate in _mediaFrameRate)
+        foreach (string rFrameRate in mediaFrameRate)
         {
             if (!int.TryParse(rFrameRate, out int fr))
             {

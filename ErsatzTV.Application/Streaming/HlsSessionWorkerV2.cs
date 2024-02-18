@@ -281,7 +281,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         
         _logger.LogDebug("Getting next playout item process with state {@State}", _state);
 
-        long ptsOffset = await GetPtsOffset(_channelNumber, CancellationToken.None);
+        //long ptsOffset = await GetPtsOffset(_channelNumber, CancellationToken.None);
         
         bool startAtZero = _state is HlsSessionState.ZeroAndRealtime or HlsSessionState.ZeroAndWorkAhead;
         bool realtime = _state is HlsSessionState.ZeroAndRealtime or HlsSessionState.SeekAndRealtime;
@@ -292,7 +292,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             _transcodedUntil,
             startAtZero,
             realtime,
-            ptsOffset,
+            0,
             _targetFramerate);
 
         Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request);

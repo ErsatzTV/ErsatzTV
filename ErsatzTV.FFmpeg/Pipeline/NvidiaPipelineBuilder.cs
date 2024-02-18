@@ -28,6 +28,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -37,6 +38,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger)
@@ -243,7 +245,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(_hardwareCapabilities),
                     (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
 
-                    (_, _) => GetSoftwareEncoder(currentState, desiredState)
+                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };
 
             foreach (IEncoder encoder in maybeEncoder)

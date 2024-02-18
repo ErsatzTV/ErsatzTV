@@ -211,6 +211,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             case StreamingMode.HttpLiveStreamingSegmenter:
                 outputFormat = OutputFormatKind.Hls;
                 break;
+            case StreamingMode.HttpLiveStreamingSegmenterV2:
+                outputFormat = OutputFormatKind.Nut;
+                break;
             case StreamingMode.HttpLiveStreamingDirect:
             {
                 // use mpeg-ts by default
@@ -380,6 +383,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
+            Option<ConcatInputFile>.None,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
@@ -527,6 +531,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioInputFile,
             None,
             subtitleInputFile,
+            Option<ConcatInputFile>.None,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
@@ -557,6 +562,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
+            concatInputFile,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
@@ -578,33 +584,134 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string host)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
-
         var concatInputFile = new ConcatInputFile(
             $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}?mode=segmenter-v2",
             resolution);
 
+        FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateConcatSegmenterSettings(
+            channel.FFmpegProfile,
+            Option<int>.None);
+        
+        playbackSettings.AudioDuration = Option<TimeSpan>.None;
+
+        string audioFormat = playbackSettings.AudioFormat switch
+        {
+            FFmpegProfileAudioFormat.Aac => AudioFormat.Aac,
+            FFmpegProfileAudioFormat.Ac3 => AudioFormat.Ac3,
+            FFmpegProfileAudioFormat.Copy => AudioFormat.Copy,
+            _ => throw new ArgumentOutOfRangeException($"unexpected audio format {playbackSettings.VideoFormat}")
+        };
+
+        var audioState = new AudioState(
+            audioFormat,
+            playbackSettings.AudioChannels,
+            playbackSettings.AudioBitrate,
+            playbackSettings.AudioBufferSize,
+            playbackSettings.AudioSampleRate,
+            Option<TimeSpan>.None,
+            playbackSettings.NormalizeLoudnessMode switch
+            {
+                // TODO: NormalizeLoudnessMode.LoudNorm => AudioFilter.LoudNorm,
+                _ => AudioFilter.None
+            });
+
+        IPixelFormat pixelFormat = channel.FFmpegProfile.VideoBitrate switch
+        {
+            8 => new PixelFormatNv12(PixelFormat.YUV420P),
+            10 => new PixelFormatYuv420P10Le(), // TODO: does 10 bit work?
+            _ => new PixelFormatUnknown(channel.FFmpegProfile.VideoBitrate)
+        };
+
+        var ffmpegVideoStream = new VideoStream(
+            Index: 0,
+            Codec: string.Empty,
+            Some(pixelFormat),
+            ColorParams.Default,
+            resolution,
+            MaybeSampleAspectRatio: "1:1",
+            DisplayAspectRatio: string.Empty,
+            FrameRate: Option<string>.None,
+            StillImage: false,
+            ScanKind.Progressive);
+
+        var videoInputFile = new VideoInputFile(concatInputFile.Url, new List<VideoStream> { ffmpegVideoStream });
+
+        var ffmpegAudioStream = new AudioStream(Index: 1, Codec: string.Empty, channel.FFmpegProfile.AudioChannels);
+        Option<AudioInputFile> audioInputFile = new AudioInputFile(
+            concatInputFile.Url,
+            new List<AudioStream> { ffmpegAudioStream },
+            audioState);
+        
+        Option<SubtitleInputFile> subtitleInputFile = Option<SubtitleInputFile>.None;
+        Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
+
+        string videoFormat = GetVideoFormat(playbackSettings);
+
+        HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
+
+        Option<string> hlsPlaylistPath = Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8");
+        
         Option<string> hlsSegmentTemplate = Path.Combine(
             FileSystemLayout.TranscodeFolder,
             channel.Number,
             "live%06d.ts");
 
-        Option<string> hlsPlaylistPath = Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8");
+        var desiredState = new FrameState(
+            playbackSettings.RealtimeOutput,
+            InfiniteLoop: true,
+            videoFormat,
+            VideoProfile: Option<string>.None,
+            Optional(playbackSettings.PixelFormat),
+            ScaledSize: resolution,
+            PaddedSize: resolution,
+            CroppedSize: Option<FrameSize>.None,
+            false,
+            playbackSettings.FrameRate,
+            playbackSettings.VideoBitrate,
+            playbackSettings.VideoBufferSize,
+            playbackSettings.VideoTrackTimeScale,
+            playbackSettings.Deinterlace);
+
+        Option<string> vaapiDriver = VaapiDriverName(hwAccel, channel.FFmpegProfile.VaapiDriver);
+        Option<string> vaapiDevice = VaapiDeviceName(hwAccel, channel.FFmpegProfile.VaapiDevice);
+
+        var ffmpegState = new FFmpegState(
+            saveReports,
+            DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
+            EncoderHardwareAccelerationMode: hwAccel,
+            vaapiDriver,
+            vaapiDevice,
+            playbackSettings.StreamSeek,
+            Finish: Option<TimeSpan>.None,
+            channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
+            "ErsatzTV",
+            channel.Name,
+            MetadataAudioLanguage: Option<string>.None,
+            MetadataSubtitleLanguage: Option<string>.None,
+            MetadataSubtitleTitle: Option<string>.None,
+            OutputFormat: OutputFormatKind.Hls,
+            hlsPlaylistPath,
+            hlsSegmentTemplate,
+            PtsOffset: 0,
+            playbackSettings.ThreadCount,
+            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
+
+        _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
-            HardwareAccelerationMode.None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+            hwAccel,
+            videoInputFile,
+            audioInputFile,
+            watermarkInputFile,
+            subtitleInputFile,
+            concatInputFile,
+            vaapiDriver,
+            vaapiDevice,
             FileSystemLayout.FFmpegReportsFolder,
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 
-        FFmpegPipeline pipeline = pipelineBuilder.ConcatSegmenter(
-            concatInputFile,
-            FFmpegState.ConcatSegmenter(saveReports, channel.Name, hlsPlaylistPath, hlsSegmentTemplate));
+        FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
         return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
     }
@@ -628,6 +735,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
+            concatInputFile,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
@@ -666,6 +774,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             None,
+            Option<ConcatInputFile>.None,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,

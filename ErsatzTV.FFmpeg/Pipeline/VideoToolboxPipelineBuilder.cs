@@ -23,6 +23,7 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -32,6 +33,7 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger)
@@ -103,7 +105,7 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) =>
                 new EncoderH264VideoToolbox(),
 
-            _ => GetSoftwareEncoder(currentState, desiredState)
+            _ => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
         };
 
     protected override List<IPipelineFilterStep> SetPixelFormat(

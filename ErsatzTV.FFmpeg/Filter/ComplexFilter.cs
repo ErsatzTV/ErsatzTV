@@ -230,7 +230,7 @@ public class ComplexFilter : IPipelineStep
             result.AddRange(new[] { "-filter_complex", filterComplex });
         }
 
-        result.AddRange(new[] { "-map", audioLabel, "-map", videoLabel });
+        result.AddRange(new[] { "-map", videoLabel, "-map", audioLabel });
 
         foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(
                      s => s.Method == SubtitleMethod.Copy ||

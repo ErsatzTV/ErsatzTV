@@ -97,6 +97,7 @@ public class PipelineBuilderBaseTests
             audioInputFile,
             None,
             None,
+            None,
             "",
             "",
             _logger);
@@ -186,6 +187,7 @@ public class PipelineBuilderBaseTests
             audioInputFile,
             None,
             None,
+            None,
             "",
             "",
             _logger);
@@ -208,6 +210,7 @@ public class PipelineBuilderBaseTests
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
+            None,
             None,
             None,
             None,
@@ -236,6 +239,7 @@ public class PipelineBuilderBaseTests
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
             HardwareAccelerationMode.None,
+            None,
             None,
             None,
             None,
@@ -329,6 +333,7 @@ public class PipelineBuilderBaseTests
             audioInputFile,
             None,
             None,
+            None,
             "",
             "",
             _logger);
@@ -412,6 +417,7 @@ public class PipelineBuilderBaseTests
             audioInputFile,
             None,
             None,
+            None,
             "",
             "",
             _logger);
@@ -456,6 +462,7 @@ public class PipelineBuilderBaseTests
             Option<AudioInputFile>.None,
             Option<WatermarkInputFile>.None,
             Option<SubtitleInputFile>.None,
+            None,
             "",
             "",
             _logger);

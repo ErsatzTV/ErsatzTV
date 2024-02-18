@@ -186,14 +186,14 @@ internal class FFmpegProcessBuilder
                 audioLabel = filter.AudioLabel;
             });
 
+        _arguments.Add("-map");
+        _arguments.Add(videoLabel);
+
         foreach (string _ in audioPath)
         {
             _arguments.Add("-map");
             _arguments.Add(audioLabel);
         }
-
-        _arguments.Add("-map");
-        _arguments.Add(videoLabel);
 
         return this;
     }

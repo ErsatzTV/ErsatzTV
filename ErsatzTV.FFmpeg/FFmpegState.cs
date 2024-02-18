@@ -50,14 +50,16 @@ public record FFmpegState(
     public static FFmpegState ConcatSegmenter(
         bool saveReport,
         string channelName,
+        Option<string> vaapiDriver,
+        Option<string> vaapiDevice,
         Option<string> hlsPlaylistPath,
         Option<string> hlsSegmentTemplate) =>
         new(
             saveReport,
             HardwareAccelerationMode.None,
-            HardwareAccelerationMode.None,
-            Option<string>.None,
-            Option<string>.None,
+            HardwareAccelerationMode.Vaapi,
+            vaapiDriver,
+            vaapiDevice,
             Option<TimeSpan>.None,
             Option<TimeSpan>.None,
             true, // do not map metadata
