@@ -12,8 +12,8 @@ public class AudioPadFilter : BaseFilter
     {
         get
         {
-            var durationString = _wholeDuration.TotalMilliseconds.ToString(NumberFormatInfo.InvariantInfo);
-            return $"apad=whole_dur={durationString}ms";
+            //var durationString = _wholeDuration.TotalMilliseconds.ToString(NumberFormatInfo.InvariantInfo);
+            return $"aresample=async=1:first_pts=0"; //=whole_dur={durationString}ms";
         }
     }
 

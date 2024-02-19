@@ -38,7 +38,7 @@ public class OutputFormatHls : IPipelineStep
     {
         get
         {
-            int frameRate = _desiredState.FrameRate.IfNone(() => GetFrameRateFromMedia(_mediaFrameRate));
+            int frameRate = _desiredState.FrameRate.IfNone(GetFrameRateFromMedia);
 
             int gop = _oneSecondGop ? frameRate : frameRate * SegmentSeconds;
 
@@ -79,11 +79,11 @@ public class OutputFormatHls : IPipelineStep
 
     public FrameState NextState(FrameState currentState) => currentState;
 
-    public static int GetFrameRateFromMedia(Option<string> mediaFrameRate)
+    private int GetFrameRateFromMedia()
     {
         var frameRate = 24;
 
-        foreach (string rFrameRate in mediaFrameRate)
+        foreach (string rFrameRate in _mediaFrameRate)
         {
             if (!int.TryParse(rFrameRate, out int fr))
             {

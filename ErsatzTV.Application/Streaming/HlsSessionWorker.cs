@@ -245,6 +245,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         int initialSegmentCount,
         CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Waiting for playlist segments...");
+        
         var sw = Stopwatch.StartNew();
         try
         {

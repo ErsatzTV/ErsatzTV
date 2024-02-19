@@ -196,7 +196,7 @@ public class IptvController : ControllerBase
             case "segmenter":
             case "segmenter-v2":
                 string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber, mode);
-                _logger.LogDebug("Maybe starting ffmpeg session for channel {Channel}", channelNumber);
+                _logger.LogDebug("Maybe starting ffmpeg session for channel {Channel}, mode {Mode}", channelNumber, mode);
                 var request = new StartFFmpegSession(channelNumber, mode, Request.Scheme, Request.Host.ToString());
                 Either<BaseError, Unit> result = await _mediator.Send(request);
                 return result.Match<IActionResult>(

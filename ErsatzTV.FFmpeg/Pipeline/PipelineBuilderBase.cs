@@ -448,7 +448,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         foreach (TimeSpan desiredDuration in audioInputFile.DesiredState.AudioDuration)
         {
             _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter(desiredDuration)));
-            pipelineSteps.Add(new ShortestOutputOption());
+            //pipelineSteps.Add(new ShortestOutputOption());
         }
     }
 
@@ -768,7 +768,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 videoInputFile.FilterSteps.Add(new RealtimeFilter());
             }
 
-            pipelineSteps.Add(new ShortestOutputOption());
+            //pipelineSteps.Add(new ShortestOutputOption());
         }
     }
 
