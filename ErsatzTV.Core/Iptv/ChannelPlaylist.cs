@@ -75,6 +75,7 @@ public class ChannelPlaylist
             {
                 StreamingMode.HttpLiveStreamingDirect => $"m3u8?mode=hls-direct{accessTokenUriAmp}",
                 StreamingMode.HttpLiveStreamingSegmenter => $"m3u8?mode=segmenter{accessTokenUriAmp}",
+                StreamingMode.HttpLiveStreamingSegmenterV2 => $"m3u8?mode=segmenter-v2{accessTokenUriAmp}",
                 StreamingMode.TransportStreamHybrid => $"ts{accessTokenUri}",
                 _ => $"ts?mode=ts-legacy{accessTokenUriAmp}"
             };
