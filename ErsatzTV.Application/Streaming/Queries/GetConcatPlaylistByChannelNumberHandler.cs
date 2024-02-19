@@ -18,7 +18,7 @@ public class
         GetConcatPlaylistByChannelNumber request,
         CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(channel => new ConcatPlaylist(request.Scheme, request.Host, channel.Number))
+            .MapT(channel => new ConcatPlaylist(request.Scheme, request.Host, channel.Number, request.Mode))
             .Map(v => v.ToEither<ConcatPlaylist>());
 
     private Task<Validation<BaseError, Channel>> Validate(GetConcatPlaylistByChannelNumber request) =>

@@ -8,6 +8,7 @@ public interface IPipelineBuilderFactory
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         Option<string> vaapiDriver,
         Option<string> vaapiDevice,
         string reportsFolder,

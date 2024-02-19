@@ -63,11 +63,11 @@ public static class FFmpegPlaybackSettingsCalculator
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                StreamingMode.HttpLiveStreamingSegmenterV2 => hlsRealtime,
                 _ => true
-            }
+            },
+            ThreadCount = ffmpegProfile.ThreadCount
         };
-
-        result.ThreadCount = ffmpegProfile.ThreadCount;
 
         if (now != start || inPoint != TimeSpan.Zero)
         {
@@ -83,6 +83,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 break;
             case StreamingMode.TransportStreamHybrid:
             case StreamingMode.HttpLiveStreamingSegmenter:
+            case StreamingMode.HttpLiveStreamingSegmenterV2:
             case StreamingMode.TransportStream:
                 result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 
@@ -169,6 +170,36 @@ public static class FFmpegPlaybackSettingsCalculator
         return result;
     }
 
+    public static FFmpegPlaybackSettings CalculateConcatSegmenterSettings(
+        FFmpegProfile ffmpegProfile,
+        Option<int> targetFramerate) =>
+        new()
+        {
+            FormatFlags = CommonFormatFlags,
+            RealtimeOutput = false,
+            ThreadCount = ffmpegProfile.ThreadCount,
+            HardwareAcceleration = ffmpegProfile.HardwareAcceleration,
+            FrameRate = targetFramerate,
+            VideoTrackTimeScale = 90000,
+            VideoFormat = ffmpegProfile.VideoFormat,
+            VideoBitrate = ffmpegProfile.VideoBitrate,
+            VideoBufferSize = ffmpegProfile.VideoBufferSize,
+            VideoDecoder = null,
+            PixelFormat = ffmpegProfile.BitDepth switch
+            {
+                FFmpegProfileBitDepth.TenBit when ffmpegProfile.VideoFormat != FFmpegProfileVideoFormat.Mpeg2Video
+                    => new PixelFormatYuv420P10Le(),
+                _ => new PixelFormatYuv420P()
+            },
+            AudioFormat = ffmpegProfile.AudioFormat,
+            AudioBitrate = ffmpegProfile.AudioBitrate,
+            AudioBufferSize = ffmpegProfile.AudioBufferSize,
+            AudioChannels = ffmpegProfile.AudioChannels,
+            AudioSampleRate = ffmpegProfile.AudioSampleRate,
+            NormalizeLoudnessMode = ffmpegProfile.NormalizeLoudnessMode,
+            Deinterlace = false
+        };
+
     public static FFmpegPlaybackSettings CalculateErrorSettings(
         StreamingMode streamingMode,
         FFmpegProfile ffmpegProfile,
@@ -188,6 +219,7 @@ public static class FFmpegPlaybackSettingsCalculator
             RealtimeOutput = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                StreamingMode.HttpLiveStreamingSegmenterV2 => hlsRealtime,
                 _ => true
             },
             VideoTrackTimeScale = 90000,

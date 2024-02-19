@@ -22,6 +22,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -31,6 +32,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger)
@@ -80,7 +82,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
             (HardwareAccelerationMode.Amf, VideoFormat.H264) =>
                 new EncoderH264Amf(),
 
-            _ => GetSoftwareEncoder(currentState, desiredState)
+            _ => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
         };
 
     protected override List<IPipelineFilterStep> SetPixelFormat(

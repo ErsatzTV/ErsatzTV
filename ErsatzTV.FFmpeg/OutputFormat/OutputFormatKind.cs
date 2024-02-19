@@ -6,5 +6,7 @@ public enum OutputFormatKind
     Mkv,
     MpegTs,
     Mp4,
-    Hls
+    Hls,
+    
+    Nut
 }

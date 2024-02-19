@@ -8,6 +8,7 @@ using ErsatzTV.FFmpeg.Filter.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
+using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.OutputOption;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
@@ -27,6 +28,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -36,6 +38,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger)
@@ -65,6 +68,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
+
+        // use software encoding (rawvideo) when piping to parent hls segmenter
+        if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
+        {
+            encodeCapability = FFmpegCapability.Software;
+        }
 
         foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
@@ -170,7 +179,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
         currentState = SetCrop(videoInputFile, desiredState, currentState);
 
-        SetStillImageLoop(videoInputFile, videoStream);
+        SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
 
         // need to upload for hardware overlay
         bool forceSoftwareOverlay = context is { HasSubtitleOverlay: true, HasWatermark: true }
@@ -225,7 +234,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(rateControlMode),
                     (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) => new EncoderMpeg2Vaapi(rateControlMode),
 
-                    (_, _) => GetSoftwareEncoder(currentState, desiredState)
+                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };
 
             foreach (IEncoder encoder in maybeEncoder)

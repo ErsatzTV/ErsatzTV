@@ -13,6 +13,7 @@ public static class VideoFormat
     public const string Vp9 = "vp9";
     public const string Av1 = "av1";
     public const string MpegTs = "mpegts";
+    public const string Raw = "raw";
 
     public const string Copy = "copy";
     public const string GeneratedImage = "generated-image";

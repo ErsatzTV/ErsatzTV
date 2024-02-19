@@ -7,6 +7,7 @@ using ErsatzTV.Application.Streaming;
 using ErsatzTV.Application.Subtitles.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Extensions;
 using Flurl;
 using MediatR;
@@ -19,78 +20,39 @@ namespace ErsatzTV.Controllers;
 public class InternalController : ControllerBase
 {
     private readonly ILogger<InternalController> _logger;
+    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IMediator _mediator;
 
-    public InternalController(IMediator mediator, ILogger<InternalController> logger)
+    public InternalController(
+        IFFmpegSegmenterService ffmpegSegmenterService,
+        IMediator mediator,
+        ILogger<InternalController> logger)
     {
+        _ffmpegSegmenterService = ffmpegSegmenterService;
         _mediator = mediator;
         _logger = logger;
     }
 
     [HttpGet("ffmpeg/concat/{channelNumber}")]
-    public Task<IActionResult> GetConcatPlaylist(string channelNumber) =>
-        _mediator.Send(new GetConcatPlaylistByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
+    public Task<IActionResult> GetConcatPlaylist(string channelNumber, [FromQuery] string mode = "ts-legacy") =>
+        _mediator.Send(
+                new GetConcatPlaylistByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber, mode))
             .ToActionResult();
 
     [HttpGet("ffmpeg/stream/{channelNumber}")]
-    public Task<IActionResult> GetStream(
+    public async Task<IActionResult> GetStream(
         string channelNumber,
         [FromQuery]
-        string mode = "mixed") =>
-        _mediator.Send(
-                new GetPlayoutItemProcessByChannelNumber(
-                    channelNumber,
-                    mode,
-                    DateTimeOffset.Now,
-                    false,
-                    true,
-                    0,
-                    Option<int>.None))
-            .Map(
-                result =>
-                    result.Match<IActionResult>(
-                        processModel =>
-                        {
-                            Command command = processModel.Process;
-
-                            _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", command.Arguments);
-                            var process = new FFmpegProcess
-                            {
-                                StartInfo = new ProcessStartInfo
-                                {
-                                    FileName = command.TargetFilePath,
-                                    Arguments = command.Arguments,
-                                    RedirectStandardOutput = true,
-                                    RedirectStandardError = false,
-                                    UseShellExecute = false,
-                                    CreateNoWindow = true
-                                }
-                            };
-                            HttpContext.Response.RegisterForDispose(process);
-
-                            foreach ((string key, string value) in command.EnvironmentVariables)
-                            {
-                                process.StartInfo.Environment[key] = value;
-                            }
-
-                            var contentType = "video/mp2t";
-                            if (mode.Equals("hls-direct", StringComparison.OrdinalIgnoreCase))
-                            {
-                                contentType = "video/mp4";
-                            }
-
-                            process.Start();
-                            return new FileStreamResult(process.StandardOutput.BaseStream, contentType);
-                        },
-                        error =>
-                        {
-                            _logger.LogError(
-                                "Failed to create stream for channel {ChannelNumber}: {Error}",
-                                channelNumber,
-                                error.Value);
-                            return BadRequest(error.Value);
-                        }
-                    ));
+        string mode = "mixed")
+    {
+        switch (mode)
+        {
+            case "segmenter-v2":
+                return await GetSegmenterV2Stream(channelNumber);
+            default:
+                return await GetTsLegacyStream(channelNumber, mode);
+        }
+    }
 
     [HttpGet("/media/plex/{plexMediaSourceId:int}/{*path}")]
     public async Task<IActionResult> GetPlexMedia(
@@ -194,5 +156,89 @@ public class InternalController : ControllerBase
 
                 return new PhysicalFileResult(r, mimeType);
             });
+    }
+
+    private async Task<IActionResult> GetSegmenterV2Stream(string channelNumber)
+    {
+        if (_ffmpegSegmenterService.TryGetWorker(channelNumber, out IHlsSessionWorker worker) &&
+            worker is HlsSessionWorkerV2 v2)
+        {
+            Either<BaseError, PlayoutItemProcessModel> result = await v2.GetNextPlayoutItemProcess();
+            return GetProcessResponse(result, channelNumber, "segmenter-v2");
+        }
+
+        _logger.LogWarning("Unable to locate session worker for channel {Channel}", channelNumber);
+        return new NotFoundResult();
+    }
+
+    private async Task<IActionResult> GetTsLegacyStream(string channelNumber, string mode)
+    {
+        var request = new GetPlayoutItemProcessByChannelNumber(
+            channelNumber,
+            mode,
+            DateTimeOffset.Now,
+            false,
+            true,
+            0,
+            Option<int>.None);
+
+        Either<BaseError, PlayoutItemProcessModel> result = await _mediator.Send(request);
+
+        return GetProcessResponse(result, channelNumber, mode);
+    }
+
+    private IActionResult GetProcessResponse(
+        Either<BaseError, PlayoutItemProcessModel> result,
+        string channelNumber,
+        string mode)
+    {
+        foreach (BaseError error in result.LeftToSeq())
+        {
+            _logger.LogError(
+                "Failed to create stream for channel {ChannelNumber}: {Error}",
+                channelNumber,
+                error.Value);
+
+            return BadRequest(error.Value);
+        }
+
+        foreach (PlayoutItemProcessModel processModel in result.RightToSeq())
+        {
+            Command command = processModel.Process;
+
+            _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+
+            var process = new FFmpegProcess
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = command.TargetFilePath,
+                    Arguments = command.Arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = false,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            HttpContext.Response.RegisterForDispose(process);
+
+            foreach ((string key, string value) in command.EnvironmentVariables)
+            {
+                process.StartInfo.Environment[key] = value;
+            }
+
+            var contentType = "video/mp2t";
+            if (mode.Equals("hls-direct", StringComparison.OrdinalIgnoreCase))
+            {
+                contentType = "video/mp4";
+            }
+
+            process.Start();
+            return new FileStreamResult(process.StandardOutput.BaseStream, contentType);
+        }
+
+        // this will never happen
+        return new NotFoundResult();
     }
 }

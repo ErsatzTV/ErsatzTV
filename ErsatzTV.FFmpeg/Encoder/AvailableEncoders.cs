@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 
@@ -6,8 +7,14 @@ namespace ErsatzTV.FFmpeg.Encoder;
 
 public static class AvailableEncoders
 {
-    public static Option<IEncoder> ForAudioFormat(AudioState desiredState, ILogger logger) =>
-        desiredState.AudioFormat.Match(
+    public static Option<IEncoder> ForAudioFormat(FFmpegState ffmpegState, AudioState desiredState, ILogger logger)
+    {
+        if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
+        {
+            return new EncoderPcmS16Le();
+        }
+        
+        return desiredState.AudioFormat.Match(
             audioFormat =>
                 audioFormat switch
                 {
@@ -17,6 +24,7 @@ public static class AvailableEncoders
                     _ => LogUnknownEncoder(audioFormat, logger)
                 },
             () => LogUnknownEncoder(string.Empty, logger));
+    }
 
     private static Option<IEncoder> LogUnknownEncoder(
         string audioFormat,

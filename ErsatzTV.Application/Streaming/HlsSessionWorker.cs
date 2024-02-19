@@ -149,19 +149,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
 
-        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
-        async void Cancel(object o, ElapsedEventArgs e)
-        {
-            try
-            {
-                await _cancellationTokenSource.CancelAsync();
-            }
-            catch (Exception)
-            {
-                // do nothing   
-            }
-        }
-
         try
         {
             _channelNumber = channelNumber;
@@ -169,7 +156,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             lock (_sync)
             {
                 _timer = new Timer(idleTimeout.TotalMilliseconds) { AutoReset = false };
-                _timer.Elapsed += Cancel;
+                _timer.Elapsed += CancelRun;
             }
 
             CancellationToken cancellationToken = _cancellationTokenSource.Token;
@@ -225,7 +212,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         {
             lock (_sync)
             {
-                _timer.Elapsed -= Cancel;
+                _timer.Elapsed -= CancelRun;
             }
 
             try
@@ -236,6 +223,73 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 // do nothing
             }
+        }
+
+        return;
+
+        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods")]
+        async void CancelRun(object o, ElapsedEventArgs e)
+        {
+            try
+            {
+                await _cancellationTokenSource.CancelAsync();
+            }
+            catch (Exception)
+            {
+                // do nothing   
+            }
+        }
+    }
+    
+    public async Task WaitForPlaylistSegments(
+        int initialSegmentCount,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Waiting for playlist segments...");
+        
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            DateTimeOffset start = DateTimeOffset.Now;
+            DateTimeOffset finish = start.AddSeconds(8);
+            
+            string playlistFileName = Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber, "live.m3u8");
+
+            _logger.LogDebug("Waiting for playlist to exist");
+            while (!_localFileSystem.FileExists(playlistFileName))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
+            }
+
+            _logger.LogDebug("Playlist exists");
+
+            var segmentCount = 0;
+            int lastSegmentCount = -1;
+            while (DateTimeOffset.Now < finish && segmentCount < initialSegmentCount)
+            {
+                if (segmentCount != lastSegmentCount)
+                {
+                    lastSegmentCount = segmentCount;
+                    _logger.LogDebug(
+                        "Segment count {SegmentCount} of {InitialSegmentCount}",
+                        segmentCount,
+                        initialSegmentCount);
+                }
+
+                await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
+
+                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
+                Option<TrimPlaylistResult> maybeResult = await TrimPlaylist(now, cancellationToken);
+                foreach (TrimPlaylistResult result in maybeResult)
+                {
+                    segmentCount = result.SegmentCount;
+                }
+            }
+        }
+        finally
+        {
+            sw.Stop();
+            _logger.LogDebug("WaitForPlaylistSegments took {Duration}", sw.Elapsed);
         }
     }
 

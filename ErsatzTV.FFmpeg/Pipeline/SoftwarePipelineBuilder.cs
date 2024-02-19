@@ -21,6 +21,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -30,6 +31,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger) =>
@@ -67,7 +69,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         FFmpegState ffmpegState,
         FrameState currentState,
         FrameState desiredState) =>
-        GetSoftwareEncoder(currentState, desiredState);
+        GetSoftwareEncoder(ffmpegState, currentState, desiredState);
 
     protected override FilterChain SetVideoFilters(
         VideoInputFile videoInputFile,
@@ -105,7 +107,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetCrop(videoInputFile, desiredState, currentState);
-            SetStillImageLoop(videoInputFile, videoStream);
+            SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
             SetSubtitle(
                 videoInputFile,
                 subtitleInputFile,

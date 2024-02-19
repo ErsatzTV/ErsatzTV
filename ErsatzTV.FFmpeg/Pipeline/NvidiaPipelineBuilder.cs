@@ -28,6 +28,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -37,6 +38,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger)
@@ -161,7 +163,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
-        SetStillImageLoop(videoInputFile, videoStream);
+        SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
 
         if (currentState.BitDepth == 8 && context.HasSubtitleOverlay || context.HasWatermark)
         {
@@ -243,7 +245,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(_hardwareCapabilities),
                     (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
 
-                    (_, _) => GetSoftwareEncoder(currentState, desiredState)
+                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };
 
             foreach (IEncoder encoder in maybeEncoder)

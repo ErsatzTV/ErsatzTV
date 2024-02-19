@@ -27,6 +27,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
+        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         string fontsFolder,
         ILogger logger) : base(
@@ -36,6 +37,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         audioInputFile,
         watermarkInputFile,
         subtitleInputFile,
+        concatInputFile,
         reportsFolder,
         fontsFolder,
         logger)
@@ -166,7 +168,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
-        SetStillImageLoop(videoInputFile, videoStream);
+        SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
 
         // need to download for any sort of overlay
         if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
@@ -206,7 +208,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(),
                     (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video) => new EncoderMpeg2Qsv(),
 
-                    (_, _) => GetSoftwareEncoder(currentState, desiredState)
+                    (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };
 
             foreach (IEncoder encoder in maybeEncoder)
