@@ -229,8 +229,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new NoDemuxDecodeDelayOutputOption(),
             outputOption,
             new ClosedGopOutputOption(),
-            new NoBFramesOutputOption()
         };
+
+        if (desiredState.VideoFormat != VideoFormat.Copy)
+        {
+            pipelineSteps.Add(new NoBFramesOutputOption());
+        }
 
         foreach (ConcatInputFile concatInputFile in _concatInputFile)
         {
@@ -444,12 +448,15 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
 
         SetAudioLoudness(audioInputFile);
-        SetAudioPad(audioInputFile);
+        SetAudioPad(audioInputFile, pipelineSteps);
     }
 
-    private void SetAudioPad(AudioInputFile audioInputFile)
+    private void SetAudioPad(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
     {
-        _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioFirstPtsFilter(0)));
+        if (pipelineSteps.All(ps => ps is not EncoderCopyAudio))
+        {
+            _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioFirstPtsFilter(0)));
+        }
 
         foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)
         {
