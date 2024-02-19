@@ -26,6 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Image library items currently default to a duration of 15 seconds
     - The `Media` > `Images` page can be used to configure image durations at a folder level
     - Child folders with unset durations will inherit the closest ancestor's duration
+- Add *experimental* new streaming mode `HLS Segmenter V2`
+  - In my initial testing, this streaming mode produces significantly fewer playback warnings/errors
+  - If it tests well for others, it *may* replace the current `HLS Segmenter` in a future release
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
