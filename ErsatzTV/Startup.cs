@@ -527,6 +527,8 @@ public class Startup
                         .GetRequiredService<ChannelWriter<IFFmpegWorkerRequest>>();
                     writer.TryWrite(new TouchFFmpegSession(ctx.File.PhysicalPath));
                 }
+                // to serve m4s
+                // ServeUnknownFileTypes = true
             });
 
         app.UseRouting();

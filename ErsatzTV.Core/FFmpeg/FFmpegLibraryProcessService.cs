@@ -202,7 +202,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         // when no audio streams are available, use null audio source
         if (!audioVersion.MediaVersion.Streams.Any(s => s.MediaStreamKind is MediaStreamKind.Audio))
         {
-            audioInputFile = new NullAudioInputFile(audioState);
+            audioInputFile = new NullAudioInputFile(audioState with { AudioDuration = playbackSettings.AudioDuration });
         }
 
         OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
@@ -617,7 +617,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IPixelFormat pixelFormat = channel.FFmpegProfile.VideoBitrate switch
         {
-            8 => new PixelFormatNv12(PixelFormat.YUV420P),
+            8 => new PixelFormatYuv420P(), // PixelFormatNv12(PixelFormat.YUV420P),
             10 => new PixelFormatYuv420P10Le(), // TODO: does 10 bit work?
             _ => new PixelFormatUnknown(channel.FFmpegProfile.VideoBitrate)
         };

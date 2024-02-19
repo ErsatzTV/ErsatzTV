@@ -132,7 +132,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
             new FastStartOutputOption(),
-            new ClosedGopOutputOption()
+            new ClosedGopOutputOption(),
+            new NoBFramesOutputOption()
         };
         
         concatInputFile.AddOption(new ConcatInputFormat());
@@ -227,7 +228,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
             outputOption,
-            new ClosedGopOutputOption()
+            new ClosedGopOutputOption(),
+            new NoBFramesOutputOption()
         };
 
         foreach (ConcatInputFile concatInputFile in _concatInputFile)
@@ -350,7 +352,9 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Nut:
-                pipelineSteps.Add(new OutputFormatNut());
+                // yes, not really "nut" - but nut is currently used to indicate a transcoding
+                // source that feeds into a concat segmenter
+                pipelineSteps.Add(new OutputFormatMkv());
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Mp4:
@@ -440,15 +444,16 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
 
         SetAudioLoudness(audioInputFile);
-        SetAudioPad(audioInputFile, pipelineSteps);
+        SetAudioPad(audioInputFile);
     }
 
-    private void SetAudioPad(AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
+    private void SetAudioPad(AudioInputFile audioInputFile)
     {
-        foreach (TimeSpan desiredDuration in audioInputFile.DesiredState.AudioDuration)
+        _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioFirstPtsFilter(0)));
+
+        foreach (TimeSpan _ in audioInputFile.DesiredState.AudioDuration)
         {
-            _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter(desiredDuration)));
-            //pipelineSteps.Add(new ShortestOutputOption());
+            _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter()));
         }
     }
 
@@ -735,7 +740,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         int initialBurst;
         if (!desiredState.Realtime)
         {
-            initialBurst = 180;
+            initialBurst = 45;
         }
         else
         {
@@ -823,7 +828,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         if (ffmpegState.SaveReport)
         {
-            pipelineSteps.Add(new FFReportVariable(_reportsFolder, None));
+            pipelineSteps.Add(new FFReportVariable(_reportsFolder, _concatInputFile));
         }
     }
 

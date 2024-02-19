@@ -24,12 +24,13 @@ public class OutputFormatConcatHls : IPipelineStep
         //"-keyint_min", $"{FRAME_RATE * OutputFormatHls.SegmentSeconds}",
         "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.SegmentSeconds}/2)",
         "-f", "hls",
+        //"-hls_segment_type", "fmp4",
         //"-hls_init_time", "2",
         "-hls_time", $"{OutputFormatHls.SegmentSeconds}",
-        "-hls_list_size", "55", // burst of 180 means 45 segments, so allow that plus 10
+        "-hls_list_size", "25", // burst of 45 means ~12 segments, so allow that plus a handful
         "-segment_list_flags", "+live",
         "-hls_segment_filename", _segmentTemplate,
-        "-hls_flags", "delete_segments+program_date_time+omit_endlist",
+        "-hls_flags", "delete_segments+program_date_time+omit_endlist+discont_start+independent_segments",
         _playlistPath
     ];
 
