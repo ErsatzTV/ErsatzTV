@@ -272,7 +272,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             context,
             pipelineSteps);
 
-        context = context with { IsIntelVaapiOrQsv = IsIntelVaapiOrQsv(ffmpegState) };
+        // don't double input files for concat segmenter (v2) parent or child
+        if (_concatInputFile.IsNone && ffmpegState.OutputFormat is not OutputFormatKind.Nut)
+        {
+            context = context with { IsIntelVaapiOrQsv = IsIntelVaapiOrQsv(ffmpegState) };
+        }
 
         if (_audioInputFile.IsNone)
         {
