@@ -291,6 +291,27 @@
             </MudButton>
         </MudCardActions>
     </MudCard>
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Program Guide (XMLTV)</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudSelect Class="mt-3"
+                       Label="XMLTV Time Zone"
+                       @bind-Value="_xmltvSettings.TimeZone"
+                       For="@(() => _xmltvSettings.TimeZone)">
+                <MudSelectItem Value="@XmltvTimeZone.Local">Local</MudSelectItem>
+                <MudSelectItem Value="@XmltvTimeZone.Utc">UTC</MudSelectItem>
+            </MudSelect>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveXmltvSettings())" StartIcon="@Icons.Material.Filled.Save">
+                Save Settings
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
 </MudStack>
 </MudGrid>
 </MudContainer>
@@ -312,6 +333,7 @@
     private int _libraryRefreshInterval;
     private PlayoutSettingsViewModel _playoutSettings = new();
     private GeneralSettingsViewModel _generalSettings = new();
+    private XmltvSettingsViewModel _xmltvSettings = new();
 
     public void Dispose()
     {
@@ -336,6 +358,7 @@
         _playoutSettings = await Mediator.Send(new GetPlayoutSettings(), _cts.Token);
         _playoutSuccess = _playoutSettings.DaysToBuild > 0;
         _generalSettings = await Mediator.Send(new GetGeneralSettings(), _cts.Token);
+        _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), _cts.Token);
 
         await RefreshCustomResolutions();
     }
@@ -419,6 +442,18 @@
                 Logger.LogError("Unexpected error saving general settings: {Error}", error.Value);
             },
             Right: _ => Snackbar.Add("Successfully saved general settings", Severity.Success));
+    }
+    
+    private async Task SaveXmltvSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateXmltvSettings(_xmltvSettings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving xmltv settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved xmltv settings", Severity.Success));
     }
 
     private async Task RefreshCustomResolutions() => _customResolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token)
