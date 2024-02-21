@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add *experimental* new streaming mode `HLS Segmenter V2`
   - In my initial testing, this streaming mode produces significantly fewer playback warnings/errors
   - If it tests well for others, it *may* replace the current `HLS Segmenter` in a future release
+- Add setting to change XMLTV data from `Local` time zone to `UTC`
+  - This is needed because some clients (incorrectly) ignore time zone specifier and require UTC times
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts

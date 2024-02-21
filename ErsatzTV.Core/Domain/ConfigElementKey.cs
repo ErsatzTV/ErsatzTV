@@ -42,4 +42,5 @@ public class ConfigElementKey
     public static ConfigElementKey LibraryRefreshInterval => new("scanner.library_refresh_interval");
     public static ConfigElementKey PlayoutDaysToBuild => new("playout.days_to_build");
     public static ConfigElementKey PlayoutSkipMissingItems => new("playout.skip_missing_items");
+    public static ConfigElementKey XmltvTimeZone => new("xmltv.time_zone");
 }

@@ -1,10 +1,12 @@
 using System.Globalization;
 using System.Xml;
+using ErsatzTV.Application.Configuration;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Streaming;
 using ErsatzTV.Infrastructure.Data;
@@ -22,6 +24,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly ILogger<RefreshChannelDataHandler> _logger;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
@@ -29,16 +32,20 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         RecyclableMemoryStreamManager recyclableMemoryStreamManager,
         IDbContextFactory<TvContext> dbContextFactory,
         ILocalFileSystem localFileSystem,
+        IConfigElementRepository configElementRepository,
         ILogger<RefreshChannelDataHandler> logger)
     {
         _recyclableMemoryStreamManager = recyclableMemoryStreamManager;
         _dbContextFactory = dbContextFactory;
         _localFileSystem = localFileSystem;
+        _configElementRepository = configElementRepository;
         _logger = logger;
     }
 
     public async Task Handle(RefreshChannelData request, CancellationToken cancellationToken)
     {
+        _logger.LogDebug("Refreshing channel data (XMLTV) for channel {Channel}", request.ChannelNumber);
+        
         _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
 
         string movieTemplateFileName = GetMovieTemplateFileName();
@@ -222,7 +229,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         File.Move(tempFile, targetFile, true);
     }
 
-    private static async Task WritePlayoutXml(
+    private async Task WritePlayoutXml(
         RefreshChannelData request,
         List<PlayoutItem> sorted,
         XmlTemplateContext templateContext,
@@ -234,6 +241,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         XmlMinifier minifier,
         XmlWriter xml)
     {
+        XmltvTimeZone xmltvTimeZone = await _configElementRepository
+            .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone)
+            .IfNoneAsync(XmltvTimeZone.Local);
+
         // skip all filler that isn't pre-roll
         var i = 0;
         while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None &&
@@ -278,13 +289,27 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             PlayoutItem finishItem = sorted[finishIndex];
             i = finishIndex;
 
-            string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+            DateTimeOffset startTime = xmltvTimeZone switch
+            {
+                XmltvTimeZone.Utc => new DateTimeOffset(startItem.Start, TimeSpan.Zero),
+                _ => startItem.StartOffset
+            };
+
+            DateTimeOffset stopTime = (xmltvTimeZone, displayItem.GuideFinishOffset.HasValue) switch
+            {
+                (XmltvTimeZone.Utc, true) => new DateTimeOffset(displayItem.GuideFinish!.Value, TimeSpan.Zero),
+                (XmltvTimeZone.Utc, false) => new DateTimeOffset(finishItem.Finish, TimeSpan.Zero),
+                (_, true) => displayItem.GuideFinishOffset!.Value,
+                (_, false) => finishItem.FinishOffset
+            };
+            
+            string start = startTime
+                .ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
                 .Replace(":", string.Empty);
-            string stop = displayItem.GuideFinishOffset.HasValue
-                ? displayItem.GuideFinishOffset.Value.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
-                    .Replace(":", string.Empty)
-                : finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
-                    .Replace(":", string.Empty);
+
+            string stop = stopTime
+                .ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
+                .Replace(":", string.Empty);
 
             await WriteItemToXml(
                 request,
