@@ -23,6 +23,9 @@ public class EncoderH264Vaapi : EncoderBase
                 result.Add("-rc_mode");
                 result.Add("1");
             }
+            
+            result.Add("-sei");
+            result.Add("-a53_cc");
 
             return result.ToArray();
         }
