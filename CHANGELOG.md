@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This should make *some* clients happier 
 - Fix `Other Video`, `Song` and `Image` fallback metadata tags to always include parent folder (folder added to library) 
 - Allow playback of items with any positive duration, including less than one second
+- Fix VAAPI transcoding of OTA content containing A53 CC data
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
