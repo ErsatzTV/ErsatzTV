@@ -531,23 +531,38 @@ public class Startup
                 // ServeUnknownFileTypes = true
             });
 
-        app.UseRouting();
-
-        if (OidcHelper.IsEnabled)
-        {
-            app.UseAuthentication();
-            app.UseAuthorization();
-        }
-
-        app.UseEndpoints(
-            endpoints =>
+        app.MapWhen(
+            ctx => !ctx.Request.Path.StartsWithSegments("/iptv"),
+            blazor =>
             {
-                endpoints.MapControllers();
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
+                blazor.UseRouting();
+
+                if (OidcHelper.IsEnabled)
+                {
+                    blazor.UseAuthentication();
+#pragma warning disable ASP0001
+                    blazor.UseAuthorization();
+#pragma warning restore ASP0001
+                }
+                
+                blazor.UseEndpoints(
+                    endpoints =>
+                    {
+                        endpoints.MapControllers();
+                        endpoints.MapBlazorHub();
+                        endpoints.MapFallbackToPage("/_Host");
+                    });
+            });
+
+        app.MapWhen(
+            ctx => ctx.Request.Path.StartsWithSegments("/iptv"),
+            iptv =>
+            {
+                iptv.UseRouting();
+                iptv.UseEndpoints(endpoints => endpoints.MapControllers());
             });
     }
-
+    
     private static void CustomServices(IServiceCollection services)
     {
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
