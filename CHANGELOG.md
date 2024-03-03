@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Search index updates should now complete at the same time as library scans
 - Do not unnecessarily update the search index during media server library scans
 - Use different library for reading song metadata that supports multiple tag entries
+- Update `/iptv` routing to make UI completely inaccessible from that path prefix
 
 ## [0.8.5-beta] - 2024-01-30
 ### Added
