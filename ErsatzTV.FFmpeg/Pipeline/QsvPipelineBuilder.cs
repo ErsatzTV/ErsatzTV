@@ -359,6 +359,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 {
                     _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
 
+                    formatForDownload = new PixelFormatNv12(formatForDownload.Name);
+                    
                     var hardwareDownload =
                         new HardwareDownloadFilter(currentState with { PixelFormat = Some(formatForDownload) });
                     currentState = hardwareDownload.NextState(currentState);
@@ -383,6 +385,18 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     }
                 }
 
+                pipelineSteps.Add(new PixelFormatOutputOption(format));
+            }
+
+            // be explicit with pixel format when feeding to concat
+            if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
+            {
+                Option<IPipelineStep> maybePixelFormat = pipelineSteps.Find(s => s is PixelFormatOutputOption);
+                foreach (IPipelineStep pf in maybePixelFormat)
+                {
+                    pipelineSteps.Remove(pf);
+                }
+                
                 pipelineSteps.Add(new PixelFormatOutputOption(format));
             }
         }
