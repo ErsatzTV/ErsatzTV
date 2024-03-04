@@ -73,6 +73,7 @@ public class FFmpegCapabilities : IFFmpegCapabilities
             VideoFormat.Vp9 => new DecoderVp9(),
             VideoFormat.Av1 => new DecoderAv1(_ffmpegDecoders),
 
+            VideoFormat.Raw => new DecoderRawVideo(),
             VideoFormat.Undetermined => new DecoderImplicit(),
             VideoFormat.Copy => new DecoderImplicit(),
             VideoFormat.GeneratedImage => new DecoderImplicit(),
