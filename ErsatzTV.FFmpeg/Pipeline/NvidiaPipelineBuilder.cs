@@ -333,9 +333,27 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 }
             }
 
+            // _logger.LogDebug(
+            //     "{CurrentPixelFormat} => {DesiredPixelFormat}",
+            //     currentState
+            //         .PixelFormat,
+            //     desiredPixelFormat);
+
             if (currentState.FrameDataLocation == FrameDataLocation.Hardware &&
                 ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
             {
+                if (currentState.PixelFormat.Map(f => f.FFmpegName) != format.FFmpegName)
+                {
+                    _logger.LogDebug(
+                        "Format {A} doesn't equal {B}",
+                        currentState.PixelFormat.Map(f => f.FFmpegName),
+                        format.FFmpegName);
+
+                    var formatFilter = new CudaFormatFilter(format);
+                    currentState = formatFilter.NextState(currentState);
+                    result.Add(formatFilter);
+                }
+
                 var hardwareDownload = new CudaHardwareDownloadFilter(currentState.PixelFormat, Some(format));
                 currentState = hardwareDownload.NextState(currentState);
                 result.Add(hardwareDownload);
@@ -374,6 +392,11 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 {
                     pipelineSteps.Add(new PixelFormatOutputOption(format));
                 }
+            }
+            
+            if (ffmpegState.OutputFormat is OutputFormatKind.Nut && format.BitDepth == 10)
+            {
+                pipelineSteps.Add(new PixelFormatOutputOption(format));
             }
         }
 
