@@ -40,14 +40,11 @@ public class SongVideoGenerator : ISongVideoGenerator
         MediaVersion videoVersion = new FallbackMediaVersion
         {
             Id = -1,
-            Chapters = new List<MediaChapter>(),
+            Chapters = [],
             Width = 192,
             Height = 108,
             SampleAspectRatio = "1:1",
-            Streams = new List<MediaStream>
-            {
-                new() { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" }
-            }
+            Streams = [new MediaStream { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" }]
         };
 
         string[] backgrounds =

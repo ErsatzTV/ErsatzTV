@@ -132,7 +132,7 @@ public class TranscodingTests
         public static ScalingBehavior[] ScalingBehaviors =
         [
             ScalingBehavior.ScaleAndPad,
-            ScalingBehavior.Crop,
+            //ScalingBehavior.Crop,
             //ScalingBehavior.Stretch
         ];
 
@@ -158,8 +158,8 @@ public class TranscodingTests
             // // // //
             // new("mpeg2video", "yuv420p"),
             // //
-            new InputFormat("libx265", "yuv420p")
-            // new("libx265", "yuv420p10le")
+            new InputFormat("libx265", "yuv420p"),
+            new InputFormat("libx265", "yuv420p10le")
             //
             // new("mpeg4", "yuv420p"),
             //
@@ -184,8 +184,8 @@ public class TranscodingTests
 
         public static FFmpegProfileBitDepth[] BitDepths =
         [
-            FFmpegProfileBitDepth.EightBit
-            //FFmpegProfileBitDepth.TenBit
+            FFmpegProfileBitDepth.EightBit,
+            FFmpegProfileBitDepth.TenBit
         ];
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
@@ -198,13 +198,20 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         [
             HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
-            //HardwareAccelerationKind.Vaapi,
-            HardwareAccelerationKind.Qsv,
+            //HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Vaapi,
+            //HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         ];
 
+        public static StreamingMode[] StreamingModes =
+        [
+            StreamingMode.TransportStream,
+            //StreamingMode.HttpLiveStreamingSegmenter,
+            StreamingMode.HttpLiveStreamingSegmenterV2
+        ];
+        
         public static string[] FilesToTest => [string.Empty];
     }
 
@@ -220,7 +227,9 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
         FFmpegProfileVideoFormat profileVideoFormat,
         [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
-        HardwareAccelerationKind profileAcceleration)
+        HardwareAccelerationKind profileAcceleration,
+        [ValueSource(typeof(TestData), nameof(TestData.StreamingModes))]
+        StreamingMode streamingMode)
     {
         var localFileSystem = new LocalFileSystem(
             Substitute.For<IClient>(),
@@ -271,19 +280,15 @@ public class TranscodingTests
                 DeinterlaceVideo = true,
                 BitDepth = profileBitDepth
             },
-            StreamingMode = StreamingMode.TransportStream,
+            StreamingMode = streamingMode,
             SubtitleMode = ChannelSubtitleMode.None
         };
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, Path.Combine("Resources", "song.mp3"));
         var songVersion = new MediaVersion
         {
-            MediaFiles = new List<MediaFile>
-            {
-                new() { Path = file }
-            },
-
-            Streams = new List<MediaStream>()
+            MediaFiles = [new MediaFile { Path = file }],
+            Streams = []
         };
 
         var song = new Song
@@ -294,6 +299,7 @@ public class TranscodingTests
                 {
                     Title = "Song Title",
                     Artists = ["Song Artist"],
+                    AlbumArtists = [],
                     Artwork = []
                 }
             ],
@@ -378,6 +384,7 @@ public class TranscodingTests
             profileAcceleration,
             VaapiDriver.RadeonSI,
             localStatisticsProvider,
+            streamingMode,
             () => videoVersion);
     }
 
@@ -405,7 +412,9 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
         FFmpegProfileVideoFormat profileVideoFormat,
         [ValueSource(typeof(TestData), nameof(TestData.TestAccelerations))]
-        HardwareAccelerationKind profileAcceleration)
+        HardwareAccelerationKind profileAcceleration,
+        [ValueSource(typeof(TestData), nameof(TestData.StreamingModes))]
+        StreamingMode streamingMode)
     {
         string file = fileToTest;
         if (string.IsNullOrWhiteSpace(file))
@@ -613,7 +622,7 @@ public class TranscodingTests
                     BitDepth = profileBitDepth,
                     ScalingBehavior = scalingBehavior
                 },
-                StreamingMode = StreamingMode.TransportStream,
+                StreamingMode = streamingMode,
                 SubtitleMode = subtitleMode
             },
             v,
@@ -652,6 +661,7 @@ public class TranscodingTests
             profileAcceleration,
             VaapiDriver.RadeonSI,
             localStatisticsProvider,
+            streamingMode,
             () => v);
     }
 
@@ -898,6 +908,7 @@ public class TranscodingTests
         HardwareAccelerationKind profileAcceleration,
         VaapiDriver vaapiDriver,
         ILocalStatisticsProvider localStatisticsProvider,
+        StreamingMode streamingMode,
         Func<MediaVersion> getFinalMediaVersion)
     {
         string[] unsupportedMessages =
@@ -994,8 +1005,14 @@ public class TranscodingTests
             foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
             {
                 // verify pixel format
-                videoStream.PixelFormat.Should().Be(
-                    profileBitDepth == FFmpegProfileBitDepth.TenBit ? PixelFormat.YUV420P10LE : PixelFormat.YUV420P);
+                string expectedPixelFormat = (profileBitDepth, streamingMode) switch
+                {
+                    //(FFmpegProfileBitDepth.TenBit, StreamingMode.HttpLiveStreamingSegmenterV2) => PixelFormat.RGB555LE,
+                    (FFmpegProfileBitDepth.TenBit, _) => PixelFormat.YUV420P10LE,
+                    _ => PixelFormat.YUV420P
+                };
+                
+                videoStream.PixelFormat.Should().Be(expectedPixelFormat);
 
                 // verify colors
                 var colorParams = new ColorParams(
@@ -1007,9 +1024,11 @@ public class TranscodingTests
                 // AMF doesn't seem to set this metadata properly
                 // MPEG2Video doesn't always seem to set this properly
                 // RADEONSI driver doesn't set this properly
+                // NUT doesn't set this properly
                 if (profileAcceleration != HardwareAccelerationKind.Amf &&
                     profileVideoFormat != FFmpegProfileVideoFormat.Mpeg2Video &&
-                    (profileAcceleration != HardwareAccelerationKind.Vaapi || vaapiDriver != VaapiDriver.RadeonSI))
+                    (profileAcceleration != HardwareAccelerationKind.Vaapi || vaapiDriver != VaapiDriver.RadeonSI) &&
+                    streamingMode != StreamingMode.HttpLiveStreamingSegmenterV2)
                 {
                     colorParams.IsBt709.Should().BeTrue($"{colorParams}");
                 }

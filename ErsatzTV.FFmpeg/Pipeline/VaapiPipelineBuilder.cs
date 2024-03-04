@@ -248,7 +248,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             videoStream,
             desiredState.PixelFormat,
             ffmpegState,
-            currentState);
+            currentState,
+            pipelineSteps);
 
         return new FilterChain(
             videoInputFile.FilterSteps,
@@ -263,7 +264,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         VideoStream videoStream,
         Option<IPixelFormat> desiredPixelFormat,
         FFmpegState ffmpegState,
-        FrameState currentState)
+        FrameState currentState,
+        ICollection<IPipelineStep> pipelineSteps)
     {
         var result = new List<IPipelineFilterStep>();
 
@@ -296,13 +298,17 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
+                    _logger.LogDebug(
+                        "FrameDataLocation == FrameDataLocation.Hardware, {CurrentPixelFormat} bit => {DesiredPixelFormat}",
+                        currentState.PixelFormat,
+                        desiredPixelFormat);
 
-                    // don't try to download from 8-bit to 10-bit
-                    HardwareDownloadFilter hardwareDownload = currentState.BitDepth == 8 &&
-                                                              desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10
-                        ? new HardwareDownloadFilter(currentState)
-                        : new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
+                    // don't try to download from 8-bit to 10-bit, or 10-bit to 8-bit
+                    HardwareDownloadFilter hardwareDownload =
+                        currentState.BitDepth == 8 && desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10 ||
+                        currentState.BitDepth == 10 && desiredPixelFormat.Map(pf => pf.BitDepth).IfNone(10) == 8
+                            ? new HardwareDownloadFilter(currentState)
+                            : new HardwareDownloadFilter(currentState with { PixelFormat = Some(format) });
 
                     currentState = hardwareDownload.NextState(currentState);
                     result.Add(hardwareDownload);
@@ -316,19 +322,26 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     currentState.PixelFormat.Map(f => f.FFmpegName),
                     format.FFmpegName);
 
-                // NV12 is 8-bit
-                if (format is PixelFormatYuv420P)
-                {
-                    format = new PixelFormatNv12(format.Name);
-                }
-
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
+                    // NV12 is 8-bit
+                    if (format is PixelFormatYuv420P)
+                    {
+                        format = new PixelFormatNv12(format.Name);
+                    }
+
                     result.Add(new VaapiFormatFilter(format));
                 }
                 else
                 {
-                    result.Add(new PixelFormatFilter(format));
+                    if (ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Vaapi)
+                    {
+                        result.Add(new PixelFormatFilter(format));
+                    }
+                    else
+                    {
+                        pipelineSteps.Add(new PixelFormatOutputOption(format));
+                    }
                 }
             }
 

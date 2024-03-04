@@ -615,16 +615,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 _ => AudioFilter.None
             });
 
-        IPixelFormat pixelFormat = channel.FFmpegProfile.VideoBitrate switch
+        IPixelFormat pixelFormat = channel.FFmpegProfile.BitDepth switch
         {
-            8 => new PixelFormatYuv420P(), // PixelFormatNv12(PixelFormat.YUV420P),
-            10 => new PixelFormatYuv420P10Le(), // TODO: does 10 bit work?
-            _ => new PixelFormatUnknown(channel.FFmpegProfile.VideoBitrate)
+            FFmpegProfileBitDepth.TenBit => new PixelFormatYuv420P10Le(),
+            _ => new PixelFormatYuv420P()
         };
 
         var ffmpegVideoStream = new VideoStream(
             Index: 0,
-            Codec: string.Empty,
+            Codec: VideoFormat.Raw,
             Some(pixelFormat),
             ColorParams.Default,
             resolution,
@@ -712,6 +711,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ffmpegPath);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
+        
+        // copy video input options to concat input
+        concatInputFile.InputOptions.AddRange(videoInputFile.InputOptions);
 
         return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
     }
