@@ -9,6 +9,8 @@ public record FFmpegKnownDecoder
     public static readonly FFmpegKnownDecoder Mpeg4Cuvid = new("mpeg4_cuvid");
     public static readonly FFmpegKnownDecoder Vc1Cuvid = new("vc1_cuvid");
     public static readonly FFmpegKnownDecoder Vp9Cuvid = new("vp9_cuvid");
+    public static readonly FFmpegKnownDecoder Libdav1d = new("libdav1d");
+    public static readonly FFmpegKnownDecoder Libaomav1 = new("libaom-av1");
 
     private FFmpegKnownDecoder(string Name) => this.Name = Name;
 
@@ -23,6 +25,8 @@ public record FFmpegKnownDecoder
             Mpeg2Cuvid.Name,
             Mpeg4Cuvid.Name,
             Vc1Cuvid.Name,
-            Vp9Cuvid.Name
+            Vp9Cuvid.Name,
+            Libdav1d.Name,
+            Libaomav1.Name
         };
 }
