@@ -7,7 +7,7 @@ public class MediaFile
 
     public int MediaVersionId { get; set; }
     public MediaVersion MediaVersion { get; set; }
-    
+
     public int? LibraryFolderId { get; set; }
     public LibraryFolder LibraryFolder { get; set; }
 }

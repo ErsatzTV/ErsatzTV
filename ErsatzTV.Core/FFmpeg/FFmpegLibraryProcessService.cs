@@ -237,7 +237,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
             subtitle =>
             {
-                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded && (!subtitle.IsExtracted || string.IsNullOrWhiteSpace(subtitle.Path)))
+                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded &&
+                    (!subtitle.IsExtracted || string.IsNullOrWhiteSpace(subtitle.Path)))
                 {
                     _logger.LogWarning("Subtitles are not yet available for this item");
                     return None;
@@ -591,7 +592,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateConcatSegmenterSettings(
             channel.FFmpegProfile,
             Option<int>.None);
-        
+
         playbackSettings.AudioDuration = Option<TimeSpan>.None;
 
         string audioFormat = playbackSettings.AudioFormat switch
@@ -622,25 +623,25 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         };
 
         var ffmpegVideoStream = new VideoStream(
-            Index: 0,
-            Codec: VideoFormat.Raw,
+            0,
+            VideoFormat.Raw,
             Some(pixelFormat),
             ColorParams.Default,
             resolution,
-            MaybeSampleAspectRatio: "1:1",
-            DisplayAspectRatio: string.Empty,
-            FrameRate: Option<string>.None,
-            StillImage: false,
+            "1:1",
+            string.Empty,
+            Option<string>.None,
+            false,
             ScanKind.Progressive);
 
         var videoInputFile = new VideoInputFile(concatInputFile.Url, new List<VideoStream> { ffmpegVideoStream });
 
-        var ffmpegAudioStream = new AudioStream(Index: 1, Codec: string.Empty, channel.FFmpegProfile.AudioChannels);
+        var ffmpegAudioStream = new AudioStream(1, string.Empty, channel.FFmpegProfile.AudioChannels);
         Option<AudioInputFile> audioInputFile = new AudioInputFile(
             concatInputFile.Url,
             new List<AudioStream> { ffmpegAudioStream },
             audioState);
-        
+
         Option<SubtitleInputFile> subtitleInputFile = Option<SubtitleInputFile>.None;
         Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
 
@@ -649,7 +650,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
 
         Option<string> hlsPlaylistPath = Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8");
-        
+
         Option<string> hlsSegmentTemplate = Path.Combine(
             FileSystemLayout.TranscodeFolder,
             channel.Number,
@@ -657,13 +658,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
-            InfiniteLoop: true,
+            true,
             videoFormat,
-            VideoProfile: Option<string>.None,
+            Option<string>.None,
             Optional(playbackSettings.PixelFormat),
-            ScaledSize: resolution,
-            PaddedSize: resolution,
-            CroppedSize: Option<FrameSize>.None,
+            resolution,
+            resolution,
+            Option<FrameSize>.None,
             false,
             playbackSettings.FrameRate,
             playbackSettings.VideoBitrate,
@@ -676,22 +677,22 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var ffmpegState = new FFmpegState(
             saveReports,
-            DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
-            EncoderHardwareAccelerationMode: hwAccel,
+            HardwareAccelerationMode.None,
+            hwAccel,
             vaapiDriver,
             vaapiDevice,
             playbackSettings.StreamSeek,
-            Finish: Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
             channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
             "ErsatzTV",
             channel.Name,
-            MetadataAudioLanguage: Option<string>.None,
-            MetadataSubtitleLanguage: Option<string>.None,
-            MetadataSubtitleTitle: Option<string>.None,
-            OutputFormat: OutputFormatKind.Hls,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None,
+            OutputFormatKind.Hls,
             hlsPlaylistPath,
             hlsSegmentTemplate,
-            PtsOffset: 0,
+            0,
             playbackSettings.ThreadCount,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
 
@@ -711,7 +712,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ffmpegPath);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
-        
+
         // copy video input options to concat input
         concatInputFile.InputOptions.AddRange(videoInputFile.InputOptions);
 

@@ -8,6 +8,6 @@ public enum ProgramScheduleItemCollectionType
     Artist = 3,
     MultiCollection = 4,
     SmartCollection = 5,
-    
+
     FakeCollection = 100
 }

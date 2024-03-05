@@ -10,7 +10,7 @@ namespace ErsatzTV.Application.Jellyfin;
 
 public class
     SynchronizeJellyfinAdminUserIdHandler : IRequestHandler<SynchronizeJellyfinAdminUserId,
-        Either<BaseError, Unit>>
+    Either<BaseError, Unit>>
 {
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly IJellyfinSecretStore _jellyfinSecretStore;

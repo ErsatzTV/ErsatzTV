@@ -9,6 +9,7 @@ public interface IImageRepository
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
         string path);
+
     Task<IEnumerable<string>> FindImagePaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
     Task<bool> AddTag(ImageMetadata metadata, Tag tag);

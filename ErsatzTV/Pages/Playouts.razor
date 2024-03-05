@@ -1,7 +1,7 @@
 ﻿@page "/playouts"
 @using ErsatzTV.Application.Playouts
-@using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject IDialogService Dialog
@@ -70,7 +70,7 @@
                     default:
                         <span></span>
                         break;
-                } 
+                }
             </MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
@@ -281,6 +281,7 @@
             {
                 await _table.ReloadServerData();
             }
+
             if (_selectedPlayoutId == playout.PlayoutId)
             {
                 _selectedPlayoutId = null;
@@ -321,7 +322,7 @@
         {
             await Mediator.Send(new EraseBlockPlayoutHistory(playout.PlayoutId), _cts.Token);
         }
-        
+
         if (_selectedPlayoutId == playout.PlayoutId)
         {
             await PlayoutSelected(playout);
@@ -355,7 +356,7 @@
         List<PlayoutNameViewModel> playouts = await Mediator.Send(new GetAllPlayouts(), _cts.Token);
         IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber));
 
-    // TODO: properly page this data
+        // TODO: properly page this data
         return new TableData<PlayoutNameViewModel>
         {
             TotalItems = playouts.Count,

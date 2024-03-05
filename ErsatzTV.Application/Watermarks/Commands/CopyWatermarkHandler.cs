@@ -41,7 +41,7 @@ public class CopyWatermarkHandler :
         clone.Name = request.Name;
 
         await dbContext.SaveChangesAsync();
-        
+
         _searchTargets.SearchTargetsChanged();
 
         return ProjectToViewModel(clone);

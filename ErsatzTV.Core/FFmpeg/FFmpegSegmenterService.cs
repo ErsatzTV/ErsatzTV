@@ -11,14 +11,14 @@ public class FFmpegSegmenterService(ILogger<FFmpegSegmenterService> logger) : IF
     public event EventHandler OnWorkersChanged;
 
     public ICollection<IHlsSessionWorker> Workers => _sessionWorkers.Values;
-    
+
     public bool TryGetWorker(string channelNumber, out IHlsSessionWorker worker) =>
         _sessionWorkers.TryGetValue(channelNumber, out worker);
 
     public bool TryAddWorker(string channelNumber, IHlsSessionWorker worker)
     {
         var result = false;
-        
+
         // check for worker
         if (TryGetWorker(channelNumber, out IHlsSessionWorker existing))
         {
@@ -27,7 +27,7 @@ public class FFmpegSegmenterService(ILogger<FFmpegSegmenterService> logger) : IF
             {
                 result = true;
             }
-            
+
             // if worker is not null, we cannot add one (so result should stay false)
         }
         else
@@ -35,12 +35,12 @@ public class FFmpegSegmenterService(ILogger<FFmpegSegmenterService> logger) : IF
             // worker does not exist, so try adding a null one
             result = _sessionWorkers.TryAdd(channelNumber, worker);
         }
-        
+
         if (result)
         {
             OnWorkersChanged?.Invoke(this, EventArgs.Empty);
         }
-        
+
         return result;
     }
 

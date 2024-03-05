@@ -26,16 +26,24 @@ public class UpdateGeneralSettingsHandler : IRequestHandler<UpdateGeneralSetting
         await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevel, generalSettings.DefaultMinimumLogLevel);
         _loggingLevelSwitches.DefaultLevelSwitch.MinimumLevel = generalSettings.DefaultMinimumLogLevel;
 
-        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelScanning, generalSettings.ScanningMinimumLogLevel);
+        await _configElementRepository.Upsert(
+            ConfigElementKey.MinimumLogLevelScanning,
+            generalSettings.ScanningMinimumLogLevel);
         _loggingLevelSwitches.ScanningLevelSwitch.MinimumLevel = generalSettings.ScanningMinimumLogLevel;
 
-        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelScheduling, generalSettings.SchedulingMinimumLogLevel);
+        await _configElementRepository.Upsert(
+            ConfigElementKey.MinimumLogLevelScheduling,
+            generalSettings.SchedulingMinimumLogLevel);
         _loggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = generalSettings.SchedulingMinimumLogLevel;
-        
-        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelStreaming, generalSettings.StreamingMinimumLogLevel);
+
+        await _configElementRepository.Upsert(
+            ConfigElementKey.MinimumLogLevelStreaming,
+            generalSettings.StreamingMinimumLogLevel);
         _loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = generalSettings.StreamingMinimumLogLevel;
 
-        await _configElementRepository.Upsert(ConfigElementKey.MinimumLogLevelHttp, generalSettings.HttpMinimumLogLevel);
+        await _configElementRepository.Upsert(
+            ConfigElementKey.MinimumLogLevelHttp,
+            generalSettings.HttpMinimumLogLevel);
         _loggingLevelSwitches.HttpLevelSwitch.MinimumLevel = generalSettings.HttpMinimumLogLevel;
 
         return Unit.Default;

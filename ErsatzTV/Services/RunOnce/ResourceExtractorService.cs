@@ -42,7 +42,7 @@ public class ResourceExtractorService : BackgroundService
             "_ArtistTitleAlbum_CenterTop.sbntxt",
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
             stoppingToken);
-        
+
         await ExtractTemplateResource(
             assembly,
             "_channel.sbntxt",

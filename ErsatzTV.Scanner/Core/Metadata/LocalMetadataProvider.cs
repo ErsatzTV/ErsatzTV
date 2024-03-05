@@ -22,6 +22,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IClient _client;
     private readonly IEpisodeNfoReader _episodeNfoReader;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+    private readonly IImageRepository _imageRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<LocalMetadataProvider> _logger;
@@ -34,7 +35,6 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly IShowNfoReader _showNfoReader;
     private readonly ISongRepository _songRepository;
-    private readonly IImageRepository _imageRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
     public LocalMetadataProvider(
@@ -405,7 +405,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             return None;
         }
     }
-    
+
     private Option<ImageMetadata> LoadImageMetadata(Image image, double? durationSeconds)
     {
         string path = image.GetHeadVersion().MediaFiles.Head().Path;
@@ -1105,7 +1105,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
         return await _metadataRepository.Add(metadata);
     }
-    
+
     private async Task<bool> ApplyMetadataUpdate(Image image, ImageMetadata metadata)
     {
         Option<ImageMetadata> maybeMetadata = Optional(image.ImageMetadata).Flatten().HeadOrNone();

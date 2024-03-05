@@ -41,7 +41,7 @@
                     </MudSelect>
                     @if (Kind == PlayoutKind.ExternalJson)
                     {
-                        <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)" />
+                        <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
                     }
                     else if (string.IsNullOrWhiteSpace(Kind))
                     {
@@ -75,7 +75,7 @@
 
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-    
+
     [Parameter]
     public string Kind { get; set; }
 
@@ -88,7 +88,7 @@
     protected override async Task OnParametersSetAsync()
     {
         _model.Kind = Kind;
-        
+
         _channels = await Mediator.Send(new GetAllChannels(), _cts.Token)
             .Map(list => list.OrderBy(vm => decimal.Parse(vm.Number)).ToList());
 
@@ -121,4 +121,5 @@
                 () => NavigationManager.NavigateTo("/playouts"));
         }
     }
+
 }

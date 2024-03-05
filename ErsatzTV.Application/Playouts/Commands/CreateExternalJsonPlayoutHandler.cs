@@ -14,9 +14,9 @@ namespace ErsatzTV.Application.Playouts;
 public class CreateExternalJsonPlayoutHandler
     : IRequestHandler<CreateExternalJsonPlayout, Either<BaseError, CreatePlayoutResponse>>
 {
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILocalFileSystem _localFileSystem;
 
     public CreateExternalJsonPlayoutHandler(
         ILocalFileSystem localFileSystem,
@@ -27,7 +27,7 @@ public class CreateExternalJsonPlayoutHandler
         _channel = channel;
         _dbContextFactory = dbContextFactory;
     }
-    
+
     public async Task<Either<BaseError, CreatePlayoutResponse>> Handle(
         CreateExternalJsonPlayout request,
         CancellationToken cancellationToken)

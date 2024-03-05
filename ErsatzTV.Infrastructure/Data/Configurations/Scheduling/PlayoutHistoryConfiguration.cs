@@ -6,8 +6,5 @@ namespace ErsatzTV.Infrastructure.Data.Configurations.Scheduling;
 
 public class PlayoutHistoryConfiguration : IEntityTypeConfiguration<PlayoutHistory>
 {
-    public void Configure(EntityTypeBuilder<PlayoutHistory> builder)
-    {
-        builder.ToTable("PlayoutHistory");
-    }
+    public void Configure(EntityTypeBuilder<PlayoutHistory> builder) => builder.ToTable("PlayoutHistory");
 }

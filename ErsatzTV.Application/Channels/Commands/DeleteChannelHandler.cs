@@ -39,7 +39,7 @@ public class DeleteChannelHandler : IRequestHandler<DeleteChannel, Either<BaseEr
     {
         dbContext.Channels.Remove(channel);
         await dbContext.SaveChangesAsync(cancellationToken);
-        
+
         _searchTargets.SearchTargetsChanged();
 
         // delete channel data from channel guide cache

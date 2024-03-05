@@ -6,7 +6,7 @@ namespace ErsatzTV.Application.Jellyfin;
 
 public class
     UpdateJellyfinLibraryPreferencesHandler : IRequestHandler<UpdateJellyfinLibraryPreferences,
-        Either<BaseError, Unit>>
+    Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ISearchIndex _searchIndex;

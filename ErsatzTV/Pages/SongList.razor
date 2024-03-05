@@ -105,6 +105,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         _navigationManager.NavigateTo(uri);
     }
 
@@ -116,6 +117,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         _navigationManager.NavigateTo(uri);
     }
 

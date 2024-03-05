@@ -1,5 +1,5 @@
 ﻿@page "/media/browser/images"
-@using S=System.Collections.Generic
+@using S = System.Collections.Generic
 @using ErsatzTV.Application.Images
 @using System.Net
 @implements IDisposable
@@ -83,7 +83,7 @@
         var query = $"library_folder_id:{item.LibraryFolderId}";
         return WebUtility.UrlEncode(query);
     }
-    
+
     private async Task EditImageFolderDuration(ImageTreeItemViewModel item)
     {
         var parameters = new DialogParameters { { "ImageFolderDuration", item.ImageFolderDuration } };
@@ -98,4 +98,5 @@
             await InvokeAsync(StateHasChanged);
         }
     }
+
 }

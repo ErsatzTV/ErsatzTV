@@ -73,7 +73,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
-            
+
             string normalizedLibraryPath = libraryPath.Path.TrimEnd(
                 Path.DirectorySeparatorChar,
                 Path.AltDirectorySeparatorChar);
@@ -226,7 +226,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             return new ScanCanceled();
         }
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateLibraryFolderId(
         MediaItemScanResult<Song> result,
         LibraryFolder libraryFolder)

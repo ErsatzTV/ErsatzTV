@@ -558,7 +558,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             doc.Add(new TextField(LanguageField, englishName, Field.Store.NO));
         }
     }
-    
+
     private async Task AddSubLanguages(ISearchRepository searchRepository, Document doc, List<string> mediaCodes)
     {
         foreach (string code in mediaCodes.Where(c => !string.IsNullOrWhiteSpace(c)).Distinct())
@@ -1012,7 +1012,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     {
                         doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
                     }
-                    
+
                     foreach (Studio studio in showMetadata.Studios)
                     {
                         doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
@@ -1250,7 +1250,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ArtistField, artist, Field.Store.NO));
                 }
-                
+
                 foreach (string albumArtist in metadata.AlbumArtists)
                 {
                     doc.Add(new TextField(AlbumArtistField, albumArtist, Field.Store.NO));
@@ -1277,7 +1277,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             }
         }
     }
-    
+
     private async Task UpdateImage(ISearchRepository searchRepository, Image image)
     {
         Option<ImageMetadata> maybeMetadata = image.ImageMetadata.HeadOrNone();
@@ -1307,7 +1307,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 IEnumerable<int> libraryFolderIds = image.MediaVersions
                     .SelectMany(mv => mv.MediaFiles)
                     .SelectMany(mf => Optional(mf.LibraryFolderId));
-                
+
                 foreach (int libraryFolderId in libraryFolderIds)
                 {
                     doc.Add(

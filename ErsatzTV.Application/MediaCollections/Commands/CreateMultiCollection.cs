@@ -9,5 +9,5 @@ public record CreateMultiCollectionItem(
     bool ScheduleAsGroup,
     PlaybackOrder PlaybackOrder);
 
-public record CreateMultiCollection
-    (string Name, List<CreateMultiCollectionItem> Items) : IRequest<Either<BaseError, MultiCollectionViewModel>>;
+public record CreateMultiCollection(string Name, List<CreateMultiCollectionItem> Items)
+    : IRequest<Either<BaseError, MultiCollectionViewModel>>;

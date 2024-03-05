@@ -1,5 +1,5 @@
 @page "/templates"
-@using S=System.Collections.Generic
+@using S = System.Collections.Generic
 @using ErsatzTV.Application.Scheduling
 @implements IDisposable
 @inject ILogger<Templates> Logger
@@ -82,7 +82,7 @@
     private TemplateGroupViewModel _selectedTemplateGroup;
     private string _templateGroupName;
     private string _templateName;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -117,25 +117,25 @@
             {
                 TreeItems.Add(new TemplateTreeItemViewModel(templateGroup));
                 _templateGroupName = null;
-                
+
                 _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
             }
         }
     }
-    
+
     private async Task AddTemplate()
     {
         if (_selectedTemplateGroup is not null && !string.IsNullOrWhiteSpace(_templateName))
         {
             Either<BaseError, TemplateViewModel> result = await Mediator.Send(new CreateTemplate(_selectedTemplateGroup.Id, _templateName), _cts.Token);
-        
+
             foreach (BaseError error in result.LeftToSeq())
             {
                 Snackbar.Add(error.Value, Severity.Error);
                 Logger.LogError("Unexpected error adding template: {Error}", error.Value);
             }
-        
+
             foreach (TemplateViewModel template in result.RightToSeq())
             {
                 foreach (TemplateTreeItemViewModel item in TreeItems.Where(item => item.TemplateGroupId == _selectedTemplateGroup.Id))
@@ -148,7 +148,7 @@
             }
         }
     }
-    
+
     private async Task<S.HashSet<TemplateTreeItemViewModel>> LoadServerData(TemplateTreeItemViewModel parentNode)
     {
         foreach (int templateGroupId in Optional(parentNode.TemplateGroupId))
@@ -201,4 +201,5 @@
             }
         }
     }
+
 }

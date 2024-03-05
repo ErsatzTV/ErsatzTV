@@ -14,9 +14,9 @@ namespace ErsatzTV.Application.MediaCollections;
 public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ISearchTargets _searchTargets;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly ISearchTargets _searchTargets;
 
     public UpdateSmartCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,

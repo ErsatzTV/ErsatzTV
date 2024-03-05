@@ -6,7 +6,7 @@ namespace ErsatzTV.Application.Plex;
 
 public class
     UpdatePlexLibraryPreferencesHandler : IRequestHandler<UpdatePlexLibraryPreferences,
-        Either<BaseError, Unit>>
+    Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ISearchIndex _searchIndex;

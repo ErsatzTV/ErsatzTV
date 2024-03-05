@@ -1,5 +1,5 @@
 @page "/blocks"
-@using S=System.Collections.Generic
+@using S = System.Collections.Generic
 @using ErsatzTV.Application.Scheduling
 @implements IDisposable
 @inject ILogger<Blocks> Logger
@@ -88,7 +88,7 @@
     private BlockGroupViewModel _selectedBlockGroup;
     private string _blockGroupName;
     private string _blockName;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -123,25 +123,25 @@
             {
                 TreeItems.Add(new BlockTreeItemViewModel(blockGroup));
                 _blockGroupName = null;
-                
+
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
             }
         }
     }
-    
+
     private async Task AddBlock()
     {
         if (_selectedBlockGroup is not null && !string.IsNullOrWhiteSpace(_blockName))
         {
             Either<BaseError, BlockViewModel> result = await Mediator.Send(new CreateBlock(_selectedBlockGroup.Id, _blockName), _cts.Token);
-        
+
             foreach (BaseError error in result.LeftToSeq())
             {
                 Snackbar.Add(error.Value, Severity.Error);
                 Logger.LogError("Unexpected error adding block: {Error}", error.Value);
             }
-        
+
             foreach (BlockViewModel block in result.RightToSeq())
             {
                 foreach (BlockTreeItemViewModel item in TreeItems.Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
@@ -154,7 +154,7 @@
             }
         }
     }
-    
+
     private async Task<S.HashSet<BlockTreeItemViewModel>> LoadServerData(BlockTreeItemViewModel parentNode)
     {
         foreach (int blockGroupId in Optional(parentNode.BlockGroupId))
@@ -182,7 +182,7 @@
             {
                 await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
                 TreeItems.RemoveWhere(i => i.BlockGroupId == blockGroupId);
-            
+
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
             }
@@ -207,4 +207,5 @@
             }
         }
     }
+
 }

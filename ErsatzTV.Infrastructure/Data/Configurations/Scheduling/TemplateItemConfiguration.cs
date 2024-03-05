@@ -6,8 +6,5 @@ namespace ErsatzTV.Infrastructure.Data.Configurations.Scheduling;
 
 public class TemplateItemConfiguration : IEntityTypeConfiguration<TemplateItem>
 {
-    public void Configure(EntityTypeBuilder<TemplateItem> builder)
-    {
-        builder.ToTable("TemplateItem");
-    }
+    public void Configure(EntityTypeBuilder<TemplateItem> builder) => builder.ToTable("TemplateItem");
 }

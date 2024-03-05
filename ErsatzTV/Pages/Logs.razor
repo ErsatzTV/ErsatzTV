@@ -73,28 +73,34 @@
         switch (state.SortLabel?.ToLowerInvariant())
         {
             case "timestamp":
-                data = await Mediator.Send(new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
-                {
-                    SortExpression = le => le.Timestamp,
-                    SortDescending = state.SortDirection == SortDirection.None
-                        ? Option<bool>.None
-                        : state.SortDirection == SortDirection.Descending
-                }, _cts.Token);
+                data = await Mediator.Send(
+                    new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
+                    {
+                        SortExpression = le => le.Timestamp,
+                        SortDescending = state.SortDirection == SortDirection.None
+                            ? Option<bool>.None
+                            : state.SortDirection == SortDirection.Descending
+                    },
+                    _cts.Token);
                 break;
             case "level":
-                data = await Mediator.Send(new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
-                {
-                    SortExpression = le => le.Level,
-                    SortDescending = state.SortDirection == SortDirection.None
-                        ? Option<bool>.None
-                        : state.SortDirection == SortDirection.Descending
-                }, _cts.Token);
+                data = await Mediator.Send(
+                    new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
+                    {
+                        SortExpression = le => le.Level,
+                        SortDescending = state.SortDirection == SortDirection.None
+                            ? Option<bool>.None
+                            : state.SortDirection == SortDirection.Descending
+                    },
+                    _cts.Token);
                 break;
             default:
-                data = await Mediator.Send(new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
-                {
-                    SortDescending = Option<bool>.None
-                }, _cts.Token);
+                data = await Mediator.Send(
+                    new GetRecentLogEntries(state.Page, state.PageSize, _searchString)
+                    {
+                        SortDescending = Option<bool>.None
+                    },
+                    _cts.Token);
                 break;
         }
 

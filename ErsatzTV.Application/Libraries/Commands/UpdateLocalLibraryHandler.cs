@@ -37,7 +37,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => UpdateLocalLibrary(dbContext, parameters));
+        return await validation.Apply(parameters => UpdateLocalLibrary(dbContext, parameters));
     }
 
     private async Task<LocalLibraryViewModel> UpdateLocalLibrary(TvContext dbContext, Parameters parameters)

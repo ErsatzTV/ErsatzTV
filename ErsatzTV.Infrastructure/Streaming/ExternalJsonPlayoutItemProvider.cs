@@ -20,11 +20,11 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly IPlexPathReplacementService _plexPathReplacementService;
-    private readonly IPlexServerApiClient _plexServerApiClient;
-    private readonly IPlexSecretStore _plexSecretStore;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<ExternalJsonPlayoutItemProvider> _logger;
+    private readonly IPlexPathReplacementService _plexPathReplacementService;
+    private readonly IPlexSecretStore _plexSecretStore;
+    private readonly IPlexServerApiClient _plexServerApiClient;
 
     public ExternalJsonPlayoutItemProvider(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -50,7 +50,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         string ffprobePath)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        
+
         Option<Playout> maybePlayout = await dbContext.Playouts
             .AsNoTracking()
             .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id);
@@ -76,7 +76,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 
         return new UnableToLocatePlayoutItem();
     }
-    
+
     private async Task<Either<BaseError, PlayoutItemWithPath>> GetExternalJsonPlayoutItem(
         TvContext dbContext,
         Playout playout,
@@ -90,7 +90,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         foreach (ExternalJsonChannel channel in maybeChannel)
         {
             // TODO: null start time should log and throw
-            
+
             DateTimeOffset startTime = DateTimeOffset.Parse(
                 channel.StartTime ?? string.Empty,
                 CultureInfo.InvariantCulture,
@@ -141,7 +141,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 
             return await StreamRemotely(dbContext, startTime, program);
         }
-        
+
         return new UnableToLocatePlayoutItem();
     }
 
@@ -166,8 +166,8 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
                     new EpisodeMetadata
                     {
                         EpisodeNumber = program.Episode,
-                        Title = program.Title,
-                    },
+                        Title = program.Title
+                    }
                 ],
                 Season = new Season
                 {
@@ -190,7 +190,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 
         return new UnableToLocatePlayoutItem();
     }
-    
+
     private async Task<Either<BaseError, PlayoutItemWithPath>> StreamRemotely(
         TvContext dbContext,
         DateTimeOffset startTime,
@@ -199,7 +199,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
         Option<PlexMediaSource> maybeServer = await dbContext.PlexMediaSources
             .Include(pms => pms.Connections)
             .SelectOneAsync(pms => pms.ServerName, pms => pms.ServerName == program.ServerKey);
-        
+
         foreach (PlexMediaSource server in maybeServer)
         {
             Option<PlexConnection> maybeConnection = server.Connections.SingleOrDefault(c => c.IsActive);

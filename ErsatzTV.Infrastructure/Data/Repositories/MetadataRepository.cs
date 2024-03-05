@@ -536,7 +536,10 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
-    private static async Task<bool> UpdateSubtitles(TvContext dbContext, Core.Domain.Metadata metadata, List<Subtitle> subtitles)
+    private static async Task<bool> UpdateSubtitles(
+        TvContext dbContext,
+        Core.Domain.Metadata metadata,
+        List<Subtitle> subtitles)
     {
         // _logger.LogDebug(
         //     "Updating {Count} subtitles; metadata is {Metadata}",

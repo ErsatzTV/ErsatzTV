@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public record UpdateCollectionCustomOrder
-(
+public record UpdateCollectionCustomOrder(
     int CollectionId,
     List<MediaItemCustomOrder> MediaItemCustomOrders) : IRequest<Either<BaseError, Unit>>;
 

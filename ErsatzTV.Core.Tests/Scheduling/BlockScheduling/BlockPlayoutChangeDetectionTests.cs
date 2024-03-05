@@ -15,24 +15,24 @@ public static class BlockPlayoutChangeDetectionTests
     {
         // takes playout items, item block keys and effective blocks
         // returns blocks to schedule and playout items to remove
-        
+
         // test case: nothing has changed
-        
+
         // test case: block has moved from one time to another time, nothing after
         // test case: block has moved from one time to another time, same block after
         // test case: block has moved from one time to another time, different block with same collection after
         // test case: block was moved from one time to another time, different block with different collection after        
-        
+
         // test case: block was removed, nothing after
         // test case: block was removed, same block after
         // test case: block was removed, different block with same collection after
         // test case: block was removed, different block with different collection after
-        
+
         // test case: block was added, nothing after
         // test case: block was added, same block after
         // test case: block was added, different block with same collection after
         // test case: block was added, different block with different collection after
-        
+
 
         [Test]
         public void Should_Work_When_Nothing_Has_Changed()
@@ -65,7 +65,7 @@ public static class BlockPlayoutChangeDetectionTests
             List<EffectiveBlock> effectiveBlocks =
             [
                 new EffectiveBlock(block1, blockKey1, GetLocalDate(2024, 1, 17).AddHours(9), 1),
-                new EffectiveBlock(block2, blockKey2, GetLocalDate(2024, 1, 17).AddHours(13), 2),
+                new EffectiveBlock(block2, blockKey2, GetLocalDate(2024, 1, 17).AddHours(13), 2)
             ];
 
             Map<CollectionKey, string> collectionEtags = LanguageExt.Map<CollectionKey, string>.Empty;
@@ -80,7 +80,7 @@ public static class BlockPlayoutChangeDetectionTests
 
             // nothing to schedule
             result.Item1.Should().HaveCount(0);
-            
+
             // do not need to remove any playout items or history
             result.Item2.Should().HaveCount(0);
         }
@@ -165,7 +165,7 @@ public static class BlockPlayoutChangeDetectionTests
                 CollectionKey = JsonConvert.SerializeObject(collectionKey),
                 CollectionEtag = JsonConvert.SerializeObject(collectionKey)
             };
-        
+
         private static DateTimeOffset GetLocalDate(int year, int month, int day) =>
             new(year, month, day, 0, 0, 0, TimeSpan.FromHours(-6));
     }

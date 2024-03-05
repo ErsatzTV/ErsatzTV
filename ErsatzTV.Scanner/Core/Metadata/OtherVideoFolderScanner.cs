@@ -77,7 +77,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
             var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
-            
+
             string normalizedLibraryPath = libraryPath.Path.TrimEnd(
                 Path.DirectorySeparatorChar,
                 Path.AltDirectorySeparatorChar);
@@ -233,7 +233,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             return new ScanCanceled();
         }
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateLibraryFolderId(
         MediaItemScanResult<OtherVideo> video,
         LibraryFolder libraryFolder)
@@ -312,7 +312,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             return BaseError.New(ex.ToString());
         }
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateThumbnail(
         MediaItemScanResult<OtherVideo> result,
         CancellationToken cancellationToken)
@@ -336,7 +336,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             return BaseError.New(ex.ToString());
         }
     }
-    
+
     private Option<string> LocateThumbnail(OtherVideo otherVideo)
     {
         string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;

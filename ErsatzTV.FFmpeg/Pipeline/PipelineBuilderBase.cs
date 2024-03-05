@@ -2,12 +2,10 @@ using System.Diagnostics;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
-using ErsatzTV.FFmpeg.Encoder.Vaapi;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.GlobalOption;
-using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.OutputOption;
@@ -20,13 +18,13 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 public abstract class PipelineBuilderBase : IPipelineBuilder
 {
     private readonly Option<AudioInputFile> _audioInputFile;
+    private readonly Option<ConcatInputFile> _concatInputFile;
     private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly string _fontsFolder;
     private readonly HardwareAccelerationMode _hardwareAccelerationMode;
     private readonly ILogger _logger;
     private readonly string _reportsFolder;
     private readonly Option<SubtitleInputFile> _subtitleInputFile;
-    private readonly Option<ConcatInputFile> _concatInputFile;
     private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<WatermarkInputFile> _watermarkInputFile;
 
@@ -120,7 +118,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         return new FFmpegPipeline(pipelineSteps, false);
     }
-    
+
     public FFmpegPipeline WrapSegmenter(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
     {
         var pipelineSteps = new List<IPipelineStep>
@@ -163,7 +161,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
             outputOption,
-            new ClosedGopOutputOption(),
+            new ClosedGopOutputOption()
         };
 
         if (desiredState.VideoFormat != VideoFormat.Copy)
@@ -176,7 +174,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             concatInputFile.AddOption(new ConcatInputFormat());
             concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
         }
-        
+
         Debug.Assert(_videoInputFile.IsSome, "Pipeline builder requires exactly one video input file");
         VideoInputFile videoInputFile = _videoInputFile.Head();
 
@@ -313,7 +311,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 videoStream.FrameRate,
                                 segmentTemplate,
                                 playlistPath,
-                                isFirstTranscode: ffmpegState.PtsOffset == 0,
+                                ffmpegState.PtsOffset == 0,
                                 ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv));
                     }
                 }
@@ -367,7 +365,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void BuildAudioPipeline(FFmpegState ffmpegState, AudioInputFile audioInputFile, List<IPipelineStep> pipelineSteps)
+    private void BuildAudioPipeline(
+        FFmpegState ffmpegState,
+        AudioInputFile audioInputFile,
+        List<IPipelineStep> pipelineSteps)
     {
         // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want
         foreach (IEncoder step in AvailableEncoders.ForAudioFormat(ffmpegState, audioInputFile.DesiredState, _logger))
@@ -538,13 +539,16 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         return maybeDecoder;
     }
 
-    protected Option<IEncoder> GetSoftwareEncoder(FFmpegState ffmpegState, FrameState currentState, FrameState desiredState)
+    protected Option<IEncoder> GetSoftwareEncoder(
+        FFmpegState ffmpegState,
+        FrameState currentState,
+        FrameState desiredState)
     {
         if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
         {
             return new EncoderRawVideo();
         }
-        
+
         return desiredState.VideoFormat switch
         {
             VideoFormat.Hevc => new EncoderLibx265(

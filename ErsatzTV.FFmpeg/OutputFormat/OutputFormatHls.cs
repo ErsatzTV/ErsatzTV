@@ -5,12 +5,12 @@ namespace ErsatzTV.FFmpeg.OutputFormat;
 public class OutputFormatHls : IPipelineStep
 {
     public const int SegmentSeconds = 4;
-    
+
     private readonly FrameState _desiredState;
+    private readonly bool _isFirstTranscode;
     private readonly Option<string> _mediaFrameRate;
     private readonly bool _oneSecondGop;
     private readonly string _playlistPath;
-    private readonly bool _isFirstTranscode;
     private readonly string _segmentTemplate;
 
     public OutputFormatHls(

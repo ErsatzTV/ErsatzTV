@@ -1,9 +1,7 @@
-using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
@@ -28,7 +26,7 @@ public static class BlockPlayoutEnumerator
         var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
 
         var enumerator = new ChronologicalMediaCollectionEnumerator(collectionItems, state);
-        
+
         // seek to the appropriate place in the collection enumerator
         foreach (PlayoutHistory h in maybeHistory)
         {
@@ -43,7 +41,7 @@ public static class BlockPlayoutEnumerator
 
         return enumerator;
     }
-    
+
     public static IMediaCollectionEnumerator SeasonEpisode(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,
@@ -63,7 +61,7 @@ public static class BlockPlayoutEnumerator
         var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
 
         var enumerator = new SeasonEpisodeMediaCollectionEnumerator(collectionItems, state);
-        
+
         // seek to the appropriate place in the collection enumerator
         foreach (PlayoutHistory h in maybeHistory)
         {
@@ -78,7 +76,7 @@ public static class BlockPlayoutEnumerator
 
         return enumerator;
     }
-    
+
     public static IMediaCollectionEnumerator Shuffle(
         List<MediaItem> collectionItems,
         DateTimeOffset currentTime,

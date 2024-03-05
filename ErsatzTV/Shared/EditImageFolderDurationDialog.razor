@@ -8,11 +8,11 @@
             </MudText>
         </MudContainer>
         <MudNumericField T="double?" Label="Duration" @bind-Value="@_imageDurationSeconds"
-                      Adornment="Adornment.End"
-                      AdornmentText="seconds"
-                      Min="0.01"
-                      Step="0.01"
-                      Immediate="true"/>
+                         Adornment="Adornment.End"
+                         AdornmentText="seconds"
+                         Min="0.01"
+                         Step="0.01"
+                         Immediate="true"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
@@ -39,11 +39,8 @@
         _cts.Dispose();
     }
 
-    protected override void OnParametersSet()
-    {
-        _imageDurationSeconds = ImageFolderDuration;
-    }
-    
+    protected override void OnParametersSet() => _imageDurationSeconds = ImageFolderDuration;
+
     private void Submit() => MudDialog.Close(DialogResult.Ok(_imageDurationSeconds));
 
     private void Cancel() => MudDialog.Cancel();

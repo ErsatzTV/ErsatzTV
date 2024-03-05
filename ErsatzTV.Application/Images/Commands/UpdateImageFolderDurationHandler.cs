@@ -16,7 +16,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
         {
             request = request with { ImageFolderDuration = 0.01 };
         }
-        
+
         // delete entry if null
         if (request.ImageFolderDuration is null)
         {
@@ -48,7 +48,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
-        
+
         // update all images (bfs) starting at this folder
         Option<LibraryFolder> maybeFolder = await dbContext.LibraryFolders
             .AsNoTracking()
@@ -59,7 +59,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
         foreach (LibraryFolder libraryFolder in maybeFolder)
         {
             LibraryFolder currentFolder = libraryFolder;
-            
+
             // walk up to get duration, if needed
             double? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
             while (durationSeconds is null && currentFolder?.ParentId is not null)
@@ -73,7 +73,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
                 {
                     currentFolder = null;
                 }
-                
+
                 foreach (LibraryFolder parent in maybeParent)
                 {
                     currentFolder = parent;
@@ -83,7 +83,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
 
             queue.Enqueue(new FolderWithParentDuration(libraryFolder, durationSeconds));
         }
-        
+
         while (queue.Count > 0)
         {
             (LibraryFolder currentFolder, double? parentDuration) = queue.Dequeue();
@@ -109,7 +109,7 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
                 .Filter(lf => lf.ParentId == currentFolder.Id)
                 .Include(lf => lf.ImageFolderDuration)
                 .ToListAsync(cancellationToken);
-            
+
             // queue all children
             foreach (LibraryFolder child in children)
             {

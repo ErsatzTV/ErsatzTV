@@ -71,7 +71,7 @@ public class UpdateChannelHandler(
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
         await dbContext.SaveChangesAsync();
-        
+
         searchTargets.SearchTargetsChanged();
 
         if (c.SubtitleMode != ChannelSubtitleMode.None)
@@ -84,7 +84,7 @@ public class UpdateChannelHandler(
                 await workerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
             }
         }
-        
+
         await workerChannel.WriteAsync(new RefreshChannelList());
 
         return ProjectToViewModel(c);

@@ -9,7 +9,7 @@ namespace ErsatzTV.Application.Search;
 
 public class
     QuerySearchIndexOtherVideosHandler : IRequestHandler<QuerySearchIndexOtherVideos,
-        OtherVideoCardResultsViewModel>
+    OtherVideoCardResultsViewModel>
 {
     private readonly IClient _client;
     private readonly IOtherVideoRepository _otherVideoRepository;

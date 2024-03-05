@@ -26,11 +26,8 @@
     [Parameter]
     public string StreamUri { get; set; }
 
-    protected override Task OnParametersSetAsync()
-    {
-        return Task.CompletedTask;
-    }
-    
+    protected override Task OnParametersSetAsync() => Task.CompletedTask;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -55,7 +52,7 @@
         {
             // ignored
         }
-        
+
         MudDialog.Close(DialogResult.Ok(true));
     }
 

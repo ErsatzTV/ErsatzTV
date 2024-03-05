@@ -6,7 +6,7 @@ public class ExternalJsonChannel
 {
     [JsonProperty("startTime")]
     public string StartTime { get; set; }
-    
+
     [JsonProperty("guideMinimumDurationSeconds")]
     public int GuideMinimumDurationSeconds { get; set; }
 

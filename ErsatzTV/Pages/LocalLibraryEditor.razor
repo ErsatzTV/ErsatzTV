@@ -129,11 +129,13 @@
     {
         _model.HasChanges = false;
         _model.Paths = await _mediator.Send(new GetLocalLibraryPaths(Id), _cts.Token)
-            .Map(list => list.Map(vm => new LocalLibraryPathEditViewModel
-            {
-                Id = vm.Id,
-                Path = vm.Path
-            }).ToList());
+            .Map(
+                list => list.Map(
+                    vm => new LocalLibraryPathEditViewModel
+                    {
+                        Id = vm.Id,
+                        Path = vm.Path
+                    }).ToList());
     }
 
     private async Task MoveLibraryPath(LocalLibraryPathEditViewModel libraryPath)
@@ -189,10 +191,11 @@
         if (!string.IsNullOrWhiteSpace(_newPath.Path) && _model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
         {
             _model.HasChanges = true;
-            _model.Paths.Add(new LocalLibraryPathEditViewModel
-            {
-                Path = _newPath.Path
-            });
+            _model.Paths.Add(
+                new LocalLibraryPathEditViewModel
+                {
+                    Path = _newPath.Path
+                });
         }
 
         _newPath.Path = null;
@@ -204,14 +207,18 @@
         if (_editContext.Validate())
         {
             Either<BaseError, LocalLibraryViewModel> result = IsEdit
-                ? await _mediator.Send(new UpdateLocalLibrary(
-                    _model.Id,
-                    _model.Name,
-                    _model.Paths.Map(p => new UpdateLocalLibraryPath(p.Id, p.Path)).ToList()), _cts.Token)
-                : await _mediator.Send(new CreateLocalLibrary(
-                    _model.Name,
-                    _model.MediaKind,
-                    _model.Paths.Map(p => p.Path).ToList()), _cts.Token);
+                ? await _mediator.Send(
+                    new UpdateLocalLibrary(
+                        _model.Id,
+                        _model.Name,
+                        _model.Paths.Map(p => new UpdateLocalLibraryPath(p.Id, p.Path)).ToList()),
+                    _cts.Token)
+                : await _mediator.Send(
+                    new CreateLocalLibrary(
+                        _model.Name,
+                        _model.MediaKind,
+                        _model.Paths.Map(p => p.Path).ToList()),
+                    _cts.Token);
 
             result.Match(
                 _ => _navigationManager.NavigateTo("media/sources/local"),

@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Map = LanguageExt.Map;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
@@ -24,7 +25,12 @@ public class BlockPlayoutBuilder(
         NullValueHandling = NullValueHandling.Ignore
     };
 
-    public virtual async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
+    protected virtual ILogger Logger => logger;
+
+    public virtual async Task<Playout> Build(
+        Playout playout,
+        PlayoutBuildMode mode,
+        CancellationToken cancellationToken)
     {
         Logger.LogDebug(
             "Building block playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
@@ -57,7 +63,7 @@ public class BlockPlayoutBuilder(
 
         // remove items without a block key (shouldn't happen often, just upgrades)
         playout.Items.RemoveAll(i => !itemBlockKeys.ContainsKey(i));
-        
+
         // remove old items
         // importantly, this should not remove their history
         playout.Items.RemoveAll(i => i.FinishOffset < start);
@@ -132,7 +138,7 @@ public class BlockPlayoutBuilder(
                     historyKey,
                     collectionMediaItems);
 
-                bool pastTime = false;
+                var pastTime = false;
 
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
@@ -144,7 +150,7 @@ public class BlockPlayoutBuilder(
                     TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
                     var collectionKey = CollectionKey.ForBlockItem(blockItem);
-                    
+
                     // create a playout item
                     var playoutItem = new PlayoutItem
                     {
@@ -201,7 +207,7 @@ public class BlockPlayoutBuilder(
                     currentTime += itemDuration;
                     enumerator.MoveNext();
                 }
-                
+
                 if (pastTime)
                 {
                     break;
@@ -214,14 +220,10 @@ public class BlockPlayoutBuilder(
         return playout;
     }
 
-    protected virtual ILogger Logger => logger;
-
-    protected virtual async Task<int> GetDaysToBuild()
-    {
-        return await configElementRepository
+    protected virtual async Task<int> GetDaysToBuild() =>
+        await configElementRepository
             .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
             .IfNoneAsync(2);
-    }
 
     protected virtual IMediaCollectionEnumerator GetEnumerator(
         Playout playout,
@@ -331,7 +333,7 @@ public class BlockPlayoutBuilder(
                     artistRepository,
                     collectionKey))).SequenceParallel();
 
-        return LanguageExt.Map.createRange(tuples);
+        return Map.createRange(tuples);
     }
 
     private Map<CollectionKey, string> GetCollectionEtags(

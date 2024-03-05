@@ -353,7 +353,9 @@ public class ElasticSearchIndex : ISearchIndex
                     MetadataKind = metadata.MetadataKind.ToString(),
                     Language = await GetLanguages(searchRepository, await searchRepository.GetLanguagesForShow(show)),
                     LanguageTag = await searchRepository.GetLanguagesForShow(show),
-                    SubLanguage = await GetLanguages(searchRepository, await searchRepository.GetSubLanguagesForShow(show)),
+                    SubLanguage = await GetLanguages(
+                        searchRepository,
+                        await searchRepository.GetSubLanguagesForShow(show)),
                     SubLanguageTag = await searchRepository.GetSubLanguagesForShow(show),
                     ContentRating = GetContentRatings(metadata.ContentRating),
                     ReleaseDate = GetReleaseDate(metadata.ReleaseDate),
@@ -728,7 +730,7 @@ public class ElasticSearchIndex : ISearchIndex
             }
         }
     }
-    
+
     private async Task UpdateImage(ISearchRepository searchRepository, Image image)
     {
         foreach (ImageMetadata metadata in image.ImageMetadata.HeadOrNone())
@@ -755,11 +757,11 @@ public class ElasticSearchIndex : ISearchIndex
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList()
                 };
-                
+
                 IEnumerable<int> libraryFolderIds = image.MediaVersions
                     .SelectMany(mv => mv.MediaFiles)
                     .SelectMany(mf => Optional(mf.LibraryFolderId));
-                
+
                 foreach (int libraryFolderId in libraryFolderIds)
                 {
                     doc.LibraryFolderId = libraryFolderId;
@@ -823,7 +825,7 @@ public class ElasticSearchIndex : ISearchIndex
 
         return result;
     }
-    
+
     private async Task<List<string>> GetSubLanguages(
         ISearchRepository searchRepository,
         IEnumerable<MediaVersion> mediaVersions)

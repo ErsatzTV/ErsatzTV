@@ -37,18 +37,18 @@ public class BlockTreeItemViewModel
         CanExpand = false;
         BlockId = block.Id;
     }
-    
+
     public string Text { get; }
-    
+
     public string EndText { get; }
-    
+
     public string Icon { get; }
-    
+
     public bool CanExpand { get; }
-    
+
     public int? BlockId { get; }
-    
+
     public int? BlockGroupId { get; }
-    
+
     public S.HashSet<BlockTreeItemViewModel> TreeItems { get; }
 }

@@ -39,13 +39,13 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "channel.sbntxt");
-        
+
         // fall back to default template
         if (!_localFileSystem.FileExists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_channel.sbntxt");
         }
-        
+
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
         {
@@ -63,11 +63,11 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                 RemoveXmlComments = true,
                 CollapseTagsWithoutContent = true
             });
-        
+
         string text = await File.ReadAllTextAsync(templateFileName, cancellationToken);
         var template = Template.Parse(text, templateFileName);
         var templateContext = new XmlTemplateContext();
-        
+
         await using RecyclableMemoryStream ms = _recyclableMemoryStreamManager.GetStream();
         await using var xml = XmlWriter.Create(
             ms,
@@ -83,7 +83,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                 ChannelHasArtwork = !string.IsNullOrWhiteSpace(channel.ArtworkPath),
                 ChannelArtworkPath = channel.ArtworkPath
             };
-            
+
             var scriptObject = new ScriptObject();
             scriptObject.Import(data);
             templateContext.PushGlobal(scriptObject);

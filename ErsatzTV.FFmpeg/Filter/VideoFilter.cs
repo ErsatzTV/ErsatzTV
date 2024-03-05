@@ -18,6 +18,6 @@ public class VideoFilter : IPipelineStep
     private string[] Arguments() =>
     [
         "-vf",
-            string.Join(",", _filterSteps.Map(fs => fs.Filter))
+        string.Join(",", _filterSteps.Map(fs => fs.Filter))
     ];
 }

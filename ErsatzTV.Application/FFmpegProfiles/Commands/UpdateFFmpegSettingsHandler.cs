@@ -101,11 +101,11 @@ public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings,
         {
             request.Settings.ExtractEmbeddedSubtitles = false;
         }
-        
+
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegExtractEmbeddedSubtitles,
             request.Settings.ExtractEmbeddedSubtitles);
-        
+
         // queue extracting all embedded subtitles
         if (request.Settings.ExtractEmbeddedSubtitles)
         {

@@ -327,7 +327,7 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
             return None;
         }
     }
-    
+
     private Option<ImageMetadata> GetImageMetadata(string path, ImageMetadata metadata)
     {
         try

@@ -9,7 +9,7 @@ public class PlayoutTemplateConfiguration : IEntityTypeConfiguration<PlayoutTemp
     public void Configure(EntityTypeBuilder<PlayoutTemplate> builder)
     {
         builder.ToTable("PlayoutTemplate");
-        
+
         builder.Property(t => t.DaysOfMonth)
             .HasConversion<IntCollectionValueConverter, CollectionValueComparer<int>>();
 

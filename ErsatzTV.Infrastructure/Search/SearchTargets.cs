@@ -6,8 +6,5 @@ public class SearchTargets : ISearchTargets
 {
     public event EventHandler OnSearchTargetsChanged;
 
-    public void SearchTargetsChanged()
-    {
-        OnSearchTargetsChanged?.Invoke(this, EventArgs.Empty);
-    }
+    public void SearchTargetsChanged() => OnSearchTargetsChanged?.Invoke(this, EventArgs.Empty);
 }

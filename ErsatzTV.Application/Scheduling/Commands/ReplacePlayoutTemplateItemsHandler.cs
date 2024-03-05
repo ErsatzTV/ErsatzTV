@@ -42,7 +42,7 @@ public class ReplacePlayoutTemplateItemsHandler(
                     playout.Templates.Remove(remove);
                 }
 
-                var now = DateTime.UtcNow;
+                DateTime now = DateTime.UtcNow;
 
                 foreach (ReplacePlayoutTemplate add in toAdd)
                 {
@@ -71,7 +71,7 @@ public class ReplacePlayoutTemplateItemsHandler(
                         ex.DateUpdated = now;
                     }
                 }
-                
+
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
 

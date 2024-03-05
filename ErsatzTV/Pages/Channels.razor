@@ -2,10 +2,8 @@
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.FFmpegProfiles
-@using System.Globalization
 @using ErsatzTV.Core.Interfaces.FFmpeg
-@using Microsoft.AspNetCore.WebUtilities
-@using Microsoft.Extensions.Primitives
+@using System.Globalization
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
@@ -118,11 +116,8 @@
 
     private int _rowsPerPage = 10;
 
-    protected override void OnInitialized()
-    {
-        SegmenterService.OnWorkersChanged += WorkersChanged;
-    }
-    
+    protected override void OnInitialized() => SegmenterService.OnWorkersChanged += WorkersChanged;
+
     private void WorkersChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
 
@@ -141,10 +136,7 @@
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
-    private async Task StopChannel(ChannelViewModel channel)
-    {
-        await SegmenterService.StopChannel(channel.Number, _cts.Token);
-    }
+    private async Task StopChannel(ChannelViewModel channel) => await SegmenterService.StopChannel(channel.Number, _cts.Token);
 
     private bool CanPreviewChannel(ChannelViewModel channel)
     {
@@ -235,7 +227,7 @@
                 () => processedChannels.Add(channel));
         }
 
-    // TODO: properly page this data
+        // TODO: properly page this data
         return new TableData<ChannelViewModel>
         {
             TotalItems = channels.Count,

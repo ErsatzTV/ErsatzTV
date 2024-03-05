@@ -1,7 +1,6 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using Serilog.Core;
 using Serilog.Events;
 
 namespace ErsatzTV.Services.RunOnce;
@@ -31,33 +30,43 @@ public class LoadLoggingLevelService : BackgroundService
         IConfigElementRepository configElementRepository =
             scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
 
-        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevel))
+        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
+                     ConfigElementKey.MinimumLogLevel))
         {
-            LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
+            LoggingLevelSwitches loggingLevelSwitches =
+                scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
             loggingLevelSwitches.DefaultLevelSwitch.MinimumLevel = logLevel;
         }
-        
-        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScanning))
+
+        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
+                     ConfigElementKey.MinimumLogLevelScanning))
         {
-            LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
+            LoggingLevelSwitches loggingLevelSwitches =
+                scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
             loggingLevelSwitches.ScanningLevelSwitch.MinimumLevel = logLevel;
         }
 
-        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScheduling))
+        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
+                     ConfigElementKey.MinimumLogLevelScheduling))
         {
-            LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
+            LoggingLevelSwitches loggingLevelSwitches =
+                scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
             loggingLevelSwitches.SchedulingLevelSwitch.MinimumLevel = logLevel;
         }
 
-        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelStreaming))
+        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
+                     ConfigElementKey.MinimumLogLevelStreaming))
         {
-            LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
+            LoggingLevelSwitches loggingLevelSwitches =
+                scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
             loggingLevelSwitches.StreamingLevelSwitch.MinimumLevel = logLevel;
         }
 
-        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelHttp))
+        foreach (LogEventLevel logLevel in await configElementRepository.GetValue<LogEventLevel>(
+                     ConfigElementKey.MinimumLogLevelHttp))
         {
-            LoggingLevelSwitches loggingLevelSwitches = scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
+            LoggingLevelSwitches loggingLevelSwitches =
+                scope.ServiceProvider.GetRequiredService<LoggingLevelSwitches>();
             loggingLevelSwitches.HttpLevelSwitch.MinimumLevel = logLevel;
         }
     }

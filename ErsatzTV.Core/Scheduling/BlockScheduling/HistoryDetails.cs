@@ -11,7 +11,7 @@ internal static class HistoryDetails
     {
         NullValueHandling = NullValueHandling.Ignore
     };
-    
+
     public static string KeyForBlockItem(BlockItem blockItem)
     {
         dynamic key = new
@@ -36,7 +36,7 @@ internal static class HistoryDetails
             Movie m => ForMovie(m),
             _ => new Details(mediaItem.Id, null, null, null)
         };
-            
+
         return JsonConvert.SerializeObject(details, Formatting.None, JsonSettings);
     }
 
@@ -50,16 +50,16 @@ internal static class HistoryDetails
         {
             return;
         }
-        
+
         Option<MediaItem> maybeMatchedItem = Option<MediaItem>.None;
         var copy = collectionItems.ToList();
-        
+
         Details details = JsonConvert.DeserializeObject<Details>(detailsString);
         if (details.SeasonNumber.HasValue && details.EpisodeNumber.HasValue)
         {
             int season = details.SeasonNumber.Value;
             int episode = details.EpisodeNumber.Value;
-            
+
             maybeMatchedItem = Optional(collectionItems.Find(ci => MatchSeasonAndEpisode(ci, season, episode)));
 
             if (maybeMatchedItem.IsNone)
@@ -93,13 +93,13 @@ internal static class HistoryDetails
             }
         }
         // TODO: match media item
-        
+
         foreach (MediaItem matchedItem in maybeMatchedItem)
         {
             IComparer<MediaItem> comparer = playbackOrder switch
             {
                 PlaybackOrder.Chronological => new ChronologicalMediaComparer(),
-                _ => new SeasonEpisodeMediaComparer(),
+                _ => new SeasonEpisodeMediaComparer()
             };
 
             copy.Sort(comparer);

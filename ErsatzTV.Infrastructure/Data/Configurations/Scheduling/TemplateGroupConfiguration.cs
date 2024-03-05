@@ -9,7 +9,7 @@ public class TemplateGroupConfiguration : IEntityTypeConfiguration<TemplateGroup
     public void Configure(EntityTypeBuilder<TemplateGroup> builder)
     {
         builder.ToTable("TemplateGroup");
-        
+
         builder.HasIndex(b => b.Name)
             .IsUnique();
 

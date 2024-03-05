@@ -14,9 +14,9 @@ namespace ErsatzTV.Application.MediaCollections;
 public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ISearchTargets _searchTargets;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly ISearchTargets _searchTargets;
 
     public UpdateCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -56,7 +56,7 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
                 await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
-        
+
         _searchTargets.SearchTargetsChanged();
 
         return Unit.Default;

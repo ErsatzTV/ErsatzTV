@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Application.Search;
 
-public record QuerySearchIndexOtherVideos
-    (string Query, int PageNumber, int PageSize) : IRequest<OtherVideoCardResultsViewModel>;
+public record QuerySearchIndexOtherVideos(string Query, int PageNumber, int PageSize)
+    : IRequest<OtherVideoCardResultsViewModel>;

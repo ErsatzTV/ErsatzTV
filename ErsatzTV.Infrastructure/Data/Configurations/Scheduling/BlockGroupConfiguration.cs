@@ -9,7 +9,7 @@ public class BlockGroupConfiguration : IEntityTypeConfiguration<BlockGroup>
     public void Configure(EntityTypeBuilder<BlockGroup> builder)
     {
         builder.ToTable("BlockGroup");
-        
+
         builder.HasIndex(b => b.Name)
             .IsUnique();
 

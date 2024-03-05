@@ -33,7 +33,7 @@ public class AddSeasonToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => ApplyAddSeasonRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddSeasonRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddSeasonRequest(TvContext dbContext, Parameters parameters)

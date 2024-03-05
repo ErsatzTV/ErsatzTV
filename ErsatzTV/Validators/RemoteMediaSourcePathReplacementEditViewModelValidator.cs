@@ -5,7 +5,7 @@ namespace ErsatzTV.Validators;
 
 public class
     RemoteMediaSourcePathReplacementEditViewModelValidator : AbstractValidator<
-        RemoteMediaSourcePathReplacementEditViewModel>
+    RemoteMediaSourcePathReplacementEditViewModel>
 {
     public RemoteMediaSourcePathReplacementEditViewModelValidator()
     {

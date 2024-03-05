@@ -6,9 +6,9 @@ namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
 public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
-    private readonly IList<GroupedMediaItem> _mediaItems;
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly int _mediaItemCount;
+    private readonly IList<GroupedMediaItem> _mediaItems;
     private IList<MediaItem> _shuffled;
 
     public BlockPlayoutShuffledMediaCollectionEnumerator(
@@ -42,10 +42,7 @@ public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnu
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
 
-    public void MoveNext()
-    {
-        State.Index++;
-    }
+    public void MoveNext() => State.Index++;
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
 
@@ -58,7 +55,7 @@ public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnu
         var superShuffle = new SuperShuffle();
         for (var i = 0; i < list.Count; i++)
         {
-            int toSelect = superShuffle.Shuffle(i, State.Seed + (State.Index / list.Count), list.Count);
+            int toSelect = superShuffle.Shuffle(i, State.Seed + State.Index / list.Count, list.Count);
             copy[i] = list[toSelect];
         }
 

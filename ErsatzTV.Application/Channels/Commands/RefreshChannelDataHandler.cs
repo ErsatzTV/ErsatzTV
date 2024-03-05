@@ -22,9 +22,9 @@ namespace ErsatzTV.Application.Channels;
 
 public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 {
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly IConfigElementRepository _configElementRepository;
     private readonly ILogger<RefreshChannelDataHandler> _logger;
     private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
@@ -45,7 +45,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
     public async Task Handle(RefreshChannelData request, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Refreshing channel data (XMLTV) for channel {Channel}", request.ChannelNumber);
-        
+
         _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
 
         string movieTemplateFileName = GetMovieTemplateFileName();
@@ -68,7 +68,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             });
 
         var templateContext = new XmlTemplateContext();
-        
+
         string movieText = await File.ReadAllTextAsync(movieTemplateFileName, cancellationToken);
         var movieTemplate = Template.Parse(movieText, movieTemplateFileName);
 
@@ -302,7 +302,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 (_, true) => displayItem.GuideFinishOffset!.Value,
                 (_, false) => finishItem.FinishOffset
             };
-            
+
             string start = startTime
                 .ToString("yyyyMMddHHmmss zzz", CultureInfo.InvariantCulture)
                 .Replace(":", string.Empty);
@@ -329,7 +329,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             i++;
         }
     }
-    
+
     private static async Task WriteBlockPlayoutXml(
         RefreshChannelData request,
         List<PlayoutItem> sorted,
@@ -367,7 +367,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     item,
                     start,
                     stop,
-                    hasCustomTitle: false,
+                    false,
                     templateContext,
                     movieTemplate,
                     episodeTemplate,
@@ -481,7 +481,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         {
             metadata.Genres ??= [];
             metadata.Guids ??= [];
-                    
+
             string poster = Optional(metadata.Artwork).Flatten()
                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                 .HeadOrNone()
@@ -491,9 +491,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             {
                 ProgrammeStart = start,
                 ProgrammeStop = stop,
-                ChannelNumber = request.ChannelNumber,
+                request.ChannelNumber,
                 HasCustomTitle = hasCustomTitle,
-                CustomTitle = displayItem.CustomTitle,
+                displayItem.CustomTitle,
                 MovieTitle = title,
                 MovieHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
                 MoviePlot = metadata.Plot,
@@ -516,7 +516,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return Option<string>.None;
     }
-    
+
     private static async Task<Option<string>> ProcessEpisodeTemplate(
         RefreshChannelData request,
         Episode templateEpisode,
@@ -546,9 +546,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 {
                     ProgrammeStart = start,
                     ProgrammeStop = stop,
-                    ChannelNumber = request.ChannelNumber,
+                    request.ChannelNumber,
                     HasCustomTitle = hasCustomTitle,
-                    CustomTitle = displayItem.CustomTitle,
+                    displayItem.CustomTitle,
                     ShowTitle = title,
                     EpisodeHasTitle = !string.IsNullOrWhiteSpace(subtitle),
                     EpisodeTitle = subtitle,
@@ -560,13 +560,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                     EpisodeHasArtwork = !string.IsNullOrWhiteSpace(artworkPath),
                     EpisodeArtworkUrl = artworkPath,
                     SeasonNumber = templateEpisode.Season?.SeasonNumber ?? 0,
-                    EpisodeNumber = metadata.EpisodeNumber,
+                    metadata.EpisodeNumber,
                     ShowHasContentRating = !string.IsNullOrWhiteSpace(showMetadata.ContentRating),
                     ShowContentRating = showMetadata.ContentRating,
                     ShowGuids = showMetadata.Guids.Map(g => g.Guid),
                     EpisodeGuids = metadata.Guids.Map(g => g.Guid)
                 };
-                
+
                 var scriptObject = new ScriptObject();
                 scriptObject.Import(data);
                 templateContext.PushGlobal(scriptObject);
@@ -606,9 +606,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             {
                 ProgrammeStart = start,
                 ProgrammeStop = stop,
-                ChannelNumber = request.ChannelNumber,
+                request.ChannelNumber,
                 HasCustomTitle = hasCustomTitle,
-                CustomTitle = displayItem.CustomTitle,
+                displayItem.CustomTitle,
                 ArtistTitle = title,
                 MusicVideoTitle = subtitle,
                 MusicVideoHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
@@ -639,7 +639,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return Option<string>.None;
     }
-    
+
     private static async Task<Option<string>> ProcessSongTemplate(
         RefreshChannelData request,
         Song templateSong,
@@ -663,9 +663,9 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             {
                 ProgrammeStart = start,
                 ProgrammeStop = stop,
-                ChannelNumber = request.ChannelNumber,
+                request.ChannelNumber,
                 HasCustomTitle = hasCustomTitle,
-                CustomTitle = displayItem.CustomTitle,
+                displayItem.CustomTitle,
                 SongTitle = subtitle,
                 SongArtists = metadata.Artists,
                 SongAlbumArtists = metadata.AlbumArtists,
@@ -682,7 +682,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 SongAlbum = metadata.Album,
                 SongHasReleaseDate = metadata.ReleaseDate.HasValue,
                 SongReleaseDate = metadata.ReleaseDate,
-                SongStudios = metadata.Studios.Map(s => s.Name),
+                SongStudios = metadata.Studios.Map(s => s.Name)
             };
 
             var scriptObject = new ScriptObject();
@@ -694,7 +694,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return Option<string>.None;
     }
-    
+
     private static async Task<Option<string>> ProcessOtherVideoTemplate(
         RefreshChannelData request,
         OtherVideo templateOtherVideo,
@@ -710,14 +710,14 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         {
             metadata.Genres ??= [];
             metadata.Guids ??= [];
-                    
+
             var data = new
             {
                 ProgrammeStart = start,
                 ProgrammeStop = stop,
-                ChannelNumber = request.ChannelNumber,
+                request.ChannelNumber,
                 HasCustomTitle = hasCustomTitle,
-                CustomTitle = displayItem.CustomTitle,
+                displayItem.CustomTitle,
                 OtherVideoTitle = title,
                 OtherVideoHasPlot = !string.IsNullOrWhiteSpace(metadata.Plot),
                 OtherVideoPlot = metadata.Plot,
@@ -741,13 +741,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
     private string GetMovieTemplateFileName()
     {
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "movie.sbntxt");
-        
+
         // fall back to default template
         if (!_localFileSystem.FileExists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_movie.sbntxt");
         }
-        
+
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
         {
@@ -760,17 +760,17 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return templateFileName;
     }
-    
+
     private string GetEpisodeTemplateFileName()
     {
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "episode.sbntxt");
-        
+
         // fall back to default template
         if (!_localFileSystem.FileExists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_episode.sbntxt");
         }
-        
+
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
         {
@@ -783,17 +783,17 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return templateFileName;
     }
-    
+
     private string GetMusicVideoTemplateFileName()
     {
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "musicVideo.sbntxt");
-        
+
         // fall back to default template
         if (!_localFileSystem.FileExists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_musicVideo.sbntxt");
         }
-        
+
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
         {
@@ -806,17 +806,17 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return templateFileName;
     }
-    
+
     private string GetSongTemplateFileName()
     {
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "song.sbntxt");
-        
+
         // fall back to default template
         if (!_localFileSystem.FileExists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_song.sbntxt");
         }
-        
+
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
         {
@@ -829,17 +829,17 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         return templateFileName;
     }
-    
+
     private string GetOtherVideoTemplateFileName()
     {
         string templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "otherVideo.sbntxt");
-        
+
         // fall back to default template
         if (!_localFileSystem.FileExists(templateFileName))
         {
             templateFileName = Path.Combine(FileSystemLayout.ChannelGuideTemplatesFolder, "_otherVideo.sbntxt");
         }
-        
+
         // fail if file doesn't exist
         if (!_localFileSystem.FileExists(templateFileName))
         {
@@ -863,10 +863,12 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             _ => 440
         };
 
-        if (artworkPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || artworkPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        if (artworkPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            artworkPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             return artworkPath;
         }
+
         if (artworkPath.StartsWith("jellyfin://", StringComparison.OrdinalIgnoreCase))
         {
             artworkPath = JellyfinUrl.PlaceholderProxyForArtwork(artworkPath, artworkKind, height);
@@ -1025,7 +1027,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             foreach (ExternalJsonChannel channel in maybeChannel)
             {
                 // TODO: null start time should log and throw
-            
+
                 DateTimeOffset startTime = DateTimeOffset.Parse(
                     channel.StartTime ?? string.Empty,
                     CultureInfo.InvariantCulture,
@@ -1077,14 +1079,15 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         var artwork = new List<Artwork>();
         if (!string.IsNullOrWhiteSpace(program.Icon))
         {
-            artwork.Add(new Artwork
-            {
-                ArtworkKind = ArtworkKind.Thumbnail,
-                Path = program.Icon,
-                SourcePath = program.Icon
-            });
+            artwork.Add(
+                new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    Path = program.Icon,
+                    SourcePath = program.Icon
+                });
         }
-        
+
         return new Episode
         {
             MediaVersions =
@@ -1100,7 +1103,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                 {
                     EpisodeNumber = program.Episode,
                     Title = program.Title
-                },
+                }
             ],
             Season = new Season
             {
@@ -1125,12 +1128,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         var artwork = new List<Artwork>();
         if (!string.IsNullOrWhiteSpace(program.Icon))
         {
-            artwork.Add(new Artwork
-            {
-                ArtworkKind = ArtworkKind.Poster,
-                Path = program.Icon,
-                SourcePath = program.Icon
-            });
+            artwork.Add(
+                new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = program.Icon,
+                    SourcePath = program.Icon
+                });
         }
 
         return new Movie

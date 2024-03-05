@@ -33,9 +33,7 @@ public class AddMusicVideoToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(
-            validation,
-            parameters => ApplyAddMusicVideoRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddMusicVideoRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddMusicVideoRequest(TvContext dbContext, Parameters parameters)

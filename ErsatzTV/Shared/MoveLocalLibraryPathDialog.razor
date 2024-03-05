@@ -120,7 +120,7 @@
 
     private async Task Cancel(MouseEventArgs e)
     {
-    // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
         if (e.Detail == 0)
         {
             await Submit();

@@ -10,11 +10,9 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
 {
     private ProgramScheduleItemCollectionType _collectionType;
 
-    public event PropertyChangedEventHandler PropertyChanged;
-    
     public int Id { get; set; }
     public int Index { get; set; }
-    
+
     public ProgramScheduleItemCollectionType CollectionType
     {
         get => _collectionType;
@@ -46,7 +44,7 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
     public MultiCollectionViewModel MultiCollection { get; set; }
     public SmartCollectionViewModel SmartCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
-    
+
     public string CollectionName => CollectionType switch
     {
         ProgramScheduleItemCollectionType.Collection => Collection?.Name,
@@ -59,17 +57,21 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
     };
 
     public PlaybackOrder PlaybackOrder { get; set; }
-    
+
     public bool IncludeInProgramGuide { get; set; }
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 
     protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
     {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+
         field = value;
         OnPropertyChanged(propertyName);
         return true;

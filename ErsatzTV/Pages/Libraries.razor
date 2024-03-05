@@ -1,10 +1,10 @@
 ﻿@page "/media/libraries"
+@using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
 @using ErsatzTV.Core.Metadata
 @using MediatR.Courier
-@using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
 @using ErsatzTV.Application.Jellyfin
 @using ErsatzTV.Application.Emby
 @implements IDisposable
@@ -77,6 +77,7 @@
                         {
                             <div style="width: 48px"></div>
                         }
+
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Disabled="@Locker.IsLibraryLocked(context.Id)"
@@ -203,18 +204,21 @@
                 {
                     await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyCollections(library.MediaSourceId, true));
                 }
+
                 break;
             case "jellyfin":
                 if (Locker.LockJellyfinCollections())
                 {
                     await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinCollections(library.MediaSourceId, true));
                 }
+
                 break;
             case "plex":
                 if (Locker.LockPlexCollections())
                 {
                     await ScannerWorkerChannel.WriteAsync(new SynchronizePlexCollections(library.MediaSourceId, true));
                 }
+
                 break;
         }
     }
@@ -249,7 +253,7 @@
         }
         catch (Exception)
         {
-    // ignore
+            // ignore
         }
     }
 

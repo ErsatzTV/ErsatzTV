@@ -77,7 +77,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             decimal progressSpread = progressMax - progressMin;
-            
+
             string normalizedLibraryPath = libraryPath.Path.TrimEnd(
                 Path.DirectorySeparatorChar,
                 Path.AltDirectorySeparatorChar);
@@ -107,9 +107,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         Array.Empty<int>(),
                         Array.Empty<int>()),
                     cancellationToken);
-                
+
                 Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(showFolder);
-                
+
                 // this folder is unused by the show, but will be used as parents of season folders
                 LibraryFolder _ = await _libraryRepository.GetOrAddFolder(
                     libraryPath,
@@ -236,7 +236,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             {
                 return new ScanCanceled();
             }
-            
+
             Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(seasonFolder);
 
             string etag = FolderEtag.CalculateWithSubfolders(seasonFolder, _localFileSystem);
@@ -426,7 +426,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
         return season;
     }
-    
+
     private async Task<Either<BaseError, Episode>> UpdateLibraryFolderId(Episode episode, LibraryFolder libraryFolder)
     {
         MediaFile mediaFile = episode.GetHeadVersion().MediaFiles.Head();

@@ -40,7 +40,7 @@ public class EraseBlockPlayoutItemsHandler(IDbContextFactory<TvContext> dbContex
 
             // save history changes
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             // delete all playout items
             await dbContext.Database.ExecuteSqlAsync(
                 $"DELETE FROM PlayoutItem WHERE PlayoutId = {playout.Id}",

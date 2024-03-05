@@ -15,16 +15,16 @@ public class GetGeneralSettingsHandler : IRequestHandler<GetGeneralSettings, Gen
     {
         Option<LogEventLevel> maybeDefaultLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevel);
-        
+
         Option<LogEventLevel> maybeScanningLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScanning);
 
         Option<LogEventLevel> maybeSchedulingLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelScheduling);
-        
+
         Option<LogEventLevel> maybeStreamingLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelStreaming);
-        
+
         Option<LogEventLevel> maybeHttpLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelHttp);
 

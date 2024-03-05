@@ -134,7 +134,7 @@ public class Startup
                     configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
 #endif
             });
-        
+
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
         OidcHelper.Init(Configuration);
@@ -544,7 +544,7 @@ public class Startup
                     blazor.UseAuthorization();
 #pragma warning restore ASP0001
                 }
-                
+
                 blazor.UseEndpoints(
                     endpoints =>
                     {
@@ -562,7 +562,7 @@ public class Startup
                 iptv.UseEndpoints(endpoints => endpoints.MapControllers());
             });
     }
-    
+
     private static void CustomServices(IServiceCollection services)
     {
         services.AddSingleton<IPlexSecretStore, PlexSecretStore>();

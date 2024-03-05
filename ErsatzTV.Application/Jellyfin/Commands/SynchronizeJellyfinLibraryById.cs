@@ -16,8 +16,8 @@ public record SynchronizeJellyfinLibraryByIdIfNeeded(int JellyfinLibraryId) : IS
     public bool DeepScan => false;
 }
 
-public record ForceSynchronizeJellyfinLibraryById
-    (int JellyfinLibraryId, bool DeepScan) : ISynchronizeJellyfinLibraryById
+public record ForceSynchronizeJellyfinLibraryById(int JellyfinLibraryId, bool DeepScan)
+    : ISynchronizeJellyfinLibraryById
 {
     public bool ForceScan => true;
 }

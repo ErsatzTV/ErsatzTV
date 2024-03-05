@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJsonPlayout, Either<BaseError, PlayoutNameViewModel>>
+public class
+    UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJsonPlayout,
+    Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
@@ -52,7 +54,9 @@ public class UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJs
             Optional(playout.DailyRebuildTime));
     }
 
-    private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, UpdateExternalJsonPlayout request) =>
+    private static Task<Validation<BaseError, Playout>> Validate(
+        TvContext dbContext,
+        UpdateExternalJsonPlayout request) =>
         PlayoutMustExist(dbContext, request);
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
