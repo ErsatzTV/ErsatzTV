@@ -28,7 +28,7 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, LocalLibrary> validation = await LocalLibraryMustExist(dbContext, request);
-        return await LanguageExtensions.Apply(validation, localLibrary => DoDeletion(dbContext, localLibrary));
+        return await validation.Apply(localLibrary => DoDeletion(dbContext, localLibrary));
     }
 
     private async Task<Unit> DoDeletion(TvContext dbContext, LocalLibrary localLibrary)

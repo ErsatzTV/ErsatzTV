@@ -7,7 +7,7 @@ namespace ErsatzTV.Application.Streaming;
 
 public class
     GetConcatPlaylistByChannelNumberHandler : IRequestHandler<GetConcatPlaylistByChannelNumber,
-        Either<BaseError, ConcatPlaylist>>
+    Either<BaseError, ConcatPlaylist>>
 {
     private readonly IChannelRepository _channelRepository;
 

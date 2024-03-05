@@ -33,7 +33,7 @@ public class AddShowToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => ApplyAddShowRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddShowRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddShowRequest(TvContext dbContext, Parameters parameters)

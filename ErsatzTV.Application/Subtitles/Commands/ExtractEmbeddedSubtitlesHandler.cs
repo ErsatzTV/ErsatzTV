@@ -23,9 +23,9 @@ namespace ErsatzTV.Application.Subtitles;
 [SuppressMessage("Security", "CA5351:Do Not Use Broken Cryptographic Algorithms")]
 public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSubtitles, Option<BaseError>>
 {
+    private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
-    private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<ExtractEmbeddedSubtitlesHandler> _logger;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
@@ -79,7 +79,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 _logger.LogDebug("Embedded subtitles are NOT enabled; nothing to extract");
                 return Option<BaseError>.None;
             }
-            
+
             bool extractEmbeddedSubtitles = await _configElementRepository
                 .GetValue<bool>(ConfigElementKey.FFmpegExtractEmbeddedSubtitles)
                 .IfNoneAsync(false);
@@ -89,7 +89,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 _logger.LogDebug("Embedded subtitle extraction is NOT enabled");
                 return Option<BaseError>.None;
             }
-            
+
             DateTime now = DateTime.UtcNow;
             DateTime until = now.AddHours(1);
 
@@ -287,7 +287,9 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     .Filter(
                         s => s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
                              s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs")
-                    .Filter(s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path) || FileDoesntExist(mediaItem.Id, s));
+                    .Filter(
+                        s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path) ||
+                             FileDoesntExist(mediaItem.Id, s));
 
                 // find cache paths for each subtitle
                 foreach (Subtitle subtitle in subtitles)
@@ -355,7 +357,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         {
             return _localFileSystem.FileExists(path) == false;
         }
-        
+
         return false;
     }
 

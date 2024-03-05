@@ -136,7 +136,7 @@ public class IptvController : ControllerBase
                     },
                     error => BadRequest(error.Value)));
     }
-    
+
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
@@ -196,7 +196,10 @@ public class IptvController : ControllerBase
             case "segmenter":
             case "segmenter-v2":
                 string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber, mode);
-                _logger.LogDebug("Maybe starting ffmpeg session for channel {Channel}, mode {Mode}", channelNumber, mode);
+                _logger.LogDebug(
+                    "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",
+                    channelNumber,
+                    mode);
                 var request = new StartFFmpegSession(channelNumber, mode, Request.Scheme, Request.Host.ToString());
                 Either<BaseError, Unit> result = await _mediator.Send(request);
                 return result.Match<IActionResult>(
@@ -261,14 +264,14 @@ public class IptvController : ControllerBase
 
             _ => "hls.m3u8"
         };
-        
+
         Option<ResolutionViewModel> maybeResolution = await _mediator.Send(new GetChannelResolution(channelNumber));
         string resolution = string.Empty;
         foreach (ResolutionViewModel res in maybeResolution)
         {
             resolution = $",RESOLUTION={res.Width}x{res.Height}";
         }
-        
+
         return $@"#EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000{resolution}

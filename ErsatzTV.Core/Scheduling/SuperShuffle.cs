@@ -4,29 +4,33 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class SuperShuffle
 {
-    private int userSID = 1;
-    private int si, r1, r2, r3, r4;
     private int randR, halfN, rx, rkey;
-    
-    public int Shuffle(int inx, int shuffleId, int listSize) {
-        int si, hi, offset;
-        int halfSize = listSize / 2;  // for 1/2 the processing range
+    private int si, r1, r2, r3, r4;
+    private readonly int userSID = 1;
 
-        shuffleId += 131 * (inx / listSize);  // have inx overflows supported
-        si = (inx % listSize);
-        if (si < halfSize) {
+    public int Shuffle(int inx, int shuffleId, int listSize)
+    {
+        int si, hi, offset;
+        int halfSize = listSize / 2; // for 1/2 the processing range
+
+        shuffleId += 131 * (inx / listSize); // have inx overflows supported
+        si = inx % listSize;
+        if (si < halfSize)
+        {
             hi = si;
             offset = 0;
-        } else {
+        }
+        else
+        {
             hi = listSize - 1 - si;
             offset = halfSize;
             halfSize = listSize - halfSize;
             shuffleId++;
         }
 
-        hi = MillerShuffleE(hi, shuffleId, halfSize);     // use any STD MSA() shuffle (aka: a PRIG function)
-        si = MillerShuffleE(hi + offset, userSID, listSize);  // indexing into the baseline shuffle
-        return(si);
+        hi = MillerShuffleE(hi, shuffleId, halfSize); // use any STD MSA() shuffle (aka: a PRIG function)
+        si = MillerShuffleE(hi + offset, userSID, listSize); // indexing into the baseline shuffle
+        return si;
     }
 
     private int MillerShuffleE(int inx, int shuffleId, int listSize)
@@ -42,23 +46,41 @@ public class SuperShuffle
         r3 = randR % p2;
         r4 = randR % 2749;
         halfN = listSize / 2 + 1;
-        rx = (randR / listSize) % listSize + 1;
-        rkey = (randR / listSize / listSize) % listSize + 1;
+        rx = randR / listSize % listSize + 1;
+        rkey = randR / listSize / listSize % listSize + 1;
 
         // perform the conditional multi-faceted mathematical mixing (on avg 2 5/6 shuffle ops done + 2 simple Xors)
-        if (si % 3 == 0) si = ((si / 3 * p1 + r1) % ((listSize + 2) / 3)) * 3; // spin multiples of 3 
+        if (si % 3 == 0)
+        {
+            si = (si / 3 * p1 + r1) % ((listSize + 2) / 3) * 3; // spin multiples of 3 
+        }
+
         if (si <= halfN)
         {
             si = (si + r3) % (halfN + 1);
             si = halfN - si;
         } // improves large permu distro
 
-        if (si % 2 == 0) si = ((si / 2 * p2 + r2) % ((listSize + 1) / 2)) * 2; // spin multiples of 2 
-        if (si < halfN) si = (si * p3 + r3) % halfN;
+        if (si % 2 == 0)
+        {
+            si = (si / 2 * p2 + r2) % ((listSize + 1) / 2) * 2; // spin multiples of 2 
+        }
 
-        if ((si ^ rx) < listSize) si ^= rx; // flip some bits with Xor
+        if (si < halfN)
+        {
+            si = (si * p3 + r3) % halfN;
+        }
+
+        if ((si ^ rx) < listSize)
+        {
+            si ^= rx; // flip some bits with Xor
+        }
+
         si = (si * p3 + r4) % listSize; // a relatively prime gears churning operation
-        if ((si ^ rkey) < listSize) si ^= rkey;
+        if ((si ^ rkey) < listSize)
+        {
+            si ^= rkey;
+        }
 
         return si;
     }

@@ -88,6 +88,7 @@
                                                 </MudSelect>
                                             </MudElement>
                                         }
+
                                         @if (_model.HardwareAcceleration is HardwareAccelerationKind.Vaapi or HardwareAccelerationKind.Qsv)
                                         {
                                             <MudElement HtmlTag="div" Class="mt-3">
@@ -262,9 +263,7 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            Seq<BaseError> errorMessage = IsEdit ? (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

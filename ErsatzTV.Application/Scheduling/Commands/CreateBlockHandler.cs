@@ -13,7 +13,7 @@ public class CreateBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        Validation<BaseError, Block> validation = await Validate(request);
+        Validation<BaseError, Block> validation = await Validate(dbContext, request);
         return await validation.Apply(profile => PersistBlock(dbContext, profile));
     }
 
@@ -24,17 +24,30 @@ public class CreateBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
         return Mapper.ProjectToViewModel(block);
     }
 
-    private static Task<Validation<BaseError, Block>> Validate(CreateBlock request) =>
-        Task.FromResult(
-            ValidateName(request).Map(
-                name => new Block
-                {
-                    BlockGroupId = request.BlockGroupId,
-                    Name = name,
-                    Minutes = 30
-                }));
+    private static async Task<Validation<BaseError, Block>> Validate(TvContext dbContext, CreateBlock request) =>
+        await ValidateBlockName(dbContext, request).MapT(
+            name => new Block
+            {
+                BlockGroupId = request.BlockGroupId,
+                Name = name,
+                Minutes = 30
+            });
 
-    private static Validation<BaseError, string> ValidateName(CreateBlock createBlock) =>
-        createBlock.NotEmpty(x => x.Name)
-            .Bind(_ => createBlock.NotLongerThan(50)(x => x.Name));
+    private static async Task<Validation<BaseError, string>> ValidateBlockName(
+        TvContext dbContext,
+        CreateBlock request)
+    {
+        if (request.Name.Length > 50)
+        {
+            return BaseError.New($"Block name \"{request.Name}\" is invalid");
+        }
+
+        Option<Block> maybeExisting = await dbContext.Blocks
+            .FirstOrDefaultAsync(r => r.BlockGroupId == request.BlockGroupId && r.Name == request.Name)
+            .Map(Optional);
+
+        return maybeExisting.IsSome
+            ? BaseError.New($"A block named \"{request.Name}\" already exists in that block group")
+            : request.Name;
+    }
 }

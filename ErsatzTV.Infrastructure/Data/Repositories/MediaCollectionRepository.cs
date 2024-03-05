@@ -152,7 +152,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 .Map(i => i.Id)
                 .ToList();
             result.AddRange(await GetSongItems(dbContext, songIds));
-            
+
             var imageIds = searchResults.Items
                 .Filter(i => i.Type == LuceneSearchIndex.ImageType)
                 .Map(i => i.Id)

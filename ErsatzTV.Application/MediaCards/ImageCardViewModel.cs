@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.MediaCards;
 
-public record ImageCardViewModel
-(
+public record ImageCardViewModel(
     int ImageId,
     string Title,
     string Subtitle,

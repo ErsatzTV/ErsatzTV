@@ -274,24 +274,26 @@
     private void SelectWeekdays()
     {
         _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(new[]
-        {
-            DayOfWeek.Monday,
-            DayOfWeek.Tuesday,
-            DayOfWeek.Wednesday,
-            DayOfWeek.Thursday,
-            DayOfWeek.Friday
-        });
+        _selectedItem.DaysOfWeek.AddRange(
+            new[]
+            {
+                DayOfWeek.Monday,
+                DayOfWeek.Tuesday,
+                DayOfWeek.Wednesday,
+                DayOfWeek.Thursday,
+                DayOfWeek.Friday
+            });
     }
 
     private void SelectWeekends()
     {
         _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(new[]
-        {
-            DayOfWeek.Saturday,
-            DayOfWeek.Sunday
-        });
+        _selectedItem.DaysOfWeek.AddRange(
+            new[]
+            {
+                DayOfWeek.Saturday,
+                DayOfWeek.Sunday
+            });
     }
 
     private void SelectAllDaysOfWeek()
@@ -369,27 +371,28 @@
 
     private void MoveItemUp(PlayoutAlternateScheduleEditViewModel item)
     {
-    // swap with lower index
+        // swap with lower index
         PlayoutAlternateScheduleEditViewModel toSwap = _items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private void MoveItemDown(PlayoutAlternateScheduleEditViewModel item)
     {
-    // swap with higher index
+        // swap with higher index
         PlayoutAlternateScheduleEditViewModel toSwap = _items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private async Task SaveChanges()
     {
-        var items = _items.Map(item => new ReplacePlayoutAlternateSchedule(
-            item.Id,
-            item.Index,
-            item.ProgramSchedule.Id,
-            item.DaysOfWeek,
-            item.DaysOfMonth,
-            item.MonthsOfYear)).ToList();
+        var items = _items.Map(
+            item => new ReplacePlayoutAlternateSchedule(
+                item.Id,
+                item.Index,
+                item.ProgramSchedule.Id,
+                item.DaysOfWeek,
+                item.DaysOfMonth,
+                item.MonthsOfYear)).ToList();
 
         Seq<BaseError> errorMessages = await Mediator.Send(new ReplacePlayoutAlternateScheduleItems(Id, items), _cts.Token)
             .Map(e => e.LeftToSeq());
@@ -447,22 +450,22 @@
         {
             int temp = list[i];
 
-    //add a number
+            //add a number
             result.Append(list[i]);
 
-    //skip number(s) between a range
+            //skip number(s) between a range
             while (i < list.Count - 1 && list[i + 1] == list[i] + 1)
             {
                 i++;
             }
 
-    //add the range
+            //add the range
             if (temp != list[i])
             {
                 result.Append("-").Append(list[i]);
             }
 
-    //add comma
+            //add comma
             if (i != list.Count - 1)
             {
                 result.Append(", ");

@@ -14,9 +14,9 @@ namespace ErsatzTV.Application.MediaCollections;
 public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ISearchTargets _searchTargets;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly ISearchTargets _searchTargets;
 
     public UpdateMultiCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -36,7 +36,7 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, MultiCollection c, UpdateMultiCollection request)
@@ -120,7 +120,7 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
         if (await dbContext.SaveChangesAsync() > 0)
         {
             _searchTargets.SearchTargetsChanged();
-            
+
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingMultiCollection(
                          request.MultiCollectionId))

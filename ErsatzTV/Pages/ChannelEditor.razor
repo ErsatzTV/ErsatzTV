@@ -7,8 +7,8 @@
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Templates
 @using ErsatzTV.Application.Watermarks
-@using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Channels
+@using ErsatzTV.Core.Domain.Filler
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ChannelEditor> Logger
@@ -196,7 +196,7 @@
         {
             FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), _cts.Token);
 
-    // TODO: command for new channel
+            // TODO: command for new channel
             IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels(), _cts.Token)
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
@@ -234,9 +234,7 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Seq<BaseError> errorMessage = IsEdit ?
-                (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
-                (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

@@ -8,7 +8,7 @@ namespace ErsatzTV.Application.FFmpegProfiles;
 
 public class
     GetFFmpegProfileByIdForApiHandler : IRequestHandler<GetFFmpegFullProfileByIdForApi,
-        Option<FFmpegFullProfileResponseModel>>
+    Option<FFmpegFullProfileResponseModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 

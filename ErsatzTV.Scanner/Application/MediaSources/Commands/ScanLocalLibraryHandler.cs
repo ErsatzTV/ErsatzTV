@@ -12,6 +12,7 @@ namespace ErsatzTV.Scanner.Application.MediaSources;
 public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<BaseError, string>>
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IImageFolderScanner _imageFolderScanner;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<ScanLocalLibraryHandler> _logger;
     private readonly IMediator _mediator;
@@ -19,7 +20,6 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
     private readonly IOtherVideoFolderScanner _otherVideoFolderScanner;
     private readonly ISongFolderScanner _songFolderScanner;
-    private readonly IImageFolderScanner _imageFolderScanner;
     private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
     public ScanLocalLibraryHandler(

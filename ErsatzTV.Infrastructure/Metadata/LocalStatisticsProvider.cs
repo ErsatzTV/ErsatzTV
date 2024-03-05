@@ -66,7 +66,6 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     {
         try
         {
-
             string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
             var song = File.Create(mediaItemPath);
 
@@ -77,11 +76,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 result.Add(new SongTag(MetadataSongTag.Album, song.Tag.Album));
             }
-            
+
             // album artist(s)
             IEnumerable<string> albumArtists = song.Tag.AlbumArtists.Filter(a => !string.IsNullOrWhiteSpace(a));
             result.AddRange(albumArtists.Map(albumArtist => new SongTag(MetadataSongTag.AlbumArtist, albumArtist)));
-            
+
             // artist(s)
             IEnumerable<string> artists = song.Tag.Performers.Filter(p => !string.IsNullOrWhiteSpace(p));
             result.AddRange(artists.Map(artist => new SongTag(MetadataSongTag.Artist, artist)));
@@ -100,7 +99,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             {
                 result.Add(new SongTag(MetadataSongTag.Comment, song.Tag.Comment));
             }
-            
+
             // track
             result.Add(new SongTag(MetadataSongTag.Track, song.Tag.Track.ToString(CultureInfo.InvariantCulture)));
 

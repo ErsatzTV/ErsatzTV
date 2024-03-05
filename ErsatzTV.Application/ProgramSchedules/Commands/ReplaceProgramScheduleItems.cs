@@ -32,6 +32,5 @@ public record ReplaceProgramScheduleItem(
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode? SubtitleMode) : IProgramScheduleItemRequest;
 
-public record ReplaceProgramScheduleItems
-    (int ProgramScheduleId, List<ReplaceProgramScheduleItem> Items) : IRequest<
-        Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>>;
+public record ReplaceProgramScheduleItems(int ProgramScheduleId, List<ReplaceProgramScheduleItem> Items) : IRequest<
+    Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>>;

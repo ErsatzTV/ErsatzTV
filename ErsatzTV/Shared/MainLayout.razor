@@ -46,7 +46,8 @@
                                         <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
                                             <MudText Typo="Typo.body1">@searchTarget.Name</MudText>
                                             <MudText Typo="Typo.subtitle1" Class="mud-text-disabled">
-                                                @(searchTarget.Kind switch
+                                                @(
+                                                searchTarget.Kind switch
                                                 {
                                                     SearchTargetKind.Channel => "Channel",
                                                     SearchTargetKind.FFmpegProfile => "FFmpeg Profile",
@@ -57,7 +58,7 @@
                                                     SearchTargetKind.Schedule => "Schedule",
                                                     SearchTargetKind.ScheduleItems => "Schedule Items",
                                                     _ => string.Empty
-                                                    })
+                                                })
                                             </MudText>
                                         </MudListItem>
                                     }
@@ -161,7 +162,7 @@
     {
         SystemStartup.OnDatabaseReady += OnStartupProgress;
         SystemStartup.OnSearchIndexReady += OnStartupProgress;
-        
+
         SearchTargets.OnSearchTargetsChanged += OnSearchTargetsChanged;
     }
 
@@ -169,7 +170,7 @@
     {
         SystemStartup.OnDatabaseReady -= OnStartupProgress;
         SystemStartup.OnSearchIndexReady -= OnStartupProgress;
-        
+
         SearchTargets.OnSearchTargetsChanged -= OnSearchTargetsChanged;
 
         _cts.Cancel();
@@ -238,10 +239,7 @@
         }
     }
 
-    protected async void OnSearchTargetsChanged(object sender, EventArgs e)
-    {
-        _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
-    }
+    protected async void OnSearchTargetsChanged(object sender, EventArgs e) => _searchTargets = await Mediator.Send(new QuerySearchTargets(), _cts.Token);
 
     private void PerformSearch()
     {
@@ -264,7 +262,7 @@
     }
 
     private void NavigateTo(SearchTargetViewModel searchTarget) =>
-    // need to force smart collections to navigate since the query string is all that differs
+        // need to force smart collections to navigate since the query string is all that differs
         NavigationManager.NavigateTo(UrlFor(searchTarget), searchTarget.Kind is SearchTargetKind.SmartCollection);
 
     private string UrlFor(SearchTargetViewModel searchTarget) =>
@@ -280,6 +278,6 @@
             SearchTargetKind.Schedule => $"schedules/{searchTarget.Id}",
             SearchTargetKind.ScheduleItems => $"schedules/{searchTarget.Id}/items",
             _ => null
-            };
+        };
 
 }

@@ -11,7 +11,6 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
-using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
@@ -128,7 +127,7 @@ public abstract class LocalFolderScanner
             return BaseError.New(ex.Message);
         }
     }
-    
+
     protected async Task<bool> RefreshArtwork(
         string artworkFile,
         ErsatzTV.Core.Domain.Metadata metadata,

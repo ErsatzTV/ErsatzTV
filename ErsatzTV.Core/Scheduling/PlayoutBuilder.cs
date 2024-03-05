@@ -53,7 +53,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
             return playout;
         }
-        
+
         foreach (PlayoutParameters parameters in await Validate(playout))
         {
             // for testing purposes
@@ -459,7 +459,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             var fakeCollections = _mediaCollectionRepository.GroupIntoFakeCollections(mediaItems, collectionKeyString)
                 .Filter(c => c.ShowId > 0 || c.ArtistId > 0 || !string.IsNullOrWhiteSpace(c.Key))
                 .ToList();
-            List<ProgramScheduleItem> fakeScheduleItems =  [];
+            List<ProgramScheduleItem> fakeScheduleItems = [];
 
             // this will be used to clone a schedule item 
             MethodInfo generic = typeof(JsonConvert).GetMethods()
@@ -495,7 +495,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 {
                     continue;
                 }
-                
+
                 string serialized = JsonConvert.SerializeObject(scheduleItem);
                 var copyScheduleItem = generic.Invoke(this, [serialized]) as ProgramScheduleItem;
                 copyScheduleItem.CollectionType = key.CollectionType;

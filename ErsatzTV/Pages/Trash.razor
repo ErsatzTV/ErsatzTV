@@ -321,7 +321,7 @@
             }
         </MudContainer>
     }
-    
+
     @if (_images?.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
@@ -413,6 +413,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -424,6 +425,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -435,6 +437,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -446,6 +449,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -457,6 +461,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -468,6 +473,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -479,6 +485,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -490,6 +497,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -501,6 +509,7 @@
             (string key, string value) = _query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri;
     }
 
@@ -531,7 +540,7 @@
                     musicVideoIds.Count + otherVideoIds.Count + songIds.Count + imageIds.Count;
 
         var parameters = new DialogParameters
-        { { "EntityType", count.ToString() }, { "EntityName", entityName } };
+            { { "EntityType", count.ToString() }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);

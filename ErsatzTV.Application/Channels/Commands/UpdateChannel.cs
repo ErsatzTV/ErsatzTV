@@ -3,8 +3,7 @@ using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Channels;
 
-public record UpdateChannel
-(
+public record UpdateChannel(
     int ChannelId,
     string Name,
     string Number,

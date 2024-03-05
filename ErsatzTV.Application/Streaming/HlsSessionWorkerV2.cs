@@ -19,6 +19,7 @@ namespace ErsatzTV.Application.Streaming;
 public class HlsSessionWorkerV2 : IHlsSessionWorker
 {
     private static readonly SemaphoreSlim Slim = new(1, 1);
+
     //private static int _workAheadCount;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly string _host;
@@ -33,11 +34,11 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private bool _disposedValue;
     private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
+    private Option<PlayoutItemProcessModel> _lastProcessModel;
     private IServiceScope _serviceScope;
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private Option<PlayoutItemProcessModel> _lastProcessModel;
 
     public HlsSessionWorkerV2(
         IServiceScopeFactory serviceScopeFactory,
@@ -90,10 +91,8 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
     public Task<Option<TrimPlaylistResult>> TrimPlaylist(
         DateTimeOffset filterBefore,
-        CancellationToken cancellationToken)
-    {
-        return Task.FromResult(Option<TrimPlaylistResult>.None);
-    }
+        CancellationToken cancellationToken) =>
+        Task.FromResult(Option<TrimPlaylistResult>.None);
 
     public void PlayoutUpdated() => _state = HlsSessionState.PlayoutUpdated;
 
@@ -250,7 +249,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             _logger.LogDebug("WaitForPlaylistSegments took {Duration}", sw.Elapsed);
         }
     }
-    
+
     public async Task<Either<BaseError, PlayoutItemProcessModel>> GetNextPlayoutItemProcess()
     {
         foreach (PlayoutItemProcessModel processModel in _lastProcessModel)
@@ -278,11 +277,11 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
                 _state = nextState;
             }
         }
-        
+
         _logger.LogDebug("Getting next playout item process with state {@State}", _state);
 
         //long ptsOffset = await GetPtsOffset(_channelNumber, CancellationToken.None);
-        
+
         bool startAtZero = _state is HlsSessionState.ZeroAndRealtime or HlsSessionState.ZeroAndWorkAhead;
         bool realtime = _state is HlsSessionState.ZeroAndRealtime or HlsSessionState.SeekAndRealtime;
 
@@ -311,7 +310,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         {
             _lastProcessModel = Option<PlayoutItemProcessModel>.None;
         }
-        
+
         return result;
     }
 
@@ -367,7 +366,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
         return result;
     }
-    
+
     private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
         await Slim.WaitAsync(cancellationToken);

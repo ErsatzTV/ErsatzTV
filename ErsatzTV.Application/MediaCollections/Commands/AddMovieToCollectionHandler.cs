@@ -33,7 +33,7 @@ public class AddMovieToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => ApplyAddMovieRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddMovieRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddMovieRequest(TvContext dbContext, Parameters parameters)

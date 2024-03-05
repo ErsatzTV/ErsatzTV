@@ -17,13 +17,13 @@ namespace ErsatzTV.Application.Playouts;
 
 public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseError, Unit>>
 {
+    private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
+    private readonly IExternalJsonPlayoutBuilder _externalJsonPlayoutBuilder;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
-    private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
-    private readonly IExternalJsonPlayoutBuilder _externalJsonPlayoutBuilder;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public BuildPlayoutHandler(
@@ -100,7 +100,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             foreach (string channelNumber in maybeChannelNumber)
             {
                 string fileName = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{channelNumber}.xml");
-                if (hasChanges || !File.Exists(fileName) || playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)
+                if (hasChanges || !File.Exists(fileName) ||
+                    playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.ExternalJson)
                 {
                     await _workerChannel.WriteAsync(new RefreshChannelData(channelNumber), cancellationToken);
                 }

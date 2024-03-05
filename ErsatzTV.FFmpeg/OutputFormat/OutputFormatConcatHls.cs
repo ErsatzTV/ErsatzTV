@@ -19,7 +19,7 @@ public class OutputFormatConcatHls : IPipelineStep
     public string[] FilterOptions => Array.Empty<string>();
 
     public string[] OutputOptions =>
-        [
+    [
         //"-g", $"{gop}",
         //"-keyint_min", $"{FRAME_RATE * OutputFormatHls.SegmentSeconds}",
         "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.SegmentSeconds}/2)",

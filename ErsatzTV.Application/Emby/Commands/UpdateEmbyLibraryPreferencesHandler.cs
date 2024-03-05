@@ -6,7 +6,7 @@ namespace ErsatzTV.Application.Emby;
 
 public class
     UpdateEmbyLibraryPreferencesHandler : IRequestHandler<UpdateEmbyLibraryPreferences,
-        Either<BaseError, Unit>>
+    Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ISearchIndex _searchIndex;

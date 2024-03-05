@@ -2,5 +2,4 @@
 
 namespace ErsatzTV.Application.Search;
 
-public record QuerySearchIndexImages
-    (string Query, int PageNumber, int PageSize) : IRequest<ImageCardResultsViewModel>;
+public record QuerySearchIndexImages(string Query, int PageNumber, int PageSize) : IRequest<ImageCardResultsViewModel>;

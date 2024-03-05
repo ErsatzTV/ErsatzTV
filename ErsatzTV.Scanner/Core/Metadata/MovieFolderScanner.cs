@@ -83,7 +83,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
-            
+
             string normalizedLibraryPath = libraryPath.Path.TrimEnd(
                 Path.DirectorySeparatorChar,
                 Path.AltDirectorySeparatorChar);
@@ -91,7 +91,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
-            
+
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
                          .Filter(ShouldIncludeFolder)
                          .OrderBy(identity))
@@ -235,7 +235,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             return new ScanCanceled();
         }
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateLibraryFolderId(
         MediaItemScanResult<Movie> video,
         LibraryFolder libraryFolder)

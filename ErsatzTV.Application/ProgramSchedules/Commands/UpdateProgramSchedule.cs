@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
-public record UpdateProgramSchedule
-(
+public record UpdateProgramSchedule(
     int ProgramScheduleId,
     string Name,
     bool KeepMultiPartEpisodesTogether,

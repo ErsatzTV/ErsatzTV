@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.MediaCards;
 
-public record TelevisionEpisodeCardViewModel
-(
+public record TelevisionEpisodeCardViewModel(
     int EpisodeId,
     DateTime Aired,
     string ShowTitle,

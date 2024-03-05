@@ -16,7 +16,7 @@ public class TemplateItemEditViewModel : CalendarItem
             Text = value;
         }
     }
-    
+
     public DateTime LastStart { get; set; }
     public DateTime? LastEnd { get; set; }
 }

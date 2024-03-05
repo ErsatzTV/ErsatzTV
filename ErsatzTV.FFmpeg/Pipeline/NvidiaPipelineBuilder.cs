@@ -64,7 +64,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
-        
+
         // use software encoding (rawvideo) when piping to parent hls segmenter
         if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
         {
@@ -393,7 +393,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     pipelineSteps.Add(new PixelFormatOutputOption(format));
                 }
             }
-            
+
             if (ffmpegState.OutputFormat is OutputFormatKind.Nut && format.BitDepth == 10)
             {
                 pipelineSteps.Add(new PixelFormatOutputOption(format));
@@ -455,7 +455,9 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     IPixelFormat pf = desiredPixelFormat;
                     if (desiredPixelFormat is PixelFormatNv12 nv12)
                     {
-                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(nv12.Name, null))
+                        foreach (IPixelFormat availablePixelFormat in AvailablePixelFormats.ForPixelFormat(
+                                     nv12.Name,
+                                     null))
                         {
                             pf = availablePixelFormat;
                         }

@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -16,14 +17,18 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.1")
+                .HasAnnotation("ProductVersion", "8.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
@@ -96,6 +101,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("ArtistId")
                         .HasColumnType("int");
 
@@ -144,6 +151,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
@@ -230,6 +239,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Categories")
                         .HasColumnType("longtext");
 
@@ -298,6 +309,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("DurationSeconds")
                         .HasColumnType("int");
 
@@ -348,6 +361,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
@@ -383,6 +398,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Key")
                         .HasColumnType("varchar(255)");
 
@@ -402,6 +419,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("EpisodeMetadataId")
                         .HasColumnType("int");
@@ -437,6 +456,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Etag")
                         .HasColumnType("longtext");
 
@@ -457,6 +478,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Address")
                         .HasColumnType("longtext");
 
@@ -475,6 +498,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("EmbyMediaSourceId")
                         .HasColumnType("int");
@@ -497,6 +522,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime(6)");
@@ -549,6 +576,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AudioBitrate")
                         .HasColumnType("int");
@@ -627,6 +656,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<bool>("AllowWatermarks")
                         .HasColumnType("tinyint(1)");
 
@@ -681,6 +712,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
@@ -741,6 +774,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<double>("DurationSeconds")
                         .HasColumnType("double");
 
@@ -760,6 +795,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime(6)");
@@ -804,6 +841,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Etag")
                         .HasColumnType("longtext");
 
@@ -824,6 +863,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Address")
                         .HasColumnType("longtext");
 
@@ -842,6 +883,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("JellyfinMediaSourceId")
                         .HasColumnType("int");
@@ -864,6 +907,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("EnglishName")
                         .HasColumnType("longtext");
@@ -890,6 +935,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("LastScan")
                         .HasColumnType("datetime(6)");
@@ -918,6 +965,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Etag")
                         .HasColumnType("longtext");
 
@@ -945,6 +994,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime?>("LastScan")
                         .HasColumnType("datetime(6)");
 
@@ -966,6 +1017,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<long>("ChapterId")
                         .HasColumnType("bigint");
@@ -994,6 +1047,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("LibraryFolderId")
                         .HasColumnType("int");
@@ -1024,6 +1079,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("LibraryPathId")
                         .HasColumnType("int");
 
@@ -1045,6 +1102,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.HasKey("Id");
 
                     b.ToTable("MediaSource", (string)null);
@@ -1057,6 +1116,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("AttachedPic")
                         .HasColumnType("tinyint(1)");
@@ -1127,6 +1188,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime(6)");
@@ -1199,6 +1262,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
 
@@ -1258,6 +1323,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
 
@@ -1276,6 +1343,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ContentRating")
                         .HasColumnType("longtext");
@@ -1328,6 +1397,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
@@ -1385,6 +1456,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("MusicVideoMetadataId")
                         .HasColumnType("int");
 
@@ -1403,6 +1476,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Album")
                         .HasColumnType("longtext");
@@ -1452,6 +1527,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ContentRating")
                         .HasColumnType("longtext");
@@ -1505,6 +1582,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("ChannelId")
                         .HasColumnType("int");
 
@@ -1537,6 +1616,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BlockKey")
                         .HasColumnType("longtext");
@@ -1618,6 +1699,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime?>("AnchorDate")
                         .HasColumnType("datetime(6)");
 
@@ -1663,6 +1746,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("PlayoutId")
                         .HasColumnType("int");
 
@@ -1684,6 +1769,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Etag")
                         .HasColumnType("longtext");
 
@@ -1703,6 +1790,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -1726,6 +1815,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("LocalPath")
                         .HasColumnType("longtext");
 
@@ -1747,6 +1838,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("KeepMultiPartEpisodesTogether")
                         .HasColumnType("tinyint(1)");
@@ -1776,6 +1869,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DaysOfMonth")
                         .HasColumnType("longtext");
@@ -1809,6 +1904,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CollectionId")
                         .HasColumnType("int");
@@ -1914,6 +2011,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("Height")
                         .HasColumnType("int");
 
@@ -1939,6 +2038,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("BlockGroupId")
                         .HasColumnType("int");
 
@@ -1956,9 +2057,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BlockGroupId");
-
-                    b.HasIndex("Name")
+                    b.HasIndex("BlockGroupId", "Name")
                         .IsUnique();
 
                     b.ToTable("Block", (string)null);
@@ -1969,6 +2068,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");
@@ -1986,6 +2087,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BlockId")
                         .HasColumnType("int");
@@ -2035,6 +2138,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("BlockId")
                         .HasColumnType("int");
 
@@ -2070,6 +2175,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime(6)");
@@ -2113,6 +2220,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime(6)");
 
@@ -2138,6 +2247,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");
 
@@ -2154,6 +2265,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BlockId")
                         .HasColumnType("int");
@@ -2178,6 +2291,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("datetime(6)");
@@ -2221,6 +2336,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ContentRating")
                         .HasColumnType("longtext");
@@ -2274,6 +2391,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
@@ -2290,6 +2409,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Album")
                         .HasColumnType("longtext");
@@ -2345,6 +2466,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
@@ -2405,6 +2528,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
 
@@ -2423,6 +2548,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
@@ -2520,6 +2647,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("int");
 
@@ -2582,6 +2711,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
@@ -2610,6 +2741,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("Episode")
                         .HasColumnType("int");
@@ -2653,6 +2786,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("Guid")
                         .HasColumnType("longtext");
 
@@ -2671,6 +2806,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("EpisodeMetadataId")
                         .HasColumnType("int");
@@ -2701,6 +2838,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("EmbyLibraryId")
                         .HasColumnType("int");
 
@@ -2722,6 +2861,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("JellyfinLibraryId")
                         .HasColumnType("int");

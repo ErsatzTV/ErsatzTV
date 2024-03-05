@@ -131,7 +131,7 @@ public class TranscodingTests
 
         public static ScalingBehavior[] ScalingBehaviors =
         [
-            ScalingBehavior.ScaleAndPad,
+            ScalingBehavior.ScaleAndPad
             //ScalingBehavior.Crop,
             //ScalingBehavior.Stretch
         ];
@@ -199,7 +199,7 @@ public class TranscodingTests
         [
             HardwareAccelerationKind.None,
             //HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi,
+            HardwareAccelerationKind.Vaapi
             //HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
@@ -211,7 +211,7 @@ public class TranscodingTests
             //StreamingMode.HttpLiveStreamingSegmenter,
             StreamingMode.HttpLiveStreamingSegmenterV2
         ];
-        
+
         public static string[] FilesToTest => [string.Empty];
     }
 
@@ -1011,7 +1011,7 @@ public class TranscodingTests
                     (FFmpegProfileBitDepth.TenBit, _) => PixelFormat.YUV420P10LE,
                     _ => PixelFormat.YUV420P
                 };
-                
+
                 videoStream.PixelFormat.Should().Be(expectedPixelFormat);
 
                 // verify colors

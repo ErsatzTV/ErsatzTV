@@ -9,8 +9,7 @@ public record UpdateMultiCollectionItem(
     bool ScheduleAsGroup,
     PlaybackOrder PlaybackOrder);
 
-public record UpdateMultiCollection
-(
+public record UpdateMultiCollection(
     int MultiCollectionId,
     string Name,
     List<UpdateMultiCollectionItem> Items) : IRequest<Either<BaseError, Unit>>;

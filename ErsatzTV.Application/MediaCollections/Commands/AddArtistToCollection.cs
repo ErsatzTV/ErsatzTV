@@ -2,5 +2,4 @@
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public record AddArtistToCollection
-    (int CollectionId, int ArtistId) : IRequest<Either<BaseError, Unit>>;
+public record AddArtistToCollection(int CollectionId, int ArtistId) : IRequest<Either<BaseError, Unit>>;

@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.Plex;
 
-public record UpdatePlexPathReplacements
-(
+public record UpdatePlexPathReplacements(
     int PlexMediaSourceId,
     List<PlexPathReplacementItem> PathReplacements) : IRequest<Either<BaseError, Unit>>;
 

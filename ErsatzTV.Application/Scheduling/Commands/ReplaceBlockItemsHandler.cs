@@ -28,7 +28,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
         block.Minutes = request.Minutes;
         block.StopScheduling = request.StopScheduling;
         block.DateUpdated = DateTime.UtcNow;
-        
+
         dbContext.RemoveRange(block.Items);
         block.Items = request.Items.Map(i => BuildItem(block, i.Index, i)).ToList();
 
@@ -67,7 +67,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
             .Include(b => b.Items)
             .SelectOneAsync(b => b.Id, b => b.Id == blockId)
             .Map(o => o.ToValidation<BaseError>("[BlockId] does not exist."));
-    
+
     private static Validation<BaseError, Block> MinutesMustBeValid(ReplaceBlockItems request, Block block) =>
         Optional(block)
             .Filter(_ => request.Minutes > 0 && request.Minutes % 15 == 0 && request.Minutes <= 24 * 60)
@@ -75,7 +75,7 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
 
     private static Validation<BaseError, Block> CollectionTypesMustBeValid(ReplaceBlockItems request, Block block) =>
         request.Items.Map(item => CollectionTypeMustBeValid(item, block)).Sequence().Map(_ => block);
-    
+
     private static Validation<BaseError, Block> CollectionTypeMustBeValid(ReplaceBlockItem item, Block block)
     {
         switch (item.CollectionType)

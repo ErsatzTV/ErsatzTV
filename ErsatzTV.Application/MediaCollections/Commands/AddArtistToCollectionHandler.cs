@@ -33,7 +33,7 @@ public class AddArtistToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => ApplyAddArtistRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddArtistRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddArtistRequest(TvContext dbContext, Parameters parameters)

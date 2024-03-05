@@ -402,7 +402,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
         {
             return Option<int>.None;
         }
-        
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.RemoteOnly;

@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public record AddItemsToCollection
-(
+public record AddItemsToCollection(
     int CollectionId,
     List<int> MovieIds,
     List<int> ShowIds,

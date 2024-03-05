@@ -22,16 +22,16 @@ public class TemplateTreeItemViewModel
         CanExpand = false;
         TemplateId = template.Id;
     }
-    
+
     public string Text { get; }
-    
+
     public string Icon { get; }
-    
+
     public bool CanExpand { get; }
-    
+
     public int? TemplateId { get; }
-    
+
     public int? TemplateGroupId { get; }
-    
+
     public S.HashSet<TemplateTreeItemViewModel> TreeItems { get; }
 }

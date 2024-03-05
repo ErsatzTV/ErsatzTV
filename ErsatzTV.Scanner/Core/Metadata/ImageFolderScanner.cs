@@ -18,12 +18,12 @@ namespace ErsatzTV.Scanner.Core.Metadata;
 public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 {
     private readonly IClient _client;
+    private readonly IImageRepository _imageRepository;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<ImageFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IImageRepository _imageRepository;
 
     public ImageFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -82,7 +82,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
-            
+
             if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
                 folderQueue.Enqueue(libraryPath.Path);
@@ -115,7 +115,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
 
                 string imageFolder = folderQueue.Dequeue();
                 Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(imageFolder);
-                
+
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(imageFolder).ToList();
@@ -144,7 +144,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                 {
                     continue;
                 }
-                
+
                 // walk up to get duration, if needed
                 LibraryFolder? currentFolder = knownFolder;
                 double? durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
@@ -157,14 +157,14 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                     {
                         currentFolder = null;
                     }
-                
+
                     foreach (LibraryFolder parent in maybeParent)
                     {
                         currentFolder = parent;
                         durationSeconds = currentFolder.ImageFolderDuration?.DurationSeconds;
                     }
                 }
-                
+
                 _logger.LogDebug("UPDATE: Etag has changed for folder {Folder}", imageFolder);
 
                 var hasErrors = false;
@@ -271,7 +271,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         {
             Image image = result.Item;
             string path = image.GetHeadVersion().MediaFiles.Head().Path;
-            bool shouldUpdate = true;
+            var shouldUpdate = true;
 
             foreach (ImageMetadata imageMetadata in Optional(image.ImageMetadata).Flatten().HeadOrNone())
             {
@@ -283,7 +283,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                                imageMetadata.DateUpdated != _localFileSystem.GetLastWriteTime(path) ||
                                durationsAreDifferent;
             }
-            
+
             if (shouldUpdate)
             {
                 image.ImageMetadata ??= [];

@@ -19,8 +19,8 @@ namespace ErsatzTV.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public class InternalController : ControllerBase
 {
-    private readonly ILogger<InternalController> _logger;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly ILogger<InternalController> _logger;
     private readonly IMediator _mediator;
 
     public InternalController(

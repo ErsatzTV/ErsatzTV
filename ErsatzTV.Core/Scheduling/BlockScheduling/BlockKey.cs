@@ -21,32 +21,32 @@ public record BlockKey
     }
 
     /// <summary>
-    /// Block Id
+    ///     Block Id
     /// </summary>
     public int b { get; set; }
-    
+
     /// <summary>
-    /// Template Id
+    ///     Template Id
     /// </summary>
     public int t { get; set; }
-    
+
     /// <summary>
-    /// Playout Template Id
+    ///     Playout Template Id
     /// </summary>
     public int pt { get; set; }
 
     /// <summary>
-    /// Block Date Updated Ticks
+    ///     Block Date Updated Ticks
     /// </summary>
     public long bt { get; set; }
-    
+
     /// <summary>
-    /// Template Date Updated Ticks
+    ///     Template Date Updated Ticks
     /// </summary>
     public long tt { get; set; }
-    
+
     /// <summary>
-    /// Playout Template Date Updated Ticks
+    ///     Playout Template Date Updated Ticks
     /// </summary>
     public long ptt { get; set; }
 }

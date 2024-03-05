@@ -167,7 +167,7 @@ public class SearchRepository : ISearchRepository
                     WHERE MediaStreamKind = 2 AND S.ShowId = @ShowId",
             new { ShowId = show.Id }).Map(result => result.ToList());
     }
-    
+
     public async Task<List<string>> GetSubLanguagesForShow(Show show)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -192,7 +192,7 @@ public class SearchRepository : ISearchRepository
                     WHERE MediaStreamKind = 2 AND E.SeasonId = @SeasonId",
             new { SeasonId = season.Id }).Map(result => result.ToList());
     }
-    
+
     public async Task<List<string>> GetSubLanguagesForSeason(Season season)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -217,7 +217,7 @@ public class SearchRepository : ISearchRepository
                     WHERE MediaStreamKind = 2 AND A.Id = @ArtistId",
             new { ArtistId = artist.Id }).Map(result => result.ToList());
     }
-    
+
     public async Task<List<string>> GetSubLanguagesForArtist(Artist artist)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

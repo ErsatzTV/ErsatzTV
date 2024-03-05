@@ -77,7 +77,7 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
             cancellationToken);
 
         IHlsSessionWorker worker = GetSessionWorker(request, targetFramerate);
-            
+
         _ffmpegSegmenterService.AddOrUpdateWorker(request.ChannelNumber, worker);
 
         // fire and forget worker

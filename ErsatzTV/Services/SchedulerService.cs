@@ -102,7 +102,7 @@ public class SchedulerService : BackgroundService
                     }
                 }
             }
-            
+
             stoppingToken.ThrowIfCancellationRequested();
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)

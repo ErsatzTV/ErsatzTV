@@ -13,7 +13,7 @@ public static class AvailableEncoders
         {
             return new EncoderPcmS16Le();
         }
-        
+
         return desiredState.AudioFormat.Match(
             audioFormat =>
                 audioFormat switch

@@ -4,5 +4,5 @@ using ErsatzTV.Core.Plex;
 
 namespace ErsatzTV.Scanner.Core.Plex;
 
-public record PlexConnectionParameters
-    (PlexConnection Connection, PlexServerAuthToken Token) : MediaServerConnectionParameters;
+public record PlexConnectionParameters(PlexConnection Connection, PlexServerAuthToken Token)
+    : MediaServerConnectionParameters;

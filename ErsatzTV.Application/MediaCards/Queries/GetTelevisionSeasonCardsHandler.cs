@@ -6,7 +6,7 @@ namespace ErsatzTV.Application.MediaCards;
 
 public class
     GetTelevisionSeasonCardsHandler : IRequestHandler<GetTelevisionSeasonCards,
-        TelevisionSeasonCardResultsViewModel>
+    TelevisionSeasonCardResultsViewModel>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly ITelevisionRepository _televisionRepository;

@@ -18,7 +18,7 @@ public static class JwtHelper
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(issuerSigningKey!));
         }
     }
-    
+
     public static string GenerateToken()
     {
         var tokenHandler = new JwtSecurityTokenHandler();

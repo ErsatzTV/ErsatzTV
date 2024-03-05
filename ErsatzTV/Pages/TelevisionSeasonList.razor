@@ -192,15 +192,16 @@
     private async Task RefreshData()
     {
         await _mediator.Send(new GetTelevisionShowById(ShowId), _cts.Token)
-            .IfSomeAsync(vm =>
-            {
-                _show = vm;
-                _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
-                _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
-                _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
-                _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
-                _sortedTags = _show.Tags.OrderBy(t => t).ToList();
-            });
+            .IfSomeAsync(
+                vm =>
+                {
+                    _show = vm;
+                    _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
+                    _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
+                    _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
+                    _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
+                    _sortedTags = _show.Tags.OrderBy(t => t).ToList();
+                });
 
         _data = await _mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize), _cts.Token);
     }

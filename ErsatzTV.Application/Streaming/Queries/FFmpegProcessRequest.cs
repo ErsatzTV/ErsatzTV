@@ -2,8 +2,7 @@
 
 namespace ErsatzTV.Application.Streaming;
 
-public record FFmpegProcessRequest
-(
+public record FFmpegProcessRequest(
     string ChannelNumber,
     string Mode,
     DateTimeOffset Now,

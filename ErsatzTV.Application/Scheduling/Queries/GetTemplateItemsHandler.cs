@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Scheduling;
 
-public class GetTemplateItemsHandler(IDbContextFactory<TvContext> dbContextFactory) : IRequestHandler<GetTemplateItems, List<TemplateItemViewModel>>
+public class GetTemplateItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetTemplateItems, List<TemplateItemViewModel>>
 {
     public async Task<List<TemplateItemViewModel>> Handle(GetTemplateItems request, CancellationToken cancellationToken)
     {

@@ -2,5 +2,4 @@
 
 namespace ErsatzTV.Application.Watermarks;
 
-public record CopyWatermark
-    (int WatermarkId, string Name) : IRequest<Either<BaseError, WatermarkViewModel>>;
+public record CopyWatermark(int WatermarkId, string Name) : IRequest<Either<BaseError, WatermarkViewModel>>;

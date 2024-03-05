@@ -128,7 +128,7 @@ public class LibraryRepository : ILibraryRepository
         IOrderedEnumerable<LibraryFolder> orderedFolders = libraryPath.LibraryFolders
             .Where(f => !_localFileSystem.FolderExists(f.Path))
             .OrderByDescending(lp => lp.Path.Length);
-        
+
         foreach (LibraryFolder folder in orderedFolders)
         {
             await dbContext.Connection.ExecuteAsync(
@@ -157,7 +157,10 @@ public class LibraryRepository : ILibraryRepository
             .MapT(lf => lf.Id);
     }
 
-    public async Task<LibraryFolder> GetOrAddFolder(LibraryPath libraryPath, Option<int> maybeParentFolder, string folder)
+    public async Task<LibraryFolder> GetOrAddFolder(
+        LibraryPath libraryPath,
+        Option<int> maybeParentFolder,
+        string folder)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
@@ -186,7 +189,7 @@ public class LibraryRepository : ILibraryRepository
             await dbContext.LibraryFolders.AddAsync(knownFolder);
             await dbContext.SaveChangesAsync();
         }
-        
+
         return knownFolder;
     }
 
@@ -215,7 +218,7 @@ public class LibraryRepository : ILibraryRepository
         {
             parentId = parentFolder;
         }
-        
+
         return new LibraryFolder
         {
             Path = folder,

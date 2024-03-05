@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 
@@ -62,7 +61,6 @@ public class Program
 
         LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
-            
             .MinimumLevel.ControlledBy(LoggingLevelSwitches.DefaultLevelSwitch)
 
             // scanning
@@ -72,18 +70,21 @@ public class Program
 
             // scheduling
             .MinimumLevel.Override("ErsatzTV.Core.Scheduling", LoggingLevelSwitches.SchedulingLevelSwitch)
-            .MinimumLevel.Override("ErsatzTV.Application.Subtitles.ExtractEmbeddedSubtitlesHandler", LoggingLevelSwitches.SchedulingLevelSwitch)
-            
+            .MinimumLevel.Override(
+                "ErsatzTV.Application.Subtitles.ExtractEmbeddedSubtitlesHandler",
+                LoggingLevelSwitches.SchedulingLevelSwitch)
+
             // streaming
             .MinimumLevel.Override("ErsatzTV.Application.Streaming", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.FFmpeg", LoggingLevelSwitches.StreamingLevelSwitch)
-            .MinimumLevel.Override("ErsatzTV.Core.FFmpeg.FFmpegLibraryProcessService", LoggingLevelSwitches.StreamingLevelSwitch)
+            .MinimumLevel.Override(
+                "ErsatzTV.Core.FFmpeg.FFmpegLibraryProcessService",
+                LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.IptvController", LoggingLevelSwitches.StreamingLevelSwitch)
             .MinimumLevel.Override("ErsatzTV.Controllers.InternalController", LoggingLevelSwitches.StreamingLevelSwitch)
-            
+
             // http
             .MinimumLevel.Override("Serilog.AspNetCore.RequestLoggingMiddleware", LoggingLevelSwitches.HttpLevelSwitch)
-            
             .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
             .WriteTo.File(

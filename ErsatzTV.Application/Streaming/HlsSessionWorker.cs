@@ -30,6 +30,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly IMediator _mediator;
     private readonly object _sync = new();
     private readonly Option<int> _targetFramerate;
+    private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
     private bool _disposedValue;
     private bool _hasWrittenSegments;
@@ -39,7 +40,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     private HlsSessionState _state;
     private Timer _timer;
     private DateTimeOffset _transcodedUntil;
-    private CancellationTokenSource _cancellationTokenSource;
 
     public HlsSessionWorker(
         IServiceScopeFactory serviceScopeFactory,
@@ -136,7 +136,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     }
 
     public void PlayoutUpdated() => _state = HlsSessionState.PlayoutUpdated;
-    
+
     public HlsSessionModel GetModel() => new(_channelNumber, _state.ToString(), _transcodedUntil, _lastAccess);
 
     void IDisposable.Dispose()
@@ -240,19 +240,19 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
         }
     }
-    
+
     public async Task WaitForPlaylistSegments(
         int initialSegmentCount,
         CancellationToken cancellationToken)
     {
         _logger.LogDebug("Waiting for playlist segments...");
-        
+
         var sw = Stopwatch.StartNew();
         try
         {
             DateTimeOffset start = DateTimeOffset.Now;
             DateTimeOffset finish = start.AddSeconds(8);
-            
+
             string playlistFileName = Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber, "live.m3u8");
 
             _logger.LogDebug("Waiting for playlist to exist");

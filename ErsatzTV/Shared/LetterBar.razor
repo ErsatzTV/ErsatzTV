@@ -51,6 +51,7 @@
             (string key, string value) = Query.EncodeQuery();
             uri = $"{uri}?{key}={value}";
         }
+
         return uri + $"#letter-{letter}";
     }
 

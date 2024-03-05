@@ -9,6 +9,7 @@ public interface ISongRepository
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
         string path);
+
     Task<IEnumerable<string>> FindSongPaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
     Task<bool> AddGenre(SongMetadata metadata, Genre genre);

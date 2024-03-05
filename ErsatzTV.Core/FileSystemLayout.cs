@@ -16,7 +16,7 @@ public static class FileSystemLayout
         "etv-transcode");
 
     public static readonly string DataProtectionFolder = Path.Combine(AppDataFolder, "data-protection");
-    
+
     public static readonly string LogsFolder = Path.Combine(AppDataFolder, "logs");
 
     public static readonly string DatabasePath = Path.Combine(AppDataFolder, "ersatztv.sqlite3");

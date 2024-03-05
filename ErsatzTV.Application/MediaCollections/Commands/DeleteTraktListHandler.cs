@@ -44,7 +44,7 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
         {
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
-            return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c));
+            return await validation.Apply(c => DoDeletion(dbContext, c));
         }
         finally
         {

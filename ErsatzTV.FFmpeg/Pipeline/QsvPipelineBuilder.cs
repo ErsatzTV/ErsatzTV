@@ -66,7 +66,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             desiredState.VideoFormat,
             desiredState.VideoProfile,
             desiredState.PixelFormat);
-        
+
         // use software encoding (rawvideo) when piping to parent hls segmenter
         if (ffmpegState.OutputFormat is OutputFormatKind.Nut)
         {
@@ -360,7 +360,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                     _logger.LogDebug("FrameDataLocation == FrameDataLocation.Hardware");
 
                     formatForDownload = new PixelFormatNv12(formatForDownload.Name);
-                    
+
                     var hardwareDownload =
                         new HardwareDownloadFilter(currentState with { PixelFormat = Some(formatForDownload) });
                     currentState = hardwareDownload.NextState(currentState);
@@ -396,7 +396,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 {
                     pipelineSteps.Remove(pf);
                 }
-                
+
                 pipelineSteps.Add(new PixelFormatOutputOption(format));
             }
         }

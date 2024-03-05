@@ -26,10 +26,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 {
     private readonly IArtistRepository _artistRepository;
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly IExternalJsonPlayoutItemProvider _externalJsonPlayoutItemProvider;
     private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly IExternalJsonPlayoutItemProvider _externalJsonPlayoutItemProvider;
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
@@ -151,12 +151,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(item => ValidatePlayoutItemPath(dbContext, item));
-        
+
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
             maybePlayoutItem = await _externalJsonPlayoutItemProvider.CheckForExternalJson(channel, now, ffprobePath);
         }
-        
+
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
             maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);

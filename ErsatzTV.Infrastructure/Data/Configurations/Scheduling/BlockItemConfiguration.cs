@@ -9,7 +9,7 @@ public class BlockItemConfiguration : IEntityTypeConfiguration<BlockItem>
     public void Configure(EntityTypeBuilder<BlockItem> builder)
     {
         builder.ToTable("BlockItem");
-        
+
         builder.HasOne(i => i.Collection)
             .WithMany()
             .HasForeignKey(i => i.CollectionId)

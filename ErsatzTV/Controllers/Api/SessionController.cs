@@ -8,10 +8,7 @@ namespace ErsatzTV.Controllers.Api;
 public class SessionController(IFFmpegSegmenterService ffmpegSegmenterService)
 {
     [HttpGet("api/sessions")]
-    public List<HlsSessionModel> GetSessions()
-    {
-        return ffmpegSegmenterService.Workers.Map(w => w.GetModel()).ToList();
-    }
+    public List<HlsSessionModel> GetSessions() => ffmpegSegmenterService.Workers.Map(w => w.GetModel()).ToList();
 
     [HttpDelete("api/session/{channelNumber}")]
     public async Task<IActionResult> StopSession(string channelNumber, CancellationToken cancellationToken)

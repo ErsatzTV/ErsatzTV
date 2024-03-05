@@ -59,9 +59,9 @@ public class
         p.NormalizeFramerate = update.NormalizeFramerate;
         p.DeinterlaceVideo = update.DeinterlaceVideo;
         await dbContext.SaveChangesAsync();
-        
+
         _searchTargets.SearchTargetsChanged();
-        
+
         return new UpdateFFmpegProfileResult(p.Id);
     }
 

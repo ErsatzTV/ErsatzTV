@@ -396,7 +396,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
         return Unit.Default;
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateLibraryFolderId(
         MediaItemScanResult<MusicVideo> video,
         LibraryFolder libraryFolder)

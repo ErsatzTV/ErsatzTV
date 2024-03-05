@@ -1,9 +1,9 @@
 ﻿@page "/playouts/{Id:int}/templates"
 @using System.Globalization
-@using ErsatzTV.Application.Channels
-@using System.Text
 @using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Application.Channels
 @using ErsatzTV.Core.Domain.Scheduling
+@using System.Text
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<PlayoutTemplatesEditor> Logger
@@ -99,7 +99,7 @@
                                     <MudSelectItem Value="@templateGroup">
                                         @templateGroup.Name
                                     </MudSelectItem>
-                                }                            
+                                }
                             </MudSelect>
                             <MudSelect Label="Template" @bind-Value="_selectedItem.Template" For="@(() => _selectedItem.Template)">
                                 @foreach (TemplateViewModel template in _templates)
@@ -224,7 +224,7 @@
                          ShowDay="false"
                          DateRangeChanged="@(range => DateRangeChanged(range))"
                          MonthCellMinHeight="115"
-                         Items="_previewItems" />
+                         Items="_previewItems"/>
         </MudCard>
     }
 </MudContainer>
@@ -244,7 +244,7 @@
     private List<PlayoutTemplateEditViewModel> _items = [];
     private TemplateGroupViewModel _selectedGroup;
     private PlayoutTemplateEditViewModel _selectedItem;
-    private List<CalendarItem> _previewItems = [];
+    private readonly List<CalendarItem> _previewItems = [];
 
     public void Dispose()
     {
@@ -276,10 +276,10 @@
             Template = item.Template,
             Index = item.Index,
             DaysOfWeek = item.DaysOfWeek.ToList(),
-            DaysOfMonth =  item.DaysOfMonth.ToList(),
-            MonthsOfYear = item.MonthsOfYear.ToList() 
+            DaysOfMonth = item.DaysOfMonth.ToList(),
+            MonthsOfYear = item.MonthsOfYear.ToList()
         };
-    
+
     private async Task UpdateTemplateGroupItems(TemplateGroupViewModel templateGroup)
     {
         _selectedGroup = templateGroup;
@@ -315,24 +315,26 @@
     private void SelectWeekdays()
     {
         _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(new[]
-        {
-            DayOfWeek.Monday,
-            DayOfWeek.Tuesday,
-            DayOfWeek.Wednesday,
-            DayOfWeek.Thursday,
-            DayOfWeek.Friday
-        });
+        _selectedItem.DaysOfWeek.AddRange(
+            new[]
+            {
+                DayOfWeek.Monday,
+                DayOfWeek.Tuesday,
+                DayOfWeek.Wednesday,
+                DayOfWeek.Thursday,
+                DayOfWeek.Friday
+            });
     }
 
     private void SelectWeekends()
     {
         _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(new[]
-        {
-            DayOfWeek.Saturday,
-            DayOfWeek.Sunday
-        });
+        _selectedItem.DaysOfWeek.AddRange(
+            new[]
+            {
+                DayOfWeek.Saturday,
+                DayOfWeek.Sunday
+            });
     }
 
     private void SelectAllDaysOfWeek()
@@ -350,13 +352,13 @@
             _selectedItem.DaysOfMonth.Add(dayOfMonth);
             _selectedItem.DaysOfMonth.Sort();
         }
-    
+
         if (!isChecked)
         {
             _selectedItem.DaysOfMonth.Remove(dayOfMonth);
         }
     }
-    
+
     private void SelectAllDaysOfMonth()
     {
         _selectedItem.DaysOfMonth.Clear();
@@ -409,14 +411,14 @@
 
     private void MoveItemUp(PlayoutTemplateEditViewModel item)
     {
-    // swap with lower index
+        // swap with lower index
         PlayoutTemplateEditViewModel toSwap = _items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private void MoveItemDown(PlayoutTemplateEditViewModel item)
     {
-    // swap with higher index
+        // swap with higher index
         PlayoutTemplateEditViewModel toSwap = _items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
@@ -428,14 +430,15 @@
             Snackbar.Add("Unable to save; item has no template selected", Severity.Error);
             return;
         }
-        
-        var items = _items.Map(item => new ReplacePlayoutTemplate(
-            item.Id,
-            item.Index,
-            item.Template.Id,
-            item.DaysOfWeek,
-            item.DaysOfMonth,
-            item.MonthsOfYear)).ToList();
+
+        var items = _items.Map(
+            item => new ReplacePlayoutTemplate(
+                item.Id,
+                item.Index,
+                item.Template.Id,
+                item.DaysOfWeek,
+                item.DaysOfMonth,
+                item.MonthsOfYear)).ToList();
 
         Option<BaseError> maybeError = await Mediator.Send(new ReplacePlayoutTemplateItems(Id, items), _cts.Token);
 
@@ -461,7 +464,7 @@
         _previewItems.Clear();
 
         var prioritized = _items.Filter(i => i.Template is not null).OrderBy(t => t.Index).ToList();
-        
+
         if (dateRange.Start.HasValue && dateRange.End.HasValue)
         {
             DateTime current = dateRange.Start.Value.Date;
@@ -532,22 +535,22 @@
         {
             int temp = list[i];
 
-    //add a number
+            //add a number
             result.Append(list[i]);
 
-    //skip number(s) between a range
+            //skip number(s) between a range
             while (i < list.Count - 1 && list[i + 1] == list[i] + 1)
             {
                 i++;
             }
 
-    //add the range
+            //add the range
             if (temp != list[i])
             {
                 result.Append("-").Append(list[i]);
             }
 
-    //add comma
+            //add comma
             if (i != list.Count - 1)
             {
                 result.Append(", ");

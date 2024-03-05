@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 
@@ -39,7 +40,7 @@ internal static class BlockPlayoutChangeDetection
 
         var earliestEffectiveBlocks = new Dictionary<BlockKey, DateTimeOffset>();
         var earliestBlocks = new Dictionary<int, DateTimeOffset>();
-        
+
         // check for changed collections
         foreach (EffectiveBlock effectiveBlock in blocksToSchedule.OrderBy(b => b.Start))
         {
@@ -54,18 +55,19 @@ internal static class BlockPlayoutChangeDetection
                 bool isUpdated = string.IsNullOrWhiteSpace(playoutItem.CollectionKey);
                 if (!isUpdated)
                 {
-                    CollectionKey collectionKey = JsonConvert.DeserializeObject<CollectionKey>(playoutItem.CollectionKey);
+                    CollectionKey collectionKey =
+                        JsonConvert.DeserializeObject<CollectionKey>(playoutItem.CollectionKey);
 
                     // collection is no longer present or collection has been modified
                     isUpdated = !collectionEtags.ContainsKey(collectionKey) ||
                                 collectionEtags[collectionKey] != playoutItem.CollectionEtag;
                 }
-                
+
                 if (isUpdated)
                 {
                     // playout item needs to be removed/re-added
                     updatedItemIds.Add(playoutItem.Id);
-                    
+
                     // block needs to be scheduled again
                     updatedBlocks.Add(effectiveBlock);
 
@@ -114,12 +116,12 @@ internal static class BlockPlayoutChangeDetection
 
         foreach ((BlockKey key, DateTimeOffset value) in earliestEffectiveBlocks)
         {
-            Serilog.Log.Logger.Debug("Earliest effective block: {Key} => {Value}", key, value);
+            Log.Logger.Debug("Earliest effective block: {Key} => {Value}", key, value);
         }
 
         foreach ((int blockId, DateTimeOffset value) in earliestBlocks)
         {
-            Serilog.Log.Logger.Debug("Earliest block id: {Id} => {Value}", blockId, value);
+            Log.Logger.Debug("Earliest block id: {Id} => {Value}", blockId, value);
         }
 
         // find affected playout items
@@ -131,8 +133,8 @@ internal static class BlockPlayoutChangeDetection
                                       value <= item.StartOffset;
 
             bool blockIdIsAffected = earliestBlocks.TryGetValue(blockKey.b, out DateTimeOffset value2) &&
-                                     value2 <= item.StartOffset; 
-            
+                                     value2 <= item.StartOffset;
+
             if (!blockKeysToSchedule.Contains(blockKey) || blockKeyIsAffected || blockIdIsAffected)
             {
                 updatedItemIds.Add(item.Id);

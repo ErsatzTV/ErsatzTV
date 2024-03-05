@@ -33,9 +33,7 @@ public class AddOtherVideoToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(
-            validation,
-            parameters => ApplyAddOtherVideoRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddOtherVideoRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddOtherVideoRequest(TvContext dbContext, Parameters parameters)

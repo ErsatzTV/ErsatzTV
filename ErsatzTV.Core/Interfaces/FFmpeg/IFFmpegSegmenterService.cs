@@ -2,8 +2,8 @@
 
 public interface IFFmpegSegmenterService
 {
-    event EventHandler OnWorkersChanged;
     ICollection<IHlsSessionWorker> Workers { get; }
+    event EventHandler OnWorkersChanged;
     bool TryGetWorker(string channelNumber, out IHlsSessionWorker worker);
     bool TryAddWorker(string channelNumber, IHlsSessionWorker worker);
     void AddOrUpdateWorker(string channelNumber, IHlsSessionWorker worker);

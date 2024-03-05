@@ -24,7 +24,7 @@ internal record EffectiveBlock(Block Block, BlockKey BlockKey, DateTimeOffset St
                 //     playoutTemplate.Template.Name);
 
                 DateTimeOffset today = current;
-                
+
                 var newBlocks = playoutTemplate.Template.Items
                     .Map(i => ToEffectiveBlock(playoutTemplate, i, today, start))
                     .Map(NormalizeGuideMode)

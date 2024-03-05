@@ -13,6 +13,7 @@ using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Compact.Reader;
 
@@ -20,6 +21,7 @@ namespace ErsatzTV.Application.Libraries;
 
 public abstract class CallLibraryScannerHandler<TRequest>
 {
+    private readonly int _batchSize = 100;
     private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _channel;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -27,7 +29,6 @@ public abstract class CallLibraryScannerHandler<TRequest>
     private readonly IRuntimeInfo _runtimeInfo;
     private readonly List<int> _toReindex = [];
     private readonly List<int> _toRemove = [];
-    private readonly int _batchSize = 100;
     private string _libraryName;
 
     protected CallLibraryScannerHandler(
@@ -74,7 +75,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()), cancellationToken);
                 _toReindex.Clear();
             }
-                    
+
             if (_toRemove.Count > 0)
             {
                 await _channel.WriteAsync(new RemoveMediaItems(_toReindex.ToArray()), cancellationToken);
@@ -104,10 +105,10 @@ public abstract class CallLibraryScannerHandler<TRequest>
                 if (logEvent.Properties.TryGetValue("SourceContext", out LogEventPropertyValue property))
                 {
                     log = log.ForContext(
-                        Serilog.Core.Constants.SourceContextPropertyName,
+                        Constants.SourceContextPropertyName,
                         property.ToString().Trim('"'));
                 }
-                
+
                 log.Write(
                     new LogEvent(
                         logEvent.Timestamp.ToLocalTime(),
@@ -143,7 +144,7 @@ public abstract class CallLibraryScannerHandler<TRequest>
                         await _channel.WriteAsync(new ReindexMediaItems(_toReindex.ToArray()));
                         _toReindex.Clear();
                     }
-                    
+
                     _toRemove.AddRange(progressUpdate.ItemsToRemove);
                     if (_toRemove.Count >= _batchSize)
                     {

@@ -5,7 +5,7 @@ namespace ErsatzTV.Application.Jellyfin;
 
 public class
     GetJellyfinLibrariesBySourceIdHandler : IRequestHandler<GetJellyfinLibrariesBySourceId,
-        List<JellyfinLibraryViewModel>>
+    List<JellyfinLibraryViewModel>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
 

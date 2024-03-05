@@ -139,6 +139,7 @@
             {
                 await _table.ReloadServerData();
             }
+
             if (_selectedSchedule == programSchedule)
             {
                 _selectedSchedule = null;
@@ -166,7 +167,7 @@
         List<ProgramScheduleViewModel> schedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token);
         IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase));
 
-    // TODO: properly page this data
+        // TODO: properly page this data
         return new TableData<ProgramScheduleViewModel>
         {
             TotalItems = schedules.Count,
@@ -181,7 +182,7 @@
         List<ProgramScheduleItemViewModel> scheduleItems = await Mediator.Send(new GetProgramScheduleItems(_selectedSchedule.Id), _cts.Token);
         IOrderedEnumerable<ProgramScheduleItemViewModel> sorted = scheduleItems.OrderBy(s => s.Index);
 
-    // TODO: properly page this data
+        // TODO: properly page this data
         return new TableData<ProgramScheduleItemViewModel>
         {
             TotalItems = scheduleItems.Count,

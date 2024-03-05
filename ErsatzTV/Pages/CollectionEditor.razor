@@ -48,11 +48,12 @@
         if (IsEdit)
         {
             Option<MediaCollectionViewModel> maybeCollection = await _mediator.Send(new GetCollectionById(Id), _cts.Token);
-            maybeCollection.IfSome(collection =>
-            {
-                _model.Id = collection.Id;
-                _model.Name = collection.Name;
-            });
+            maybeCollection.IfSome(
+                collection =>
+                {
+                    _model.Id = collection.Id;
+                    _model.Name = collection.Name;
+                });
         }
         else
         {
@@ -73,9 +74,7 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(new UpdateCollection(Id, _model.Name), _cts.Token)).LeftToSeq() :
-                (await _mediator.Send(new CreateCollection(_model.Name), _cts.Token)).LeftToSeq();
+            Seq<BaseError> errorMessage = IsEdit ? (await _mediator.Send(new UpdateCollection(Id, _model.Name), _cts.Token)).LeftToSeq() : (await _mediator.Send(new CreateCollection(_model.Name), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

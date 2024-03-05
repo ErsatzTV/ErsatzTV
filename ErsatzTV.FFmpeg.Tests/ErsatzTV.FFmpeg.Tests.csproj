@@ -10,15 +10,15 @@
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="6.12.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
         <PackageReference Include="NSubstitute" Version="5.1.0" />
-        <PackageReference Include="NUnit" Version="4.0.1" />
+        <PackageReference Include="NUnit" Version="4.1.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
         <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
         <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
         <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
         <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
-        <PackageReference Include="coverlet.collector" Version="6.0.0">
+        <PackageReference Include="coverlet.collector" Version="6.0.1">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

@@ -148,7 +148,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             subtitles = subtitles.Filter(s => s.SubtitleKind is not SubtitleKind.Embedded).ToList();
         }
 
-        foreach (Subtitle subtitle in subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage).ToList())
+        foreach (Subtitle subtitle in subtitles.Filter(s => s.SubtitleKind is SubtitleKind.Embedded && !s.IsImage)
+                     .ToList())
         {
             if (subtitle.IsExtracted == false)
             {
@@ -167,7 +168,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 subtitles.Remove(subtitle);
             }
         }
-        
+
         var allCodes = new List<string>();
         string language = (preferredSubtitleLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))

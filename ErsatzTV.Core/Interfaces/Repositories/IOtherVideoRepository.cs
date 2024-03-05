@@ -9,6 +9,7 @@ public interface IOtherVideoRepository
         LibraryPath libraryPath,
         LibraryFolder libraryFolder,
         string path);
+
     Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath);
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
     Task<bool> AddGenre(OtherVideoMetadata metadata, Genre genre);

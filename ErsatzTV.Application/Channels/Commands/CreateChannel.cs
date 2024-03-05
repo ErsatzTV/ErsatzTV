@@ -3,8 +3,7 @@ using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Channels;
 
-public record CreateChannel
-(
+public record CreateChannel(
     string Name,
     string Number,
     string Group,
