@@ -10,7 +10,7 @@ public class BlockConfiguration : IEntityTypeConfiguration<Block>
     {
         builder.ToTable("Block");
 
-        builder.HasIndex(b => b.Name)
+        builder.HasIndex(b => new { b.BlockGroupId, b.Name })
             .IsUnique();
 
         builder.HasMany(b => b.Items)
