@@ -293,7 +293,17 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Nut:
-                pipelineSteps.Add(new OutputFormatNut());
+                // mkv doesn't want to store rawvideo with yuv420p10le, so we have to use NUT
+                if (desiredState.BitDepth > 8)
+                {
+                    pipelineSteps.Add(new OutputFormatNut());
+                }
+                else
+                {
+                    // yuv420p seems to work better with mkv (NUT results in duplicate PTS)
+                    pipelineSteps.Add(new OutputFormatMkv());
+                }
+
                 pipelineSteps.Add(new PipeProtocol());
                 break;
             case OutputFormatKind.Mp4:
