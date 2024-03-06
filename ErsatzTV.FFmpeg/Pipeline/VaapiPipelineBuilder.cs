@@ -322,14 +322,15 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                     currentState.PixelFormat.Map(f => f.FFmpegName),
                     format.FFmpegName);
 
+                // NV12 is 8-bit, and Intel VAAPI seems to REQUIRE NV12
+                // NUT is fine with YUV420P
+                if (format is PixelFormatYuv420P && ffmpegState.OutputFormat is not OutputFormatKind.Nut)
+                {
+                    format = new PixelFormatNv12(format.Name);
+                }
+
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    // NV12 is 8-bit
-                    if (format is PixelFormatYuv420P)
-                    {
-                        format = new PixelFormatNv12(format.Name);
-                    }
-
                     result.Add(new VaapiFormatFilter(format));
                 }
                 else
