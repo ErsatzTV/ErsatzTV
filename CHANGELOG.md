@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow playback of items with any positive duration, including less than one second
 - Fix VAAPI transcoding of OTA content containing A53 CC data
 - Fix AV1 software decoder priority (`libdav1d`, `libaom-av1`, `av1`)
+- Fix some stream failures caused by loudnorm filter
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
@@ -55,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Do not unnecessarily update the search index during media server library scans
 - Use different library for reading song metadata that supports multiple tag entries
 - Update `/iptv` routing to make UI completely inaccessible from that path prefix
+- Use CUDA 11 instead of CUDA 12 in NVIDIA docker image to significantly lower required driver version
 
 ## [0.8.5-beta] - 2024-01-30
 ### Added
