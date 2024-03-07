@@ -416,9 +416,11 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     {
         if (audioInputFile.DesiredState.NormalizeLoudnessFilter is not AudioFilter.None)
         {
-            _audioInputFile.Iter(
-                f => f.FilterSteps.Add(
-                    new NormalizeLoudnessFilter(audioInputFile.DesiredState.NormalizeLoudnessFilter)));
+            var filter = new NormalizeLoudnessFilter(
+                audioInputFile.DesiredState.NormalizeLoudnessFilter,
+                audioInputFile.DesiredState.AudioSampleRate);
+
+            _audioInputFile.Iter(f => f.FilterSteps.Add(filter));
         }
     }
 
