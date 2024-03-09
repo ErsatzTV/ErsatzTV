@@ -14,9 +14,7 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ISearchIndex _searchIndex;
 
-    public DeleteLocalLibraryHandler(
-        IDbContextFactory<TvContext> dbContextFactory,
-        ISearchIndex searchIndex)
+    public DeleteLocalLibraryHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchIndex searchIndex)
     {
         _dbContextFactory = dbContextFactory;
         _searchIndex = searchIndex;
@@ -34,14 +32,39 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
     private async Task<Unit> DoDeletion(TvContext dbContext, LocalLibrary localLibrary)
     {
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
-                @"SELECT MediaItem.Id FROM MediaItem
-                      INNER JOIN LibraryPath LP on MediaItem.LibraryPathId = LP.Id
-                      WHERE LP.LibraryId = @LibraryId",
+                """
+                SELECT MediaItem.Id FROM MediaItem
+                    INNER JOIN LibraryPath LP on MediaItem.LibraryPathId = LP.Id
+                    WHERE LP.LibraryId = @LibraryId
+                """,
                 new { LibraryId = localLibrary.Id })
             .Map(result => result.ToList());
 
         await _searchIndex.RemoveItems(ids);
         _searchIndex.Commit();
+
+        await dbContext.Connection.ExecuteAsync(
+            """
+            DELETE FROM MediaItem WHERE Id IN
+            (
+                SELECT MI.Id FROM MediaItem MI
+                INNER JOIN LibraryPath LP ON MI.LibraryPathId = LP.Id
+                WHERE LP.LibraryId = @LibraryId
+            )
+            """,
+            new { LibraryId = localLibrary.Id });
+
+        // delete all library folders (children first)
+        IOrderedQueryable<LibraryFolder> orderedFolders = dbContext.LibraryFolders
+            .Filter(lf => lf.LibraryPath.LibraryId == localLibrary.Id)
+            .OrderByDescending(lp => lp.Path.Length);
+
+        foreach (LibraryFolder folder in orderedFolders)
+        {
+            await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM LibraryFolder WHERE Id = @LibraryFolderId",
+                new { LibraryFolderId = folder.Id });
+        }
 
         dbContext.LocalLibraries.Remove(localLibrary);
         await dbContext.SaveChangesAsync();
