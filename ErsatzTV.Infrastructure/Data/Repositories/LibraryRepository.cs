@@ -166,7 +166,7 @@ public class LibraryRepository : ILibraryRepository
 
         // load from db or create new folder
         LibraryFolder knownFolder = await libraryPath.LibraryFolders
-            .Filter(f => f.Path == folder)
+            .Filter(f => f.Path == folder && f.LibraryPathId == libraryPath.Id)
             .HeadOrNone()
             .IfNoneAsync(CreateNewFolder(libraryPath, maybeParentFolder, folder));
 
