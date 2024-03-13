@@ -48,6 +48,6 @@ public class CreateBlockHandler(IDbContextFactory<TvContext> dbContextFactory)
 
         return maybeExisting.IsSome
             ? BaseError.New($"A block named \"{request.Name}\" already exists in that block group")
-            : request.Name;
+            : Success<BaseError, string>(request.Name);
     }
 }
