@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix VAAPI transcoding of OTA content containing A53 CC data
 - Fix AV1 software decoder priority (`libdav1d`, `libaom-av1`, `av1`)
 - Fix some stream failures caused by loudnorm filter
+- Fix multi-collection editor improperly disabling collections/smart collections that haven't already been added to the multi-collection
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
