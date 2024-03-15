@@ -15,6 +15,7 @@ public class MultiCollectionSmartItemEditViewModel : MultiCollectionItemEditView
             _smartCollection = value;
 
             Collection = new MediaCollectionViewModel(
+                ProgramScheduleItemCollectionType.SmartCollection,
                 _smartCollection.Id,
                 _smartCollection.Name,
                 false,
