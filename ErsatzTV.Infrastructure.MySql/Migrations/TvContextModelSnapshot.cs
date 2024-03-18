@@ -17,7 +17,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -765,7 +765,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Genre");
+                    b.ToTable("Genre", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.ImageFolderDuration", b =>
@@ -1335,7 +1335,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Mood");
+                    b.ToTable("Mood", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MovieMetadata", b =>
@@ -1447,7 +1447,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("SmartCollectionId");
 
-                    b.ToTable("MultiCollectionSmartItem");
+                    b.ToTable("MultiCollectionSmartItem", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoArtist", b =>
@@ -1468,7 +1468,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("MusicVideoMetadataId");
 
-                    b.ToTable("MusicVideoArtist");
+                    b.ToTable("MusicVideoArtist", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
@@ -2057,7 +2057,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BlockGroupId", "Name")
+                    b.HasIndex("BlockGroupId");
+
+                    b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("Block", (string)null);
@@ -2540,7 +2542,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("ArtistMetadataId");
 
-                    b.ToTable("Style");
+                    b.ToTable("Style", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Subtitle", b =>
@@ -2702,7 +2704,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("SongMetadataId");
 
-                    b.ToTable("Tag");
+                    b.ToTable("Tag", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
@@ -2853,7 +2855,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("EmbyLibraryId");
 
-                    b.ToTable("EmbyPathInfo");
+                    b.ToTable("EmbyPathInfo", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Jellyfin.JellyfinPathInfo", b =>
@@ -2877,7 +2879,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasIndex("JellyfinLibraryId");
 
-                    b.ToTable("JellyfinPathInfo");
+                    b.ToTable("JellyfinPathInfo", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.EmbyLibrary", b =>
@@ -3904,7 +3906,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasForeignKey("ProgramScheduleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutAnchor", "Anchor", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.Playout.Anchor#ErsatzTV.Core.Domain.PlayoutAnchor", "Anchor", b1 =>
                         {
                             b1.Property<int>("PlayoutId")
                                 .HasColumnType("int");
@@ -3934,7 +3936,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("PlayoutId");
 
-                            b1.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
+                            b1.OwnsOne("ErsatzTV.Core.Domain.Playout.Anchor#ErsatzTV.Core.Domain.PlayoutAnchor.ScheduleItemsEnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
                                 {
                                     b2.Property<int>("PlayoutAnchorPlayoutId")
                                         .HasColumnType("int");
@@ -4017,7 +4019,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasForeignKey("SmartCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutProgramScheduleAnchor.EnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutProgramScheduleAnchorId")
                                 .HasColumnType("int");
@@ -4063,7 +4065,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
+                    b.OwnsOne("ErsatzTV.Core.Domain.PlayoutScheduleItemFillGroupIndex.EnumeratorState#ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutScheduleItemFillGroupIndexId")
                                 .HasColumnType("int");

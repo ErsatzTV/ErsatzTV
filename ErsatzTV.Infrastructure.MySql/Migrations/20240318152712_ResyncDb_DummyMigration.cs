@@ -6,19 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     /// <inheritdoc />
-    public partial class Update_BlockUniqueIndex : Migration
+    public partial class ResyncDb_DummyMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Block_BlockGroupId",
-                table: "Block");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Block_Name",
-                table: "Block");
-
             migrationBuilder.AlterColumn<int>(
                 name: "Id",
                 table: "Writer",
@@ -648,21 +640,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                 oldClrType: typeof(int),
                 oldType: "int")
                 .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Block_BlockGroupId_Name",
-                table: "Block",
-                columns: new[] { "BlockGroupId", "Name" },
-                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Block_BlockGroupId_Name",
-                table: "Block");
-
             migrationBuilder.AlterColumn<int>(
                 name: "Id",
                 table: "Writer",
@@ -1292,17 +1274,6 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                 oldClrType: typeof(int),
                 oldType: "int")
                 .OldAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Block_BlockGroupId",
-                table: "Block",
-                column: "BlockGroupId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Block_Name",
-                table: "Block",
-                column: "Name",
-                unique: true);
         }
     }
 }
