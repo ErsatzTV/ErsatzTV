@@ -12,15 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20240305161535_Update_BlockUniqueIndex")]
-    partial class Update_BlockUniqueIndex
+    [Migration("20240318152712_ResyncDb_DummyMigration")]
+    partial class ResyncDb_DummyMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -2060,7 +2060,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BlockGroupId", "Name")
+                    b.HasIndex("BlockGroupId");
+
+                    b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("Block", (string)null);
