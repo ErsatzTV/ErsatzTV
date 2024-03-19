@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -85,7 +86,10 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
 
         foreach (EmbyPathReplacement replacement in maybeReplacement)
         {
-            string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
+            string finalPath = Regex.Replace(path,
+                Regex.Escape(replacement.EmbyPath),
+                Regex.Replace(replacement.LocalPath ?? string.Empty, "\\$[0-9]+", @"$$$0"),
+                RegexOptions.IgnoreCase);
             if (IsWindows(replacement.EmbyMediaSource, path) && !isTargetPlatformWindows)
             {
                 finalPath = finalPath.Replace(@"\", @"/");

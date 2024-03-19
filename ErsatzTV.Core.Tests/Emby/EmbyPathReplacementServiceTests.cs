@@ -164,6 +164,38 @@ public class EmbyPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
+    
+    [Test]
+    public async Task EmbyWindows_To_EtvLinux_UncPathWithMixedCaseServerName()
+    {
+        var replacements = new List<EmbyPathReplacement>
+        {
+            new()
+            {
+                Id = 1,
+                EmbyPath = @"\\ServerName\Something\Some Shared Folder\",
+                LocalPath = @"/mnt/something else/Some Shared Folder/",
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Windows" }
+            }
+        };
+
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetEmbyPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
+
+        var service = new EmbyPathReplacementService(
+            repo,
+            runtime,
+            Substitute.For<ILogger<EmbyPathReplacementService>>());
+
+        string result = await service.GetReplacementEmbyPath(
+            0,
+            @"\\SERVERNAME\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+
+        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+    }
 
     [Test]
     public async Task EmbyLinux_To_EtvWindows()

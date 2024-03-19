@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -51,7 +52,10 @@ public class PlexPathReplacementService : IPlexPathReplacementService
 
         foreach (PlexPathReplacement replacement in maybeReplacement)
         {
-            string finalPath = path.Replace(replacement.PlexPath, replacement.LocalPath);
+            string finalPath = Regex.Replace(path,
+                Regex.Escape(replacement.PlexPath),
+                Regex.Replace(replacement.LocalPath ?? string.Empty, "\\$[0-9]+", @"$$$0"),
+                RegexOptions.IgnoreCase);
             if (IsWindows(replacement.PlexMediaSource) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
             {
                 finalPath = finalPath.Replace(@"\", @"/");

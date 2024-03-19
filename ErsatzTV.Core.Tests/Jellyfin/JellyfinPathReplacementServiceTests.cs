@@ -164,6 +164,38 @@ public class JellyfinPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
+    
+    [Test]
+    public async Task JellyfinWindows_To_EtvLinux_UncPathWithMixedCaseServerName()
+    {
+        var replacements = new List<JellyfinPathReplacement>
+        {
+            new()
+            {
+                Id = 1,
+                JellyfinPath = @"\\ServerName\Something\Some Shared Folder\",
+                LocalPath = @"/mnt/something else/Some Shared Folder/",
+                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Windows" }
+            }
+        };
+
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetJellyfinPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
+
+        var service = new JellyfinPathReplacementService(
+            repo,
+            runtime,
+            Substitute.For<ILogger<JellyfinPathReplacementService>>());
+
+        string result = await service.GetReplacementJellyfinPath(
+            0,
+            @"\\SERVERNAME\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+
+        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+    }
 
     [Test]
     public async Task JellyfinLinux_To_EtvWindows()
