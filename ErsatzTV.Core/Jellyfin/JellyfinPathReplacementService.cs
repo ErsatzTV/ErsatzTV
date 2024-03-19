@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -85,7 +86,10 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
 
         foreach (JellyfinPathReplacement replacement in maybeReplacement)
         {
-            string finalPath = path.Replace(replacement.JellyfinPath, replacement.LocalPath);
+            string finalPath = Regex.Replace(path,
+                Regex.Escape(replacement.JellyfinPath),
+                Regex.Replace(replacement.LocalPath ?? string.Empty, "\\$[0-9]+", @"$$$0"),
+                RegexOptions.IgnoreCase);
             if (IsWindows(replacement.JellyfinMediaSource, path) && !isTargetPlatformWindows)
             {
                 finalPath = finalPath.Replace(@"\", @"/");

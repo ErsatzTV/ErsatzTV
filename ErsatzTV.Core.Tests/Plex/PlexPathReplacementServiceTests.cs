@@ -140,6 +140,38 @@ public class PlexPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
+    
+    [Test]
+    public async Task PlexWindows_To_EtvLinux_UncPathWithMixedCaseServerName()
+    {
+        var replacements = new List<PlexPathReplacement>
+        {
+            new()
+            {
+                Id = 1,
+                PlexPath = @"\\ServerName\Something\Some Shared Folder\",
+                LocalPath = @"/mnt/something else/Some Shared Folder/",
+                PlexMediaSource = new PlexMediaSource { Platform = "Windows" }
+            }
+        };
+
+        IMediaSourceRepository repo = Substitute.For<IMediaSourceRepository>();
+        repo.GetPlexPathReplacementsByLibraryId(Arg.Any<int>()).Returns(replacements.AsTask());
+
+        IRuntimeInfo runtime = Substitute.For<IRuntimeInfo>();
+        runtime.IsOSPlatform(OSPlatform.Windows).Returns(false);
+
+        var service = new PlexPathReplacementService(
+            repo,
+            runtime,
+            Substitute.For<ILogger<PlexPathReplacementService>>());
+
+        string result = await service.GetReplacementPlexPath(
+            0,
+            @"\\SERVERNAME\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+
+        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+    }
 
     [Test]
     public async Task PlexLinux_To_EtvWindows()
