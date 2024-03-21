@@ -64,6 +64,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string ShowGenreField = "show_genre";
     internal const string ShowTagField = "show_tag";
     internal const string ShowStudioField = "show_studio";
+    internal const string ShowContentRatingField = "show_content_rating";
     internal const string MetadataKindField = "metadata_kind";
     internal const string VideoCodecField = "video_codec";
     internal const string VideoDynamicRange = "video_dynamic_range";
@@ -113,7 +114,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 41;
+    public int Version => 42;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -735,6 +736,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
                 }
+                
+                if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
+                {
+                    foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
+                             .Map(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        doc.Add(new StringField(ShowContentRatingField, contentRating, Field.Store.NO));
+                    }
+                }
 
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);
                 await AddLanguages(searchRepository, doc, languages);
@@ -1017,8 +1027,17 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     {
                         doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
                     }
+                    
+                    if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
+                    {
+                        foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
+                                 .Map(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                        {
+                            doc.Add(new StringField(ShowContentRatingField, contentRating, Field.Store.NO));
+                        }
+                    }
                 }
-
+                
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                 {
                     doc.Add(new TextField(TitleField, metadata.Title, Field.Store.NO));
@@ -1353,16 +1372,20 @@ public sealed class LuceneSearchIndex : ISearchIndex
         doc.Get(TypeField, CultureInfo.InvariantCulture),
         Convert.ToInt32(doc.Get(IdField, CultureInfo.InvariantCulture), CultureInfo.InvariantCulture));
 
-    internal static Query ParseQuery(string query)
+    internal static Query ParseQuery(string query, bool useCustomAnalyzers = true)
     {
         using var analyzer = new StandardAnalyzer(AppLuceneVersion);
-        var customAnalyzers = new Dictionary<string, Analyzer>
+        var customAnalyzers = new Dictionary<string, Analyzer>();
+
+        if (useCustomAnalyzers)
         {
-            { ContentRatingField, new KeywordAnalyzer() },
-            { StateField, new KeywordAnalyzer() }
-        };
+            customAnalyzers.Add(ShowContentRatingField, new KeywordAnalyzer());
+            customAnalyzers.Add(ContentRatingField, new KeywordAnalyzer());
+            customAnalyzers.Add(StateField, new KeywordAnalyzer());
+        }
+
         using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
-        QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
+        QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, [TitleField], analyzerWrapper);
         parser.AllowLeadingWildcard = true;
         return ParseQuery(query, parser);
     }

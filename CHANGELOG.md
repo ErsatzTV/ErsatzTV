@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-- Add `show_studio` to search index for seasons and episodes
+- Add `show_studio` and `show_content_rating` to search index for seasons and episodes
 - Add two new global subtitle settings:
   - `Use embedded subtitles`
     - Default value: `true`
