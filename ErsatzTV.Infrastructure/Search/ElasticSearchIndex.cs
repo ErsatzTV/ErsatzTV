@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 41;
+    public int Version => 42;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -162,7 +162,7 @@ public class ElasticSearchIndex : ISearchIndex
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = LuceneSearchIndex.ParseQuery(query);
+        Query parsedQuery = LuceneSearchIndex.ParseQuery(query, false);
 
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
@@ -238,6 +238,7 @@ public class ElasticSearchIndex : ISearchIndex
                         .Text(t => t.ShowGenre, t => t.Store(false))
                         .Text(t => t.ShowTag, t => t.Store(false))
                         .Text(t => t.ShowStudio, t => t.Store(false))
+                        .Keyword(t => t.ShowContentRating, t => t.Store(false))
                         .Text(t => t.Style, t => t.Store(false))
                         .Text(t => t.Mood, t => t.Store(false))
                         .Text(t => t.Album, t => t.Store(false))
@@ -413,6 +414,7 @@ public class ElasticSearchIndex : ISearchIndex
                     ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList(),
                     ShowTag = showMetadata.Tags.Map(t => t.Name).ToList(),
                     ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList(),
+                    ShowContentRating = GetContentRatings(showMetadata.ContentRating),
                     Language = await GetLanguages(
                         searchRepository,
                         await searchRepository.GetLanguagesForSeason(season)),
@@ -614,6 +616,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList();
                     doc.ShowTag = showMetadata.Tags.Map(t => t.Name).ToList();
                     doc.ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList();
+                    doc.ShowContentRating = GetContentRatings(showMetadata.ContentRating);
                 }
 
                 AddStatistics(doc, episode.MediaVersions);
