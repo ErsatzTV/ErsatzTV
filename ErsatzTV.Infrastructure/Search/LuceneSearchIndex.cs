@@ -1372,22 +1372,24 @@ public sealed class LuceneSearchIndex : ISearchIndex
         doc.Get(TypeField, CultureInfo.InvariantCulture),
         Convert.ToInt32(doc.Get(IdField, CultureInfo.InvariantCulture), CultureInfo.InvariantCulture));
 
-    internal static Query ParseQuery(string query, bool useCustomAnalyzers = true)
+    internal static Query ParseQuery(string query)
     {
-        using var analyzer = new StandardAnalyzer(AppLuceneVersion);
-        var customAnalyzers = new Dictionary<string, Analyzer>();
-
-        if (useCustomAnalyzers)
+        using var analyzer = new SimpleAnalyzer(AppLuceneVersion);
+        var customAnalyzers = new Dictionary<string, Analyzer>
         {
-            customAnalyzers.Add(ShowContentRatingField, new KeywordAnalyzer());
-            customAnalyzers.Add(ContentRatingField, new KeywordAnalyzer());
-            customAnalyzers.Add(StateField, new KeywordAnalyzer());
-        }
-
+            { ShowContentRatingField, new KeywordAnalyzer() },
+            { ContentRatingField, new KeywordAnalyzer() },
+            { StateField, new KeywordAnalyzer() },
+            { PlotField, new StandardAnalyzer(AppLuceneVersion) }
+        };
         using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
         QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, [TitleField], analyzerWrapper);
         parser.AllowLeadingWildcard = true;
-        return ParseQuery(query, parser);
+        Query result = ParseQuery(query, parser);
+
+        Serilog.Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
+
+        return result;
     }
 
     private static Query ParseQuery(string searchQuery, QueryParser parser)

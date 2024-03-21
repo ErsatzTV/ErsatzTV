@@ -162,7 +162,7 @@ public class ElasticSearchIndex : ISearchIndex
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = LuceneSearchIndex.ParseQuery(query, false);
+        Query parsedQuery = LuceneSearchIndex.ParseQuery(query);
 
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)
