@@ -32,6 +32,7 @@ public class PlexService : BackgroundService
         await Task.Yield();
 
         await _systemStartup.WaitForDatabase(stoppingToken);
+        await _systemStartup.WaitForSearchIndex(stoppingToken);
         if (stoppingToken.IsCancellationRequested)
         {
             return;

@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 42;
+    public int Version => 43;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -162,7 +162,7 @@ public class ElasticSearchIndex : ISearchIndex
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = LuceneSearchIndex.ParseQuery(query);
+        Query parsedQuery = SearchQueryParser.ParseQuery(query);
 
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Index(IndexName)

@@ -17,14 +17,17 @@ public class ScannerService : BackgroundService
     private readonly ChannelReader<IScannerBackgroundServiceRequest> _channel;
     private readonly ILogger<ScannerService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly SystemStartup _systemStartup;
 
     public ScannerService(
         ChannelReader<IScannerBackgroundServiceRequest> channel,
         IServiceScopeFactory serviceScopeFactory,
+        SystemStartup systemStartup,
         ILogger<ScannerService> logger)
     {
         _channel = channel;
         _serviceScopeFactory = serviceScopeFactory;
+        _systemStartup = systemStartup;
         _logger = logger;
     }
 
@@ -32,6 +35,8 @@ public class ScannerService : BackgroundService
     {
         await Task.Yield();
 
+        await _systemStartup.WaitForDatabase(stoppingToken);
+        await _systemStartup.WaitForSearchIndex(stoppingToken);
         try
         {
             _logger.LogInformation("Scanner service started");
