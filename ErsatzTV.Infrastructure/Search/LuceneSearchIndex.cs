@@ -30,7 +30,7 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public sealed class LuceneSearchIndex : ISearchIndex
 {
-    private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
+    internal const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
 
     internal const string IdField = "id";
     internal const string TypeField = "type";
@@ -220,7 +220,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query parsedQuery = ParseQuery(query);
+        Query parsedQuery = SearchQueryParser.ParseQuery(query);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
@@ -1371,47 +1371,6 @@ public sealed class LuceneSearchIndex : ISearchIndex
     private static SearchItem ProjectToSearchItem(Document doc) => new(
         doc.Get(TypeField, CultureInfo.InvariantCulture),
         Convert.ToInt32(doc.Get(IdField, CultureInfo.InvariantCulture), CultureInfo.InvariantCulture));
-
-    internal static Query ParseQuery(string query)
-    {
-        using var analyzer = new SimpleAnalyzer(AppLuceneVersion);
-        var customAnalyzers = new Dictionary<string, Analyzer>
-        {
-            { IdField, new KeywordAnalyzer() },
-            { LibraryIdField, new KeywordAnalyzer() },
-            { LibraryFolderIdField, new KeywordAnalyzer() },
-            { TypeField, new KeywordAnalyzer() },
-            { TagField, new KeywordAnalyzer() },
-            { ShowTagField, new KeywordAnalyzer() },
-            { ContentRatingField, new KeywordAnalyzer() },
-            { ShowContentRatingField, new KeywordAnalyzer() },
-            { StateField, new KeywordAnalyzer() },
-            { PlotField, new StandardAnalyzer(AppLuceneVersion) }
-        };
-        using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
-        QueryParser parser = new CustomMultiFieldQueryParser(AppLuceneVersion, [TitleField], analyzerWrapper);
-        parser.AllowLeadingWildcard = true;
-        Query result = ParseQuery(query, parser);
-
-        Serilog.Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
-
-        return result;
-    }
-
-    private static Query ParseQuery(string searchQuery, QueryParser parser)
-    {
-        Query query;
-        try
-        {
-            query = parser.Parse(searchQuery.Trim());
-        }
-        catch (ParseException)
-        {
-            query = parser.Parse(QueryParserBase.Escape(searchQuery.Trim()));
-        }
-
-        return query;
-    }
 
     private static void AddStatistics(Document doc, List<MediaVersion> mediaVersions)
     {
