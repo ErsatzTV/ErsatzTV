@@ -1377,6 +1377,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using var analyzer = new SimpleAnalyzer(AppLuceneVersion);
         var customAnalyzers = new Dictionary<string, Analyzer>
         {
+            { IdField, new KeywordAnalyzer() },
+            { LibraryIdField, new KeywordAnalyzer() },
+            { LibraryFolderIdField, new KeywordAnalyzer() },
             { TypeField, new KeywordAnalyzer() },
             { TagField, new KeywordAnalyzer() },
             { ShowTagField, new KeywordAnalyzer() },
