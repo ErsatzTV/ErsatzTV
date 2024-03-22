@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 42;
+    public int Version => 43;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,

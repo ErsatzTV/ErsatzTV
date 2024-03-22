@@ -9,23 +9,39 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public static class SearchQueryParser
 {
-    internal static Query ParseQuery(string query)
+    internal static Analyzer AnalyzerWrapper()
     {
-        using var analyzer = new SimpleAnalyzer(LuceneSearchIndex.AppLuceneVersion);
+        using var defaultAnalyzer = new CustomAnalyzer(LuceneSearchIndex.AppLuceneVersion);
+        using var keywordAnalyzer = new KeywordAnalyzer();
         var customAnalyzers = new Dictionary<string, Analyzer>
         {
-            { LuceneSearchIndex.IdField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.LibraryIdField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.LibraryFolderIdField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.TypeField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.TagField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.ShowTagField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.ContentRatingField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.ShowContentRatingField, new KeywordAnalyzer() },
-            { LuceneSearchIndex.StateField, new KeywordAnalyzer() },
+            // StringField should use KeywordAnalyzer
+            { LuceneSearchIndex.IdField, keywordAnalyzer },
+            { LuceneSearchIndex.TypeField, keywordAnalyzer },
+            { LuceneSearchIndex.SortTitleField, keywordAnalyzer },
+            { LuceneSearchIndex.LibraryIdField, keywordAnalyzer },
+            { LuceneSearchIndex.TitleAndYearField, keywordAnalyzer },
+            { LuceneSearchIndex.JumpLetterField, keywordAnalyzer },
+            { LuceneSearchIndex.StateField, keywordAnalyzer },
+            { LuceneSearchIndex.ContentRatingField, keywordAnalyzer },
+            { LuceneSearchIndex.ReleaseDateField, keywordAnalyzer },
+            { LuceneSearchIndex.AddedDateField, keywordAnalyzer },
+            { LuceneSearchIndex.TraktListField, keywordAnalyzer },
+            { LuceneSearchIndex.ShowContentRatingField, keywordAnalyzer },
+            { LuceneSearchIndex.LibraryFolderIdField, keywordAnalyzer },
+            { LuceneSearchIndex.VideoCodecField, keywordAnalyzer },
+            { LuceneSearchIndex.VideoDynamicRange, keywordAnalyzer },
+
             { LuceneSearchIndex.PlotField, new StandardAnalyzer(LuceneSearchIndex.AppLuceneVersion) }
         };
-        using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
+
+        return new PerFieldAnalyzerWrapper(defaultAnalyzer, customAnalyzers);
+    }
+
+    public static Query ParseQuery(string query)
+    {
+        using Analyzer analyzerWrapper = AnalyzerWrapper();
+        
         QueryParser parser = new CustomMultiFieldQueryParser(
             LuceneSearchIndex.AppLuceneVersion,
             [LuceneSearchIndex.TitleField],

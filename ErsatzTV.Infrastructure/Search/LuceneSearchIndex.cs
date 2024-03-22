@@ -11,12 +11,8 @@ using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
 using LanguageExt.UnsafeValueAccess;
 using Lucene.Net.Analysis;
-using Lucene.Net.Analysis.Core;
-using Lucene.Net.Analysis.Miscellaneous;
-using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Sandbox.Queries;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
@@ -114,7 +110,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 42;
+    public int Version => 43;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -138,7 +134,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             }
 
             _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            Analyzer analyzer = SearchQueryParser.AnalyzerWrapper();
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
                 { OpenMode = OpenMode.CREATE_OR_APPEND };
             _writer = new IndexWriter(_directory, indexConfig);
@@ -295,7 +291,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         {
             using (var d = FSDirectory.Open(folder))
             {
-                using (var analyzer = new StandardAnalyzer(AppLuceneVersion))
+                using (Analyzer analyzer = SearchQueryParser.AnalyzerWrapper())
                 {
                     var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
                         { OpenMode = OpenMode.CREATE_OR_APPEND };
