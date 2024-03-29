@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - If it tests well for others, it *may* replace the current `HLS Segmenter` in a future release
 - Add setting to change XMLTV data from `Local` time zone to `UTC`
   - This is needed because some clients (incorrectly) ignore time zone specifier and require UTC times
+- Support `.ogv` video files in local libraries
 
 ### Fixed
 - Fix antiforgery error caused by reusing existing browser tabs across docker container restarts
