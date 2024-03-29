@@ -78,16 +78,32 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
+            System.Collections.Generic.HashSet<string> allMissingFiles =
+                await _libraryRepository.FindAllMissingFiles(libraryPath);
+
+            if (allMissingFiles.Count > 0)
+            {
+                _logger.LogDebug(
+                    "Library path {Path} has {Count} missing files",
+                    libraryPath.Path,
+                    allMissingFiles.Count);
+            }
+
             string normalizedLibraryPath = libraryPath.Path.TrimEnd(
                 Path.DirectorySeparatorChar,
                 Path.AltDirectorySeparatorChar);
             if (libraryPath.Path != normalizedLibraryPath)
             {
+                _logger.LogDebug(
+                    "Normalizing library path from {Original} to {Normalized}",
+                    libraryPath.Path,
+                    normalizedLibraryPath);
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
 
             if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
+                _logger.LogDebug("Adding folder to scanner queue: {Folder}", libraryPath.Path);
                 folderQueue.Enqueue(libraryPath.Path);
             }
 
@@ -96,6 +112,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                          .Filter(allFolders.Add)
                          .OrderBy(identity))
             {
+                _logger.LogDebug("Adding folder to scanner queue: {Folder}", folder);
                 folderQueue.Enqueue(folder);
             }
 
@@ -133,6 +150,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                              .Filter(allFolders.Add)
                              .OrderBy(identity))
                 {
+                    _logger.LogDebug("Adding folder to scanner queue: {Folder}", subdirectory);
                     folderQueue.Enqueue(subdirectory);
                 }
 
@@ -142,8 +160,18 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     maybeParentFolder,
                     otherVideoFolder);
 
+                bool hasMissingFiles = allFiles.Any(allMissingFiles.Contains);
+                bool isSameEtag = knownFolder.Etag == etag && !hasMissingFiles;
+
+                _logger.LogDebug(
+                    "Scanning other video folder {Folder}; etag {Etag}; last etag {LastEtag}; has missing files {HasMissingFiles}",
+                    otherVideoFolder,
+                    etag,
+                    knownFolder.Etag,
+                    hasMissingFiles);
+
                 // skip folder if etag matches
-                if (allFiles.Count == 0 || knownFolder.Etag == etag)
+                if (allFiles.Count == 0 || isSameEtag)
                 {
                     continue;
                 }
@@ -156,6 +184,8 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
+                    _logger.LogDebug("Processing other video file {File}", file);
+
                     Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
                         .GetOrAdd(libraryPath, knownFolder, file)
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
