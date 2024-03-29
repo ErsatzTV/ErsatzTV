@@ -161,18 +161,27 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     otherVideoFolder);
 
                 bool hasMissingFiles = allFiles.Any(allMissingFiles.Contains);
-                bool isSameEtag = knownFolder.Etag == etag && !hasMissingFiles;
+                bool isSameEtag = !hasMissingFiles && knownFolder.Etag == etag;
 
                 _logger.LogDebug(
-                    "Scanning other video folder {Folder}; etag {Etag}; last etag {LastEtag}; has missing files {HasMissingFiles}",
+                    "Scanning other video folder {Folder}; file count: {Count}, etag: {LastEtag} => {Etag}; has missing files: {HasMissingFiles}",
                     otherVideoFolder,
+                    allFiles.Count,
                     etag,
                     knownFolder.Etag,
                     hasMissingFiles);
 
-                // skip folder if etag matches
-                if (allFiles.Count == 0 || isSameEtag)
+                // skip empty folder
+                if (allFiles.Count == 0)
                 {
+                    _logger.LogDebug("Skipping empty other videos folder");
+                    continue;
+                }
+                
+                // skip folder if etag matches
+                if (isSameEtag)
+                {
+                    _logger.LogDebug("Skipping unchanged other videos folder, that contains no missing items");
                     continue;
                 }
 
