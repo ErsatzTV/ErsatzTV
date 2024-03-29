@@ -194,10 +194,12 @@ public abstract class CallLibraryScannerHandler<TRequest>
 
         string processFileName = Environment.ProcessPath ?? string.Empty;
         string processExecutable = Path.GetFileNameWithoutExtension(processFileName);
-        string folderName = Path.GetDirectoryName(
-            "dotnet".Equals(processExecutable, StringComparison.OrdinalIgnoreCase)
-                ? typeof(EntityIdResult).Assembly.Location
-                : processFileName);
+        string folderName = Path.GetDirectoryName(processFileName);
+        if ("dotnet".Equals(processExecutable, StringComparison.OrdinalIgnoreCase))
+        {
+            folderName = AppContext.BaseDirectory;
+        }
+
         if (!string.IsNullOrWhiteSpace(folderName))
         {
             string localFileName = Path.Combine(folderName, executable);
