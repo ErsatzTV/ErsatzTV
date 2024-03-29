@@ -193,9 +193,14 @@ public abstract class CallLibraryScannerHandler<TRequest>
             : "ErsatzTV.Scanner";
 
         string processFileName = Environment.ProcessPath ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(processFileName))
+        string processExecutable = Path.GetFileNameWithoutExtension(processFileName);
+        string folderName = Path.GetDirectoryName(
+            "dotnet".Equals(processExecutable, StringComparison.OrdinalIgnoreCase)
+                ? typeof(EntityIdResult).Assembly.Location
+                : processFileName);
+        if (!string.IsNullOrWhiteSpace(folderName))
         {
-            string localFileName = Path.Combine(Path.GetDirectoryName(processFileName) ?? string.Empty, executable);
+            string localFileName = Path.Combine(folderName, executable);
             if (File.Exists(localFileName))
             {
                 return localFileName;
