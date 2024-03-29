@@ -87,6 +87,12 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             return base.GetRangeQuery(LuceneSearchIndex.AddedDateField, "00000000", dateString, false, false);
         }
 
+        // assume asterisk always means wildcard
+        if (queryText.Contains('*'))
+        {
+            return GetWildcardQuery(field, queryText);
+        }
+        
         return base.GetFieldQuery(field, queryText, slop);
     }
 
