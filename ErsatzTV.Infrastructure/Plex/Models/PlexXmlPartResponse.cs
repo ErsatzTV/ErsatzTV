@@ -16,6 +16,18 @@ public class PlexXmlPartResponse
     [XmlAttribute("file")]
     public string File { get; set; }
 
+    [XmlAttribute("size")]
+    public long Size { get; set; }
+
+    [XmlAttribute("container")]
+    public string Container { get; set; }
+
+    [XmlAttribute("videoProfile")]
+    public string VideoProfile { get; set; }
+
+    [XmlAttribute("audioProfile")]
+    public string AudioProfile { get; set; }
+
     [XmlElement("Stream")]
     public List<PlexStreamResponse> Stream { get; set; }
 }

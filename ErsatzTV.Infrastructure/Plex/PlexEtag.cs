@@ -41,6 +41,21 @@ public class PlexEtag
 
                 bw.Write((byte)FieldKey.File);
                 bw.Write(part.File);
+
+                bw.Write((byte)FieldKey.Duration);
+                bw.Write(part.Duration);
+
+                bw.Write((byte)FieldKey.Size);
+                bw.Write(part.Size);
+
+                bw.Write((byte)FieldKey.Container);
+                bw.Write(part.Container ?? string.Empty);
+
+                bw.Write((byte)FieldKey.VideoProfile);
+                bw.Write(part.VideoProfile ?? string.Empty);
+
+                bw.Write((byte)FieldKey.AudioProfile);
+                bw.Write(part.AudioProfile ?? string.Empty);
             }
         }
 
@@ -205,6 +220,21 @@ public class PlexEtag
                 bw.Write((byte)FieldKey.File);
                 bw.Write(part.File);
 
+                bw.Write((byte)FieldKey.Duration);
+                bw.Write(part.Duration);
+
+                bw.Write((byte)FieldKey.Size);
+                bw.Write(part.Size);
+
+                bw.Write((byte)FieldKey.Container);
+                bw.Write(part.Container ?? string.Empty);
+
+                bw.Write((byte)FieldKey.VideoProfile);
+                bw.Write(part.VideoProfile ?? string.Empty);
+
+                bw.Write((byte)FieldKey.AudioProfile);
+                bw.Write(part.AudioProfile ?? string.Empty);
+
                 // stream id
                 foreach (PlexStreamResponse stream in part.Stream)
                 {
@@ -298,6 +328,12 @@ public class PlexEtag
         File = 30,
 
         ChildCount = 40,
-        Smart = 41 // smart collection bool
+        Smart = 41, // smart collection bool
+
+        Duration = 50,
+        Size = 51,
+        Container = 52,
+        VideoProfile = 53,
+        AudioProfile = 54
     }
 }
