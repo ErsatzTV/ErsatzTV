@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -19,6 +20,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
@@ -54,6 +56,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _mediator = mediator;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _client = client;
         _logger = logger;
     }
@@ -81,6 +84,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
+
+            ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
 
             if (ShouldIncludeFolder(libraryPath.Path))
             {
@@ -135,11 +140,24 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     libraryPath,
                     maybeParentFolder,
                     songFolder);
-
-                // skip folder if etag matches
-                if (allFiles.Count == 0 || knownFolder.Etag == etag)
+                
+                if (knownFolder.Etag == etag)
                 {
-                    continue;
+                    if (allFiles.Any(allTrashedItems.Contains))
+                    {
+                        _logger.LogDebug("Previously trashed items are now present in folder {Folder}", songFolder);
+                    }
+                    else
+                    {
+                        // etag matches and no trashed items are now present, continue to next folder
+                        continue;
+                    }
+                }
+                else
+                {
+                    _logger.LogDebug(
+                        "UPDATE: Etag has changed for folder {Folder}",
+                        songFolder);
                 }
 
                 _logger.LogDebug(

@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -19,6 +20,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -57,6 +59,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _mediator = mediator;
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _client = client;
         _logger = logger;
     }
@@ -78,16 +81,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             var allFolders = new System.Collections.Generic.HashSet<string>();
             var folderQueue = new Queue<string>();
 
-            System.Collections.Generic.HashSet<string> allMissingFiles =
-                await _libraryRepository.FindAllMissingFiles(libraryPath);
-
-            if (allMissingFiles.Count > 0)
-            {
-                _logger.LogDebug(
-                    "Library path {Path} has {Count} missing files",
-                    libraryPath.Path,
-                    allMissingFiles.Count);
-            }
+            ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
 
             string normalizedLibraryPath = libraryPath.Path.TrimEnd(
                 Path.DirectorySeparatorChar,
@@ -160,34 +154,24 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     maybeParentFolder,
                     otherVideoFolder);
 
-                bool hasMissingFiles = allFiles.Any(allMissingFiles.Contains);
-                bool isSameEtag = !hasMissingFiles && knownFolder.Etag == etag;
-
-                _logger.LogDebug(
-                    "Scanning other video folder {Folder}; file count: {Count}, etag: {LastEtag} => {Etag}; has missing files: {HasMissingFiles}",
-                    otherVideoFolder,
-                    allFiles.Count,
-                    etag,
-                    knownFolder.Etag,
-                    hasMissingFiles);
-
-                // skip empty folder
-                if (allFiles.Count == 0)
+                if (knownFolder.Etag == etag)
                 {
-                    _logger.LogDebug("Skipping empty other videos folder");
-                    continue;
+                    if (allFiles.Any(allTrashedItems.Contains))
+                    {
+                        _logger.LogDebug("Previously trashed items are now present in folder {Folder}", otherVideoFolder);
+                    }
+                    else
+                    {
+                        // etag matches and no trashed items are now present, continue to next folder
+                        continue;
+                    }
                 }
-                
-                // skip folder if etag matches
-                if (isSameEtag)
+                else
                 {
-                    _logger.LogDebug("Skipping unchanged other videos folder, that contains no missing items");
-                    continue;
+                    _logger.LogDebug(
+                        "UPDATE: Etag has changed for folder {Folder}",
+                        otherVideoFolder);
                 }
-
-                _logger.LogDebug(
-                    "UPDATE: Etag has changed for folder {Folder}",
-                    otherVideoFolder);
 
                 var hasErrors = false;
 

@@ -55,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where replacing files in Plex would be missed by subsequent ETV library scans
   - This fix will require a one-time re-scan of each Plex library in full
   - After the initial full scan, incremental scans will behave as normal
+- Fix edge case where some local episodes, music videos, other videos, songs, images would not automatically be restored from trash
 
 ### Changed
 - Log search index updates under scanner category at debug level, to indicate a potential cause for the UI being out of date
