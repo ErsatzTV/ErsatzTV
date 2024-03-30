@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -20,6 +21,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly IArtistRepository _artistRepository;
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -59,6 +61,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         _artistRepository = artistRepository;
         _musicVideoRepository = musicVideoRepository;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _mediator = mediator;
         _client = client;
         _logger = logger;
@@ -83,6 +86,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
+
+            ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
 
             var allArtistFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
                 .Filter(ShouldIncludeFolder)
@@ -151,6 +156,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                         ffprobePath,
                         result.Item,
                         artistFolder,
+                        allTrashedItems,
                         cancellationToken);
 
                     foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
@@ -312,6 +318,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         string ffprobePath,
         Artist artist,
         string artistFolder,
+        ImmutableHashSet<string> allTrashedItems,
         CancellationToken cancellationToken)
     {
         var folderQueue = new Queue<string>();
@@ -345,10 +352,23 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 maybeParentFolder,
                 musicVideoFolder);
 
-            // skip folder if etag matches
             if (knownFolder.Etag == etag)
             {
-                continue;
+                if (allFiles.Any(allTrashedItems.Contains))
+                {
+                    _logger.LogDebug("Previously trashed items are now present in folder {Folder}", musicVideoFolder);
+                }
+                else
+                {
+                    // etag matches and no trashed items are now present, continue to next folder
+                    continue;
+                }
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "UPDATE: Etag has changed for folder {Folder}",
+                    musicVideoFolder);
             }
 
             var hasErrors = false;

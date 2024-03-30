@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -20,6 +21,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     private readonly IClient _client;
     private readonly IImageRepository _imageRepository;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<ImageFolderScanner> _logger;
@@ -54,6 +56,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
         _mediator = mediator;
         _imageRepository = imageRepository;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _client = client;
         _logger = logger;
     }
@@ -82,6 +85,8 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
+
+            ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
 
             if (ShouldIncludeFolder(libraryPath.Path) && allFolders.Add(libraryPath.Path))
             {
@@ -139,10 +144,23 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                     maybeParentFolder,
                     imageFolder);
 
-                // skip folder if etag matches
-                if (allFiles.Count == 0 || knownFolder.Etag == etag)
+                if (knownFolder.Etag == etag)
                 {
-                    continue;
+                    if (allFiles.Any(allTrashedItems.Contains))
+                    {
+                        _logger.LogDebug("Previously trashed items are now present in folder {Folder}", imageFolder);
+                    }
+                    else
+                    {
+                        // etag matches and no trashed items are now present, continue to next folder
+                        continue;
+                    }
+                }
+                else
+                {
+                    _logger.LogDebug(
+                        "UPDATE: Etag has changed for folder {Folder}",
+                        imageFolder);
                 }
 
                 // walk up to get duration, if needed

@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
@@ -210,41 +209,6 @@ public class LibraryRepository : ILibraryRepository
         await dbContext.Connection.ExecuteAsync(
             "UPDATE LibraryPath SET Path = @Path WHERE Id = @Id",
             new { Path = normalizedLibraryPath, libraryPath.Id });
-    }
-
-    public async Task<System.Collections.Generic.HashSet<string>> FindAllMissingFiles(LibraryPath libraryPath)
-    {
-        var result = new System.Collections.Generic.HashSet<string>();
-
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        IAsyncEnumerable<MediaItem> items = dbContext.MediaItems
-            .AsNoTracking()
-            .Filter(mi => mi.LibraryPathId == libraryPath.Id)
-            .Filter(mi => mi.State == MediaItemState.FileNotFound)
-            .Include(mi => (mi as Movie).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Episode).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as MusicVideo).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as OtherVideo).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(mi => (mi as Image).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .AsAsyncEnumerable();
-
-        await foreach (MediaItem item in items)
-        {
-            MediaVersion version = item.GetHeadVersion();
-            foreach (MediaFile file in version.MediaFiles)
-            {
-                result.Add(file.Path);
-            }
-        }
-
-        return result;
     }
 
     private static LibraryFolder CreateNewFolder(LibraryPath libraryPath, Option<int> maybeParentFolder, string folder)

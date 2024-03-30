@@ -18,5 +18,4 @@ public interface ILibraryRepository
     Task<LibraryFolder> GetOrAddFolder(LibraryPath libraryPath, Option<int> maybeParentFolder, string folder);
     Task UpdateLibraryFolderId(MediaFile mediaFile, int libraryFolderId);
     Task UpdatePath(LibraryPath libraryPath, string normalizedLibraryPath);
-    Task<System.Collections.Generic.HashSet<string>> FindAllMissingFiles(LibraryPath libraryPath);
 }

@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Collections.Immutable;
+using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -20,6 +21,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly IClient _client;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
@@ -60,6 +62,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _localSubtitlesProvider = localSubtitlesProvider;
         _metadataRepository = metadataRepository;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _mediator = mediator;
         _client = client;
         _fallbackMetadataProvider = fallbackMetadataProvider;
@@ -85,6 +88,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
+            
+            ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
 
             var allShowFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
                 .Filter(ShouldIncludeFolder)
@@ -153,6 +158,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         ffprobePath,
                         result.Item,
                         showFolder,
+                        allTrashedItems,
                         cancellationToken);
 
                     foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
@@ -227,6 +233,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         string ffprobePath,
         Show show,
         string showFolder,
+        ImmutableHashSet<string> allTrashedItems,
         CancellationToken cancellationToken)
     {
         foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
@@ -248,7 +255,15 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             // skip folder if etag matches
             if (knownFolder.Etag == etag)
             {
-                continue;
+                if (allTrashedItems.Any(f => f.StartsWith(seasonFolder, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogDebug("Previously trashed items are now present in folder {Folder}", seasonFolder);
+                }
+                else
+                {
+                    // etag matches and no trashed items are now present, continue to next folder
+                    continue;
+                }
             }
 
             Option<int> maybeSeasonNumber = _fallbackMetadataProvider.GetSeasonNumberForFolder(seasonFolder);
