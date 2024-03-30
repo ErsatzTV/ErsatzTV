@@ -100,7 +100,7 @@ public class IptvController : ControllerBase
         FFmpegProcessRequest request = mode switch
         {
             "ts-legacy" => new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber),
-            _ => new GetWrappedProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber)
+            _ => new GetWrappedProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), Request.Query["access_token"], channelNumber)
         };
 
         return await _mediator.Send(request)

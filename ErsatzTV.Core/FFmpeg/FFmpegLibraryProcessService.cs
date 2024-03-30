@@ -724,12 +724,17 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         bool saveReports,
         Channel channel,
         string scheme,
-        string host)
+        string host,
+        string accessToken)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
+        string accessTokenQuery = string.IsNullOrWhiteSpace(accessToken)
+            ? string.Empty
+            : $"&access_token={accessToken}";
+
         var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter",
+            $"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter{accessTokenQuery}",
             resolution);
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
