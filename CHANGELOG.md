@@ -67,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use different library for reading song metadata that supports multiple tag entries
 - Update `/iptv` routing to make UI completely inaccessible from that path prefix
 - Use CUDA 11 instead of CUDA 12 in NVIDIA docker image to significantly lower required driver version
+- Allow block durations with 5-minute increments (e.g., 5 min, 10 min, 15 min, etc.)
 
 ## [0.8.5-beta] - 2024-01-30
 ### Added
