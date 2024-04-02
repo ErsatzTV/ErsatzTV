@@ -93,7 +93,7 @@
                          ShowPrevNextButtons="false"
                          ShowDatePicker="false"
                          ShowTodayButton="false"
-                         DayTimeInterval="CalendarTimeInterval.Minutes15"
+                         DayTimeInterval="CalendarTimeInterval.Minutes10"
                          Use24HourClock="@(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern.Contains("H"))"
                          EnableDragItems="true"
                          EnableResizeItems="false"
@@ -132,7 +132,7 @@
         while (start.Date == DateTime.Today.Date)
         {
             _startTimes.Add(start);
-            start = start.AddMinutes(15);
+            start = start.AddMinutes(5);
         }
     }
 
@@ -204,7 +204,7 @@
                 break;
             }
 
-            maybeStart = maybeStart.AddMinutes(15);
+            maybeStart = maybeStart.AddMinutes(5);
         }
     }
 
