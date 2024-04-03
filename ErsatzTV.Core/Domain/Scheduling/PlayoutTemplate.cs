@@ -11,8 +11,8 @@ public class PlayoutTemplate
     public ICollection<DayOfWeek> DaysOfWeek { get; set; }
     public ICollection<int> DaysOfMonth { get; set; }
     public ICollection<int> MonthsOfYear { get; set; }
-    public DateTimeOffset StartDate { get; set; }
-    public DateTimeOffset EndDate { get; set; }
+    public DateTimeOffset? StartDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
     public DateTime DateUpdated { get; set; }
 
     // TODO: ICollection<DateTimeOffset> AdditionalDays { get; set; }
