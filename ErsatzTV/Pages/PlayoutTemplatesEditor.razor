@@ -111,6 +111,16 @@
                     </MudCard>
                     <MudCard Class="mt-4">
                         <MudCardContent>
+                            <MudCheckBox T="bool" Class="mt-3" Label="Limit To Date Range"
+                                         @bind-Value="_selectedItem.LimitToDateRange" />
+                            @if (_selectedItem.LimitToDateRange)
+                            {
+                                <MudDateRangePicker Class="mt-2" Label="Active Date Range" @bind-DateRange="_selectedItem.ActiveDateRange"/>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                    <MudCard Class="mt-4">
+                        <MudCardContent>
                             <MudElement HtmlTag="div" Class="mt-3">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Monday)"
                                              Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
@@ -277,7 +287,10 @@
             Index = item.Index,
             DaysOfWeek = item.DaysOfWeek.ToList(),
             DaysOfMonth = item.DaysOfMonth.ToList(),
-            MonthsOfYear = item.MonthsOfYear.ToList()
+            MonthsOfYear = item.MonthsOfYear.ToList(),
+            StartDate = item.StartDate,
+            EndDate = item.EndDate,
+            LimitToDateRange = item.StartDate.HasValue && item.EndDate.HasValue
         };
 
     private async Task UpdateTemplateGroupItems(TemplateGroupViewModel templateGroup)
@@ -438,7 +451,9 @@
                 item.Template.Id,
                 item.DaysOfWeek,
                 item.DaysOfMonth,
-                item.MonthsOfYear)).ToList();
+                item.MonthsOfYear,
+                item.LimitToDateRange ? item.StartDate : null,
+                item.LimitToDateRange ? item.EndDate : null)).ToList();
 
         Option<BaseError> maybeError = await Mediator.Send(new ReplacePlayoutTemplateItems(Id, items), _cts.Token);
 

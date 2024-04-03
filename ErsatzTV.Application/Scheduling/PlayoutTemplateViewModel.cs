@@ -6,4 +6,6 @@ public record PlayoutTemplateViewModel(
     int Index,
     ICollection<DayOfWeek> DaysOfWeek,
     ICollection<int> DaysOfMonth,
-    ICollection<int> MonthsOfYear);
+    ICollection<int> MonthsOfYear,
+    DateTimeOffset? StartDate,
+    DateTimeOffset? EndDate);

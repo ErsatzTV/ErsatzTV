@@ -10,6 +10,14 @@ public static class PlayoutTemplateSelector
     {
         foreach (PlayoutTemplate template in templates.OrderBy(x => x.Index))
         {
+            if (template.StartDate.HasValue && template.EndDate.HasValue)
+            {
+                if (date.Date < template.StartDate.Value.Date || date.Date > template.EndDate.Value.Date)
+                {
+                    continue;
+                }
+            }
+            
             bool daysOfWeek = template.DaysOfWeek.Contains(date.DayOfWeek);
             if (!daysOfWeek)
             {

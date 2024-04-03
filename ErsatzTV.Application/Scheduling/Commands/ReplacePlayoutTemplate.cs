@@ -6,4 +6,6 @@ public record ReplacePlayoutTemplate(
     int TemplateId,
     List<DayOfWeek> DaysOfWeek,
     List<int> DaysOfMonth,
-    List<int> MonthsOfYear);
+    List<int> MonthsOfYear,
+    DateTimeOffset? StartDate,
+    DateTimeOffset? EndDate);
