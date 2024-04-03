@@ -7,5 +7,8 @@ public record ReplacePlayoutTemplate(
     List<DayOfWeek> DaysOfWeek,
     List<int> DaysOfMonth,
     List<int> MonthsOfYear,
-    DateTimeOffset? StartDate,
-    DateTimeOffset? EndDate);
+    bool LimitToDateRange,
+    int StartMonth,
+    int StartDay,
+    int EndMonth,
+    int EndDay);

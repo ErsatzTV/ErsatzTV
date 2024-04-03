@@ -7,5 +7,8 @@ public record PlayoutTemplateViewModel(
     ICollection<DayOfWeek> DaysOfWeek,
     ICollection<int> DaysOfMonth,
     ICollection<int> MonthsOfYear,
-    DateTimeOffset? StartDate,
-    DateTimeOffset? EndDate);
+    bool LimitToDateRange,
+    int StartMonth,
+    int StartDay,
+    int EndMonth,
+    int EndDay);

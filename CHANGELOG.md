@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add `Active Date Range` to block playout template editor to allow limiting templates to a specific date range
+  - This is year-agnostic, meaning the Month/Day range will apply to every year
+  - This also supports wrapping the end of the year (e.g., start 12/1 and end 1/15)
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added

@@ -54,8 +54,11 @@ internal static class Mapper
             playoutTemplate.DaysOfWeek,
             playoutTemplate.DaysOfMonth,
             playoutTemplate.MonthsOfYear,
-            playoutTemplate.StartDate,
-            playoutTemplate.EndDate);
+            playoutTemplate.LimitToDateRange,
+            playoutTemplate.StartMonth,
+            playoutTemplate.StartDay,
+            playoutTemplate.EndMonth,
+            playoutTemplate.EndDay);
 
     internal static PlayoutItemPreviewViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
         new(

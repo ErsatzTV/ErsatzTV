@@ -10,9 +10,53 @@ public static class PlayoutTemplateSelector
     {
         foreach (PlayoutTemplate template in templates.OrderBy(x => x.Index))
         {
-            if (template.StartDate.HasValue && template.EndDate.HasValue)
+            if (template.LimitToDateRange)
             {
-                if (date.Date < template.StartDate.Value.Date || date.Date > template.EndDate.Value.Date)
+                bool reverse = template.StartMonth * 100 + template.StartDay >
+                               template.EndMonth * 100 + template.EndDay;
+
+                int year = date.LocalDateTime.Year;
+                DateTime start;
+                DateTime end;
+
+                try
+                {
+                    start = new DateTime(year, template.StartMonth, template.StartDay, 0, 0, 0, DateTimeKind.Local);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // this should only happen with days that are greater than the actual days in the month,
+                    // so roll over to the 1st of the next month
+                    start = new DateTime(year, template.StartMonth + 1, 1, 0, 0, 0, DateTimeKind.Local);
+                }
+
+                try
+                {
+                    end = new DateTime(year, template.EndMonth, template.EndDay, 0, 0, 0, DateTimeKind.Local);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // this should only happen with days that are greater than the actual days in the month,
+                    // so reduce to the max days in the month
+                    end = new DateTime(
+                        year,
+                        template.EndMonth,
+                        DateTime.DaysInMonth(year, template.EndMonth),
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Local);
+                }
+                
+                if (reverse)
+                {
+                    (start, end) = (end, start);
+                    if (date.Date > start.Date && date.Date < end.Date)
+                    {
+                        continue;
+                    }
+                }
+                else if (date.Date < start.Date || date.Date > end.Date)
                 {
                     continue;
                 }
