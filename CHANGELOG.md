@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.6-beta] - 2024-04-03
 ### Added
 - Add `show_studio` and `show_content_rating` to search index for seasons and episodes
 - Add two new global subtitle settings:
@@ -1937,7 +1939,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.5-beta...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.6-beta...HEAD
+[0.8.6-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.5-beta...v0.8.6-beta
 [0.8.5-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.4-beta...v0.8.5-beta
 [0.8.4-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.3-beta...v0.8.4-beta
 [0.8.3-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.2-beta...v0.8.3-beta
