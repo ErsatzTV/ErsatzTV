@@ -11,11 +11,13 @@ public class PlayoutTemplate
     public ICollection<DayOfWeek> DaysOfWeek { get; set; }
     public ICollection<int> DaysOfMonth { get; set; }
     public ICollection<int> MonthsOfYear { get; set; }
-    public DateTimeOffset? StartDate { get; set; }
-    public DateTimeOffset? EndDate { get; set; }
+    public bool LimitToDateRange { get; set; }
+    public int StartMonth { get; set; }
+    public int StartDay { get; set; }
+    public int EndMonth { get; set; }
+    public int EndDay { get; set; }
     public DateTime DateUpdated { get; set; }
-
-    // TODO: ICollection<DateTimeOffset> AdditionalDays { get; set; }
+    //public ICollection<DateTimeOffset> AdditionalDays { get; set; }
 
     public static List<DayOfWeek> AllDaysOfWeek() =>
     [

@@ -55,8 +55,11 @@ public class ReplacePlayoutTemplateItemsHandler(
                             DaysOfWeek = add.DaysOfWeek,
                             DaysOfMonth = add.DaysOfMonth,
                             MonthsOfYear = add.MonthsOfYear,
-                            StartDate = add.StartDate,
-                            EndDate = add.EndDate,
+                            LimitToDateRange = add.LimitToDateRange,
+                            StartMonth = add.StartMonth,
+                            StartDay = add.StartDay,
+                            EndMonth = add.EndMonth,
+                            EndDay = add.EndDay,
                             DateUpdated = now
                         });
                 }
@@ -70,8 +73,11 @@ public class ReplacePlayoutTemplateItemsHandler(
                         ex.DaysOfWeek = update.DaysOfWeek;
                         ex.DaysOfMonth = update.DaysOfMonth;
                         ex.MonthsOfYear = update.MonthsOfYear;
-                        ex.StartDate = update.StartDate;
-                        ex.EndDate = update.EndDate;
+                        ex.LimitToDateRange = update.LimitToDateRange;
+                        ex.StartMonth = update.StartMonth;
+                        ex.StartDay = update.StartDay;
+                        ex.EndMonth = update.EndMonth;
+                        ex.EndDay = update.EndDay;
                         ex.DateUpdated = now;
                     }
                 }

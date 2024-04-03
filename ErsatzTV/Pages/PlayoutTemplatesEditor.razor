@@ -115,7 +115,42 @@
                                          @bind-Value="_selectedItem.LimitToDateRange" />
                             @if (_selectedItem.LimitToDateRange)
                             {
-                                <MudDateRangePicker Class="mt-2" Label="Active Date Range" @bind-DateRange="_selectedItem.ActiveDateRange"/>
+                                <MudGrid Class="mt-2" Style="align-items: start" Justify="Justify.Center">
+                                    <MudItem xs="6">
+                                        <MudSelect T="int" @bind-Value="_selectedItem.StartMonth" Label="Start Month">
+                                            @foreach (int month in Enumerable.Range(1, 12))
+                                            {
+                                                <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudSelect T="int" @bind-Value="_selectedItem.StartDay" Label="Start Day">
+                                            @foreach (int day in Enumerable.Range(1, 31))
+                                            {
+                                                <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                </MudGrid>
+                                <MudGrid Class="mt-2" Style="align-items: start" Justify="Justify.Center">
+                                    <MudItem xs="6">
+                                        <MudSelect T="int" @bind-Value="_selectedItem.EndMonth" Label="End Month">
+                                            @foreach (int month in Enumerable.Range(1, 12))
+                                            {
+                                                <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudSelect T="int" @bind-Value="_selectedItem.EndDay" Label="End Day">
+                                            @foreach (int day in Enumerable.Range(1, 31))
+                                            {
+                                                <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                </MudGrid>
                             }
                         </MudCardContent>
                     </MudCard>
@@ -288,9 +323,11 @@
             DaysOfWeek = item.DaysOfWeek.ToList(),
             DaysOfMonth = item.DaysOfMonth.ToList(),
             MonthsOfYear = item.MonthsOfYear.ToList(),
-            StartDate = item.StartDate,
-            EndDate = item.EndDate,
-            LimitToDateRange = item.StartDate.HasValue && item.EndDate.HasValue
+            LimitToDateRange = item.LimitToDateRange,
+            StartMonth = item.StartMonth,
+            StartDay = item.StartDay,
+            EndMonth = item.EndMonth,
+            EndDay = item.EndDay
         };
 
     private async Task UpdateTemplateGroupItems(TemplateGroupViewModel templateGroup)
@@ -452,8 +489,11 @@
                 item.DaysOfWeek,
                 item.DaysOfMonth,
                 item.MonthsOfYear,
-                item.LimitToDateRange ? item.StartDate : null,
-                item.LimitToDateRange ? item.EndDate : null)).ToList();
+                item.LimitToDateRange,
+                item.StartMonth,
+                item.StartDay,
+                item.EndMonth,
+                item.EndDay)).ToList();
 
         Option<BaseError> maybeError = await Mediator.Send(new ReplacePlayoutTemplateItems(Id, items), _cts.Token);
 

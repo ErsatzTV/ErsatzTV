@@ -1,10 +1,15 @@
 using ErsatzTV.Application.Scheduling;
-using MudBlazor;
+using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.ViewModels;
 
 public class PlayoutTemplateEditViewModel
 {
+    private int _startMonth;
+    private int _startDay;
+    private int _endMonth;
+    private int _endDay;
     public int Id { get; set; }
     public int Index { get; set; }
     public TemplateViewModel Template { get; set; }
@@ -12,48 +17,62 @@ public class PlayoutTemplateEditViewModel
     public List<int> DaysOfMonth { get; set; }
     public List<int> MonthsOfYear { get; set; }
     public bool LimitToDateRange { get; set; }
-    public DateTimeOffset? StartDate { get; set; }
-    public DateTimeOffset? EndDate { get; set; }
-    public DateRange ActiveDateRange
+
+    public int StartMonth
     {
-        get
-        {
-            if (StartDate is null || EndDate is null || StartDate.Value.Year < 2000 || EndDate.Value.Year < 2000)
-            {
-                return new DateRange(
-                    DateTime.Today,
-                    new DateTime(3000, 1, 1, 0, 0, 0, DateTimeKind.Local));
-            }
-
-            return new DateRange(StartDate.Value.LocalDateTime, EndDate.Value.LocalDateTime);
-        }
-
-        set
-        {
-            StartDate = null;
-            if (value?.Start is not null)
-            {
-                DateTime start = value.Start.Value;
-                TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(
-                    new DateTime(start.Year, start.Month, start.Day, 0, 0, 0, DateTimeKind.Local));
-                StartDate = new DateTimeOffset(start.Year, start.Month, start.Day, 0, 0, 0, offset);
-            }
-
-            EndDate = null;
-            if (value?.End is not null)
-            {
-                DateTime end = value.End.Value;
-                TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(
-                    new DateTime(end.Year, end.Month, end.Day, 0, 0, 0, DateTimeKind.Local));
-                EndDate = new DateTimeOffset(end.Year, end.Month, end.Day, 0, 0, 0, offset);
-            }
-        }
+        get => _startMonth == 0 ? 1 : _startMonth;
+        set => _startMonth = value;
     }
 
-    public bool AppliesToDate(DateTime date) =>
-        (LimitToDateRange is false || StartDate is null || date.Date >= StartDate.Value.Date) &&
-        (LimitToDateRange is false || EndDate is null || date.Date <= EndDate.Value.Date) &&
-        DaysOfWeek.Contains(date.DayOfWeek) &&
-        DaysOfMonth.Contains(date.Day) &&
-        MonthsOfYear.Contains(date.Month);
+    public int StartDay
+    {
+        get => _startDay == 0 ? 1 : _startDay;
+        set => _startDay = value;
+    }
+
+    public int EndMonth
+    {
+        get => _endMonth == 0 ? 12 : _endMonth;
+        set => _endMonth = value;
+    }
+
+    public int EndDay
+    {
+        get => _endDay == 0 ? 31 : _endDay;
+        set => _endDay = value;
+    }
+
+    public bool AppliesToDate(DateTime date)
+    {
+        // share the PlayoutTemplateSelector logic
+        
+        var template = new PlayoutTemplate
+        {
+            DaysOfWeek = DaysOfWeek,
+            DaysOfMonth = DaysOfMonth,
+            MonthsOfYear = MonthsOfYear,
+            LimitToDateRange = LimitToDateRange,
+            StartMonth = StartMonth,
+            StartDay = StartDay,
+            EndMonth = EndMonth,
+            EndDay = EndDay,
+        };
+
+        TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(
+            new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local));
+
+        Option<PlayoutTemplate> result =
+            PlayoutTemplateSelector.GetPlayoutTemplateFor(
+                new[] { template },
+                new DateTimeOffset(
+                    date.Year,
+                    date.Month,
+                    date.Day,
+                    0,
+                    0,
+                    0,
+                    offset));
+
+        return result.IsSome;
+    }
 }
