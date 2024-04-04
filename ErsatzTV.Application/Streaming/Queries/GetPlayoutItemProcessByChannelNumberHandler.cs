@@ -204,15 +204,54 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             {
                 _logger.LogDebug("Block playout item has no watermark; checking for deco");
                 
-                // check for playout deco
-                foreach (Deco deco in Optional(playoutItemWithPath.PlayoutItem.Playout.Deco))
+                // check for playout template deco
+                // load all playout templates
+                // get playout template for start time
+                // check for deco
+                // load all templates that have decos
+                List<PlayoutTemplate> playoutTemplates = await dbContext.PlayoutTemplates
+                    .AsNoTracking()
+                    .Filter(t => t.PlayoutId == playoutItemWithPath.PlayoutItem.PlayoutId)
+                    .Filter(t => t.DecoTemplateId != null)
+                    .Include(t => t.DecoTemplate)
+                    .ThenInclude(t => t.Items)
+                    .ThenInclude(i => i.Deco)
+                    .ThenInclude(d => d.Watermark)
+                    .ToListAsync(cancellationToken);
+
+                Option<PlayoutTemplate> maybeActiveTemplate = PlayoutTemplateSelector.GetPlayoutTemplateFor(
+                    playoutTemplates,
+                    playoutItemWithPath.PlayoutItem.StartOffset);
+
+                foreach (PlayoutTemplate activeTemplate in maybeActiveTemplate)
                 {
-                    _logger.LogDebug("Block playout item has default deco; checking for watermark");
-                    foreach (ChannelWatermark watermark in Optional(deco.Watermark))
+                    _logger.LogDebug("Block playout has active playout template; checking for deco template items");
+                    Option<DecoTemplateItem> maybeItem = activeTemplate.DecoTemplate.Items
+                        .Find(i => i.StartTime <= now.TimeOfDay && i.EndTime > now.TimeOfDay);
+                    foreach (DecoTemplateItem item in maybeItem)
                     {
-                        _logger.LogDebug(
-                            "Block playout has default deco with watermark; will use for this playout item");
-                        playoutItemWatermark = watermark;
+                        _logger.LogDebug("Block playout has active deco template item; checking for watermark");
+                        foreach (ChannelWatermark watermark in Optional(item.Deco.Watermark))
+                        {
+                            _logger.LogDebug(
+                                "Block playout has active deco template item with watermark; will use for this playout item");
+                            playoutItemWatermark = watermark;
+                        }
+                    }
+                }
+
+                if (playoutItemWatermark.IsNone)
+                {
+                    // check for playout deco
+                    foreach (Deco deco in Optional(playoutItemWithPath.PlayoutItem.Playout.Deco))
+                    {
+                        _logger.LogDebug("Block playout item has default deco; checking for watermark");
+                        foreach (ChannelWatermark watermark in Optional(deco.Watermark))
+                        {
+                            _logger.LogDebug(
+                                "Block playout has default deco with watermark; will use for this playout item");
+                            playoutItemWatermark = watermark;
+                        }
                     }
                 }
             }
