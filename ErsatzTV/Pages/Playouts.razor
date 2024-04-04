@@ -82,8 +82,6 @@
                     </div>
                     @if (context.PlayoutType == ProgramSchedulePlayoutType.Flood)
                     {
-                        <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit Alternate Schedules">
                             <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
@@ -105,8 +103,6 @@
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.ExternalJson)
                     {
-                        <div style="width: 48px"></div>
-                        <div style="width: 48px"></div>
                         <MudTooltip Text="Edit External Json File">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
@@ -118,22 +114,10 @@
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
                     {
-                        <MudTooltip Text="Erase Items">
-                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
-                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           OnClick="@(_ => EraseItems(context))">
-                            </MudIconButton>
-                        </MudTooltip>
-                        <MudTooltip Text="Erase Items and History">
-                            <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
-                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           OnClick="@(_ => EraseHistory(context))">
-                            </MudIconButton>
-                        </MudTooltip>
-                        <MudTooltip Text="Edit Templates">
+                        <MudTooltip Text="Edit Playout">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           Link="@($"playouts/{context.PlayoutId}/templates")">
+                                           Link="@($"playouts/block/{context.PlayoutId}")">
                             </MudIconButton>
                         </MudTooltip>
                         <MudTooltip Text="Reset Playout">

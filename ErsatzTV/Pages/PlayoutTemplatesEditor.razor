@@ -11,7 +11,7 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable T="PlayoutTemplateEditViewModel" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
+    <MudTable T="PlayoutTemplateEditViewModel" Class="mt-4" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
         <ToolBarContent>
             <MudText Typo="Typo.h6">@_channelName Templates</MudText>
             <MudSpacer/>
@@ -285,6 +285,9 @@
     private readonly List<TemplateGroupViewModel> _templateGroups = [];
     private readonly List<TemplateViewModel> _templates = [];
 
+    // private readonly List<DecoGroupViewModel> _decoGroups = [];
+    // private readonly List<DecoViewModel> _decos = [];
+
     private string _channelName;
     private List<PlayoutTemplateEditViewModel> _items = [];
     private TemplateGroupViewModel _selectedGroup;
@@ -306,6 +309,9 @@
         _templateGroups.Clear();
         _templateGroups.AddRange(await Mediator.Send(new GetAllTemplateGroups(), _cts.Token));
 
+        // _decoGroups.Clear();
+        // _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), _cts.Token));
+        
         List<PlayoutTemplateViewModel> results = await Mediator.Send(new GetPlayoutTemplates(Id), _cts.Token);
         _items = results.Map(ProjectToEditViewModel).ToList();
         if (_items.Count == 1)

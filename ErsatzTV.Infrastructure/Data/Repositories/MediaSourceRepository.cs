@@ -120,7 +120,22 @@ public class MediaSourceRepository : IMediaSourceRepository
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        // TODO: possibly caused by https://github.com/dotnet/efcore/issues/33133
+        var success = false;
+        var attempts = 0;
+        while (!success && attempts < 3)
+        {
+            try
+            {
+                await dbContext.SaveChangesAsync();
+                success = true;
+            }
+            catch (DbUpdateException)
+            {
+                // do nothing
+                attempts++;
+            }
+        }
     }
 
     public async Task<List<int>> UpdateLibraries(

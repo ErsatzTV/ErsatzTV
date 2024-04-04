@@ -1,0 +1,90 @@
+﻿@page "/decos/{Id:int}"
+@using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Application.Watermarks
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<DecoEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+<MudText Typo="Typo.h4" Class="mb-4">Edit Deco</MudText>
+<div style="max-width: 400px">
+    <MudCard>
+        <MudCardContent>
+            <MudTextField Label="Name" @bind-Value="_deco.Name" For="@(() => _deco.Name)"/>
+            <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_deco.WatermarkId" For="@(() => _deco.WatermarkId)"
+                       Clearable="true">
+                <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                @foreach (WatermarkViewModel watermark in _watermarks)
+                {
+                    <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudCardContent>
+    </MudCard>
+</div>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+    Save Changes
+</MudButton>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private DecoEditViewModel _deco = new();
+    private List<WatermarkViewModel> _watermarks = [];
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadWatermarks();
+        await LoadDeco();
+    }
+    
+    private async Task LoadWatermarks() =>
+        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
+
+    private async Task LoadDeco()
+    {
+        Option<DecoViewModel> maybeDeco = await Mediator.Send(new GetDecoById(Id), _cts.Token);
+        if (maybeDeco.IsNone)
+        {
+            NavigationManager.NavigateTo("decos");
+            return;
+        }
+
+        foreach (DecoViewModel deco in maybeDeco)
+        {
+            _deco = new DecoEditViewModel
+            {
+                Name = deco.Name,
+                DecoGroupId = deco.DecoGroupId,
+                WatermarkId = deco.WatermarkId
+            };
+        }
+    }
+
+    private async Task SaveChanges()
+    {
+        Seq<BaseError> errorMessages = await Mediator
+            .Send(new UpdateDeco(Id, _deco.DecoGroupId, _deco.Name, _deco.WatermarkId), _cts.Token)
+            .Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving deco: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving deco: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/decos"));
+    }
+}
