@@ -1,0 +1,314 @@
+﻿@page "/deco-templates/{Id:int}"
+@using ErsatzTV.Application.Scheduling
+@using System.Globalization
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<DecoTemplateEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Edit Deco Template</MudText>
+    <MudGrid>
+        <MudItem xs="4">
+            <div style="max-width: 400px">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Name" @bind-Value="_decoTemplate.Name" For="@(() => _decoTemplate.Name)"/>
+                    </MudCardContent>
+                </MudCard>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
+                Save Changes
+            </MudButton>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px">
+                <MudCard>
+                    <MudCardContent>
+                        <MudSelect T="DecoGroupViewModel"
+                                   Label="Deco Group"
+                                   ValueChanged="@(vm => UpdateDecoGroupItems(vm))">
+                            @foreach (DecoGroupViewModel decoGroup in _decoGroups)
+                            {
+                                <MudSelectItem Value="@decoGroup">@decoGroup.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Class="mt-3"
+                                   T="DecoViewModel"
+                                   Label="Deco"
+                                   @bind-value="_selectedDeco">
+                            @foreach (DecoViewModel deco in _decos)
+                            {
+                                <MudSelectItem Value="@deco">@deco.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Class="mt-3"
+                                   T="DateTime"
+                                   Label="Start Time On Or After"
+                                   @bind-value="_selectedDecoStart">
+                            @foreach (DateTime startTime in _startTimes)
+                            {
+                                <MudSelectItem Value="@startTime">
+                                    @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                            <MudItem xs="6">
+                                <MudTextField T="int"
+                                              Label="Duration"
+                                              @bind-Value="_durationHours"
+                                              Adornment="Adornment.End"
+                                              AdornmentText="hours"/>
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudSelect T="int" @bind-Value="_durationMinutes" Adornment="Adornment.End" AdornmentText="minutes">
+                                    <MudSelectItem Value="0"/>
+                                    <MudSelectItem Value="5"/>
+                                    <MudSelectItem Value="10"/>
+                                    <MudSelectItem Value="15"/>
+                                    <MudSelectItem Value="20"/>
+                                    <MudSelectItem Value="25"/>
+                                    <MudSelectItem Value="30"/>
+                                    <MudSelectItem Value="35"/>
+                                    <MudSelectItem Value="40"/>
+                                    <MudSelectItem Value="45"/>
+                                    <MudSelectItem Value="50"/>
+                                    <MudSelectItem Value="55"/>
+                                </MudSelect>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoToDecoTemplate())" Disabled="@(_selectedDeco is null)">
+                            Add Deco To Deco Template
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px">
+                <MudCard>
+                    <MudCardContent>
+                        <MudSelect T="DecoTemplateItemEditViewModel"
+                                   Label="Deco To Remove"
+                                   @bind-Value="_decoToRemove">
+                            <MudSelectItem Value="@((DecoTemplateItemEditViewModel)null)">(none)</MudSelectItem>
+                            @foreach (DecoTemplateItemEditViewModel item in _decoTemplate.Items.OrderBy(i => i.Start))
+                            {
+                                <MudSelectItem Value="@item">@item.Start.ToShortTimeString() - @item.Text</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => RemoveDecoFromDecoTemplate())" Disabled="@(_decoToRemove is null)">
+                            Remove Deco From Deco Template
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="8">
+            <MudCalendar Class="mt-4"
+                         Items="@_decoTemplate.Items"
+                         ShowMonth="false"
+                         ShowWeek="false"
+                         ShowPrevNextButtons="false"
+                         ShowDatePicker="false"
+                         ShowTodayButton="false"
+                         DayTimeInterval="CalendarTimeInterval.Minutes10"
+                         Use24HourClock="@(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern.Contains("H"))"
+                         EnableDragItems="true"
+                         EnableResizeItems="false"
+                         ItemChanged="@(ci => CalendarItemChanged(ci))"/>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private readonly List<DecoGroupViewModel> _decoGroups = [];
+    private readonly List<DecoViewModel> _decos = [];
+    private readonly List<DateTime> _startTimes = [];
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private DecoTemplateItemsEditViewModel _decoTemplate = new();
+    private DecoTemplateItemEditViewModel _decoToRemove;
+    private DecoGroupViewModel _selectedDecoGroup;
+    private DecoViewModel _selectedDeco;
+    private DateTime _selectedDecoStart;
+    private int _durationHours;
+    private int _durationMinutes = 15;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDecoTemplateItems();
+
+        DateTime start = DateTime.Today;
+        _selectedDecoStart = start;
+        while (start.Date == DateTime.Today.Date)
+        {
+            _startTimes.Add(start);
+            start = start.AddMinutes(5);
+        }
+    }
+
+    private async Task LoadDecoTemplateItems()
+    {
+        Option<DecoTemplateViewModel> maybeDecoTemplate = await Mediator.Send(new GetDecoTemplateById(Id), _cts.Token);
+        if (maybeDecoTemplate.IsNone)
+        {
+            NavigationManager.NavigateTo("deco-templates");
+            return;
+        }
+
+        foreach (DecoTemplateViewModel template in maybeDecoTemplate)
+        {
+            _decoTemplate = new DecoTemplateItemsEditViewModel
+            {
+                Name = template.Name,
+                Items = []
+            };
+        }
+
+        Option<IEnumerable<DecoTemplateItemViewModel>> maybeResults = await Mediator.Send(new GetDecoTemplateItems(Id), _cts.Token);
+        foreach (IEnumerable<DecoTemplateItemViewModel> items in maybeResults)
+        {
+            _decoTemplate.Items.AddRange(items.Map(ProjectToEditViewModel));
+        }
+
+        _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), _cts.Token));
+    }
+
+    private static DecoTemplateItemEditViewModel ProjectToEditViewModel(DecoTemplateItemViewModel item) =>
+        new()
+        {
+            DecoId = item.DecoId,
+            DecoName = item.DecoName,
+            Start = item.StartTime,
+            End = item.EndTime
+        };
+
+    private async Task UpdateDecoGroupItems(DecoGroupViewModel decoGroup)
+    {
+        _selectedDecoGroup = decoGroup;
+
+        _decos.Clear();
+        _decos.AddRange(await Mediator.Send(new GetDecosByDecoGroupId(_selectedDecoGroup.Id), _cts.Token));
+    }
+
+    private void AddDecoToDecoTemplate()
+    {
+        // find first time where this deco will fit
+        DateTime maybeStart = _selectedDecoStart;
+        while (maybeStart.Date == DateTime.Today)
+        {
+            DateTime maybeEnd = maybeStart.AddHours(_durationHours).AddMinutes(_durationMinutes);
+            if (IntersectsOthers(null, maybeStart, maybeEnd) == false)
+            {
+                var item = new DecoTemplateItemEditViewModel
+                {
+                    DecoId = _selectedDeco.Id,
+                    DecoName = _selectedDeco.Name,
+                    Start = maybeStart,
+                    End = maybeEnd,
+                    LastStart = maybeStart,
+                    LastEnd = maybeEnd
+                };
+
+                _decoTemplate.Items.Add(item);
+
+                break;
+            }
+
+            maybeStart = maybeStart.AddMinutes(5);
+        }
+    }
+
+    private async Task RemoveDecoFromDecoTemplate()
+    {
+        if (_decoToRemove is not null)
+        {
+            _decoTemplate.Items.Remove(_decoToRemove);
+            _decoToRemove = null;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void CalendarItemChanged(CalendarItem calendarItem)
+    {
+        // don't allow any overlap
+        if (calendarItem is DecoTemplateItemEditViewModel item)
+        {
+            if (item.End.HasValue && IntersectsOthers(item, item.Start, item.End.Value))
+            {
+                // roll back
+                item.Start = item.LastStart;
+                item.End = item.LastEnd;
+            }
+            else
+            {
+                // commit
+                item.LastStart = item.Start;
+                item.LastEnd = item.End;
+            }
+        }
+    }
+
+    private bool IntersectsOthers(DecoTemplateItemEditViewModel item, DateTime start, DateTime end)
+    {
+        var willFit = true;
+
+        foreach (DecoTemplateItemEditViewModel existing in _decoTemplate.Items)
+        {
+            if (existing == item)
+            {
+                continue;
+            }
+
+            if (start < existing.End && existing.Start < end)
+            {
+                willFit = false;
+                break;
+            }
+        }
+
+        return willFit == false;
+    }
+
+    // private void RemoveDecoTemplateItem(DecoTemplateItemEditViewModel item)
+    // {
+    //     _selectedItem = null;
+    //     _decoTemplate.Items.Remove(item);
+    // }
+
+    private async Task SaveChanges()
+    {
+        await Task.Delay(10);
+
+        var items = _decoTemplate.Items.Map(item => new ReplaceDecoTemplateItem(item.DecoId, item.Start.TimeOfDay, item.End!.Value.TimeOfDay)).ToList();
+
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceDecoTemplateItems(Id, _decoTemplate.Name, items), _cts.Token)
+            .Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving template: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving template: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/deco-templates"));
+    }
+
+}

@@ -16,7 +16,8 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
         builder.HasMany(d => d.Playouts)
             .WithOne(p => p.Deco)
             .HasForeignKey(p => p.DecoId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
 
         builder.HasOne(d => d.Watermark)
             .WithMany()

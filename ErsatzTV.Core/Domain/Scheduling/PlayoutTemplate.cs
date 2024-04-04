@@ -7,6 +7,8 @@ public class PlayoutTemplate
     public Playout Playout { get; set; }
     public int TemplateId { get; set; }
     public Template Template { get; set; }
+    public int? DecoTemplateId { get; set; }
+    public DecoTemplate DecoTemplate { get; set; }
     public int Index { get; set; }
     public ICollection<DayOfWeek> DaysOfWeek { get; set; }
     public ICollection<int> DaysOfMonth { get; set; }

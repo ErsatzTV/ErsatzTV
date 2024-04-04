@@ -2183,6 +2183,81 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.ToTable("DecoGroup", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DecoTemplateGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecoTemplateGroupId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("DecoTemplate", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplateGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("DecoTemplateGroup", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplateItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DecoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DecoTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time(6)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecoId");
+
+                    b.HasIndex("DecoTemplateId");
+
+                    b.ToTable("DecoTemplateItem", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -2238,6 +2313,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("DaysOfWeek")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("DecoTemplateId")
+                        .HasColumnType("int");
+
                     b.Property<int>("EndDay")
                         .HasColumnType("int");
 
@@ -2266,6 +2344,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DecoTemplateId");
 
                     b.HasIndex("PlayoutId");
 
@@ -4345,6 +4425,36 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Watermark");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.DecoTemplateGroup", "DecoTemplateGroup")
+                        .WithMany("DecoTemplates")
+                        .HasForeignKey("DecoTemplateGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DecoTemplateGroup");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplateItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.Deco", "Deco")
+                        .WithMany()
+                        .HasForeignKey("DecoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", "DecoTemplate")
+                        .WithMany("Items")
+                        .HasForeignKey("DecoTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Deco");
+
+                    b.Navigation("DecoTemplate");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutHistory", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Scheduling.Block", "Block")
@@ -4366,6 +4476,11 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.PlayoutTemplate", b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", "DecoTemplate")
+                        .WithMany("PlayoutTemplates")
+                        .HasForeignKey("DecoTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
                         .WithMany("Templates")
                         .HasForeignKey("PlayoutId")
@@ -4377,6 +4492,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DecoTemplate");
 
                     b.Navigation("Playout");
 
@@ -5222,6 +5339,18 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoGroup", b =>
                 {
                     b.Navigation("Decos");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplate", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("PlayoutTemplates");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.DecoTemplateGroup", b =>
+                {
+                    b.Navigation("DecoTemplates");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Template", b =>

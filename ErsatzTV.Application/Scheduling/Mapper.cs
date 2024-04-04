@@ -52,6 +52,19 @@ internal static class Mapper
     internal static DecoViewModel ProjectToViewModel(Deco deco) =>
         new(deco.Id, deco.DecoGroupId, deco.Name, deco.WatermarkId);
 
+    internal static DecoTemplateGroupViewModel ProjectToViewModel(DecoTemplateGroup decoTemplateGroup) =>
+        new(decoTemplateGroup.Id, decoTemplateGroup.Name, decoTemplateGroup.DecoTemplates.Count);
+
+    internal static DecoTemplateViewModel ProjectToViewModel(DecoTemplate decoTemplate) =>
+        new(decoTemplate.Id, decoTemplate.DecoTemplateGroupId, decoTemplate.Name);
+
+    internal static DecoTemplateItemViewModel ProjectToViewModel(DecoTemplateItem decoTemplateItem)
+    {
+        DateTime startTime = DateTime.Today.Add(decoTemplateItem.StartTime);
+        DateTime endTime = DateTime.Today.Add(decoTemplateItem.EndTime);
+        return new DecoTemplateItemViewModel(decoTemplateItem.DecoId, decoTemplateItem.Deco.Name, startTime, endTime);
+    }
+
     internal static PlayoutTemplateViewModel ProjectToViewModel(PlayoutTemplate playoutTemplate) =>
         new(
             playoutTemplate.Id,
