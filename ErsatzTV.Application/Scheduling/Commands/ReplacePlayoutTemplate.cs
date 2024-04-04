@@ -4,6 +4,7 @@ public record ReplacePlayoutTemplate(
     int Id,
     int Index,
     int TemplateId,
+    int? DecoTemplateId,
     List<DayOfWeek> DaysOfWeek,
     List<int> DaysOfMonth,
     List<int> MonthsOfYear,

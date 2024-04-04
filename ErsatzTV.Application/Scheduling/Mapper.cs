@@ -55,8 +55,15 @@ internal static class Mapper
     internal static DecoTemplateGroupViewModel ProjectToViewModel(DecoTemplateGroup decoTemplateGroup) =>
         new(decoTemplateGroup.Id, decoTemplateGroup.Name, decoTemplateGroup.DecoTemplates.Count);
 
-    internal static DecoTemplateViewModel ProjectToViewModel(DecoTemplate decoTemplate) =>
-        new(decoTemplate.Id, decoTemplate.DecoTemplateGroupId, decoTemplate.Name);
+    internal static DecoTemplateViewModel ProjectToViewModel(DecoTemplate decoTemplate)
+    {
+        if (decoTemplate is null)
+        {
+            return null;
+        }
+
+        return new DecoTemplateViewModel(decoTemplate.Id, decoTemplate.DecoTemplateGroupId, decoTemplate.Name);
+    }
 
     internal static DecoTemplateItemViewModel ProjectToViewModel(DecoTemplateItem decoTemplateItem)
     {
@@ -69,6 +76,7 @@ internal static class Mapper
         new(
             playoutTemplate.Id,
             ProjectToViewModel(playoutTemplate.Template),
+            ProjectToViewModel(playoutTemplate.DecoTemplate),
             playoutTemplate.Index,
             playoutTemplate.DaysOfWeek,
             playoutTemplate.DaysOfMonth,

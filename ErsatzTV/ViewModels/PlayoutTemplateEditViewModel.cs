@@ -1,3 +1,4 @@
+using ErsatzTV.Annotations;
 using ErsatzTV.Application.Scheduling;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling;
@@ -13,6 +14,8 @@ public class PlayoutTemplateEditViewModel
     public int Id { get; set; }
     public int Index { get; set; }
     public TemplateViewModel Template { get; set; }
+    [CanBeNull]
+    public DecoTemplateViewModel DecoTemplate { get; set; }
     public List<DayOfWeek> DaysOfWeek { get; set; }
     public List<int> DaysOfMonth { get; set; }
     public List<int> MonthsOfYear { get; set; }
