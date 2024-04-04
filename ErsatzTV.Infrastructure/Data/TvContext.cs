@@ -94,6 +94,11 @@ public class TvContext : DbContext
     public DbSet<TemplateGroup> TemplateGroups { get; set; }
     public DbSet<Template> Templates { get; set; }
     public DbSet<TemplateItem> TemplateItems { get; set; }
+    public DbSet<DecoGroup> DecoGroups { get; set; }
+    public DbSet<Deco> Decos { get; set; }
+    public DbSet<DecoTemplateGroup> DecoTemplateGroups { get; set; }
+    public DbSet<DecoTemplate> DecoTemplates { get; set; }
+    public DbSet<DecoTemplateItem> DecoTemplateItems { get; set; }
     public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
     public DbSet<Resolution> Resolutions { get; set; }
     public DbSet<LanguageCode> LanguageCodes { get; set; }

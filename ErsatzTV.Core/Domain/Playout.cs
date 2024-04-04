@@ -20,4 +20,6 @@ public class Playout
     public ICollection<PlayoutHistory> PlayoutHistory { get; set; }
     public int Seed { get; set; }
     public TimeSpan? DailyRebuildTime { get; set; }
+    public int? DecoId { get; set; }
+    public Deco Deco { get; set; }
 }

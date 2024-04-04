@@ -52,6 +52,7 @@ public class ReplacePlayoutTemplateItemsHandler(
                             PlayoutId = playout.Id,
                             Index = add.Index,
                             TemplateId = add.TemplateId,
+                            DecoTemplateId = add.DecoTemplateId,
                             DaysOfWeek = add.DaysOfWeek,
                             DaysOfMonth = add.DaysOfMonth,
                             MonthsOfYear = add.MonthsOfYear,
@@ -70,6 +71,7 @@ public class ReplacePlayoutTemplateItemsHandler(
                     {
                         ex.Index = update.Index;
                         ex.TemplateId = update.TemplateId;
+                        ex.DecoTemplateId = update.DecoTemplateId;
                         ex.DaysOfWeek = update.DaysOfWeek;
                         ex.DaysOfMonth = update.DaysOfMonth;
                         ex.MonthsOfYear = update.MonthsOfYear;

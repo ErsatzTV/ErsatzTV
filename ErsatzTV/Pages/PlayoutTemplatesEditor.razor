@@ -11,7 +11,7 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable T="PlayoutTemplateEditViewModel" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
+    <MudTable T="PlayoutTemplateEditViewModel" Class="mt-4" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
         <ToolBarContent>
             <MudText Typo="Typo.h6">@_channelName Templates</MudText>
             <MudSpacer/>
@@ -105,6 +105,24 @@
                                 @foreach (TemplateViewModel template in _templates)
                                 {
                                     <MudSelectItem Value="@template">@template.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudCardContent>
+                    </MudCard>
+                    <MudCard Class="mt-4">
+                        <MudCardContent>
+                            <MudSelect T="DecoTemplateGroupViewModel" Label="Deco Template Group" Value="@_selectedDecoTemplateGroup" ValueChanged="@(vm => UpdateDecoTemplateGroupItems(vm))">
+                                @foreach (DecoTemplateGroupViewModel decoTemplateGroup in _decoTemplateGroups)
+                                {
+                                    <MudSelectItem Value="@decoTemplateGroup">
+                                        @decoTemplateGroup.Name
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Label="Deco Template" @bind-Value="_selectedItem.DecoTemplate" For="@(() => _selectedItem.DecoTemplate)" Clearable="true">
+                                @foreach (DecoTemplateViewModel decoTemplate in _decoTemplates)
+                                {
+                                    <MudSelectItem Value="@decoTemplate">@decoTemplate.Name</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudCardContent>
@@ -285,9 +303,13 @@
     private readonly List<TemplateGroupViewModel> _templateGroups = [];
     private readonly List<TemplateViewModel> _templates = [];
 
+    private readonly List<DecoTemplateGroupViewModel> _decoTemplateGroups = [];
+    private readonly List<DecoTemplateViewModel> _decoTemplates = [];
+
     private string _channelName;
     private List<PlayoutTemplateEditViewModel> _items = [];
     private TemplateGroupViewModel _selectedGroup;
+    private DecoTemplateGroupViewModel _selectedDecoTemplateGroup;
     private PlayoutTemplateEditViewModel _selectedItem;
     private readonly List<CalendarItem> _previewItems = [];
 
@@ -306,6 +328,9 @@
         _templateGroups.Clear();
         _templateGroups.AddRange(await Mediator.Send(new GetAllTemplateGroups(), _cts.Token));
 
+        _decoTemplateGroups.Clear();
+        _decoTemplateGroups.AddRange(await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token));
+        
         List<PlayoutTemplateViewModel> results = await Mediator.Send(new GetPlayoutTemplates(Id), _cts.Token);
         _items = results.Map(ProjectToEditViewModel).ToList();
         if (_items.Count == 1)
@@ -319,6 +344,7 @@
         {
             Id = item.Id,
             Template = item.Template,
+            DecoTemplate = item.DecoTemplate,
             Index = item.Index,
             DaysOfWeek = item.DaysOfWeek.ToList(),
             DaysOfMonth = item.DaysOfMonth.ToList(),
@@ -338,6 +364,14 @@
         _templates.AddRange(await Mediator.Send(new GetTemplatesByTemplateGroupId(_selectedGroup.Id), _cts.Token));
     }
 
+    private async Task UpdateDecoTemplateGroupItems(DecoTemplateGroupViewModel decoTemplateGroup)
+    {
+        _selectedDecoTemplateGroup = decoTemplateGroup;
+
+        _decoTemplates.Clear();
+        _decoTemplates.AddRange(await Mediator.Send(new GetDecoTemplatesByDecoTemplateGroupId(_selectedDecoTemplateGroup.Id), _cts.Token));
+    }
+
     private async Task SelectedItemChanged(PlayoutTemplateEditViewModel template)
     {
         _selectedItem = template;
@@ -345,6 +379,11 @@
         foreach (TemplateGroupViewModel group in Optional(_templateGroups.Find(group => group.Id == _selectedItem.Template.TemplateGroupId)))
         {
             await UpdateTemplateGroupItems(group);
+        }
+        
+        foreach (DecoTemplateGroupViewModel group in Optional(_decoTemplateGroups.Find(group => group.Id == _selectedItem.DecoTemplate?.DecoTemplateGroupId)))
+        {
+            await UpdateDecoTemplateGroupItems(group);
         }
     }
 
@@ -486,6 +525,7 @@
                 item.Id,
                 item.Index,
                 item.Template.Id,
+                item.DecoTemplate?.Id,
                 item.DaysOfWeek,
                 item.DaysOfMonth,
                 item.MonthsOfYear,

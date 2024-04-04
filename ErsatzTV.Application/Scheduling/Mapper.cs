@@ -45,11 +45,38 @@ internal static class Mapper
         DateTime endTime = startTime.AddMinutes(templateItem.Block.Minutes);
         return new TemplateItemViewModel(templateItem.BlockId, templateItem.Block.Name, startTime, endTime);
     }
+    
+    internal static DecoGroupViewModel ProjectToViewModel(DecoGroup decoGroup) =>
+        new(decoGroup.Id, decoGroup.Name, decoGroup.Decos.Count);
+
+    internal static DecoViewModel ProjectToViewModel(Deco deco) =>
+        new(deco.Id, deco.DecoGroupId, deco.Name, deco.WatermarkId);
+
+    internal static DecoTemplateGroupViewModel ProjectToViewModel(DecoTemplateGroup decoTemplateGroup) =>
+        new(decoTemplateGroup.Id, decoTemplateGroup.Name, decoTemplateGroup.DecoTemplates.Count);
+
+    internal static DecoTemplateViewModel ProjectToViewModel(DecoTemplate decoTemplate)
+    {
+        if (decoTemplate is null)
+        {
+            return null;
+        }
+
+        return new DecoTemplateViewModel(decoTemplate.Id, decoTemplate.DecoTemplateGroupId, decoTemplate.Name);
+    }
+
+    internal static DecoTemplateItemViewModel ProjectToViewModel(DecoTemplateItem decoTemplateItem)
+    {
+        DateTime startTime = DateTime.Today.Add(decoTemplateItem.StartTime);
+        DateTime endTime = DateTime.Today.Add(decoTemplateItem.EndTime);
+        return new DecoTemplateItemViewModel(decoTemplateItem.DecoId, decoTemplateItem.Deco.Name, startTime, endTime);
+    }
 
     internal static PlayoutTemplateViewModel ProjectToViewModel(PlayoutTemplate playoutTemplate) =>
         new(
             playoutTemplate.Id,
             ProjectToViewModel(playoutTemplate.Template),
+            ProjectToViewModel(playoutTemplate.DecoTemplate),
             playoutTemplate.Index,
             playoutTemplate.DaysOfWeek,
             playoutTemplate.DaysOfMonth,

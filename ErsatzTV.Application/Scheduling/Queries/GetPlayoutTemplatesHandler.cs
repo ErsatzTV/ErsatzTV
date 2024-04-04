@@ -17,6 +17,7 @@ public class GetPlayoutTemplatesHandler(IDbContextFactory<TvContext> dbContextFa
             .AsNoTracking()
             .Filter(t => t.PlayoutId == request.PlayoutId)
             .Include(t => t.Template)
+            .Include(t => t.DecoTemplate)
             .ToListAsync(cancellationToken);
 
         return playoutTemplates.Map(Mapper.ProjectToViewModel).ToList();
