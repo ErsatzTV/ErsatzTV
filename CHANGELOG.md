@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Active Date Range` to block playout template editor to allow limiting templates to a specific date range
   - This is year-agnostic, meaning the Month/Day range will apply to every year
   - This also supports wrapping the end of the year (e.g., start 12/1 and end 1/15)
+- Add new `Deco` system for "decorating" channels with non-primary content
+  - Decos currently only contain Watermarks, but future work will add other functionality, including filler 
+  - Similar to blocks, decos have deco groups for organization
+  - Similar to blocks, decos have deco templates for filling a "day" with decos
+  - In the playout template editor, playout template items can have *both* a block template and a deco template
+    - This allows watermarks to change at different times than primary content
+  - Block playouts can also have a default deco
+    - This will apply whenever a deco template is missing, or when a deco template item cannot be found for the current time
+    - Effectively, this sets a default watermark for the entire playout
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added
