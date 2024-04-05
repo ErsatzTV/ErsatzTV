@@ -300,9 +300,7 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         foreach (PlexEpisode plexEpisode in maybeExisting)
         {
             var result = new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false };
-
-            // deepScan isn't needed here since we create our own plex etags
-            if (plexEpisode.Etag != item.Etag)
+            if (plexEpisode.Etag != item.Etag || deepScan)
             {
                 foreach (BaseError error in await UpdateEpisodePath(dbContext, plexEpisode, item))
                 {
@@ -537,24 +535,33 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             version.DateAdded = incomingVersion.DateAdded;
 
             // media file
-            MediaFile file = version.MediaFiles.Head();
-            MediaFile incomingFile = incomingVersion.MediaFiles.Head();
 
-            _logger.LogDebug(
-                "Updating plex episode (key {Key}) path from {Existing} to {Incoming}",
-                existing.Key,
-                file.Path,
-                incomingFile.Path);
+            if (version.MediaFiles.Head() is PlexMediaFile file &&
+                incomingVersion.MediaFiles.Head() is PlexMediaFile incomingFile)
+            {
+                _logger.LogDebug(
+                    "Updating plex episode (key {Key}) file key from {FK1} => {FK2}, path from {Existing} to {Incoming}",
+                    existing.Key,
+                    file.Key,
+                    incomingFile.Key,
+                    file.Path,
+                    incomingFile.Path);
 
-            file.Path = incomingFile.Path;
+                file.Path = incomingFile.Path;
+                file.Key = incomingFile.Key;
 
-            await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
-                new { version.Name, version.DateAdded, version.Id });
+                await dbContext.Connection.ExecuteAsync(
+                    @"UPDATE MediaVersion SET Name = @Name, DateAdded = @DateAdded WHERE Id = @Id",
+                    new { version.Name, version.DateAdded, version.Id });
 
-            await dbContext.Connection.ExecuteAsync(
-                @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
-                new { file.Path, file.Id });
+                await dbContext.Connection.ExecuteAsync(
+                    @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
+                    new { file.Path, file.Id });
+
+                await dbContext.Connection.ExecuteAsync(
+                    @"UPDATE PlexMediaFile SET Key = @Key WHERE Id = @Id",
+                    new { file.Key, file.Id });
+            }
 
             return Option<BaseError>.None;
         }

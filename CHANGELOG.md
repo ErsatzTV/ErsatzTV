@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This will apply whenever a deco template is missing, or when a deco template item cannot be found for the current time
     - Effectively, this sets a default watermark for the entire playout
 
+### Fixed
+- Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help
+
 ## [0.8.6-beta] - 2024-04-03
 ### Added
 - Add `show_studio` and `show_content_rating` to search index for seasons and episodes
