@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help
+- Fix more wildcard search phrase queries (when wildcards are used in quotes, like `title:"law & order*"`)
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added

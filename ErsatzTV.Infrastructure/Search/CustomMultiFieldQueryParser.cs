@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;
+using Lucene.Net.QueryParsers.ComplexPhrase;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
 using Query = Lucene.Net.Search.Query;
@@ -11,8 +12,11 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public class CustomMultiFieldQueryParser : MultiFieldQueryParser
 {
-    private static readonly List<string> NumericFields = new()
-    {
+    private readonly LuceneVersion _matchVersion;
+    private readonly Analyzer _analyzer;
+
+    private static readonly List<string> NumericFields =
+    [
         LuceneSearchIndex.MinutesField,
         LuceneSearchIndex.SecondsField,
         LuceneSearchIndex.HeightField,
@@ -20,7 +24,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         LuceneSearchIndex.SeasonNumberField,
         LuceneSearchIndex.EpisodeNumberField,
         LuceneSearchIndex.VideoBitDepthField
-    };
+    ];
 
     public CustomMultiFieldQueryParser(
         LuceneVersion matchVersion,
@@ -28,6 +32,8 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         Analyzer analyzer,
         IDictionary<string, float> boosts) : base(matchVersion, fields, analyzer, boosts)
     {
+        _matchVersion = matchVersion;
+        _analyzer = analyzer;
     }
 
     public CustomMultiFieldQueryParser(LuceneVersion matchVersion, string[] fields, Analyzer analyzer) : base(
@@ -35,6 +41,8 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         fields,
         analyzer)
     {
+        _matchVersion = matchVersion;
+        _analyzer = analyzer;
     }
 
     protected override Query GetFieldQuery(string field, string queryText, bool quoted)
@@ -90,7 +98,16 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         // assume asterisk always means wildcard
         if (queryText.Contains('*'))
         {
-            return GetWildcardQuery(field, queryText);
+            var parser = new ComplexPhraseQueryParser(_matchVersion, LuceneSearchIndex.TitleField, _analyzer)
+            {
+                AllowLeadingWildcard = true
+            };
+            
+            string queryToParse = string.IsNullOrWhiteSpace(field)
+                ? $"\"{queryText}\""
+                : $"{field}:\"{queryText}\"";
+
+            return parser.Parse(queryToParse);
         }
         
         return base.GetFieldQuery(field, queryText, slop);
