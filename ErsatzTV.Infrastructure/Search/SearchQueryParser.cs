@@ -3,12 +3,18 @@ using Lucene.Net.Analysis.Core;
 using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.QueryParsers.Classic;
+using Lucene.Net.Search;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
 public static class SearchQueryParser
 {
+    static SearchQueryParser()
+    {
+        BooleanQuery.MaxClauseCount = 1024 * 4;
+    }
+    
     internal static Analyzer AnalyzerWrapper()
     {
         using var defaultAnalyzer = new CustomAnalyzer(LuceneSearchIndex.AppLuceneVersion);
