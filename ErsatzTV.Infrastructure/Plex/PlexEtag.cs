@@ -36,6 +36,9 @@ public class PlexEtag
             // media part id
             foreach (PlexPartResponse part in media.Part)
             {
+                bw.Write((byte)FieldKey.Key);
+                bw.Write(part.Key);
+                
                 bw.Write((byte)FieldKey.PartId);
                 bw.Write(part.Id);
 
@@ -214,6 +217,9 @@ public class PlexEtag
             // media part id
             foreach (PlexXmlPartResponse part in media.Part)
             {
+                bw.Write((byte)FieldKey.Key);
+                bw.Write(part.Key);
+                
                 bw.Write((byte)FieldKey.PartId);
                 bw.Write(part.Id);
 
@@ -326,6 +332,7 @@ public class PlexEtag
         Art = 21,
 
         File = 30,
+        Key = 31,
 
         ChildCount = 40,
         Smart = 41, // smart collection bool

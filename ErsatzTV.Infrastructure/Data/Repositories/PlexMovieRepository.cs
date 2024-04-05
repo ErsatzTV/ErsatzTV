@@ -253,12 +253,19 @@ public class PlexMovieRepository : IPlexMovieRepository
             new { version.Name, version.DateAdded, version.Id });
 
         // media file
-        MediaFile file = version.MediaFiles.Head();
-        MediaFile incomingFile = incomingVersion.MediaFiles.Head();
-        file.Path = incomingFile.Path;
+        if (version.MediaFiles.Head() is PlexMediaFile file &&
+            incomingVersion.MediaFiles.Head() is PlexMediaFile incomingFile)
+        {
+            file.Path = incomingFile.Path;
+            file.Key = incomingFile.Key;
 
-        await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
-            new { file.Path, file.Id });
+            await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaFile SET Path = @Path WHERE Id = @Id",
+                new { file.Path, file.Id });
+
+            await dbContext.Connection.ExecuteAsync(
+                @"UPDATE PlexMediaFile SET Key = @Key WHERE Id = @Id",
+                new { file.Key, file.Id });
+        }
     }
 }
