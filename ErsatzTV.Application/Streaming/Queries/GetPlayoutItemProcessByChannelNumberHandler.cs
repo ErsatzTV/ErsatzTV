@@ -173,7 +173,31 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
         {
-            maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);
+            Option<Playout> maybePlayout = await dbContext.Playouts
+                .AsNoTracking()
+
+                // get playout deco
+                .Include(p => p.Deco)
+                .ThenInclude(d => d.Watermark)
+
+                // get playout templates (and deco templates/decos)
+                .Include(p => p.Templates)
+                .ThenInclude(t => t.DecoTemplate)
+                .ThenInclude(t => t.Items)
+                .ThenInclude(i => i.Deco)
+                .ThenInclude(d => d.Watermark)
+
+                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id);
+
+            foreach (var playout in maybePlayout)
+            {
+                maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, playout, now);
+            }
+
+            if (maybePlayout.IsNone)
+            {
+                maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, null, now);
+            }
         }
 
         foreach (PlayoutItemWithPath playoutItemWithPath in maybePlayoutItem.RightToSeq())
@@ -431,19 +455,43 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(
         TvContext dbContext,
         Channel channel,
+        Playout playout,
         DateTimeOffset now)
     {
-        // check for channel fallback
-        Option<FillerPreset> maybeFallback = await dbContext.FillerPresets
-            .SelectOneAsync(w => w.Id, w => w.Id == channel.FallbackFillerId);
-
-        // then check for global fallback
-        if (maybeFallback.IsNone)
+        Option<FillerPreset> maybeFallback = Option<FillerPreset>.None;
+        
+        DeadAirFallbackResult decoDeadAirFallback = GetDecoDeadAirFallback(playout, now);
+        switch (decoDeadAirFallback)
         {
-            maybeFallback = await dbContext.ConfigElements
-                .GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId)
-                .BindT(fillerId => dbContext.FillerPresets.SelectOneAsync(w => w.Id, w => w.Id == fillerId));
+            case CustomDeadAirFallback custom:
+                maybeFallback = new FillerPreset
+                {
+                    AllowWatermarks = true,
+                    CollectionType = custom.CollectionType,
+                    CollectionId = custom.CollectionId,
+                    MediaItemId = custom.MediaItemId,
+                    MultiCollectionId = custom.MultiCollectionId,
+                    SmartCollectionId = custom.SmartCollectionId
+                };
+                break;
+            case DisableDeadAirFallback:
+                // do nothing
+                break;
+            case InheritDeadAirFallback:
+                // check for channel fallback
+                maybeFallback = await dbContext.FillerPresets
+                    .SelectOneAsync(w => w.Id, w => w.Id == channel.FallbackFillerId);
+
+                // then check for global fallback
+                if (maybeFallback.IsNone)
+                {
+                    maybeFallback = await dbContext.ConfigElements
+                        .GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId)
+                        .BindT(fillerId => dbContext.FillerPresets.SelectOneAsync(w => w.Id, w => w.Id == fillerId));
+                }
+                break;
         }
+        
 
         foreach (FillerPreset fallbackPreset in maybeFallback)
         {
@@ -651,8 +699,64 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return new InheritWatermark();
     }
 
+    private DeadAirFallbackResult GetDecoDeadAirFallback(Playout playout, DateTimeOffset now)
+    {
+        DecoEntries decoEntries = GetDecoEntries(playout, now);
+
+        // first, check deco template / active deco
+        foreach (Deco templateDeco in decoEntries.TemplateDeco)
+        {
+            switch (templateDeco.DeadAirFallbackMode)
+            {
+                case DecoMode.Override:
+                    _logger.LogDebug("Dead air fallback will come from template deco (override)");
+                    return new CustomDeadAirFallback(
+                        templateDeco.DeadAirFallbackCollectionType,
+                        templateDeco.DeadAirFallbackCollectionId,
+                        templateDeco.DeadAirFallbackMediaItemId,
+                        templateDeco.DeadAirFallbackMultiCollectionId,
+                        templateDeco.DeadAirFallbackSmartCollectionId);
+                case DecoMode.Disable:
+                    _logger.LogDebug("Dead air fallback is disabled by template deco");
+                    return new DisableDeadAirFallback();
+                case DecoMode.Inherit:
+                    _logger.LogDebug("Dead air fallback will inherit from playout deco");
+                    break;
+            }
+        }
+
+        // second, check playout deco
+        foreach (Deco playoutDeco in decoEntries.PlayoutDeco)
+        {
+            switch (playoutDeco.DeadAirFallbackMode)
+            {
+                case DecoMode.Override:
+                    _logger.LogDebug("Dead air fallback will come from playout deco (override)");
+                    return new CustomDeadAirFallback(
+                        playoutDeco.DeadAirFallbackCollectionType,
+                        playoutDeco.DeadAirFallbackCollectionId,
+                        playoutDeco.DeadAirFallbackMediaItemId,
+                        playoutDeco.DeadAirFallbackMultiCollectionId,
+                        playoutDeco.DeadAirFallbackSmartCollectionId);
+                case DecoMode.Disable:
+                    _logger.LogDebug("Dead air fallback is disabled by playout deco");
+                    return new DisableDeadAirFallback();
+                case DecoMode.Inherit:
+                    _logger.LogDebug("Dead air fallback will inherit from channel and/or global setting");
+                    break;
+            }
+        }
+
+        return new InheritDeadAirFallback();
+    }
+
     private static DecoEntries GetDecoEntries(Playout playout, DateTimeOffset now)
     {
+        if (playout is null)
+        {
+            return new DecoEntries(Option<Deco>.None, Option<Deco>.None);
+        }
+        
         Option<Deco> maybePlayoutDeco = Optional(playout.Deco);
         Option<Deco> maybeTemplateDeco = Option<Deco>.None;
         
@@ -678,4 +782,15 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private sealed record InheritWatermark : WatermarkResult;
     private sealed record DisableWatermark : WatermarkResult;
     private sealed record CustomWatermark(ChannelWatermark Watermark) : WatermarkResult;
+
+    private abstract record DeadAirFallbackResult;
+    private sealed record InheritDeadAirFallback : DeadAirFallbackResult;
+    private sealed record DisableDeadAirFallback : DeadAirFallbackResult;
+
+    private sealed record CustomDeadAirFallback(
+        ProgramScheduleItemCollectionType CollectionType,
+        int? CollectionId,
+        int? MediaItemId,
+        int? MultiCollectionId,
+        int? SmartCollectionId) : DeadAirFallbackResult;
 }
