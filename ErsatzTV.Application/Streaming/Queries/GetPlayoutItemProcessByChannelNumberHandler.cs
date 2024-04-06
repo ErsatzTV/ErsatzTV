@@ -79,9 +79,19 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         DateTimeOffset now = request.Now;
 
         Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
+            // get playout deco
             .Include(i => i.Playout)
             .ThenInclude(p => p.Deco)
             .ThenInclude(d => d.Watermark)
+            
+            // get playout templates (and deco templates/decos)
+            .Include(i => i.Playout)
+            .ThenInclude(p => p.Templates)
+            .ThenInclude(t => t.DecoTemplate)
+            .ThenInclude(t => t.Items)
+            .ThenInclude(i => i.Deco)
+            .ThenInclude(d => d.Watermark)
+
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
@@ -198,62 +208,20 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     watermarkId => dbContext.ChannelWatermarks
                         .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
-            Option<ChannelWatermark> playoutItemWatermark = Optional(playoutItemWithPath.PlayoutItem.Watermark);
-            if (playoutItemWatermark.IsNone &&
-                playoutItemWithPath.PlayoutItem.Playout.ProgramSchedulePlayoutType is ProgramSchedulePlayoutType.Block)
+            Option<ChannelWatermark> playoutItemWatermark = Option<ChannelWatermark>.None;
+            bool disableWatermarks = playoutItemWithPath.PlayoutItem.DisableWatermarks;
+            WatermarkResult watermarkResult = GetPlayoutItemWatermark(playoutItemWithPath.PlayoutItem.Playout, now);
+            switch (watermarkResult)
             {
-                _logger.LogDebug("Block playout item has no watermark; checking for deco");
-                
-                // check for playout template deco
-                // load all playout templates
-                // get playout template for start time
-                // check for deco
-                // load all templates that have decos
-                List<PlayoutTemplate> playoutTemplates = await dbContext.PlayoutTemplates
-                    .AsNoTracking()
-                    .Filter(t => t.PlayoutId == playoutItemWithPath.PlayoutItem.PlayoutId)
-                    .Filter(t => t.DecoTemplateId != null)
-                    .Include(t => t.DecoTemplate)
-                    .ThenInclude(t => t.Items)
-                    .ThenInclude(i => i.Deco)
-                    .ThenInclude(d => d.Watermark)
-                    .ToListAsync(cancellationToken);
-
-                Option<PlayoutTemplate> maybeActiveTemplate = PlayoutTemplateSelector.GetPlayoutTemplateFor(
-                    playoutTemplates,
-                    playoutItemWithPath.PlayoutItem.StartOffset);
-
-                foreach (PlayoutTemplate activeTemplate in maybeActiveTemplate)
-                {
-                    _logger.LogDebug("Block playout has active playout template; checking for deco template items");
-                    Option<DecoTemplateItem> maybeItem = activeTemplate.DecoTemplate.Items
-                        .Find(i => i.StartTime <= now.TimeOfDay && i.EndTime > now.TimeOfDay);
-                    foreach (DecoTemplateItem item in maybeItem)
-                    {
-                        _logger.LogDebug("Block playout has active deco template item; checking for watermark");
-                        foreach (ChannelWatermark watermark in Optional(item.Deco.Watermark))
-                        {
-                            _logger.LogDebug(
-                                "Block playout has active deco template item with watermark; will use for this playout item");
-                            playoutItemWatermark = watermark;
-                        }
-                    }
-                }
-
-                if (playoutItemWatermark.IsNone)
-                {
-                    // check for playout deco
-                    foreach (Deco deco in Optional(playoutItemWithPath.PlayoutItem.Playout.Deco))
-                    {
-                        _logger.LogDebug("Block playout item has default deco; checking for watermark");
-                        foreach (ChannelWatermark watermark in Optional(deco.Watermark))
-                        {
-                            _logger.LogDebug(
-                                "Block playout has default deco with watermark; will use for this playout item");
-                            playoutItemWatermark = watermark;
-                        }
-                    }
-                }
+                case InheritWatermark:
+                    // do nothing, other code will fall back to channel/global
+                    break;
+                case DisableWatermark:
+                    disableWatermarks = true;
+                    break;
+                case CustomWatermark watermark:
+                    playoutItemWatermark = watermark.Watermark;
+                    break;
             }
 
             if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
@@ -312,7 +280,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 outPoint,
                 request.PtsOffset,
                 request.TargetFramerate,
-                playoutItemWithPath.PlayoutItem.DisableWatermarks,
+                disableWatermarks,
                 _ => { });
 
             var result = new PlayoutItemProcessModel(process, duration, finish, true);
@@ -641,4 +609,73 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             _ => path
         };
     }
+
+    private WatermarkResult GetPlayoutItemWatermark(Playout playout, DateTimeOffset now)
+    {
+        DecoEntries decoEntries = GetDecoEntries(playout, now);
+
+        // first, check deco template / active deco
+        foreach (Deco templateDeco in decoEntries.TemplateDeco)
+        {
+            switch (templateDeco.WatermarkMode)
+            {
+                case DecoMode.Override:
+                    _logger.LogDebug("Watermark will come from template deco (override)");
+                    return new CustomWatermark(templateDeco.Watermark);
+                case DecoMode.Disable:
+                    _logger.LogDebug("Watermark is disabled by template deco");
+                    return new DisableWatermark();
+                case DecoMode.Inherit:
+                    _logger.LogDebug("Watermark will inherit from playout deco");
+                    break;
+            }
+        }
+
+        // second, check playout deco
+        foreach (Deco playoutDeco in decoEntries.PlayoutDeco)
+        {
+            switch (playoutDeco.WatermarkMode)
+            {
+                case DecoMode.Override:
+                    _logger.LogDebug("Watermark will come from playout deco (override)");
+                    return new CustomWatermark(playoutDeco.Watermark);
+                case DecoMode.Disable:
+                    _logger.LogDebug("Watermark is disabled by playout deco");
+                    return new DisableWatermark();
+                case DecoMode.Inherit:
+                    _logger.LogDebug("Watermark will inherit from channel and/or global setting");
+                    break;
+            }
+        }
+
+        return new InheritWatermark();
+    }
+
+    private static DecoEntries GetDecoEntries(Playout playout, DateTimeOffset now)
+    {
+        Option<Deco> maybePlayoutDeco = Optional(playout.Deco);
+        Option<Deco> maybeTemplateDeco = Option<Deco>.None;
+        
+        Option<PlayoutTemplate> maybeActiveTemplate =
+            PlayoutTemplateSelector.GetPlayoutTemplateFor(playout.Templates, now);
+
+        foreach (PlayoutTemplate activeTemplate in maybeActiveTemplate)
+        {
+            Option<DecoTemplateItem> maybeItem = activeTemplate.DecoTemplate.Items
+                .Find(i => i.StartTime <= now.TimeOfDay && i.EndTime > now.TimeOfDay);
+            foreach (DecoTemplateItem item in maybeItem)
+            {
+                maybeTemplateDeco = Optional(item.Deco);
+            }
+        }
+        
+        return new DecoEntries(maybeTemplateDeco, maybePlayoutDeco);
+    }
+
+    private sealed record DecoEntries(Option<Deco> TemplateDeco, Option<Deco> PlayoutDeco);
+
+    private abstract record WatermarkResult;
+    private sealed record InheritWatermark : WatermarkResult;
+    private sealed record DisableWatermark : WatermarkResult;
+    private sealed record CustomWatermark(ChannelWatermark Watermark) : WatermarkResult;
 }
