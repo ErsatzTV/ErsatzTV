@@ -1,19 +1,43 @@
 ﻿@page "/decos/{Id:int}"
 @using ErsatzTV.Application.Scheduling
 @using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Television
+@using ErsatzTV.Application.Artists
+@using ErsatzTV.Core.Domain.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<DecoEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-<MudText Typo="Typo.h4" Class="mb-4">Edit Deco</MudText>
-<div style="max-width: 400px">
-    <MudCard>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="display: flex; flex-direction: row">
+<MudStack Class="mr-6">
+    <MudText Typo="Typo.h4" Class="mb-4">Edit Deco</MudText>
+    <MudCard Class="mb-6" Style="width: 350px">
         <MudCardContent>
             <MudTextField Label="Name" @bind-Value="_deco.Name" For="@(() => _deco.Name)"/>
-            <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_deco.WatermarkId" For="@(() => _deco.WatermarkId)"
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" StartIcon="@Icons.Material.Filled.Save">
+                Save Changes
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Watermark</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudSelect Label="Watermark Mode" @bind-Value="_deco.WatermarkMode" For="@(() => _deco.WatermarkMode)">
+                <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+                <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+                <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+            </MudSelect>
+            <MudSelect Disabled="@(_deco.WatermarkMode != DecoMode.Override)" Label="Watermark Override" @bind-Value="_deco.WatermarkId" For="@(() => _deco.WatermarkId)"
                        Clearable="true">
                 <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                 @foreach (WatermarkViewModel watermark in _watermarks)
@@ -23,10 +47,116 @@
             </MudSelect>
         </MudCardContent>
     </MudCard>
-</div>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
-    Save Changes
-</MudButton>
+    <MudCard Class="mb-6" Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudTooltip Style="max-width: 350px">
+                    <ChildContent>
+                        <MudText Typo="Typo.h6">Dead Air Fallback</MudText>
+                    </ChildContent>
+                    <TooltipContent>
+                        <MudText Typo="Typo.body2">When no playout item is found for the current time, *one* item will be randomly selected from this collection and looped and cut to exactly fit until the start of the next playout item.</MudText>
+                        <MudText Typo="Typo.body2" Class="mt-3">This replaces the "Channel is Offline" image that would otherwise display.</MudText>
+                    </TooltipContent>
+                </MudTooltip>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudSelect Label="Dead Air Fallback Mode" @bind-Value="_deco.DeadAirFallbackMode" For="@(() => _deco.DeadAirFallbackMode)">
+                <MudSelectItem Value="DecoMode.Inherit">Inherit</MudSelectItem>
+                <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
+                <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
+            </MudSelect>
+            <MudSelect Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)" 
+                       Label="Dead Air Fallback Collection Type"
+                       @bind-Value="_deco.DeadAirFallbackCollectionType"
+                       For="@(() => _deco.DeadAirFallbackCollectionType)">
+                @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
+                {
+                    <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
+                }
+            </MudSelect>
+            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Collection)
+            {
+                <MudSelect Class="mt-3"
+                           T="MediaCollectionViewModel"
+                           Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                           Label="Collection"
+                           @bind-value="_deco.DeadAirFallbackCollection">
+                    @foreach (MediaCollectionViewModel collection in _mediaCollections)
+                    {
+                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+            {
+                <MudSelect Class="mt-3"
+                           T="MultiCollectionViewModel"
+                           Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                           Label="Multi Collection"
+                           @bind-value="_deco.DeadAirFallbackMultiCollection">
+                    @foreach (MultiCollectionViewModel collection in _multiCollections)
+                    {
+                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+            {
+                <MudSelect Class="mt-3"
+                           T="SmartCollectionViewModel"
+                           Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                           Label="Smart Collection"
+                           @bind-value="_deco.DeadAirFallbackSmartCollection">
+                    @foreach (SmartCollectionViewModel collection in _smartCollections)
+                    {
+                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+            {
+                <MudSelect Class="mt-3"
+                           T="NamedMediaItemViewModel"
+                           Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                           Label="Television Show"
+                           @bind-value="_deco.DeadAirFallbackMediaItem">
+                    @foreach (NamedMediaItemViewModel show in _televisionShows)
+                    {
+                        <MudSelectItem Value="@show">@show.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+            {
+                <MudSelect Class="mt-3"
+                           T="NamedMediaItemViewModel"
+                           Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                           Label="Television Season"
+                           @bind-value="_deco.DeadAirFallbackMediaItem">
+                    @foreach (NamedMediaItemViewModel season in _televisionSeasons)
+                    {
+                        <MudSelectItem Value="@season">@season.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Artist)
+            {
+                <MudSelect Class="mt-3"
+                           T="NamedMediaItemViewModel"
+                           Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
+                           Label="Artist"
+                           @bind-value="_deco.DeadAirFallbackMediaItem">
+                    @foreach (NamedMediaItemViewModel artist in _artists)
+                    {
+                        <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudStack>
 </MudContainer>
 
 @code {
@@ -36,7 +166,16 @@
     public int Id { get; set; }
 
     private DecoEditViewModel _deco = new();
+
     private List<WatermarkViewModel> _watermarks = [];
+    
+    private List<MediaCollectionViewModel> _mediaCollections = [];
+    private List<MultiCollectionViewModel> _multiCollections = [];
+    private List<SmartCollectionViewModel> _smartCollections = [];
+    private List<NamedMediaItemViewModel> _televisionShows = [];
+    private List<NamedMediaItemViewModel> _televisionSeasons = [];
+    private List<NamedMediaItemViewModel> _artists = [];
+
 
     public void Dispose()
     {
@@ -47,6 +186,20 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadWatermarks();
+        
+        _mediaCollections = await Mediator.Send(new GetAllCollections(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _multiCollections = await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _smartCollections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _televisionShows = await Mediator.Send(new GetAllTelevisionShows(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _artists = await Mediator.Send(new GetAllArtists(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
         await LoadDeco();
     }
     
@@ -68,15 +221,44 @@
             {
                 Name = deco.Name,
                 DecoGroupId = deco.DecoGroupId,
-                WatermarkId = deco.WatermarkId
+                WatermarkMode = deco.WatermarkMode,
+                WatermarkId = deco.WatermarkId,
+                DeadAirFallbackMode = deco.DeadAirFallbackMode,
+                DeadAirFallbackCollectionType = deco.DeadAirFallbackCollectionType,
+                DeadAirFallbackCollection = deco.DeadAirFallbackCollectionId.HasValue
+                    ? _mediaCollections.Find(c => c.Id == deco.DeadAirFallbackCollectionId.Value)
+                    : null,
+                DeadAirFallbackMediaItem = deco.DeadAirFallbackMediaItemId.HasValue
+                    ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList()
+                        .Find(vm => vm.MediaItemId == deco.DeadAirFallbackMediaItemId.Value)
+                    : null,
+                DeadAirFallbackMultiCollection = deco.DeadAirFallbackMultiCollectionId.HasValue
+                    ? _multiCollections.Find(c => c.Id == deco.DeadAirFallbackMultiCollectionId.Value)
+                    : null,
+                DeadAirFallbackSmartCollection = deco.DeadAirFallbackSmartCollectionId.HasValue
+                    ? _smartCollections.Find(c => c.Id == deco.DeadAirFallbackSmartCollectionId.Value)
+                    : null
             };
         }
     }
 
     private async Task SaveChanges()
     {
+        var request = new UpdateDeco(
+            Id,
+            _deco.DecoGroupId,
+            _deco.Name,
+            _deco.WatermarkMode,
+            _deco.WatermarkId,
+            _deco.DeadAirFallbackMode,
+            _deco.DeadAirFallbackCollectionType,
+            _deco.DeadAirFallbackCollection?.Id,
+            _deco.DeadAirFallbackMediaItem?.MediaItemId,
+            _deco.DeadAirFallbackMultiCollection?.Id,
+            _deco.DeadAirFallbackSmartCollection?.Id);
+        
         Seq<BaseError> errorMessages = await Mediator
-            .Send(new UpdateDeco(Id, _deco.DecoGroupId, _deco.Name, _deco.WatermarkId), _cts.Token)
+            .Send(request, _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(

@@ -22,7 +22,26 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         UpdateDeco request)
     {
         existing.Name = request.Name;
-        existing.WatermarkId = request.WatermarkId;
+        
+        // watermark
+        existing.WatermarkMode = request.WatermarkMode;
+        existing.WatermarkId = request.WatermarkMode is DecoMode.Override ? request.WatermarkId : null;
+        
+        // dead air fallback
+        existing.DeadAirFallbackMode = request.DeadAirFallbackMode;
+        existing.DeadAirFallbackCollectionType = request.DeadAirFallbackCollectionType;
+        existing.DeadAirFallbackCollectionId = request.DeadAirFallbackMode is DecoMode.Override
+            ? request.DeadAirFallbackCollectionId
+            : null;
+        existing.DeadAirFallbackMediaItemId = request.DeadAirFallbackMode is DecoMode.Override
+            ? request.DeadAirFallbackMediaItemId
+            : null;
+        existing.DeadAirFallbackMultiCollectionId = request.DeadAirFallbackMode is DecoMode.Override
+            ? request.DeadAirFallbackMultiCollectionId
+            : null;
+        existing.DeadAirFallbackSmartCollectionId = request.DeadAirFallbackMode is DecoMode.Override
+            ? request.DeadAirFallbackSmartCollectionId
+            : null;
 
         await dbContext.SaveChangesAsync();
 

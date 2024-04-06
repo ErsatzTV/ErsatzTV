@@ -9,14 +9,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This is year-agnostic, meaning the Month/Day range will apply to every year
   - This also supports wrapping the end of the year (e.g., start 12/1 and end 1/15)
 - Add new `Deco` system for "decorating" channels with non-primary content
-  - Decos currently only contain Watermarks, but future work will add other functionality, including filler 
+  - Decos currently contain
+    - Watermarks
+    - Dead Air Fallback (i.e. fallback filler)
   - Similar to blocks, decos have deco groups for organization
   - Similar to blocks, decos have deco templates for filling a "day" with decos
   - In the playout template editor, playout template items can have *both* a block template and a deco template
-    - This allows watermarks to change at different times than primary content
+    - This allows watermarks and dead air fallback to change at different times than primary content
   - Block playouts can also have a default deco
     - This will apply whenever a deco template is missing, or when a deco template item cannot be found for the current time
-    - Effectively, this sets a default watermark for the entire playout
+    - Effectively, this sets a default watermark and dead air fallback for the entire playout
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help

@@ -24,5 +24,29 @@ public class DecoConfiguration : IEntityTypeConfiguration<Deco>
             .HasForeignKey(d => d.WatermarkId)
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
+        
+        builder.HasOne(d => d.DeadAirFallbackCollection)
+            .WithMany()
+            .HasForeignKey(d => d.DeadAirFallbackCollectionId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
+        builder.HasOne(d => d.DeadAirFallbackMediaItem)
+            .WithMany()
+            .HasForeignKey(d => d.DeadAirFallbackMediaItemId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
+        builder.HasOne(d => d.DeadAirFallbackMultiCollection)
+            .WithMany()
+            .HasForeignKey(d => d.DeadAirFallbackMultiCollectionId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
+        builder.HasOne(d => d.DeadAirFallbackSmartCollection)
+            .WithMany()
+            .HasForeignKey(d => d.DeadAirFallbackSmartCollectionId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
     }
 }
