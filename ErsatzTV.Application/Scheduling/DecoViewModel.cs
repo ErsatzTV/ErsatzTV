@@ -1,3 +1,17 @@
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
+
 namespace ErsatzTV.Application.Scheduling;
 
-public record DecoViewModel(int Id, int DecoGroupId, string Name, int? WatermarkId);
+public record DecoViewModel(
+    int Id,
+    int DecoGroupId,
+    string Name,
+    DecoMode WatermarkMode,
+    int? WatermarkId,
+    DecoMode DeadAirFallbackMode,
+    ProgramScheduleItemCollectionType DeadAirFallbackCollectionType,
+    int? DeadAirFallbackCollectionId,
+    int? DeadAirFallbackMediaItemId,
+    int? DeadAirFallbackMultiCollectionId,
+    int? DeadAirFallbackSmartCollectionId);

@@ -2036,6 +2036,24 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DeadAirFallbackCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeadAirFallbackCollectionType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DeadAirFallbackMediaItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DeadAirFallbackMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DeadAirFallbackMultiCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DeadAirFallbackSmartCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("DecoGroupId")
                         .HasColumnType("INTEGER");
 
@@ -2045,7 +2063,18 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("WatermarkId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("WatermarkMode")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("DeadAirFallbackCollectionId");
+
+                    b.HasIndex("DeadAirFallbackMediaItemId");
+
+                    b.HasIndex("DeadAirFallbackMultiCollectionId");
+
+                    b.HasIndex("DeadAirFallbackSmartCollectionId");
 
                     b.HasIndex("WatermarkId");
 
@@ -4254,6 +4283,26 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Scheduling.Deco", b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.Collection", "DeadAirFallbackCollection")
+                        .WithMany()
+                        .HasForeignKey("DeadAirFallbackCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "DeadAirFallbackMediaItem")
+                        .WithMany()
+                        .HasForeignKey("DeadAirFallbackMediaItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "DeadAirFallbackMultiCollection")
+                        .WithMany()
+                        .HasForeignKey("DeadAirFallbackMultiCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "DeadAirFallbackSmartCollection")
+                        .WithMany()
+                        .HasForeignKey("DeadAirFallbackSmartCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Scheduling.DecoGroup", "DecoGroup")
                         .WithMany("Decos")
                         .HasForeignKey("DecoGroupId")
@@ -4264,6 +4313,14 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .WithMany()
                         .HasForeignKey("WatermarkId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("DeadAirFallbackCollection");
+
+                    b.Navigation("DeadAirFallbackMediaItem");
+
+                    b.Navigation("DeadAirFallbackMultiCollection");
+
+                    b.Navigation("DeadAirFallbackSmartCollection");
 
                     b.Navigation("DecoGroup");
 

@@ -50,7 +50,18 @@ internal static class Mapper
         new(decoGroup.Id, decoGroup.Name, decoGroup.Decos.Count);
 
     internal static DecoViewModel ProjectToViewModel(Deco deco) =>
-        new(deco.Id, deco.DecoGroupId, deco.Name, deco.WatermarkId);
+        new(
+            deco.Id,
+            deco.DecoGroupId,
+            deco.Name,
+            deco.WatermarkMode,
+            deco.WatermarkId,
+            deco.DeadAirFallbackMode,
+            deco.DeadAirFallbackCollectionType,
+            deco.DeadAirFallbackCollectionId,
+            deco.DeadAirFallbackMediaItemId,
+            deco.DeadAirFallbackMultiCollectionId,
+            deco.DeadAirFallbackSmartCollectionId);
 
     internal static DecoTemplateGroupViewModel ProjectToViewModel(DecoTemplateGroup decoTemplateGroup) =>
         new(decoTemplateGroup.Id, decoTemplateGroup.Name, decoTemplateGroup.DecoTemplates.Count);
