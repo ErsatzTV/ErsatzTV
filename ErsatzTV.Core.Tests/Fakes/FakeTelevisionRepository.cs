@@ -86,4 +86,7 @@ public class FakeTelevisionRepository : ITelevisionRepository
 
     public Task<bool> UpdatePlot(EpisodeMetadata metadata, string plot) => throw new NotSupportedException();
     public Task<bool> UpdateYear(ShowMetadata metadata, int? year) => throw new NotSupportedException();
+
+    public Task<bool> UpdateTitles(ShowMetadata metadata, string title, string sortTitle) =>
+        throw new NotSupportedException();
 }
