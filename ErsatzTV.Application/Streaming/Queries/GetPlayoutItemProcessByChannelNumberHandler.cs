@@ -466,7 +466,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             case CustomDeadAirFallback custom:
                 maybeFallback = new FillerPreset
                 {
-                    AllowWatermarks = true,
+                    AllowWatermarks = false, // TODO: does this need to be configurable?
                     CollectionType = custom.CollectionType,
                     CollectionId = custom.CollectionId,
                     MediaItemId = custom.MediaItemId,

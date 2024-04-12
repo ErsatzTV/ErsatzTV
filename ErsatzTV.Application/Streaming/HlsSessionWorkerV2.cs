@@ -18,7 +18,7 @@ namespace ErsatzTV.Application.Streaming;
 
 public class HlsSessionWorkerV2 : IHlsSessionWorker
 {
-    private static readonly SemaphoreSlim Slim = new(1, 1);
+    private readonly SemaphoreSlim _slim = new(1, 1);
 
     //private static int _workAheadCount;
     private readonly IConfigElementRepository _configElementRepository;
@@ -65,14 +65,14 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     {
         _logger.LogInformation("API termination request for HLS session for channel {Channel}", _channelNumber);
 
-        await Slim.WaitAsync(cancellationToken);
+        await _slim.WaitAsync(cancellationToken);
         try
         {
             await _cancellationTokenSource.CancelAsync();
         }
         finally
         {
-            Slim.Release();
+            _slim.Release();
         }
     }
 
@@ -369,7 +369,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
     private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
-        await Slim.WaitAsync(cancellationToken);
+        await _slim.WaitAsync(cancellationToken);
         try
         {
             long result = 0;
@@ -398,7 +398,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
         }
         finally
         {
-            Slim.Release();
+            _slim.Release();
         }
     }
 
