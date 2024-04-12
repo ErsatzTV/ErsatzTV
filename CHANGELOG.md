@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix more wildcard search phrase queries (when wildcards are used in quotes, like `title:"law & order*"`)
 - Fix bug where channels would unnecessarily wait on each other
   - e.g. in-progress streams would delay responding with a playlist when new streams were starting
+- Update Plex show title in ETV when changed in Plex
+- Reindex seasons and episodes when show is updated from media server
+  - This is needed to keep `show_*` tags accurate in the search index (e.g., `show_title`, `show_studio`)
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added
