@@ -20,8 +20,8 @@ namespace ErsatzTV.Application.Streaming;
 
 public class HlsSessionWorker : IHlsSessionWorker
 {
-    private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
+    private readonly SemaphoreSlim _slim = new(1, 1);
     private readonly IClient _client;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
@@ -66,14 +66,14 @@ public class HlsSessionWorker : IHlsSessionWorker
     {
         _logger.LogInformation("API termination request for HLS session for channel {Channel}", _channelNumber);
 
-        await Slim.WaitAsync(cancellationToken);
+        await _slim.WaitAsync(cancellationToken);
         try
         {
             await _cancellationTokenSource.CancelAsync();
         }
         finally
         {
-            Slim.Release();
+            _slim.Release();
         }
     }
 
@@ -97,7 +97,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         try
         {
             var sw = Stopwatch.StartNew();
-            await Slim.WaitAsync(cancellationToken);
+            await _slim.WaitAsync(cancellationToken);
             try
             {
                 Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
@@ -117,7 +117,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
             finally
             {
-                Slim.Release();
+                _slim.Release();
                 sw.Stop();
                 // _logger.LogDebug("TrimPlaylist took {Duration}", sw.Elapsed);
             }
@@ -535,7 +535,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private async Task TrimAndDelete(CancellationToken cancellationToken)
     {
-        await Slim.WaitAsync(cancellationToken);
+        await _slim.WaitAsync(cancellationToken);
         try
         {
             Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
@@ -555,7 +555,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
         finally
         {
-            Slim.Release();
+            _slim.Release();
         }
     }
 
@@ -606,7 +606,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
     private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
     {
-        await Slim.WaitAsync(cancellationToken);
+        await _slim.WaitAsync(cancellationToken);
         try
         {
             long result = 0;
@@ -635,7 +635,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
         finally
         {
-            Slim.Release();
+            _slim.Release();
         }
     }
 
