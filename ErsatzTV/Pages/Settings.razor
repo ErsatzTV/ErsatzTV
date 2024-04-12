@@ -236,7 +236,7 @@
                               @bind-Value="_playoutSettings.DaysToBuild"
                               Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
                               Required="true"
-                              RequiredError="Days to build is required!"
+                              RequiredError="Playout days to build is required!"
                               Adornment="Adornment.End"
                               AdornmentText="Days"/>
                 <MudElement HtmlTag="div" Class="mt-3">
@@ -298,6 +298,14 @@
             </CardHeaderContent>
         </MudCardHeader>
         <MudCardContent>
+            <MudTextField T="int"
+                          Label="Days To Build"
+                          @bind-Value="_xmltvSettings.DaysToBuild"
+                          Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))"
+                          Required="true"
+                          RequiredError="XMLTV days to build is required!"
+                          Adornment="Adornment.End"
+                          AdornmentText="Days"/>
             <MudSelect Class="mt-3"
                        Label="XMLTV Time Zone"
                        @bind-Value="_xmltvSettings.TimeZone"
@@ -374,7 +382,9 @@
         _ => null
     };
 
-    private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Days to build must be greater than zero" : null;
+    private static string ValidateXmltvDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "XMLTV days to build must be greater than zero" : null;
+
+    private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Playout days to build must be greater than zero" : null;
 
     private static string ValidateHlsSegmenterIdleTimeout(int idleTimeout) => idleTimeout < 30 ? "HLS Segmenter idle timeout must be greater than or equal to 30" : null;
 

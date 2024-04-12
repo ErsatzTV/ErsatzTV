@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Block playouts can also have a default deco
     - This will apply whenever a deco template is missing, or when a deco template item cannot be found for the current time
     - Effectively, this sets a default watermark and dead air fallback for the entire playout
+- Add `XMLTV Days To Build` setting, which is distinct from the existing `Playout Days To Build` setting
+  - The value for `XMLTV Days To Build` cannot be larger than `Playout Days To Build`
+  - This allows, for example, a week of playout data while optimizing XMLTV data to only a day or two
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help

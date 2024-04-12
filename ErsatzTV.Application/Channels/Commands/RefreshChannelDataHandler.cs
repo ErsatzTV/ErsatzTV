@@ -170,13 +170,23 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         await using var xml = XmlWriter.Create(
             ms,
             new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
+        
+        int daysToBuild = await _configElementRepository
+            .GetValue<int>(ConfigElementKey.XmltvDaysToBuild)
+            .IfNoneAsync(2);
 
+        DateTimeOffset finish = DateTimeOffset.UtcNow.AddDays(daysToBuild);
+        
         foreach (Playout playout in playouts)
         {
             switch (playout.ProgramSchedulePlayoutType)
             {
                 case ProgramSchedulePlayoutType.Flood:
-                    var floodSorted = playouts.Collect(p => p.Items).OrderBy(pi => pi.Start).ToList();
+                    var floodSorted = playouts
+                        .Collect(p => p.Items)
+                        .OrderBy(pi => pi.Start)
+                        .Filter(pi => pi.StartOffset <= finish)
+                        .ToList();
                     await WritePlayoutXml(
                         request,
                         floodSorted,
@@ -190,7 +200,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         xml);
                     break;
                 case ProgramSchedulePlayoutType.Block:
-                    var blockSorted = playouts.Collect(p => p.Items).OrderBy(pi => pi.Start).ToList();
+                    var blockSorted = playouts
+                        .Collect(p => p.Items)
+                        .OrderBy(pi => pi.Start)
+                        .Filter(pi => pi.StartOffset <= finish)
+                        .ToList();
                     await WriteBlockPlayoutXml(
                         request,
                         blockSorted,
@@ -204,7 +218,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
                         xml);
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
-                    List<PlayoutItem> externalJsonSorted = await CollectExternalJsonItems(playout.ExternalJsonFile);
+                    var externalJsonSorted = (await CollectExternalJsonItems(playout.ExternalJsonFile))
+                        .Filter(pi => pi.StartOffset <= finish)
+                        .ToList();
+
                     await WritePlayoutXml(
                         request,
                         externalJsonSorted,
