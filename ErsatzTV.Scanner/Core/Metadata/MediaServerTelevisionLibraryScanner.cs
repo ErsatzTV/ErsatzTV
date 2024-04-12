@@ -168,6 +168,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     library,
                     getLocalPath,
                     result.Item,
+                    result.IsUpdated,
                     connectionParameters,
                     GetSeasonLibraryItems(library, connectionParameters, result.Item),
                     deepScan,
@@ -290,6 +291,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TLibrary library,
         Func<TEpisode, string> getLocalPath,
         TShow show,
+        bool showIsUpdated,
         TConnectionParameters connectionParameters,
         IAsyncEnumerable<TSeason> seasonEntries,
         bool deepScan,
@@ -352,6 +354,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     library,
                     getLocalPath,
                     show,
+                    showIsUpdated,
                     result.Item,
                     connectionParameters,
                     GetEpisodeLibraryItems(library, connectionParameters, show, result.Item),
@@ -373,7 +376,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 result.Item.Show = show;
 
-                if (result.IsAdded || result.IsUpdated)
+                if (result.IsAdded || result.IsUpdated || showIsUpdated)
                 {
                     await _mediator.Publish(
                         new ScannerProgressUpdate(
@@ -402,6 +405,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TLibrary library,
         Func<TEpisode, string> getLocalPath,
         TShow show,
+        bool showIsUpdated,
         TSeason season,
         TConnectionParameters connectionParameters,
         IAsyncEnumerable<TEpisode> episodeEntries,
@@ -523,7 +527,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     }
                 }
 
-                if (result.IsAdded || result.IsUpdated)
+                if (result.IsAdded || result.IsUpdated || showIsUpdated)
                 {
                     await _mediator.Publish(
                         new ScannerProgressUpdate(

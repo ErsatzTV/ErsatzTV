@@ -534,6 +534,14 @@ public class TelevisionRepository : ITelevisionRepository
             new { Year = year, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
+    public async Task<bool> UpdateTitles(ShowMetadata metadata, string title, string sortTitle)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE ShowMetadata SET Title = @Title, SortTitle = @SortTitle WHERE Id = @MetadataId",
+            new { Title = title, SortTitle = sortTitle, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
+
     public async Task<List<Episode>> GetShowItems(int showId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
