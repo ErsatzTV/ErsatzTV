@@ -128,12 +128,30 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                 continue;
             }
 
-            bool forced = file.Contains(".forced.");
-            bool sdh = file.Contains(".sdh.") || file.Contains(".cc.");
+            string language = fileName;
+            var forced = false;
+            var sdh = false;
 
-            string language = fileName
-                .Replace($"{withoutExtension}.", string.Empty)[..3]
-                .Replace(".", string.Empty);
+            if (file.Contains(".forced."))
+            {
+                forced = true;
+                language = language.Replace(".forced", string.Empty);
+            }
+
+            if (file.Contains(".sdh"))
+            {
+                sdh = true;
+                language = language.Replace(".sdh", string.Empty);
+            }
+
+
+            if (file.Contains(".cc."))
+            {
+                sdh = true;
+                language = language.Replace(".cc", string.Empty);
+            }
+
+            language = language.Replace($"{withoutExtension}.", string.Empty)[..3].Replace(".", string.Empty);
 
             Option<CultureInfo> maybeCulture = languageCodes.Find(
                 ci => ci.TwoLetterISOLanguageName == language || ci.ThreeLetterISOLanguageName == language);
