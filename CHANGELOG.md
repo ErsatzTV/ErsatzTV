@@ -31,6 +31,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Update Plex show title in ETV when changed in Plex
 - Reindex seasons and episodes when show is updated from media server
   - This is needed to keep `show_*` tags accurate in the search index (e.g., `show_title`, `show_studio`)
+- Fix external subtitle detection to support forced/sdh subtitles with language tag before and after forced/sdh tag:
+  - `Something.forced.en.srt`
+  - `Something.sdh.en.srt`
+  - `Something.en.forced.srt`
+  - `Something.en.sdh.srt`
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added

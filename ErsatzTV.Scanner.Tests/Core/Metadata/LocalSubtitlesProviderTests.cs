@@ -80,7 +80,9 @@ public class LocalSubtitlesProviderTests
             new(@"/Movies/Avatar (2009)/Avatar (2009).mkv"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).eng.srt"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).en.forced.ass"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).forced.en.ass"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).en.sdh.srt"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).sdh.en.srt"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).de.srt"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).de.sdh.forced.srt")
         };
@@ -96,13 +98,13 @@ public class LocalSubtitlesProviderTests
             @"/Movies/Avatar (2009)/Avatar (2009).mkv",
             false);
 
-        result.Count.Should().Be(5);
-        result.Count(s => s.Language == "eng").Should().Be(3);
+        result.Count.Should().Be(7);
+        result.Count(s => s.Language == "eng").Should().Be(5);
         result.Count(s => s.Language == "deu").Should().Be(2);
-        result.Count(s => s.Forced).Should().Be(2);
-        result.Count(s => s.SDH).Should().Be(2);
-        result.Count(s => s.Codec == "subrip").Should().Be(4);
-        result.Count(s => s.Codec == "ass").Should().Be(1);
+        result.Count(s => s.Forced).Should().Be(3);
+        result.Count(s => s.SDH).Should().Be(3);
+        result.Count(s => s.Codec == "subrip").Should().Be(5);
+        result.Count(s => s.Codec == "ass").Should().Be(2);
         result.Count(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).Should().Be(0);
     }
 }
