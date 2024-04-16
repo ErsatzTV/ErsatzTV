@@ -37,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Something.en.forced.srt`
   - `Something.en.sdh.srt`
 
+### Changed
+- Use ffmpeg 7 in all docker images 
+
 ## [0.8.6-beta] - 2024-04-03
 ### Added
 - Add `show_studio` and `show_content_rating` to search index for seasons and episodes
