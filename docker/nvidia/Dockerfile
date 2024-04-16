@@ -1,6 +1,15 @@
 ﻿# https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg
+
+RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt-get -yqq update && \
+    apt-get install -yq aspnetcore-runtime-8.0 && \
+    apt-get autoremove -y && \
+    apt-get clean -y
+
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
@@ -35,10 +44,11 @@ RUN sed -i '/Scanner/d' ErsatzTV.csproj
 RUN dotnet publish ErsatzTV.csproj --framework net8.0 -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM jasongdove/ersatztv-ffmpeg:6.1-nvidia AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:7.0-nvidia AS runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
 EXPOSE 8409
+COPY --from=build /usr/share/dotnet /usr/share/dotnet
 COPY --from=build /app ./
 ENTRYPOINT ["./ErsatzTV"]
