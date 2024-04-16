@@ -1,4 +1,9 @@
-﻿# https://hub.docker.com/_/microsoft-dotnet
+﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-amd64 AS dotnet-runtime
+
+FROM jasongdove/ersatztv-ffmpeg:7.0 AS runtime-base
+COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
+
+# https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg
 WORKDIR /source
@@ -35,7 +40,7 @@ RUN sed -i '/Scanner/d' ErsatzTV.csproj
 RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM jasongdove/ersatztv-ffmpeg:6.1 AS runtime-base
+FROM runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
