@@ -10,6 +10,7 @@ public class HealthCheckService : IHealthCheckService
     private readonly ILogger<HealthCheckService> _logger;
 
     public HealthCheckService(
+        IMacOsConfigFolderHealthCheck macOsConfigFolderHealthCheck,
         IFFmpegVersionHealthCheck ffmpegVersionHealthCheck,
         IFFmpegReportsHealthCheck ffmpegReportsHealthCheck,
         IHardwareAccelerationHealthCheck hardwareAccelerationHealthCheck,
@@ -23,8 +24,9 @@ public class HealthCheckService : IHealthCheckService
         ILogger<HealthCheckService> logger)
     {
         _logger = logger;
-        _checks = new List<IHealthCheck>
-        {
+        _checks =
+        [
+            macOsConfigFolderHealthCheck,
             ffmpegVersionHealthCheck,
             ffmpegReportsHealthCheck,
             hardwareAccelerationHealthCheck,
@@ -35,7 +37,7 @@ public class HealthCheckService : IHealthCheckService
             unavailableHealthCheck,
             vaapiDriverHealthCheck,
             errorReportsHealthCheck
-        };
+        ];
     }
 
     public Task<List<HealthCheckResult>> PerformHealthChecks(CancellationToken cancellationToken) =>

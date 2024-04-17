@@ -62,4 +62,12 @@ public static class FileSystemLayout
 
     public static readonly string AudioStreamSelectorScriptsFolder =
         Path.Combine(ScriptsFolder, "audio-stream-selector");
+    
+    public static readonly string MacOsOldAppDataFolder = Path.Combine(
+        Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
+        ".local",
+        "share",
+        "ersatztv");
+
+    public static readonly string MacOsOldDatabasePath = Path.Combine(MacOsOldAppDataFolder, "ersatztv.sqlite3");
 }

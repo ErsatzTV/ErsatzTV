@@ -47,14 +47,7 @@
     }
     else
     {
-        <MudCard>
-            <MudCardContent Class="release-notes mud-typography mud-typography-body1">
-                <MarkdownView Content="@_releaseNotes"/>
-            </MudCardContent>
-        </MudCard>
-        <MudText Class="mt-6">Full changelog is available on <MudLink Href="https://github.com/ErsatzTV/ErsatzTV/blob/main/CHANGELOG.md">GitHub</MudLink></MudText>
-        <MudTable Class="mt-6"
-                  Hover="true"
+        <MudTable Hover="true"
                   Dense="true"
                   ServerData="@(new Func<TableState, Task<TableData<HealthCheckResult>>>(ServerReload))"
                   @ref="_table">
@@ -106,6 +99,12 @@
                 </MudTd>
             </RowTemplate>
         </MudTable>
+        <MudCard Class="mt-6" Style="max-height: 600px; overflow: auto">
+            <MudCardContent Class="release-notes mud-typography mud-typography-body1">
+                <MarkdownView Content="@_releaseNotes"/>
+            </MudCardContent>
+        </MudCard>
+        <MudText Class="mt-6">Full changelog is available on <MudLink Href="https://github.com/ErsatzTV/ErsatzTV/blob/main/CHANGELOG.md">GitHub</MudLink></MudText>
     }
 </MudContainer>
 
