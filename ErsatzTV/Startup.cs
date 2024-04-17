@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Channels;
 using Bugsnag.AspNet.Core;
@@ -327,6 +328,8 @@ public class Startup
             "https://github.com/ErsatzTV/ErsatzTV",
             "https://discord.gg/hHaJm3yGy6");
 
+        CopyMacOsConfigFolderIfNeeded();
+        
         List<string> directoriesToCreate =
         [
             FileSystemLayout.AppDataFolder,
@@ -715,5 +718,56 @@ public class Startup
             provider => provider.GetRequiredService<Channel<TMessageType>>().Reader);
         services.AddSingleton(
             provider => provider.GetRequiredService<Channel<TMessageType>>().Writer);
+    }
+    
+    private static void CopyMacOsConfigFolderIfNeeded()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return;
+        }
+
+        bool newDbExists = File.Exists(FileSystemLayout.DatabasePath);
+        if (newDbExists)
+        {
+            return;
+        }
+
+        string oldFolder = Path.Combine(
+            Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
+            ".local",
+            "share",
+            "ersatztv");
+
+        bool oldDbExists = File.Exists(Path.Combine(oldFolder, "ersatztv.sqlite3"));
+        if (!oldDbExists)
+        {
+            return;
+        }
+
+        // safe to move here since
+        //   - old db exists
+        //   - new db does not exist
+
+        Log.Logger.Information(
+            "Migrating config data from {OldFolder} to {NewFolder}",
+            oldFolder,
+            FileSystemLayout.AppDataFolder);
+                    
+        try
+        {
+            // delete (empty) new config folder
+            if (Directory.Exists(FileSystemLayout.AppDataFolder))
+            {
+                Directory.Delete(FileSystemLayout.AppDataFolder);
+            }
+
+            // move old config folder to new config folder
+            Directory.Move(oldFolder, FileSystemLayout.AppDataFolder);
+        }
+        catch (Exception ex)
+        {
+            Log.Logger.Warning(ex, "Failed to migrate config data");
+        }
     }
 }
