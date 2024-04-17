@@ -22,6 +22,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `XMLTV Days To Build` setting, which is distinct from the existing `Playout Days To Build` setting
   - The value for `XMLTV Days To Build` cannot be larger than `Playout Days To Build`
   - This allows, for example, a week of playout data while optimizing XMLTV data to only a day or two
+- Add health check to detect config folder issue on MacOS
+  - ETV versions through v0.8.4-beta (using dotnet 7) stored config data in `$HOME/.local/share/ersatztv`
+  - ETV versions starting with v0.8.5-beta (using dotnet 8) store config data in `$HOME/Library/Application Support/ersatztv`
+  - If a dotnet 8 version of ETV has NOT been launched on MacOS, it will automatically migrate the config folder on startup
+  - If a dotnet 8 version of ETV *has* been launched on MacOS, a failing health check will display with instructions on how to resolve the config issue to restore data 
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help

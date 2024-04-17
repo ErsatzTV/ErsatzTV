@@ -751,10 +751,10 @@ public class Startup
                     
         try
         {
-            // delete (empty) new config folder
+            // delete new config folder
             if (Directory.Exists(FileSystemLayout.AppDataFolder))
             {
-                Directory.Delete(FileSystemLayout.AppDataFolder);
+                Directory.Delete(FileSystemLayout.AppDataFolder, recursive: true);
             }
 
             // move old config folder to new config folder

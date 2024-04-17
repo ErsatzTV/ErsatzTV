@@ -20,10 +20,10 @@ public class MacOsConfigFolderHealthCheck : BaseHealthCheck, IMacOsConfigFolderH
         if (Directory.Exists(FileSystemLayout.MacOsOldAppDataFolder))
         {
             var message =
-                $"Old config data exists; to migrate: exit ETV, delete the folder {FileSystemLayout.AppDataFolder} and restart ETV";
-            return WarningResult(message).AsTask();
+                $"Old config data exists; to migrate: exit ETV, backup the folder {FileSystemLayout.AppDataFolder} to another location, and restart ETV. Otherwise, move the old folder {FileSystemLayout.MacOsOldAppDataFolder} to another location to remove this message";
+            return FailResult(message).AsTask();
         }
 
-        return OkResult().AsTask();
+        return NotApplicableResult().AsTask();
     }
 }
