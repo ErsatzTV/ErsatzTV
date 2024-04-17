@@ -602,6 +602,7 @@ public class Startup
         AddChannel<ISearchIndexBackgroundServiceRequest>(services);
         AddChannel<IScannerBackgroundServiceRequest>(services);
 
+        services.AddScoped<IMacOsConfigFolderHealthCheck, MacOsConfigFolderHealthCheck>();
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
         services.AddScoped<IHardwareAccelerationHealthCheck, HardwareAccelerationHealthCheck>();
@@ -733,13 +734,7 @@ public class Startup
             return;
         }
 
-        string oldFolder = Path.Combine(
-            Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
-            ".local",
-            "share",
-            "ersatztv");
-
-        bool oldDbExists = File.Exists(Path.Combine(oldFolder, "ersatztv.sqlite3"));
+        bool oldDbExists = File.Exists(FileSystemLayout.MacOsOldDatabasePath);
         if (!oldDbExists)
         {
             return;
@@ -751,7 +746,7 @@ public class Startup
 
         Log.Logger.Information(
             "Migrating config data from {OldFolder} to {NewFolder}",
-            oldFolder,
+            FileSystemLayout.MacOsOldAppDataFolder,
             FileSystemLayout.AppDataFolder);
                     
         try
@@ -763,7 +758,7 @@ public class Startup
             }
 
             // move old config folder to new config folder
-            Directory.Move(oldFolder, FileSystemLayout.AppDataFolder);
+            Directory.Move(FileSystemLayout.MacOsOldAppDataFolder, FileSystemLayout.AppDataFolder);
         }
         catch (Exception ex)
         {

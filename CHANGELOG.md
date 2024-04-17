@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use ffmpeg 7 in all docker images 
+- Show health checks at top of home page; scroll release notes if needed
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added
