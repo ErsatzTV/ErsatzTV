@@ -651,10 +651,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         Option<string> hlsPlaylistPath = Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8");
 
-        Option<string> hlsSegmentTemplate = Path.Combine(
-            FileSystemLayout.TranscodeFolder,
-            channel.Number,
-            "live%06d.ts");
+        Option<string> hlsSegmentTemplate = videoFormat switch
+        {
+            // hls/hevc needs mp4
+            VideoFormat.Hevc => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.m4s"),
+
+            // hls is otherwise fine with ts
+            _ => Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
+        };
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,

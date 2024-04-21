@@ -18,21 +18,38 @@ public class OutputFormatConcatHls : IPipelineStep
     public string[] InputOptions(InputFile inputFile) => Array.Empty<string>();
     public string[] FilterOptions => Array.Empty<string>();
 
-    public string[] OutputOptions =>
-    [
-        //"-g", $"{gop}",
-        //"-keyint_min", $"{FRAME_RATE * OutputFormatHls.SegmentSeconds}",
-        "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.SegmentSeconds}/2)",
-        "-f", "hls",
-        //"-hls_segment_type", "fmp4",
-        //"-hls_init_time", "2",
-        "-hls_time", $"{OutputFormatHls.SegmentSeconds}",
-        "-hls_list_size", "25", // burst of 45 means ~12 segments, so allow that plus a handful
-        "-segment_list_flags", "+live",
-        "-hls_segment_filename", _segmentTemplate,
-        "-hls_flags", "delete_segments+program_date_time+omit_endlist+discont_start+independent_segments",
-        _playlistPath
-    ];
+    public string[] OutputOptions
+    {
+        get
+        {
+            string segmentType = "mpegts";
+            string hlsFlags = "delete_segments+program_date_time+omit_endlist+discont_start+independent_segments";
+
+            // check for fmp4 output
+            if (_segmentTemplate.Contains("m4s"))
+            {
+                segmentType = "fmp4";
+                hlsFlags = "delete_segments+program_date_time+omit_endlist";
+            }
+
+            return
+            [
+                //"-g", $"{gop}",
+                //"-keyint_min", $"{FRAME_RATE * OutputFormatHls.SegmentSeconds}",
+                "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.SegmentSeconds}/2)",
+                "-f", "hls",
+                "-hls_segment_type", segmentType,
+                //"-hls_init_time", "2",
+                "-hls_playlist_type", "event",
+                "-hls_time", $"{OutputFormatHls.SegmentSeconds}",
+                "-hls_list_size", "25", // burst of 45 means ~12 segments, so allow that plus a handful
+                "-segment_list_flags", "+live",
+                "-hls_segment_filename", _segmentTemplate,
+                "-hls_flags", hlsFlags,
+                _playlistPath
+            ];
+        }
+    }
 
     public FrameState NextState(FrameState currentState) => currentState;
 }

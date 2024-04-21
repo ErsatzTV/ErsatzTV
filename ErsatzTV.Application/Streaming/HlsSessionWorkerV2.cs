@@ -5,11 +5,9 @@ using System.Timers;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
@@ -21,7 +19,6 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private readonly SemaphoreSlim _slim = new(1, 1);
 
     //private static int _workAheadCount;
-    private readonly IConfigElementRepository _configElementRepository;
     private readonly string _host;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<HlsSessionWorkerV2> _logger;
@@ -32,7 +29,6 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     private CancellationTokenSource _cancellationTokenSource;
     private string _channelNumber;
     private bool _disposedValue;
-    private bool _hasWrittenSegments;
     private DateTimeOffset _lastAccess;
     private Option<PlayoutItemProcessModel> _lastProcessModel;
     private IServiceScope _serviceScope;
@@ -42,7 +38,6 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
     public HlsSessionWorkerV2(
         IServiceScopeFactory serviceScopeFactory,
-        IConfigElementRepository configElementRepository,
         ILocalFileSystem localFileSystem,
         ILogger<HlsSessionWorkerV2> logger,
         Option<int> targetFramerate,
@@ -51,7 +46,6 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
     {
         _serviceScope = serviceScopeFactory.CreateScope();
         _mediator = _serviceScope.ServiceProvider.GetRequiredService<IMediator>();
-        _configElementRepository = configElementRepository;
         _localFileSystem = localFileSystem;
         _logger = logger;
         _targetFramerate = targetFramerate;
@@ -298,8 +292,6 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
         foreach (PlayoutItemProcessModel processModel in result.RightToSeq())
         {
-            _hasWrittenSegments = true;
-
             _logger.LogDebug("Next playout item process will transcode until {Until}", processModel.Until);
 
             _transcodedUntil = processModel.Until;
@@ -366,45 +358,4 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
         return result;
     }
-
-    private async Task<long> GetPtsOffset(string channelNumber, CancellationToken cancellationToken)
-    {
-        await _slim.WaitAsync(cancellationToken);
-        try
-        {
-            long result = 0;
-
-            // if we haven't yet written any segments, start at zero
-            if (!_hasWrittenSegments)
-            {
-                return result;
-            }
-
-            Either<BaseError, PtsAndDuration> queryResult = await _mediator.Send(
-                new GetLastPtsDuration(channelNumber),
-                cancellationToken);
-
-            foreach (BaseError error in queryResult.LeftToSeq())
-            {
-                _logger.LogWarning("Unable to determine last pts offset - {Error}", error.ToString());
-            }
-
-            foreach ((long pts, long duration) in queryResult.RightToSeq())
-            {
-                result = pts + duration + 1;
-            }
-
-            return result;
-        }
-        finally
-        {
-            _slim.Release();
-        }
-    }
-
-    private async Task<int> GetWorkAheadLimit() =>
-        await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
-            .Map(maybeCount => maybeCount.Match(identity, () => 1));
-
-    private sealed record Segment(string File, int SequenceNumber);
 }
