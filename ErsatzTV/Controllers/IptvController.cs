@@ -162,6 +162,7 @@ public class IptvController : ControllerBase
         return NotFound();
     }
 
+    [HttpHead("iptv/channel/{channelNumber}.m3u8")]
     [HttpGet("iptv/channel/{channelNumber}.m3u8")]
     public async Task<IActionResult> GetHttpLiveStreamingVideo(
         string channelNumber,
