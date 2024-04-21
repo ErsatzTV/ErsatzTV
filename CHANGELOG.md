@@ -45,6 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Use ffmpeg 7 in all docker images 
 - Show health checks at top of home page; scroll release notes if needed
+- Improve `HLS Segmenter V2` compliance by serving fmp4 segments when `hevc` video format is selected
+  - > 1.5. The container format for HEVC video MUST be fMP4.
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added

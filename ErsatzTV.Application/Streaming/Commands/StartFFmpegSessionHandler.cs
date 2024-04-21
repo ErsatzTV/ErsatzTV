@@ -107,7 +107,6 @@ public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Eit
         {
             "segmenter-v2" => new HlsSessionWorkerV2(
                 _serviceScopeFactory,
-                _configElementRepository,
                 _localFileSystem,
                 _sessionWorkerV2Logger,
                 targetFramerate,
