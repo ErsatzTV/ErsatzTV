@@ -42,6 +42,7 @@ public class
         p.ResolutionId = update.ResolutionId;
         p.ScalingBehavior = update.ScalingBehavior;
         p.VideoFormat = update.VideoFormat;
+        p.VideoProfile = update.VideoProfile;
 
         // mpeg2video only supports 8-bit content
         p.BitDepth = update.VideoFormat == FFmpegProfileVideoFormat.Mpeg2Video

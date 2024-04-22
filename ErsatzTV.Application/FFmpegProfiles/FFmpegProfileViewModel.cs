@@ -15,6 +15,7 @@ public record FFmpegProfileViewModel(
     ResolutionViewModel Resolution,
     ScalingBehavior ScalingBehavior,
     FFmpegProfileVideoFormat VideoFormat,
+    string VideoProfile,
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,

@@ -304,6 +304,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
 
         string videoFormat = GetVideoFormat(playbackSettings);
+        Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, fillerKind);
 
@@ -343,7 +344,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.RealtimeOutput,
             fillerKind == FillerKind.Fallback,
             videoFormat,
-            Optional(videoStream.Profile),
+            maybeVideoProfile,
             Optional(playbackSettings.PixelFormat),
             scaledSize,
             paddedSize,
@@ -444,11 +445,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<TimeSpan>.None,
             AudioFilter.None);
 
+        var videoFormat = GetVideoFormat(playbackSettings);
+        
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             false,
-            GetVideoFormat(playbackSettings),
-            VideoProfile.Main,
+            videoFormat,
+            GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile),
             new PixelFormatYuv420P(),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
             new FrameSize(desiredResolution.Width, desiredResolution.Height),
@@ -460,9 +463,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
 
-        OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
-            ? OutputFormatKind.Hls
-            : OutputFormatKind.MpegTs;
+        OutputFormatKind outputFormat = OutputFormatKind.MpegTs;
+        switch (channel.StreamingMode)
+        {
+            case StreamingMode.HttpLiveStreamingSegmenter:
+                outputFormat = OutputFormatKind.Hls;
+                break;
+            case StreamingMode.HttpLiveStreamingSegmenterV2:
+                outputFormat = OutputFormatKind.Nut;
+                break;
+        }
 
         Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
@@ -646,6 +656,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<WatermarkInputFile> watermarkInputFile = Option<WatermarkInputFile>.None;
 
         string videoFormat = GetVideoFormat(playbackSettings);
+        Option<string> maybeVideoProfile = GetVideoProfile(videoFormat, channel.FFmpegProfile.VideoProfile);
 
         HardwareAccelerationMode hwAccel = GetHardwareAccelerationMode(playbackSettings, FillerKind.None);
 
@@ -664,7 +675,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.RealtimeOutput,
             true,
             videoFormat,
-            Option<string>.None,
+            maybeVideoProfile,
             Optional(playbackSettings.PixelFormat),
             resolution,
             resolution,
@@ -978,6 +989,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,
             FFmpegProfileVideoFormat.Copy => VideoFormat.Copy,
             _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
+        };
+
+    private static Option<string> GetVideoProfile(string videoFormat, string videoProfile) =>
+        (videoFormat, videoProfile.ToLowerInvariant()) switch
+        {
+            (VideoFormat.H264, VideoProfile.Main) => VideoProfile.Main,
+            (VideoFormat.H264, VideoProfile.High) => VideoProfile.High,
+            _ => Option<string>.None
         };
 
     private static HardwareAccelerationMode GetHardwareAccelerationMode(

@@ -249,8 +249,10 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
-                    (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(_hardwareCapabilities),
-                    (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
+                    (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) =>
+                        new EncoderHevcNvenc(_hardwareCapabilities),
+                    (HardwareAccelerationMode.Nvenc, VideoFormat.H264) =>
+                        new EncoderH264Nvenc(desiredState.VideoProfile),
 
                     (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };
