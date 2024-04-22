@@ -41,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Something.sdh.en.srt`
   - `Something.en.forced.srt`
   - `Something.en.sdh.srt`
+- Fix playback from Jellyfin 10.9 by allowing playlist HTTP HEAD requests 
 - Fix `HLS Segmenter V2` segment duration (previously 10s, now 4s)
 
 ### Changed
@@ -51,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - > 1.5. The container format for HEVC video MUST be fMP4.
   - Using accurate BANDWIDTH value in multi-variant playlist
   - Using proper MIME types for statically-served `.m3u8` and `.ts` files
+  - Serving playlists with gzip compression
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added
