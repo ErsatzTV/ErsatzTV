@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using CliWrap;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Images;
@@ -196,19 +197,20 @@ public class IptvController : ControllerBase
         {
             case "segmenter":
             case "segmenter-v2":
-                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber, mode);
                 _logger.LogDebug(
                     "Maybe starting ffmpeg session for channel {Channel}, mode {Mode}",
                     channelNumber,
                     mode);
                 var request = new StartFFmpegSession(channelNumber, mode, Request.Scheme, Request.Host.ToString());
                 Either<BaseError, Unit> result = await _mediator.Send(request);
+                string multiVariantPlaylist = await GetMultiVariantPlaylist(channelNumber, mode);
                 return result.Match<IActionResult>(
                     _ =>
                     {
                         _logger.LogDebug(
                             "Session started; returning multi-variant playlist for channel {Channel}",
                             channelNumber);
+
                         return Content(multiVariantPlaylist, "application/vnd.apple.mpegurl");
                         // return Redirect($"~/iptv/session/{channelNumber}/hls.m3u8");
                     },
@@ -220,6 +222,7 @@ public class IptvController : ControllerBase
                                 _logger.LogDebug(
                                     "Session is already active; returning multi-variant playlist for channel {Channel}",
                                     channelNumber);
+
                                 return Content(multiVariantPlaylist, "application/vnd.apple.mpegurl");
                             // return RedirectPreserveMethod($"iptv/session/{channelNumber}/hls.m3u8");
                             default:
@@ -266,6 +269,28 @@ public class IptvController : ControllerBase
             _ => "hls.m3u8"
         };
 
+        var variantPlaylist =
+            $"{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/{file}{AccessTokenQuery()}";
+        
+        try
+        {
+            if (mode == "segmenter-v2")
+            {
+                string fileName = Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "playlist.m3u8");
+                if (System.IO.File.Exists(fileName))
+                {
+                    string text = await System.IO.File.ReadAllTextAsync(fileName, Encoding.UTF8);
+                    return text.Replace("live.m3u8", variantPlaylist);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to return ffmpeg multi-variant playlist; falling back to generated playlist");
+        }
+        
         Option<ResolutionViewModel> maybeResolution = await _mediator.Send(new GetChannelResolution(channelNumber));
         string resolution = string.Empty;
         foreach (ResolutionViewModel res in maybeResolution)
@@ -275,8 +300,8 @@ public class IptvController : ControllerBase
 
         return $@"#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=10000000{resolution}
-{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/{file}{AccessTokenQuery()}";
+#EXT-X-STREAM-INF:BANDWIDTH=10000000{resolution}
+{variantPlaylist}";
     }
 
     private string AccessTokenQuery() => string.IsNullOrWhiteSpace(Request.Query["access_token"])

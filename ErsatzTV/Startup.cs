@@ -447,6 +447,11 @@ public class Startup
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.trakt.tv"));
 
         services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
+        
+        services.AddResponseCompression(options =>
+        {
+            options.EnableForHttps = true;
+        });
 
         CustomServices(services);
     }
@@ -515,7 +520,13 @@ public class Startup
         app.UseStaticFiles();
 
         var extensionProvider = new FileExtensionContentTypeProvider();
-        extensionProvider.Mappings.Add(".m3u8", "application/x-mpegurl");
+        
+        // fix static file M3U8 mime type
+        extensionProvider.Mappings.Add(".m3u8", "application/vnd.apple.mpegurl");
+
+        // fix static file TS mime type
+        extensionProvider.Mappings.Remove(".ts");
+        extensionProvider.Mappings.Add(".ts", "video/mp2t");
 
         app.UseStaticFiles(
             new StaticFileOptions
@@ -533,6 +544,8 @@ public class Startup
                 // to serve m4s
                 ServeUnknownFileTypes = true
             });
+
+        app.UseResponseCompression();
 
         app.MapWhen(
             ctx => !ctx.Request.Path.StartsWithSegments("/iptv"),
