@@ -22,20 +22,17 @@ public class OutputFormatConcatHls : IPipelineStep
     {
         get
         {
-            string segmentType = "mpegts";
-            string hlsFlags = "delete_segments+program_date_time+omit_endlist+discont_start+independent_segments";
+            var segmentType = "mpegts";
 
             // check for fmp4 output
             if (_segmentTemplate.Contains("m4s"))
             {
                 segmentType = "fmp4";
-                hlsFlags = "delete_segments+program_date_time+omit_endlist";
             }
 
             return
             [
-                //"-g", $"{gop}",
-                //"-keyint_min", $"{FRAME_RATE * OutputFormatHls.SegmentSeconds}",
+                "-g", $"{OutputFormatHls.SegmentSeconds}/2",
                 "-force_key_frames", $"expr:gte(t,n_forced*{OutputFormatHls.SegmentSeconds}/2)",
                 "-f", "hls",
                 "-hls_segment_type", segmentType,
@@ -45,7 +42,8 @@ public class OutputFormatConcatHls : IPipelineStep
                 "-hls_list_size", "25", // burst of 45 means ~12 segments, so allow that plus a handful
                 "-segment_list_flags", "+live",
                 "-hls_segment_filename", _segmentTemplate,
-                "-hls_flags", hlsFlags,
+                "-hls_flags", "delete_segments+program_date_time+omit_endlist+discont_start+independent_segments",
+                "-master_pl_name", "playlist.m3u8",
                 _playlistPath
             ];
         }
