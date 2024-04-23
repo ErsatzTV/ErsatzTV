@@ -16,7 +16,6 @@ public class EncoderH264Nvenc(Option<string> maybeVideoProfile) : EncoderBase
                 return
                 [
                     "-c:v", Name,
-                    "-preset", "llhq",
                     "-profile:v", videoProfile.ToLowerInvariant(),
                 ];
             }
