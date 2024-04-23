@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix `HLS Segmenter V2` segment duration (previously 10s, now 4s)
 - Fix `HLS Segmenter V2` error video generation
 - Fix MySql database migrations
+- Fix block playout playback when no deco is configured
 
 ### Changed
 - Use ffmpeg 7 in all docker images 
