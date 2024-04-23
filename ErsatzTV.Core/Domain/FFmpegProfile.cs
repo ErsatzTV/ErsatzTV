@@ -15,6 +15,7 @@ public record FFmpegProfile
     public Resolution Resolution { get; set; }
     public ScalingBehavior ScalingBehavior { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
+    public string VideoProfile { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
@@ -35,6 +36,7 @@ public record FFmpegProfile
             ResolutionId = resolution.Id,
             Resolution = resolution,
             VideoFormat = FFmpegProfileVideoFormat.H264,
+            VideoProfile = "high",
             AudioFormat = FFmpegProfileAudioFormat.Aac,
             VideoBitrate = 2000,
             VideoBufferSize = 4000,

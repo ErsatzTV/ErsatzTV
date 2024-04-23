@@ -15,6 +15,7 @@ public record UpdateFFmpegProfile(
     int ResolutionId,
     ScalingBehavior ScalingBehavior,
     FFmpegProfileVideoFormat VideoFormat,
+    string VideoProfile,
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,

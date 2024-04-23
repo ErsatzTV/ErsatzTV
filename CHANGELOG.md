@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - ETV versions starting with v0.8.5-beta (using dotnet 8) store config data in `$HOME/Library/Application Support/ersatztv`
   - If a dotnet 8 version of ETV has NOT been launched on MacOS, it will automatically migrate the config folder on startup
   - If a dotnet 8 version of ETV *has* been launched on MacOS, a failing health check will display with instructions on how to resolve the config issue to restore data 
+- Add `Video Profile` setting to `FFmpeg Profile` editor when `h264` format is selected
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Something.en.sdh.srt`
 - Fix playback from Jellyfin 10.9 by allowing playlist HTTP HEAD requests 
 - Fix `HLS Segmenter V2` segment duration (previously 10s, now 4s)
+- Fix `HLS Segmenter V2` error video generation
 
 ### Changed
 - Use ffmpeg 7 in all docker images 

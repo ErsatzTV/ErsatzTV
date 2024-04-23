@@ -230,9 +230,12 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
-                    (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(rateControlMode),
-                    (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(rateControlMode),
-                    (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) => new EncoderMpeg2Vaapi(rateControlMode),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) =>
+                        new EncoderHevcVaapi(rateControlMode),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.H264) =>
+                        new EncoderH264Vaapi(desiredState.VideoProfile, rateControlMode),
+                    (HardwareAccelerationMode.Vaapi, VideoFormat.Mpeg2Video) =>
+                        new EncoderMpeg2Vaapi(rateControlMode),
 
                     (_, _) => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
                 };

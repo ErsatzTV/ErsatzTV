@@ -103,7 +103,7 @@ public class VideoToolboxPipelineBuilder : SoftwarePipelineBuilder
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) =>
                 new EncoderHevcVideoToolbox(desiredState.BitDepth),
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) =>
-                new EncoderH264VideoToolbox(),
+                new EncoderH264VideoToolbox(desiredState.VideoProfile),
 
             _ => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
         };

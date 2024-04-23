@@ -80,7 +80,7 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
             (HardwareAccelerationMode.Amf, VideoFormat.Hevc) =>
                 new EncoderHevcAmf(),
             (HardwareAccelerationMode.Amf, VideoFormat.H264) =>
-                new EncoderH264Amf(),
+                new EncoderH264Amf(desiredState.VideoProfile),
 
             _ => GetSoftwareEncoder(ffmpegState, currentState, desiredState)
         };
