@@ -18,6 +18,7 @@ internal static class Mapper
             profile.ScalingBehavior,
             profile.VideoFormat,
             profile.VideoProfile,
+            profile.VideoPreset ?? string.Empty,
             profile.BitDepth,
             profile.VideoBitrate,
             profile.VideoBufferSize,

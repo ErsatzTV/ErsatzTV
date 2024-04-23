@@ -34,6 +34,7 @@ public class FFmpegProfileEditViewModel
         VideoBufferSize = viewModel.VideoBufferSize;
         VideoFormat = viewModel.VideoFormat;
         VideoProfile = viewModel.VideoProfile;
+        VideoPreset = viewModel.VideoPreset;
         BitDepth = viewModel.BitDepth;
     }
 
@@ -58,6 +59,7 @@ public class FFmpegProfileEditViewModel
     public int VideoBufferSize { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
     public string VideoProfile { get; set; }
+    public string VideoPreset { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }
 
     public CreateFFmpegProfile ToCreate() =>
@@ -72,6 +74,7 @@ public class FFmpegProfileEditViewModel
             ScalingBehavior,
             VideoFormat,
             VideoProfile,
+            VideoPreset,
             BitDepth,
             VideoBitrate,
             VideoBufferSize,
@@ -98,6 +101,7 @@ public class FFmpegProfileEditViewModel
             ScalingBehavior,
             VideoFormat,
             VideoProfile,
+            VideoPreset,
             BitDepth,
             VideoBitrate,
             VideoBufferSize,

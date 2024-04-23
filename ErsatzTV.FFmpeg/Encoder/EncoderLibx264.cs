@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.FFmpeg.Encoder;
 
-public class EncoderLibx264(Option<string> maybeVideoProfile) : EncoderBase
+public class EncoderLibx264(Option<string> maybeVideoProfile, Option<string> maybeVideoPreset) : EncoderBase
 {
     public override string Name => "libx264";
     public override StreamKind Kind => StreamKind.Video;
@@ -11,16 +11,24 @@ public class EncoderLibx264(Option<string> maybeVideoProfile) : EncoderBase
     {
         get
         {
+            var result = new List<string>(base.OutputOptions);
+            
             foreach (string videoProfile in maybeVideoProfile)
             {
-                return
-                [
-                    "-c:v", Name,
-                    "-profile:v", videoProfile.ToLowerInvariant()
-                ];
+                result.Add("-profile:v");
+                result.Add(videoProfile.ToLowerInvariant());
             }
 
-            return base.OutputOptions;
+            foreach (string videoPreset in maybeVideoPreset)
+            {
+                if (!string.IsNullOrWhiteSpace(videoPreset))
+                {
+                    result.Add("-preset:v");
+                    result.Add(videoPreset);
+                }
+            }
+
+            return result.ToArray();
         }
     }
 

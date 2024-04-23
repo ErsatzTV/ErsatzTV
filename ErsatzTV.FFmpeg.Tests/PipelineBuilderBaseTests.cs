@@ -6,6 +6,7 @@ using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.InputOption;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Pipeline;
+using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
 using LanguageExt;
@@ -58,6 +59,7 @@ public class PipelineBuilderBaseTests
             false,
             VideoFormat.Hevc,
             VideoProfile.Main,
+            VideoPreset.Unset,
             new PixelFormatYuv420P(),
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
@@ -148,6 +150,7 @@ public class PipelineBuilderBaseTests
             false,
             VideoFormat.Hevc,
             VideoProfile.Main,
+            VideoPreset.Unset,
             new PixelFormatYuv420P(),
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
@@ -294,6 +297,7 @@ public class PipelineBuilderBaseTests
             false,
             VideoFormat.Copy,
             VideoProfile.Main,
+            VideoPreset.Unset,
             Option<IPixelFormat>.None,
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
@@ -378,6 +382,7 @@ public class PipelineBuilderBaseTests
             false,
             VideoFormat.Copy,
             VideoProfile.Main,
+            VideoPreset.Unset,
             new PixelFormatYuv420P(),
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),

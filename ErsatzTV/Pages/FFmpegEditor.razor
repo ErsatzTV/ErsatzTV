@@ -5,7 +5,9 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using System.Runtime.InteropServices
 @using ErsatzTV.Core.FFmpeg
+@using ErsatzTV.FFmpeg
 @using ErsatzTV.FFmpeg.Format
+@using ErsatzTV.FFmpeg.Preset
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FFmpegEditor> _logger
@@ -64,6 +66,22 @@
                                                Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || (_model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.None))">
                                         <MudSelectItem Value="@VideoProfile.Main">main</MudSelectItem>
                                         <MudSelectItem Value="@VideoProfile.High">high</MudSelectItem>
+                                    </MudSelect>
+                                    @{
+                                        ICollection<string> presets = AvailablePresets.ForAccelAndFormat(MapAccel(_model.HardwareAcceleration), MapVideoFormat(_model.VideoFormat));
+                                    }
+                                    <MudSelect Label="Preset"
+                                               @bind-Value="_model.VideoPreset"
+                                               For="@(() => _model.VideoPreset)"
+                                               Disabled="@(presets.Count == 0)"
+                                               Clearable="true">
+                                        @foreach (string preset in presets)
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(preset))
+                                            {
+                                                <MudSelectItem Value="@preset">@preset</MudSelectItem>
+                                            }
+                                        }
                                     </MudSelect>
                                     <MudSelect Label="Bit Depth" @bind-Value="_model.BitDepth" For="@(() => _model.BitDepth)">
                                         <MudSelectItem Value="@FFmpegProfileBitDepth.EightBit">8-bit</MudSelectItem>
@@ -282,5 +300,24 @@
                 () => _navigationManager.NavigateTo("/ffmpeg"));
         }
     }
+
+    private static HardwareAccelerationMode MapAccel(HardwareAccelerationKind kind) =>
+        kind switch
+        {
+            HardwareAccelerationKind.Amf => HardwareAccelerationMode.Amf,
+            HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
+            HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
+            HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
+            HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
+            _ => HardwareAccelerationMode.None
+        };
+
+    private static string MapVideoFormat(FFmpegProfileVideoFormat format) =>
+        format switch
+        {
+            FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
+            FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
+            _ => VideoFormat.Mpeg2Video
+        };
 
 }

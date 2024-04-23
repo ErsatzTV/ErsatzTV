@@ -16,6 +16,7 @@ public record FFmpegProfile
     public ScalingBehavior ScalingBehavior { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
     public string VideoProfile { get; set; }
+    public string VideoPreset { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
@@ -37,6 +38,7 @@ public record FFmpegProfile
             Resolution = resolution,
             VideoFormat = FFmpegProfileVideoFormat.H264,
             VideoProfile = "high",
+            VideoPreset = ErsatzTV.FFmpeg.Preset.VideoPreset.Unset,
             AudioFormat = FFmpegProfileAudioFormat.Aac,
             VideoBitrate = 2000,
             VideoBufferSize = 4000,

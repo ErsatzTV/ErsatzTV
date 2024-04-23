@@ -5,10 +5,12 @@ namespace ErsatzTV.FFmpeg.Encoder.Nvenc;
 
 public class EncoderHevcNvenc : EncoderBase
 {
+    private readonly Option<string> _maybeVideoPreset;
     private readonly bool _bFrames;
 
-    public EncoderHevcNvenc(IHardwareCapabilities hardwareCapabilities)
+    public EncoderHevcNvenc(IHardwareCapabilities hardwareCapabilities, Option<string> maybeVideoPreset)
     {
+        _maybeVideoPreset = maybeVideoPreset;
         if (hardwareCapabilities is NvidiaHardwareCapabilities nvidia)
         {
             _bFrames = nvidia.HevcBFrames;
@@ -18,8 +20,29 @@ public class EncoderHevcNvenc : EncoderBase
     public override string Name => "hevc_nvenc";
     public override StreamKind Kind => StreamKind.Video;
 
-    public override string[] OutputOptions =>
-        new[] { "-c:v", "hevc_nvenc", "-tag:v", "hvc1", "-b_ref_mode", _bFrames ? "1" : "0" };
+    public override string[] OutputOptions
+    {
+        get
+        {
+            var result = new List<string>
+            {
+                "-c:v", "hevc_nvenc",
+                "-tag:v", "hvc1",
+                "-b_ref_mode", _bFrames ? "1" : "0"
+            };
+            
+            foreach (string videoPreset in _maybeVideoPreset)
+            {
+                if (!string.IsNullOrWhiteSpace(videoPreset))
+                {
+                    result.Add("-preset:v");
+                    result.Add(videoPreset);
+                }
+            }
+            
+            return result.ToArray();
+        }
+    }
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

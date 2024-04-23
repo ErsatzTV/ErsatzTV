@@ -643,6 +643,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("VideoFormat")
                         .HasColumnType("int");
 
+                    b.Property<string>("VideoPreset")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("VideoProfile")
                         .HasColumnType("longtext");
 
