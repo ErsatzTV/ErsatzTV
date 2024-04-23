@@ -10,17 +10,17 @@ public static class AvailablePresets
     {
         return (hardwareAccelerationMode, videoFormat) switch
         {
-            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) =>
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264 or VideoFormat.Hevc) =>
             [
                 VideoPreset.LowLatencyHighPerformance, VideoPreset.LowLatencyHighQuality
             ],
 
-            (HardwareAccelerationMode.Qsv, VideoFormat.H264) =>
+            (HardwareAccelerationMode.Qsv, VideoFormat.H264 or VideoFormat.Hevc) =>
             [
                 VideoPreset.VeryFast
             ],
 
-            (HardwareAccelerationMode.None, VideoFormat.H264) =>
+            (HardwareAccelerationMode.None, VideoFormat.H264 or VideoFormat.Hevc) =>
             [
                 VideoPreset.VeryFast
             ],

@@ -211,7 +211,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             Option<IEncoder> maybeEncoder =
                 (ffmpegState.EncoderHardwareAccelerationMode, desiredState.VideoFormat) switch
                 {
-                    (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
+                    (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(desiredState.VideoPreset),
                     (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(
                         desiredState.VideoProfile,
                         desiredState.VideoPreset),

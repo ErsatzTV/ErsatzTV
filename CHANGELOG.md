@@ -28,7 +28,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - If a dotnet 8 version of ETV has NOT been launched on MacOS, it will automatically migrate the config folder on startup
   - If a dotnet 8 version of ETV *has* been launched on MacOS, a failing health check will display with instructions on how to resolve the config issue to restore data 
 - Add `Video Profile` setting to `FFmpeg Profile` editor when `h264` format is selected
-- Add `Video Preset` setting to `FFmpeg Profile` editor for some combinations of acceleration and video format
+- Add `Video Preset` setting to `FFmpeg Profile` editor for some combinations of acceleration and video format:
+  - `Nvenc` / `h264`
+  - `Nvenc` / `hevc`
+  - `Qsv` / `h264`
+  - `Qsv` / `hevc`
+  - `None` / `h264`
+  - `None` / `hevc`
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help
