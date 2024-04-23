@@ -575,7 +575,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             VideoFormat.Hevc => new EncoderLibx265(
                 currentState with { FrameDataLocation = FrameDataLocation.Software }),
-            VideoFormat.H264 => new EncoderLibx264(desiredState.VideoProfile),
+            VideoFormat.H264 => new EncoderLibx264(desiredState.VideoProfile, desiredState.VideoPreset),
             VideoFormat.Mpeg2Video => new EncoderMpeg2Video(),
 
             VideoFormat.Copy => new EncoderCopyVideo(),

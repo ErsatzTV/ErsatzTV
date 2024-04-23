@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.FFmpeg.Encoder.Nvenc;
 
-public class EncoderH264Nvenc(Option<string> maybeVideoProfile) : EncoderBase
+public class EncoderH264Nvenc(Option<string> maybeVideoProfile, Option<string> maybeVideoPreset) : EncoderBase
 {
     public override string Name => "h264_nvenc";
     public override StreamKind Kind => StreamKind.Video;
@@ -11,16 +11,24 @@ public class EncoderH264Nvenc(Option<string> maybeVideoProfile) : EncoderBase
     {
         get
         {
+            var result = new List<string>(base.OutputOptions);
+            
             foreach (string videoProfile in maybeVideoProfile)
             {
-                return
-                [
-                    "-c:v", Name,
-                    "-profile:v", videoProfile.ToLowerInvariant(),
-                ];
+                result.Add("-profile:v");
+                result.Add(videoProfile.ToLowerInvariant());
             }
 
-            return base.OutputOptions;
+            foreach (string videoPreset in maybeVideoPreset)
+            {
+                if (!string.IsNullOrWhiteSpace(videoPreset))
+                {
+                    result.Add("-preset:v");
+                    result.Add(videoPreset);
+                }
+            }
+
+            return result.ToArray();
         }
     }
 

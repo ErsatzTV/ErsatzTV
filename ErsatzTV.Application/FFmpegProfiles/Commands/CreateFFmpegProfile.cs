@@ -15,6 +15,7 @@ public record CreateFFmpegProfile(
     ScalingBehavior ScalingBehavior,
     FFmpegProfileVideoFormat VideoFormat,
     string VideoProfile,
+    string VideoPreset,
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,
