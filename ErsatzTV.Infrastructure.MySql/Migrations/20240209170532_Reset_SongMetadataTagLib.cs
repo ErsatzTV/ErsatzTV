@@ -12,7 +12,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
             migrationBuilder.Sql(
                 @"UPDATE LibraryPath SET LastScan = '0001-01-01 00:00:00' WHERE Id IN
-                (SELECT LP.Id FROM LibraryPath LP INNER JOIN Library L on L.Id = LP.LibraryId WHERE MediaKind = 5)");
+                (SELECT A.lpid FROM
+                (SELECT LP.Id AS lpid FROM LibraryPath LP INNER JOIN Library L on L.Id = LP.LibraryId WHERE MediaKind = 5)
+                as A)");
 
             migrationBuilder.Sql(
                 @"UPDATE Library SET LastScan = '0001-01-01 00:00:00' WHERE MediaKind = 5");
@@ -22,7 +24,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
             
             migrationBuilder.Sql(
                 @"UPDATE LibraryFolder SET Etag = NULL WHERE Id IN
-                (SELECT LF.Id FROM LibraryFolder LF INNER JOIN LibraryPath LP on LF.LibraryPathId = LP.Id INNER JOIN Library L on LP.LibraryId = L.Id WHERE MediaKind = 5)");
+                (SELECT A.lfid FROM
+                (SELECT LF.Id AS lfid FROM LibraryFolder LF INNER JOIN LibraryPath LP on LF.LibraryPathId = LP.Id INNER JOIN Library L on LP.LibraryId = L.Id WHERE MediaKind = 5)
+                AS A)");
         }
 
         /// <inheritdoc />

@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback from Jellyfin 10.9 by allowing playlist HTTP HEAD requests 
 - Fix `HLS Segmenter V2` segment duration (previously 10s, now 4s)
 - Fix `HLS Segmenter V2` error video generation
+- Fix MySql database migrations
 
 ### Changed
 - Use ffmpeg 7 in all docker images 

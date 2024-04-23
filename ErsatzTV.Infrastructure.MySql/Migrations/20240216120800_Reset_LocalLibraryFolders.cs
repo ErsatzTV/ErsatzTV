@@ -14,7 +14,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
             migrationBuilder.Sql(
                 @"UPDATE LibraryPath SET LastScan = '0001-01-01 00:00:00' WHERE Id IN
-                (SELECT LP.Id FROM Library L INNER JOIN LibraryPath LP ON L.Id = LP.LibraryId INNER JOIN LocalMediaSource LMS ON LMS.Id = L.MediaSourceId)");
+                (SELECT A.lpid FROM
+                (SELECT LP.Id AS lpid FROM Library L INNER JOIN LibraryPath LP ON L.Id = LP.LibraryId INNER JOIN LocalMediaSource LMS ON LMS.Id = L.MediaSourceId)
+                AS A)");
 
             migrationBuilder.Sql(
                 @"UPDATE Library SET LastScan = '0001-01-01 00:00:00' WHERE MediaSourceId IN (SELECT Id FROM LocalMediaSource)");
