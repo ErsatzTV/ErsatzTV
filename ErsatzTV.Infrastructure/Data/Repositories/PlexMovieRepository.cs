@@ -264,7 +264,7 @@ public class PlexMovieRepository : IPlexMovieRepository
                 new { file.Path, file.Id });
 
             await dbContext.Connection.ExecuteAsync(
-                @"UPDATE PlexMediaFile SET Key = @Key WHERE Id = @Id",
+                @"UPDATE PlexMediaFile SET `Key` = @Key WHERE Id = @Id",
                 new { file.Key, file.Id });
         }
     }
