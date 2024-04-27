@@ -108,6 +108,7 @@
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Playlist">Playlist</MudSelectItem>
                         </MudSelect>
                         @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
                         {
@@ -183,7 +184,33 @@
                                 </MoreItemsTemplate>
                             </MudAutocomplete>
                         }
-                        <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Playlist)
+                        {
+                            <MudSelect Class="mt-3"
+                                       T="PlaylistGroupViewModel"
+                                       Label="Playlist Group"
+                                       ValueChanged="@(vm => UpdatePlaylistGroupItems(vm))">
+                                @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
+                                {
+                                    <MudSelectItem Value="@playlistGroup">@playlistGroup.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                       T="PlaylistViewModel"
+                                       Label="Playlist"
+                                       @bind-value="_selectedItem.Playlist">
+                                @foreach (PlaylistViewModel playlist in _playlists)
+                                {
+                                    <MudSelectItem Value="@playlist">@playlist.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+
+                        }
+                        <MudSelect Class="mt-3"
+                                   Label="Playback Order"
+                                   @bind-Value="@_selectedItem.PlaybackOrder"
+                                   For="@(() => _selectedItem.PlaybackOrder)"
+                                   Disabled="@(_selectedItem.CollectionType is ProgramScheduleItemCollectionType.Playlist)">
                             @switch (_selectedItem.CollectionType)
                             {
                                 case ProgramScheduleItemCollectionType.MultiCollection:
@@ -203,6 +230,8 @@
                                     <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
                                     <MudSelectItem Value="PlaybackOrder.MultiEpisodeShuffle">Multi-Episode Shuffle</MudSelectItem>
+                                    break;
+                                case ProgramScheduleItemCollectionType.Playlist:
                                     break;
                                 default:
                                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
@@ -366,6 +395,8 @@
     private List<FillerPresetViewModel> _fillerPresets = new();
     private List<WatermarkViewModel> _watermarks = new();
     private List<LanguageCodeViewModel> _availableCultures = new();
+    private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
+    private readonly List<PlaylistViewModel> _playlists = [];
 
     private ProgramScheduleItemEditViewModel _selectedItem;
 
@@ -385,6 +416,7 @@
         _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
 
         string name = string.Empty;
         var shuffleScheduleItems = false;
@@ -471,6 +503,12 @@
         }
 
         return await Mediator.Send(new SearchArtists(value), _cts.Token);
+    }
+
+    private async Task UpdatePlaylistGroupItems(PlaylistGroupViewModel playlistGroup)
+    {
+        _playlists.Clear();
+        _playlists.AddRange(await Mediator.Send(new GetPlaylistsByPlaylistGroupId(playlistGroup.Id), _cts.Token));
     }
 
     private ProgramScheduleItemEditViewModel ProjectToEditViewModel(ProgramScheduleItemViewModel item)
@@ -566,6 +604,7 @@
                 item.MultiCollection?.Id,
                 item.SmartCollection?.Id,
                 item.MediaItem?.MediaItemId,
+                item.Playlist?.Id,
                 item.PlaybackOrder,
                 item.FillWithGroupMode,
                 item.MultipleCount,

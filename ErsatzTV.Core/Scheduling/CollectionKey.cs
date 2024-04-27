@@ -11,6 +11,7 @@ public class CollectionKey : Record<CollectionKey>
     public int? MultiCollectionId { get; set; }
     public int? SmartCollectionId { get; set; }
     public int? MediaItemId { get; set; }
+    public int? PlaylistId { get; set; }
     public string FakeCollectionKey { get; set; }
 
     public static CollectionKey ForBlockItem(BlockItem item) =>
@@ -90,6 +91,12 @@ public class CollectionKey : Record<CollectionKey>
             {
                 CollectionType = item.CollectionType,
                 SmartCollectionId = item.SmartCollectionId,
+                FakeCollectionKey = item.FakeCollectionKey
+            },
+            ProgramScheduleItemCollectionType.Playlist => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                PlaylistId = item.PlaylistId,
                 FakeCollectionKey = item.FakeCollectionKey
             },
             ProgramScheduleItemCollectionType.FakeCollection => new CollectionKey

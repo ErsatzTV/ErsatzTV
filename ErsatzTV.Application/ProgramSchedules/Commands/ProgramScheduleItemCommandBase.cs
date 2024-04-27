@@ -159,6 +159,13 @@ public abstract class ProgramScheduleItemCommandBase
                 }
 
                 break;
+            case ProgramScheduleItemCollectionType.Playlist:
+                if (item.PlaylistId is null)
+                {
+                    return BaseError.New("[Playlist] is required for collection type 'Playlist'");
+                }
+
+                break;
             default:
                 return BaseError.New("[CollectionType] is invalid");
         }
@@ -182,6 +189,7 @@ public abstract class ProgramScheduleItemCommandBase
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
                 MediaItemId = item.MediaItemId,
+                PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
                 FillWithGroupMode = FillWithGroupMode.None,
                 CustomTitle = item.CustomTitle,
@@ -207,6 +215,7 @@ public abstract class ProgramScheduleItemCommandBase
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
                 MediaItemId = item.MediaItemId,
+                PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
                 FillWithGroupMode = FillWithGroupMode.None,
                 CustomTitle = item.CustomTitle,
@@ -232,6 +241,7 @@ public abstract class ProgramScheduleItemCommandBase
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
                 MediaItemId = item.MediaItemId,
+                PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
                 FillWithGroupMode = item.FillWithGroupMode,
                 Count = item.MultipleCount.GetValueOrDefault(),
@@ -258,6 +268,7 @@ public abstract class ProgramScheduleItemCommandBase
                 MultiCollectionId = item.MultiCollectionId,
                 SmartCollectionId = item.SmartCollectionId,
                 MediaItemId = item.MediaItemId,
+                PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
                 FillWithGroupMode = item.FillWithGroupMode,
                 PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),

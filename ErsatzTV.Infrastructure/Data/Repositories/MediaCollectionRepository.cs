@@ -249,6 +249,84 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         return result;
     }
+    
+    public async Task<List<MediaItem>> GetPlaylistItems(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var result = new List<MediaItem>();
+
+        Option<Playlist> maybePlaylist = await dbContext.Playlists
+            .Include(p => p.Items)
+            .SelectOneAsync(p => p.Id, p => p.Id == id);
+
+        foreach (PlaylistItem playlistItem in maybePlaylist.SelectMany(p => p.Items))
+        {
+            switch (playlistItem.CollectionType)
+            {
+                case ProgramScheduleItemCollectionType.Collection:
+                    foreach (int collectionId in Optional(playlistItem.CollectionId))
+                    {
+                        result.AddRange(await GetMovieItems(dbContext, collectionId));
+                        result.AddRange(await GetShowItems(dbContext, collectionId));
+                        result.AddRange(await GetSeasonItems(dbContext, collectionId));
+                        result.AddRange(await GetEpisodeItems(dbContext, collectionId));
+                        result.AddRange(await GetArtistItems(dbContext, collectionId));
+                        result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
+                        result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
+                        result.AddRange(await GetSongItems(dbContext, collectionId));
+                        result.AddRange(await GetImageItems(dbContext, collectionId));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.TelevisionShow:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetShowItemsFromShowId(dbContext, mediaItemId));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.TelevisionSeason:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, mediaItemId));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.Artist:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetArtistItemsFromArtistId(dbContext, mediaItemId));
+                    }
+
+                    break;
+
+                case ProgramScheduleItemCollectionType.MultiCollection:
+                    foreach (int multiCollectionId in Optional(playlistItem.MultiCollectionId))
+                    {
+                        result.AddRange(await GetMultiCollectionItems(multiCollectionId));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.SmartCollection:
+                    foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
+                    {
+                        result.AddRange(await GetSmartCollectionItems(smartCollectionId));
+                    }
+
+                    break;
+                
+                // TODO: other single media item types
+            }
+        }
+
+        return result.DistinctBy(x => x.Id).ToList();
+    }
+
 
     public async Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(
         int? collectionId,
@@ -337,6 +415,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
                 .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
                 .MapT(s => s.ShowMetadata.Head().Title),
+            // TODO: get playlist name
             _ => None
         };
     }

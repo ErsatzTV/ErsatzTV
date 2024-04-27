@@ -866,6 +866,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.FakeCollectionKey == collectionKey.FakeCollectionKey
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
+                     && a.PlaylistId == collectionKey.PlaylistId
                      && a.AnchorDate is null);
 
             var maybeEnumeratorState = collectionEnumerators.ToDictionary(e => e.Key, e => e.Value.State);
@@ -885,6 +886,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     MultiCollectionId = collectionKey.MultiCollectionId,
                     SmartCollectionId = collectionKey.SmartCollectionId,
                     MediaItemId = collectionKey.MediaItemId,
+                    PlaylistId = collectionKey.PlaylistId,
                     FakeCollectionKey = collectionKey.FakeCollectionKey,
                     EnumeratorState = maybeEnumeratorState[collectionKey]
                 });
@@ -922,7 +924,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
-                     && a.MediaItemId == collectionKey.MediaItemId);
+                     && a.MediaItemId == collectionKey.MediaItemId
+                     && a.PlaylistId == collectionKey.PlaylistId);
 
         CollectionEnumeratorState state = null;
 

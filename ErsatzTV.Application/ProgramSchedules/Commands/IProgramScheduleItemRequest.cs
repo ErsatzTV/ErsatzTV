@@ -10,6 +10,7 @@ public interface IProgramScheduleItemRequest
     int? MultiCollectionId { get; }
     int? SmartCollectionId { get; }
     int? MediaItemId { get; }
+    int? PlaylistId { get; }
     PlayoutMode PlayoutMode { get; }
     PlaybackOrder PlaybackOrder { get; }
     FillWithGroupMode FillWithGroupMode { get; }

@@ -13,6 +13,7 @@ public record ReplaceProgramScheduleItem(
     int? MultiCollectionId,
     int? SmartCollectionId,
     int? MediaItemId,
+    int? PlaylistId,
     PlaybackOrder PlaybackOrder,
     FillWithGroupMode FillWithGroupMode,
     int? MultipleCount,

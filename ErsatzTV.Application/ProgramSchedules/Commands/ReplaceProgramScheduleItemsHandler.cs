@@ -104,7 +104,8 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
                 item.CollectionId,
                 item.MediaItemId,
                 item.MultiCollectionId,
-                item.SmartCollectionId);
+                item.SmartCollectionId,
+                item.PlaylistId);
 
             if (keyOrders.TryGetValue(key, out System.Collections.Generic.HashSet<PlaybackOrder> playbackOrders))
             {
@@ -128,5 +129,6 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
         int? CollectionId,
         int? MediaItemId,
         int? MultiCollectionId,
-        int? SmartCollectionId);
+        int? SmartCollectionId,
+        int? PlaylistId);
 }

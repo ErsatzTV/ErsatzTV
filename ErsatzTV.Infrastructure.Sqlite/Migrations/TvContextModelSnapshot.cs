@@ -1730,6 +1730,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("MultiCollectionId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("PlayoutId")
                         .HasColumnType("INTEGER");
 
@@ -1743,6 +1746,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
 
                     b.HasIndex("PlayoutId");
 
@@ -1940,6 +1945,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("PlaybackOrder")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("PostRollFillerId")
                         .HasColumnType("INTEGER");
 
@@ -1984,6 +1992,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MidRollFillerId");
 
                     b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
 
                     b.HasIndex("PostRollFillerId");
 
@@ -4168,6 +4178,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
                         .WithMany("ProgramScheduleAnchors")
                         .HasForeignKey("PlayoutId")
@@ -4205,6 +4220,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaItem");
 
                     b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
 
                     b.Navigation("Playout");
 
@@ -4319,6 +4336,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Filler.FillerPreset", "PostRollFiller")
                         .WithMany()
                         .HasForeignKey("PostRollFillerId")
@@ -4358,6 +4380,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MidRollFiller");
 
                     b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
 
                     b.Navigation("PostRollFiller");
 
