@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20240427104030_Add_Playlist")]
+    partial class Add_Playlist
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
@@ -1552,9 +1555,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("CollectionType")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IncludeInProgramGuide")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("Index")
                         .HasColumnType("INTEGER");
 
@@ -1562,9 +1562,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MultiCollectionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PlaybackOrder")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("PlaylistId")

@@ -17,7 +17,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.3")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -1580,6 +1580,97 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.HasIndex("OtherVideoId");
 
                     b.ToTable("OtherVideoMetadata", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Playlist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("PlaylistGroupId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlaylistGroupId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Playlist", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("PlaylistGroup", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CollectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CollectionType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IncludeInProgramGuide")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MediaItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MultiCollectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlaybackOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlaylistId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SmartCollectionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CollectionId");
+
+                    b.HasIndex("MediaItemId");
+
+                    b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
+
+                    b.HasIndex("SmartCollectionId");
+
+                    b.ToTable("PlaylistItem", (string)null);
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
@@ -4066,6 +4157,56 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("OtherVideo");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Playlist", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.PlaylistGroup", "PlaylistGroup")
+                        .WithMany("Playlists")
+                        .HasForeignKey("PlaylistGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlaylistGroup");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Collection", "Collection")
+                        .WithMany()
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
+                        .WithMany()
+                        .HasForeignKey("MediaItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "MultiCollection")
+                        .WithMany()
+                        .HasForeignKey("MultiCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany("Items")
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
+                        .WithMany()
+                        .HasForeignKey("SmartCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Collection");
+
+                    b.Navigation("MediaItem");
+
+                    b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
+
+                    b.Navigation("SmartCollection");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Channel", "Channel")
@@ -5354,6 +5495,16 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Navigation("Tags");
 
                     b.Navigation("Writers");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Playlist", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistGroup", b =>
+                {
+                    b.Navigation("Playlists");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
