@@ -501,6 +501,41 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.DistinctBy(x => x.Id).ToList();
     }
 
+    public async Task<List<Movie>> GetMovie(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetMovieItems(dbContext, [id]);
+    }
+
+    public async Task<List<Episode>> GetEpisode(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetEpisodeItems(dbContext, [id]);
+    }
+
+    public async Task<List<MusicVideo>> GetMusicVideo(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetMusicVideoItems(dbContext, [id]);
+    }
+
+    public async Task<List<OtherVideo>> GetOtherVideo(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetOtherVideoItems(dbContext, [id]);
+    }
+
+    public async Task<List<Song>> GetSong(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetSongItems(dbContext, [id]);
+    }
+
+    public async Task<List<Image>> GetImage(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetImageItems(dbContext, [id]);
+    }
 
     public async Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(
         int? collectionId,
@@ -738,7 +773,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         return await GetMovieItems(dbContext, ids);
     }
-
+    
     private static Task<List<Movie>> GetMovieItems(TvContext dbContext, IEnumerable<int> movieIds) =>
         dbContext.Movies
             .Include(m => m.MovieMetadata)

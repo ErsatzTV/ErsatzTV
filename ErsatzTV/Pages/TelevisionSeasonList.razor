@@ -65,6 +65,13 @@
                 <MudButton Class="ml-3"
                            Variant="Variant.Filled"
                            Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           OnClick="@AddToPlaylist">
+                    Add To Playlist
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Schedule"
                            OnClick="@AddToSchedule">
                     Add To Schedule
@@ -217,6 +224,20 @@
         {
             await _mediator.Send(new AddShowToCollection(collection.Id, ShowId), _cts.Token);
             _navigationManager.NavigateTo($"media/collections/{collection.Id}");
+        }
+    }
+
+    private async Task AddToPlaylist()
+    {
+        var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await _dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        {
+            await _mediator.Send(new AddShowToPlaylist(playlist.Id, ShowId), _cts.Token);
+            _navigationManager.NavigateTo($"media/playlists/{playlist.Id}");
         }
     }
 
