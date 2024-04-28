@@ -15,6 +15,8 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
         IList<MediaItem> mediaItems,
         CollectionEnumeratorState state)
     {
+        CurrentIncludeInProgramGuide = Option<bool>.None;
+
         // TODO: this will break if we allow shows and seasons
         _sortedMediaItems = collection.CollectionItems
             .OrderBy(ci => ci.CustomIndex)
@@ -37,6 +39,7 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 

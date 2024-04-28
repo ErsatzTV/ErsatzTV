@@ -9,6 +9,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 {
     private IList<IMediaCollectionEnumerator> _sortedEnumerators;
     private int _enumeratorIndex;
+    private System.Collections.Generic.HashSet<int> _idsToIncludeInEPG;
 
     public static async Task<PlaylistEnumerator> Create(
         IMediaCollectionRepository mediaCollectionRepository,
@@ -19,6 +20,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         var result = new PlaylistEnumerator
         {
             _sortedEnumerators = [],
+            _idsToIncludeInEPG = [],
             Count = LCM(playlistItemMap.Values.Map(v => v.Count)) * playlistItemMap.Count
         };
 
@@ -28,6 +30,14 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         foreach (PlaylistItem playlistItem in playlistItemMap.Keys.OrderBy(i => i.Index))
         {
             List<MediaItem> items = playlistItemMap[playlistItem];
+            if (playlistItem.IncludeInProgramGuide)
+            {
+                foreach (MediaItem mediaItem in items)
+                {
+                    result._idsToIncludeInEPG.Add(mediaItem.Id);
+                }
+            }
+            
             var collectionKey = CollectionKey.ForPlaylistItem(playlistItem);
             if (enumeratorMap.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
             {
@@ -101,6 +111,18 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
     public CollectionEnumeratorState State { get; private set; }
     
     public Option<MediaItem> Current => _sortedEnumerators[_enumeratorIndex].Current;
+    public Option<bool> CurrentIncludeInProgramGuide
+    {
+        get
+        {
+            foreach (MediaItem mediaItem in Current)
+            {
+                return _idsToIncludeInEPG.Contains(mediaItem.Id);
+            }
+            
+            return Option<bool>.None;
+        }
+    }
 
     public int Count { get; private set; }
 

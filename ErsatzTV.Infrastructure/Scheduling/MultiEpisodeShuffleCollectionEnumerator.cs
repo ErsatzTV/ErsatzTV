@@ -26,6 +26,8 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         ILogger logger,
         CancellationToken cancellationToken)
     {
+        CurrentIncludeInProgramGuide = Option<bool>.None;
+        
         _logger = logger;
         _cancellationToken = cancellationToken;
 
@@ -103,6 +105,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext()
     {

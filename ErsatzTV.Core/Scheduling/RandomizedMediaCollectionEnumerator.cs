@@ -13,6 +13,8 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
 
     public RandomizedMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
     {
+        CurrentIncludeInProgramGuide = Option<bool>.None;
+
         _mediaItems = mediaItems;
         _lazyMinimumDuration =
             new Lazy<Option<TimeSpan>>(
@@ -35,6 +37,7 @@ public class RandomizedMediaCollectionEnumerator : IMediaCollectionEnumerator
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _mediaItems.Any() ? _mediaItems[_index] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext()
     {

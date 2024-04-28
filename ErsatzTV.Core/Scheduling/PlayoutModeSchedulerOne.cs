@@ -42,7 +42,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 InPoint = TimeSpan.Zero,
                 OutPoint = itemDuration,
                 GuideGroup = playoutBuilderState.NextGuideGroup,
-                FillerKind = scheduleItem.GuideMode == GuideMode.Filler
+                FillerKind = (scheduleItem.GuideMode == GuideMode.Filler || contentEnumerator.CurrentIncludeInProgramGuide == false)
                     ? FillerKind.GuideMode
                     : FillerKind.None,
                 CustomTitle = scheduleItem.CustomTitle,
