@@ -16,6 +16,7 @@ public abstract record ProgramScheduleItemViewModel(
     MediaCollectionViewModel Collection,
     MultiCollectionViewModel MultiCollection,
     SmartCollectionViewModel SmartCollection,
+    PlaylistViewModel Playlist,
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
     FillWithGroupMode FillWithGroupMode,
@@ -45,6 +46,8 @@ public abstract record ProgramScheduleItemViewModel(
             MultiCollection?.Name,
         ProgramScheduleItemCollectionType.SmartCollection =>
             SmartCollection?.Name,
+        ProgramScheduleItemCollectionType.Playlist =>
+            Playlist?.Name,
         _ => string.Empty
     };
 }

@@ -51,6 +51,11 @@ public class CollectionKey : Record<CollectionKey>
             {
                 CollectionType = item.CollectionType
             },
+            ProgramScheduleItemCollectionType.Movie => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
             _ => throw new ArgumentOutOfRangeException(nameof(item))
         };
 

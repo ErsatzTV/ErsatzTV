@@ -14,6 +14,26 @@ internal static class Mapper
     internal static NamedMediaItemViewModel ProjectToViewModel(Artist artist) =>
         new(artist.Id, artist.ArtistMetadata.HeadOrNone().Match(am => am.Title, () => "???"));
 
+    internal static NamedMediaItemViewModel ProjectToViewModel(Movie movie) =>
+        new(movie.Id, MovieTitle(movie));
+
+    private static string MovieTitle(Movie movie)
+    {
+        var title = "???";
+        var year = "???";
+
+        foreach (MovieMetadata movieMetadata in movie.MovieMetadata.HeadOrNone())
+        {
+            title = movieMetadata.Title;
+            foreach (int y in Optional(movieMetadata.Year))
+            {
+                year = y.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        return $"{title} ({year})";
+    }
+
     private static string ShowTitle(Season season)
     {
         var title = "???";

@@ -30,6 +30,9 @@ public class GetPlaylistItemsHandler(IDbContextFactory<TvContext> dbContextFacto
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Artist).ArtistMetadata)
             .ThenInclude(am => am.Artwork)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Movie).MovieMetadata)
+            .ThenInclude(mm => mm.Artwork)
             .ToListAsync(cancellationToken);
 
         if (allItems.All(bi => bi.IncludeInProgramGuide == false))

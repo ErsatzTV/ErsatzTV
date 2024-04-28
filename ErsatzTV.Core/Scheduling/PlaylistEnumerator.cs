@@ -78,10 +78,20 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                 case PlaybackOrder.Random:
                     enumerator = new RandomizedMediaCollectionEnumerator(items, initState);
                     break;
+                default:
+                    if (items.Count == 1)
+                    {
+                        enumerator = new SingleMediaItemEnumerator(items.Head());
+                    }
+
+                    break;
             }
 
-            enumeratorMap.Add(collectionKey, enumerator);
-            result._sortedEnumerators.Add(enumerator);
+            if (enumerator is not null)
+            {
+                enumeratorMap.Add(collectionKey, enumerator);
+                result._sortedEnumerators.Add(enumerator);
+            }
         }
 
         result.MinimumDuration = playlistItemMap.Values

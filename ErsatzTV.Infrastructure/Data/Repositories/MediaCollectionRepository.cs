@@ -100,6 +100,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
+                
+                case ProgramScheduleItemCollectionType.Movie:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetMovieItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
 
                 // TODO: other single media item types
             }
@@ -398,6 +406,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
                         result.AddRange(await GetSmartCollectionItems(smartCollectionId));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.Movie:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetMovieItems(dbContext, [mediaItemId]));
                     }
 
                     break;

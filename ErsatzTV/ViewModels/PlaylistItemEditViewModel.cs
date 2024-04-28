@@ -53,6 +53,7 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
         ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
         ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
         ProgramScheduleItemCollectionType.SmartCollection => SmartCollection?.Name,
+        ProgramScheduleItemCollectionType.Movie => MediaItem?.Name,
         _ => string.Empty
     };
 

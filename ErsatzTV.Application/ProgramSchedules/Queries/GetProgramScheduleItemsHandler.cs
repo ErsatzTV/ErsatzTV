@@ -28,6 +28,7 @@ public class GetProgramScheduleItemsHandler :
             .Include(i => i.Collection)
             .Include(i => i.MultiCollection)
             .Include(i => i.SmartCollection)
+            .Include(i => i.Playlist)
             .Include(i => i.MediaItem)
             .ThenInclude(i => (i as Movie).MovieMetadata)
             .ThenInclude(mm => mm.Artwork)

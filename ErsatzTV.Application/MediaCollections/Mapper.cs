@@ -69,6 +69,7 @@ internal static class Mapper
                 Show show => MediaItems.Mapper.ProjectToViewModel(show),
                 Season season => MediaItems.Mapper.ProjectToViewModel(season),
                 Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
+                Movie movie => MediaItems.Mapper.ProjectToViewModel(movie),
                 // TODO: other items?
                 _ => null
             },
