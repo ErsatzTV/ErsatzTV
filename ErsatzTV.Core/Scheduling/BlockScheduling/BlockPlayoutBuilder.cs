@@ -56,6 +56,12 @@ public class BlockPlayoutBuilder(
 
         // get all collection items for the playout
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(blocksToSchedule);
+        if (collectionMediaItems.Values.All(v => v.Count == 0))
+        {
+            logger.LogWarning("There are no media items to schedule");
+            return playout;
+        }
+
         Map<CollectionKey, string> collectionEtags = GetCollectionEtags(collectionMediaItems);
 
         Dictionary<PlayoutItem, BlockKey> itemBlockKeys =

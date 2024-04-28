@@ -8,6 +8,7 @@ namespace ErsatzTV.Core.Scheduling;
 public class PlaylistEnumerator : IMediaCollectionEnumerator
 {
     private IList<IMediaCollectionEnumerator> _sortedEnumerators;
+    private IList<bool> _playAll;
     private int _enumeratorIndex;
     private System.Collections.Generic.HashSet<int> _idsToIncludeInEPG;
 
@@ -20,6 +21,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         var result = new PlaylistEnumerator
         {
             _sortedEnumerators = [],
+            _playAll = [],
             _idsToIncludeInEPG = [],
             Count = LCM(playlistItemMap.Values.Map(v => v.Count)) * playlistItemMap.Count
         };
@@ -42,6 +44,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             if (enumeratorMap.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
             {
                 result._sortedEnumerators.Add(enumerator);
+                result._playAll.Add(playlistItem.PlayAll);
                 continue;
             }
 
@@ -92,6 +95,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             {
                 enumeratorMap.Add(collectionKey, enumerator);
                 result._sortedEnumerators.Add(enumerator);
+                result._playAll.Add(playlistItem.PlayAll);
             }
         }
 
@@ -103,11 +107,16 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
         result.State = new CollectionEnumeratorState { Seed = state.Seed };
         result._enumeratorIndex = 0;
-        while (result.State.Index < state.Index)
-        {
-            result.MoveNext();
-        }
         
+        // TODO: how do we end up with index > count?
+        if (state.Index < result.Count)
+        {
+            while (result.State.Index < state.Index)
+            {
+                result.MoveNext();
+            }
+        }
+
         return result;
     }
 
@@ -142,7 +151,13 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
     public void MoveNext()
     {
         _sortedEnumerators[_enumeratorIndex].MoveNext();
-        _enumeratorIndex = (_enumeratorIndex + 1) % _sortedEnumerators.Count;
+        
+        // if we aren't playing all, or if we just finished playing all, move to the next enumerator
+        if (!_playAll[_enumeratorIndex] || _sortedEnumerators[_enumeratorIndex].State.Index == 0)
+        {
+            _enumeratorIndex = (_enumeratorIndex + 1) % _sortedEnumerators.Count;
+        }
+
         State.Index = (State.Index + 1) % Count;
     }
 

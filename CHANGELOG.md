@@ -50,8 +50,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Songs
     - Images
   - Playlists can be added to schedules as a schedule item
-  - Each time through the playlist, one item will be scheduled from each playlist item
+  - Each time through the playlist, one item will be scheduled from each playlist item (if `Play All` is unchecked)
     - NB: This does not mean every collection will always schedule one item; the normal flood playout restrictions like duration and fixed start times still apply here
+  - If `Play All` is checked, that playlist item will play all of its items each time through the playlist
+    - This can be helpful if you want to play entire collections in a specific order, e.g.
+      - Every episode from Show 1 Season 2
+      - Every episode from Show 2 Season 3
+      - Every episode from Show 1 Season 3
   - Playlist items with fewer media items will be re-shuffled (if applicable) before those with more media items
 
 ### Fixed

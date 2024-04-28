@@ -35,6 +35,7 @@
                 <col/>
                 <col/>
                 <col/>
+                <col/>
                 <col style="width: 60px;"/>
                 <col style="width: 60px;"/>
                 <col style="width: 60px;"/>
@@ -44,6 +45,7 @@
                 <MudTh>Item Type</MudTh>
                 <MudTh>Item</MudTh>
                 <MudTh>Playback Order</MudTh>
+                <MudTh>Play All</MudTh>
                 <MudTh>Show In EPG</MudTh>
                 <MudTh/>
                 <MudTh/>
@@ -65,6 +67,9 @@
                     <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
                         @(context.PlaybackOrder > 0 ? context.PlaybackOrder : "")
                     </MudText>
+                </MudTd>
+                <MudTd>
+                    <MudCheckBox T="bool" Value="@context.PlayAll" ValueChanged="@(e => UpdatePlayAll(context, e))"/>
                 </MudTd>
                 <MudTd>
                     <MudCheckBox T="bool" Value="@context.IncludeInProgramGuide" ValueChanged="@(e => UpdateEPG(context, e))"/>
@@ -405,6 +410,7 @@
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
+            PlayAll = item.PlayAll,
             IncludeInProgramGuide = item.IncludeInProgramGuide
         };
 
@@ -432,6 +438,7 @@
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
+            PlayAll = item.PlayAll,
             IncludeInProgramGuide = item.IncludeInProgramGuide
         };
 
@@ -490,6 +497,7 @@
                 item.SmartCollection?.Id,
                 item.MediaItem?.MediaItemId,
                 item.PlaybackOrder,
+                item.PlayAll,
                 item.IncludeInProgramGuide)).ToList();
 
         return new ReplacePlaylistItems(Id, _playlist.Name, items);
@@ -503,4 +511,5 @@
 
     private static void UpdateEPG(PlaylistItemEditViewModel context, bool includeInProgramGuide) => context.IncludeInProgramGuide = includeInProgramGuide;
 
+    private static void UpdatePlayAll(PlaylistItemEditViewModel context, bool playAll) => context.PlayAll = playAll;
 }

@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Map = LanguageExt.Map;
 
@@ -18,10 +19,11 @@ public class PlayoutBuilder : IPlayoutBuilder
     private readonly IArtistRepository _artistRepository;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly ILogger<PlayoutBuilder> _logger;
+    private ILogger<PlayoutBuilder> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
     private readonly ITelevisionRepository _televisionRepository;
+    private Playlist _debugPlaylist;
 
     public PlayoutBuilder(
         IConfigElementRepository configElementRepository,
@@ -39,6 +41,21 @@ public class PlayoutBuilder : IPlayoutBuilder
         _multiEpisodeFactory = multiEpisodeFactory;
         _localFileSystem = localFileSystem;
         _logger = logger;
+    }
+
+    public bool TrimStart { get; set; } = true;
+
+    public Playlist DebugPlaylist
+    {
+        get => _debugPlaylist;
+        set
+        {
+            if (value is not null)
+            {
+                _debugPlaylist = value;
+                _logger = NullLogger<PlayoutBuilder>.Instance;
+            }
+        }
     }
 
     public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
@@ -368,8 +385,11 @@ public class PlayoutBuilder : IPlayoutBuilder
                 cancellationToken);
         }
 
-        // remove old items
-        playout.Items.RemoveAll(old => old.FinishOffset < trimBefore);
+        if (TrimStart)
+        {
+            // remove old items
+            playout.Items.RemoveAll(old => old.FinishOffset < trimBefore);
+        }
 
         // check for future items that aren't grouped inside range
         var futureItems = playout.Items.Filter(i => i.StartOffset > trimAfter).ToList();
@@ -944,8 +964,9 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             foreach (int playlistId in Optional(collectionKey.PlaylistId))
             {
-                Dictionary<PlaylistItem, List<MediaItem>> playlistItemMap =
-                    await _mediaCollectionRepository.GetPlaylistItemMap(playlistId);
+                Dictionary<PlaylistItem, List<MediaItem>> playlistItemMap = DebugPlaylist is not null
+                    ? await _mediaCollectionRepository.GetPlaylistItemMap(DebugPlaylist)
+                    : await _mediaCollectionRepository.GetPlaylistItemMap(playlistId);
 
                 return await PlaylistEnumerator.Create(
                     _mediaCollectionRepository,
