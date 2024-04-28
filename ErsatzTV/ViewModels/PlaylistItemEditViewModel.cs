@@ -81,6 +81,8 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
 
     public PlaybackOrder PlaybackOrder { get; set; }
 
+    public bool PlayAll { get; set; }
+
     public bool IncludeInProgramGuide { get; set; }
 
     public event PropertyChangedEventHandler PropertyChanged;

@@ -13,6 +13,9 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(int playlistId) =>
         throw new NotSupportedException();
 
+    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist) =>
+        throw new NotSupportedException();
+
     public Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id) =>
         throw new NotSupportedException();
 

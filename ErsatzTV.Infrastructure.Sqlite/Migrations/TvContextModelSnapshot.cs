@@ -1564,6 +1564,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("MultiCollectionId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("PlayAll")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("PlaybackOrder")
                         .HasColumnType("INTEGER");
 

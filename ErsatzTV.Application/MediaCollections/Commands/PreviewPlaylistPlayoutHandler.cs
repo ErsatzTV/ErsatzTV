@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Application.Scheduling;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Scheduling;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
@@ -13,7 +13,8 @@ namespace ErsatzTV.Application.MediaCollections;
 [SuppressMessage("ReSharper", "SuggestBaseTypeForParameterInConstructor")]
 public class PreviewPlaylistPlayoutHandler(
     IDbContextFactory<TvContext> dbContextFactory,
-    IBlockPlayoutPreviewBuilder blockPlayoutBuilder)
+    IMediaCollectionRepository mediaCollectionRepository,
+    IPlayoutBuilder playoutBuilder)
     : IRequestHandler<PreviewPlaylistPlayout, List<PlayoutItemPreviewViewModel>>
 {
     public async Task<List<PlayoutItemPreviewViewModel>> Handle(
@@ -21,21 +22,6 @@ public class PreviewPlaylistPlayoutHandler(
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        // TODO: consider using flood playout instead
-        
-        var template = new Template
-        {
-            Items = []
-        };
-
-        template.Items.Add(
-            new TemplateItem
-            {
-                Block = MapToBlock(request.Data),
-                StartTime = TimeSpan.Zero,
-                Template = template
-            });
 
         var playout = new Playout
         {
@@ -45,21 +31,38 @@ public class PreviewPlaylistPlayoutHandler(
                 Name = "Playlist Preview"
             },
             Items = [],
-            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Block,
+            ProgramSchedulePlayoutType = ProgramSchedulePlayoutType.Flood,
             PlayoutHistory = [],
-            Templates =
-            [
-                new PlayoutTemplate
-                {
-                    DaysOfWeek = PlayoutTemplate.AllDaysOfWeek(),
-                    DaysOfMonth = PlayoutTemplate.AllDaysOfMonth(),
-                    MonthsOfYear = PlayoutTemplate.AllMonthsOfYear(),
-                    Template = template
-                }
-            ]
+            ProgramSchedule = new ProgramSchedule
+            {
+                Items = [MapToScheduleItem(request)]
+            },
+            ProgramScheduleAlternates = [],
+            FillGroupIndices = []
         };
 
-        await blockPlayoutBuilder.Build(playout, PlayoutBuildMode.Reset, cancellationToken);
+        // TODO: make an explicit method to preview, this is ugly
+        playoutBuilder.TrimStart = false;
+        playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
+        await playoutBuilder.Build(playout, PlayoutBuildMode.Reset, cancellationToken);
+
+        int maxItems = 0;
+        Dictionary<PlaylistItem, List<MediaItem>> map =
+            await mediaCollectionRepository.GetPlaylistItemMap(playout.ProgramSchedule.Items[0].Playlist);
+        foreach (PlaylistItem item in playout.ProgramSchedule.Items[0].Playlist.Items)
+        {
+            if (item.PlayAll)
+            {
+                maxItems += map[item].Count;
+            }
+            else
+            {
+                maxItems += 1;
+            }
+        }
+
+        // limit preview to once through the playlist
+        playout.Items = playout.Items.Take(maxItems).ToList();
 
         // load playout item details for title
         foreach (PlayoutItem playoutItem in playout.Items)
@@ -91,29 +94,32 @@ public class PreviewPlaylistPlayoutHandler(
                 playoutItem.MediaItem = mediaItem;
             }
         }
-
-        return playout.Items.Map(Scheduling.Mapper.ProjectToViewModel).ToList();
+        
+        return playout.Items.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
     }
 
-    private static Block MapToBlock(ReplacePlaylistItems request) =>
+    private static ProgramScheduleItemFlood MapToScheduleItem(PreviewPlaylistPlayout request) =>
         new()
         {
-            Name = request.Name,
-            Minutes = 6 * 60,
-            StopScheduling = BlockStopScheduling.AfterDurationEnd,
-            Items = request.Items.Map(MapToBlockItem).ToList()
+            CollectionType = ProgramScheduleItemCollectionType.Playlist,
+            Playlist = new Playlist
+            {
+                Items = request.Data.Items.OrderBy(i => i.Index).Map(MapToPlaylistItem).ToList()
+            },
+            PlaylistId = request.Data.PlaylistId,
+            PlaybackOrder = PlaybackOrder.Shuffle
         };
 
-    private static BlockItem MapToBlockItem(int id, ReplacePlaylistItem request) =>
+    private static PlaylistItem MapToPlaylistItem(ReplacePlaylistItem item) =>
         new()
         {
-            Id = id,
-            Index = request.Index,
-            CollectionType = request.CollectionType,
-            CollectionId = request.CollectionId,
-            MultiCollectionId = request.MultiCollectionId,
-            SmartCollectionId = request.SmartCollectionId,
-            MediaItemId = request.MediaItemId,
-            PlaybackOrder = request.PlaybackOrder
+            Index = item.Index,
+            CollectionType = item.CollectionType,
+            CollectionId = item.CollectionId,
+            MediaItemId = item.MediaItemId,
+            MultiCollectionId = item.MultiCollectionId,
+            SmartCollectionId = item.SmartCollectionId,
+            PlaybackOrder = item.PlaybackOrder,
+            PlayAll = item.PlayAll
         };
 }
