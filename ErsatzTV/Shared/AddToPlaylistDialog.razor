@@ -1,0 +1,137 @@
+﻿@using Microsoft.Extensions.Caching.Memory
+@using ErsatzTV.Application.MediaCollections
+@implements IDisposable
+@inject IMediator Mediator
+@inject IMemoryCache MemoryCache
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudHighlighter Class="mud-primary-text"
+                                Style="background-color: transparent; font-weight: bold"
+                                Text="@FormatText()"
+                                HighlightedText="@EntityName"/>
+            </MudContainer>
+            <MudSelect Class="mb-3 mx-4"
+                       T="PlaylistGroupViewModel"
+                       Label="Playlist Group"
+                       Value="_selectedPlaylistGroup"
+                       ValueChanged="@(vm => UpdatePlaylistGroupItems(vm))">
+                @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
+                {
+                    <MudSelectItem Value="@playlistGroup">@playlistGroup.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect Class="mb-6 mx-4"
+                       T="PlaylistViewModel"
+                       Label="Playlist"
+                       @bind-value="_selectedPlaylist">
+                @foreach (PlaylistViewModel playlist in _playlists)
+                {
+                    <MudSelectItem Value="@playlist">@playlist.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Add To Playlist
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string EntityType { get; set; }
+
+    [Parameter]
+    public string EntityName { get; set; }
+
+    [Parameter]
+    public string DetailText { get; set; }
+
+    [Parameter]
+    public string DetailHighlight { get; set; }
+
+    private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
+    private readonly List<PlaylistViewModel> _playlists = [];
+
+    private PlaylistGroupViewModel _selectedPlaylistGroup;
+    private PlaylistViewModel _selectedPlaylist;
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private bool CanSubmit() => _selectedPlaylist != null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _playlistGroups.AddRange(await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token));
+
+        if (MemoryCache.TryGetValue("AddToPlaylistDialog.SelectedPlaylistGroupId", out int groupId))
+        {
+            _selectedPlaylistGroup = _playlistGroups.SingleOrDefault(pg => pg.Id == groupId);
+            if (_selectedPlaylistGroup is not null)
+            {
+                await UpdatePlaylistGroupItems(_selectedPlaylistGroup);
+                if (MemoryCache.TryGetValue("AddToPlaylistDialog.SelectedPlaylistId", out int id))
+                {
+                    _selectedPlaylist = _playlists.SingleOrDefault(c => c.Id == id);
+                }
+            }
+        }
+    }
+
+    private string FormatText() => $"Select the playlist to add the {EntityType} {EntityName}";
+    
+    private async Task UpdatePlaylistGroupItems(PlaylistGroupViewModel playlistGroup)
+    {
+        _selectedPlaylistGroup = playlistGroup;
+
+        _playlists.Clear();
+        _playlists.AddRange(await Mediator.Send(new GetPlaylistsByPlaylistGroupId(playlistGroup.Id), _cts.Token));
+    }
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        await Task.CompletedTask;
+
+        MemoryCache.Set("AddToPlaylistDialog.SelectedPlaylistGroupId", _selectedPlaylistGroup.Id);
+        MemoryCache.Set("AddToPlaylistDialog.SelectedPlaylistId", _selectedPlaylist.Id);
+        MudDialog.Close(DialogResult.Ok(_selectedPlaylist));
+    }
+
+    private async Task Cancel(MouseEventArgs e)
+    {
+        // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        if (e.Detail == 0)
+        {
+            await Submit();
+        }
+        else
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+}

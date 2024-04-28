@@ -13,7 +13,11 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-<MudTable Hover="true" Items="_schedule?.Items?.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+<MudTable T="ProgramScheduleItemEditViewModel"
+          Hover="true"
+          Items="_schedule?.Items?.OrderBy(i => i.Index)"
+          Dense="true"
+          SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
     <ToolBarContent>
         <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
     </ToolBarContent>
@@ -188,6 +192,7 @@
                         {
                             <MudSelect Class="mt-3"
                                        T="PlaylistGroupViewModel"
+                                       Value="@_selectedPlaylistGroup"
                                        Label="Playlist Group"
                                        ValueChanged="@(vm => UpdatePlaylistGroupItems(vm))">
                                 @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
@@ -398,6 +403,7 @@
     private readonly List<PlaylistGroupViewModel> _playlistGroups = [];
     private readonly List<PlaylistViewModel> _playlists = [];
 
+    private PlaylistGroupViewModel _selectedPlaylistGroup;
     private ProgramScheduleItemEditViewModel _selectedItem;
 
     public void Dispose()
@@ -440,7 +446,7 @@
 
             if (_schedule.Items.Count == 1)
             {
-                _selectedItem = _schedule.Items.Head();
+                await SelectedItemChanged(_schedule.Items.Head());
             }
         }
     }
@@ -507,6 +513,8 @@
 
     private async Task UpdatePlaylistGroupItems(PlaylistGroupViewModel playlistGroup)
     {
+        _selectedPlaylistGroup = playlistGroup;
+
         _playlists.Clear();
         _playlists.AddRange(await Mediator.Send(new GetPlaylistsByPlaylistGroupId(playlistGroup.Id), _cts.Token));
     }
@@ -524,6 +532,7 @@
             Collection = item.Collection,
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
+            Playlist = item.Playlist,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
             FillWithGroupMode = item.FillWithGroupMode,
@@ -635,4 +644,17 @@
             () => NavigationManager.NavigateTo("/schedules"));
     }
 
+    private async Task SelectedItemChanged(ProgramScheduleItemEditViewModel vm)
+    {
+        _selectedItem = vm;
+
+        foreach (int playlistGroupId in Optional(_selectedItem.Playlist?.Id))
+        {
+            foreach (PlaylistGroupViewModel group in Optional(_playlistGroups.Find(g => g.Id == playlistGroupId)))
+            {
+                _selectedPlaylistGroup = group;
+                await UpdatePlaylistGroupItems(group);
+            }
+        }
+    }
 }

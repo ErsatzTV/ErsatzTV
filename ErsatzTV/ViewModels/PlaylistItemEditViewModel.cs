@@ -45,7 +45,24 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
     public SmartCollectionViewModel SmartCollection { get; set; }
     public NamedMediaItemViewModel MediaItem { get; set; }
 
-    public string CollectionName => CollectionType switch
+    public string ItemType => CollectionType switch
+    {
+        ProgramScheduleItemCollectionType.Collection => "Collection",
+        ProgramScheduleItemCollectionType.TelevisionShow => "Show",
+        ProgramScheduleItemCollectionType.TelevisionSeason => "Season",
+        ProgramScheduleItemCollectionType.Artist => "Artist",
+        ProgramScheduleItemCollectionType.MultiCollection => "Multi-Collection",
+        ProgramScheduleItemCollectionType.SmartCollection => "Smart Collection",
+        ProgramScheduleItemCollectionType.Movie => "Movie",
+        ProgramScheduleItemCollectionType.Episode => "Episode",
+        ProgramScheduleItemCollectionType.MusicVideo => "Music Video",
+        ProgramScheduleItemCollectionType.OtherVideo => "Other Video",
+        ProgramScheduleItemCollectionType.Song => "Song",
+        ProgramScheduleItemCollectionType.Image => "Image",
+        _ => string.Empty
+    };
+    
+    public string ItemName => CollectionType switch
     {
         ProgramScheduleItemCollectionType.Collection => Collection?.Name,
         ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
@@ -53,6 +70,12 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
         ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
         ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
         ProgramScheduleItemCollectionType.SmartCollection => SmartCollection?.Name,
+        ProgramScheduleItemCollectionType.Movie => MediaItem?.Name,
+        ProgramScheduleItemCollectionType.Episode => MediaItem?.Name,
+        ProgramScheduleItemCollectionType.MusicVideo => MediaItem?.Name,
+        ProgramScheduleItemCollectionType.OtherVideo => MediaItem?.Name,
+        ProgramScheduleItemCollectionType.Song => MediaItem?.Name,
+        ProgramScheduleItemCollectionType.Image => MediaItem?.Name,
         _ => string.Empty
     };
 

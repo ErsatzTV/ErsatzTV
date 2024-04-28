@@ -32,6 +32,9 @@ internal static class Mapper
                     duration.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(duration.SmartCollection)
                         : null,
+                    duration.Playlist != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(duration.Playlist)
+                        : null,
                     duration.MediaItem switch
                     {
                         Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -84,6 +87,9 @@ internal static class Mapper
                     flood.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(flood.SmartCollection)
                         : null,
+                    flood.Playlist != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(flood.Playlist)
+                        : null,
                     flood.MediaItem switch
                     {
                         Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -132,6 +138,9 @@ internal static class Mapper
                         : null,
                     multiple.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(multiple.SmartCollection)
+                        : null,
+                    multiple.Playlist != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(multiple.Playlist)
                         : null,
                     multiple.MediaItem switch
                     {
@@ -182,6 +191,9 @@ internal static class Mapper
                         : null,
                     one.SmartCollection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(one.SmartCollection)
+                        : null,
+                    one.Playlist != null
+                        ? MediaCollections.Mapper.ProjectToViewModel(one.Playlist)
                         : null,
                     one.MediaItem switch
                     {

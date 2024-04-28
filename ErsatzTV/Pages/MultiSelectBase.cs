@@ -91,6 +91,17 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
         SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList(),
         SelectedItems.OfType<ImageCardViewModel>().Map(i => i.ImageId).ToList());
+    
+    protected Task AddSelectionToPlaylist() => AddItemsToPlaylist(
+        SelectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
+        SelectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+        SelectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId).ToList(),
+        SelectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId).ToList(),
+        SelectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
+        SelectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
+        SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
+        SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList(),
+        SelectedItems.OfType<ImageCardViewModel>().Map(i => i.ImageId).ToList());
 
     protected async Task AddItemsToCollection(
         List<int> movieIds,
@@ -105,7 +116,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         string entityName = "selected items")
     {
         int count = movieIds.Count + showIds.Count + seasonIds.Count + episodeIds.Count + artistIds.Count +
-                    musicVideoIds.Count + otherVideoIds.Count + songIds.Count;
+                    musicVideoIds.Count + otherVideoIds.Count + songIds.Count + imageIds.Count;
 
         var parameters = new DialogParameters
             { { "EntityType", count.ToString(CultureInfo.InvariantCulture) }, { "EntityName", entityName } };
@@ -172,6 +183,59 @@ public class MultiSelectBase<T> : FragmentNavigationBase
 
             await RefreshData();
             ClearSelection();
+        }
+    }
+    
+    protected async Task AddItemsToPlaylist(
+        List<int> movieIds,
+        List<int> showIds,
+        List<int> seasonIds,
+        List<int> episodeIds,
+        List<int> artistIds,
+        List<int> musicVideoIds,
+        List<int> otherVideoIds,
+        List<int> songIds,
+        List<int> imageIds,
+        string entityName = "selected items")
+    {
+        int count = movieIds.Count + showIds.Count + seasonIds.Count + episodeIds.Count + artistIds.Count +
+                    musicVideoIds.Count + otherVideoIds.Count + songIds.Count + imageIds.Count;
+
+        var parameters = new DialogParameters
+            { { "EntityType", count.ToString(CultureInfo.InvariantCulture) }, { "EntityName", entityName } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog =
+            await Dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        {
+            var request = new AddItemsToPlaylist(
+                playlist.Id,
+                movieIds,
+                showIds,
+                seasonIds,
+                episodeIds,
+                artistIds,
+                musicVideoIds,
+                otherVideoIds,
+                songIds,
+                imageIds);
+
+            Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
+            addResult.Match(
+                Left: error =>
+                {
+                    Snackbar.Add($"Unexpected error adding items to playlist: {error.Value}");
+                    Logger.LogError("Unexpected error adding items to playlist: {Error}", error.Value);
+                },
+                Right: _ =>
+                {
+                    Snackbar.Add(
+                        $"Added {count} items to playlist {playlist.Name}",
+                        Severity.Success);
+                    ClearSelection();
+                });
         }
     }
 }
