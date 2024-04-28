@@ -18,6 +18,8 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
         CollectionEnumeratorState state,
         CancellationToken cancellationToken)
     {
+        CurrentIncludeInProgramGuide = Option<bool>.None;
+
         _mediaItemCount = mediaItems.Sum(i => 1 + Optional(i.Additional).Flatten().Count());
         _mediaItems = mediaItems;
         _cancellationToken = cancellationToken;
@@ -56,6 +58,7 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext()
     {

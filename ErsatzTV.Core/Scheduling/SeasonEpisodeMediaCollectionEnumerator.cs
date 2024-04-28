@@ -13,6 +13,8 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
         IEnumerable<MediaItem> mediaItems,
         CollectionEnumeratorState state)
     {
+        CurrentIncludeInProgramGuide = Option<bool>.None;
+
         _sortedMediaItems = mediaItems.OrderBy(identity, new SeasonEpisodeMediaComparer()).ToList();
         _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(
             () => _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
@@ -38,6 +40,7 @@ public sealed class SeasonEpisodeMediaCollectionEnumerator : IMediaCollectionEnu
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 

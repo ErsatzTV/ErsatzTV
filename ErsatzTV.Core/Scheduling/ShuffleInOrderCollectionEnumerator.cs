@@ -20,6 +20,8 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
         bool randomStartPoint,
         CancellationToken cancellationToken)
     {
+        CurrentIncludeInProgramGuide = Option<bool>.None;
+
         _collections = collections;
         _randomStartPoint = randomStartPoint;
         _cancellationToken = cancellationToken;
@@ -59,6 +61,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     public CollectionEnumeratorState State { get; }
 
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
+    public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext()
     {
