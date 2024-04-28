@@ -16,6 +16,7 @@
             <MudSelect Class="mb-3 mx-4"
                        T="PlaylistGroupViewModel"
                        Label="Playlist Group"
+                       Value="_selectedPlaylistGroup"
                        ValueChanged="@(vm => UpdatePlaylistGroupItems(vm))">
                 @foreach (PlaylistGroupViewModel playlistGroup in _playlistGroups)
                 {

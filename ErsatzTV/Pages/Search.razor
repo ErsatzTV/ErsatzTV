@@ -23,6 +23,13 @@
                 </MudButton>
                 <MudButton Class="ml-3"
                            Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           OnClick="@(_ => AddSelectionToPlaylist())">
+                    Add To Playlist
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.Check"
                            OnClick="@(_ => ClearSelection())">
@@ -84,6 +91,15 @@
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
                                OnClick="@AddAllToCollection">
+                        Add All
+                    </MudButton>
+                </MudTooltip>
+                <MudTooltip Text="Add All To Playlist">
+                    <MudButton Class="ml-3" 
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                               OnClick="@AddAllToPlaylist">
                         Add All
                     </MudButton>
                 </MudTooltip>
@@ -753,6 +769,22 @@
     {
         SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query), CancellationToken);
         await AddItemsToCollection(
+            results.MovieIds,
+            results.ShowIds,
+            results.SeasonIds,
+            results.EpisodeIds,
+            results.ArtistIds,
+            results.MusicVideoIds,
+            results.OtherVideoIds,
+            results.SongIds,
+            results.ImageIds,
+            "search results");
+    }
+
+    private async Task AddAllToPlaylist(MouseEventArgs _)
+    {
+        SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query), CancellationToken);
+        await AddItemsToPlaylist(
             results.MovieIds,
             results.ShowIds,
             results.SeasonIds,

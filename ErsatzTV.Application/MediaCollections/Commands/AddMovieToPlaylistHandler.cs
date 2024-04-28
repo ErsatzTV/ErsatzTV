@@ -29,6 +29,7 @@ public class AddMovieToPlaylistHandler(IDbContextFactory<TvContext> dbContextFac
             Index = parameters.Playlist.Items.Max(i => i.Index) + 1,
             CollectionType = ProgramScheduleItemCollectionType.Movie,
             MediaItemId = parameters.Movie.Id,
+            PlaybackOrder = PlaybackOrder.Shuffle,
             IncludeInProgramGuide = true
         };
         

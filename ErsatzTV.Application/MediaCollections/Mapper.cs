@@ -70,7 +70,11 @@ internal static class Mapper
                 Season season => MediaItems.Mapper.ProjectToViewModel(season),
                 Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                 Movie movie => MediaItems.Mapper.ProjectToViewModel(movie),
-                // TODO: other items?
+                Episode episode => MediaItems.Mapper.ProjectToViewModel(episode),
+                MusicVideo musicVideo => MediaItems.Mapper.ProjectToViewModel(musicVideo),
+                OtherVideo otherVideo => MediaItems.Mapper.ProjectToViewModel(otherVideo),
+                Song song => MediaItems.Mapper.ProjectToViewModel(song),
+                Image image => MediaItems.Mapper.ProjectToViewModel(image),
                 _ => null
             },
             playlistItem.PlaybackOrder,

@@ -109,7 +109,45 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
 
-                // TODO: other single media item types
+                case ProgramScheduleItemCollectionType.Episode:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetEpisodeItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case ProgramScheduleItemCollectionType.MusicVideo:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetMusicVideoItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case ProgramScheduleItemCollectionType.OtherVideo:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetOtherVideoItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.Song:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetSongItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.Image:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetImageItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
             }
 
             result.Add(playlistItem, mediaItems);
@@ -418,7 +456,45 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
                     break;
                 
-                // TODO: other single media item types
+                case ProgramScheduleItemCollectionType.Episode:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetEpisodeItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case ProgramScheduleItemCollectionType.MusicVideo:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetMusicVideoItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case ProgramScheduleItemCollectionType.OtherVideo:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetOtherVideoItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.Song:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetSongItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+                
+                case ProgramScheduleItemCollectionType.Image:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetImageItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
             }
         }
 

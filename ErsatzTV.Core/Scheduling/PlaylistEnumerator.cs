@@ -45,46 +45,47 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                 continue;
             }
 
-            // TODO: sort each of the item lists / or maybe pass into child enumerators?
             var initState = new CollectionEnumeratorState { Seed = state.Seed, Index = 0 };
-            switch (playlistItem.PlaybackOrder)
+            if (items.Count == 1)
             {
-                case PlaybackOrder.Chronological:
-                    enumerator = new ChronologicalMediaCollectionEnumerator(items, initState);
-                    break;
-                // TODO: fix multi episode shuffle?
-                case PlaybackOrder.MultiEpisodeShuffle:
-                case PlaybackOrder.Shuffle:
-                    List<GroupedMediaItem> i = await PlayoutBuilder.GetGroupedMediaItemsForShuffle(
-                        mediaCollectionRepository,
-                        // TODO: fix this
-                        new ProgramSchedule { KeepMultiPartEpisodesTogether = false },
-                        items,
-                        CollectionKey.ForPlaylistItem(playlistItem));
-                    enumerator = new ShuffledMediaCollectionEnumerator(i, initState, cancellationToken);
-                    break;
-                case PlaybackOrder.ShuffleInOrder:
-                    enumerator = new ShuffleInOrderCollectionEnumerator(
-                        await PlayoutBuilder.GetCollectionItemsForShuffleInOrder(mediaCollectionRepository, CollectionKey.ForPlaylistItem(playlistItem)),
-                        initState,
-                        // TODO: fix this
-                        randomStartPoint: false,
-                        cancellationToken);
-                    break;
-                case PlaybackOrder.SeasonEpisode:
-                    // TODO: check random start point?
-                    enumerator = new SeasonEpisodeMediaCollectionEnumerator(items, initState);
-                    break;
-                case PlaybackOrder.Random:
-                    enumerator = new RandomizedMediaCollectionEnumerator(items, initState);
-                    break;
-                default:
-                    if (items.Count == 1)
-                    {
-                        enumerator = new SingleMediaItemEnumerator(items.Head());
-                    }
-
-                    break;
+                enumerator = new SingleMediaItemEnumerator(items.Head());
+            }
+            else
+            {
+                switch (playlistItem.PlaybackOrder)
+                {
+                    case PlaybackOrder.Chronological:
+                        enumerator = new ChronologicalMediaCollectionEnumerator(items, initState);
+                        break;
+                    // TODO: fix multi episode shuffle?
+                    case PlaybackOrder.MultiEpisodeShuffle:
+                    case PlaybackOrder.Shuffle:
+                        List<GroupedMediaItem> i = await PlayoutBuilder.GetGroupedMediaItemsForShuffle(
+                            mediaCollectionRepository,
+                            // TODO: fix this
+                            new ProgramSchedule { KeepMultiPartEpisodesTogether = false },
+                            items,
+                            CollectionKey.ForPlaylistItem(playlistItem));
+                        enumerator = new ShuffledMediaCollectionEnumerator(i, initState, cancellationToken);
+                        break;
+                    case PlaybackOrder.ShuffleInOrder:
+                        enumerator = new ShuffleInOrderCollectionEnumerator(
+                            await PlayoutBuilder.GetCollectionItemsForShuffleInOrder(
+                                mediaCollectionRepository,
+                                CollectionKey.ForPlaylistItem(playlistItem)),
+                            initState,
+                            // TODO: fix this
+                            randomStartPoint: false,
+                            cancellationToken);
+                        break;
+                    case PlaybackOrder.SeasonEpisode:
+                        // TODO: check random start point?
+                        enumerator = new SeasonEpisodeMediaCollectionEnumerator(items, initState);
+                        break;
+                    case PlaybackOrder.Random:
+                        enumerator = new RandomizedMediaCollectionEnumerator(items, initState);
+                        break;
+                }
             }
 
             if (enumerator is not null)

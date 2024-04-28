@@ -109,9 +109,14 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
 
                 break;
             case ProgramScheduleItemCollectionType.Movie:
+            case ProgramScheduleItemCollectionType.Episode:
+            case ProgramScheduleItemCollectionType.MusicVideo:
+            case ProgramScheduleItemCollectionType.OtherVideo:
+            case ProgramScheduleItemCollectionType.Song:
+            case ProgramScheduleItemCollectionType.Image:
                 if (item.MediaItemId is null)
                 {
-                    return BaseError.New("[MediaItem] is required for type 'Movie'");
+                    return BaseError.New($"[MediaItem] is required for type '{item.CollectionType}'");
                 }
 
                 break;

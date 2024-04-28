@@ -28,9 +28,10 @@
     Preview Playlist Playout
 </MudButton>
 <MudGrid>
-    <MudItem xs="8">
+    <MudItem xs="12">
         <MudTable Class="mt-6" Hover="true" Items="_playlist.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
             <ColGroup>
+                <col/>
                 <col/>
                 <col/>
                 <col/>
@@ -40,6 +41,7 @@
                 <col style="width: 60px;"/>
             </ColGroup>
             <HeaderContent>
+                <MudTh>Item Type</MudTh>
                 <MudTh>Item</MudTh>
                 <MudTh>Playback Order</MudTh>
                 <MudTh>Show In EPG</MudTh>
@@ -49,9 +51,14 @@
                 <MudTh/>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Collection">
+                <MudTd DataLabel="Item Type">
                     <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                        @context.CollectionName
+                        @context.ItemType
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Item">
+                    <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                        @context.ItemName
                     </MudText>
                 </MudTd>
                 <MudTd DataLabel="Playback Order">
@@ -104,6 +111,11 @@
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
                             <MudSelectItem Value="ProgramScheduleItemCollectionType.Movie">Movie</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Episode">Episode</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.MusicVideo">Music Video</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.OtherVideo">Other Video</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Song">Song</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Image">Image</MudSelectItem>
                         </MudSelect>
                         @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
                         {
@@ -203,7 +215,7 @@
                                    Label="Playback Order"
                                    @bind-Value="@_selectedItem.PlaybackOrder"
                                    For="@(() => _selectedItem.PlaybackOrder)"
-                                   Disabled="@(_selectedItem.CollectionType is ProgramScheduleItemCollectionType.Movie)">
+                                   Disabled="@(_selectedItem.CollectionType is ProgramScheduleItemCollectionType.Movie or ProgramScheduleItemCollectionType.Episode or ProgramScheduleItemCollectionType.MusicVideo or ProgramScheduleItemCollectionType.OtherVideo or ProgramScheduleItemCollectionType.Song or ProgramScheduleItemCollectionType.Image)">
                             @switch (_selectedItem.CollectionType)
                             {
                                 case ProgramScheduleItemCollectionType.MultiCollection:
