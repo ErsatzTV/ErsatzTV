@@ -10,6 +10,9 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
 
     public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
 
+    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(int playlistId) =>
+        throw new NotSupportedException();
+
     public Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id) =>
         throw new NotSupportedException();
 

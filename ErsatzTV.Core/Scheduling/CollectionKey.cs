@@ -13,6 +13,46 @@ public class CollectionKey : Record<CollectionKey>
     public int? MediaItemId { get; set; }
     public int? PlaylistId { get; set; }
     public string FakeCollectionKey { get; set; }
+    
+    public static CollectionKey ForPlaylistItem(PlaylistItem item) =>
+        item.CollectionType switch
+        {
+            ProgramScheduleItemCollectionType.Collection => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                CollectionId = item.CollectionId
+            },
+            ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.Artist => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.MultiCollection => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MultiCollectionId = item.MultiCollectionId
+            },
+            ProgramScheduleItemCollectionType.SmartCollection => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                SmartCollectionId = item.SmartCollectionId
+            },
+            ProgramScheduleItemCollectionType.FakeCollection => new CollectionKey
+            {
+                CollectionType = item.CollectionType
+            },
+            _ => throw new ArgumentOutOfRangeException(nameof(item))
+        };
 
     public static CollectionKey ForBlockItem(BlockItem item) =>
         item.CollectionType switch
