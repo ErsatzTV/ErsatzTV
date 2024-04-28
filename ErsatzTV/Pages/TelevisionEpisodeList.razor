@@ -59,6 +59,13 @@
                 <MudButton Class="ml-3"
                            Variant="Variant.Filled"
                            Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           OnClick="@AddToPlaylist">
+                    Add To Playlist
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Schedule"
                            OnClick="@AddToSchedule">
                     Add To Schedule
@@ -107,6 +114,14 @@
                                        StartIcon="@Icons.Material.Filled.Add"
                                        OnClick="@(_ => AddEpisodeToCollection(episode))">
                                 Add To Collection
+                            </MudButton>
+                        </div>
+                        <div class="mt-6">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                                       OnClick="@(_ => AddEpisodeToPlaylist(episode))">
+                                Add To Playlist
                             </MudButton>
                         </div>
                         <div class="mt-6">
@@ -230,7 +245,20 @@
             _navigationManager.NavigateTo($"media/collections/{collection.Id}");
         }
     }
+    
+    private async Task AddToPlaylist()
+    {
+        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
+        IDialogReference dialog = await _dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        {
+            await _mediator.Send(new AddSeasonToPlaylist(playlist.Id, SeasonId), _cts.Token);
+            _navigationManager.NavigateTo($"media/playlists/{playlist.Id}");
+        }
+    }
 
     private async Task AddToSchedule()
     {
@@ -264,6 +292,27 @@
                     _logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
                 },
                 Right: _ => _snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
+        }
+    }
+    
+    private async Task AddEpisodeToPlaylist(TelevisionEpisodeCardViewModel episode)
+    {
+        var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = await _dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        {
+            var request = new AddEpisodeToPlaylist(playlist.Id, episode.EpisodeId);
+            Either<BaseError, Unit> addResult = await _mediator.Send(request, _cts.Token);
+            addResult.Match(
+                Left: error =>
+                {
+                    _snackbar.Add($"Unexpected error adding episode to playlist: {error.Value}");
+                    _logger.LogError("Unexpected error adding episode to playlist: {Error}", error.Value);
+                },
+                Right: _ => _snackbar.Add($"Added {episode.Title} to playlist {playlist.Name}", Severity.Success));
         }
     }
 

@@ -121,6 +121,36 @@ public class CollectionKey : Record<CollectionKey>
             {
                 CollectionType = item.CollectionType
             },
+            ProgramScheduleItemCollectionType.Movie => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.Episode => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.MusicVideo => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.OtherVideo => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.Song => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
+            ProgramScheduleItemCollectionType.Image => new CollectionKey
+            {
+                CollectionType = item.CollectionType,
+                MediaItemId = item.MediaItemId
+            },
             _ => throw new ArgumentOutOfRangeException(nameof(item))
         };
 
