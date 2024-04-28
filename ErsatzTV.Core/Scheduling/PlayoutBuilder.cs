@@ -866,6 +866,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.FakeCollectionKey == collectionKey.FakeCollectionKey
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
+                     && a.PlaylistId == collectionKey.PlaylistId
                      && a.AnchorDate is null);
 
             var maybeEnumeratorState = collectionEnumerators.ToDictionary(e => e.Key, e => e.Value.State);
@@ -885,6 +886,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     MultiCollectionId = collectionKey.MultiCollectionId,
                     SmartCollectionId = collectionKey.SmartCollectionId,
                     MediaItemId = collectionKey.MediaItemId,
+                    PlaylistId = collectionKey.PlaylistId,
                     FakeCollectionKey = collectionKey.FakeCollectionKey,
                     EnumeratorState = maybeEnumeratorState[collectionKey]
                 });
@@ -922,7 +924,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
-                     && a.MediaItemId == collectionKey.MediaItemId);
+                     && a.MediaItemId == collectionKey.MediaItemId
+                     && a.PlaylistId == collectionKey.PlaylistId);
 
         CollectionEnumeratorState state = null;
 
@@ -936,6 +939,21 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
 
         state ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
+        
+        if (collectionKey.CollectionType is ProgramScheduleItemCollectionType.Playlist)
+        {
+            foreach (int playlistId in Optional(collectionKey.PlaylistId))
+            {
+                Dictionary<PlaylistItem, List<MediaItem>> playlistItemMap =
+                    await _mediaCollectionRepository.GetPlaylistItemMap(playlistId);
+
+                return await PlaylistEnumerator.Create(
+                    _mediaCollectionRepository,
+                    playlistItemMap,
+                    state,
+                    cancellationToken);
+            }
+        }
 
         int collectionId = collectionKey.CollectionId ?? 0;
 
@@ -985,7 +1003,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 return new RandomizedMediaCollectionEnumerator(mediaItems, state);
             case PlaybackOrder.ShuffleInOrder:
                 return new ShuffleInOrderCollectionEnumerator(
-                    await GetCollectionItemsForShuffleInOrder(collectionKey),
+                    await GetCollectionItemsForShuffleInOrder(_mediaCollectionRepository, collectionKey),
                     state,
                     activeSchedule.RandomStartPoint,
                     cancellationToken);
@@ -1026,7 +1044,11 @@ public class PlayoutBuilder : IPlayoutBuilder
             case PlaybackOrder.MultiEpisodeShuffle:
             case PlaybackOrder.Shuffle:
                 return new ShuffledMediaCollectionEnumerator(
-                    await GetGroupedMediaItemsForShuffle(activeSchedule, mediaItems, collectionKey),
+                    await GetGroupedMediaItemsForShuffle(
+                        _mediaCollectionRepository,
+                        activeSchedule,
+                        mediaItems,
+                        collectionKey),
                     state,
                     cancellationToken);
             default:
@@ -1035,14 +1057,15 @@ public class PlayoutBuilder : IPlayoutBuilder
         }
     }
 
-    private async Task<List<GroupedMediaItem>> GetGroupedMediaItemsForShuffle(
+    internal static async Task<List<GroupedMediaItem>> GetGroupedMediaItemsForShuffle(
+        IMediaCollectionRepository mediaCollectionRepository,
         ProgramSchedule activeSchedule,
         List<MediaItem> mediaItems,
         CollectionKey collectionKey)
     {
         if (collectionKey.MultiCollectionId != null)
         {
-            List<CollectionWithItems> collections = await _mediaCollectionRepository
+            List<CollectionWithItems> collections = await mediaCollectionRepository
                 .GetMultiCollectionCollections(collectionKey.MultiCollectionId.Value);
 
             return MultiCollectionGrouper.GroupMediaItems(collections);
@@ -1053,18 +1076,20 @@ public class PlayoutBuilder : IPlayoutBuilder
             : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
     }
 
-    private async Task<List<CollectionWithItems>> GetCollectionItemsForShuffleInOrder(CollectionKey collectionKey)
+    internal static async Task<List<CollectionWithItems>> GetCollectionItemsForShuffleInOrder(
+        IMediaCollectionRepository mediaCollectionRepository,
+        CollectionKey collectionKey)
     {
         List<CollectionWithItems> result;
 
         if (collectionKey.MultiCollectionId != null)
         {
-            result = await _mediaCollectionRepository.GetMultiCollectionCollections(
+            result = await mediaCollectionRepository.GetMultiCollectionCollections(
                 collectionKey.MultiCollectionId.Value);
         }
         else
         {
-            result = await _mediaCollectionRepository.GetFakeMultiCollectionCollections(
+            result = await mediaCollectionRepository.GetFakeMultiCollectionCollections(
                 collectionKey.CollectionId,
                 collectionKey.SmartCollectionId);
         }

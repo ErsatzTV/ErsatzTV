@@ -99,6 +99,9 @@ public class TvContext : DbContext
     public DbSet<DecoTemplateGroup> DecoTemplateGroups { get; set; }
     public DbSet<DecoTemplate> DecoTemplates { get; set; }
     public DbSet<DecoTemplateItem> DecoTemplateItems { get; set; }
+    public DbSet<PlaylistGroup> PlaylistGroups { get; set; }
+    public DbSet<Playlist> Playlists { get; set; }
+    public DbSet<PlaylistItem> PlaylistItems { get; set; }
     public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
     public DbSet<Resolution> Resolutions { get; set; }
     public DbSet<LanguageCode> LanguageCodes { get; set; }

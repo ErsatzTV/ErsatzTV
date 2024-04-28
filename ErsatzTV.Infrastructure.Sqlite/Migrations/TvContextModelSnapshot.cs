@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -1503,6 +1503,91 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("OtherVideoMetadata", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Playlist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PlaylistGroupId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlaylistGroupId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Playlist", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("PlaylistGroup", (string)null);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CollectionType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IncludeInProgramGuide")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MediaItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MultiCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlaybackOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SmartCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CollectionId");
+
+                    b.HasIndex("MediaItemId");
+
+                    b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
+
+                    b.HasIndex("SmartCollectionId");
+
+                    b.ToTable("PlaylistItem", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
                 {
                     b.Property<int>("Id")
@@ -1645,6 +1730,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("MultiCollectionId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("PlayoutId")
                         .HasColumnType("INTEGER");
 
@@ -1658,6 +1746,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MediaItemId");
 
                     b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
 
                     b.HasIndex("PlayoutId");
 
@@ -1855,6 +1945,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("PlaybackOrder")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("PostRollFillerId")
                         .HasColumnType("INTEGER");
 
@@ -1899,6 +1992,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("MidRollFillerId");
 
                     b.HasIndex("MultiCollectionId");
+
+                    b.HasIndex("PlaylistId");
 
                     b.HasIndex("PostRollFillerId");
 
@@ -3911,6 +4006,56 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("OtherVideo");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Playlist", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.PlaylistGroup", "PlaylistGroup")
+                        .WithMany("Playlists")
+                        .HasForeignKey("PlaylistGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlaylistGroup");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Collection", "Collection")
+                        .WithMany()
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
+                        .WithMany()
+                        .HasForeignKey("MediaItemId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "MultiCollection")
+                        .WithMany()
+                        .HasForeignKey("MultiCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany("Items")
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
+                        .WithMany()
+                        .HasForeignKey("SmartCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Collection");
+
+                    b.Navigation("MediaItem");
+
+                    b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
+
+                    b.Navigation("SmartCollection");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Channel", "Channel")
@@ -4033,6 +4178,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
                         .WithMany("ProgramScheduleAnchors")
                         .HasForeignKey("PlayoutId")
@@ -4070,6 +4220,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MediaItem");
 
                     b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
 
                     b.Navigation("Playout");
 
@@ -4184,6 +4336,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Filler.FillerPreset", "PostRollFiller")
                         .WithMany()
                         .HasForeignKey("PostRollFillerId")
@@ -4223,6 +4380,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("MidRollFiller");
 
                     b.Navigation("MultiCollection");
+
+                    b.Navigation("Playlist");
 
                     b.Navigation("PostRollFiller");
 
@@ -5199,6 +5358,16 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("Tags");
 
                     b.Navigation("Writers");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.Playlist", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlaylistGroup", b =>
+                {
+                    b.Navigation("Playlists");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Playout", b =>

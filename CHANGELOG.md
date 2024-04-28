@@ -35,6 +35,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Qsv` / `hevc`
   - `None` / `h264`
   - `None` / `hevc`
+- Add *experimental* list type `Playlist`
+  - Playlists contain an ordered list of:
+    - Collections
+    - Multi-Collections
+    - Smart Collections
+    - TV Shows
+    - TV Seasons
+    - Artists
+  - Playlists can be added to schedules as a schedule item
+  - Each time through the playlist, one item will be scheduled from each playlist item
+    - NB: This does not mean every collection will always schedule one item; the normal flood playout restrictions like duration and fixed start times still apply here
+  - Playlist items with fewer media items will be re-shuffled (if applicable) before those with more media items
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help

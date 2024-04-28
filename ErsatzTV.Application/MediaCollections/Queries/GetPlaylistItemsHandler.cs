@@ -1,0 +1,45 @@
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace ErsatzTV.Application.MediaCollections;
+
+public class GetPlaylistItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetPlaylistItems, List<PlaylistItemViewModel>>
+{
+    public async Task<List<PlaylistItemViewModel>> Handle(GetPlaylistItems request, CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        List<PlaylistItem> allItems = await dbContext.PlaylistItems
+            .AsNoTracking()
+            .Filter(i => i.PlaylistId == request.PlaylistId)
+            .Include(i => i.Collection)
+            .Include(i => i.MultiCollection)
+            .Include(i => i.SmartCollection)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Season).SeasonMetadata)
+            .ThenInclude(sm => sm.Artwork)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Season).Show)
+            .ThenInclude(s => s.ShowMetadata)
+            .ThenInclude(sm => sm.Artwork)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Show).ShowMetadata)
+            .ThenInclude(sm => sm.Artwork)
+            .Include(i => i.MediaItem)
+            .ThenInclude(i => (i as Artist).ArtistMetadata)
+            .ThenInclude(am => am.Artwork)
+            .ToListAsync(cancellationToken);
+
+        if (allItems.All(bi => bi.IncludeInProgramGuide == false))
+        {
+            foreach (PlaylistItem bi in allItems)
+            {
+                bi.IncludeInProgramGuide = true;
+            }
+        }
+
+        return allItems.Map(Mapper.ProjectToViewModel).ToList();
+    }
+}

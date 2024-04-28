@@ -36,6 +36,12 @@ public class PlayoutProgramScheduleAnchorConfiguration : IEntityTypeConfiguratio
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
+        builder.HasOne(i => i.Playlist)
+            .WithMany()
+            .HasForeignKey(i => i.PlaylistId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(false);
+
         builder.Property(i => i.AnchorDate)
             .IsRequired(false);
     }

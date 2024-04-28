@@ -324,7 +324,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -375,7 +375,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -436,7 +436,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -483,7 +483,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -548,7 +548,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -626,7 +626,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -677,7 +677,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -724,7 +724,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -777,7 +777,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, IndexName);
+                await _client.IndexAsync(doc, index: IndexName);
             }
             catch (Exception ex)
             {
@@ -946,7 +946,7 @@ public class ElasticSearchIndex : ISearchIndex
             s => s.Index(IndexName)
                 .Size(0)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
-                .Aggregations(a => a.Terms("count", v => v.Field(i => i.JumpLetter).Size(30)))
+                .Aggregations(a => a.Add("count", agg => agg.Terms(v => v.Field(i => i.JumpLetter).Size(30))))
                 .QueryLuceneSyntax(query));
 
         if (!response.IsValidResponse)

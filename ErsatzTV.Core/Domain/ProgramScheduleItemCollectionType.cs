@@ -8,6 +8,14 @@ public enum ProgramScheduleItemCollectionType
     Artist = 3,
     MultiCollection = 4,
     SmartCollection = 5,
+    Playlist = 6,
+
+    Movie = 10,
+    Episode = 20,
+    MusicVideo = 30,
+    OtherVideo = 40,
+    Song = 50,
+    Image = 60,
 
     FakeCollection = 100
 }

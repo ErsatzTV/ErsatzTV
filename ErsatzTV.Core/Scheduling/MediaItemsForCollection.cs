@@ -37,6 +37,10 @@ public static class MediaItemsForCollection
                 result.AddRange(
                     await mediaCollectionRepository.GetSmartCollectionItems(collectionKey.SmartCollectionId ?? 0));
                 break;
+            case ProgramScheduleItemCollectionType.Playlist:
+                result.AddRange(
+                    await mediaCollectionRepository.GetPlaylistItems(collectionKey.PlaylistId ?? 0));
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(collectionKey));
         }
