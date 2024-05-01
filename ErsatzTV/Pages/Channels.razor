@@ -176,7 +176,12 @@
 
             var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
             uri.Path = uri.Path.Replace("/channels", $"/iptv/channel/{channel.Number}.m3u8");
-            uri.Query = "?mode=segmenter";
+            uri.Query = channel.StreamingMode switch
+            {
+                StreamingMode.HttpLiveStreamingSegmenterV2 => "?mode=segmenter-v2",
+                _ => "?mode=segmenter"
+            };
+
             if (JwtHelper.IsEnabled)
             {
                 uri.Query += $"&access_token={JwtHelper.GenerateToken()}";

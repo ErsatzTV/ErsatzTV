@@ -37,7 +37,7 @@ public class OutputFormatConcatHls : IPipelineStep
                 "-f", "hls",
                 "-hls_segment_type", segmentType,
                 //"-hls_init_time", "2",
-                "-hls_playlist_type", "event",
+                //"-hls_playlist_type", "event",
                 "-hls_time", $"{OutputFormatHls.SegmentSeconds}",
                 "-hls_list_size", "25", // burst of 45 means ~12 segments, so allow that plus a handful
                 "-segment_list_flags", "+live",

@@ -78,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix MySql database migrations
 - Fix Plex library scans with MySql/MariaDB
 - Fix block playout playback when no deco is configured
+- Fix `HLS Segmenter V2` to delete old segments (use less disk space while channel is active)
 
 ### Changed
 - Use ffmpeg 7 in all docker images 
@@ -88,6 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Using accurate BANDWIDTH value in multi-variant playlist
   - Using proper MIME types for statically-served `.m3u8` and `.ts` files
   - Serving playlists with gzip compression
+- Use `HLS Segmenter V2` for channel preview when channel is configured for `HLS Segmenter V2`
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added
