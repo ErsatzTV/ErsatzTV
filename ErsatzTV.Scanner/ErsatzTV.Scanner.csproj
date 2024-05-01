@@ -42,8 +42,4 @@
         </AssemblyAttribute>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Application\Streaming\" />
-    </ItemGroup>
-
 </Project>
