@@ -86,7 +86,7 @@
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Schedule As Group">
-                <MudCheckBox @bind-Checked="@context.ScheduleAsGroup" For="@(() => context.ScheduleAsGroup)"/>
+                <MudCheckBox @bind-Value="@context.ScheduleAsGroup" For="@(() => context.ScheduleAsGroup)"/>
             </MudTd>
             <MudTd DataLabel="Playback Order">
                 @if (context.ScheduleAsGroup)

@@ -9,7 +9,7 @@
 @inject SystemStartup SystemStartup
 @inject ISearchTargets SearchTargets;
 
-<MudThemeProvider Theme="_ersatzTvTheme"/>
+<MudThemeProvider Theme="ErsatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
 <MudSnackbarProvider/>
 
@@ -77,13 +77,13 @@
         }
         @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
         <MudTooltip Text="Documentation">
-            <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Link="https://ersatztv.org" Target="_blank"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Href="https://ersatztv.org" Target="_blank"/>
         </MudTooltip>
         <MudTooltip Text="Discord">
-            <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Link="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+            <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
         </MudTooltip>
         <MudTooltip Text="GitHub">
-            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Link="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
+            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
         </MudTooltip>
         <AuthorizeView>
             <form action="/account/logout" method="post">
@@ -180,7 +180,7 @@
         _cts.Dispose();
     }
 
-    private MudTheme _ersatzTvTheme => new()
+    private static MudTheme ErsatzTvTheme => new()
     {
         Palette = new PaletteDark
         {

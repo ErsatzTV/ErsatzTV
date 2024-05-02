@@ -36,7 +36,7 @@
                 </div>
             }
             <div class="media-card-overlay" style="">
-                <MudButton Link="@(IsSelectMode ? null : Link)"
+                <MudButton Href="@(IsSelectMode ? null : Link)"
                            Style="height: 100%; width: 100%"
                            OnClick="@(e => IsSelectMode || string.IsNullOrWhiteSpace(Link) ? SelectClicked.InvokeAsync(e) : Task.CompletedTask)">
                 </MudButton>

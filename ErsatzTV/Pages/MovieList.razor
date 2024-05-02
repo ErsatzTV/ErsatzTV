@@ -62,7 +62,7 @@
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
         <FragmentLetterAnchor TCard="MovieCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
-                       Link="@($"media/movies/{context.MovieId}")"
+                       Href="@($"media/movies/{context.MovieId}")"
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(context, e))"
                        IsSelected="@IsSelected(context)"

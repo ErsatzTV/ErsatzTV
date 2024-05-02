@@ -88,7 +88,7 @@
                     }
                     <MudTooltip Text="Edit Channel">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"channels/{context.Id}")">
+                                       Href="@($"channels/{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Channel">
@@ -103,7 +103,7 @@
             <MudTablePager/>
         </PagerContent>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="channels/add" Class="mt-4">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="channels/add" Class="mt-4">
         Add Channel
     </MudButton>
 </MudContainer>

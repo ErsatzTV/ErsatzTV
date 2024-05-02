@@ -3,15 +3,15 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Configuration
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IMediator _mediator
+@inject IDialogService Dialog
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="media/collections/add">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="media/collections/add">
             Add Collection
         </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="media/multi-collections/add">
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Href="media/multi-collections/add">
             Add Multi Collection
         </MudButton>
     </div>
@@ -38,7 +38,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Collection">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"media/collections/{context.Id}")">
+                                       Href="@($"media/collections/{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Collection">
@@ -76,7 +76,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Collection">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@($"media/multi-collections/{context.Id}/edit")">
+                                       Href="@($"media/multi-collections/{context.Id}/edit")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Collection">
@@ -114,7 +114,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Collection">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Link="@context.Query.GetRelativeSearchQuery()">
+                                       Href="@context.Query.GetRelativeSearchQuery()">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Collection">
@@ -150,13 +150,13 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _collectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize), _cts.Token)
+        _collectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
-        _multiCollectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize), _cts.Token)
+        _multiCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
-        _smartCollectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize), _cts.Token)
+        _smartCollectionsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
@@ -165,11 +165,11 @@
         var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeleteCollection(collection.Id), _cts.Token);
+            await Mediator.Send(new DeleteCollection(collection.Id), _cts.Token);
             if (_collectionsTable != null)
             {
                 await _collectionsTable.ReloadServerData();
@@ -182,11 +182,11 @@
         var parameters = new DialogParameters { { "EntityType", "multi collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Multi Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Multi Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeleteMultiCollection(collection.Id), _cts.Token);
+            await Mediator.Send(new DeleteMultiCollection(collection.Id), _cts.Token);
             if (_multiCollectionsTable != null)
             {
                 await _multiCollectionsTable.ReloadServerData();
@@ -199,11 +199,11 @@
         var parameters = new DialogParameters { { "EntityType", "smart collection" }, { "EntityName", collection.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeleteSmartCollection(collection.Id), _cts.Token);
+            await Mediator.Send(new DeleteSmartCollection(collection.Id), _cts.Token);
             if (_smartCollectionsTable != null)
             {
                 await _smartCollectionsTable.ReloadServerData();
@@ -213,25 +213,25 @@
 
     private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedMediaCollectionsViewModel data = await _mediator.Send(new GetPagedCollections(state.Page, state.PageSize), _cts.Token);
+        PagedMediaCollectionsViewModel data = await Mediator.Send(new GetPagedCollections(state.Page, state.PageSize), _cts.Token);
         return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
     private async Task<TableData<MultiCollectionViewModel>> ServerReloadMultiCollections(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedMultiCollectionsViewModel data = await _mediator.Send(new GetPagedMultiCollections(state.Page, state.PageSize), _cts.Token);
+        PagedMultiCollectionsViewModel data = await Mediator.Send(new GetPagedMultiCollections(state.Page, state.PageSize), _cts.Token);
         return new TableData<MultiCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
     private async Task<TableData<SmartCollectionViewModel>> ServerReloadSmartCollections(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedSmartCollectionsViewModel data = await _mediator.Send(new GetPagedSmartCollections(state.Page, state.PageSize), _cts.Token);
+        PagedSmartCollectionsViewModel data = await Mediator.Send(new GetPagedSmartCollections(state.Page, state.PageSize), _cts.Token);
         return new TableData<SmartCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 

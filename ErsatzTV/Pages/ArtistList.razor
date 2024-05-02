@@ -54,7 +54,7 @@
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
         <FragmentLetterAnchor TCard="ArtistCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
-                       Link="@($"media/music/artists/{context.ArtistId}")"
+                       Href="@($"media/music/artists/{context.ArtistId}")"
                        ArtworkKind="ArtworkKind.Thumbnail"
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(context, e))"

@@ -68,7 +68,7 @@
                             <MudSelectItem Value="@(WatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
                         </MudSelect>
                         <MudCheckBox Class="mt-3" Label="Place Within Source Content"
-                                     @bind-Checked="_model.PlaceWithinSourceContent"
+                                     @bind-Value="_model.PlaceWithinSourceContent"
                                      For="@(() => _model.PlaceWithinSourceContent)"
                                      Disabled="@(_model.Mode == ChannelWatermarkMode.None)"/>
                         <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
