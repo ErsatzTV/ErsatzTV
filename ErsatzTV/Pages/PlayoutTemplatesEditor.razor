@@ -376,12 +376,12 @@
     {
         _selectedItem = template;
 
-        foreach (TemplateGroupViewModel group in Optional(_templateGroups.Find(group => group.Id == _selectedItem.Template.TemplateGroupId)))
+        foreach (TemplateGroupViewModel group in Optional(_templateGroups.Find(group => group.Id == _selectedItem?.Template?.TemplateGroupId)))
         {
             await UpdateTemplateGroupItems(group);
         }
         
-        foreach (DecoTemplateGroupViewModel group in Optional(_decoTemplateGroups.Find(group => group.Id == _selectedItem.DecoTemplate?.DecoTemplateGroupId)))
+        foreach (DecoTemplateGroupViewModel group in Optional(_decoTemplateGroups.Find(group => group.Id == _selectedItem?.DecoTemplate?.DecoTemplateGroupId)))
         {
             await UpdateDecoTemplateGroupItems(group);
         }
@@ -389,7 +389,7 @@
 
     private void DayOfWeekChanged(DayOfWeek dayOfWeek, bool isChecked)
     {
-        if (isChecked && !_selectedItem.DaysOfWeek.Contains(dayOfWeek))
+        if (isChecked && _selectedItem != null && !_selectedItem.DaysOfWeek.Contains(dayOfWeek))
         {
             _selectedItem.DaysOfWeek.Add(dayOfWeek);
             _selectedItem.DaysOfWeek = _selectedItem.DaysOfWeek.OrderBy(x => ((int)x + 6) % 7).ToList();
@@ -397,14 +397,14 @@
 
         if (!isChecked)
         {
-            _selectedItem.DaysOfWeek.Remove(dayOfWeek);
+            _selectedItem?.DaysOfWeek.Remove(dayOfWeek);
         }
     }
 
     private void SelectWeekdays()
     {
-        _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(
+        _selectedItem?.DaysOfWeek.Clear();
+        _selectedItem?.DaysOfWeek.AddRange(
             new[]
             {
                 DayOfWeek.Monday,
@@ -417,8 +417,8 @@
 
     private void SelectWeekends()
     {
-        _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(
+        _selectedItem?.DaysOfWeek.Clear();
+        _selectedItem?.DaysOfWeek.AddRange(
             new[]
             {
                 DayOfWeek.Saturday,
@@ -428,37 +428,37 @@
 
     private void SelectAllDaysOfWeek()
     {
-        _selectedItem.DaysOfWeek.Clear();
-        _selectedItem.DaysOfWeek.AddRange(PlayoutTemplate.AllDaysOfWeek());
+        _selectedItem?.DaysOfWeek.Clear();
+        _selectedItem?.DaysOfWeek.AddRange(PlayoutTemplate.AllDaysOfWeek());
     }
 
-    private void SelectNoDaysOfWeek() => _selectedItem.DaysOfWeek.Clear();
+    private void SelectNoDaysOfWeek() => _selectedItem?.DaysOfWeek.Clear();
 
     private void DayOfMonthChanged(int dayOfMonth, bool isChecked)
     {
         if (isChecked && !_selectedItem.DaysOfMonth.Contains(dayOfMonth))
         {
-            _selectedItem.DaysOfMonth.Add(dayOfMonth);
-            _selectedItem.DaysOfMonth.Sort();
+            _selectedItem?.DaysOfMonth.Add(dayOfMonth);
+            _selectedItem?.DaysOfMonth.Sort();
         }
 
         if (!isChecked)
         {
-            _selectedItem.DaysOfMonth.Remove(dayOfMonth);
+            _selectedItem?.DaysOfMonth.Remove(dayOfMonth);
         }
     }
 
     private void SelectAllDaysOfMonth()
     {
-        _selectedItem.DaysOfMonth.Clear();
-        _selectedItem.DaysOfMonth.AddRange(PlayoutTemplate.AllDaysOfMonth());
+        _selectedItem?.DaysOfMonth.Clear();
+        _selectedItem?.DaysOfMonth.AddRange(PlayoutTemplate.AllDaysOfMonth());
     }
 
-    private void SelectNoDaysOfMonth() => _selectedItem.DaysOfMonth.Clear();
+    private void SelectNoDaysOfMonth() => _selectedItem?.DaysOfMonth.Clear();
 
     private void MonthOfYearChanged(int monthOfYear, bool isChecked)
     {
-        if (isChecked && !_selectedItem.MonthsOfYear.Contains(monthOfYear))
+        if (isChecked && _selectedItem != null && !_selectedItem.MonthsOfYear.Contains(monthOfYear))
         {
             _selectedItem.MonthsOfYear.Add(monthOfYear);
             _selectedItem.MonthsOfYear.Sort();
@@ -466,17 +466,17 @@
 
         if (!isChecked)
         {
-            _selectedItem.MonthsOfYear.Remove(monthOfYear);
+            _selectedItem?.MonthsOfYear.Remove(monthOfYear);
         }
     }
 
     private void SelectAllMonthsOfYear()
     {
-        _selectedItem.MonthsOfYear.Clear();
-        _selectedItem.MonthsOfYear.AddRange(PlayoutTemplate.AllMonthsOfYear());
+        _selectedItem?.MonthsOfYear.Clear();
+        _selectedItem?.MonthsOfYear.AddRange(PlayoutTemplate.AllMonthsOfYear());
     }
 
-    private void SelectNoMonthsOfYear() => _selectedItem.MonthsOfYear.Clear();
+    private void SelectNoMonthsOfYear() => _selectedItem?.MonthsOfYear.Clear();
 
     private void AddTemplate()
     {
@@ -554,7 +554,7 @@
 
     private async Task DateRangeChanged(DateRange dateRange)
     {
-        await Task.Delay(10);
+        await Task.CompletedTask;
 
         _previewItems.Clear();
 

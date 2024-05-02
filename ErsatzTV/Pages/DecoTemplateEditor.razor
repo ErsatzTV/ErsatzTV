@@ -251,7 +251,9 @@
         // don't allow any overlap
         if (calendarItem is DecoTemplateItemEditViewModel item)
         {
-            if (item.End.HasValue && IntersectsOthers(item, item.Start, item.End.Value))
+            bool intersects = item.End.HasValue && IntersectsOthers(item, item.Start, item.End.Value);
+            bool crossesMidnight = item.End.HasValue && item.End.Value.TimeOfDay > TimeSpan.Zero && item.End.Value.TimeOfDay < item.Start.TimeOfDay;
+            if (intersects || crossesMidnight)
             {
                 // roll back
                 item.Start = item.LastStart;
@@ -295,7 +297,11 @@
 
     private async Task SaveChanges()
     {
-        await Task.Delay(10);
+        if (_decoTemplate.Items.Any(i => i.End is null))
+        {
+            Snackbar.Add("Template item cannot end after midnight", Severity.Error);
+            return;
+        }
 
         var items = _decoTemplate.Items.Map(item => new ReplaceDecoTemplateItem(item.DecoId, item.Start.TimeOfDay, item.End!.Value.TimeOfDay)).ToList();
 
