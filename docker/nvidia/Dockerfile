@@ -16,7 +16,6 @@ WORKDIR /source
 
 # copy csproj and restore as distinct layers
 COPY *.sln .
-COPY nuget.config .
 COPY lib/nuget/* ./lib/nuget/
 COPY artwork/* ./artwork/
 COPY ErsatzTV/*.csproj ./ErsatzTV/
