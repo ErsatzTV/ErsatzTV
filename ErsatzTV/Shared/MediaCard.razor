@@ -1,9 +1,9 @@
 ﻿@using static Prelude
 @using ErsatzTV.Application.MediaCards
-@inject IMediator _mediator
+@inject IMediator Mediator
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
-    @if (SelectClicked.HasDelegate || !string.IsNullOrWhiteSpace(Link))
+    @if (SelectClicked.HasDelegate || !string.IsNullOrWhiteSpace(Href))
     {
         <div class="@(IsSelected ? DeleteClicked.HasDelegate ? "media-card-selected-delete" : "media-card-selected" : "")"
              style="border-radius: 4px; position: relative;">
@@ -36,9 +36,9 @@
                 </div>
             }
             <div class="media-card-overlay" style="">
-                <MudButton Href="@(IsSelectMode ? null : Link)"
+                <MudButton Href="@(IsSelectMode ? null : Href)"
                            Style="height: 100%; width: 100%"
-                           OnClick="@(e => IsSelectMode || string.IsNullOrWhiteSpace(Link) ? SelectClicked.InvokeAsync(e) : Task.CompletedTask)">
+                           OnClick="@(e => IsSelectMode || string.IsNullOrWhiteSpace(Href) ? SelectClicked.InvokeAsync(e) : Task.CompletedTask)">
                 </MudButton>
                 @if (SelectClicked.HasDelegate)
                 {
@@ -89,7 +89,7 @@
     public MediaCardViewModel Data { get; set; }
 
     [Parameter]
-    public string Link { get; set; }
+    public string Href { get; set; }
 
     [Parameter]
     public EventCallback<Unit> DataRefreshed { get; set; }
