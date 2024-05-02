@@ -80,6 +80,10 @@ internal static class Mapper
     {
         DateTime startTime = DateTime.Today.Add(decoTemplateItem.StartTime);
         DateTime endTime = DateTime.Today.Add(decoTemplateItem.EndTime);
+        if (startTime > endTime)
+        {
+            endTime = endTime.AddDays(1);
+        }
         return new DecoTemplateItemViewModel(decoTemplateItem.DecoId, decoTemplateItem.Deco.Name, startTime, endTime);
     }
 

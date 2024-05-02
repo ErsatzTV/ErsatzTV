@@ -224,7 +224,9 @@
         // don't allow any overlap
         if (calendarItem is TemplateItemEditViewModel item)
         {
-            if (item.End.HasValue && IntersectsOthers(item, item.Start, item.End.Value))
+            bool intersects = item.End.HasValue && IntersectsOthers(item, item.Start, item.End.Value);
+            bool crossesMidnight = item.End.HasValue && item.End.Value.TimeOfDay > TimeSpan.Zero && item.End.Value.TimeOfDay < item.Start.TimeOfDay;
+            if (intersects || crossesMidnight)
             {
                 // roll back
                 item.Start = item.LastStart;
@@ -268,8 +270,6 @@
 
     private async Task SaveChanges()
     {
-        await Task.Delay(10);
-
         var items = _template.Items.Map(item => new ReplaceTemplateItem(item.BlockId, item.Start.TimeOfDay)).ToList();
 
         Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceTemplateItems(Id, _template.Name, items), _cts.Token)

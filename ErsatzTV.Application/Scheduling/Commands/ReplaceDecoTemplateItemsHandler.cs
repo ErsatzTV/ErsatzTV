@@ -27,7 +27,12 @@ public class ReplaceDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbCont
         decoTemplate.DateUpdated = DateTime.UtcNow;
 
         dbContext.RemoveRange(decoTemplate.Items);
-        decoTemplate.Items = request.Items.Map(i => BuildItem(decoTemplate, i)).ToList();
+        
+        // drop items that are invalid
+        decoTemplate.Items = request.Items
+            .Map(i => BuildItem(decoTemplate, i))
+            .Filter(i => i.StartTime < i.EndTime || i.EndTime == TimeSpan.Zero)
+            .ToList();
 
         await dbContext.SaveChangesAsync();
 

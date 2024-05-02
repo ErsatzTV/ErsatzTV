@@ -79,6 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix Plex library scans with MySql/MariaDB
 - Fix block playout playback when no deco is configured
 - Fix `HLS Segmenter V2` to delete old segments (use less disk space while channel is active)
+- Fix template and deco template editors to prevent items that go beyond midnight 
 
 ### Changed
 - Use ffmpeg 7 in all docker images 
