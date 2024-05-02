@@ -1,6 +1,4 @@
-﻿version: "3.1"
-
-services:
+﻿services:
     ersatztv:
         privileged: true
         build:
@@ -13,4 +11,6 @@ services:
             resources:
                 reservations:
                     devices:
-                        -   capabilities: [ gpu ]
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]

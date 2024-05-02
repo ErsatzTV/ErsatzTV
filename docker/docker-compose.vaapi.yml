@@ -1,6 +1,4 @@
-﻿version: "3.1"
-
-services:
+﻿services:
     ersatztv:
         build:
             dockerfile: docker/vaapi/Dockerfile
