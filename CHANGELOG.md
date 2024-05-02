@@ -90,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Using proper MIME types for statically-served `.m3u8` and `.ts` files
   - Serving playlists with gzip compression
 - Use `HLS Segmenter V2` for channel preview when channel is configured for `HLS Segmenter V2`
+- Detect and use `/dev/dri/card*` devices in addition to `/dev/dri/render*` devices
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added
