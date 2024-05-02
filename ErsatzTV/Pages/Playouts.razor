@@ -1,6 +1,5 @@
 ﻿@page "/playouts"
 @using ErsatzTV.Application.Playouts
-@using ErsatzTV.Application.Scheduling
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Core.Scheduling
 @implements IDisposable
@@ -11,16 +10,16 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="playouts/add">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="playouts/add">
             Add Playout
         </MudButton>
         <MudTooltip Text="This feature is experimental">
-            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Link="@($"playouts/add/{PlayoutKind.Block}")">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.Block}")">
                 Add Block Playout
             </MudButton>
         </MudTooltip>
         <MudTooltip Text="This feature is experimental">
-            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Link="@($"playouts/add/{PlayoutKind.ExternalJson}")">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")">
                 Add External Json Playout
             </MudButton>
         </MudTooltip>
@@ -85,7 +84,7 @@
                         <MudTooltip Text="Edit Alternate Schedules">
                             <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           Link="@($"playouts/{context.PlayoutId}/alternate-schedules")">
+                                           Href="@($"playouts/{context.PlayoutId}/alternate-schedules")">
                             </MudIconButton>
                         </MudTooltip>
                         <MudTooltip Text="Reset Playout">
@@ -117,7 +116,7 @@
                         <MudTooltip Text="Edit Playout">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           Link="@($"playouts/block/{context.PlayoutId}")">
+                                           Href="@($"playouts/block/{context.PlayoutId}")">
                             </MudIconButton>
                         </MudTooltip>
                         <MudTooltip Text="Reset Playout">
@@ -152,7 +151,7 @@
                   @ref="_detailTable">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Playout Detail</MudText>
-                <MudSwitch T="bool" Class="ml-6" @bind-Checked="@ShowFiller" Color="Color.Secondary" Label="Show Filler"/>
+                <MudSwitch T="bool" Class="ml-6" @bind-Value="@ShowFiller" Color="Color.Secondary" Label="Show Filler"/>
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Start</MudTh>
@@ -279,32 +278,6 @@
         if (_table != null)
         {
             await _table.ReloadServerData();
-        }
-
-        if (_selectedPlayoutId == playout.PlayoutId)
-        {
-            await PlayoutSelected(playout);
-        }
-    }
-
-    private async Task EraseItems(PlayoutNameViewModel playout)
-    {
-        if (playout.PlayoutType is ProgramSchedulePlayoutType.Block)
-        {
-            await Mediator.Send(new EraseBlockPlayoutItems(playout.PlayoutId), _cts.Token);
-        }
-
-        if (_selectedPlayoutId == playout.PlayoutId)
-        {
-            await PlayoutSelected(playout);
-        }
-    }
-
-    private async Task EraseHistory(PlayoutNameViewModel playout)
-    {
-        if (playout.PlayoutType is ProgramSchedulePlayoutType.Block)
-        {
-            await Mediator.Send(new EraseBlockPlayoutHistory(playout.PlayoutId), _cts.Token);
         }
 
         if (_selectedPlayoutId == playout.PlayoutId)

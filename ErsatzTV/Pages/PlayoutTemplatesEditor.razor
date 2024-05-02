@@ -176,38 +176,38 @@
                         <MudCardContent>
                             <MudElement HtmlTag="div" Class="mt-3">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Monday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Monday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Monday, c))"/>
                             </MudElement>
                             <MudElement HtmlTag="div" Class="mt-2">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Tuesday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Tuesday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Tuesday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Tuesday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Tuesday, c))"/>
                             </MudElement>
                             <MudElement HtmlTag="div" Class="mt-2">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Wednesday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Wednesday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Wednesday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Wednesday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Wednesday, c))"/>
                             </MudElement>
                             <MudElement HtmlTag="div" Class="mt-2">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Thursday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Thursday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Thursday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Thursday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Thursday, c))"/>
                             </MudElement>
                             <MudElement HtmlTag="div" Class="mt-2">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Friday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Friday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Friday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Friday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Friday, c))"/>
                             </MudElement>
                             <MudElement HtmlTag="div" Class="mt-2">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Saturday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Saturday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Saturday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Saturday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Saturday, c))"/>
                             </MudElement>
                             <MudElement HtmlTag="div" Class="mt-2">
                                 <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Sunday)"
-                                             Checked="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Sunday))"
-                                             CheckedChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Sunday, c))"/>
+                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Sunday))"
+                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Sunday, c))"/>
                             </MudElement>
                         </MudCardContent>
                         <MudCardActions>
@@ -234,8 +234,8 @@
                                 {
                                     <MudItem xs="3">
                                         <MudCheckBox T="bool" Label="@day.ToString()"
-                                                     Checked="@(_selectedItem.DaysOfMonth.Contains(day))"
-                                                     CheckedChanged="@((bool c) => DayOfMonthChanged(day, c))"/>
+                                                     Value="@(_selectedItem.DaysOfMonth.Contains(day))"
+                                                     ValueChanged="@((bool c) => DayOfMonthChanged(day, c))"/>
                                     </MudItem>
                                 }
                             </MudGrid>
@@ -255,15 +255,15 @@
                         <MudCardContent>
                             <MudElement HtmlTag="div" Class="mt-3">
                                 <MudCheckBox T="bool" Label="@_dtf.GetMonthName(1)"
-                                             Checked="@(_selectedItem.MonthsOfYear.Contains(1))"
-                                             CheckedChanged="@((bool c) => MonthOfYearChanged(1, c))"/>
+                                             Value="@(_selectedItem.MonthsOfYear.Contains(1))"
+                                             ValueChanged="@((bool c) => MonthOfYearChanged(1, c))"/>
                             </MudElement>
                             @foreach (int month in Enumerable.Range(2, 11))
                             {
                                 <MudElement HtmlTag="div" Class="mt-2">
                                     <MudCheckBox T="bool" Label="@_dtf.GetMonthName(month)"
-                                                 Checked="@(_selectedItem.MonthsOfYear.Contains(month))"
-                                                 CheckedChanged="@((bool c) => MonthOfYearChanged(month, c))"/>
+                                                 Value="@(_selectedItem.MonthsOfYear.Contains(month))"
+                                                 ValueChanged="@((bool c) => MonthOfYearChanged(month, c))"/>
                                 </MudElement>
                             }
                         </MudCardContent>

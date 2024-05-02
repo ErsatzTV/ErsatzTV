@@ -2,8 +2,8 @@
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @inherits MultiSelectBase<CollectionItems>
-@inject NavigationManager _navigationManager
-@inject IJSRuntime _jsRuntime
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="align-items: center; display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%;" class="ml-6 mr-6">
@@ -31,60 +31,60 @@
             <div style="align-items: center; display: flex; flex-direction: row;">
                 <MudText Typo="Typo.h4">@_data?.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                               Link="@($"media/collections/{Id}/edit")"/>
+                               Href="@($"media/collections/{Id}/edit")"/>
             </div>
             @if (_data?.MovieCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
             }
 
             @if (_data?.ShowCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
             }
 
             @if (_data?.SeasonCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#seasons")">@_data.SeasonCards.Count Seasons</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#seasons")">@_data.SeasonCards.Count Seasons</MudLink>
             }
 
             @if (_data?.EpisodeCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
             }
 
             @if (_data?.ArtistCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")">@_data.ArtistCards.Count Artists</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")">@_data.ArtistCards.Count Artists</MudLink>
             }
 
             @if (_data?.MusicVideoCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
             }
 
             @if (_data?.OtherVideoCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")">@_data.OtherVideoCards.Count Other Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#other_videos")">@_data.OtherVideoCards.Count Other Videos</MudLink>
             }
 
             @if (_data?.SongCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")">@_data.SongCards.Count Songs</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#songs")">@_data.SongCards.Count Songs</MudLink>
             }
 
             @if (_data?.ImageCards.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#images")">@_data.ImageCards.Count Images</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")">@_data.ImageCards.Count Images</MudLink>
             }
 
             @if (SupportsCustomOrdering())
             {
                 <div style="margin-left: auto">
                     <MudSwitch T="bool"
-                               Checked="@_data.UseCustomPlaybackOrder"
+                               Value="@(_data?.UseCustomPlaybackOrder == true)"
                                Color="Color.Primary"
-                               CheckedChanged="@OnUseCustomOrderChanged"
+                               ValueChanged="@OnUseCustomOrderChanged"
                                Label="Use Custom Playback Order"/>
                 </div>
             }
@@ -106,7 +106,7 @@
             @foreach (MovieCardViewModel card in OrderMovies(_data.MovieCards))
             {
                 <MediaCard Data="@card"
-                           Link="@($"media/movies/{card.MovieId}")"
+                           Href="@($"media/movies/{card.MovieId}")"
                            DeleteClicked="@RemoveMovieFromCollection"
                            SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
@@ -129,7 +129,7 @@
             @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"media/tv/shows/{card.TelevisionShowId}")"
+                           Href="@($"media/tv/shows/{card.TelevisionShowId}")"
                            DeleteClicked="@RemoveShowFromCollection"
                            SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
@@ -152,7 +152,7 @@
             @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
+                           Href="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
                            DeleteClicked="@RemoveSeasonFromCollection"
@@ -177,7 +177,7 @@
             @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
             {
                 <MediaCard Data="@card"
-                           Link="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
+                           Href="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
                            ContainerClass="media-card-episode-container mx-2"
@@ -205,7 +205,7 @@
             @foreach (ArtistCardViewModel card in _data.ArtistCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"media/music/artists/{card.ArtistId}")"
+                           Href="@($"media/music/artists/{card.ArtistId}")"
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveArtistFromCollection"
                            SelectColor="@Color.Error"
@@ -229,7 +229,7 @@
             @foreach (MusicVideoCardViewModel card in _data.MusicVideoCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link=""
+                           Href=""
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveMusicVideoFromCollection"
                            SelectColor="@Color.Error"
@@ -253,7 +253,7 @@
             @foreach (OtherVideoCardViewModel card in _data.OtherVideoCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link=""
+                           Href=""
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveOtherVideoFromCollection"
                            SelectColor="@Color.Error"
@@ -277,7 +277,7 @@
             @foreach (SongCardViewModel card in _data.SongCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link=""
+                           Href=""
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveSongFromCollection"
                            SelectColor="@Color.Error"
@@ -301,7 +301,7 @@
             @foreach (ImageCardViewModel card in _data.ImageCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link=""
+                           Href=""
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveImageFromCollection"
                            SelectColor="@Color.Error"
@@ -332,7 +332,7 @@
 
         maybeResult.Match(
             result => _data = result,
-            _ => _navigationManager.NavigateTo("404"));
+            _ => NavigationManager.NavigateTo("404"));
     }
 
     private IOrderedEnumerable<MovieCardViewModel> OrderMovies(List<MovieCardViewModel> movies)
@@ -349,14 +349,14 @@
     {
         try
         {
-            await _jsRuntime.InvokeVoidAsync("sortableCollection", Id);
+            await JsRuntime.InvokeVoidAsync("sortableCollection", Id);
             if (_data.UseCustomPlaybackOrder)
             {
-                await _jsRuntime.InvokeVoidAsync("enableSorting");
+                await JsRuntime.InvokeVoidAsync("enableSorting");
             }
             else
             {
-                await _jsRuntime.InvokeVoidAsync("disableSorting");
+                await JsRuntime.InvokeVoidAsync("disableSorting");
             }
         }
         catch (Exception)
@@ -391,7 +391,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { movie.MovieId }
+                MediaItemIds = [movie.MovieId]
             };
 
             await RemoveItemsWithConfirmation("movie", $"{movie.Title} ({movie.Subtitle})", request);
@@ -404,7 +404,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { artist.ArtistId }
+                MediaItemIds = [artist.ArtistId]
             };
 
             await RemoveItemsWithConfirmation(
@@ -420,7 +420,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { musicVideo.MusicVideoId }
+                MediaItemIds = [musicVideo.MusicVideoId]
             };
 
             await RemoveItemsWithConfirmation("music video", $"{musicVideo.Title} ({musicVideo.Subtitle})", request);
@@ -433,7 +433,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { show.TelevisionShowId }
+                MediaItemIds = [show.TelevisionShowId]
             };
 
             await RemoveItemsWithConfirmation("show", $"{show.Title} ({show.Subtitle})", request);
@@ -446,7 +446,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { season.TelevisionSeasonId }
+                MediaItemIds = [season.TelevisionSeasonId]
             };
 
             await RemoveItemsWithConfirmation("season", $"{season.ShowTitle} - {season.Title}", request);
@@ -457,7 +457,7 @@
     {
         var request = new RemoveItemsFromCollection(Id)
         {
-            MediaItemIds = new List<int> { episode.EpisodeId }
+            MediaItemIds = [episode.EpisodeId]
         };
 
         await RemoveItemsWithConfirmation("episode", $"{episode.ShowTitle} - {episode.Title}", request);
@@ -469,7 +469,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { otherVideo.OtherVideoId }
+                MediaItemIds = [otherVideo.OtherVideoId]
             };
 
             await RemoveItemsWithConfirmation("other video", $"{otherVideo.Title}", request);
@@ -482,7 +482,7 @@
         {
             var request = new RemoveItemsFromCollection(Id)
             {
-                MediaItemIds = new List<int> { song.SongId }
+                MediaItemIds = [song.SongId]
             };
 
             await RemoveItemsWithConfirmation("song", $"{song.Title}", request);

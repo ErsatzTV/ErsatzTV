@@ -219,7 +219,7 @@
         @foreach (ActorCardViewModel actor in _movie.Actors)
         {
             <MediaCard Data="@actor"
-                       Link="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
+                       Href="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
                        ArtworkKind="ArtworkKind.Thumbnail"/>
         }
     </MudContainer>

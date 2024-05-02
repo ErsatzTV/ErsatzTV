@@ -18,7 +18,7 @@
             </CardHeaderContent>
         </MudCardHeader>
         <MudCardContent>
-            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" Link="@($"playouts/{Id}/templates")" Class="mt-4">
+            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" Href="@($"playouts/{Id}/templates")" Class="mt-4">
                 Edit Templates
             </MudButton>
         </MudCardContent>

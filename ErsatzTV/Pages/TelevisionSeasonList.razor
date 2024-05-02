@@ -151,7 +151,7 @@
     @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
     {
         <MediaCard Data="@card" Placeholder="@card.Placeholder"
-                   Link="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
+                   Href="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
                    AddToCollectionClicked="@AddSeasonToCollection"/>
     }
 </MudContainer>
@@ -164,7 +164,7 @@
         @foreach (ActorCardViewModel actor in _show.Actors)
         {
             <MediaCard Data="@actor"
-                       Link="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
+                       Href="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
                        ArtworkKind="ArtworkKind.Thumbnail"/>
         }
     </MudContainer>

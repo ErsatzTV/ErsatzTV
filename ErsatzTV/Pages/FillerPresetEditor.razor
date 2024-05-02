@@ -44,7 +44,7 @@
                             <MudSelectItem T="int?" Value="15">15 (:00, :15, :30, :45)</MudSelectItem>
                             <MudSelectItem T="int?" Value="30">30 (:00, :30)</MudSelectItem>
                         </MudSelect>
-                        <MudCheckBox Class="mt-3" Label="Allow Watermarks" @bind-Checked="@_model.AllowWatermarks" For="@(() => _model.AllowWatermarks)"/>
+                        <MudCheckBox Class="mt-3" Label="Allow Watermarks" @bind-Value="@_model.AllowWatermarks" For="@(() => _model.AllowWatermarks)"/>
                         <MudSelect Class="mt-3" Label="Filler Collection Type" @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
                             @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
                             {

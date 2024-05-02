@@ -9,11 +9,11 @@
 @using ErsatzTV.FFmpeg.Format
 @using ErsatzTV.FFmpeg.Preset
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<FFmpegEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
-@inject IMemoryCache _memoryCache
+@inject NavigationManager NavigationManager
+@inject ILogger<FFmpegEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IMemoryCache MemoryCache
 @inject PersistentComponentState ApplicationState
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -137,10 +137,10 @@
                                         </MudElement>
                                     }
                                     <MudElement HtmlTag="div" Class="mt-3">
-                                        <MudCheckBox Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
+                                        <MudCheckBox Label="Normalize Frame Rate" @bind-Value="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
                                     </MudElement>
                                     <MudElement HtmlTag="div" Class="mt-3">
-                                        <MudCheckBox Label="Auto Deinterlace Video" @bind-Checked="@_model.DeinterlaceVideo" For="@(() => _model.DeinterlaceVideo)"/>
+                                        <MudCheckBox Label="Auto Deinterlace Video" @bind-Value="@_model.DeinterlaceVideo" For="@(() => _model.DeinterlaceVideo)"/>
                                     </MudElement>
                                 </MudItem>
                                 <MudItem>
@@ -216,7 +216,7 @@
     {
         if (!ApplicationState.TryTakeFromJson("_resolutions", out List<ResolutionViewModel> restoredResolutions))
         {
-            _resolutions = await _mediator.Send(new GetAllResolutions(), _cts.Token);
+            _resolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token);
         }
         else
         {
@@ -225,7 +225,7 @@
 
         if (!ApplicationState.TryTakeFromJson("_hardwareAccelerationKinds", out List<HardwareAccelerationKind> restoredHardwareAccelerationKinds))
         {
-            _hardwareAccelerationKinds = await _mediator.Send(new GetSupportedHardwareAccelerationKinds(), _cts.Token);
+            _hardwareAccelerationKinds = await Mediator.Send(new GetSupportedHardwareAccelerationKinds(), _cts.Token);
         }
         else
         {
@@ -236,7 +236,7 @@
         {
             if (!ApplicationState.TryTakeFromJson("_model", out FFmpegProfileEditViewModel restoredProfile))
             {
-                Option<FFmpegProfileViewModel> maybeProfile = await _mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
+                Option<FFmpegProfileViewModel> maybeProfile = await Mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
                 foreach (FFmpegProfileViewModel profile in maybeProfile)
                 {
                     _model = new FFmpegProfileEditViewModel(profile);
@@ -244,7 +244,7 @@
 
                 if (maybeProfile.IsNone)
                 {
-                    _navigationManager.NavigateTo("404");
+                    NavigationManager.NavigateTo("404");
                 }
             }
             else
@@ -254,7 +254,7 @@
         }
         else
         {
-            _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile(), _cts.Token));
+            _model = new FFmpegProfileEditViewModel(await Mediator.Send(new NewFFmpegProfile(), _cts.Token));
         }
 
         if (!_hardwareAccelerationKinds.Contains(_model.HardwareAcceleration))
@@ -265,9 +265,9 @@
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
 
-        if (!_memoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
+        if (!MemoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
         {
-            vaapiDevices = new List<string> { "/dev/dri/renderD128" };
+            vaapiDevices = ["/dev/dri/renderD128"];
         }
 
         _vaapiDevices = vaapiDevices.OrderBy(s => s).ToList();
@@ -289,15 +289,15 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Seq<BaseError> errorMessage = IsEdit ? (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
+            Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    _snackbar.Add("Unexpected error saving ffmpeg profile");
-                    _logger.LogError("Unexpected error saving ffmpeg profile: {Error}", error.Value);
+                    Snackbar.Add("Unexpected error saving ffmpeg profile");
+                    Logger.LogError("Unexpected error saving ffmpeg profile: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo("/ffmpeg"));
+                () => NavigationManager.NavigateTo("/ffmpeg"));
         }
     }
 

@@ -3,9 +3,9 @@
 @implements IDisposable
 @using ErsatzTV.Core.Interfaces.MediaSources
 @typeparam TMediaSource
-@inject IMediator _mediator
-@inject IDialogService _dialog
-@inject IEntityLocker _locker
+@inject IMediator Mediator
+@inject IDialogService Dialog
+@inject IEntityLocker Locker
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -29,18 +29,18 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Refresh Libraries">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@(_locker.IsRemoteMediaSourceLocked<TMediaSource>())"
+                                       Disabled="@(Locker.IsRemoteMediaSourceLocked<TMediaSource>())"
                                        OnClick="@(_ => RefreshLibraries(context.Id))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Edit Libraries">
                         <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
-                                       Link="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/libraries")">
+                                       Href="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/libraries")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Edit Path Replacements">
                         <MudIconButton Icon="@Icons.Material.Filled.Folder"
-                                       Link="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/paths")">
+                                       Href="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/paths")">
                         </MudIconButton>
                     </MudTooltip>
                 </div>
@@ -60,7 +60,7 @@
     {
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
-                   Link="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
+                   Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
                    Class="mt-4">
             Connect @Name
         </MudButton>
@@ -70,7 +70,7 @@
     {
         <MudButton Variant="Variant.Filled"
                    Color="Color.Secondary"
-                   Link="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
+                   Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
                    Class="ml-4 mt-4">
             Fix @Name Connection
         </MudButton>
@@ -112,20 +112,20 @@
     {
         _isAuthorized = await SecretStore.ReadSecrets()
             .Map(secrets => !string.IsNullOrWhiteSpace(secrets.Address) && !string.IsNullOrWhiteSpace(secrets.ApiKey));
-        _mediaSources = await _mediator.Send(GetAllMediaSourcesCommand, _cts.Token);
+        _mediaSources = await Mediator.Send(GetAllMediaSourcesCommand, _cts.Token);
     }
 
     private async Task Disconnect()
     {
         var parameters = new DialogParameters { { "Name", Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-        IDialogReference dialog = await _dialog.ShowAsync<DisconnectRemoteMediaSourceDialog>($"Disconnect {Name}", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DisconnectRemoteMediaSourceDialog>($"Disconnect {Name}", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            if (_locker.LockRemoteMediaSource<TMediaSource>())
+            if (Locker.LockRemoteMediaSource<TMediaSource>())
             {
-                await _mediator.Send(DisconnectCommand, _cts.Token);
+                await Mediator.Send(DisconnectCommand, _cts.Token);
                 await LoadMediaSources();
             }
         }

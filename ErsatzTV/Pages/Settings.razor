@@ -47,20 +47,20 @@
                 <MudSwitch T="bool"
                            Label="Use embedded subtitles"
                            Color="Color.Primary"
-                           @bind-Checked="@_ffmpegSettings.UseEmbeddedSubtitles"/>
+                           @bind-Value="@_ffmpegSettings.UseEmbeddedSubtitles"/>
             </MudElement>
             <MudElement HtmlTag="div" Class="mt-3">
                 <MudSwitch T="bool"
                            Label="Extract and use embedded (text) subtitles"
                            Color="Color.Primary"
-                           @bind-Checked="@_ffmpegSettings.ExtractEmbeddedSubtitles"
+                           @bind-Value="@_ffmpegSettings.ExtractEmbeddedSubtitles"
                            Disabled="@(_ffmpegSettings.UseEmbeddedSubtitles == false)"/>
             </MudElement>
             <MudElement HtmlTag="div" Class="mt-3">
                 <MudSwitch T="bool"
                            Label="Save troubleshooting reports to disk"
                            Color="Color.Primary"
-                           @bind-Checked="@_ffmpegSettings.SaveReports"/>
+                           @bind-Value="@_ffmpegSettings.SaveReports"/>
             </MudElement>
             <MudSelect Class="mt-3"
                        Label="Global Watermark"
@@ -242,7 +242,7 @@
                 <MudElement HtmlTag="div" Class="mt-3">
                     <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
                         <MudCheckBox Label="Skip Missing Items"
-                                     @bind-Checked="_playoutSettings.SkipMissingItems"
+                                     @bind-Value="_playoutSettings.SkipMissingItems"
                                      For="@(() => _playoutSettings.SkipMissingItems)"/>
                     </MudTooltip>
                 </MudElement>

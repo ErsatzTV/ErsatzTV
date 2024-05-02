@@ -2,10 +2,10 @@
 @page "/schedules/add"
 @using ErsatzTV.Application.ProgramSchedules
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<ScheduleEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<ScheduleEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -19,14 +19,14 @@
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudTooltip Text="Always schedule multi-part episodes chronologically when shuffling">
                             <MudCheckBox Label="Keep Multi-Part Episodes Together"
-                                         @bind-Checked="@_model.KeepMultiPartEpisodesTogether"
+                                         @bind-Value="@_model.KeepMultiPartEpisodesTogether"
                                          For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
                         </MudTooltip>
                     </MudElement>
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudTooltip Text="This is useful for multi-part crossover episodes">
                             <MudCheckBox Label="Treat Collections As Shows*"
-                                         @bind-Checked="@_model.TreatCollectionsAsShows"
+                                         @bind-Value="@_model.TreatCollectionsAsShows"
                                          Disabled="@(_model.KeepMultiPartEpisodesTogether == false)"
                                          For="@(() => _model.TreatCollectionsAsShows)"/>
                         </MudTooltip>
@@ -34,13 +34,13 @@
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudTooltip Text="Note: this disables fixed start times and flood mode">
                             <MudCheckBox Label="Shuffle Schedule Items"
-                                         @bind-Checked="@_model.ShuffleScheduleItems"
+                                         @bind-Value="@_model.ShuffleScheduleItems"
                                          For="@(() => _model.ShuffleScheduleItems)"/>
                         </MudTooltip>
                     </MudElement>
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudCheckBox Label="Random Start Point"
-                                     @bind-Checked="@_model.RandomStartPoint"
+                                     @bind-Value="@_model.RandomStartPoint"
                                      For="@(() => _model.RandomStartPoint)"/>
                     </MudElement>
                 </MudCardContent>
@@ -74,7 +74,7 @@
     {
         if (IsEdit)
         {
-            Option<ProgramScheduleViewModel> maybeProgramSchedule = await _mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
+            Option<ProgramScheduleViewModel> maybeProgramSchedule = await Mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
             maybeProgramSchedule.Match(
                 viewModel =>
                 {
@@ -85,7 +85,7 @@
                     _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
                     _model.RandomStartPoint = viewModel.RandomStartPoint;
                 },
-                () => _navigationManager.NavigateTo("404"));
+                () => NavigationManager.NavigateTo("404"));
         }
         else
         {
@@ -107,19 +107,19 @@
         if (_editContext.Validate())
         {
             Either<BaseError, EntityIdResult> result = IsEdit
-                ? await _mediator.Send(_model.ToUpdate(), _cts.Token).MapT(r => r as EntityIdResult)
-                : await _mediator.Send(_model.ToCreate(), _cts.Token).MapT(r => r as EntityIdResult);
+                ? await Mediator.Send(_model.ToUpdate(), _cts.Token).MapT(r => r as EntityIdResult)
+                : await Mediator.Send(_model.ToCreate(), _cts.Token).MapT(r => r as EntityIdResult);
 
             result.Match(
                 programSchedule =>
                 {
                     string destination = IsEdit ? "/schedules" : $"/schedules/{programSchedule.Id}/items";
-                    _navigationManager.NavigateTo(destination);
+                    NavigationManager.NavigateTo(destination);
                 },
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
                 });
         }
     }
