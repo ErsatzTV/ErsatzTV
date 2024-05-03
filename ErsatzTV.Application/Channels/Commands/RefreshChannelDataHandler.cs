@@ -170,13 +170,13 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         await using var xml = XmlWriter.Create(
             ms,
             new XmlWriterSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment });
-        
+
         int daysToBuild = await _configElementRepository
             .GetValue<int>(ConfigElementKey.XmltvDaysToBuild)
             .IfNoneAsync(2);
 
         DateTimeOffset finish = DateTimeOffset.UtcNow.AddDays(daysToBuild);
-        
+
         foreach (Playout playout in playouts)
         {
             switch (playout.ProgramSchedulePlayoutType)
@@ -367,6 +367,11 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             TimeSpan groupDuration = groupFinish - groupStart;
 
             var itemsToInclude = group.Filter(g => g.FillerKind is FillerKind.None).ToList();
+            if (itemsToInclude.Count == 0)
+            {
+                continue;
+            }
+
             TimeSpan perItem = groupDuration / itemsToInclude.Count;
 
             DateTimeOffset currentStart = new DateTimeOffset(groupStart, TimeSpan.Zero).ToLocalTime();
