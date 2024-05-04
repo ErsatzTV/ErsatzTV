@@ -92,7 +92,7 @@ public static class BlockPlayoutEnumerator
             .OrderByDescending(h => h.When)
             .HeadOrNone();
 
-        var state = new CollectionEnumeratorState { Seed = playout.Id, Index = 0 };
+        var state = new CollectionEnumeratorState { Seed = playout.Seed + blockItem.BlockId, Index = 0 };
         foreach (PlayoutHistory h in maybeHistory)
         {
             state.Index = h.Index + 1;
