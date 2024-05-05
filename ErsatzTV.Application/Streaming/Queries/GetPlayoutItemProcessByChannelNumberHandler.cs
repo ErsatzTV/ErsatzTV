@@ -83,7 +83,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.Playout)
             .ThenInclude(p => p.Deco)
             .ThenInclude(d => d.Watermark)
-            
+
             // get playout templates (and deco templates/decos)
             .Include(i => i.Playout)
             .ThenInclude(p => p.Templates)
@@ -232,7 +232,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     watermarkId => dbContext.ChannelWatermarks
                         .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
-            Option<ChannelWatermark> playoutItemWatermark = Option<ChannelWatermark>.None;
+            Option<ChannelWatermark> playoutItemWatermark = Optional(playoutItemWithPath.PlayoutItem.Watermark);
             bool disableWatermarks = playoutItemWithPath.PlayoutItem.DisableWatermarks;
             WatermarkResult watermarkResult = GetPlayoutItemWatermark(playoutItemWithPath.PlayoutItem.Playout, now);
             switch (watermarkResult)
@@ -459,7 +459,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         DateTimeOffset now)
     {
         Option<FillerPreset> maybeFallback = Option<FillerPreset>.None;
-        
+
         DeadAirFallbackResult decoDeadAirFallback = GetDecoDeadAirFallback(playout, now);
         switch (decoDeadAirFallback)
         {
@@ -491,7 +491,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 }
                 break;
         }
-        
+
 
         foreach (FillerPreset fallbackPreset in maybeFallback)
         {
@@ -756,10 +756,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         {
             return new DecoEntries(Option<Deco>.None, Option<Deco>.None);
         }
-        
+
         Option<Deco> maybePlayoutDeco = Optional(playout.Deco);
         Option<Deco> maybeTemplateDeco = Option<Deco>.None;
-        
+
         Option<PlayoutTemplate> maybeActiveTemplate =
             PlayoutTemplateSelector.GetPlayoutTemplateFor(playout.Templates, now);
 
@@ -773,7 +773,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 maybeTemplateDeco = Optional(item.Deco);
             }
         }
-        
+
         return new DecoEntries(maybeTemplateDeco, maybePlayoutDeco);
     }
 
