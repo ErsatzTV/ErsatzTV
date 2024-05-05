@@ -52,7 +52,11 @@
             <CardHeaderContent>
                 <MudTooltip Style="max-width: 350px">
                     <ChildContent>
-                        <MudText Typo="Typo.h6">Dead Air Fallback</MudText>
+                        <MudText Typo="Typo.h6" Class="d-flex align-center justify-center">
+                            Dead Air Fallback
+                            &nbsp;
+                            <MudIcon Icon="@Icons.Material.Filled.Info"/>
+                        </MudText>
                     </ChildContent>
                     <TooltipContent>
                         <MudText Typo="Typo.body2">When no playout item is found for the current time, *one* item will be randomly selected from this collection and looped and cut to exactly fit until the start of the next playout item.</MudText>
@@ -67,7 +71,7 @@
                 <MudSelectItem Value="DecoMode.Disable">Disable</MudSelectItem>
                 <MudSelectItem Value="DecoMode.Override">Override</MudSelectItem>
             </MudSelect>
-            <MudSelect Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)" 
+            <MudSelect Disabled="@(_deco.DeadAirFallbackMode != DecoMode.Override)"
                        Label="Dead Air Fallback Collection Type"
                        @bind-Value="_deco.DeadAirFallbackCollectionType"
                        For="@(() => _deco.DeadAirFallbackCollectionType)">
@@ -168,7 +172,7 @@
     private DecoEditViewModel _deco = new();
 
     private List<WatermarkViewModel> _watermarks = [];
-    
+
     private List<MediaCollectionViewModel> _mediaCollections = [];
     private List<MultiCollectionViewModel> _multiCollections = [];
     private List<SmartCollectionViewModel> _smartCollections = [];
@@ -186,7 +190,7 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadWatermarks();
-        
+
         _mediaCollections = await Mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _multiCollections = await Mediator.Send(new GetAllMultiCollections(), _cts.Token)
@@ -202,7 +206,7 @@
 
         await LoadDeco();
     }
-    
+
     private async Task LoadWatermarks() =>
         _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
 
@@ -256,7 +260,7 @@
             _deco.DeadAirFallbackMediaItem?.MediaItemId,
             _deco.DeadAirFallbackMultiCollection?.Id,
             _deco.DeadAirFallbackSmartCollection?.Id);
-        
+
         Seq<BaseError> errorMessages = await Mediator
             .Send(request, _cts.Token)
             .Map(e => e.LeftToSeq());
