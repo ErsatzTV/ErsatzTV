@@ -449,7 +449,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             AudioFilter.None);
 
         var videoFormat = GetVideoFormat(playbackSettings);
-        
+
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             false,
@@ -998,7 +998,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         };
 
     private static Option<string> GetVideoProfile(string videoFormat, string videoProfile) =>
-        (videoFormat, videoProfile.ToLowerInvariant()) switch
+        (videoFormat, (videoProfile ?? string.Empty).ToLowerInvariant()) switch
         {
             (VideoFormat.H264, VideoProfile.Main) => VideoProfile.Main,
             (VideoFormat.H264, VideoProfile.High) => VideoProfile.High,
