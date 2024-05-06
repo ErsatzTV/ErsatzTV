@@ -6,12 +6,11 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.ProgramSchedules
 @implements IDisposable
-@inject IMediator _mediator
-@inject ILogger<TelevisionSeasonList> _logger
-@inject ISnackbar _snackbar
-@inject IDialogService _dialog
-@inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject IMediator Mediator
+@inject ILogger<TelevisionSeasonList> Logger
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -198,7 +197,7 @@
 
     private async Task RefreshData()
     {
-        await _mediator.Send(new GetTelevisionShowById(ShowId), _cts.Token)
+        await Mediator.Send(new GetTelevisionShowById(ShowId), _cts.Token)
             .IfSomeAsync(
                 vm =>
                 {
@@ -210,7 +209,7 @@
                     _sortedTags = _show.Tags.OrderBy(t => t).ToList();
                 });
 
-        _data = await _mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize), _cts.Token);
+        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize), _cts.Token);
     }
 
     private async Task AddToCollection()
@@ -218,12 +217,12 @@
         var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
         {
-            await _mediator.Send(new AddShowToCollection(collection.Id, ShowId), _cts.Token);
-            _navigationManager.NavigateTo($"media/collections/{collection.Id}");
+            await Mediator.Send(new AddShowToCollection(collection.Id, ShowId), _cts.Token);
+            NavigationManager.NavigateTo($"media/collections/{collection.Id}");
         }
     }
 
@@ -232,12 +231,12 @@
         var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is PlaylistViewModel playlist)
         {
-            await _mediator.Send(new AddShowToPlaylist(playlist.Id, ShowId), _cts.Token);
-            _navigationManager.NavigateTo($"media/playlists/{playlist.Id}");
+            await Mediator.Send(new AddShowToPlaylist(playlist.Id, ShowId), _cts.Token);
+            NavigationManager.NavigateTo($"media/playlists/{playlist.Id}");
         }
     }
 
@@ -246,12 +245,12 @@
         var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionShow, null, null, null, ShowId, null, PlaybackOrder.Shuffle, FillWithGroupMode.None, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
-            _navigationManager.NavigateTo($"schedules/{schedule.Id}/items");
+            await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionShow, null, null, null, ShowId, null, PlaybackOrder.Shuffle, FillWithGroupMode.None, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
+            NavigationManager.NavigateTo($"schedules/{schedule.Id}/items");
         }
     }
 
@@ -262,19 +261,19 @@
             var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", season.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await _dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddSeasonToCollection(collection.Id, season.TelevisionSeasonId);
-                Either<BaseError, Unit> addResult = await _mediator.Send(request, _cts.Token);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, _cts.Token);
                 addResult.Match(
                     Left: error =>
                     {
-                        _snackbar.Add($"Unexpected error adding season to collection: {error.Value}");
-                        _logger.LogError("Unexpected error adding season to collection: {Error}", error.Value);
+                        Snackbar.Add($"Unexpected error adding season to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding season to collection: {Error}", error.Value);
                     },
-                    Right: _ => _snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
             }
         }
     }

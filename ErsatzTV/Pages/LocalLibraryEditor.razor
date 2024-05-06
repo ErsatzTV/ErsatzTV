@@ -2,12 +2,12 @@
 @page "/media/sources/local/add"
 @using ErsatzTV.Application.Libraries
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IEntityLocker _locker
-@inject IMediator _mediator
-@inject ILogger<LocalLibraryEditor> _logger
-@inject ISnackbar _snackbar
-@inject NavigationManager _navigationManager
+@inject IDialogService Dialog
+@inject IEntityLocker Locker
+@inject IMediator Mediator
+@inject ILogger<LocalLibraryEditor> Logger
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -56,7 +56,7 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Move Library Path">
                         <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
-                                       Disabled="@(_model.Id == 0 || context.Id == 0 || _locker.IsLibraryLocked(_model.Id))"
+                                       Disabled="@(_model.Id == 0 || context.Id == 0 || Locker.IsLibraryLocked(_model.Id))"
                                        OnClick="@(() => MoveLibraryPath(context))">
                         </MudIconButton>
                     </MudTooltip>
@@ -89,7 +89,7 @@
     {
         if (IsEdit)
         {
-            Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id), _cts.Token);
+            Option<LocalLibraryViewModel> maybeLibrary = await Mediator.Send(new GetLocalLibraryById(Id), _cts.Token);
             await maybeLibrary.Match(
                 async library =>
                 {
@@ -101,7 +101,7 @@
                 },
                 () =>
                 {
-                    _navigationManager.NavigateTo("404");
+                    NavigationManager.NavigateTo("404");
                     return Task.CompletedTask;
                 });
         }
@@ -116,7 +116,7 @@
 
     protected override void OnInitialized()
     {
-        _locker.OnLibraryChanged += LockChanged;
+        Locker.OnLibraryChanged += LockChanged;
 
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
@@ -128,7 +128,7 @@
     private async Task LoadLibraryPaths()
     {
         _model.HasChanges = false;
-        _model.Paths = await _mediator.Send(new GetLocalLibraryPaths(Id), _cts.Token)
+        _model.Paths = await Mediator.Send(new GetLocalLibraryPaths(Id), _cts.Token)
             .Map(
                 list => list.Map(
                     vm => new LocalLibraryPathEditViewModel
@@ -143,18 +143,18 @@
         var parameters = new DialogParameters { { "MediaKind", _model.MediaKind }, { "SourceLibraryId", Id } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<MoveLocalLibraryPathDialog>("Move Local Library Path", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<MoveLocalLibraryPathDialog>("Move Local Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled && result.Data is LocalLibraryViewModel library)
         {
             var request = new MoveLocalLibraryPath(libraryPath.Id, library.Id);
-            Either<BaseError, Unit> moveResult = await _mediator.Send(request, _cts.Token);
+            Either<BaseError, Unit> moveResult = await Mediator.Send(request, _cts.Token);
             moveResult.Match(
-                _ => _navigationManager.NavigateTo($"media/sources/local/{library.Id}/edit"),
+                _ => NavigationManager.NavigateTo($"media/sources/local/{library.Id}/edit"),
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Unexpected error moving local library path: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error moving local library path: {Error}", error.Value);
                 });
         }
     }
@@ -167,7 +167,7 @@
             _model.Paths.Remove(libraryPath);
         }
 
-        int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id), _cts.Token);
+        int count = await Mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id), _cts.Token);
         var parameters = new DialogParameters
         {
             { "EntityType", "library path" },
@@ -177,7 +177,7 @@
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Library Path", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -207,13 +207,13 @@
         if (_editContext.Validate())
         {
             Either<BaseError, LocalLibraryViewModel> result = IsEdit
-                ? await _mediator.Send(
+                ? await Mediator.Send(
                     new UpdateLocalLibrary(
                         _model.Id,
                         _model.Name,
                         _model.Paths.Map(p => new UpdateLocalLibraryPath(p.Id, p.Path)).ToList()),
                     _cts.Token)
-                : await _mediator.Send(
+                : await Mediator.Send(
                     new CreateLocalLibrary(
                         _model.Name,
                         _model.MediaKind,
@@ -221,11 +221,11 @@
                     _cts.Token);
 
             result.Match(
-                _ => _navigationManager.NavigateTo("media/sources/local"),
+                _ => NavigationManager.NavigateTo("media/sources/local"),
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Unexpected error saving local library: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving local library: {Error}", error.Value);
                 });
         }
     }
@@ -236,7 +236,7 @@
 
     void IDisposable.Dispose()
     {
-        _locker.OnLibraryChanged -= LockChanged;
+        Locker.OnLibraryChanged -= LockChanged;
 
         _cts.Cancel();
         _cts.Dispose();

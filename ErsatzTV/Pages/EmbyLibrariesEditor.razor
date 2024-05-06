@@ -2,8 +2,8 @@
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Emby
 @implements IDisposable
-@inject IMediator _mediator
-@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
+@inject IMediator Mediator
+@inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 
 <RemoteMediaSourceLibrariesEditor
     Id="@Id"
@@ -30,11 +30,11 @@
             libraries.Map(l => new EmbyLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
     private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetEmbyLibrariesBySourceId(Id))
+        Mediator.Send(new GetEmbyLibrariesBySourceId(Id))
             .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
     private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
-        _mediator.Send(new GetEmbyMediaSourceById(Id))
+        Mediator.Send(new GetEmbyMediaSourceById(Id))
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(EmbyLibraryViewModel library) => new()
@@ -47,8 +47,8 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(parameters.MediaSourceId), _cts.Token);
-        await _scannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraries(parameters.MediaSourceId), _cts.Token);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

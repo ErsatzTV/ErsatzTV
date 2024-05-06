@@ -956,68 +956,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         };
     }
 
-    private static string GetDescription(PlayoutItem playoutItem)
-    {
-        if (!string.IsNullOrWhiteSpace(playoutItem.CustomTitle))
-        {
-            return string.Empty;
-        }
-
-        return playoutItem.MediaItem switch
-        {
-            Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot ?? string.Empty).IfNone(string.Empty),
-            Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot ?? string.Empty)
-                .IfNone(string.Empty),
-            MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Map(mvm => mvm.Plot ?? string.Empty)
-                .IfNone(string.Empty),
-            OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Map(ovm => ovm.Plot ?? string.Empty)
-                .IfNone(string.Empty),
-            _ => string.Empty
-        };
-    }
-
-    private Option<ContentRating> GetContentRating(PlayoutItem playoutItem)
-    {
-        try
-        {
-            return playoutItem.MediaItem switch
-            {
-                Movie m => m.MovieMetadata
-                    .HeadOrNone()
-                    .Match(mm => ParseContentRating(mm.ContentRating, "MPAA"), () => None),
-                Episode e => e.Season.Show.ShowMetadata
-                    .HeadOrNone()
-                    .Match(sm => ParseContentRating(sm.ContentRating, "VCHIP"), () => None),
-                _ => None
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get content rating for playout item {Item}", GetTitle(playoutItem));
-            return None;
-        }
-    }
-
-    private static Option<ContentRating> ParseContentRating(string contentRating, string system)
-    {
-        Option<string> maybeFirst = (contentRating ?? string.Empty).Split('/').HeadOrNone();
-        return maybeFirst.Map(
-            first =>
-            {
-                string[] split = first.Split(':');
-                if (split.Length == 2)
-                {
-                    return split[0].Equals("us", StringComparison.OrdinalIgnoreCase)
-                        ? new ContentRating(system, split[1].ToUpperInvariant())
-                        : new ContentRating(None, split[1].ToUpperInvariant());
-                }
-
-                return string.IsNullOrWhiteSpace(first)
-                    ? Option<ContentRating>.None
-                    : new ContentRating(None, first);
-            }).Flatten();
-    }
-
     private static string GetPrioritizedArtworkPath(Metadata metadata)
     {
         Option<string> maybeArtwork = Optional(metadata.Artwork).Flatten()
@@ -1179,6 +1117,4 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             ]
         };
     }
-
-    private sealed record ContentRating(Option<string> System, string Value);
 }

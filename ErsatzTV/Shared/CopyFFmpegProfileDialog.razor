@@ -1,8 +1,8 @@
 ﻿@using ErsatzTV.Application.FFmpegProfiles
 @implements IDisposable
-@inject IMediator _mediator
-@inject ISnackbar _snackbar
-@inject ILogger<CopyFFmpegProfileDialog> _logger
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<CopyFFmpegProfileDialog> Logger
 
 <MudDialog>
     <DialogContent>
@@ -57,14 +57,14 @@
         }
 
         Either<BaseError, FFmpegProfileViewModel> maybeResult =
-            await _mediator.Send(new CopyFFmpegProfile(FFmpegProfileId, _newFFmpegProfileName), _cts.Token);
+            await Mediator.Send(new CopyFFmpegProfile(FFmpegProfileId, _newFFmpegProfileName), _cts.Token);
 
         maybeResult.Match(
             ffmpegProfile => { MudDialog.Close(DialogResult.Ok(ffmpegProfile)); },
             error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Error copying FFmpeg Profile: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error copying FFmpeg Profile: {Error}", error.Value);
                 MudDialog.Close(DialogResult.Cancel());
             });
     }

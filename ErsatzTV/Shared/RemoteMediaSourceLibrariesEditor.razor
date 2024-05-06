@@ -1,10 +1,10 @@
 ﻿@using ErsatzTV.Application.MediaSources
 @implements IDisposable
-@inject IMediator _mediator
-@inject NavigationManager _navigationManager
-@inject ILogger<RemoteMediaSourceLibrariesEditor> _logger
-@inject ISnackbar _snackbar
-@inject IEntityLocker _locker
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<RemoteMediaSourceLibrariesEditor> Logger
+@inject ISnackbar Snackbar
+@inject IEntityLocker Locker
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_libraries" Dense="true">
@@ -87,7 +87,7 @@
             },
             () =>
             {
-                _navigationManager.NavigateTo("404");
+                NavigationManager.NavigateTo("404");
                 return Task.CompletedTask;
             });
     }
@@ -95,26 +95,26 @@
     private async Task SaveChanges()
     {
         IRequest<Either<BaseError, Unit>> request = GetUpdateLibraryRequest(_libraries);
-        Seq<BaseError> errorMessages = await _mediator.Send(request, _cts.Token).Map(e => e.LeftToSeq());
+        Seq<BaseError> errorMessages = await Mediator.Send(request, _cts.Token).Map(e => e.LeftToSeq());
 
         await errorMessages.HeadOrNone().Match(
             error =>
             {
-                _snackbar.Add($"Unexpected error saving {Name.ToLowerInvariant()} libraries: {error.Value}", Severity.Error);
-                _logger.LogError("Unexpected error saving {MediaSource} libraries: {Error}", Name, error.Value);
+                Snackbar.Add($"Unexpected error saving {Name.ToLowerInvariant()} libraries: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving {MediaSource} libraries: {Error}", Name, error.Value);
                 return Task.CompletedTask;
             },
             async () =>
             {
                 foreach (int libraryId in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
                 {
-                    if (_locker.LockLibrary(libraryId))
+                    if (Locker.LockLibrary(libraryId))
                     {
                         await SynchronizeLibraryByIdIfNeeded(new SynchronizeParameters(libraryId, Id));
                     }
                 }
 
-                _navigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}");
+                NavigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}");
             });
     }
 

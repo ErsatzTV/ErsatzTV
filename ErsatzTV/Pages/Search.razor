@@ -1,7 +1,6 @@
 ﻿@page "/search"
 @inherits MultiSelectBase<Search>
-@inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject NavigationManager NavigationManager
 @inject PersistentComponentState ApplicationState
 @using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
@@ -42,47 +41,47 @@
             <MudText Style="margin-bottom: auto; margin-top: auto">@_query</MudText>
             if (_movies?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
             }
 
             if (_shows?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
 
             if (_seasons?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#seasons")" Style="margin-bottom: auto; margin-top: auto">@_seasons.Count Seasons</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#seasons")" Style="margin-bottom: auto; margin-top: auto">@_seasons.Count Seasons</MudLink>
             }
 
             if (_episodes?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count Episodes</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count Episodes</MudLink>
             }
 
             if (_artists?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
             }
 
             if (_musicVideos?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
             }
 
             if (_otherVideos?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")" Style="margin-bottom: auto; margin-top: auto">@_otherVideos.Count Other Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#other_videos")" Style="margin-bottom: auto; margin-top: auto">@_otherVideos.Count Other Videos</MudLink>
             }
 
             if (_songs?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
             }
 
             if (_images?.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count Images</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#images")" Style="margin-bottom: auto; margin-top: auto">@_images.Count Images</MudLink>
             }
 
             <div style="margin-left: auto">
@@ -95,7 +94,7 @@
                     </MudButton>
                 </MudTooltip>
                 <MudTooltip Text="Add All To Playlist">
-                    <MudButton Class="ml-3" 
+                    <MudButton Class="ml-3"
                                Variant="Variant.Filled"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.PlaylistAdd"
@@ -383,7 +382,7 @@
     {
         _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistData);
 
-        _query = _navigationManager.Uri.GetSearchQuery();
+        _query = NavigationManager.Uri.GetSearchQuery();
         if (!string.IsNullOrWhiteSpace(_query))
         {
             if (!ApplicationState.TryTakeFromJson("_movies", out MovieCardResultsViewModel restoredMovies))

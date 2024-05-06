@@ -3,7 +3,6 @@
 @using ErsatzTV.Application.Channels
 @implements IDisposable
 @inject NavigationManager NavigationManager
-@inject ILogger<BlockPlayoutEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IEntityLocker EntityLocker;
@@ -119,10 +118,10 @@
         {
             _channelName = name;
         }
-        
+
         _decoGroups.Clear();
         _decoGroups.AddRange(await Mediator.Send(new GetAllDecoGroups(), _cts.Token));
-        
+
         Option<DecoViewModel> maybeDefaultDeco = await Mediator.Send(new GetDecoByPlayoutId(Id), _cts.Token);
         foreach (DecoViewModel defaultDeco in maybeDefaultDeco)
         {

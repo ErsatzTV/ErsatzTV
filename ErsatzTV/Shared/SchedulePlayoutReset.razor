@@ -1,8 +1,8 @@
 ﻿@using ErsatzTV.Application.Playouts
 @implements IDisposable
-@inject IMediator _mediator
-@inject ISnackbar _snackbar
-@inject ILogger<SchedulePlayoutReset> _logger
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<SchedulePlayoutReset> Logger
 
 <MudDialog>
     <DialogContent>
@@ -68,14 +68,14 @@
     private async Task Submit()
     {
         Either<BaseError, PlayoutNameViewModel> maybeResult =
-            await _mediator.Send(new UpdatePlayout(PlayoutId, _resetTime), _cts.Token);
+            await Mediator.Send(new UpdatePlayout(PlayoutId, _resetTime), _cts.Token);
 
         maybeResult.Match(
             playout => { MudDialog.Close(DialogResult.Ok(playout)); },
             error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Error updating Playout: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error updating Playout: {Error}", error.Value);
                 MudDialog.Close(DialogResult.Cancel());
             });
     }

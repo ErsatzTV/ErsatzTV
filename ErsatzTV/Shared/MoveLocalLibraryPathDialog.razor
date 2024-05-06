@@ -1,10 +1,10 @@
 ﻿@using Microsoft.Extensions.Caching.Memory
 @using ErsatzTV.Application.Libraries
 @implements IDisposable
-@inject IMediator _mediator
-@inject IMemoryCache _memoryCache
-@inject ISnackbar _snackbar
-@inject ILogger<MoveLocalLibraryPathDialog> _logger
+@inject IMediator Mediator
+@inject IMemoryCache MemoryCache
+@inject ISnackbar Snackbar
+@inject ILogger<MoveLocalLibraryPathDialog> Logger
 
 <MudDialog>
     <DialogContent>
@@ -72,11 +72,11 @@
     {
         _newLibrary = new LocalLibraryViewModel(-1, "(New Library)", MediaKind, -1);
 
-        _libraries = await _mediator.Send(new GetAllLocalLibraries(), _cts.Token)
+        _libraries = await Mediator.Send(new GetAllLocalLibraries(), _cts.Token)
             .Map(list => list.Filter(ll => ll.MediaKind == MediaKind && ll.Id != SourceLibraryId))
             .Map(list => new[] { _newLibrary }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
 
-        if (_memoryCache.TryGetValue("MoveLocalLibraryPathDialog.SelectedLibraryId", out int id))
+        if (MemoryCache.TryGetValue("MoveLocalLibraryPathDialog.SelectedLibraryId", out int id))
         {
             _selectedLibrary = _libraries.SingleOrDefault(c => c.Id == id) ?? _newLibrary;
         }
@@ -96,24 +96,24 @@
         if (_selectedLibrary == _newLibrary)
         {
             Either<BaseError, LocalLibraryViewModel> maybeResult =
-                await _mediator.Send(new CreateLocalLibrary(_newLibraryName, MediaKind, new List<string>()), _cts.Token);
+                await Mediator.Send(new CreateLocalLibrary(_newLibraryName, MediaKind, new List<string>()), _cts.Token);
 
             maybeResult.Match(
                 collection =>
                 {
-                    _memoryCache.Set("MoveLocalLibraryPathDialog.SelectedLibraryId", collection.Id);
+                    MemoryCache.Set("MoveLocalLibraryPathDialog.SelectedLibraryId", collection.Id);
                     MudDialog.Close(DialogResult.Ok(collection));
                 },
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Error creating new local library: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error creating new local library: {Error}", error.Value);
                     MudDialog.Close(DialogResult.Cancel());
                 });
         }
         else
         {
-            _memoryCache.Set("MoveLocalLibraryPathDialog.SelectedLibraryId", _selectedLibrary.Id);
+            MemoryCache.Set("MoveLocalLibraryPathDialog.SelectedLibraryId", _selectedLibrary.Id);
             MudDialog.Close(DialogResult.Ok(_selectedLibrary));
         }
     }

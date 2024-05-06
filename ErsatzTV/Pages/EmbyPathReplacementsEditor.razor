@@ -2,10 +2,7 @@
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Emby
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<ScheduleItemsEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject IMediator Mediator
 
 <RemoteMediaSourcePathReplacementsEditor
     Id="@Id"
@@ -27,11 +24,11 @@
     }
 
     private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
-        _mediator.Send(new GetEmbyMediaSourceById(Id), _cts.Token)
+        Mediator.Send(new GetEmbyMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetEmbyPathReplacementsBySourceId(Id), _cts.Token)
+        Mediator.Send(new GetEmbyPathReplacementsBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).ToList());
 
     private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(EmbyPathReplacementViewModel item) =>

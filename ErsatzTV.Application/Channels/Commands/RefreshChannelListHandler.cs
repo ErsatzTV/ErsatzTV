@@ -132,11 +132,6 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         .Distinct()
         .ToList();
 
-    private static string GetIconUrl(ChannelResult channel) =>
-        string.IsNullOrWhiteSpace(channel.ArtworkPath)
-            ? "{RequestBase}/iptv/images/ersatztv-500.png{AccessTokenUri}"
-            : $"{{RequestBase}}/iptv/logos/{channel.ArtworkPath}.jpg{{AccessTokenUri}}";
-
     // ReSharper disable once ClassNeverInstantiated.Local
     private sealed record ChannelResult(string Number, string Name, string Categories, string ArtworkPath);
 }

@@ -1,7 +1,7 @@
-﻿@inject IMediator _mediator
-@inject NavigationManager _navigationManager
-@inject ISnackbar _snackbar
-@inject ILogger<RemoteMediaSourceEditor> _logger
+﻿@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ILogger<RemoteMediaSourceEditor> Logger
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">@Name Media Source</MudText>
@@ -53,11 +53,11 @@
         {
             Either<BaseError, Unit> result = await SaveSecrets(_model);
             result.Match(
-                _ => _navigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}"),
+                _ => NavigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}"),
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Error saving {MediaSource} secrets: {Error}", Name, error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error saving {MediaSource} secrets: {Error}", Name, error.Value);
                 });
         }
     }
