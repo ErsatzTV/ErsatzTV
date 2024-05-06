@@ -4,17 +4,15 @@ using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
+using Serilog;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
 public static class SearchQueryParser
 {
-    static SearchQueryParser()
-    {
-        BooleanQuery.MaxClauseCount = 1024 * 4;
-    }
-    
+    static SearchQueryParser() => BooleanQuery.MaxClauseCount = 1024 * 4;
+
     internal static Analyzer AnalyzerWrapper()
     {
         using var defaultAnalyzer = new CustomAnalyzer(LuceneSearchIndex.AppLuceneVersion);
@@ -47,7 +45,7 @@ public static class SearchQueryParser
     public static Query ParseQuery(string query)
     {
         using Analyzer analyzerWrapper = AnalyzerWrapper();
-        
+
         QueryParser parser = new CustomMultiFieldQueryParser(
             LuceneSearchIndex.AppLuceneVersion,
             [LuceneSearchIndex.TitleField],
@@ -55,7 +53,7 @@ public static class SearchQueryParser
         parser.AllowLeadingWildcard = true;
         Query result = ParseQuery(query, parser);
 
-        Serilog.Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
+        Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
 
         return result;
     }

@@ -1,9 +1,5 @@
-﻿using System.Threading.Channels;
-using ErsatzTV.Application.Playouts;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +28,7 @@ public class AddMovieToPlaylistHandler(IDbContextFactory<TvContext> dbContextFac
             PlaybackOrder = PlaybackOrder.Shuffle,
             IncludeInProgramGuide = true
         };
-        
+
         parameters.Playlist.Items.Add(playlistItem);
         await dbContext.SaveChangesAsync();
         return Unit.Default;

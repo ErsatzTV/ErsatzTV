@@ -33,7 +33,7 @@ public class ProgramScheduleItemConfiguration : IEntityTypeConfiguration<Program
             .HasForeignKey(i => i.SmartCollectionId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
-        
+
         builder.HasOne(i => i.Playlist)
             .WithMany()
             .HasForeignKey(i => i.PlaylistId)

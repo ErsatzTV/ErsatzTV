@@ -1,7 +1,7 @@
 ﻿@using ErsatzTV.Application.ProgramSchedules
 @using NaturalSort.Extension
 @implements IDisposable
-@inject IMediator _mediator
+@inject IMediator Mediator
 
 <div @onkeydown="@OnKeyDown">
     <MudDialog>
@@ -57,7 +57,7 @@
     }
 
     protected override async Task OnParametersSetAsync() =>
-        _schedules = await _mediator.Send(new GetAllProgramSchedules(), _cts.Token)
+        _schedules = await Mediator.Send(new GetAllProgramSchedules(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase)).ToList());
 
     private string FormatText() => $"Select the schedule to add the {EntityType} {EntityName}";

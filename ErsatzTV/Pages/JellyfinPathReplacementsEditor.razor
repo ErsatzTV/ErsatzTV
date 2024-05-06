@@ -1,11 +1,8 @@
 ﻿@page "/media/sources/jellyfin/{Id:int}/paths"
-@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.MediaSources
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<ScheduleItemsEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject IMediator Mediator
 
 <RemoteMediaSourcePathReplacementsEditor
     Id="@Id"
@@ -27,11 +24,11 @@
     }
 
     private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
-        await _mediator.Send(new GetJellyfinMediaSourceById(Id), _cts.Token)
+        await Mediator.Send(new GetJellyfinMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private async Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
-        await _mediator.Send(new GetJellyfinPathReplacementsBySourceId(Id), _cts.Token)
+        await Mediator.Send(new GetJellyfinPathReplacementsBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).ToList());
 
     private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(JellyfinPathReplacementViewModel item) =>

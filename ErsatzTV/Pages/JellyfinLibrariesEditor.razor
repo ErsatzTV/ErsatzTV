@@ -1,9 +1,9 @@
 ﻿@page "/media/sources/jellyfin/{Id:int}/libraries"
-@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.MediaSources
 @implements IDisposable
-@inject IMediator _mediator
-@inject ChannelWriter<IScannerBackgroundServiceRequest> _scannerWorkerChannel
+@inject IMediator Mediator
+@inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 
 <RemoteMediaSourceLibrariesEditor
     Id="@Id"
@@ -30,11 +30,11 @@
             libraries.Map(l => new JellyfinLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
     private async Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
-        await _mediator.Send(new GetJellyfinLibrariesBySourceId(Id), _cts.Token)
+        await Mediator.Send(new GetJellyfinLibrariesBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
     private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
-        await _mediator.Send(new GetJellyfinMediaSourceById(Id), _cts.Token)
+        await Mediator.Send(new GetJellyfinMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(JellyfinLibraryViewModel library) => new()
@@ -47,8 +47,8 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
-        await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(parameters.MediaSourceId), _cts.Token);
-        await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(parameters.MediaSourceId), _cts.Token);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
         return Unit.Default;
     }
 

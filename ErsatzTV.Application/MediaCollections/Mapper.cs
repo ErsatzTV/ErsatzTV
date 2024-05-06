@@ -48,7 +48,7 @@ internal static class Mapper
 
     internal static PlaylistGroupViewModel ProjectToViewModel(PlaylistGroup playlistGroup) =>
         new(playlistGroup.Id, playlistGroup.Name, playlistGroup.Playlists.Count);
-    
+
     internal static PlaylistViewModel ProjectToViewModel(Playlist playlist) =>
         new(playlist.Id, playlist.PlaylistGroupId, playlist.Name);
 

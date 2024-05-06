@@ -1,6 +1,5 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -60,10 +59,14 @@ public class ReplacePlaylistItemsHandler(IDbContextFactory<TvContext> dbContextF
             .SelectOneAsync(b => b.Id, b => b.Id == playlistId)
             .Map(o => o.ToValidation<BaseError>("[PlaylistId] does not exist."));
 
-    private static Validation<BaseError, Playlist> CollectionTypesMustBeValid(ReplacePlaylistItems request, Playlist playlist) =>
+    private static Validation<BaseError, Playlist> CollectionTypesMustBeValid(
+        ReplacePlaylistItems request,
+        Playlist playlist) =>
         request.Items.Map(item => CollectionTypeMustBeValid(item, playlist)).Sequence().Map(_ => playlist);
 
-    private static Validation<BaseError, Playlist> CollectionTypeMustBeValid(ReplacePlaylistItem item, Playlist playlist)
+    private static Validation<BaseError, Playlist> CollectionTypeMustBeValid(
+        ReplacePlaylistItem item,
+        Playlist playlist)
     {
         switch (item.CollectionType)
         {

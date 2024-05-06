@@ -329,7 +329,7 @@ public class Startup
             "https://discord.gg/hHaJm3yGy6");
 
         CopyMacOsConfigFolderIfNeeded();
-        
+
         List<string> directoriesToCreate =
         [
             FileSystemLayout.AppDataFolder,
@@ -447,11 +447,8 @@ public class Startup
             .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.trakt.tv"));
 
         services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
-        
-        services.AddResponseCompression(options =>
-        {
-            options.EnableForHttps = true;
-        });
+
+        services.AddResponseCompression(options => { options.EnableForHttps = true; });
 
         CustomServices(services);
     }
@@ -520,7 +517,7 @@ public class Startup
         app.UseStaticFiles();
 
         var extensionProvider = new FileExtensionContentTypeProvider();
-        
+
         // fix static file M3U8 mime type
         extensionProvider.Mappings.Add(".m3u8", "application/vnd.apple.mpegurl");
 
@@ -733,7 +730,7 @@ public class Startup
         services.AddSingleton(
             provider => provider.GetRequiredService<Channel<TMessageType>>().Writer);
     }
-    
+
     private static void CopyMacOsConfigFolderIfNeeded()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -761,13 +758,13 @@ public class Startup
             "Migrating config data from {OldFolder} to {NewFolder}",
             FileSystemLayout.MacOsOldAppDataFolder,
             FileSystemLayout.AppDataFolder);
-                    
+
         try
         {
             // delete new config folder
             if (Directory.Exists(FileSystemLayout.AppDataFolder))
             {
-                Directory.Delete(FileSystemLayout.AppDataFolder, recursive: true);
+                Directory.Delete(FileSystemLayout.AppDataFolder, true);
             }
 
             // move old config folder to new config folder

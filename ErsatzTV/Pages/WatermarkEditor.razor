@@ -1,8 +1,8 @@
 ﻿@page "/watermarks/{Id:int}"
 @page "/watermarks/add"
+@using ErsatzTV.Application.Images
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.FFmpeg.State
-@using ErsatzTV.Application.Images
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<WatermarkEditor> Logger

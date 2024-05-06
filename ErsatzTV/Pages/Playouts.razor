@@ -1,11 +1,11 @@
 ﻿@page "/playouts"
-@using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.Playouts
 @using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
-@inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel;
+@inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
 @inject IEntityLocker EntityLocker;
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">

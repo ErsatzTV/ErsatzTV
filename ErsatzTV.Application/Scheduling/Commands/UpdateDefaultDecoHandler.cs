@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Scheduling;
 
-public class UpdateDefaultDecoHandler(IDbContextFactory<TvContext> dbContextFactory) : IRequestHandler<UpdateDefaultDeco>
+public class UpdateDefaultDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<UpdateDefaultDeco>
 {
     public async Task Handle(UpdateDefaultDeco request, CancellationToken cancellationToken)
     {

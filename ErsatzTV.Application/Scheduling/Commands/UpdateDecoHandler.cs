@@ -22,11 +22,11 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         UpdateDeco request)
     {
         existing.Name = request.Name;
-        
+
         // watermark
         existing.WatermarkMode = request.WatermarkMode;
         existing.WatermarkId = request.WatermarkMode is DecoMode.Override ? request.WatermarkId : null;
-        
+
         // dead air fallback
         existing.DeadAirFallbackMode = request.DeadAirFallbackMode;
         existing.DeadAirFallbackCollectionType = request.DeadAirFallbackCollectionType;
@@ -58,7 +58,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         dbContext.Decos
             .SelectOneAsync(d => d.Id, d => d.Id == request.DecoId)
             .Map(o => o.ToValidation<BaseError>("Deco does not exist"));
-    
+
     private static async Task<Validation<BaseError, string>> ValidateDecoName(
         TvContext dbContext,
         UpdateDeco request)

@@ -25,10 +25,10 @@ internal static class Mapper
 
     internal static NamedMediaItemViewModel ProjectToViewModel(OtherVideo otherVideo) =>
         new(otherVideo.Id, otherVideo.OtherVideoMetadata.HeadOrNone().Match(ov => ov.Title, () => "???"));
-    
+
     internal static NamedMediaItemViewModel ProjectToViewModel(Song song) =>
         new(song.Id, SongTitle(song));
-    
+
     internal static NamedMediaItemViewModel ProjectToViewModel(Image image) =>
         new(image.Id, image.ImageMetadata.HeadOrNone().Match(i => i.Title, () => "???"));
 
@@ -68,7 +68,7 @@ internal static class Mapper
 
     private static string SeasonDescription(Season season) =>
         season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}";
-    
+
     private static string EpisodeTitle(Episode e)
     {
         string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()

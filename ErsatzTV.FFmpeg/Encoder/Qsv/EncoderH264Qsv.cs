@@ -12,13 +12,13 @@ public class EncoderH264Qsv(Option<string> maybeVideoProfile, Option<string> may
         get
         {
             var result = new List<string> { "-c:v", Name, "-low_power", "0", "-look_ahead", "0" };
-            
+
             foreach (string videoProfile in maybeVideoProfile)
             {
                 result.Add("-profile:v");
                 result.Add(videoProfile.ToLowerInvariant());
             }
-            
+
             foreach (string videoPreset in maybeVideoPreset)
             {
                 if (!string.IsNullOrWhiteSpace(videoPreset))

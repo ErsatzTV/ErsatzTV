@@ -20,11 +20,11 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<OtherVideoFolderScanner> _logger;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
     private readonly IOtherVideoRepository _otherVideoRepository;
 
@@ -158,7 +158,9 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 {
                     if (allFiles.Any(allTrashedItems.Contains))
                     {
-                        _logger.LogDebug("Previously trashed items are now present in folder {Folder}", otherVideoFolder);
+                        _logger.LogDebug(
+                            "Previously trashed items are now present in folder {Folder}",
+                            otherVideoFolder);
                     }
                     else
                     {

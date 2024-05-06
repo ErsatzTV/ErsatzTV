@@ -164,7 +164,7 @@ public class EmbyPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public async Task EmbyWindows_To_EtvLinux_UncPathWithMixedCaseServerName()
     {

@@ -140,7 +140,7 @@ public class PlexPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
-    
+
     [Test]
     public async Task PlexWindows_To_EtvLinux_UncPathWithMixedCaseServerName()
     {

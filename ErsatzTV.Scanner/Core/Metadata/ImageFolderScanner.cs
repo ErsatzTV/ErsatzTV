@@ -21,10 +21,10 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
     private readonly IClient _client;
     private readonly IImageRepository _imageRepository;
     private readonly ILibraryRepository _libraryRepository;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<ImageFolderScanner> _logger;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
 
     public ImageFolderScanner(

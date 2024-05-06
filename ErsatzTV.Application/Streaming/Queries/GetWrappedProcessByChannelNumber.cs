@@ -2,7 +2,11 @@
 
 public record GetWrappedProcessByChannelNumber : FFmpegProcessRequest
 {
-    public GetWrappedProcessByChannelNumber(string scheme, string host, string accessToken, string channelNumber) : base(
+    public GetWrappedProcessByChannelNumber(
+        string scheme,
+        string host,
+        string accessToken,
+        string channelNumber) : base(
         channelNumber,
         "ts",
         DateTimeOffset.Now,

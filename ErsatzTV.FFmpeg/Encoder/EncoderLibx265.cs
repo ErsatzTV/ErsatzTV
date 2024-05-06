@@ -18,7 +18,7 @@ public class EncoderLibx265(FrameState currentState, Option<string> maybeVideoPr
                 "-tag:v", "hvc1",
                 "-x265-params", "log-level=error"
             };
-            
+
             foreach (string videoPreset in maybeVideoPreset)
             {
                 if (!string.IsNullOrWhiteSpace(videoPreset))

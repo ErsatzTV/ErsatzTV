@@ -91,7 +91,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(t => t.Items)
             .ThenInclude(i => i.Deco)
             .ThenInclude(d => d.Watermark)
-
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
             .ThenInclude(em => em.Subtitles)
@@ -186,10 +185,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .ThenInclude(t => t.Items)
                 .ThenInclude(i => i.Deco)
                 .ThenInclude(d => d.Watermark)
-
                 .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == channel.Id);
 
-            foreach (var playout in maybePlayout)
+            foreach (Playout playout in maybePlayout)
             {
                 maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, playout, now);
             }
@@ -489,6 +487,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         .GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId)
                         .BindT(fillerId => dbContext.FillerPresets.SelectOneAsync(w => w.Id, w => w.Id == fillerId));
                 }
+
                 break;
         }
 
@@ -780,12 +779,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private sealed record DecoEntries(Option<Deco> TemplateDeco, Option<Deco> PlayoutDeco);
 
     private abstract record WatermarkResult;
+
     private sealed record InheritWatermark : WatermarkResult;
+
     private sealed record DisableWatermark : WatermarkResult;
+
     private sealed record CustomWatermark(ChannelWatermark Watermark) : WatermarkResult;
 
     private abstract record DeadAirFallbackResult;
+
     private sealed record InheritDeadAirFallback : DeadAirFallbackResult;
+
     private sealed record DisableDeadAirFallback : DeadAirFallbackResult;
 
     private sealed record CustomDeadAirFallback(

@@ -16,14 +16,13 @@ namespace ErsatzTV.Application.Streaming;
 
 public class HlsSessionWorkerV2 : IHlsSessionWorker
 {
-    private readonly SemaphoreSlim _slim = new(1, 1);
-
     //private static int _workAheadCount;
     private readonly string _host;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<HlsSessionWorkerV2> _logger;
     private readonly IMediator _mediator;
     private readonly string _scheme;
+    private readonly SemaphoreSlim _slim = new(1, 1);
     private readonly object _sync = new();
     private readonly Option<int> _targetFramerate;
     private CancellationTokenSource _cancellationTokenSource;

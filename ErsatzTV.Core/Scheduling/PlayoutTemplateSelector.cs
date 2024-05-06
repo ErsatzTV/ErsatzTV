@@ -47,7 +47,7 @@ public static class PlayoutTemplateSelector
                         0,
                         DateTimeKind.Local);
                 }
-                
+
                 if (reverse)
                 {
                     (start, end) = (end, start);
@@ -61,7 +61,7 @@ public static class PlayoutTemplateSelector
                     continue;
                 }
             }
-            
+
             bool daysOfWeek = template.DaysOfWeek.Contains(date.DayOfWeek);
             if (!daysOfWeek)
             {

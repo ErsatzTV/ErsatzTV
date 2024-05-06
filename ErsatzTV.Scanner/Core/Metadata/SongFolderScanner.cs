@@ -20,10 +20,10 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<SongFolderScanner> _logger;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
     private readonly ISongRepository _songRepository;
 
@@ -140,7 +140,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     libraryPath,
                     maybeParentFolder,
                     songFolder);
-                
+
                 if (knownFolder.Etag == etag)
                 {
                     if (allFiles.Any(allTrashedItems.Contains))

@@ -1,10 +1,10 @@
 ﻿@page "/media/filler/presets"
-@using ErsatzTV.Application.Filler
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.Filler
 @using ErsatzTV.Core.Domain.Filler
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IMediator _mediator
+@inject IDialogService Dialog
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div>
@@ -80,7 +80,7 @@
         _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync() => _fillerPresetsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize), _cts.Token)
+    protected override async Task OnParametersSetAsync() => _fillerPresetsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize), _cts.Token)
         .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private async Task DeleteFillerPreset(FillerPresetViewModel fillerPreset)
@@ -88,11 +88,11 @@
         var parameters = new DialogParameters { { "EntityType", "filler preset" }, { "EntityName", fillerPreset.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Filler Preset", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Filler Preset", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id), _cts.Token);
+            await Mediator.Send(new DeleteFillerPreset(fillerPreset.Id), _cts.Token);
             if (_fillerPresetsTable != null)
             {
                 await _fillerPresetsTable.ReloadServerData();
@@ -102,9 +102,9 @@
 
     private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), _cts.Token);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedFillerPresetsViewModel data = await _mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize), _cts.Token);
+        PagedFillerPresetsViewModel data = await Mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize), _cts.Token);
         return new TableData<FillerPresetViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 

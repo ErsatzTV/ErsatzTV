@@ -448,7 +448,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<TimeSpan>.None,
             AudioFilter.None);
 
-        var videoFormat = GetVideoFormat(playbackSettings);
+        string videoFormat = GetVideoFormat(playbackSettings);
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,

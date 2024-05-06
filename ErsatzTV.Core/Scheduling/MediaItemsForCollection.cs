@@ -46,36 +46,42 @@ public static class MediaItemsForCollection
                 {
                     result.AddRange(await mediaCollectionRepository.GetMovie(mediaItemId));
                 }
+
                 break;
             case ProgramScheduleItemCollectionType.Episode:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetEpisode(mediaItemId));
                 }
+
                 break;
             case ProgramScheduleItemCollectionType.MusicVideo:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetMusicVideo(mediaItemId));
                 }
+
                 break;
             case ProgramScheduleItemCollectionType.OtherVideo:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetOtherVideo(mediaItemId));
                 }
+
                 break;
             case ProgramScheduleItemCollectionType.Song:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetSong(mediaItemId));
                 }
+
                 break;
             case ProgramScheduleItemCollectionType.Image:
                 foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
                 {
                     result.AddRange(await mediaCollectionRepository.GetImage(mediaItemId));
                 }
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(collectionKey));

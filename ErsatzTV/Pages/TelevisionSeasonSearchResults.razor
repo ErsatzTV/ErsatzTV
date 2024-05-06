@@ -1,12 +1,11 @@
 ﻿@page "/media/tv/seasons"
 @page "/media/tv/seasons/page/{PageNumber:int}"
-@using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
+@using ErsatzTV.Extensions
 @inherits MultiSelectBase<TelevisionShowList>
-@inject NavigationManager _navigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject NavigationManager NavigationManager
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -85,7 +84,7 @@
             PageNumber = 1;
         }
 
-        _query = _navigationManager.Uri.GetSearchQuery();
+        _query = NavigationManager.Uri.GetSearchQuery();
 
         await RefreshData();
     }
@@ -105,7 +104,7 @@
             uri = $"{uri}?{key}={value}";
         }
 
-        _navigationManager.NavigateTo(uri);
+        NavigationManager.NavigateTo(uri);
     }
 
     private void NextPage()
@@ -117,7 +116,7 @@
             uri = $"{uri}?{key}={value}";
         }
 
-        _navigationManager.NavigateTo(uri);
+        NavigationManager.NavigateTo(uri);
     }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)

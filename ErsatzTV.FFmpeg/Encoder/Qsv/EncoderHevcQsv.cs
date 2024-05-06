@@ -12,7 +12,7 @@ public class EncoderHevcQsv(Option<string> maybeVideoPreset) : EncoderBase
         get
         {
             var result = new List<string> { "-c:v", Name, "-low_power", "0", "-look_ahead", "0" };
-            
+
             foreach (string videoPreset in maybeVideoPreset)
             {
                 if (!string.IsNullOrWhiteSpace(videoPreset))

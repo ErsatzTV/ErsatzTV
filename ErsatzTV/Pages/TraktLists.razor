@@ -1,19 +1,17 @@
 ﻿@page "/media/trakt/lists"
-@using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Configuration
+@using ErsatzTV.Application.MediaCollections
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IMediator _mediator
-@inject ISnackbar _snackbar
-@inject ILogger<TraktLists> _logger
-@inject IEntityLocker _locker
-@inject ChannelWriter<IBackgroundServiceRequest> _workerChannel
+@inject IDialogService Dialog
+@inject IMediator Mediator
+@inject IEntityLocker Locker
+@inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
-                   Disabled="@_locker.IsTraktLocked()"
+                   Disabled="@Locker.IsTraktLocked()"
                    OnClick="@(_ => AddTraktList())">
             Add Trakt List
         </MudButton>
@@ -47,19 +45,19 @@
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Search Trakt List">
                         <MudIconButton Icon="@Icons.Material.Filled.Search"
-                                       Disabled="@_locker.IsTraktLocked()"
+                                       Disabled="@Locker.IsTraktLocked()"
                                        Href="@($"search?query=trakt_list%3a{context.TraktId}")">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Match Trakt List Items">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@_locker.IsTraktLocked()"
+                                       Disabled="@Locker.IsTraktLocked()"
                                        OnClick="@(_ => MatchListItems(context))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Trakt List">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Disabled="@_locker.IsTraktLocked()"
+                                       Disabled="@Locker.IsTraktLocked()"
                                        OnClick="@(_ => DeleteTraktList(context))">
                         </MudIconButton>
                     </MudTooltip>
@@ -85,9 +83,9 @@
         _cts.Dispose();
     }
 
-    protected override void OnInitialized() => _locker.OnTraktChanged += LockChanged;
+    protected override void OnInitialized() => Locker.OnTraktChanged += LockChanged;
 
-    protected override async Task OnParametersSetAsync() => _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
+    protected override async Task OnParametersSetAsync() => _traktListsRowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
         .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private void LockChanged(object sender, EventArgs e) =>
@@ -95,7 +93,7 @@
             async () =>
             {
                 StateHasChanged();
-                if (_traktListsTable != null && !_locker.IsTraktLocked())
+                if (_traktListsTable != null && !Locker.IsTraktLocked())
                 {
                     await _traktListsTable.ReloadServerData();
                 }
@@ -103,28 +101,28 @@
 
     private async Task MatchListItems(TraktListViewModel traktList)
     {
-        if (_locker.LockTrakt())
+        if (Locker.LockTrakt())
         {
-            await _workerChannel.WriteAsync(new MatchTraktListItems(traktList.Id), _cts.Token);
+            await WorkerChannel.WriteAsync(new MatchTraktListItems(traktList.Id), _cts.Token);
         }
     }
 
     private async Task DeleteTraktList(TraktListViewModel traktList)
     {
-        if (_locker.LockTrakt())
+        if (Locker.LockTrakt())
         {
             var parameters = new DialogParameters { { "EntityType", "Trakt List" }, { "EntityName", traktList.Name } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Trakt List", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Trakt List", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled)
             {
-                await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
+                await WorkerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
             }
             else
             {
-                _locker.UnlockTrakt();
+                Locker.UnlockTrakt();
             }
         }
     }
@@ -133,9 +131,9 @@
     {
         try
         {
-            await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()), _cts.Token);
+            await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()), _cts.Token);
 
-            PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
+            PagedTraktListsViewModel data = await Mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
             return new TableData<TraktListViewModel> { TotalItems = data.TotalCount, Items = data.Page };
         }
         catch (Exception)
@@ -150,18 +148,18 @@
 
     private async Task AddTraktList()
     {
-        if (_locker.LockTrakt())
+        if (Locker.LockTrakt())
         {
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-            IDialogReference dialog = await _dialog.ShowAsync<AddTraktListDialog>("Add Trakt List", options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddTraktListDialog>("Add Trakt List", options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is string url)
             {
-                await _workerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
+                await WorkerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
             }
             else
             {
-                _locker.UnlockTrakt();
+                Locker.UnlockTrakt();
             }
         }
     }

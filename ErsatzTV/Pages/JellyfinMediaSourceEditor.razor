@@ -1,11 +1,8 @@
 ﻿@page "/media/sources/jellyfin/edit"
-@using ErsatzTV.Core.Jellyfin
 @using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Core.Jellyfin
 @implements IDisposable
-@inject IMediator _mediator
-@inject NavigationManager _navigationManager
-@inject ISnackbar _snackbar
-@inject ILogger<JellyfinMediaSourceEditor> _logger
+@inject IMediator Mediator
 
 <RemoteMediaSourceEditor
     Name="Jellyfin"
@@ -23,7 +20,7 @@
 
     private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
-        JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets(), _cts.Token);
+        JellyfinSecrets secrets = await Mediator.Send(new GetJellyfinSecrets(), _cts.Token);
         viewModel.Address = secrets.Address;
         viewModel.ApiKey = secrets.ApiKey;
         return Unit.Default;
@@ -32,7 +29,7 @@
     private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
         var secrets = new JellyfinSecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
-        return await _mediator.Send(new SaveJellyfinSecrets(secrets), _cts.Token);
+        return await Mediator.Send(new SaveJellyfinSecrets(secrets), _cts.Token);
     }
 
 }

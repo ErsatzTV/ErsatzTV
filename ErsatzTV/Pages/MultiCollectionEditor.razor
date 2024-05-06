@@ -2,10 +2,10 @@
 @page "/media/multi-collections/add"
 @using ErsatzTV.Application.MediaCollections
 @implements IDisposable
-@inject IMediator _mediator
-@inject NavigationManager _navigationManager
-@inject ISnackbar _snackbar
-@inject ILogger<MultiCollectionEditor> _logger
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject ILogger<MultiCollectionEditor> Logger
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -43,7 +43,7 @@
                                    HelperText="Disabled collections are already present in this multi collection">
                             @foreach (SmartCollectionViewModel collection in _smartCollections)
                             {
-                                <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.CollectionType == ProgramScheduleItemCollectionType.SmartCollection &&  i.Collection.Id == collection.Id))"
+                                <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.CollectionType == ProgramScheduleItemCollectionType.SmartCollection && i.Collection.Id == collection.Id))"
                                                Value="@collection">
                                     @collection.Name
                                 </MudSelectItem>
@@ -131,15 +131,15 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await _mediator.Send(new GetAllCollections(), _cts.Token)
+        _collections = await Mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
-        _smartCollections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
+        _smartCollections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         if (IsEdit)
         {
-            Option<MultiCollectionViewModel> maybeCollection = await _mediator.Send(new GetMultiCollectionById(Id), _cts.Token);
+            Option<MultiCollectionViewModel> maybeCollection = await Mediator.Send(new GetMultiCollectionById(Id), _cts.Token);
             maybeCollection.IfSome(
                 collection =>
                 {
@@ -185,15 +185,15 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Seq<BaseError> errorMessage = IsEdit ? (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, GetUpdateItems()), _cts.Token)).LeftToSeq() : (await _mediator.Send(new CreateMultiCollection(_model.Name, GetCreateItems()), _cts.Token)).LeftToSeq();
+            Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(new UpdateMultiCollection(Id, _model.Name, GetUpdateItems()), _cts.Token)).LeftToSeq() : (await Mediator.Send(new CreateMultiCollection(_model.Name, GetCreateItems()), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Error saving collection: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error saving collection: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo("media/collections"));
+                () => NavigationManager.NavigateTo("media/collections"));
         }
     }
 

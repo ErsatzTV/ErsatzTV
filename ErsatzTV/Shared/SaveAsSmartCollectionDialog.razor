@@ -1,10 +1,10 @@
-﻿@using Microsoft.Extensions.Caching.Memory
-@using ErsatzTV.Application.MediaCollections
+﻿@using ErsatzTV.Application.MediaCollections
+@using Microsoft.Extensions.Caching.Memory
 @implements IDisposable
-@inject IMediator _mediator
-@inject IMemoryCache _memoryCache
-@inject ISnackbar _snackbar
-@inject ILogger<SaveAsSmartCollectionDialog> _logger
+@inject IMediator Mediator
+@inject IMemoryCache MemoryCache
+@inject ISnackbar Snackbar
+@inject ILogger<SaveAsSmartCollectionDialog> Logger
 
 <MudDialog>
     <DialogContent>
@@ -64,10 +64,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
+        _collections = await Mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => new[] { _newCollection }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
 
-        if (_memoryCache.TryGetValue("SaveAsSmartCollectionDialog.SelectedCollectionId", out int id))
+        if (MemoryCache.TryGetValue("SaveAsSmartCollectionDialog.SelectedCollectionId", out int id))
         {
             _selectedCollection = _collections.SingleOrDefault(c => c.Id == id) ?? _newCollection;
         }
@@ -87,24 +87,24 @@
         if (_selectedCollection == _newCollection)
         {
             Either<BaseError, SmartCollectionViewModel> maybeResult =
-                await _mediator.Send(new CreateSmartCollection(string.Empty, _newCollectionName), _cts.Token);
+                await Mediator.Send(new CreateSmartCollection(string.Empty, _newCollectionName), _cts.Token);
 
             maybeResult.Match(
                 collection =>
                 {
-                    _memoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", collection.Id);
+                    MemoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", collection.Id);
                     MudDialog.Close(DialogResult.Ok(collection));
                 },
                 error =>
                 {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Error creating new collection: {Error}", error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error creating new collection: {Error}", error.Value);
                     MudDialog.Close(DialogResult.Cancel());
                 });
         }
         else
         {
-            _memoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
+            MemoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
             MudDialog.Close(DialogResult.Ok(_selectedCollection));
         }
     }

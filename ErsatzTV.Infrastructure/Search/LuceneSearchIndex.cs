@@ -732,7 +732,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
                 {
                     foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
@@ -1023,7 +1023,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                     {
                         doc.Add(new TextField(ShowStudioField, studio.Name, Field.Store.NO));
                     }
-                    
+
                     if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
                     {
                         foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
@@ -1033,7 +1033,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                         }
                     }
                 }
-                
+
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                 {
                     doc.Add(new TextField(TitleField, metadata.Title, Field.Store.NO));

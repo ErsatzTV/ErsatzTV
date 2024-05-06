@@ -47,7 +47,6 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.Collection:
                     foreach (int collectionId in Optional(playlistItem.CollectionId))
                     {
-
                         mediaItems.AddRange(await GetMovieItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetShowItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetSeasonItems(dbContext, collectionId));
@@ -100,7 +99,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Movie:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -132,7 +131,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Song:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -140,7 +139,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Image:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -171,7 +170,6 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 case ProgramScheduleItemCollectionType.Collection:
                     foreach (int collectionId in Optional(playlistItem.CollectionId))
                     {
-
                         mediaItems.AddRange(await GetMovieItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetShowItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetSeasonItems(dbContext, collectionId));
@@ -224,7 +222,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Movie:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -256,7 +254,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Song:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -264,7 +262,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Image:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -501,7 +499,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         return result;
     }
-    
+
     public async Task<List<MediaItem>> GetPlaylistItems(int id)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -531,7 +529,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.TelevisionShow:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -539,7 +537,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.TelevisionSeason:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -547,7 +545,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Artist:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -563,7 +561,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.SmartCollection:
                     foreach (int smartCollectionId in Optional(playlistItem.SmartCollectionId))
                     {
@@ -571,7 +569,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Movie:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -579,7 +577,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Episode:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -603,7 +601,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Song:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -611,7 +609,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
-                
+
                 case ProgramScheduleItemCollectionType.Image:
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
@@ -897,7 +895,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         return await GetMovieItems(dbContext, ids);
     }
-    
+
     private static Task<List<Movie>> GetMovieItems(TvContext dbContext, IEnumerable<int> movieIds) =>
         dbContext.Movies
             .Include(m => m.MovieMetadata)

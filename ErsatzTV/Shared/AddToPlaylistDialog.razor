@@ -1,5 +1,5 @@
-﻿@using Microsoft.Extensions.Caching.Memory
-@using ErsatzTV.Application.MediaCollections
+﻿@using ErsatzTV.Application.MediaCollections
+@using Microsoft.Extensions.Caching.Memory
 @implements IDisposable
 @inject IMediator Mediator
 @inject IMemoryCache MemoryCache
@@ -98,7 +98,7 @@
     }
 
     private string FormatText() => $"Select the playlist to add the {EntityType} {EntityName}";
-    
+
     private async Task UpdatePlaylistGroupItems(PlaylistGroupViewModel playlistGroup)
     {
         _selectedPlaylistGroup = playlistGroup;

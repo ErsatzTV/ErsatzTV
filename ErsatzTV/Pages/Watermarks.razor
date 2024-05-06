@@ -1,11 +1,9 @@
 ﻿@page "/watermarks"
 @using ErsatzTV.Application.Watermarks
 @implements IDisposable
-@inject IDialogService _dialog
-@inject IMediator _mediator
-@inject ILogger<Watermarks> _logger
-@inject ISnackbar _snackbar
-@inject NavigationManager _navigationManager
+@inject IDialogService Dialog
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_watermarks">
@@ -84,18 +82,18 @@
     protected override async Task OnParametersSetAsync() => await LoadWatermarksAsync();
 
     private async Task LoadWatermarksAsync() =>
-        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token);
+        _watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
 
     private async Task DeleteWatermarkAsync(WatermarkViewModel watermark)
     {
         var parameters = new DialogParameters { { "EntityType", "watermark" }, { "EntityName", watermark.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<DeleteDialog>("Delete Watermark", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Watermark", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await _mediator.Send(new DeleteWatermark(watermark.Id), _cts.Token);
+            await Mediator.Send(new DeleteWatermark(watermark.Id), _cts.Token);
             await LoadWatermarksAsync();
         }
     }
@@ -105,11 +103,11 @@
         var parameters = new DialogParameters { { "WatermarkId", watermark.Id } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = await _dialog.ShowAsync<CopyWatermarkDialog>("Copy Watermark", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<CopyWatermarkDialog>("Copy Watermark", parameters, options);
         DialogResult dialogResult = await dialog.Result;
         if (!dialogResult.Canceled && dialogResult.Data is WatermarkViewModel data)
         {
-            _navigationManager.NavigateTo($"/watermarks/{data.Id}");
+            NavigationManager.NavigateTo($"/watermarks/{data.Id}");
         }
     }
 

@@ -27,7 +27,7 @@ public class MultiEpisodeShuffleCollectionEnumerator : IMediaCollectionEnumerato
         CancellationToken cancellationToken)
     {
         CurrentIncludeInProgramGuide = Option<bool>.None;
-        
+
         _logger = logger;
         _cancellationToken = cancellationToken;
 

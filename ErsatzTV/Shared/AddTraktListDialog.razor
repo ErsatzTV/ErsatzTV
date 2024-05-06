@@ -1,10 +1,4 @@
-﻿@using Microsoft.Extensions.Caching.Memory
-@inject IMediator _mediator
-@inject IMemoryCache _memoryCache
-@inject ISnackbar _snackbar
-@inject ILogger<AddTraktListDialog> _logger
-
-<MudDialog>
+﻿<MudDialog>
     <DialogContent>
         <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
             <MudContainer Class="mb-6">

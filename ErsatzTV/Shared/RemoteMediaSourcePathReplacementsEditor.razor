@@ -1,9 +1,9 @@
 ﻿@using ErsatzTV.Application.MediaSources
 @implements IDisposable
-@inject NavigationManager _navigationManager
-@inject ILogger<RemoteMediaSourcePathReplacementsEditor> _logger
-@inject ISnackbar _snackbar
-@inject IMediator _mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<RemoteMediaSourcePathReplacementsEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_pathReplacements.OrderBy(r => r.Id)" Dense="true" @bind-SelectedItem="_selectedItem">
@@ -110,7 +110,7 @@
             },
             () =>
             {
-                _navigationManager.NavigateTo("404");
+                NavigationManager.NavigateTo("404");
                 return Task.CompletedTask;
             });
     }
@@ -130,16 +130,16 @@
 
     private async Task SaveChanges()
     {
-        Seq<BaseError> errorMessages = await _mediator.Send(GetUpdatePathReplacementsRequest(_pathReplacements), _cts.Token)
+        Seq<BaseError> errorMessages = await Mediator.Send(GetUpdatePathReplacementsRequest(_pathReplacements), _cts.Token)
             .Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(
             error =>
             {
-                _snackbar.Add($"Unexpected error saving path replacements: {error.Value}", Severity.Error);
-                _logger.LogError("Unexpected error saving path replacements: {Error}", error.Value);
+                Snackbar.Add($"Unexpected error saving path replacements: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving path replacements: {Error}", error.Value);
             },
-            () => _navigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}"));
+            () => NavigationManager.NavigateTo($"media/sources/{Name.ToLowerInvariant()}"));
     }
 
 }

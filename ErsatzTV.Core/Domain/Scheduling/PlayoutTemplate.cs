@@ -18,6 +18,7 @@ public class PlayoutTemplate
     public int StartDay { get; set; }
     public int EndMonth { get; set; }
     public int EndDay { get; set; }
+
     public DateTime DateUpdated { get; set; }
     //public ICollection<DateTimeOffset> AdditionalDays { get; set; }
 

@@ -17,7 +17,9 @@ public class CreatePlaylistGroupHandler(IDbContextFactory<TvContext> dbContextFa
         return await validation.Apply(profile => PersistPlaylistGroup(dbContext, profile));
     }
 
-    private static async Task<PlaylistGroupViewModel> PersistPlaylistGroup(TvContext dbContext, PlaylistGroup playlistGroup)
+    private static async Task<PlaylistGroupViewModel> PersistPlaylistGroup(
+        TvContext dbContext,
+        PlaylistGroup playlistGroup)
     {
         await dbContext.PlaylistGroups.AddAsync(playlistGroup);
         await dbContext.SaveChangesAsync();

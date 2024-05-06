@@ -45,7 +45,7 @@ internal static class Mapper
         DateTime endTime = startTime.AddMinutes(templateItem.Block.Minutes);
         return new TemplateItemViewModel(templateItem.BlockId, templateItem.Block.Name, startTime, endTime);
     }
-    
+
     internal static DecoGroupViewModel ProjectToViewModel(DecoGroup decoGroup) =>
         new(decoGroup.Id, decoGroup.Name, decoGroup.Decos.Count);
 
@@ -84,6 +84,7 @@ internal static class Mapper
         {
             endTime = endTime.AddDays(1);
         }
+
         return new DecoTemplateItemViewModel(decoTemplateItem.DecoId, decoTemplateItem.Deco.Name, startTime, endTime);
     }
 

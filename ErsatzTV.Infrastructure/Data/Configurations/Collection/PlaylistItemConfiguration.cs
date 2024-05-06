@@ -9,7 +9,7 @@ public class PlaylistItemConfiguration : IEntityTypeConfiguration<PlaylistItem>
     public void Configure(EntityTypeBuilder<PlaylistItem> builder)
     {
         builder.ToTable("PlaylistItem");
-        
+
         builder.HasOne(i => i.Collection)
             .WithMany()
             .HasForeignKey(i => i.CollectionId)

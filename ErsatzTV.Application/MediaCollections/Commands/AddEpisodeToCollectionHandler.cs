@@ -33,7 +33,9 @@ public class AddEpisodeToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => ApplyAddTelevisionEpisodeRequest(dbContext, parameters));
+        return await LanguageExtensions.Apply(
+            validation,
+            parameters => ApplyAddTelevisionEpisodeRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddTelevisionEpisodeRequest(TvContext dbContext, Parameters parameters)

@@ -6,7 +6,7 @@ public class EncoderH264Amf(Option<string> maybeVideoProfile) : EncoderBase
 {
     public override string Name => "h264_amf";
     public override StreamKind Kind => StreamKind.Video;
-    
+
     public override string[] OutputOptions
     {
         get
@@ -16,7 +16,7 @@ public class EncoderH264Amf(Option<string> maybeVideoProfile) : EncoderBase
                 return
                 [
                     "-c:v", Name,
-                    "-profile:v", videoProfile.ToLowerInvariant(),
+                    "-profile:v", videoProfile.ToLowerInvariant()
                 ];
             }
 

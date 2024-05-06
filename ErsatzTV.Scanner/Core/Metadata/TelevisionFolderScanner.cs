@@ -21,11 +21,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly IClient _client;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILibraryRepository _libraryRepository;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
     private readonly ITelevisionRepository _televisionRepository;
@@ -88,7 +88,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             {
                 await _libraryRepository.UpdatePath(libraryPath, normalizedLibraryPath);
             }
-            
+
             ImmutableHashSet<string> allTrashedItems = await _mediaItemRepository.GetAllTrashedItems(libraryPath);
 
             var allShowFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)

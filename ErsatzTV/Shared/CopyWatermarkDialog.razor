@@ -1,8 +1,8 @@
 ﻿@using ErsatzTV.Application.Watermarks
 @implements IDisposable
-@inject IMediator _mediator
-@inject ISnackbar _snackbar
-@inject ILogger<CopyWatermarkDialog> _logger
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<CopyWatermarkDialog> Logger
 
 <MudDialog>
     <DialogContent>
@@ -57,14 +57,14 @@
         }
 
         Either<BaseError, WatermarkViewModel> maybeResult =
-            await _mediator.Send(new CopyWatermark(WatermarkId, _newWatermarkName), _cts.Token);
+            await Mediator.Send(new CopyWatermark(WatermarkId, _newWatermarkName), _cts.Token);
 
         maybeResult.Match(
             watermark => { MudDialog.Close(DialogResult.Ok(watermark)); },
             error =>
             {
-                _snackbar.Add(error.Value, Severity.Error);
-                _logger.LogError("Error copying Watermark: {Error}", error.Value);
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error copying Watermark: {Error}", error.Value);
                 MudDialog.Close(DialogResult.Cancel());
             });
     }
