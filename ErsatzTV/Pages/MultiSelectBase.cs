@@ -91,7 +91,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
         SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList(),
         SelectedItems.OfType<ImageCardViewModel>().Map(i => i.ImageId).ToList());
-    
+
     protected Task AddSelectionToPlaylist() => AddItemsToPlaylist(
         SelectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
         SelectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
@@ -185,7 +185,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
             ClearSelection();
         }
     }
-    
+
     protected async Task AddItemsToPlaylist(
         List<int> movieIds,
         List<int> showIds,

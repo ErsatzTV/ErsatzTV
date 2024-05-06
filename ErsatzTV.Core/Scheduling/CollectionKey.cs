@@ -13,7 +13,7 @@ public class CollectionKey : Record<CollectionKey>
     public int? MediaItemId { get; set; }
     public int? PlaylistId { get; set; }
     public string FakeCollectionKey { get; set; }
-    
+
     public static CollectionKey ForPlaylistItem(PlaylistItem item) =>
         item.CollectionType switch
         {

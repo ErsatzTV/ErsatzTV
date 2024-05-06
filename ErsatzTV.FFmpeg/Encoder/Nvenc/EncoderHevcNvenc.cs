@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Encoder.Nvenc;
 
 public class EncoderHevcNvenc : EncoderBase
 {
-    private readonly Option<string> _maybeVideoPreset;
     private readonly bool _bFrames;
+    private readonly Option<string> _maybeVideoPreset;
 
     public EncoderHevcNvenc(IHardwareCapabilities hardwareCapabilities, Option<string> maybeVideoPreset)
     {
@@ -30,7 +30,7 @@ public class EncoderHevcNvenc : EncoderBase
                 "-tag:v", "hvc1",
                 "-b_ref_mode", _bFrames ? "1" : "0"
             };
-            
+
             foreach (string videoPreset in _maybeVideoPreset)
             {
                 if (!string.IsNullOrWhiteSpace(videoPreset))
@@ -39,7 +39,7 @@ public class EncoderHevcNvenc : EncoderBase
                     result.Add(videoPreset);
                 }
             }
-            
+
             return result.ToArray();
         }
     }

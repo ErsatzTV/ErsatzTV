@@ -6,7 +6,9 @@ namespace ErsatzTV.Application.Scheduling;
 public class GetDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
     : IRequestHandler<GetDecoTemplateItems, List<DecoTemplateItemViewModel>>
 {
-    public async Task<List<DecoTemplateItemViewModel>> Handle(GetDecoTemplateItems request, CancellationToken cancellationToken)
+    public async Task<List<DecoTemplateItemViewModel>> Handle(
+        GetDecoTemplateItems request,
+        CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 

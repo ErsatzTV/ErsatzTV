@@ -11,7 +11,7 @@ public static class PlayoutTemplateSelectorTests
     public class GetPlayoutTemplateFor
     {
         private static readonly TimeSpan Offset = TimeSpan.FromHours(-5);
-        
+
         [Test]
         public void LimitToDateRange_Before_Start_Should_Not_Return_Template()
         {
@@ -33,7 +33,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_On_Start_Should_Return_Template()
         {
@@ -55,7 +55,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_In_Range_Should_Return_Template()
         {
@@ -77,7 +77,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_On_End_Should_Return_Template()
         {
@@ -99,7 +99,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_After_End_Should_Not_Return_Template()
         {
@@ -121,7 +121,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Before_Invalid_Start_Date_Should_Not_Return_Template()
         {
@@ -143,7 +143,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_After_Invalid_Start_Date_Should_Return_Template()
         {
@@ -165,7 +165,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Before_Invalid_End_Date_Should_Return_Template()
         {
@@ -187,7 +187,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_After_Invalid_End_Date_Should_Not_Return_Template()
         {
@@ -209,7 +209,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_Before_Start_Should_Not_Return_Template()
         {
@@ -231,7 +231,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_On_Start_Should_Return_Template()
         {
@@ -253,7 +253,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_In_Range_Should_Return_Template()
         {
@@ -275,7 +275,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_On_End_Should_Return_Template()
         {
@@ -297,7 +297,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_After_End_Should_Not_Return_Template()
         {
@@ -319,7 +319,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_Before_Invalid_Start_Date_Should_Not_Return_Template()
         {
@@ -341,7 +341,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsNone.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_After_Invalid_Start_Date_Should_Return_Template()
         {
@@ -363,7 +363,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_Before_Invalid_End_Date_Should_Return_Template()
         {
@@ -385,7 +385,7 @@ public static class PlayoutTemplateSelectorTests
 
             result.IsSome.Should().BeTrue();
         }
-        
+
         [Test]
         public void LimitToDateRange_Wrap_Around_After_Invalid_End_Date_Should_Not_Return_Template()
         {

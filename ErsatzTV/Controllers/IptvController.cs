@@ -101,7 +101,11 @@ public class IptvController : ControllerBase
         FFmpegProcessRequest request = mode switch
         {
             "ts-legacy" => new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber),
-            _ => new GetWrappedProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), Request.Query["access_token"], channelNumber)
+            _ => new GetWrappedProcessByChannelNumber(
+                Request.Scheme,
+                Request.Host.ToString(),
+                Request.Query["access_token"],
+                channelNumber)
         };
 
         return await _mediator.Send(request)
@@ -271,7 +275,7 @@ public class IptvController : ControllerBase
 
         var variantPlaylist =
             $"{Request.Scheme}://{Request.Host}/iptv/session/{channelNumber}/{file}{AccessTokenQuery()}";
-        
+
         try
         {
             if (mode == "segmenter-v2")
@@ -290,7 +294,7 @@ public class IptvController : ControllerBase
                 ex,
                 "Failed to return ffmpeg multi-variant playlist; falling back to generated playlist");
         }
-        
+
         Option<ResolutionViewModel> maybeResolution = await _mediator.Send(new GetChannelResolution(channelNumber));
         string resolution = string.Empty;
         foreach (ResolutionViewModel res in maybeResolution)

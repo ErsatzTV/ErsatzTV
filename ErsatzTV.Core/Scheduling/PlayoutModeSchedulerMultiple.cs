@@ -65,7 +65,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 InPoint = TimeSpan.Zero,
                 OutPoint = itemDuration,
                 GuideGroup = nextState.NextGuideGroup,
-                FillerKind = (scheduleItem.GuideMode == GuideMode.Filler || contentEnumerator.CurrentIncludeInProgramGuide == false)
+                FillerKind = scheduleItem.GuideMode == GuideMode.Filler ||
+                             contentEnumerator.CurrentIncludeInProgramGuide == false
                     ? FillerKind.GuideMode
                     : FillerKind.None,
                 CustomTitle = scheduleItem.CustomTitle,

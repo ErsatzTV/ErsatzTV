@@ -1,12 +1,12 @@
 ﻿@page "/media/libraries"
-@using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
+@using ErsatzTV.Application.Emby
+@using ErsatzTV.Application.Jellyfin
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
 @using ErsatzTV.Core.Metadata
 @using MediatR.Courier
-@using ErsatzTV.Application.Jellyfin
-@using ErsatzTV.Application.Emby
+@using PlexLibraryViewModel = ErsatzTV.Application.Libraries.PlexLibraryViewModel
 @implements IDisposable
 @inject IMediator Mediator
 @inject IEntityLocker Locker

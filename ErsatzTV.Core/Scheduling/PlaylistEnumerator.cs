@@ -7,10 +7,52 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class PlaylistEnumerator : IMediaCollectionEnumerator
 {
-    private IList<IMediaCollectionEnumerator> _sortedEnumerators;
-    private IList<bool> _playAll;
     private int _enumeratorIndex;
     private System.Collections.Generic.HashSet<int> _idsToIncludeInEPG;
+    private IList<bool> _playAll;
+    private IList<IMediaCollectionEnumerator> _sortedEnumerators;
+
+    private PlaylistEnumerator()
+    {
+    }
+
+    public void ResetState(CollectionEnumeratorState state) =>
+        // seed doesn't matter here
+        State.Index = state.Index;
+
+    public CollectionEnumeratorState State { get; private set; }
+
+    public Option<MediaItem> Current => _sortedEnumerators[_enumeratorIndex].Current;
+
+    public Option<bool> CurrentIncludeInProgramGuide
+    {
+        get
+        {
+            foreach (MediaItem mediaItem in Current)
+            {
+                return _idsToIncludeInEPG.Contains(mediaItem.Id);
+            }
+
+            return Option<bool>.None;
+        }
+    }
+
+    public int Count { get; private set; }
+
+    public Option<TimeSpan> MinimumDuration { get; private set; }
+
+    public void MoveNext()
+    {
+        _sortedEnumerators[_enumeratorIndex].MoveNext();
+
+        // if we aren't playing all, or if we just finished playing all, move to the next enumerator
+        if (!_playAll[_enumeratorIndex] || _sortedEnumerators[_enumeratorIndex].State.Index == 0)
+        {
+            _enumeratorIndex = (_enumeratorIndex + 1) % _sortedEnumerators.Count;
+        }
+
+        State.Index = (State.Index + 1) % Count;
+    }
 
     public static async Task<PlaylistEnumerator> Create(
         IMediaCollectionRepository mediaCollectionRepository,
@@ -39,7 +81,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                     result._idsToIncludeInEPG.Add(mediaItem.Id);
                 }
             }
-            
+
             var collectionKey = CollectionKey.ForPlaylistItem(playlistItem);
             if (enumeratorMap.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
             {
@@ -78,7 +120,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                                 CollectionKey.ForPlaylistItem(playlistItem)),
                             initState,
                             // TODO: fix this
-                            randomStartPoint: false,
+                            false,
                             cancellationToken);
                         break;
                     case PlaybackOrder.SeasonEpisode:
@@ -107,7 +149,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
         result.State = new CollectionEnumeratorState { Seed = state.Seed };
         result._enumeratorIndex = 0;
-        
+
         // TODO: how do we end up with index > count?
         if (state.Index < result.Count)
         {
@@ -120,62 +162,19 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         return result;
     }
 
-    private PlaylistEnumerator()
-    {
-    }
-    
-    public void ResetState(CollectionEnumeratorState state) =>
-        // seed doesn't matter here
-        State.Index = state.Index;
+    private static int LCM(IEnumerable<int> numbers) => numbers.Aggregate(lcm);
 
-    public CollectionEnumeratorState State { get; private set; }
-    
-    public Option<MediaItem> Current => _sortedEnumerators[_enumeratorIndex].Current;
-    public Option<bool> CurrentIncludeInProgramGuide
-    {
-        get
-        {
-            foreach (MediaItem mediaItem in Current)
-            {
-                return _idsToIncludeInEPG.Contains(mediaItem.Id);
-            }
-            
-            return Option<bool>.None;
-        }
-    }
-
-    public int Count { get; private set; }
-
-    public Option<TimeSpan> MinimumDuration { get; private set; }
-
-    public void MoveNext()
-    {
-        _sortedEnumerators[_enumeratorIndex].MoveNext();
-        
-        // if we aren't playing all, or if we just finished playing all, move to the next enumerator
-        if (!_playAll[_enumeratorIndex] || _sortedEnumerators[_enumeratorIndex].State.Index == 0)
-        {
-            _enumeratorIndex = (_enumeratorIndex + 1) % _sortedEnumerators.Count;
-        }
-
-        State.Index = (State.Index + 1) % Count;
-    }
-
-    private static int LCM(IEnumerable<int> numbers)
-    {
-        return numbers.Aggregate(lcm);
-    }
-
-    private static int lcm(int a, int b)
-    {
-        return Math.Abs(a * b) / GCD(a, b);
-    }
+    private static int lcm(int a, int b) => Math.Abs(a * b) / GCD(a, b);
 
     private static int GCD(int a, int b)
     {
         while (true)
         {
-            if (b == 0) return a;
+            if (b == 0)
+            {
+                return a;
+            }
+
             int a1 = a;
             a = b;
             b = a1 % b;

@@ -7,15 +7,17 @@ namespace ErsatzTV.ViewModels;
 
 public class PlayoutTemplateEditViewModel
 {
-    private int _startMonth;
-    private int _startDay;
-    private int _endMonth;
     private int _endDay;
+    private int _endMonth;
+    private int _startDay;
+    private int _startMonth;
     public int Id { get; set; }
     public int Index { get; set; }
     public TemplateViewModel Template { get; set; }
+
     [CanBeNull]
     public DecoTemplateViewModel DecoTemplate { get; set; }
+
     public List<DayOfWeek> DaysOfWeek { get; set; }
     public List<int> DaysOfMonth { get; set; }
     public List<int> MonthsOfYear { get; set; }
@@ -48,7 +50,7 @@ public class PlayoutTemplateEditViewModel
     public bool AppliesToDate(DateTime date)
     {
         // share the PlayoutTemplateSelector logic
-        
+
         var template = new PlayoutTemplate
         {
             DaysOfWeek = DaysOfWeek,
@@ -58,7 +60,7 @@ public class PlayoutTemplateEditViewModel
             StartMonth = StartMonth,
             StartDay = StartDay,
             EndMonth = EndMonth,
-            EndDay = EndDay,
+            EndDay = EndDay
         };
 
         TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(

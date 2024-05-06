@@ -6,13 +6,13 @@ public class EncoderLibx264(Option<string> maybeVideoProfile, Option<string> may
 {
     public override string Name => "libx264";
     public override StreamKind Kind => StreamKind.Video;
-    
+
     public override string[] OutputOptions
     {
         get
         {
             var result = new List<string>(base.OutputOptions);
-            
+
             foreach (string videoProfile in maybeVideoProfile)
             {
                 result.Add("-profile:v");

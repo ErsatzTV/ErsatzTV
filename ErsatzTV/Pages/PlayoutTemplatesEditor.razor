@@ -1,9 +1,9 @@
 ﻿@page "/playouts/{Id:int}/templates"
 @using System.Globalization
-@using ErsatzTV.Application.Scheduling
-@using ErsatzTV.Application.Channels
-@using ErsatzTV.Core.Domain.Scheduling
 @using System.Text
+@using ErsatzTV.Application.Channels
+@using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Core.Domain.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<PlayoutTemplatesEditor> Logger
@@ -11,285 +11,285 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable T="PlayoutTemplateEditViewModel" Class="mt-4" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">@_channelName Templates</MudText>
-            <MudSpacer/>
-            <MudText Typo="Typo.subtitle1" Class="mr-3">In priority order from top to bottom</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col/>
-            <col/>
-            <col style="width: 60px;"/>
-            <col style="width: 60px;"/>
-            <col style="width: 60px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Template</MudTh>
-            <MudTh>Days of the Week</MudTh>
-            <MudTh>Days of the Month</MudTh>
-            <MudTh>Months</MudTh>
-            <MudTh/>
-            <MudTh/>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Template">
-                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @context.Template?.Name
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Days of the Week">
-                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @ToDaysOfWeekString(context.DaysOfWeek)
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Days of the Month">
-                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @ToDaysOfMonthString(context.DaysOfMonth)
-                </MudText>
-            </MudTd>
-            <MudTd DataLabel="Months">
-                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @ToMonthsOfYearString(context.MonthsOfYear)
-                </MudText>
-            </MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
-                               OnClick="@(_ => MoveItemUp(context))"
-                               Disabled="@(_items.All(x => x.Index >= context.Index))">
-                </MudIconButton>
-            </MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
-                               OnClick="@(_ => MoveItemDown(context))"
-                               Disabled="@(_items.All(x => x.Index <= context.Index))">
-                </MudIconButton>
-            </MudTd>
-            <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                               OnClick="@(_ => DeleteTemplate(context))">
-                </MudIconButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddTemplate())" Class="mt-4">
-        Add Template
-    </MudButton>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
-        Save Changes
-    </MudButton>
-    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => PreviewCalendar())" Class="mt-4 ml-4">
-        Preview Calendar
-    </MudButton>
+<MudTable T="PlayoutTemplateEditViewModel" Class="mt-4" Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" SelectedItem="@_selectedItem" SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@_channelName Templates</MudText>
+        <MudSpacer/>
+        <MudText Typo="Typo.subtitle1" Class="mr-3">In priority order from top to bottom</MudText>
+    </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+        <col style="width: 60px;"/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Template</MudTh>
+        <MudTh>Days of the Week</MudTh>
+        <MudTh>Days of the Month</MudTh>
+        <MudTh>Months</MudTh>
+        <MudTh/>
+        <MudTh/>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Template">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @context.Template?.Name
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Days of the Week">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @ToDaysOfWeekString(context.DaysOfWeek)
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Days of the Month">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @ToDaysOfMonthString(context.DaysOfMonth)
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Months">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @ToMonthsOfYearString(context.MonthsOfYear)
+            </MudText>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                           OnClick="@(_ => MoveItemUp(context))"
+                           Disabled="@(_items.All(x => x.Index >= context.Index))">
+            </MudIconButton>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                           OnClick="@(_ => MoveItemDown(context))"
+                           Disabled="@(_items.All(x => x.Index <= context.Index))">
+            </MudIconButton>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           OnClick="@(_ => DeleteTemplate(context))">
+            </MudIconButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddTemplate())" Class="mt-4">
+    Add Template
+</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+    Save Changes
+</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => PreviewCalendar())" Class="mt-4 ml-4">
+    Preview Calendar
+</MudButton>
 
-    @if (_selectedItem is not null)
-    {
-        <EditForm Model="_selectedItem">
-            <FluentValidationValidator/>
-            <div style="display: flex; flex-direction: row;" class="mt-6">
-                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
-                    <MudCard>
-                        <MudCardContent>
-                            <MudSelect T="TemplateGroupViewModel" Label="Template Group" Value="@_selectedGroup" ValueChanged="@(vm => UpdateTemplateGroupItems(vm))">
-                                @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
-                                {
-                                    <MudSelectItem Value="@templateGroup">
-                                        @templateGroup.Name
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudSelect Label="Template" @bind-Value="_selectedItem.Template" For="@(() => _selectedItem.Template)">
-                                @foreach (TemplateViewModel template in _templates)
-                                {
-                                    <MudSelectItem Value="@template">@template.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudCardContent>
-                    </MudCard>
-                    <MudCard Class="mt-4">
-                        <MudCardContent>
-                            <MudSelect T="DecoTemplateGroupViewModel" Label="Deco Template Group" Value="@_selectedDecoTemplateGroup" ValueChanged="@(vm => UpdateDecoTemplateGroupItems(vm))">
-                                @foreach (DecoTemplateGroupViewModel decoTemplateGroup in _decoTemplateGroups)
-                                {
-                                    <MudSelectItem Value="@decoTemplateGroup">
-                                        @decoTemplateGroup.Name
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudSelect Label="Deco Template" @bind-Value="_selectedItem.DecoTemplate" For="@(() => _selectedItem.DecoTemplate)" Clearable="true">
-                                @foreach (DecoTemplateViewModel decoTemplate in _decoTemplates)
-                                {
-                                    <MudSelectItem Value="@decoTemplate">@decoTemplate.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudCardContent>
-                    </MudCard>
-                    <MudCard Class="mt-4">
-                        <MudCardContent>
-                            <MudCheckBox T="bool" Class="mt-3" Label="Limit To Date Range"
-                                         @bind-Value="_selectedItem.LimitToDateRange" />
-                            @if (_selectedItem.LimitToDateRange)
+@if (_selectedItem is not null)
+{
+    <EditForm Model="_selectedItem">
+        <FluentValidationValidator/>
+        <div style="display: flex; flex-direction: row;" class="mt-6">
+            <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudSelect T="TemplateGroupViewModel" Label="Template Group" Value="@_selectedGroup" ValueChanged="@(vm => UpdateTemplateGroupItems(vm))">
+                            @foreach (TemplateGroupViewModel templateGroup in _templateGroups)
                             {
-                                <MudGrid Class="mt-2" Style="align-items: start" Justify="Justify.Center">
-                                    <MudItem xs="6">
-                                        <MudSelect T="int" @bind-Value="_selectedItem.StartMonth" Label="Start Month">
-                                            @foreach (int month in Enumerable.Range(1, 12))
-                                            {
-                                                <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
-                                            }
-                                        </MudSelect>
-                                    </MudItem>
-                                    <MudItem xs="6">
-                                        <MudSelect T="int" @bind-Value="_selectedItem.StartDay" Label="Start Day">
-                                            @foreach (int day in Enumerable.Range(1, 31))
-                                            {
-                                                <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
-                                            }
-                                        </MudSelect>
-                                    </MudItem>
-                                </MudGrid>
-                                <MudGrid Class="mt-2" Style="align-items: start" Justify="Justify.Center">
-                                    <MudItem xs="6">
-                                        <MudSelect T="int" @bind-Value="_selectedItem.EndMonth" Label="End Month">
-                                            @foreach (int month in Enumerable.Range(1, 12))
-                                            {
-                                                <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
-                                            }
-                                        </MudSelect>
-                                    </MudItem>
-                                    <MudItem xs="6">
-                                        <MudSelect T="int" @bind-Value="_selectedItem.EndDay" Label="End Day">
-                                            @foreach (int day in Enumerable.Range(1, 31))
-                                            {
-                                                <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
-                                            }
-                                        </MudSelect>
-                                    </MudItem>
-                                </MudGrid>
+                                <MudSelectItem Value="@templateGroup">
+                                    @templateGroup.Name
+                                </MudSelectItem>
                             }
-                        </MudCardContent>
-                    </MudCard>
-                    <MudCard Class="mt-4">
-                        <MudCardContent>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Monday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Monday, c))"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-2">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Tuesday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Tuesday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Tuesday, c))"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-2">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Wednesday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Wednesday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Wednesday, c))"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-2">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Thursday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Thursday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Thursday, c))"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-2">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Friday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Friday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Friday, c))"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-2">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Saturday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Saturday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Saturday, c))"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-2">
-                                <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Sunday)"
-                                             Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Sunday))"
-                                             ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Sunday, c))"/>
-                            </MudElement>
-                        </MudCardContent>
-                        <MudCardActions>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekdays())">
-                                Weekdays
-                            </MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekends())">
-                                Weekends
-                            </MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfWeek())">
-                                All
-                            </MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfWeek())">
-                                None
-                            </MudButton>
-                        </MudCardActions>
-                    </MudCard>
-                </div>
-                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
-                    <MudCard>
-                        <MudCardContent>
-                            <MudGrid Justify="Justify.FlexStart" Class="mt-3">
-                                @foreach (int day in Enumerable.Range(1, 31))
-                                {
-                                    <MudItem xs="3">
-                                        <MudCheckBox T="bool" Label="@day.ToString()"
-                                                     Value="@(_selectedItem.DaysOfMonth.Contains(day))"
-                                                     ValueChanged="@((bool c) => DayOfMonthChanged(day, c))"/>
-                                    </MudItem>
-                                }
+                        </MudSelect>
+                        <MudSelect Label="Template" @bind-Value="_selectedItem.Template" For="@(() => _selectedItem.Template)">
+                            @foreach (TemplateViewModel template in _templates)
+                            {
+                                <MudSelectItem Value="@template">@template.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                </MudCard>
+                <MudCard Class="mt-4">
+                    <MudCardContent>
+                        <MudSelect T="DecoTemplateGroupViewModel" Label="Deco Template Group" Value="@_selectedDecoTemplateGroup" ValueChanged="@(vm => UpdateDecoTemplateGroupItems(vm))">
+                            @foreach (DecoTemplateGroupViewModel decoTemplateGroup in _decoTemplateGroups)
+                            {
+                                <MudSelectItem Value="@decoTemplateGroup">
+                                    @decoTemplateGroup.Name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Label="Deco Template" @bind-Value="_selectedItem.DecoTemplate" For="@(() => _selectedItem.DecoTemplate)" Clearable="true">
+                            @foreach (DecoTemplateViewModel decoTemplate in _decoTemplates)
+                            {
+                                <MudSelectItem Value="@decoTemplate">@decoTemplate.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudCardContent>
+                </MudCard>
+                <MudCard Class="mt-4">
+                    <MudCardContent>
+                        <MudCheckBox T="bool" Class="mt-3" Label="Limit To Date Range"
+                                     @bind-Value="_selectedItem.LimitToDateRange"/>
+                        @if (_selectedItem.LimitToDateRange)
+                        {
+                            <MudGrid Class="mt-2" Style="align-items: start" Justify="Justify.Center">
+                                <MudItem xs="6">
+                                    <MudSelect T="int" @bind-Value="_selectedItem.StartMonth" Label="Start Month">
+                                        @foreach (int month in Enumerable.Range(1, 12))
+                                        {
+                                            <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudSelect T="int" @bind-Value="_selectedItem.StartDay" Label="Start Day">
+                                        @foreach (int day in Enumerable.Range(1, 31))
+                                        {
+                                            <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
                             </MudGrid>
-                        </MudCardContent>
-                        <MudCardActions>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfMonth())">
-                                All
-                            </MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfMonth())">
-                                None
-                            </MudButton>
-                        </MudCardActions>
-                    </MudCard>
-                </div>
-                <div style="flex-grow: 1; max-width: 400px;">
-                    <MudCard>
-                        <MudCardContent>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudCheckBox T="bool" Label="@_dtf.GetMonthName(1)"
-                                             Value="@(_selectedItem.MonthsOfYear.Contains(1))"
-                                             ValueChanged="@((bool c) => MonthOfYearChanged(1, c))"/>
-                            </MudElement>
-                            @foreach (int month in Enumerable.Range(2, 11))
-                            {
-                                <MudElement HtmlTag="div" Class="mt-2">
-                                    <MudCheckBox T="bool" Label="@_dtf.GetMonthName(month)"
-                                                 Value="@(_selectedItem.MonthsOfYear.Contains(month))"
-                                                 ValueChanged="@((bool c) => MonthOfYearChanged(month, c))"/>
-                                </MudElement>
-                            }
-                        </MudCardContent>
-                        <MudCardActions>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllMonthsOfYear())">
-                                All
-                            </MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoMonthsOfYear())">
-                                None
-                            </MudButton>
-                        </MudCardActions>
-                    </MudCard>
-                </div>
+                            <MudGrid Class="mt-2" Style="align-items: start" Justify="Justify.Center">
+                                <MudItem xs="6">
+                                    <MudSelect T="int" @bind-Value="_selectedItem.EndMonth" Label="End Month">
+                                        @foreach (int month in Enumerable.Range(1, 12))
+                                        {
+                                            <MudSelectItem Value="@month">@_dtf.GetMonthName(month)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudSelect T="int" @bind-Value="_selectedItem.EndDay" Label="End Day">
+                                        @foreach (int day in Enumerable.Range(1, 31))
+                                        {
+                                            <MudSelectItem Value="@day">@day.ToString()</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            </MudGrid>
+                        }
+                    </MudCardContent>
+                </MudCard>
+                <MudCard Class="mt-4">
+                    <MudCardContent>
+                        <MudElement HtmlTag="div" Class="mt-3">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Monday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Monday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Monday, c))"/>
+                        </MudElement>
+                        <MudElement HtmlTag="div" Class="mt-2">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Tuesday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Tuesday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Tuesday, c))"/>
+                        </MudElement>
+                        <MudElement HtmlTag="div" Class="mt-2">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Wednesday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Wednesday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Wednesday, c))"/>
+                        </MudElement>
+                        <MudElement HtmlTag="div" Class="mt-2">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Thursday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Thursday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Thursday, c))"/>
+                        </MudElement>
+                        <MudElement HtmlTag="div" Class="mt-2">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Friday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Friday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Friday, c))"/>
+                        </MudElement>
+                        <MudElement HtmlTag="div" Class="mt-2">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Saturday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Saturday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Saturday, c))"/>
+                        </MudElement>
+                        <MudElement HtmlTag="div" Class="mt-2">
+                            <MudCheckBox T="bool" Label="@_dtf.GetDayName(DayOfWeek.Sunday)"
+                                         Value="@(_selectedItem.DaysOfWeek.Contains(DayOfWeek.Sunday))"
+                                         ValueChanged="@((bool c) => DayOfWeekChanged(DayOfWeek.Sunday, c))"/>
+                        </MudElement>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekdays())">
+                            Weekdays
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectWeekends())">
+                            Weekends
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfWeek())">
+                            All
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfWeek())">
+                            None
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
             </div>
-        </EditForm>
-    }
-    else
-    {
-        <MudCard Class="mt-4">
-            <MudCalendar ShowWeek="false"
-                         ShowDay="false"
-                         DateRangeChanged="@(range => DateRangeChanged(range))"
-                         MonthCellMinHeight="115"
-                         Items="_previewItems"/>
-        </MudCard>
-    }
+            <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
+                <MudCard>
+                    <MudCardContent>
+                        <MudGrid Justify="Justify.FlexStart" Class="mt-3">
+                            @foreach (int day in Enumerable.Range(1, 31))
+                            {
+                                <MudItem xs="3">
+                                    <MudCheckBox T="bool" Label="@day.ToString()"
+                                                 Value="@(_selectedItem.DaysOfMonth.Contains(day))"
+                                                 ValueChanged="@((bool c) => DayOfMonthChanged(day, c))"/>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllDaysOfMonth())">
+                            All
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoDaysOfMonth())">
+                            None
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+            <div style="flex-grow: 1; max-width: 400px;">
+                <MudCard>
+                    <MudCardContent>
+                        <MudElement HtmlTag="div" Class="mt-3">
+                            <MudCheckBox T="bool" Label="@_dtf.GetMonthName(1)"
+                                         Value="@(_selectedItem.MonthsOfYear.Contains(1))"
+                                         ValueChanged="@((bool c) => MonthOfYearChanged(1, c))"/>
+                        </MudElement>
+                        @foreach (int month in Enumerable.Range(2, 11))
+                        {
+                            <MudElement HtmlTag="div" Class="mt-2">
+                                <MudCheckBox T="bool" Label="@_dtf.GetMonthName(month)"
+                                             Value="@(_selectedItem.MonthsOfYear.Contains(month))"
+                                             ValueChanged="@((bool c) => MonthOfYearChanged(month, c))"/>
+                            </MudElement>
+                        }
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectAllMonthsOfYear())">
+                            All
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(_ => SelectNoMonthsOfYear())">
+                            None
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        </div>
+    </EditForm>
+}
+else
+{
+    <MudCard Class="mt-4">
+        <MudCalendar ShowWeek="false"
+                     ShowDay="false"
+                     DateRangeChanged="@(range => DateRangeChanged(range))"
+                     MonthCellMinHeight="115"
+                     Items="_previewItems"/>
+    </MudCard>
+}
 </MudContainer>
 
 @code {
@@ -330,7 +330,7 @@
 
         _decoTemplateGroups.Clear();
         _decoTemplateGroups.AddRange(await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token));
-        
+
         List<PlayoutTemplateViewModel> results = await Mediator.Send(new GetPlayoutTemplates(Id), _cts.Token);
         _items = results.Map(ProjectToEditViewModel).ToList();
         if (_items.Count == 1)
@@ -380,7 +380,7 @@
         {
             await UpdateTemplateGroupItems(group);
         }
-        
+
         foreach (DecoTemplateGroupViewModel group in Optional(_decoTemplateGroups.Find(group => group.Id == _selectedItem?.DecoTemplate?.DecoTemplateGroupId)))
         {
             await UpdateDecoTemplateGroupItems(group);

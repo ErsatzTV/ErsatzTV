@@ -9,7 +9,7 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
     public void Configure(EntityTypeBuilder<Playlist> builder)
     {
         builder.ToTable("Playlist");
-        
+
         builder.HasIndex(d => new { d.PlaylistGroupId, d.Name })
             .IsUnique();
 
@@ -17,6 +17,5 @@ public class PlaylistConfiguration : IEntityTypeConfiguration<Playlist>
             .WithOne(pi => pi.Playlist)
             .HasForeignKey(pi => pi.PlaylistId)
             .OnDelete(DeleteBehavior.Cascade);
-        
     }
 }

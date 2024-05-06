@@ -433,7 +433,7 @@ public class PlexTelevisionLibraryScanner :
                 result.IsUpdated = true;
             }
         }
-        
+
         if (fullMetadata.SortTitle != existingMetadata.SortTitle || fullMetadata.Title != existingMetadata.Title)
         {
             existingMetadata.Title = fullMetadata.Title;

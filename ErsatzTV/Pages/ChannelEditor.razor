@@ -1,14 +1,14 @@
 ﻿@page "/channels/{Id:int?}"
 @page "/channels/add"
-@using static Prelude
+@using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Application.Images
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Templates
 @using ErsatzTV.Application.Watermarks
-@using ErsatzTV.Application.Channels
 @using ErsatzTV.Core.Domain.Filler
+@using static Prelude
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ChannelEditor> Logger

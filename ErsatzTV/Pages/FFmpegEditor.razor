@@ -1,13 +1,13 @@
 ﻿@page "/ffmpeg/{Id:int}"
 @page "/ffmpeg/add"
-@using Microsoft.Extensions.Caching.Memory
-@using ErsatzTV.Application.Resolutions
-@using ErsatzTV.Application.FFmpegProfiles
 @using System.Runtime.InteropServices
+@using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Application.Resolutions
 @using ErsatzTV.Core.FFmpeg
 @using ErsatzTV.FFmpeg
 @using ErsatzTV.FFmpeg.Format
 @using ErsatzTV.FFmpeg.Preset
+@using Microsoft.Extensions.Caching.Memory
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<FFmpegEditor> Logger
@@ -63,7 +63,7 @@
                                     <MudSelect Label="Profile"
                                                @bind-Value="_model.VideoProfile"
                                                For="@(() => _model.VideoProfile)"
-                                               Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || (_model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.None))"
+                                               Disabled="@(_model.VideoFormat != FFmpegProfileVideoFormat.H264 || _model.HardwareAcceleration != HardwareAccelerationKind.Nvenc && _model.HardwareAcceleration != HardwareAccelerationKind.Qsv && _model.HardwareAcceleration != HardwareAccelerationKind.None)"
                                                Clearable="true">
                                         <MudSelectItem Value="@VideoProfile.Main">main</MudSelectItem>
                                         <MudSelectItem Value="@VideoProfile.High">high</MudSelectItem>

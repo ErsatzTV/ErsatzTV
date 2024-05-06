@@ -38,7 +38,7 @@ public class PlexEtag
             {
                 bw.Write((byte)FieldKey.Key);
                 bw.Write(part.Key);
-                
+
                 bw.Write((byte)FieldKey.PartId);
                 bw.Write(part.Id);
 
@@ -219,7 +219,7 @@ public class PlexEtag
             {
                 bw.Write((byte)FieldKey.Key);
                 bw.Write(part.Key);
-                
+
                 bw.Write((byte)FieldKey.PartId);
                 bw.Write(part.Id);
 

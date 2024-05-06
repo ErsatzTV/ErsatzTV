@@ -22,7 +22,7 @@ public class EncoderH264Vaapi(Option<string> maybeVideoProfile, RateControlMode 
 
             result.Add("-sei");
             result.Add("-a53_cc");
-            
+
             foreach (string videoProfile in maybeVideoProfile)
             {
                 result.Add("-profile:v");

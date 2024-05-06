@@ -6,9 +6,8 @@ public static class AvailablePresets
 {
     public static ICollection<string> ForAccelAndFormat(
         HardwareAccelerationMode hardwareAccelerationMode,
-        string videoFormat)
-    {
-        return (hardwareAccelerationMode, videoFormat) switch
+        string videoFormat) =>
+        (hardwareAccelerationMode, videoFormat) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264 or VideoFormat.Hevc) =>
             [
@@ -27,5 +26,4 @@ public static class AvailablePresets
 
             _ => Array.Empty<string>()
         };
-    }
 }

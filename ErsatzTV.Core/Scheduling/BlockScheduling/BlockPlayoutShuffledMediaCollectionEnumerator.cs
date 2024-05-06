@@ -16,7 +16,7 @@ public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnu
         CollectionEnumeratorState state)
     {
         CurrentIncludeInProgramGuide = Option<bool>.None;
-        
+
         _mediaItems = mediaItems;
         _mediaItemCount = _mediaItems.Sum(i => 1 + Optional(i.Additional).Flatten().Count());
 

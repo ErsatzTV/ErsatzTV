@@ -52,7 +52,8 @@ public class PlexPathReplacementService : IPlexPathReplacementService
 
         foreach (PlexPathReplacement replacement in maybeReplacement)
         {
-            string finalPath = Regex.Replace(path,
+            string finalPath = Regex.Replace(
+                path,
                 Regex.Escape(replacement.PlexPath),
                 Regex.Replace(replacement.LocalPath ?? string.Empty, "\\$[0-9]+", @"$$$0"),
                 RegexOptions.IgnoreCase);

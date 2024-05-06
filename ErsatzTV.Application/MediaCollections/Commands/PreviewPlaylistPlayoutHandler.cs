@@ -46,7 +46,7 @@ public class PreviewPlaylistPlayoutHandler(
         playoutBuilder.DebugPlaylist = playout.ProgramSchedule.Items[0].Playlist;
         await playoutBuilder.Build(playout, PlayoutBuildMode.Reset, cancellationToken);
 
-        int maxItems = 0;
+        var maxItems = 0;
         Dictionary<PlaylistItem, List<MediaItem>> map =
             await mediaCollectionRepository.GetPlaylistItemMap(playout.ProgramSchedule.Items[0].Playlist);
         foreach (PlaylistItem item in playout.ProgramSchedule.Items[0].Playlist.Items)
@@ -94,7 +94,7 @@ public class PreviewPlaylistPlayoutHandler(
                 playoutItem.MediaItem = mediaItem;
             }
         }
-        
+
         return playout.Items.OrderBy(i => i.StartOffset).Map(Scheduling.Mapper.ProjectToViewModel).ToList();
     }
 

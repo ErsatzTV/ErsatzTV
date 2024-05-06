@@ -43,7 +43,7 @@
                                    HelperText="Disabled collections are already present in this multi collection">
                             @foreach (SmartCollectionViewModel collection in _smartCollections)
                             {
-                                <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.CollectionType == ProgramScheduleItemCollectionType.SmartCollection &&  i.Collection.Id == collection.Id))"
+                                <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.CollectionType == ProgramScheduleItemCollectionType.SmartCollection && i.Collection.Id == collection.Id))"
                                                Value="@collection">
                                     @collection.Name
                                 </MudSelectItem>

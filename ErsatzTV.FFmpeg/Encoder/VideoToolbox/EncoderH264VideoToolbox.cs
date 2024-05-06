@@ -6,7 +6,7 @@ public class EncoderH264VideoToolbox(Option<string> maybeVideoProfile) : Encoder
 {
     public override string Name => "h264_videotoolbox";
     public override StreamKind Kind => StreamKind.Video;
-    
+
     public override string[] OutputOptions
     {
         get
@@ -16,7 +16,7 @@ public class EncoderH264VideoToolbox(Option<string> maybeVideoProfile) : Encoder
                 return
                 [
                     "-c:v", Name,
-                    "-profile:v", videoProfile.ToLowerInvariant(),
+                    "-profile:v", videoProfile.ToLowerInvariant()
                 ];
             }
 

@@ -61,7 +61,7 @@ public class PlaylistItemEditViewModel : INotifyPropertyChanged
         ProgramScheduleItemCollectionType.Image => "Image",
         _ => string.Empty
     };
-    
+
     public string ItemName => CollectionType switch
     {
         ProgramScheduleItemCollectionType.Collection => Collection?.Name,

@@ -4,9 +4,9 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class SuperShuffle
 {
+    private readonly int userSID = 1;
     private int randR, halfN, rx, rkey;
     private int si, r1, r2, r3, r4;
-    private readonly int userSID = 1;
 
     public int Shuffle(int inx, int shuffleId, int listSize)
     {

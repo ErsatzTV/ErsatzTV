@@ -86,7 +86,8 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
 
         foreach (JellyfinPathReplacement replacement in maybeReplacement)
         {
-            string finalPath = Regex.Replace(path,
+            string finalPath = Regex.Replace(
+                path,
                 Regex.Escape(replacement.JellyfinPath),
                 Regex.Replace(replacement.LocalPath ?? string.Empty, "\\$[0-9]+", @"$$$0"),
                 RegexOptions.IgnoreCase);

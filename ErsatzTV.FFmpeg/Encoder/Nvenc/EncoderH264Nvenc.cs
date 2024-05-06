@@ -12,7 +12,7 @@ public class EncoderH264Nvenc(Option<string> maybeVideoProfile, Option<string> m
         get
         {
             var result = new List<string>(base.OutputOptions);
-            
+
             foreach (string videoProfile in maybeVideoProfile)
             {
                 result.Add("-profile:v");
