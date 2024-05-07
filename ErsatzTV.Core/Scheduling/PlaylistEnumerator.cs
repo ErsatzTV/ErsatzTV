@@ -59,7 +59,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
 
         State.Index += 1;
-        if (_remainingMediaItemIds.Count == 0)
+        if (_remainingMediaItemIds.Count == 0 && _enumeratorIndex == 0 && _sortedEnumerators[0].State.Index == 0)
         {
             State.Index = 0;
             _remainingMediaItemIds.UnionWith(_allMediaItemIds);
