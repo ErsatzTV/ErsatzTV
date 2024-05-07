@@ -647,7 +647,7 @@
     {
         _selectedItem = vm;
 
-        foreach (int playlistGroupId in Optional(_selectedItem.Playlist?.Id))
+        foreach (int playlistGroupId in Optional(_selectedItem.Playlist?.PlaylistGroupId))
         {
             foreach (PlaylistGroupViewModel group in Optional(_playlistGroups.Find(g => g.Id == playlistGroupId)))
             {

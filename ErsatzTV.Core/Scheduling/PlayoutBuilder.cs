@@ -481,7 +481,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 .ToList();
             List<ProgramScheduleItem> fakeScheduleItems = [];
 
-            // this will be used to clone a schedule item 
+            // this will be used to clone a schedule item
             MethodInfo generic = typeof(JsonConvert).GetMethods()
                 .FirstOrDefault(
                     x => x.Name.Equals("DeserializeObject", StringComparison.OrdinalIgnoreCase) && x.IsGenericMethod &&
