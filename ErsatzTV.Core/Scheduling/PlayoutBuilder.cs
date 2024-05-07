@@ -481,7 +481,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                 .ToList();
             List<ProgramScheduleItem> fakeScheduleItems = [];
 
-            // this will be used to clone a schedule item 
+            // this will be used to clone a schedule item
             MethodInfo generic = typeof(JsonConvert).GetMethods()
                 .FirstOrDefault(
                     x => x.Name.Equals("DeserializeObject", StringComparison.OrdinalIgnoreCase) && x.IsGenericMethod &&
@@ -562,7 +562,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         // find start anchor
         PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, scheduleItemsEnumerator);
-        // _logger.LogDebug("Start anchor: {@StartAnchor}", startAnchor);
+        _logger.LogDebug("Start anchor: {@StartAnchor}", startAnchor);
 
         // start at the previously-decided time
         DateTimeOffset currentTime = startAnchor.NextStartOffset.ToLocalTime();
@@ -951,7 +951,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         foreach (PlayoutProgramScheduleAnchor anchor in maybeAnchor)
         {
-            // _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
+            _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
 
             anchor.EnumeratorState ??= new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 };
 

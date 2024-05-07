@@ -7,6 +7,8 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class PlaylistEnumerator : IMediaCollectionEnumerator
 {
+    private readonly System.Collections.Generic.HashSet<int> _remainingMediaItemIds = [];
+    private System.Collections.Generic.HashSet<int> _allMediaItemIds;
     private int _enumeratorIndex;
     private System.Collections.Generic.HashSet<int> _idsToIncludeInEPG;
     private IList<bool> _playAll;
@@ -37,12 +39,17 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public int Count { get; private set; }
+    public int Count => throw new NotSupportedException("Count isn't used for playlist enumeration");
 
     public Option<TimeSpan> MinimumDuration { get; private set; }
 
     public void MoveNext()
     {
+        foreach (MediaItem maybeMediaItem in _sortedEnumerators[_enumeratorIndex].Current)
+        {
+            _remainingMediaItemIds.Remove(maybeMediaItem.Id);
+        }
+
         _sortedEnumerators[_enumeratorIndex].MoveNext();
 
         // if we aren't playing all, or if we just finished playing all, move to the next enumerator
@@ -51,7 +58,12 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             _enumeratorIndex = (_enumeratorIndex + 1) % _sortedEnumerators.Count;
         }
 
-        State.Index = (State.Index + 1) % Count;
+        State.Index += 1;
+        if (_remainingMediaItemIds.Count == 0)
+        {
+            State.Index = 0;
+            _remainingMediaItemIds.UnionWith(_allMediaItemIds);
+        }
     }
 
     public static async Task<PlaylistEnumerator> Create(
@@ -64,19 +76,21 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         {
             _sortedEnumerators = [],
             _playAll = [],
-            _idsToIncludeInEPG = [],
-            Count = LCM(playlistItemMap.Values.Map(v => v.Count)) * playlistItemMap.Count
+            _idsToIncludeInEPG = []
         };
 
         // collections should share enumerators
         var enumeratorMap = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+        result._allMediaItemIds = [];
 
         foreach (PlaylistItem playlistItem in playlistItemMap.Keys.OrderBy(i => i.Index))
         {
             List<MediaItem> items = playlistItemMap[playlistItem];
-            if (playlistItem.IncludeInProgramGuide)
+            foreach (MediaItem mediaItem in items)
             {
-                foreach (MediaItem mediaItem in items)
+                result._allMediaItemIds.Add(mediaItem.Id);
+
+                if (playlistItem.IncludeInProgramGuide)
                 {
                     result._idsToIncludeInEPG.Add(mediaItem.Id);
                 }
@@ -141,6 +155,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             }
         }
 
+        result._remainingMediaItemIds.UnionWith(result._allMediaItemIds);
+
         result.MinimumDuration = playlistItemMap.Values
             .Flatten()
             .Bind(i => i.GetNonZeroDuration())
@@ -150,34 +166,17 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         result.State = new CollectionEnumeratorState { Seed = state.Seed };
         result._enumeratorIndex = 0;
 
-        // TODO: how do we end up with index > count?
-        if (state.Index < result.Count)
+        // this was a bug when playlist enumerators were first added; shouldn't happen anymore
+        if (state.Index < 0)
         {
-            while (result.State.Index < state.Index)
-            {
-                result.MoveNext();
-            }
+            state.Index = 0;
+        }
+
+        while (result.State.Index < state.Index)
+        {
+            result.MoveNext();
         }
 
         return result;
-    }
-
-    private static int LCM(IEnumerable<int> numbers) => numbers.Aggregate(lcm);
-
-    private static int lcm(int a, int b) => Math.Abs(a * b) / GCD(a, b);
-
-    private static int GCD(int a, int b)
-    {
-        while (true)
-        {
-            if (b == 0)
-            {
-                return a;
-            }
-
-            int a1 = a;
-            a = b;
-            b = a1 % b;
-        }
     }
 }
