@@ -438,6 +438,8 @@ public class Startup
             TvContext.CaseInsensitiveCollation = "utf8mb4_general_ci";
         }
 
+        Log.Logger.Information("Transcode folder is {Folder}", FileSystemLayout.TranscodeFolder);
+
         services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<GetAllChannels>());
 
         services.AddRefitClient<IPlexTvApi>()

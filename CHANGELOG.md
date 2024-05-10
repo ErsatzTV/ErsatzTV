@@ -58,6 +58,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - Every episode from Show 2 Season 3
       - Every episode from Show 1 Season 3
   - Playlist items with fewer media items will be re-shuffled (if applicable) before those with more media items
+- Add two new environment variables to customize config and transcode folder locations
+  - `ETV_CONFIG_FOLDER`
+  - `ETV_TRANSCODE_FOLDER`
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help
@@ -95,6 +98,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Serving playlists with gzip compression
 - Use `HLS Segmenter V2` for channel preview when channel is configured for `HLS Segmenter V2`
 - Detect and use `/dev/dri/card*` devices in addition to `/dev/dri/render*` devices
+- Change default folder locations in docker using new environment variables
+    - `ETV_CONFIG_FOLDER` - now defaults to `/config`
+    - `ETV_TRANSCODE_FOLDER` - now defaults to `/transcode`
+    - If the old locations are still present in docker, these variables will be ignored, so you can migrate at your own pace
+      - Old config location: `/root/.local/share/ersatztv`
+      - Old transcode location: `/root/.local/share/etv-transcode`
 
 ## [0.8.6-beta] - 2024-04-03
 ### Added

@@ -10,7 +10,9 @@
         ports:
             - "8409:8409"
         volumes:
-            - ersatztv:/root/.local/share/ersatztv
+            - ersatztv:/config
             #- /media/shared:/media/shared:ro
+        tmpfs:
+            - /transcode
 volumes:
     ersatztv:
