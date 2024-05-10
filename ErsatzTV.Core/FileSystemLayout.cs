@@ -20,31 +20,48 @@ public static class FileSystemLayout
         string customConfigFolder = Environment.GetEnvironmentVariable("ETV_CONFIG_FOLDER");
         bool useCustomConfigFolder = !string.IsNullOrWhiteSpace(customConfigFolder);
 
-        if (!string.IsNullOrWhiteSpace(customConfigFolder))
+        if (useCustomConfigFolder && isDocker)
         {
-            if (isDocker)
+            // check for config at old location
+            if (Directory.Exists(defaultConfigFolder))
             {
-                // check for config at old location
-                if (Directory.Exists(defaultConfigFolder))
-                {
-                    // ignore custom config folder
-                    useCustomConfigFolder = false;
-                }
+                Serilog.Log.Logger.Warning(
+                    "Ignoring ETV_CONFIG_FOLDER {Folder} and using default {Default}",
+                    customConfigFolder,
+                    defaultConfigFolder);
+
+                // ignore custom config folder
+                useCustomConfigFolder = false;
             }
         }
 
-        AppDataFolder = useCustomConfigFolder
-            ? customConfigFolder
-            : Path.Combine(
-                Environment.GetFolderPath(
-                    Environment.SpecialFolder.LocalApplicationData,
-                    Environment.SpecialFolderOption.DoNotVerify),
-                "ersatztv");
+        AppDataFolder = useCustomConfigFolder ? customConfigFolder : defaultConfigFolder;
 
-        if (!Directory.Exists(AppDataFolder))
+        string defaultTranscodeFolder = Path.Combine(
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData,
+                Environment.SpecialFolderOption.DoNotVerify),
+            "etv-transcode");
+
+        string customTranscodeFolder = Environment.GetEnvironmentVariable("ETV_TRANSCODE_FOLDER");
+        bool useCustomTranscodeFolder = !string.IsNullOrWhiteSpace(customTranscodeFolder);
+
+        if (useCustomTranscodeFolder && isDocker)
         {
-            Directory.CreateDirectory(AppDataFolder);
+            // check for config at old location
+            if (Directory.Exists(defaultTranscodeFolder))
+            {
+                Serilog.Log.Logger.Warning(
+                    "Ignoring ETV_TRANSCODE_FOLDER {Folder} and using default {Default}",
+                    customTranscodeFolder,
+                    defaultTranscodeFolder);
+
+                // ignore custom config folder
+                useCustomTranscodeFolder = false;
+            }
         }
+
+        TranscodeFolder = useCustomTranscodeFolder ? customTranscodeFolder : defaultTranscodeFolder;
 
         DataProtectionFolder = Path.Combine(AppDataFolder, "data-protection");
         LogsFolder = Path.Combine(AppDataFolder, "logs");
@@ -94,12 +111,7 @@ public static class FileSystemLayout
 
     public static readonly string AppDataFolder;
 
-    // TODO: find a different spot for this; configurable?
-    public static readonly string TranscodeFolder = Path.Combine(
-        Environment.GetFolderPath(
-            Environment.SpecialFolder.LocalApplicationData,
-            Environment.SpecialFolderOption.Create),
-        "etv-transcode");
+    public static readonly string TranscodeFolder;
 
     public static readonly string DataProtectionFolder;
     public static readonly string LogsFolder;
