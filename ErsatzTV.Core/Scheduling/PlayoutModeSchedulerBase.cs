@@ -243,7 +243,41 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         List<MediaChapter> effectiveChapters = chapters;
         if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll) || effectiveChapters.Count <= 1)
         {
-            effectiveChapters = new List<MediaChapter>();
+            effectiveChapters = [];
+        }
+
+        // convert mid-roll to post-roll if we have no chapters
+        if (allFiller.Any(f => f.FillerKind is FillerKind.MidRoll) && effectiveChapters.Count == 0)
+        {
+            Logger.LogInformation(
+                "Converting mid-roll filler preset to post-roll for content that has no chapter markers");
+
+            var toRemove = allFiller.Filter(f => f.FillerKind is FillerKind.MidRoll).ToList();
+            allFiller.RemoveAll(toRemove.Contains);
+
+            foreach (FillerPreset midRollFiller in toRemove)
+            {
+                var clone = new FillerPreset
+                {
+                    FillerKind = FillerKind.PostRoll,
+                    FillerMode = midRollFiller.FillerMode,
+                    Duration = midRollFiller.Duration,
+                    Count = midRollFiller.Count,
+                    PadToNearestMinute = midRollFiller.PadToNearestMinute,
+                    AllowWatermarks = midRollFiller.AllowWatermarks,
+                    CollectionType = midRollFiller.CollectionType,
+                    CollectionId = midRollFiller.CollectionId,
+                    Collection = midRollFiller.Collection,
+                    MediaItemId = midRollFiller.MediaItemId,
+                    MediaItem = midRollFiller.MediaItem,
+                    MultiCollectionId = midRollFiller.MultiCollectionId,
+                    MultiCollection = midRollFiller.MultiCollection,
+                    SmartCollectionId = midRollFiller.SmartCollectionId,
+                    SmartCollection = midRollFiller.SmartCollection
+                };
+
+                allFiller.Add(clone);
+            }
         }
 
         foreach (FillerPreset filler in allFiller.Filter(
@@ -395,10 +429,11 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
             TimeSpan remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
 
-            // _logger.LogInformation(
-            //     "Total duration {TotalDuration}; need to fill {TimeSpan} to pad properly to {TargetTime}",
+            // Logger.LogInformation(
+            //     "Total duration {TotalDuration}; need to fill {TimeSpan} to pad properly from {StartTime} to {TargetTime}",
             //     totalDuration,
             //     remainingToFill,
+            //     playoutItem.StartOffset,
             //     targetTime);
 
             switch (padFiller.FillerKind)
