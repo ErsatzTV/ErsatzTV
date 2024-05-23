@@ -9,7 +9,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
     private const string BundledVersion = "7.0";
-    private const string BundledVersionVaapi = "6.1";
+    private const string BundledVersionVaapi = "7.0";
     private const string WindowsVersionPrefix = "n6.1";
 
     private static readonly string[] FFmpegVersionArguments = { "-version" };
