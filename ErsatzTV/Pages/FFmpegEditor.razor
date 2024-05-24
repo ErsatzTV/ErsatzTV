@@ -84,6 +84,9 @@
                                             }
                                         }
                                     </MudSelect>
+                                    <MudElement HtmlTag="div" Class="mt-3">
+                                        <MudCheckBox Label="Allow B-Frames" @bind-Value="@_model.AllowBFrames" For="@(() => _model.AllowBFrames)"/>
+                                    </MudElement>
                                     <MudSelect Label="Bit Depth" @bind-Value="_model.BitDepth" For="@(() => _model.BitDepth)">
                                         <MudSelectItem Value="@FFmpegProfileBitDepth.EightBit">8-bit</MudSelectItem>
                                         <MudSelectItem Value="@FFmpegProfileBitDepth.TenBit">10-bit</MudSelectItem>

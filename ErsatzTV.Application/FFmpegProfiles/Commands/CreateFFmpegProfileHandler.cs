@@ -56,6 +56,7 @@ public class CreateFFmpegProfileHandler :
                 VideoFormat = request.VideoFormat,
                 VideoProfile = request.VideoProfile,
                 VideoPreset = request.VideoPreset,
+                AllowBFrames = request.AllowBFrames,
                 BitDepth = request.BitDepth,
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,

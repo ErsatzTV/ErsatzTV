@@ -2,6 +2,7 @@
 using ErsatzTV.Application.Resolutions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
+using LanguageExt.ClassInstances;
 
 namespace ErsatzTV.ViewModels;
 
@@ -35,6 +36,7 @@ public class FFmpegProfileEditViewModel
         VideoFormat = viewModel.VideoFormat;
         VideoProfile = viewModel.VideoProfile;
         VideoPreset = viewModel.VideoPreset;
+        AllowBFrames = viewModel.AllowBFrames;
         BitDepth = viewModel.BitDepth;
     }
 
@@ -60,6 +62,7 @@ public class FFmpegProfileEditViewModel
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
     public string VideoProfile { get; set; }
     public string VideoPreset { get; set; }
+    public bool AllowBFrames { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }
 
     public CreateFFmpegProfile ToCreate() =>
@@ -75,6 +78,7 @@ public class FFmpegProfileEditViewModel
             VideoFormat,
             VideoProfile,
             VideoPreset,
+            AllowBFrames,
             BitDepth,
             VideoBitrate,
             VideoBufferSize,
@@ -102,6 +106,7 @@ public class FFmpegProfileEditViewModel
             VideoFormat,
             VideoProfile,
             VideoPreset,
+            AllowBFrames,
             BitDepth,
             VideoBitrate,
             VideoBufferSize,

@@ -17,6 +17,7 @@ public record FFmpegProfile
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
     public string VideoProfile { get; set; }
     public string VideoPreset { get; set; }
+    public bool AllowBFrames { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
@@ -39,6 +40,7 @@ public record FFmpegProfile
             VideoFormat = FFmpegProfileVideoFormat.H264,
             VideoProfile = "high",
             VideoPreset = ErsatzTV.FFmpeg.Preset.VideoPreset.Unset,
+            AllowBFrames = false,
             AudioFormat = FFmpegProfileAudioFormat.Aac,
             VideoBitrate = 2000,
             VideoBufferSize = 4000,

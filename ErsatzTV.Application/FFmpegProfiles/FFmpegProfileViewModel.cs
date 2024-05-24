@@ -17,6 +17,7 @@ public record FFmpegProfileViewModel(
     FFmpegProfileVideoFormat VideoFormat,
     string VideoProfile,
     string VideoPreset,
+    bool AllowBFrames,
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,
