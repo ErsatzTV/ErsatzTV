@@ -2,7 +2,6 @@
 using ErsatzTV.Application.Resolutions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
-using LanguageExt.ClassInstances;
 
 namespace ErsatzTV.ViewModels;
 
