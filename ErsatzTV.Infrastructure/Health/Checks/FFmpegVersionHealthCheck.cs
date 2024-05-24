@@ -10,7 +10,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 {
     private const string BundledVersion = "7.0";
     private const string BundledVersionVaapi = "7.0";
-    private const string WindowsVersionPrefix = "n6.1";
+    private const string WindowsVersionPrefix = "n7.0";
 
     private static readonly string[] FFmpegVersionArguments = { "-version" };
 
