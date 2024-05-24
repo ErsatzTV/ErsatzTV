@@ -579,6 +579,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AllowBFrames")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("AudioBitrate")
                         .HasColumnType("int");
 

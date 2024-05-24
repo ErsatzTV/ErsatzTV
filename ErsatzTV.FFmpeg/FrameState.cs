@@ -8,6 +8,7 @@ public record FrameState(
     string VideoFormat,
     Option<string> VideoProfile,
     Option<string> VideoPreset,
+    bool AllowBFrames,
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,

@@ -174,7 +174,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             new ClosedGopOutputOption()
         };
 
-        if (desiredState.VideoFormat != VideoFormat.Copy)
+        if (desiredState.VideoFormat != VideoFormat.Copy && !desiredState.AllowBFrames)
         {
             pipelineSteps.Add(new NoBFramesOutputOption());
         }

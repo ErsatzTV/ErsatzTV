@@ -61,6 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add two new environment variables to customize config and transcode folder locations
   - `ETV_CONFIG_FOLDER`
   - `ETV_TRANSCODE_FOLDER`
+- Add checkbox to allow use of B-frames in FFmpeg Profile (disabled by default)
 
 ### Fixed
 - Fix some cases of 404s from Plex when files were replaced and scanning the library from ETV didn't help
