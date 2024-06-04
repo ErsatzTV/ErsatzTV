@@ -17,6 +17,7 @@ public record AudioStream(int Index, string Codec, int Channels) : MediaStream(
 public record VideoStream(
     int Index,
     string Codec,
+    string Profile,
     Option<IPixelFormat> PixelFormat,
     ColorParams ColorParams,
     FrameSize FrameSize,

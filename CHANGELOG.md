@@ -89,6 +89,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Erasing block playout history will also generate new random seeds for the playout
 - Fix building playouts that use mid-roll filler and have content without chapter markers
   - When this happens, mid-roll will be treated as post-roll
+- Fix decoder capability check
+  - This caused some streams to incorrectly use software decoding
 
 ### Changed
 - Use ffmpeg 7 in all docker images

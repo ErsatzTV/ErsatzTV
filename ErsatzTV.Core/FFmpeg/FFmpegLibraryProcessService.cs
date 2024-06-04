@@ -178,6 +178,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
             videoStream.Codec,
+            videoStream.Profile,
             Some(pixelFormat),
             new ColorParams(
                 videoStream.ColorRange,
@@ -495,6 +496,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var ffmpegVideoStream = new VideoStream(
             0,
             VideoFormat.GeneratedImage,
+            string.Empty,
             new PixelFormatUnknown(), // leave this unknown so we convert to desired yuv420p
             ColorParams.Default,
             new FrameSize(videoVersion.Width, videoVersion.Height),
@@ -641,6 +643,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var ffmpegVideoStream = new VideoStream(
             0,
             VideoFormat.Raw,
+            string.Empty,
             Some(pixelFormat),
             ColorParams.Default,
             resolution,
@@ -790,6 +793,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 new(
                     0,
                     string.Empty,
+                    string.Empty,
                     None,
                     ColorParams.Default,
                     FrameSize.Unknown,
@@ -873,6 +877,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                 new(
                                     options.ImageStreamIndex.IfNone(0),
                                     "unknown",
+                                    string.Empty,
                                     new PixelFormatUnknown(),
                                     ColorParams.Default,
                                     new FrameSize(1, 1),
