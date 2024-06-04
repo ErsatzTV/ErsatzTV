@@ -32,6 +32,7 @@ public class PipelineBuilderBaseTests
                 new(
                     0,
                     VideoFormat.H264,
+                    VideoProfile.Main,
                     new PixelFormatYuv420P(),
                     ColorParams.Default,
                     new FrameSize(1920, 1080),
@@ -124,6 +125,7 @@ public class PipelineBuilderBaseTests
                 new(
                     0,
                     VideoFormat.H264,
+                    VideoProfile.Main,
                     new PixelFormatYuv420P(),
                     ColorParams.Default,
                     new FrameSize(1920, 1080),
@@ -272,6 +274,7 @@ public class PipelineBuilderBaseTests
                 new(
                     0,
                     VideoFormat.H264,
+                    VideoProfile.Main,
                     new PixelFormatYuv420P(),
                     ColorParams.Default,
                     new FrameSize(1920, 1080),
@@ -368,6 +371,7 @@ public class PipelineBuilderBaseTests
                 new(
                     0,
                     VideoFormat.H264,
+                    VideoProfile.Main,
                     new PixelFormatYuv420P(),
                     ColorParams.Default,
                     new FrameSize(1920, 1080),
@@ -453,6 +457,7 @@ public class PipelineBuilderBaseTests
             {
                 new(
                     0,
+                    string.Empty,
                     string.Empty,
                     Option<IPixelFormat>.None,
                     ColorParams.Default,

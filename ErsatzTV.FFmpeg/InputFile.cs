@@ -17,6 +17,7 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
         new VideoStream(
             0,
             string.Empty,
+            string.Empty,
             Option<IPixelFormat>.None,
             ColorParams.Default,
             Resolution,

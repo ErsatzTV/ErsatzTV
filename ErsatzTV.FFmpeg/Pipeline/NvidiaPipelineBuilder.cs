@@ -58,7 +58,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
     {
         FFmpegCapability decodeCapability = _hardwareCapabilities.CanDecode(
             videoStream.Codec,
-            desiredState.VideoProfile,
+            videoStream.Profile,
             videoStream.PixelFormat);
         FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
