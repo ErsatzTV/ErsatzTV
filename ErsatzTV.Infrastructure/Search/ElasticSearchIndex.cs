@@ -46,7 +46,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 43;
+    public int Version => 44;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -908,6 +908,11 @@ public class ElasticSearchIndex : ISearchIndex
                 foreach (IPixelFormat pixelFormat in maybePixelFormat)
                 {
                     doc.VideoBitDepth = pixelFormat.BitDepth;
+                }
+
+                if (maybePixelFormat.IsNone && videoStream.BitsPerRawSample > 0)
+                {
+                    doc.VideoBitDepth = videoStream.BitsPerRawSample;
                 }
 
                 var colorParams = new ColorParams(
