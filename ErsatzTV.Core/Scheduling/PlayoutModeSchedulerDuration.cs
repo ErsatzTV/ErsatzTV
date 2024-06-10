@@ -21,7 +21,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         CancellationToken cancellationToken)
     {
         // Logger.LogDebug(
-        //     "DurationSchedule: {CurrentTime} {DurationFinish} {InDurationFiller} {HardStop}",
+        //     "DurationSchedule: {ItemId} {CurrentTime} {DurationFinish} {InDurationFiller} {HardStop}",
+        //     scheduleItem.Id,
         //     playoutBuilderState.CurrentTime,
         //     playoutBuilderState.DurationFinish,
         //     playoutBuilderState.InDurationFiller,
