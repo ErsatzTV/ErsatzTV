@@ -91,6 +91,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - When this happens, mid-roll will be treated as post-roll
 - Fix VAAPI decoder capability check
   - This caused some streams to incorrectly use software decoding
+- Fix scheduling loop/failure caused by some duration schedule items
 
 ### Changed
 - Use ffmpeg 7 in all docker images

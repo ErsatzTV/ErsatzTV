@@ -425,6 +425,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.ProgramScheduleAlternates,
             playoutStart);
 
+        // _logger.LogDebug("Active schedule is: {Schedule}", activeSchedule.Name);
+
         // random start points are disabled in some scenarios, so ensure it's enabled and active
         randomStartPoint = randomStartPoint && activeSchedule.RandomStartPoint;
 
@@ -562,6 +564,16 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         // find start anchor
         PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, scheduleItemsEnumerator);
+
+        // clear duration finish if it has already passed
+        foreach (DateTimeOffset durationFinish in startAnchor.DurationFinishOffset)
+        {
+            if (durationFinish < startAnchor.NextStartOffset)
+            {
+                startAnchor.DurationFinish = null;
+            }
+        }
+
         // _logger.LogDebug("Start anchor: {@StartAnchor}", startAnchor);
 
         // start at the previously-decided time
@@ -723,7 +735,11 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         foreach (DateTimeOffset durationFinish in playoutBuilderState.DurationFinish)
         {
-            playout.Anchor.DurationFinish = durationFinish.UtcDateTime;
+            // don't save duration finish if it already passed
+            if (durationFinish > playout.Anchor.NextStartOffset)
+            {
+                playout.Anchor.DurationFinish = durationFinish.UtcDateTime;
+            }
         }
 
         // build program schedule anchors
