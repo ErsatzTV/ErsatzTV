@@ -110,7 +110,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 43;
+    public int Version => 44;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -1393,6 +1393,11 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 foreach (IPixelFormat pixelFormat in maybePixelFormat)
                 {
                     doc.Add(new Int32Field(VideoBitDepthField, pixelFormat.BitDepth, Field.Store.NO));
+                }
+
+                if (maybePixelFormat.IsNone && videoStream.BitsPerRawSample > 0)
+                {
+                    doc.Add(new Int32Field(VideoBitDepthField, videoStream.BitsPerRawSample, Field.Store.NO));
                 }
 
                 var colorParams = new ColorParams(
