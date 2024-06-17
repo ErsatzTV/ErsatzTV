@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -92,6 +92,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix VAAPI decoder capability check
   - This caused some streams to incorrectly use software decoding
 - Fix scheduling loop/failure caused by some duration schedule items
+- Fix `video_bit_depth` search field for Plex media
+- Fix template and deco template editors with MariaDB/MySql backend
 
 ### Changed
 - Use ffmpeg 7 in all docker images

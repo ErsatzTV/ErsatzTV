@@ -174,11 +174,7 @@
 
         foreach (DecoTemplateViewModel template in maybeDecoTemplate)
         {
-            _decoTemplate = new DecoTemplateItemsEditViewModel
-            {
-                Name = template.Name,
-                Items = []
-            };
+            _decoTemplate = new DecoTemplateItemsEditViewModel { Name = template.Name };
         }
 
         Option<IEnumerable<DecoTemplateItemViewModel>> maybeResults = await Mediator.Send(new GetDecoTemplateItems(Id), _cts.Token);

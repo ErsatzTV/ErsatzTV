@@ -112,7 +112,7 @@
     public int Id { get; set; }
 
     private TemplateItemsEditViewModel _template = new();
-    private TemplateItemEditViewModel _blockToRemove;
+    private TemplateItemEditViewModel _blockToRemove = new();
     private BlockGroupViewModel _selectedBlockGroup;
     private BlockViewModel _selectedBlock;
     private DateTime _selectedBlockStart;
@@ -147,11 +147,7 @@
 
         foreach (TemplateViewModel template in maybeTemplate)
         {
-            _template = new TemplateItemsEditViewModel
-            {
-                Name = template.Name,
-                Items = []
-            };
+            _template = new TemplateItemsEditViewModel { Name = template.Name };
         }
 
         Option<IEnumerable<TemplateItemViewModel>> maybeResults = await Mediator.Send(new GetTemplateItems(Id), _cts.Token);
