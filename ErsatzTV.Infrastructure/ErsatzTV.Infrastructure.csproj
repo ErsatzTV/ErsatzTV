@@ -14,7 +14,7 @@
       <PackageReference Include="CliWrap" Version="3.6.6" />
       <PackageReference Include="Dapper" Version="2.1.35" />
       <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.13.12" />
-      <PackageReference Include="Jint" Version="3.1.1" />
+      <PackageReference Include="Jint" Version="3.1.3" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00016" />
