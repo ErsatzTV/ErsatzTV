@@ -96,7 +96,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix template and deco template editors with MariaDB/MySql backend
 
 ### Changed
-- Use ffmpeg 7 in all docker images
 - Show health checks at top of home page; scroll release notes if needed
 - Improve `HLS Segmenter V2` compliance by:
   - Serving fmp4 segments when `hevc` video format is selected

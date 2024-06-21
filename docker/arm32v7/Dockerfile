@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-arm32v7 AS dotnet-runtime
 
-FROM jasongdove/ersatztv-ffmpeg:7.0-arm AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:6.1-arm AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 
 # https://hub.docker.com/_/microsoft-dotnet
