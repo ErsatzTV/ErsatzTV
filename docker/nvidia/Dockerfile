@@ -1,4 +1,4 @@
-﻿FROM jasongdove/ersatztv-ffmpeg:7.0-nvidia AS runtime-base
+﻿FROM jasongdove/ersatztv-ffmpeg:6.1-nvidia AS runtime-base
 
 RUN wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
