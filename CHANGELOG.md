@@ -94,6 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix scheduling loop/failure caused by some duration schedule items
 - Fix `video_bit_depth` search field for Plex media
 - Fix template and deco template editors with MariaDB/MySql backend
+- Fix transcoding 10-bit source content using QSV acceleration on Windows
 
 ### Changed
 - Show health checks at top of home page; scroll release notes if needed
