@@ -572,11 +572,18 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
     {
         IPipelineFilterStep scaleStep;
 
-        if (currentState.ScaledSize != desiredState.ScaledSize && ffmpegState is
-            {
-                DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
-                EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
-            } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false })
+        bool useSoftwareFilter = ffmpegState is
+        {
+            DecoderHardwareAccelerationMode: HardwareAccelerationMode.None,
+            EncoderHardwareAccelerationMode: HardwareAccelerationMode.None
+        } && context is { HasWatermark: false, HasSubtitleOverlay: false, ShouldDeinterlace: false };
+
+        // auto_scale filter seems to muck up 10-bit software decode => hardware scale, so use software scale in that case
+        useSoftwareFilter = useSoftwareFilter ||
+                            (ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
+                             OperatingSystem.IsWindows() && currentState.BitDepth == 10);
+
+        if (currentState.ScaledSize != desiredState.ScaledSize && useSoftwareFilter)
         {
             scaleStep = new ScaleFilter(
                 currentState,
