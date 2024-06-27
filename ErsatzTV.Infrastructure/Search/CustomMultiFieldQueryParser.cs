@@ -96,7 +96,7 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         }
 
         // assume asterisk always means wildcard
-        if (queryText.Contains('*'))
+        if (queryText.Contains('*') && queryText.Contains(' '))
         {
             var parser = new ComplexPhraseQueryParser(_matchVersion, LuceneSearchIndex.TitleField, _analyzer)
             {
