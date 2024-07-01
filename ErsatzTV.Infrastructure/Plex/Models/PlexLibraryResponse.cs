@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.Infrastructure.Plex.Models;
+namespace ErsatzTV.Infrastructure.Plex.Models;
 
 public class PlexLibraryResponse
 {
@@ -8,4 +8,5 @@ public class PlexLibraryResponse
     public string Agent { get; set; }
     public int Hidden { get; set; }
     public string Uuid { get; set; }
+    public string Language { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -63,6 +63,7 @@ public class TvContext : DbContext
     public DbSet<Episode> Episodes { get; set; }
     public DbSet<EpisodeMetadata> EpisodeMetadata { get; set; }
     public DbSet<PlexMovie> PlexMovies { get; set; }
+    public DbSet<PlexOtherVideo> PlexOtherVideos { get; set; }
     public DbSet<PlexShow> PlexShows { get; set; }
     public DbSet<PlexSeason> PlexSeasons { get; set; }
     public DbSet<PlexEpisode> PlexEpisodes { get; set; }
