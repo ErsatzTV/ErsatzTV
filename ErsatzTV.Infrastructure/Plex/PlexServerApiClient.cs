@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
+using J2N.Collections.Generic.Extensions;
 using Microsoft.Extensions.Logging;
 using Refit;
 
@@ -129,7 +130,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                 .Map(
                     r => r.MediaContainer.Metadata.Filter(
                         m => m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
-                .Map(list => list.Map(metadata => ProjectToOtherVideo(metadata, library.MediaSourceId)));
+                .Map(list => list.Map(metadata => ProjectToOtherVideo(metadata, library.MediaSourceId, library)));
         }
 
         return GetPagedLibraryContents(connection, CountItems, GetItems);
@@ -272,7 +273,8 @@ public class PlexServerApiClient : IPlexServerApiClient
         int plexMediaSourceId,
         string key,
         PlexConnection connection,
-        PlexServerAuthToken token)
+        PlexServerAuthToken token,
+        PlexLibrary library)
     {
         try
         {
@@ -289,7 +291,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                     Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
                     return maybeVersion.Match<Either<BaseError, Tuple<OtherVideoMetadata, MediaVersion>>>(
                         version => Tuple(
-                            ProjectToOtherVideoMetadata(version, response.Metadata, plexMediaSourceId),
+                            ProjectToOtherVideoMetadata(version, response.Metadata, plexMediaSourceId, library),
                             version),
                         () => BaseError.New("Unable to locate metadata"));
                 },
@@ -1102,7 +1104,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             EndTime = TimeSpan.FromMilliseconds(chapter.EndTimeOffset)
         };
 
-    private PlexOtherVideo ProjectToOtherVideo(PlexMetadataResponse response, int mediaSourceId)
+    private PlexOtherVideo ProjectToOtherVideo(PlexMetadataResponse response, int mediaSourceId, PlexLibrary library)
     {
         PlexMediaResponse<PlexPartResponse> media = response.Media
             .Filter(media => media.Part.Count != 0)
@@ -1133,7 +1135,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Streams = new List<MediaStream>()
         };
 
-        OtherVideoMetadata metadata = ProjectToOtherVideoMetadata(version, response, mediaSourceId);
+        OtherVideoMetadata metadata = ProjectToOtherVideoMetadata(version, response, mediaSourceId, library);
 
         var otherVideo = new PlexOtherVideo
         {
@@ -1147,7 +1149,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return otherVideo;
     }
 
-    private OtherVideoMetadata ProjectToOtherVideoMetadata(MediaVersion version, PlexMetadataResponse response, int mediaSourceId)
+    private OtherVideoMetadata ProjectToOtherVideoMetadata(MediaVersion version, PlexMetadataResponse response, int mediaSourceId, PlexLibrary library)
     {
         DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
         DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
@@ -1243,6 +1245,19 @@ public class PlexServerApiClient : IPlexServerApiClient
 
             metadata.Artwork ??= new List<Artwork>();
             metadata.Artwork.Add(artwork);
+        }
+
+        //Path2Tags
+        if (!string.IsNullOrWhiteSpace(response.Media[0].Part[0].File))
+        {
+            string mediaPath = response.Media[0].Part[0].File;
+            string[] tokens = mediaPath.Split("/");
+            
+            tokens.Take(1)  // Removing the first token from the full path (empty on unix, drive on windows)
+                .Take(tokens.Length -1) // Ignoring last token (filename)
+                .Map(t => new Tag { Name = t })
+                .ToList()
+                .ForEach(tag => metadata.Tags.Add(tag));
         }
 
         return metadata;

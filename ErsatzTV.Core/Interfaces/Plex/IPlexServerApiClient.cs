@@ -66,7 +66,8 @@ public interface IPlexServerApiClient
         int plexMediaSourceId,
         string key,
         PlexConnection connection,
-        PlexServerAuthToken token);
+        PlexServerAuthToken token,
+        PlexLibrary library);
 
     Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
         int plexMediaSourceId,
