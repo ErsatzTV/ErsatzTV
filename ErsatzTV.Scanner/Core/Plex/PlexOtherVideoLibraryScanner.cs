@@ -129,7 +129,8 @@ public class PlexOtherVideoLibraryScanner :
                     library.MediaSourceId,
                     incoming.Key.Split("/").Last(),
                     connectionParameters.Connection,
-                    connectionParameters.Token)
+                    connectionParameters.Token,
+                    library)
                 .MapT(tuple => tuple.Item2); // drop the metadata part
 
         foreach (BaseError error in maybeVersion.LeftToSeq())
@@ -153,7 +154,8 @@ public class PlexOtherVideoLibraryScanner :
                 library.MediaSourceId,
                 incoming.Key.Split("/").Last(),
                 connectionParameters.Connection,
-                connectionParameters.Token);
+                connectionParameters.Token,
+                library);
 
         foreach (BaseError error in maybeResult.LeftToSeq())
         {
