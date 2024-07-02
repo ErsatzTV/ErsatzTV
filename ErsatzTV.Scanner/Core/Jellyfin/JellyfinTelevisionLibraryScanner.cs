@@ -73,18 +73,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
             cancellationToken);
     }
 
-    protected override Task<Either<BaseError, int>> CountShowLibraryItems(
-        JellyfinConnectionParameters connectionParameters,
-        JellyfinLibrary library)
-        => _jellyfinApiClient.GetLibraryItemCount(
-            connectionParameters.Address,
-            connectionParameters.ApiKey,
-            library,
-            library.ItemId,
-            JellyfinItemType.Show,
-            false);
-
-    protected override IAsyncEnumerable<JellyfinShow> GetShowLibraryItems(
+    protected override IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(
         JellyfinConnectionParameters connectionParameters,
         JellyfinLibrary library) =>
         _jellyfinApiClient.GetShowLibraryItems(connectionParameters.Address, connectionParameters.ApiKey, library);
@@ -97,19 +86,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
     protected override string MediaServerEtag(JellyfinSeason season) => season.Etag;
     protected override string MediaServerEtag(JellyfinEpisode episode) => episode.Etag;
 
-    protected override Task<Either<BaseError, int>> CountSeasonLibraryItems(
-        JellyfinConnectionParameters connectionParameters,
-        JellyfinLibrary library,
-        JellyfinShow show) =>
-        _jellyfinApiClient.GetLibraryItemCount(
-            connectionParameters.Address,
-            connectionParameters.ApiKey,
-            library,
-            show.ItemId,
-            JellyfinItemType.Season,
-            false);
-
-    protected override IAsyncEnumerable<JellyfinSeason> GetSeasonLibraryItems(
+    protected override IAsyncEnumerable<Tuple<JellyfinSeason, int>> GetSeasonLibraryItems(
         JellyfinLibrary library,
         JellyfinConnectionParameters connectionParameters,
         JellyfinShow show) =>
@@ -119,19 +96,7 @@ public class JellyfinTelevisionLibraryScanner : MediaServerTelevisionLibraryScan
             library,
             show.ItemId);
 
-    protected override Task<Either<BaseError, int>> CountEpisodeLibraryItems(
-        JellyfinConnectionParameters connectionParameters,
-        JellyfinLibrary library,
-        JellyfinSeason season) =>
-        _jellyfinApiClient.GetLibraryItemCount(
-            connectionParameters.Address,
-            connectionParameters.ApiKey,
-            library,
-            season.ItemId,
-            JellyfinItemType.Episode,
-            true);
-
-    protected override IAsyncEnumerable<JellyfinEpisode> GetEpisodeLibraryItems(
+    protected override IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItems(
         JellyfinLibrary library,
         JellyfinConnectionParameters connectionParameters,
         JellyfinShow show,

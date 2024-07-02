@@ -2,10 +2,10 @@
 
 public static class EmbyItemType
 {
-    public static readonly string Movie = "Movie";
-    public static readonly string Show = "Series";
-    public static readonly string Season = "Season";
-    public static readonly string Episode = "Episode";
-    public static readonly string Collection = "BoxSet";
-    public static readonly string CollectionItems = "Movie,Series,Season,Episode";
+    public const string Movie = "Movie";
+    public const string Show = "Series";
+    public const string Season = "Season";
+    public const string Episode = "Episode";
+    public const string Collection = "BoxSet";
+    public const string CollectionItems = "Movie,Series,Season,Episode";
 }

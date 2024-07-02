@@ -22,25 +22,6 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey);
 
-    [Get("/Items")]
-    public Task<JellyfinLibraryItemsResponse> GetLibraryStats(
-        [Header("X-Emby-Token")]
-        string apiKey,
-        [Query]
-        string userId,
-        [Query]
-        string parentId,
-        [Query]
-        string includeItemTypes,
-        [Query]
-        bool recursive = true,
-        [Query]
-        string filters = "IsNotFolder",
-        [Query]
-        int startIndex = 0,
-        [Query]
-        int limit = 0);
-
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<JellyfinLibraryItemsResponse> GetMovieLibraryItems(
         [Header("X-Emby-Token")]

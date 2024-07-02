@@ -130,15 +130,7 @@ public class PlexTelevisionLibraryScanner :
     //     }
     // }
 
-    protected override Task<Either<BaseError, int>> CountShowLibraryItems(
-        PlexConnectionParameters connectionParameters,
-        PlexLibrary library) =>
-        _plexServerApiClient.GetLibraryItemCount(
-            library,
-            connectionParameters.Connection,
-            connectionParameters.Token);
-
-    protected override IAsyncEnumerable<PlexShow> GetShowLibraryItems(
+    protected override IAsyncEnumerable<Tuple<PlexShow, int>> GetShowLibraryItems(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library) =>
         _plexServerApiClient.GetShowLibraryContents(
@@ -146,16 +138,7 @@ public class PlexTelevisionLibraryScanner :
             connectionParameters.Connection,
             connectionParameters.Token);
 
-    protected override Task<Either<BaseError, int>> CountSeasonLibraryItems(
-        PlexConnectionParameters connectionParameters,
-        PlexLibrary library,
-        PlexShow show) =>
-        _plexServerApiClient.CountShowSeasons(
-            show,
-            connectionParameters.Connection,
-            connectionParameters.Token);
-
-    protected override IAsyncEnumerable<PlexSeason> GetSeasonLibraryItems(
+    protected override IAsyncEnumerable<Tuple<PlexSeason, int>> GetSeasonLibraryItems(
         PlexLibrary library,
         PlexConnectionParameters connectionParameters,
         PlexShow show) =>
@@ -165,16 +148,7 @@ public class PlexTelevisionLibraryScanner :
             connectionParameters.Connection,
             connectionParameters.Token);
 
-    protected override Task<Either<BaseError, int>> CountEpisodeLibraryItems(
-        PlexConnectionParameters connectionParameters,
-        PlexLibrary library,
-        PlexSeason season) =>
-        _plexServerApiClient.CountSeasonEpisodes(
-            season,
-            connectionParameters.Connection,
-            connectionParameters.Token);
-
-    protected override IAsyncEnumerable<PlexEpisode> GetEpisodeLibraryItems(
+    protected override IAsyncEnumerable<Tuple<PlexEpisode, int>> GetEpisodeLibraryItems(
         PlexLibrary library,
         PlexConnectionParameters connectionParameters,
         PlexShow show,

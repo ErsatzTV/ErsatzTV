@@ -93,17 +93,15 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    public IAsyncEnumerable<JellyfinMovie> GetMovieLibraryItems(
+    public IAsyncEnumerable<Tuple<JellyfinMovie, int>> GetMovieLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library) =>
         GetPagedLibraryItems(
             address,
-            apiKey,
             library,
             library.MediaSourceId,
             library.ItemId,
-            JellyfinItemType.Movie,
             (service, userId, itemId, skip, pageSize) => service.GetMovieLibraryItems(
                 apiKey,
                 userId,
@@ -112,17 +110,15 @@ public class JellyfinApiClient : IJellyfinApiClient
                 limit: pageSize),
             (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToMovie(lib, item)).Flatten());
 
-    public IAsyncEnumerable<JellyfinShow> GetShowLibraryItems(
+    public IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library) =>
         GetPagedLibraryItems(
             address,
-            apiKey,
             library,
             library.MediaSourceId,
             library.ItemId,
-            JellyfinItemType.Show,
             (service, userId, itemId, skip, pageSize) => service.GetShowLibraryItems(
                 apiKey,
                 userId,
@@ -131,18 +127,16 @@ public class JellyfinApiClient : IJellyfinApiClient
                 limit: pageSize),
             (_, item) => ProjectToShow(item));
 
-    public IAsyncEnumerable<JellyfinSeason> GetSeasonLibraryItems(
+    public IAsyncEnumerable<Tuple<JellyfinSeason, int>> GetSeasonLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library,
         string showId) =>
         GetPagedLibraryItems(
             address,
-            apiKey,
             library,
             library.MediaSourceId,
             showId,
-            JellyfinItemType.Season,
             (service, userId, _, skip, pageSize) => service.GetSeasonLibraryItems(
                 apiKey,
                 userId,
@@ -151,18 +145,16 @@ public class JellyfinApiClient : IJellyfinApiClient
                 limit: pageSize),
             (_, item) => ProjectToSeason(item));
 
-    public IAsyncEnumerable<JellyfinEpisode> GetEpisodeLibraryItems(
+    public IAsyncEnumerable<Tuple<JellyfinEpisode, int>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
         JellyfinLibrary library,
         string seasonId) =>
         GetPagedLibraryItems(
             address,
-            apiKey,
             library,
             library.MediaSourceId,
             seasonId,
-            JellyfinItemType.Episode,
             (service, userId, _, skip, pageSize) => service.GetEpisodeLibraryItems(
                 apiKey,
                 userId,
@@ -171,7 +163,7 @@ public class JellyfinApiClient : IJellyfinApiClient
                 limit: pageSize),
             (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToEpisode(lib, item)).Flatten());
 
-    public IAsyncEnumerable<JellyfinCollection> GetCollectionLibraryItems(
+    public IAsyncEnumerable<Tuple<JellyfinCollection, int>> GetCollectionLibraryItems(
         string address,
         string apiKey,
         int mediaSourceId)
@@ -182,11 +174,9 @@ public class JellyfinApiClient : IJellyfinApiClient
         {
             return GetPagedLibraryItems(
                 address,
-                apiKey,
                 None,
                 mediaSourceId,
                 itemId,
-                JellyfinItemType.Collection,
                 (service, userId, _, skip, pageSize) => service.GetCollectionLibraryItems(
                     apiKey,
                     userId,
@@ -196,21 +186,19 @@ public class JellyfinApiClient : IJellyfinApiClient
                 (_, item) => ProjectToCollection(item));
         }
 
-        return AsyncEnumerable.Empty<JellyfinCollection>();
+        return AsyncEnumerable.Empty<Tuple<JellyfinCollection, int>>();
     }
 
-    public IAsyncEnumerable<MediaItem> GetCollectionItems(
+    public IAsyncEnumerable<Tuple<MediaItem, int>> GetCollectionItems(
         string address,
         string apiKey,
         int mediaSourceId,
         string collectionId) =>
         GetPagedLibraryItems(
             address,
-            apiKey,
             None,
             mediaSourceId,
             collectionId,
-            JellyfinItemType.CollectionItems,
             (service, userId, _, skip, pageSize) => service.GetCollectionItems(
                 apiKey,
                 userId,
@@ -218,37 +206,6 @@ public class JellyfinApiClient : IJellyfinApiClient
                 startIndex: skip,
                 limit: pageSize),
             (_, item) => ProjectToCollectionMediaItem(item));
-
-    public async Task<Either<BaseError, int>> GetLibraryItemCount(
-        string address,
-        string apiKey,
-        JellyfinLibrary library,
-        string parentId,
-        string includeItemTypes,
-        bool excludeFolders)
-    {
-        try
-        {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
-            {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinLibraryItemsResponse items = await service.GetLibraryStats(
-                    apiKey,
-                    userId,
-                    parentId,
-                    includeItemTypes,
-                    filters: excludeFolders ? "IsNotFolder" : null);
-                return items.TotalRecordCount;
-            }
-
-            return BaseError.New("Jellyfin admin user id is not available");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting jellyfin library item count");
-            return BaseError.New(ex.Message);
-        }
-    }
 
     public async Task<Either<BaseError, MediaVersion>> GetPlaybackInfo(
         string address,
@@ -275,40 +232,33 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private async IAsyncEnumerable<TItem> GetPagedLibraryItems<TItem>(
+    private async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
         string address,
-        string apiKey,
         Option<JellyfinLibrary> maybeLibrary,
         int mediaSourceId,
         string parentId,
-        string itemType,
         Func<IJellyfinApi, string, string, int, int, Task<JellyfinLibraryItemsResponse>> getItems,
         Func<Option<JellyfinLibrary>, JellyfinLibraryItemResponse, Option<TItem>> mapper)
     {
         if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
         {
             IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-            string filters = itemType == JellyfinItemType.Movie || itemType == JellyfinItemType.Episode
-                ? "IsNotFolder"
-                : null;
-            int size = await service
-                .GetLibraryStats(apiKey, userId, parentId, itemType, filters: filters)
-                .Map(r => r.TotalRecordCount);
 
             const int PAGE_SIZE = 10;
 
-            int pages = (size - 1) / PAGE_SIZE + 1;
-
+            int pages = int.MaxValue;
             for (var i = 0; i < pages; i++)
             {
                 int skip = i * PAGE_SIZE;
 
-                Task<IEnumerable<TItem>> result = getItems(service, userId, parentId, skip, PAGE_SIZE)
-                    .Map(items => items.Items.Map(item => mapper(maybeLibrary, item)).Somes());
+                JellyfinLibraryItemsResponse result = await getItems(service, userId, parentId, skip, PAGE_SIZE);
 
-                foreach (TItem item in await result)
+                // update page count
+                pages = Math.Min(pages, (result.TotalRecordCount - 1) / PAGE_SIZE + 1);
+
+                foreach (TItem item in result.Items.Map(item => mapper(maybeLibrary, item)).Somes())
                 {
-                    yield return item;
+                    yield return new Tuple<TItem, int>(item, result.TotalRecordCount);
                 }
             }
         }

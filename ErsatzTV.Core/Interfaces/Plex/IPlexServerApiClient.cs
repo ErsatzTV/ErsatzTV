@@ -13,33 +13,23 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    IAsyncEnumerable<PlexMovie> GetMovieLibraryContents(
+    IAsyncEnumerable<Tuple<PlexMovie, int>> GetMovieLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    IAsyncEnumerable<PlexShow> GetShowLibraryContents(
+    IAsyncEnumerable<Tuple<PlexShow, int>> GetShowLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, int>> CountShowSeasons(
-        PlexShow show,
-        PlexConnection connection,
-        PlexServerAuthToken token);
-
-    IAsyncEnumerable<PlexSeason> GetShowSeasons(
+    IAsyncEnumerable<Tuple<PlexSeason, int>> GetShowSeasons(
         PlexLibrary library,
         PlexShow show,
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, int>> CountSeasonEpisodes(
-        PlexSeason season,
-        PlexConnection connection,
-        PlexServerAuthToken token);
-
-    IAsyncEnumerable<PlexEpisode> GetSeasonEpisodes(
+    IAsyncEnumerable<Tuple<PlexEpisode, int>> GetSeasonEpisodes(
         PlexLibrary library,
         PlexSeason season,
         PlexConnection connection,
@@ -63,17 +53,12 @@ public interface IPlexServerApiClient
         PlexConnection connection,
         PlexServerAuthToken token);
 
-    Task<Either<BaseError, int>> GetLibraryItemCount(
-        PlexLibrary library,
-        PlexConnection connection,
-        PlexServerAuthToken token);
-
-    IAsyncEnumerable<PlexCollection> GetAllCollections(
+    IAsyncEnumerable<Tuple<PlexCollection, int>> GetAllCollections(
         PlexConnection connection,
         PlexServerAuthToken token,
         CancellationToken cancellationToken);
 
-    IAsyncEnumerable<MediaItem> GetCollectionItems(
+    IAsyncEnumerable<Tuple<MediaItem, int>> GetCollectionItems(
         PlexConnection connection,
         PlexServerAuthToken token,
         string key,

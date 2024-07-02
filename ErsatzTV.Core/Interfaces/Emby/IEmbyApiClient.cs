@@ -8,32 +8,26 @@ public interface IEmbyApiClient
     Task<Either<BaseError, EmbyServerInformation>> GetServerInformation(string address, string apiKey);
     Task<Either<BaseError, List<EmbyLibrary>>> GetLibraries(string address, string apiKey);
 
-    IAsyncEnumerable<EmbyMovie> GetMovieLibraryItems(string address, string apiKey, EmbyLibrary library);
+    IAsyncEnumerable<Tuple<EmbyMovie, int>> GetMovieLibraryItems(string address, string apiKey, EmbyLibrary library);
 
-    IAsyncEnumerable<EmbyShow> GetShowLibraryItems(string address, string apiKey, EmbyLibrary library);
+    IAsyncEnumerable<Tuple<EmbyShow, int>> GetShowLibraryItems(string address, string apiKey, EmbyLibrary library);
 
-    IAsyncEnumerable<EmbySeason> GetSeasonLibraryItems(
+    IAsyncEnumerable<Tuple<EmbySeason, int>> GetSeasonLibraryItems(
         string address,
         string apiKey,
         EmbyLibrary library,
         string showId);
 
-    IAsyncEnumerable<EmbyEpisode> GetEpisodeLibraryItems(
+    IAsyncEnumerable<Tuple<EmbyEpisode, int>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
         EmbyLibrary library,
         string showId,
         string seasonId);
 
-    IAsyncEnumerable<EmbyCollection> GetCollectionLibraryItems(string address, string apiKey);
+    IAsyncEnumerable<Tuple<EmbyCollection, int>> GetCollectionLibraryItems(string address, string apiKey);
 
-    IAsyncEnumerable<MediaItem> GetCollectionItems(string address, string apiKey, string collectionId);
-
-    Task<Either<BaseError, int>> GetLibraryItemCount(
-        string address,
-        string apiKey,
-        string parentId,
-        string includeItemTypes);
+    IAsyncEnumerable<Tuple<MediaItem, int>> GetCollectionItems(string address, string apiKey, string collectionId);
 
     Task<Either<BaseError, MediaVersion>> GetPlaybackInfo(
         string address,

@@ -17,21 +17,6 @@ public interface IEmbyApi
         [Header("X-Emby-Token")]
         string apiKey);
 
-    [Get("/Items")]
-    public Task<EmbyLibraryItemsResponse> GetLibraryStats(
-        [Header("X-Emby-Token")]
-        string apiKey,
-        [Query]
-        string parentId,
-        [Query]
-        string includeItemTypes,
-        [Query]
-        bool recursive = true,
-        [Query]
-        int startIndex = 0,
-        [Query]
-        int limit = 0);
-
     [Get("/Items?sortOrder=Ascending&sortBy=SortName")]
     public Task<EmbyLibraryItemsResponse> GetMovieLibraryItems(
         [Header("X-Emby-Token")]

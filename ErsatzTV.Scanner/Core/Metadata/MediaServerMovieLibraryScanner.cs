@@ -48,27 +48,14 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     {
         try
         {
-            Either<BaseError, int> maybeCount = await CountMovieLibraryItems(connectionParameters, library);
-            foreach (BaseError error in maybeCount.LeftToSeq())
-            {
-                return error;
-            }
-
-            foreach (int count in maybeCount.RightToSeq())
-            {
-                return await ScanLibrary(
-                    movieRepository,
-                    connectionParameters,
-                    library,
-                    getLocalPath,
-                    GetMovieLibraryItems(connectionParameters, library),
-                    count,
-                    deepScan,
-                    cancellationToken);
-            }
-
-            // this won't happen
-            return Unit.Default;
+            return await ScanLibrary(
+                movieRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetMovieLibraryItems(connectionParameters, library),
+                deepScan,
+                cancellationToken);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -81,8 +68,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         TConnectionParameters connectionParameters,
         TLibrary library,
         Func<TMovie, string> getLocalPath,
-        IAsyncEnumerable<TMovie> movieEntries,
-        int totalMovieCount,
+        IAsyncEnumerable<Tuple<TMovie, int>> movieEntries,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -90,7 +76,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         IReadOnlyDictionary<string, TEtag> existingMovies = (await movieRepository.GetExistingMovies(library))
             .ToImmutableDictionary(e => e.MediaServerItemId, e => e);
 
-        await foreach (TMovie incoming in movieEntries.WithCancellation(cancellationToken))
+        await foreach ((TMovie incoming, int totalMovieCount) in movieEntries.WithCancellation(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -237,11 +223,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     protected abstract string MediaServerItemId(TMovie movie);
     protected abstract string MediaServerEtag(TMovie movie);
 
-    protected abstract Task<Either<BaseError, int>> CountMovieLibraryItems(
-        TConnectionParameters connectionParameters,
-        TLibrary library);
-
-    protected abstract IAsyncEnumerable<TMovie> GetMovieLibraryItems(
+    protected abstract IAsyncEnumerable<Tuple<TMovie, int>> GetMovieLibraryItems(
         TConnectionParameters connectionParameters,
         TLibrary library);
 
