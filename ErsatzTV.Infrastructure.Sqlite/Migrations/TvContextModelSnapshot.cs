@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.5");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -3323,6 +3323,19 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.ToTable("PlexMovie", (string)null);
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlexOtherVideo", b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.OtherVideo");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("PlexOtherVideo", (string)null);
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.EmbySeason", b =>
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.Season");
@@ -5123,6 +5136,15 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.Movie", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.PlexMovie", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.PlexOtherVideo", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.OtherVideo", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.PlexOtherVideo", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
