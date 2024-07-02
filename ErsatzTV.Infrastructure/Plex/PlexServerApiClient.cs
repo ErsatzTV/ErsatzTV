@@ -399,7 +399,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                 Name = response.Title,
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
+                Paths = new List<LibraryPath> { new() { Path = String.Join(",", response.Location.Map(l => l.Path)) } }
             },
             "movie" => new PlexLibrary
             {
@@ -407,7 +407,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                 Name = response.Title,
                 MediaKind = (response.Agent == "com.plexapp.agents.none" && response.Language == "xn" ? LibraryMediaKind.OtherVideos : LibraryMediaKind.Movies),
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
+                Paths = new List<LibraryPath> { new() { Path = String.Join(",", response.Location.Map(l => l.Path)) } }
             },
             // TODO: "artist" for music libraries
             _ => None
@@ -1192,17 +1192,24 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
 
         //Path2Tags
-        if (!string.IsNullOrWhiteSpace(response.Media[0].Part[0].File))
+        /*
+        if (version.MediaFiles != null && version.MediaFiles.Length() > 0 && !string.IsNullOrEmpty(version.MediaFiles[0].Path))
         {
-            string mediaPath = response.Media[0].Part[0].File;
+            string mediaPath = version.MediaFiles[0].Path;
             string[] tokens = mediaPath.Split("/");
 
-            tokens.Take(1)  // Removing the first token from the full path (empty on unix, drive on windows)
-                .Take(tokens.Length -1) // Ignoring last token (filename)
-                .Map(t => new Tag { Name = t })
-                .ToList()
-                .ForEach(tag => metadata.Tags.Add(tag));
+            if (tokens.Length() > 2)
+            {
+                tokens.Take(1)  // Removing the first token from the full path (empty on unix, drive on windows)
+                    .Take(tokens.Length - 1) // Ignoring last token (filename)
+                    .ToList()
+                    .ForEach(token =>
+                    {
+                        metadata.Tags.Add(new Tag { Name = token, ExternalCollectionId = token });
+                    });
+            }
         }
+        */
 
         return metadata;
     }

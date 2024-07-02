@@ -9,4 +9,5 @@ public class PlexLibraryResponse
     public int Hidden { get; set; }
     public string Uuid { get; set; }
     public string Language { get; set; }
+    public List<PlexLocationResponse> Location { get; set; }
 }
