@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Interfaces.Repositories;
@@ -28,11 +28,14 @@ public interface IMetadataRepository
     Task<Unit> MarkAsUpdated(ShowMetadata metadata, DateTime dateUpdated);
     Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated);
     Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated);
+    Task<Unit> MarkAsUpdated(OtherVideoMetadata metadata, DateTime dateUpdated);
     Task<Unit> MarkAsUpdated(EpisodeMetadata metadata, DateTime dateUpdated);
     Task<Unit> MarkAsExternal(ShowMetadata metadata);
     Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating);
     Task<Unit> MarkAsExternal(MovieMetadata metadata);
+    Task<Unit> MarkAsExternal(OtherVideoMetadata metadata);
     Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating);
+    Task<Unit> SetContentRating(OtherVideoMetadata metadata, string contentRating);
 
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     Task<bool> RemoveGuid(MetadataGuid guid);

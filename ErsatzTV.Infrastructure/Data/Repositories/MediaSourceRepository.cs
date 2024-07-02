@@ -141,7 +141,8 @@ public class MediaSourceRepository : IMediaSourceRepository
     public async Task<List<int>> UpdateLibraries(
         int plexMediaSourceId,
         List<PlexLibrary> toAdd,
-        List<PlexLibrary> toDelete)
+        List<PlexLibrary> toDelete,
+        List<PlexLibrary> toUpdate)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
@@ -165,6 +166,23 @@ public class MediaSourceRepository : IMediaSourceRepository
         {
             dbContext.PlexLibraries.Remove(delete);
         }
+
+        // update library path (for other video metadata)
+        foreach (PlexLibrary incoming in toUpdate)
+        {
+            Option<PlexLibrary> maybeExisting = await dbContext.PlexLibraries
+                .Include(l => l.Paths)
+                .SelectOneAsync(l => l.Key, l => l.Key == incoming.Key);
+
+            foreach (LibraryPath existing in maybeExisting.Map(l => l.Paths.HeadOrNone()))
+            {
+                foreach (LibraryPath path in incoming.Paths.HeadOrNone())
+                {
+                    existing.Path = path.Path;
+                }
+            }
+        }
+
 
         await dbContext.SaveChangesAsync();
 

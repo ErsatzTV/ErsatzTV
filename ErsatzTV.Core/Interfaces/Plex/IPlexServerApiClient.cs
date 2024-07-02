@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Plex;
 
 namespace ErsatzTV.Core.Interfaces.Plex;
@@ -14,6 +14,11 @@ public interface IPlexServerApiClient
         PlexServerAuthToken token);
 
     IAsyncEnumerable<Tuple<PlexMovie, int>> GetMovieLibraryContents(
+        PlexLibrary library,
+        PlexConnection connection,
+        PlexServerAuthToken token);
+
+    IAsyncEnumerable<Tuple<PlexOtherVideo, int>> GetOtherVideoLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token);
@@ -46,6 +51,13 @@ public interface IPlexServerApiClient
         string key,
         PlexConnection connection,
         PlexServerAuthToken token);
+
+    Task<Either<BaseError, Tuple<OtherVideoMetadata, MediaVersion>>> GetOtherVideoMetadataAndStatistics(
+        int plexMediaSourceId,
+        string key,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library);
 
     Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
         int plexMediaSourceId,

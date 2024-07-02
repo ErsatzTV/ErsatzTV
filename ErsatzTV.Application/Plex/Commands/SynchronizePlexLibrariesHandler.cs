@@ -84,10 +84,13 @@ public class
             var existing = connectionParameters.PlexMediaSource.Libraries.OfType<PlexLibrary>().ToList();
             var toAdd = libraries.Filter(library => existing.All(l => l.Key != library.Key)).ToList();
             var toRemove = existing.Filter(library => libraries.All(l => l.Key != library.Key)).ToList();
+            var toUpdate = libraries
+                .Filter(l => toAdd.All(a => a.Key != l.Key) && toRemove.All(r => r.Key != l.Key)).ToList();
             List<int> ids = await _mediaSourceRepository.UpdateLibraries(
                 connectionParameters.PlexMediaSource.Id,
                 toAdd,
-                toRemove);
+                toRemove,
+                toUpdate);
             if (ids.Count != 0)
             {
                 await _searchIndex.RemoveItems(ids);

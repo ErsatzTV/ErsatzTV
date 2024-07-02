@@ -1,4 +1,4 @@
-﻿using Bugsnag;
+using Bugsnag;
 using Bugsnag.Payload;
 using Dapper;
 using ErsatzTV.Core;
@@ -198,11 +198,13 @@ public class Program
                     services.AddScoped<IRuntimeInfo, RuntimeInfo>();
 
                     services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
+                    services.AddScoped<IPlexOtherVideoLibraryScanner, PlexOtherVideoLibraryScanner>();
                     services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
                     services.AddScoped<IPlexCollectionScanner, PlexCollectionScanner>();
                     services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
                     services.AddScoped<IPlexCollectionRepository, PlexCollectionRepository>();
                     services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
+                    services.AddScoped<IPlexOtherVideoRepository, PlexOtherVideoRepository>();
                     services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
                     services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
                     services.AddScoped<PlexEtag>();

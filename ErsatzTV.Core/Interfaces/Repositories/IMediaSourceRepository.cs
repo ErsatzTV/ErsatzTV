@@ -20,7 +20,8 @@ public interface IMediaSourceRepository
     Task<List<int>> UpdateLibraries(
         int plexMediaSourceId,
         List<PlexLibrary> toAdd,
-        List<PlexLibrary> toDelete);
+        List<PlexLibrary> toDelete,
+        List<PlexLibrary> toUpdate);
 
     Task<List<int>> UpdateLibraries(
         int jellyfinMediaSourceId,

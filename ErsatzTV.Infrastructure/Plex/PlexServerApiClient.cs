@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Xml.Serialization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -7,6 +7,7 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex;
@@ -50,15 +51,12 @@ public class PlexServerApiClient : IPlexServerApiClient
                 });
             List<PlexLibraryResponse> directory =
                 await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
-            return directory
-                // .Filter(l => l.Hidden == 0)
+            List<PlexLibrary> response = directory
                 .Filter(l => l.Type.ToLowerInvariant() is "movie" or "show")
-                .Filter(
-                    l => l.Type.ToLowerInvariant() is not "movie" ||
-                         (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
                 .Map(Project)
                 .Somes()
                 .ToList();
+            return response;
         }
         catch (Exception ex)
         {
@@ -105,6 +103,29 @@ public class PlexServerApiClient : IPlexServerApiClient
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
                 .Map(r => r.MediaContainer.Metadata ?? new List<PlexMetadataResponse>())
                 .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)));
+        }
+
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+    }
+
+    public IAsyncEnumerable<Tuple<PlexOtherVideo, int>> GetOtherVideoLibraryContents(
+        PlexLibrary library,
+        PlexConnection connection,
+        PlexServerAuthToken token)
+    {
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetLibrarySection(library.Key, token.AuthToken);
+        }
+
+        Task<IEnumerable<PlexOtherVideo>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
+                .Map(
+                    r => r.MediaContainer.Metadata.Filter(
+                        m => m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
+                .Map(list => list.Map(metadata => ProjectToOtherVideo(metadata, library.MediaSourceId, library)));
         }
 
         return GetPagedLibraryContents(connection, CountItems, GetItems);
@@ -198,6 +219,40 @@ public class PlexServerApiClient : IPlexServerApiClient
                     return maybeVersion.Match<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>>(
                         version => Tuple(
                             ProjectToMovieMetadata(version, response.Metadata, plexMediaSourceId),
+                            version),
+                        () => BaseError.New("Unable to locate metadata"));
+                },
+                () => BaseError.New("Unable to locate metadata"));
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    public async Task<Either<BaseError, Tuple<OtherVideoMetadata, MediaVersion>>> GetOtherVideoMetadataAndStatistics(
+        int plexMediaSourceId,
+        string key,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library)
+    {
+        try
+        {
+            IPlexServerApi service = XmlServiceFor(connection.Uri);
+            Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
+                .GetVideoMetadata(key, token.AuthToken)
+                .Map(Optional)
+                .Map(
+                    r => r.Filter(
+                        m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
+            return maybeResponse.Match(
+                response =>
+                {
+                    Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
+                    return maybeVersion.Match<Either<BaseError, Tuple<OtherVideoMetadata, MediaVersion>>>(
+                        version => Tuple(
+                            ProjectToOtherVideoMetadata(version, response.Metadata, plexMediaSourceId, library),
                             version),
                         () => BaseError.New("Unable to locate metadata"));
                 },
@@ -336,8 +391,18 @@ public class PlexServerApiClient : IPlexServerApiClient
             });
     }
 
-    private static Option<PlexLibrary> Project(PlexLibraryResponse response) =>
-        response.Type switch
+    private static Option<PlexLibrary> Project(PlexLibraryResponse response)
+    {
+        List<LibraryPath> paths =
+        [
+            new LibraryPath
+            {
+                Path = JsonConvert.SerializeObject(
+                    new LibraryPaths { Paths = response.Location.Map(l => l.Path).ToList() })
+            }
+        ];
+
+        return response.Type switch
         {
             "show" => new PlexLibrary
             {
@@ -345,19 +410,22 @@ public class PlexServerApiClient : IPlexServerApiClient
                 Name = response.Title,
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
+                Paths = paths
             },
             "movie" => new PlexLibrary
             {
                 Key = response.Key,
                 Name = response.Title,
-                MediaKind = LibraryMediaKind.Movies,
+                MediaKind = response.Agent == "com.plexapp.agents.none" && response.Language == "xn"
+                    ? LibraryMediaKind.OtherVideos
+                    : LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
+                Paths = paths
             },
             // TODO: "artist" for music libraries
             _ => None
         };
+    }
 
     private Option<PlexCollection> ProjectToCollection(
         PlexMediaSource plexMediaSource,
@@ -994,6 +1062,192 @@ public class PlexServerApiClient : IPlexServerApiClient
             EndTime = TimeSpan.FromMilliseconds(chapter.EndTimeOffset)
         };
 
+    private PlexOtherVideo ProjectToOtherVideo(PlexMetadataResponse response, int mediaSourceId, PlexLibrary library)
+    {
+        PlexMediaResponse<PlexPartResponse> media = response.Media
+            .Filter(media => media.Part.Count != 0)
+            .MaxBy(media => media.Id);
+
+        PlexPartResponse part = media.Part.Head();
+        DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+        DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+        var version = new MediaVersion
+        {
+            Name = "Main",
+            Duration = TimeSpan.FromMilliseconds(media.Duration),
+            Width = media.Width,
+            Height = media.Height,
+            // specifically omit sample aspect ratio
+            DateAdded = dateAdded,
+            DateUpdated = lastWriteTime,
+            MediaFiles = new List<MediaFile>
+            {
+                new PlexMediaFile
+                {
+                    PlexId = part.Id,
+                    Key = part.Key,
+                    Path = part.File
+                }
+            },
+            Streams = new List<MediaStream>()
+        };
+
+        OtherVideoMetadata metadata = ProjectToOtherVideoMetadata(version, response, mediaSourceId, library);
+
+        var otherVideo = new PlexOtherVideo
+        {
+            Etag = _plexEtag.ForMovie(response),
+            Key = response.Key,
+            OtherVideoMetadata = new List<OtherVideoMetadata> { metadata },
+            MediaVersions = new List<MediaVersion> { version },
+            TraktListItems = new List<TraktListItem>()
+        };
+
+        return otherVideo;
+    }
+
+    private OtherVideoMetadata ProjectToOtherVideoMetadata(MediaVersion version, PlexMetadataResponse response, int mediaSourceId, PlexLibrary library)
+    {
+        DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+        DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+        var metadata = new OtherVideoMetadata
+        {
+            MetadataKind = MetadataKind.External,
+            Title = response.Title,
+            SortTitle = SortTitle.GetSortTitle(response.Title),
+            Plot = response.Summary,
+            Year = response.Year,
+            Tagline = response.Tagline,
+            ContentRating = response.ContentRating,
+            DateAdded = dateAdded,
+            DateUpdated = lastWriteTime,
+            Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
+            Tags = new List<Tag>(),
+            Studios = new List<Studio>(),
+            Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
+                .ToList(),
+            Directors = Optional(response.Director).Flatten().Map(d => new Director { Name = d.Tag }).ToList(),
+            Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList(),
+            Subtitles = new List<Subtitle>()
+        };
+
+        var subtitleStreams = version.Streams
+            .Filter(s => s.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+            .ToList();
+
+        metadata.Subtitles.AddRange(subtitleStreams.Map(Subtitle.FromMediaStream));
+
+        if (response is PlexXmlMetadataResponse xml)
+        {
+            metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
+            if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
+            {
+                Option<string> normalized = NormalizeGuid(xml.PlexGuid);
+                foreach (string guid in normalized)
+                {
+                    if (metadata.Guids.All(g => g.Guid != guid))
+                    {
+                        metadata.Guids.Add(new MetadataGuid { Guid = guid });
+                    }
+                }
+            }
+
+            PlexMediaResponse<PlexXmlPartResponse> media = xml.Media
+                .Filter(media => media.Part.Count != 0)
+                .MaxBy(media => media.Id);
+
+            PlexXmlPartResponse part = media.Part.Head();
+            string folder = Path.GetDirectoryName(part.File);
+
+            if (!string.IsNullOrWhiteSpace(folder))
+            {
+                IEnumerable<string> libraryPaths = library.Paths
+                    .HeadOrNone()
+                    .Map(p => p.Path)
+                    .Map(JsonConvert.DeserializeObject<LibraryPaths>)
+                    .Map(lp => lp.Paths)
+                    .Flatten();
+
+                // check each library path from plex
+                foreach (string libraryPath in libraryPaths)
+                {
+                    // if the media file belongs to this library path
+                    if (folder.StartsWith(libraryPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // try to get a parent directory of the library path
+                        string parent = Optional(Directory.GetParent(libraryPath)).Match(
+                            di => di.FullName,
+                            () => libraryPath);
+
+                        // get all folders between parent and media file
+                        string diff = Path.GetRelativePath(parent, folder);
+
+                        // each folder becomes a tag
+                        IEnumerable<Tag> tags = diff.Split(Path.DirectorySeparatorChar)
+                            .Map(t => new Tag { Name = t });
+
+                        metadata.Tags.AddRange(tags);
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            metadata.Guids = new List<MetadataGuid>();
+        }
+
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            metadata.Tags.Add(
+                new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString(CultureInfo.InvariantCulture) });
+        }
+
+        if (!string.IsNullOrWhiteSpace(response.Studio))
+        {
+            metadata.Studios.Add(new Studio { Name = response.Studio });
+        }
+
+        if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
+        {
+            metadata.ReleaseDate = releaseDate;
+        }
+
+        if (!string.IsNullOrWhiteSpace(response.Thumb))
+        {
+            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            var artwork = new Artwork
+            {
+                ArtworkKind = ArtworkKind.Poster,
+                Path = path,
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime
+            };
+
+            metadata.Artwork ??= new List<Artwork>();
+            metadata.Artwork.Add(artwork);
+        }
+
+        if (!string.IsNullOrWhiteSpace(response.Art))
+        {
+            var path = $"plex/{mediaSourceId}{response.Art}";
+            var artwork = new Artwork
+            {
+                ArtworkKind = ArtworkKind.FanArt,
+                Path = path,
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime
+            };
+
+            metadata.Artwork ??= new List<Artwork>();
+            metadata.Artwork.Add(artwork);
+        }
+
+        return metadata;
+    }
+
     private Option<string> NormalizeGuid(string guid)
     {
         if (guid.StartsWith("plex://show", StringComparison.OrdinalIgnoreCase) ||
@@ -1036,5 +1290,11 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
 
         return None;
+    }
+
+    private sealed class LibraryPaths
+    {
+        [JsonProperty("paths")]
+        public List<string> Paths { get; set; } = [];
     }
 }

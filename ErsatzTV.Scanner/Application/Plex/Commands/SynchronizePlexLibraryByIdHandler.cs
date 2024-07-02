@@ -1,4 +1,4 @@
-﻿using ErsatzTV.Core;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -16,6 +16,7 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
     private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
+    private readonly IPlexOtherVideoLibraryScanner _plexOtherVideoLibraryScanner;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
 
@@ -25,6 +26,7 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
         IConfigElementRepository configElementRepository,
         IPlexSecretStore plexSecretStore,
         IPlexMovieLibraryScanner plexMovieLibraryScanner,
+        IPlexOtherVideoLibraryScanner plexOtherVideoLibraryScanner,
         IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
         ILibraryRepository libraryRepository,
         ILogger<SynchronizePlexLibraryByIdHandler> logger)
@@ -34,6 +36,7 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
         _configElementRepository = configElementRepository;
         _plexSecretStore = plexSecretStore;
         _plexMovieLibraryScanner = plexMovieLibraryScanner;
+        _plexOtherVideoLibraryScanner = plexOtherVideoLibraryScanner;
         _plexTelevisionLibraryScanner = plexTelevisionLibraryScanner;
         _libraryRepository = libraryRepository;
         _logger = logger;
@@ -61,6 +64,13 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
             {
                 LibraryMediaKind.Movies =>
                     await _plexMovieLibraryScanner.ScanLibrary(
+                        parameters.ConnectionParameters.ActiveConnection,
+                        parameters.ConnectionParameters.PlexServerAuthToken,
+                        parameters.Library,
+                        parameters.DeepScan,
+                        cancellationToken),
+                LibraryMediaKind.OtherVideos =>
+                    await _plexOtherVideoLibraryScanner.ScanLibrary(
                         parameters.ConnectionParameters.ActiveConnection,
                         parameters.ConnectionParameters.PlexServerAuthToken,
                         parameters.Library,
