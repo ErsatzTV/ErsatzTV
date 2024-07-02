@@ -42,7 +42,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
                 return error;
             }
 
-            // need to call get libraries to find library that contains collections (box sets)                
+            // need to call get libraries to find library that contains collections (box sets)
             await _jellyfinApiClient.GetLibraries(address, apiKey);
 
             var incomingItemIds = new List<string>();
@@ -51,7 +51,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             List<JellyfinCollection> existingCollections = await _jellyfinCollectionRepository.GetCollections();
 
             // loop over collections
-            await foreach (JellyfinCollection collection in _jellyfinApiClient.GetCollectionLibraryItems(
+            await foreach ((JellyfinCollection collection, int _) in _jellyfinApiClient.GetCollectionLibraryItems(
                                address,
                                apiKey,
                                mediaSourceId))
@@ -105,7 +105,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
         try
         {
             // get collection items from JF
-            IAsyncEnumerable<MediaItem> items = _jellyfinApiClient.GetCollectionItems(
+            IAsyncEnumerable<Tuple<MediaItem, int>> items = _jellyfinApiClient.GetCollectionItems(
                 address,
                 apiKey,
                 mediaSourceId,
@@ -115,7 +115,7 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
 
             // sync tags on items
             var addedIds = new List<int>();
-            await foreach (MediaItem item in items)
+            await foreach ((MediaItem item, int _) in items)
             {
                 addedIds.Add(await _jellyfinCollectionRepository.AddTag(item, collection));
             }

@@ -69,7 +69,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    public IAsyncEnumerable<PlexMovie> GetMovieLibraryContents(
+    public IAsyncEnumerable<Tuple<PlexMovie, int>> GetMovieLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token)
@@ -92,7 +92,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
 
-    public IAsyncEnumerable<PlexShow> GetShowLibraryContents(
+    public IAsyncEnumerable<Tuple<PlexShow, int>> GetShowLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token)
@@ -113,7 +113,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
 
-    public IAsyncEnumerable<PlexOtherVideo> GetOtherVideoLibraryContents(
+    public IAsyncEnumerable<Tuple<PlexOtherVideo, int>> GetOtherVideoLibraryContents(
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token)
@@ -136,24 +136,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
 
-    public async Task<Either<BaseError, int>> CountShowSeasons(
-        PlexShow show,
-        PlexConnection connection,
-        PlexServerAuthToken token)
-    {
-        try
-        {
-            string showMetadataKey = show.Key.Split("/").Reverse().Skip(1).Head();
-            IPlexServerApi service = XmlServiceFor(connection.Uri);
-            return await service.CountShowChildren(showMetadataKey, token.AuthToken).Map(r => r.TotalSize);
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
-    }
-
-    public IAsyncEnumerable<PlexSeason> GetShowSeasons(
+    public IAsyncEnumerable<Tuple<PlexSeason, int>> GetShowSeasons(
         PlexLibrary library,
         PlexShow show,
         PlexConnection connection,
@@ -176,24 +159,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         return GetPagedLibraryContents(connection, CountItems, GetItems);
     }
 
-    public async Task<Either<BaseError, int>> CountSeasonEpisodes(
-        PlexSeason season,
-        PlexConnection connection,
-        PlexServerAuthToken token)
-    {
-        try
-        {
-            string seasonMetadataKey = season.Key.Split("/").Reverse().Skip(1).Head();
-            IPlexServerApi service = XmlServiceFor(connection.Uri);
-            return await service.CountSeasonChildren(seasonMetadataKey, token.AuthToken).Map(r => r.TotalSize);
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
-    }
-
-    public IAsyncEnumerable<PlexEpisode> GetSeasonEpisodes(
+    public IAsyncEnumerable<Tuple<PlexEpisode, int>> GetSeasonEpisodes(
         PlexLibrary library,
         PlexSeason season,
         PlexConnection connection,
@@ -336,23 +302,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    public async Task<Either<BaseError, int>> GetLibraryItemCount(
-        PlexLibrary library,
-        PlexConnection connection,
-        PlexServerAuthToken token)
-    {
-        try
-        {
-            IPlexServerApi service = XmlServiceFor(connection.Uri);
-            return await service.GetLibrarySection(library.Key, token.AuthToken).Map(r => r.TotalSize);
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
-    }
-
-    public IAsyncEnumerable<PlexCollection> GetAllCollections(
+    public IAsyncEnumerable<Tuple<PlexCollection, int>> GetAllCollections(
         PlexConnection connection,
         PlexServerAuthToken token,
         CancellationToken cancellationToken)
@@ -373,7 +323,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    public IAsyncEnumerable<MediaItem> GetCollectionItems(
+    public IAsyncEnumerable<Tuple<MediaItem, int>> GetCollectionItems(
         PlexConnection connection,
         PlexServerAuthToken token,
         string key,
@@ -395,7 +345,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
-    private static async IAsyncEnumerable<TItem> GetPagedLibraryContents<TItem>(
+    private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryContents<TItem>(
         PlexConnection connection,
         Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
         Func<IPlexServerApi, IPlexServerApi, int, int, Task<IEnumerable<TItem>>> getItems)
@@ -417,7 +367,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
             foreach (TItem item in await result)
             {
-                yield return item;
+                yield return new Tuple<TItem, int>(item, size);
             }
         }
     }
@@ -1252,7 +1202,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             string mediaPath = response.Media[0].Part[0].File;
             string[] tokens = mediaPath.Split("/");
-            
+
             tokens.Take(1)  // Removing the first token from the full path (empty on unix, drive on windows)
                 .Take(tokens.Length -1) // Ignoring last token (filename)
                 .Map(t => new Tag { Name = t })

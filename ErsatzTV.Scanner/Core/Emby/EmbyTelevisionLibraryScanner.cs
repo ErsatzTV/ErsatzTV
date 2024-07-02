@@ -72,16 +72,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             cancellationToken);
     }
 
-    protected override Task<Either<BaseError, int>> CountShowLibraryItems(
-        EmbyConnectionParameters connectionParameters,
-        EmbyLibrary library)
-        => _embyApiClient.GetLibraryItemCount(
-            connectionParameters.Address,
-            connectionParameters.ApiKey,
-            library.ItemId,
-            EmbyItemType.Show);
-
-    protected override IAsyncEnumerable<EmbyShow> GetShowLibraryItems(
+    protected override IAsyncEnumerable<Tuple<EmbyShow, int>> GetShowLibraryItems(
         EmbyConnectionParameters connectionParameters,
         EmbyLibrary library) =>
         _embyApiClient.GetShowLibraryItems(connectionParameters.Address, connectionParameters.ApiKey, library);
@@ -94,17 +85,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
     protected override string MediaServerEtag(EmbySeason season) => season.Etag;
     protected override string MediaServerEtag(EmbyEpisode episode) => episode.Etag;
 
-    protected override Task<Either<BaseError, int>> CountSeasonLibraryItems(
-        EmbyConnectionParameters connectionParameters,
-        EmbyLibrary library,
-        EmbyShow show) =>
-        _embyApiClient.GetLibraryItemCount(
-            connectionParameters.Address,
-            connectionParameters.ApiKey,
-            show.ItemId,
-            EmbyItemType.Season);
-
-    protected override IAsyncEnumerable<EmbySeason> GetSeasonLibraryItems(
+    protected override IAsyncEnumerable<Tuple<EmbySeason, int>> GetSeasonLibraryItems(
         EmbyLibrary library,
         EmbyConnectionParameters connectionParameters,
         EmbyShow show) =>
@@ -114,17 +95,7 @@ public class EmbyTelevisionLibraryScanner : MediaServerTelevisionLibraryScanner<
             library,
             show.ItemId);
 
-    protected override Task<Either<BaseError, int>> CountEpisodeLibraryItems(
-        EmbyConnectionParameters connectionParameters,
-        EmbyLibrary library,
-        EmbySeason season) =>
-        _embyApiClient.GetLibraryItemCount(
-            connectionParameters.Address,
-            connectionParameters.ApiKey,
-            season.ItemId,
-            EmbyItemType.Episode);
-
-    protected override IAsyncEnumerable<EmbyEpisode> GetEpisodeLibraryItems(
+    protected override IAsyncEnumerable<Tuple<EmbyEpisode, int>> GetEpisodeLibraryItems(
         EmbyLibrary library,
         EmbyConnectionParameters connectionParameters,
         EmbyShow show,

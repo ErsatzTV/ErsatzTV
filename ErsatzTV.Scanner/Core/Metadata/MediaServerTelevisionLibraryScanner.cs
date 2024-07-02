@@ -50,29 +50,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
     {
         try
         {
-            Either<BaseError, int> maybeCount = await CountShowLibraryItems(connectionParameters, library);
-            foreach (BaseError error in maybeCount.LeftToSeq())
-            {
-                return error;
-            }
-
-            foreach (int count in maybeCount.RightToSeq())
-            {
-                _logger.LogDebug("Library {Library} contains {Count} shows", library.Name, count);
-
-                return await ScanLibrary(
-                    televisionRepository,
-                    connectionParameters,
-                    library,
-                    getLocalPath,
-                    GetShowLibraryItems(connectionParameters, library),
-                    count,
-                    deepScan,
-                    cancellationToken);
-            }
-
-            // this won't happen
-            return Unit.Default;
+            return await ScanLibrary(
+                televisionRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetShowLibraryItems(connectionParameters, library),
+                deepScan,
+                cancellationToken);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -80,11 +65,7 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         }
     }
 
-    protected abstract Task<Either<BaseError, int>> CountShowLibraryItems(
-        TConnectionParameters connectionParameters,
-        TLibrary library);
-
-    protected abstract IAsyncEnumerable<TShow> GetShowLibraryItems(
+    protected abstract IAsyncEnumerable<Tuple<TShow, int>> GetShowLibraryItems(
         TConnectionParameters connectionParameters,
         TLibrary library);
 
@@ -100,15 +81,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TConnectionParameters connectionParameters,
         TLibrary library,
         Func<TEpisode, string> getLocalPath,
-        IAsyncEnumerable<TShow> showEntries,
-        int totalShowCount,
+        IAsyncEnumerable<Tuple<TShow, int>> showEntries,
         bool deepScan,
         CancellationToken cancellationToken)
     {
         var incomingItemIds = new List<string>();
         List<TEtag> existingShows = await televisionRepository.GetExistingShows(library);
 
-        await foreach (TShow incoming in showEntries.WithCancellation(cancellationToken))
+        await foreach ((TShow incoming, int totalShowCount) in showEntries.WithCancellation(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -146,23 +126,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
             foreach (MediaItemScanResult<TShow> result in maybeShow.RightToSeq())
             {
-                Either<BaseError, int> maybeCount = await CountSeasonLibraryItems(
-                    connectionParameters,
-                    library,
-                    result.Item);
-                foreach (BaseError error in maybeCount.LeftToSeq())
-                {
-                    return error;
-                }
-
-                foreach (int count in maybeCount.RightToSeq())
-                {
-                    _logger.LogDebug(
-                        "Show {Title} contains {Count} seasons",
-                        result.Item.ShowMetadata.Head().Title,
-                        count);
-                }
-
                 Either<BaseError, Unit> scanResult = await ScanSeasons(
                     televisionRepository,
                     library,
@@ -220,22 +183,12 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         return Unit.Default;
     }
 
-    protected abstract Task<Either<BaseError, int>> CountSeasonLibraryItems(
-        TConnectionParameters connectionParameters,
-        TLibrary library,
-        TShow show);
-
-    protected abstract IAsyncEnumerable<TSeason> GetSeasonLibraryItems(
+    protected abstract IAsyncEnumerable<Tuple<TSeason, int>> GetSeasonLibraryItems(
         TLibrary library,
         TConnectionParameters connectionParameters,
         TShow show);
 
-    protected abstract Task<Either<BaseError, int>> CountEpisodeLibraryItems(
-        TConnectionParameters connectionParameters,
-        TLibrary library,
-        TSeason season);
-
-    protected abstract IAsyncEnumerable<TEpisode> GetEpisodeLibraryItems(
+    protected abstract IAsyncEnumerable<Tuple<TEpisode, int>> GetEpisodeLibraryItems(
         TLibrary library,
         TConnectionParameters connectionParameters,
         TShow show,
@@ -293,14 +246,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         TShow show,
         bool showIsUpdated,
         TConnectionParameters connectionParameters,
-        IAsyncEnumerable<TSeason> seasonEntries,
+        IAsyncEnumerable<Tuple<TSeason, int>> seasonEntries,
         bool deepScan,
         CancellationToken cancellationToken)
     {
         var incomingItemIds = new List<string>();
         List<TEtag> existingSeasons = await televisionRepository.GetExistingSeasons(library, show);
 
-        await foreach (TSeason incoming in seasonEntries.WithCancellation(cancellationToken))
+        await foreach ((TSeason incoming, int _) in seasonEntries.WithCancellation(cancellationToken))
         {
             incoming.ShowId = show.Id;
 
@@ -331,24 +284,6 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
             foreach (MediaItemScanResult<TSeason> result in maybeSeason.RightToSeq())
             {
-                Either<BaseError, int> maybeCount = await CountEpisodeLibraryItems(
-                    connectionParameters,
-                    library,
-                    result.Item);
-                foreach (BaseError error in maybeCount.LeftToSeq())
-                {
-                    return error;
-                }
-
-                foreach (int count in maybeCount.RightToSeq())
-                {
-                    _logger.LogDebug(
-                        "Show {Title} season {Season} contains {Count} episodes",
-                        show.ShowMetadata.Head().Title,
-                        result.Item.SeasonNumber,
-                        count);
-                }
-
                 Either<BaseError, Unit> scanResult = await ScanEpisodes(
                     televisionRepository,
                     library,
@@ -408,14 +343,14 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
         bool showIsUpdated,
         TSeason season,
         TConnectionParameters connectionParameters,
-        IAsyncEnumerable<TEpisode> episodeEntries,
+        IAsyncEnumerable<Tuple<TEpisode, int>> episodeEntries,
         bool deepScan,
         CancellationToken cancellationToken)
     {
         var incomingItemIds = new List<string>();
         List<TEtag> existingEpisodes = await televisionRepository.GetExistingEpisodes(library, season);
 
-        await foreach (TEpisode incoming in episodeEntries.WithCancellation(cancellationToken))
+        await foreach ((TEpisode incoming, int _) in episodeEntries.WithCancellation(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
