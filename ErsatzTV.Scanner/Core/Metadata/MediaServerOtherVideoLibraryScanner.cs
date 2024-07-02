@@ -48,27 +48,14 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
     {
         try
         {
-            Either<BaseError, int> maybeCount = await CountOtherVideoLibraryItems(connectionParameters, library);
-            foreach (BaseError error in maybeCount.LeftToSeq())
-            {
-                return error;
-            }
-
-            foreach (int count in maybeCount.RightToSeq())
-            {
-                return await ScanLibrary(
-                    otherVideoRepository,
-                    connectionParameters,
-                    library,
-                    getLocalPath,
-                    GetOtherVideoLibraryItems(connectionParameters, library),
-                    count,
-                    deepScan,
-                    cancellationToken);
-            }
-
-            // this won't happen
-            return Unit.Default;
+            return await ScanLibrary(
+                otherVideoRepository,
+                connectionParameters,
+                library,
+                getLocalPath,
+                GetOtherVideoLibraryItems(connectionParameters, library),
+                deepScan,
+                cancellationToken);
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
@@ -81,8 +68,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         TConnectionParameters connectionParameters,
         TLibrary library,
         Func<TOtherVideo, string> getLocalPath,
-        IAsyncEnumerable<TOtherVideo> otherVideoEntries,
-        int totalOtherVideoCount,
+        IAsyncEnumerable<Tuple<TOtherVideo, int>> otherVideoEntries,
         bool deepScan,
         CancellationToken cancellationToken)
     {
@@ -90,7 +76,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         IReadOnlyDictionary<string, TEtag> existingOtherVideos = (await otherVideoRepository.GetExistingOtherVideos(library))
             .ToImmutableDictionary(e => e.MediaServerItemId, e => e);
 
-        await foreach (TOtherVideo incoming in otherVideoEntries.WithCancellation(cancellationToken))
+        await foreach ((TOtherVideo incoming, int totalOtherVideoCount) in otherVideoEntries.WithCancellation(cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -237,11 +223,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
     protected abstract string MediaServerItemId(TOtherVideo otherVideo);
     protected abstract string MediaServerEtag(TOtherVideo otherVideo);
 
-    protected abstract Task<Either<BaseError, int>> CountOtherVideoLibraryItems(
-        TConnectionParameters connectionParameters,
-        TLibrary library);
-
-    protected abstract IAsyncEnumerable<TOtherVideo> GetOtherVideoLibraryItems(
+    protected abstract IAsyncEnumerable<Tuple<TOtherVideo, int>> GetOtherVideoLibraryItems(
         TConnectionParameters connectionParameters,
         TLibrary library);
 

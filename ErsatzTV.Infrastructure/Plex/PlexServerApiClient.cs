@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
-using J2N.Collections.Generic.Extensions;
 using Microsoft.Extensions.Logging;
 using Refit;
 
@@ -52,12 +51,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             List<PlexLibraryResponse> directory =
                 await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
             List<PlexLibrary> response = directory
-                // .Filter(l => l.Hidden == 0)
                 .Filter(l => l.Type.ToLowerInvariant() is "movie" or "show")
-                // Removed Other Videos Filter
-                //.Filter(
-                //    l => l.Type.ToLowerInvariant() is not "movie" ||
-                //         (l.Agent ?? string.Empty).ToLowerInvariant() is not "com.plexapp.agents.none")
                 .Map(Project)
                 .Somes()
                 .ToList();

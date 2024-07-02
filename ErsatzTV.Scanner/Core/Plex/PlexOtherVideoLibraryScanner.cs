@@ -83,15 +83,7 @@ public class PlexOtherVideoLibraryScanner :
 
     protected override string MediaServerEtag(PlexOtherVideo otherVideo) => otherVideo.Etag;
 
-    protected override Task<Either<BaseError, int>> CountOtherVideoLibraryItems(
-        PlexConnectionParameters connectionParameters,
-        PlexLibrary library)
-        => _plexServerApiClient.GetLibraryItemCount(
-            library,
-            connectionParameters.Connection,
-            connectionParameters.Token);
-
-    protected override IAsyncEnumerable<PlexOtherVideo> GetOtherVideoLibraryItems(
+    protected override IAsyncEnumerable<Tuple<PlexOtherVideo, int>> GetOtherVideoLibraryItems(
         PlexConnectionParameters connectionParameters,
         PlexLibrary library) =>
         _plexServerApiClient.GetOtherVideoLibraryContents(
