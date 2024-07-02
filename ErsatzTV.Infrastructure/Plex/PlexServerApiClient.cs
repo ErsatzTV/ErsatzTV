@@ -7,6 +7,7 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex;
@@ -390,8 +391,18 @@ public class PlexServerApiClient : IPlexServerApiClient
             });
     }
 
-    private static Option<PlexLibrary> Project(PlexLibraryResponse response) =>
-        response.Type switch
+    private static Option<PlexLibrary> Project(PlexLibraryResponse response)
+    {
+        List<LibraryPath> paths =
+        [
+            new LibraryPath
+            {
+                Path = JsonConvert.SerializeObject(
+                    new LibraryPaths { Paths = response.Location.Map(l => l.Path).ToList() })
+            }
+        ];
+
+        return response.Type switch
         {
             "show" => new PlexLibrary
             {
@@ -399,19 +410,22 @@ public class PlexServerApiClient : IPlexServerApiClient
                 Name = response.Title,
                 MediaKind = LibraryMediaKind.Shows,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = String.Join(",", response.Location.Map(l => l.Path)) } }
+                Paths = paths
             },
             "movie" => new PlexLibrary
             {
                 Key = response.Key,
                 Name = response.Title,
-                MediaKind = (response.Agent == "com.plexapp.agents.none" && response.Language == "xn" ? LibraryMediaKind.OtherVideos : LibraryMediaKind.Movies),
+                MediaKind = response.Agent == "com.plexapp.agents.none" && response.Language == "xn"
+                    ? LibraryMediaKind.OtherVideos
+                    : LibraryMediaKind.Movies,
                 ShouldSyncItems = false,
-                Paths = new List<LibraryPath> { new() { Path = String.Join(",", response.Location.Map(l => l.Path)) } }
+                Paths = paths
             },
             // TODO: "artist" for music libraries
             _ => None
         };
+    }
 
     private Option<PlexCollection> ProjectToCollection(
         PlexMediaSource plexMediaSource,
@@ -1139,6 +1153,46 @@ public class PlexServerApiClient : IPlexServerApiClient
                     }
                 }
             }
+
+            PlexMediaResponse<PlexXmlPartResponse> media = xml.Media
+                .Filter(media => media.Part.Count != 0)
+                .MaxBy(media => media.Id);
+
+            PlexXmlPartResponse part = media.Part.Head();
+            string folder = Path.GetDirectoryName(part.File);
+
+            if (!string.IsNullOrWhiteSpace(folder))
+            {
+                IEnumerable<string> libraryPaths = library.Paths
+                    .HeadOrNone()
+                    .Map(p => p.Path)
+                    .Map(JsonConvert.DeserializeObject<LibraryPaths>)
+                    .Map(lp => lp.Paths)
+                    .Flatten();
+
+                // check each library path from plex
+                foreach (string libraryPath in libraryPaths)
+                {
+                    // if the media file belongs to this library path
+                    if (folder.StartsWith(libraryPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // try to get a parent directory of the library path
+                        string parent = Optional(Directory.GetParent(libraryPath)).Match(
+                            di => di.FullName,
+                            () => libraryPath);
+
+                        // get all folders between parent and media file
+                        string diff = Path.GetRelativePath(parent, folder);
+
+                        // each folder becomes a tag
+                        IEnumerable<Tag> tags = diff.Split(Path.DirectorySeparatorChar)
+                            .Map(t => new Tag { Name = t });
+
+                        metadata.Tags.AddRange(tags);
+                        break;
+                    }
+                }
+            }
         }
         else
         {
@@ -1191,26 +1245,6 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Artwork.Add(artwork);
         }
 
-        //Path2Tags
-        /*
-        if (version.MediaFiles != null && version.MediaFiles.Length() > 0 && !string.IsNullOrEmpty(version.MediaFiles[0].Path))
-        {
-            string mediaPath = version.MediaFiles[0].Path;
-            string[] tokens = mediaPath.Split("/");
-
-            if (tokens.Length() > 2)
-            {
-                tokens.Take(1)  // Removing the first token from the full path (empty on unix, drive on windows)
-                    .Take(tokens.Length - 1) // Ignoring last token (filename)
-                    .ToList()
-                    .ForEach(token =>
-                    {
-                        metadata.Tags.Add(new Tag { Name = token, ExternalCollectionId = token });
-                    });
-            }
-        }
-        */
-
         return metadata;
     }
 
@@ -1256,5 +1290,11 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
 
         return None;
+    }
+
+    private sealed class LibraryPaths
+    {
+        [JsonProperty("paths")]
+        public List<string> Paths { get; set; } = [];
     }
 }
