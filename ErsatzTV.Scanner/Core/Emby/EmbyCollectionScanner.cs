@@ -30,7 +30,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
     {
         try
         {
-            // need to call get libraries to find library that contains collections (box sets)                
+            // need to call get libraries to find library that contains collections (box sets)
             await _embyApiClient.GetLibraries(address, apiKey);
 
             var incomingItemIds = new List<string>();
@@ -38,7 +38,7 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             // get all collections from db (item id, etag)
             List<EmbyCollection> existingCollections = await _embyCollectionRepository.GetCollections();
 
-            await foreach (EmbyCollection collection in _embyApiClient.GetCollectionLibraryItems(address, apiKey))
+            await foreach ((EmbyCollection collection, int _) in _embyApiClient.GetCollectionLibraryItems(address, apiKey))
             {
                 incomingItemIds.Add(collection.ItemId);
 
@@ -88,13 +88,13 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         try
         {
             // get collection items from Emby
-            IAsyncEnumerable<MediaItem> items = _embyApiClient.GetCollectionItems(address, apiKey, collection.ItemId);
+            IAsyncEnumerable<Tuple<MediaItem, int>> items = _embyApiClient.GetCollectionItems(address, apiKey, collection.ItemId);
 
             List<int> removedIds = await _embyCollectionRepository.RemoveAllTags(collection);
 
             // sync tags on items
             var addedIds = new List<int>();
-            await foreach (MediaItem item in items)
+            await foreach ((MediaItem item, int _) in items)
             {
                 addedIds.Add(await _embyCollectionRepository.AddTag(item, collection));
             }

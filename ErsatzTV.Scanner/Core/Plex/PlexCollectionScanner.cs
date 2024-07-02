@@ -39,7 +39,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
             // get all collections from db (key, etag)
             List<PlexCollection> existingCollections = await _plexCollectionRepository.GetCollections();
 
-            await foreach (PlexCollection collection in _plexServerApiClient.GetAllCollections(
+            await foreach ((PlexCollection collection, int _) in _plexServerApiClient.GetAllCollections(
                                connection,
                                token,
                                cancellationToken))
@@ -93,7 +93,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
         try
         {
             // get collection items from Plex
-            IAsyncEnumerable<MediaItem> items = _plexServerApiClient.GetCollectionItems(
+            IAsyncEnumerable<Tuple<MediaItem, int>> items = _plexServerApiClient.GetCollectionItems(
                 connection,
                 token,
                 collection.Key,
@@ -103,7 +103,7 @@ public class PlexCollectionScanner : IPlexCollectionScanner
 
             // sync tags on items
             var addedIds = new List<int>();
-            await foreach (MediaItem item in items)
+            await foreach ((MediaItem item, int _) in items)
             {
                 addedIds.Add(await _plexCollectionRepository.AddTag(item, collection));
                 cancellationToken.ThrowIfCancellationRequested();
