@@ -9,7 +9,7 @@ public class PlexMediaContainerResponse<T>
 
 public class PlexMediaContainerDirectoryContent<T>
 {
-    public List<T> Directory { get; set; }
+    public List<T> Directory { get; set; } = [];
 }
 
 public class PlexMediaContainerMetadataContent<T>

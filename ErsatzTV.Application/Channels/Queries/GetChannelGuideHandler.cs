@@ -36,10 +36,12 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
             return BaseError.New($"Required file {channelsFile} is missing");
         }
 
-        string accessTokenUri = string.Empty;
+        long mtime = File.GetLastWriteTime(channelsFile).Ticks;
+
+        var accessTokenUri = $"?v={mtime}";
         if (!string.IsNullOrWhiteSpace(request.AccessToken))
         {
-            accessTokenUri = $"?access_token={request.AccessToken}";
+            accessTokenUri += $"&access_token={request.AccessToken}";
         }
 
         string channelsFragment = await File.ReadAllTextAsync(channelsFile, Encoding.UTF8, cancellationToken);
