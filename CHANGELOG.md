@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Items in these libraries will have tag metadata added from folders just like local Other Video libraries
   - Thanks @raknam for adding this feature!
 
+### Fixed
+- Add basic cache busting to XMLTV image URLs
+  - This should help with clients not showing correct channel logos or posters
+
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging
 
