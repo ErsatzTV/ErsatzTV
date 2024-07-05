@@ -304,6 +304,11 @@ public class MetadataRepository : IMetadataRepository
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
+            OtherVideoMetadata => await dbContext.Connection.ExecuteAsync(
+                    @"INSERT INTO Artwork (ArtworkKind, OtherVideoMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
+                    parameters)
+                .ToUnit(),
             _ => Unit.Default
         };
     }
@@ -313,7 +318,7 @@ public class MetadataRepository : IMetadataRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id
-                OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id)",
+                OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id OR OtherVideoMetadataId = @Id)",
             new { ArtworkKind = artworkKind, metadata.Id }).ToUnit();
     }
 
