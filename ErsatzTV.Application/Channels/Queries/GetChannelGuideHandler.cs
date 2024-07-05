@@ -41,7 +41,7 @@ public class GetChannelGuideHandler : IRequestHandler<GetChannelGuide, Either<Ba
         var accessTokenUri = $"?v={mtime}";
         if (!string.IsNullOrWhiteSpace(request.AccessToken))
         {
-            accessTokenUri += $"&access_token={request.AccessToken}";
+            accessTokenUri += $"&amp;access_token={request.AccessToken}";
         }
 
         string channelsFragment = await File.ReadAllTextAsync(channelsFile, Encoding.UTF8, cancellationToken);
