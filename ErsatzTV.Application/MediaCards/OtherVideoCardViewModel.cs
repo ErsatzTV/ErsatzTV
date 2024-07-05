@@ -7,12 +7,13 @@ public record OtherVideoCardViewModel(
     string Title,
     string Subtitle,
     string SortTitle,
+    string Poster,
     MediaItemState State) : MediaCardViewModel(
     OtherVideoId,
     Title,
     Subtitle,
     SortTitle,
-    null,
+    Poster,
     State)
 {
     public int CustomIndex { get; set; }

@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Add basic cache busting to XMLTV image URLs
   - This should help with clients not showing correct channel logos or posters
+- Fix artwork in other video libraries by @raknam
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging

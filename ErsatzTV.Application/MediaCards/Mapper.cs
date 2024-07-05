@@ -117,13 +117,22 @@ internal static class Mapper
             musicVideoMetadata.MusicVideo.GetHeadVersion().MediaFiles.Head().Path,
             localPath);
 
-    internal static OtherVideoCardViewModel ProjectToViewModel(OtherVideoMetadata otherVideoMetadata) =>
-        new(
+    internal static OtherVideoCardViewModel ProjectToViewModel(OtherVideoMetadata otherVideoMetadata)
+    {
+        string poster = GetThumbnail(otherVideoMetadata, None, None);
+        if (string.IsNullOrWhiteSpace(poster))
+        {
+            poster = GetPoster(otherVideoMetadata, None, None);
+        }
+
+        return new OtherVideoCardViewModel(
             otherVideoMetadata.OtherVideoId,
             otherVideoMetadata.Title,
             otherVideoMetadata.OriginalTitle,
             otherVideoMetadata.SortTitle,
+            poster,
             otherVideoMetadata.OtherVideo.State);
+    }
 
     internal static SongCardViewModel ProjectToViewModel(SongMetadata songMetadata)
     {
