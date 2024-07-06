@@ -36,29 +36,16 @@ public class ArtworkController : ControllerBase
 
         return artwork.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
-            Right: r => {
-                if (r.Path.StartsWith("plex/", StringComparison.InvariantCulture))
+            Right: r => r.ArtworkKind switch
                 {
-                    return r.ArtworkKind switch
-                    {
-                        ArtworkKind.Poster    => new RedirectResult("/artwork/posters/" + r.Path),
-                        ArtworkKind.Thumbnail => new RedirectResult("/artwork/thumbnails/" + r.Path),
-                        ArtworkKind.FanArt    => new RedirectResult("/artwork/fanart/" + r.Path),
-                        _ => new NotFoundResult()
-                    };
-                } else
-                {
-                    return r.ArtworkKind switch
-                    {
-                        ArtworkKind.Poster => new RedirectResult("/artwork/posters/" + r.Path),
-                        ArtworkKind.Thumbnail => new RedirectResult("/artwork/thumbnails/" + r.Path),
-                        ArtworkKind.Logo => new RedirectResult("/iptv/logos/" + r.Path),
-                        ArtworkKind.FanArt => new RedirectResult("/artwork/fanart/" + r.Path),
-                        ArtworkKind.Watermark => new RedirectResult("/artwork/watermarks/" + r.Path),
-                        _ => new NotFoundResult()
-                    };
+                    ArtworkKind.Poster    => new RedirectResult("/artwork/posters/" + r.Path),
+                    ArtworkKind.Thumbnail => new RedirectResult("/artwork/thumbnails/" + r.Path),
+                    ArtworkKind.Logo      => new RedirectResult("/iptv/logos/" + r.Path),
+                    ArtworkKind.FanArt    => new RedirectResult("/artwork/fanart/" + r.Path),
+                    ArtworkKind.Watermark => new RedirectResult("/artwork/watermarks/" + r.Path),
+                    _ => new NotFoundResult()
                 }
-            });
+            );
     }
 
     [HttpHead("/iptv/artwork/posters/{fileName}")]
