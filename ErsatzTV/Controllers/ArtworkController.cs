@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.Emby;
+using ErsatzTV.Application.Artworks;
+using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Application.Plex;
@@ -24,6 +25,27 @@ public class ArtworkController : ControllerBase
     {
         _mediator = mediator;
         _httpClientFactory = httpClientFactory;
+    }
+
+    [HttpHead("/artwork/{id}")]
+    [HttpGet("/artwork/{id}")]
+    // This route redirect to the proper artwork from its Id
+    public async Task<IActionResult> RedirectArtwork(int id, CancellationToken cancellationToken) {
+        Either<BaseError, Artwork> artwork =
+            await _mediator.Send(new GetArtwork(id), cancellationToken);
+
+        return artwork.Match<IActionResult>(
+            Left: _ => new NotFoundResult(),
+            Right: r => r.ArtworkKind switch
+                {
+                    ArtworkKind.Poster    => new RedirectResult("/artwork/posters/" + r.Path),
+                    ArtworkKind.Thumbnail => new RedirectResult("/artwork/thumbnails/" + r.Path),
+                    ArtworkKind.Logo      => new RedirectResult("/iptv/logos/" + r.Path),
+                    ArtworkKind.FanArt    => new RedirectResult("/artwork/fanart/" + r.Path),
+                    ArtworkKind.Watermark => new RedirectResult("/artwork/watermarks/" + r.Path),
+                    _ => new NotFoundResult()
+                }
+            );
     }
 
     [HttpHead("/iptv/artwork/posters/{fileName}")]
