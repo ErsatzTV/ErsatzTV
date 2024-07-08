@@ -36,6 +36,7 @@ public class IptvController : ControllerBase
         _ffmpegSegmenterService = ffmpegSegmenterService;
     }
 
+    [HttpHead("iptv/channels.m3u")]
     [HttpGet("iptv/channels.m3u")]
     public Task<IActionResult> GetChannelPlaylist(
         [FromQuery]
@@ -50,6 +51,7 @@ public class IptvController : ControllerBase
                     Request.Query["access_token"]))
             .Map<ChannelPlaylist, IActionResult>(Ok);
 
+    [HttpHead("iptv/xmltv.xml")]
     [HttpGet("iptv/xmltv.xml")]
     public Task<IActionResult> GetGuide() =>
         _mediator.Send(
@@ -142,6 +144,7 @@ public class IptvController : ControllerBase
                     error => BadRequest(error.Value)));
     }
 
+    [HttpHead("iptv/session/{channelNumber}/hls.m3u8")]
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
     public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
