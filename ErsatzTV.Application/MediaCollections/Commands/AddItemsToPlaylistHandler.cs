@@ -48,7 +48,7 @@ public class AddItemsToPlaylistHandler : IRequestHandler<AddItemsToPlaylist, Eit
             { ProgramScheduleItemCollectionType.Image, request.ImageIds }
         };
 
-        int index = playlist.Items.Max(i => i.Index) + 1;
+        int index = playlist.Items.Count > 0 ? playlist.Items.Max(i => i.Index) + 1 : 0;
 
         foreach ((ProgramScheduleItemCollectionType collectionType, List<int> ids) in allItems)
         {
