@@ -62,6 +62,7 @@ public class IptvController : ControllerBase
                     Request.Query["access_token"]))
             .ToActionResult();
 
+    [HttpHead("iptv/hdhr/channel/{channelNumber}.ts")]
     [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
     public Task<IActionResult> GetHDHRVideo(string channelNumber, [FromQuery] string mode = "ts")
     {
@@ -74,6 +75,7 @@ public class IptvController : ControllerBase
         return GetTransportStreamVideo(channelNumber, mode);
     }
 
+    [HttpHead("iptv/channel/{channelNumber}.ts")]
     [HttpGet("iptv/channel/{channelNumber}.ts")]
     public async Task<IActionResult> GetTransportStreamVideo(
         string channelNumber,
@@ -254,6 +256,7 @@ public class IptvController : ControllerBase
         }
     }
 
+    [HttpHead("iptv/logos/{fileName}")]
     [HttpGet("iptv/logos/{fileName}")]
     [HttpHead("iptv/logos/{fileName}.jpg")]
     [HttpGet("iptv/logos/{fileName}.jpg")]
