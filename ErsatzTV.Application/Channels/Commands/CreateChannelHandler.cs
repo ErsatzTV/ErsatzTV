@@ -73,6 +73,7 @@ public class CreateChannelHandler(
                     Group = request.Group,
                     Categories = request.Categories,
                     FFmpegProfileId = ffmpegProfileId,
+                    ProgressMode = request.ProgressMode,
                     StreamingMode = request.StreamingMode,
                     Artwork = artwork,
                     PreferredAudioLanguageCode = preferredAudioLanguageCode,

@@ -6,6 +6,7 @@ using System.Timers;
 using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
@@ -172,6 +173,9 @@ public class HlsSessionWorker : IHlsSessionWorker
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
 
+            // time shift on-demand playout if needed
+            await _mediator.Send(new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true), cancellationToken);
+
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
             _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
 
@@ -236,7 +240,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             }
             catch (Exception)
             {
-                // do nothing   
+                // do nothing
             }
         }
     }
@@ -524,6 +528,17 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
         finally
         {
+            try
+            {
+                await _mediator.Send(
+                    new UpdateOnDemandCheckpoint(_channelNumber, DateTimeOffset.Now),
+                    CancellationToken.None);
+            }
+            catch (Exception)
+            {
+                // do nothing
+            }
+
             if (!realtime)
             {
                 Interlocked.Decrement(ref _workAheadCount);

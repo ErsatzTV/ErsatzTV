@@ -30,6 +30,10 @@
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
                     <MudTextField Class="mt-3" Label="Group" @bind-Value="_model.Group" For="@(() => _model.Group)"/>
                     <MudTextField Class="mt-3" Label="Categories" @bind-Value="_model.Categories" For="@(() => _model.Categories)" Placeholder="Comma-separated list of categories"/>
+                    <MudSelect Class="mt-3" Label="Progress Mode" @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)">
+                        <MudSelectItem Value="@(ChannelProgressMode.Always)">Always</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelProgressMode.OnDemand)">On Demand</MudSelectItem>
+                    </MudSelect>
                     <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
                         <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
@@ -180,6 +184,7 @@
                     _model.Number = channelViewModel.Number;
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
+                    _model.ProgressMode = channelViewModel.ProgressMode;
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
                     _model.PreferredAudioTitle = channelViewModel.PreferredAudioTitle;

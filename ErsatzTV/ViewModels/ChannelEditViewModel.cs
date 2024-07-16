@@ -15,6 +15,7 @@ public class ChannelEditViewModel
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string Logo { get; set; }
+    public ChannelProgressMode ProgressMode { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public int? WatermarkId { get; set; }
     public int? FallbackFillerId { get; set; }
@@ -41,6 +42,7 @@ public class ChannelEditViewModel
             Logo,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
+            ProgressMode,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,
@@ -59,6 +61,7 @@ public class ChannelEditViewModel
             Logo,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
+            ProgressMode,
             StreamingMode,
             WatermarkId,
             FallbackFillerId,

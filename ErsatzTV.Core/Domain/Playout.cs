@@ -22,4 +22,5 @@ public class Playout
     public TimeSpan? DailyRebuildTime { get; set; }
     public int? DecoId { get; set; }
     public Deco Deco { get; set; }
+    public DateTimeOffset? OnDemandCheckpoint { get; set; }
 }

@@ -28,4 +28,5 @@ public class Channel
     public ChannelSubtitleMode SubtitleMode { get; set; }
     public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
     public string MusicVideoCreditsTemplate { get; set; }
+    public ChannelProgressMode ProgressMode { get; set; }
 }

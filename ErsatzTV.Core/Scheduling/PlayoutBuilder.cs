@@ -17,6 +17,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 {
     private static readonly Random Random = new();
     private readonly IArtistRepository _artistRepository;
+    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
@@ -26,6 +27,7 @@ public class PlayoutBuilder : IPlayoutBuilder
     private ILogger<PlayoutBuilder> _logger;
 
     public PlayoutBuilder(
+        IPlayoutTimeShifter playoutTimeShifter,
         IConfigElementRepository configElementRepository,
         IMediaCollectionRepository mediaCollectionRepository,
         ITelevisionRepository televisionRepository,
@@ -34,6 +36,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         ILocalFileSystem localFileSystem,
         ILogger<PlayoutBuilder> logger)
     {
+        _playoutTimeShifter = playoutTimeShifter;
         _configElementRepository = configElementRepository;
         _mediaCollectionRepository = mediaCollectionRepository;
         _televisionRepository = televisionRepository;
@@ -78,6 +81,12 @@ public class PlayoutBuilder : IPlayoutBuilder
             // {
             //     return await Build(playout, mode, parameters with { Start = parameters.Start.AddDays(-2) });
             // }
+
+            // time shift on demand channel if needed
+            if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand && mode is not PlayoutBuildMode.Reset)
+            {
+                _playoutTimeShifter.TimeShift(playout, parameters.Start, false);
+            }
 
             return await Build(playout, mode, parameters, cancellationToken);
         }
@@ -238,6 +247,13 @@ public class PlayoutBuilder : IPlayoutBuilder
         playout.Items.Clear();
         playout.Anchor = null;
         playout.ProgramScheduleAnchors.Clear();
+        playout.OnDemandCheckpoint = null;
+
+        // don't trim start for on demand channels, we want to time shift it all forward
+        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        {
+            TrimStart = false;
+        }
 
         await BuildPlayoutItems(
             playout,
@@ -246,6 +262,12 @@ public class PlayoutBuilder : IPlayoutBuilder
             parameters.CollectionMediaItems,
             true,
             cancellationToken);
+
+        // time shift on demand channel if needed
+        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        {
+            _playoutTimeShifter.TimeShift(playout, parameters.Start, false);
+        }
 
         return playout;
     }
@@ -391,20 +413,24 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.Items.RemoveAll(old => old.FinishOffset < trimBefore);
         }
 
-        // check for future items that aren't grouped inside range
-        var futureItems = playout.Items.Filter(i => i.StartOffset > trimAfter).ToList();
-        foreach (PlayoutItem futureItem in futureItems)
+        // on demand channels end up with slightly more than expected due to time shifting from midnight to first build
+        if (playout.Channel.ProgressMode is not ChannelProgressMode.OnDemand)
         {
-            if (playout.Items.All(i => i == futureItem || i.GuideGroup != futureItem.GuideGroup))
+            // check for future items that aren't grouped inside range
+            var futureItems = playout.Items.Filter(i => i.StartOffset > trimAfter).ToList();
+            foreach (PlayoutItem futureItem in futureItems)
             {
-                _logger.LogError(
-                    "Playout item scheduled for {Time} after hard stop of {HardStop}",
-                    futureItem.StartOffset,
-                    trimAfter);
+                if (playout.Items.All(i => i == futureItem || i.GuideGroup != futureItem.GuideGroup))
+                {
+                    _logger.LogError(
+                        "Playout item scheduled for {Time} after hard stop of {HardStop}",
+                        futureItem.StartOffset,
+                        trimAfter);
 
-                // it feels hacky to have to clean up a playlist like this,
-                // so only log the error, and leave the bad data to fail tests
-                // playout.Items.Remove(futureItem);
+                    // it feels hacky to have to clean up a playlist like this,
+                    // so only log the error, and leave the bad data to fail tests
+                    // playout.Items.Remove(futureItem);
+                }
             }
         }
 
@@ -424,6 +450,12 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.ProgramSchedule,
             playout.ProgramScheduleAlternates,
             playoutStart);
+
+        // on demand channels do NOT use alternate schedules
+        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        {
+            activeSchedule = playout.ProgramSchedule;
+        }
 
         // _logger.LogDebug("Active schedule is: {Schedule}", activeSchedule.Name);
 

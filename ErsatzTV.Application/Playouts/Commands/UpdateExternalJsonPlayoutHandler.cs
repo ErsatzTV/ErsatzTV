@@ -49,9 +49,10 @@ public class
             playout.ProgramSchedulePlayoutType,
             playout.Channel.Name,
             playout.Channel.Number,
+            playout.Channel.ProgressMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
             playout.ExternalJsonFile,
-            Optional(playout.DailyRebuildTime));
+            playout.DailyRebuildTime);
     }
 
     private static Task<Validation<BaseError, Playout>> Validate(

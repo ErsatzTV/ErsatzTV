@@ -117,6 +117,7 @@ public class ScheduleIntegrationTests
             provider.GetRequiredService<IFallbackMetadataProvider>());
 
         var builder = new PlayoutBuilder(
+            Substitute.For<IPlayoutTimeShifter>(),
             new ConfigElementRepository(factory),
             new MediaCollectionRepository(Substitute.For<IClient>(), searchIndex, factory),
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),
@@ -287,6 +288,7 @@ public class ScheduleIntegrationTests
         DateTimeOffset finish = start.AddDays(2);
 
         var builder = new PlayoutBuilder(
+            Substitute.For<IPlayoutTimeShifter>(),
             new ConfigElementRepository(factory),
             new MediaCollectionRepository(Substitute.For<IClient>(), Substitute.For<ISearchIndex>(), factory),
             new TelevisionRepository(factory, provider.GetRequiredService<ILogger<TelevisionRepository>>()),

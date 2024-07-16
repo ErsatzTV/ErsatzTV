@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - These libraries will now appear as ETV Other Video libraries
   - Items in these libraries will have tag metadata added from folders just like local Other Video libraries
   - Thanks @raknam for adding this feature!
+- Add *experimental* support for `On Demand` channel progress
+  - With `On Demand` channel progress, the schedule will only advance when the channel is being streamed
+  - When the channel is idle, the schedule is unmodified and will be shifted forward as needed so no content is missed
+  - Setting a channel to `On Demand` progress will disable alternate schedules
+  - The `On Demand` setting will only be used for `Flood` playouts (NOT `Block` or `External JSON`)
+  - It is NOT recommended to use fixed start times with `On Demand` progress
+    - This will probably be disabled with a future update
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs
