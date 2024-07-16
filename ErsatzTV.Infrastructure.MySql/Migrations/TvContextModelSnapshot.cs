@@ -1702,6 +1702,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("ExternalJsonFile")
                         .HasColumnType("longtext");
 
+                    b.Property<DateTimeOffset?>("OnDemandCheckpoint")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int?>("ProgramScheduleId")
                         .HasColumnType("int");
 

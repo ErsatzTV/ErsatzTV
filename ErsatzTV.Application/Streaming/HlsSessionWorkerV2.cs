@@ -4,6 +4,7 @@ using System.Text;
 using System.Timers;
 using CliWrap;
 using CliWrap.Buffered;
+using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -124,6 +125,9 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             _transcodedUntil = DateTimeOffset.Now;
             PlaylistStart = _transcodedUntil;
 
+            // time shift on-demand playout if needed
+            await _mediator.Send(new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true), cancellationToken);
+
             // start concat/segmenter process
             // other transcode processes will be started by incoming requests from concat/segmenter process
 
@@ -173,6 +177,17 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
 
             try
             {
+                await _mediator.Send(
+                    new UpdateOnDemandCheckpoint(_channelNumber, DateTimeOffset.Now),
+                    CancellationToken.None);
+            }
+            catch (Exception)
+            {
+                // do nothing
+            }
+
+            try
+            {
                 _localFileSystem.EmptyFolder(Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber));
             }
             catch
@@ -192,7 +207,7 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             }
             catch (Exception)
             {
-                // do nothing   
+                // do nothing
             }
         }
     }

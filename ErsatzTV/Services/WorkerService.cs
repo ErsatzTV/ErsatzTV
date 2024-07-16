@@ -71,6 +71,9 @@ public class WorkerService : BackgroundService
                                     buildPlayout.PlayoutId,
                                     error.Value));
                             break;
+                        case TimeShiftOnDemandPlayout timeShiftOnDemandPlayout:
+                            await mediator.Send(timeShiftOnDemandPlayout, stoppingToken);
+                            break;
                         case DeleteOrphanedArtwork deleteOrphanedArtwork:
                             await mediator.Send(deleteOrphanedArtwork, stoppingToken);
                             break;
