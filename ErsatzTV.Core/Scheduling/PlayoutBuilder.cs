@@ -451,6 +451,12 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.ProgramScheduleAlternates,
             playoutStart);
 
+        // on demand channels do NOT use alternate schedules
+        if (playout.Channel.ProgressMode is ChannelProgressMode.OnDemand)
+        {
+            activeSchedule = playout.ProgramSchedule;
+        }
+
         // _logger.LogDebug("Active schedule is: {Schedule}", activeSchedule.Name);
 
         // random start points are disabled in some scenarios, so ensure it's enabled and active
