@@ -41,9 +41,10 @@ public class UpdatePlayoutHandler : IRequestHandler<UpdatePlayout, Either<BaseEr
             playout.ProgramSchedulePlayoutType,
             playout.Channel.Name,
             playout.Channel.Number,
+            playout.Channel.ProgressMode,
             playout.ProgramSchedule?.Name ?? string.Empty,
             playout.ExternalJsonFile,
-            Optional(playout.DailyRebuildTime));
+            playout.DailyRebuildTime);
     }
 
     private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, UpdatePlayout request) =>

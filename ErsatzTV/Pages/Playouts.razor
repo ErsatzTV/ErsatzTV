@@ -81,12 +81,24 @@
                     </div>
                     @if (context.PlayoutType == ProgramSchedulePlayoutType.Flood)
                     {
-                        <MudTooltip Text="Edit Alternate Schedules">
-                            <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
-                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           Href="@($"playouts/{context.PlayoutId}/alternate-schedules")">
-                            </MudIconButton>
-                        </MudTooltip>
+                        if (context.ProgressMode is ChannelProgressMode.OnDemand)
+                        {
+                            <MudTooltip Text="Alternate Schedules are not supported with On Demand progress">
+                                <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
+                                               Disabled="true">
+                                </MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Edit Alternate Schedules">
+                                <MudIconButton Icon="@Icons.Material.Filled.EditCalendar"
+                                               Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                               Href="@($"playouts/{context.PlayoutId}/alternate-schedules")">
+                                </MudIconButton>
+                            </MudTooltip>
+                        }
+
                         <MudTooltip Text="Reset Playout">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"

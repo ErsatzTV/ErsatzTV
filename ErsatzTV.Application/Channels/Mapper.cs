@@ -16,6 +16,7 @@ internal static class Mapper
             GetLogo(channel),
             channel.PreferredAudioLanguageCode,
             channel.PreferredAudioTitle,
+            channel.ProgressMode,
             channel.StreamingMode,
             channel.WatermarkId,
             channel.FallbackFillerId,
