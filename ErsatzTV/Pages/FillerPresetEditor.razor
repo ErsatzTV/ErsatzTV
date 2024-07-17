@@ -46,10 +46,12 @@
                         </MudSelect>
                         <MudCheckBox Class="mt-3" Label="Allow Watermarks" @bind-Value="@_model.AllowWatermarks" For="@(() => _model.AllowWatermarks)"/>
                         <MudSelect Class="mt-3" Label="Filler Collection Type" @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
-                            @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
-                            {
-                                <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
-                            }
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
+                            <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
                         </MudSelect>
                         @if (_model.CollectionType == ProgramScheduleItemCollectionType.Collection)
                         {

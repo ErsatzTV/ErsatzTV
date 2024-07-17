@@ -75,10 +75,12 @@
                            Label="Dead Air Fallback Collection Type"
                            @bind-Value="_deco.DeadAirFallbackCollectionType"
                            For="@(() => _deco.DeadAirFallbackCollectionType)">
-                    @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
-                    {
-                        <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
-                    }
+                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
+                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
+                    <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionSeason">Television Season</MudSelectItem>
+                    <MudSelectItem Value="ProgramScheduleItemCollectionType.Artist">Artist</MudSelectItem>
+                    <MudSelectItem Value="ProgramScheduleItemCollectionType.MultiCollection">Multi Collection</MudSelectItem>
+                    <MudSelectItem Value="ProgramScheduleItemCollectionType.SmartCollection">Smart Collection</MudSelectItem>
                 </MudSelect>
                 @if (_deco.DeadAirFallbackCollectionType == ProgramScheduleItemCollectionType.Collection)
                 {
