@@ -10,8 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Items in these libraries will have tag metadata added from folders just like local Other Video libraries
   - Thanks @raknam for adding this feature!
 - Add *experimental* support for `On Demand` channel progress
-  - With `On Demand` channel progress, the schedule will only advance when the channel is being streamed
-  - When the channel is idle, the schedule is unmodified and will be shifted forward as needed so no content is missed
+  - With `On Demand` channel progress, the playout will only advance when the channel is being streamed
+  - When the channel is idle, the playout is unmodified and will be shifted forward as needed so no content is missed
   - Setting a channel to `On Demand` progress will disable alternate schedules
   - The `On Demand` setting will only be used for `Flood` playouts (NOT `Block` or `External JSON`)
   - It is NOT recommended to use fixed start times with `On Demand` progress
@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This should help with clients not showing correct channel logos or posters
 - Fix artwork in other video libraries by @raknam
 - Fix adding items to empty playlists
+- Fix filler preset editor and deco dead air fallback editor to only show supported collection types
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging
