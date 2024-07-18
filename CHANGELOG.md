@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix artwork in other video libraries by @raknam
 - Fix adding items to empty playlists
 - Fix filler preset editor and deco dead air fallback editor to only show supported collection types
+- Fix infinite loop caused by impossible schedule (all collection items longer than schedule item duration)
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging

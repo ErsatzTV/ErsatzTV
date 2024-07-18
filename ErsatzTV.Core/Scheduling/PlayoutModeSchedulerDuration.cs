@@ -77,6 +77,31 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
 
             if (itemDuration > scheduleItem.PlayoutDuration)
             {
+                var fail = false;
+                foreach (TimeSpan minimumDuration in contentEnumerator.MinimumDuration)
+                {
+                    if (minimumDuration > scheduleItem.PlayoutDuration)
+                    {
+                        Logger.LogError(
+                            "Collection with minimum duration {Duration:hh\\:mm\\:ss} will never fit in schedule item with duration {PlayoutDuration:hh\\:mm\\:ss}; skipping this schedule item!",
+                            minimumDuration,
+                            scheduleItem.PlayoutDuration);
+
+                        nextState = nextState with
+                        {
+                            DurationFinish = None
+                        };
+
+                        nextState.ScheduleItemsEnumerator.MoveNext();
+                        fail = true;
+                    }
+                }
+
+                if (fail)
+                {
+                    break;
+                }
+
                 Logger.LogWarning(
                     "Skipping playout item {Title} with duration {Duration:hh\\:mm\\:ss} that will never fit in schedule item duration {PlayoutDuration:hh\\:mm\\:ss}",
                     PlayoutBuilder.DisplayTitle(mediaItem),

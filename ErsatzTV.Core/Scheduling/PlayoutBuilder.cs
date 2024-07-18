@@ -666,7 +666,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             if (timeCount[playoutBuilderState.CurrentTime] == 6)
             {
                 _logger.LogWarning(
-                    "Failed to schedule beyond {Time}; aborting playout build - this is a bug",
+                    "Failed to schedule beyond {Time}; aborting playout build - this can be caused by an impossible schedule, or by a bug",
                     playoutBuilderState.CurrentTime);
 
                 throw new InvalidOperationException("Scheduling loop encountered");
