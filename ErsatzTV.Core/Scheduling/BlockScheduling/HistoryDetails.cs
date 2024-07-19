@@ -28,6 +28,21 @@ internal static class HistoryDetails
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
     }
 
+    public static string ForDefaultFiller(Deco deco)
+    {
+        dynamic key = new
+        {
+            DecoId = deco.Id,
+            PlaybackOrder = PlaybackOrder.Shuffle,
+            CollectionType = deco.DefaultFillerCollectionType,
+            CollectionId = deco.DefaultFillerCollectionId,
+            MultiCollectionId = deco.DefaultFillerMultiCollectionId,
+            SmartCollectionId = deco.DefaultFillerSmartCollectionId,
+        };
+
+        return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
+    }
+
     public static string ForMediaItem(MediaItem mediaItem)
     {
         Details details = mediaItem switch

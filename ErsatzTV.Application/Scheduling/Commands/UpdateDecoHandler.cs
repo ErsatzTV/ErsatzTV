@@ -27,6 +27,22 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         existing.WatermarkMode = request.WatermarkMode;
         existing.WatermarkId = request.WatermarkMode is DecoMode.Override ? request.WatermarkId : null;
 
+        // default filler
+        existing.DefaultFillerMode = request.DefaultFillerMode;
+        existing.DefaultFillerCollectionType = request.DefaultFillerCollectionType;
+        existing.DefaultFillerCollectionId = request.DefaultFillerMode is DecoMode.Override
+            ? request.DefaultFillerCollectionId
+            : null;
+        existing.DefaultFillerMediaItemId = request.DefaultFillerMode is DecoMode.Override
+            ? request.DefaultFillerMediaItemId
+            : null;
+        existing.DefaultFillerMultiCollectionId = request.DefaultFillerMode is DecoMode.Override
+            ? request.DefaultFillerMultiCollectionId
+            : null;
+        existing.DefaultFillerSmartCollectionId = request.DefaultFillerMode is DecoMode.Override
+            ? request.DefaultFillerSmartCollectionId
+            : null;
+
         // dead air fallback
         existing.DeadAirFallbackMode = request.DeadAirFallbackMode;
         existing.DeadAirFallbackCollectionType = request.DeadAirFallbackCollectionType;

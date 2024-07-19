@@ -4,7 +4,6 @@ using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
@@ -12,20 +11,26 @@ namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 public class BlockPlayoutFillerBuilder(
     IMediaCollectionRepository mediaCollectionRepository,
     ITelevisionRepository televisionRepository,
-    IArtistRepository artistRepository,
-    ILogger<BlockPlayoutFillerBuilder> logger) : IBlockPlayoutFillerBuilder
+    IArtistRepository artistRepository) : IBlockPlayoutFillerBuilder
 {
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
         NullValueHandling = NullValueHandling.Ignore
     };
 
-    public async Task<Playout> Build(Playout playout, CancellationToken cancellationToken)
+    public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
-        // remove all playout items with type filler
-        playout.Items.RemoveAll(pi => pi.FillerKind is not FillerKind.None);
+        if (mode is PlayoutBuildMode.Reset)
+        {
+            // remove all playout items with type filler
+            var toRemove = playout.Items.Where(pi => pi.FillerKind is not FillerKind.None).ToList();
+            foreach (PlayoutItem playoutItem in toRemove)
+            {
+                BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem);
+            }
+        }
 
-        var collectionMediaItems = new Dictionary<CollectionKey, List<MediaItem>>();
+        var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
 
         // find all unscheduled periods
         var queue = new Queue<PlayoutItem>(playout.Items);
@@ -35,33 +40,37 @@ public class BlockPlayoutFillerBuilder(
             PlayoutItem two = queue.Peek();
 
             DateTimeOffset start = one.FinishOffset;
-            DateTimeOffset finish = two.Start;
+            DateTimeOffset finish = two.StartOffset;
 
             // find applicable deco
             foreach (Deco deco in GetDecoFor(playout, start))
             {
                 var collectionKey = CollectionKey.ForDecoDefaultFiller(deco);
+                string historyKey = HistoryDetails.ForDefaultFiller(deco);
 
                 // load collection items from db on demand
-                if (!collectionMediaItems.TryGetValue(collectionKey, out List<MediaItem> items))
+                if (!collectionEnumerators.TryGetValue(collectionKey, out IMediaCollectionEnumerator enumerator))
                 {
-                    items = await MediaItemsForCollection.Collect(
+                    List<MediaItem> collectionItems = await MediaItemsForCollection.Collect(
                         mediaCollectionRepository,
                         televisionRepository,
                         artistRepository,
                         collectionKey);
 
-                    collectionMediaItems.Add(collectionKey, items);
+                    enumerator = BlockPlayoutEnumerator.Shuffle(
+                        collectionItems,
+                        start,
+                        playout,
+                        deco,
+                        historyKey);
+
+                    collectionEnumerators.Add(collectionKey, enumerator);
                 }
 
                 DateTimeOffset current = start;
                 var pastTime = false;
                 while (current < finish)
                 {
-                    var enumerator = new RandomizedMediaCollectionEnumerator(
-                        items,
-                        new CollectionEnumeratorState { Index = 0, Seed = 0 });
-
                     foreach (MediaItem mediaItem in enumerator.Current)
                     {
                         TimeSpan itemDuration = DurationForMediaItem(mediaItem);
@@ -75,17 +84,33 @@ public class BlockPlayoutFillerBuilder(
                             InPoint = TimeSpan.Zero,
                             OutPoint = itemDuration,
                             FillerKind = FillerKind.Fallback,
-                            CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings)
+                            CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
+                            GuideStart = one.GuideStart,
+                            GuideFinish = one.GuideFinish,
+                            GuideGroup = one.GuideGroup
                         };
 
                         if (filler.FinishOffset > finish)
                         {
-                            logger.LogDebug("Filler would run into primary content; done scheduling this period");
                             pastTime = true;
                             break;
                         }
 
                         playout.Items.Add(filler);
+
+
+                        // create a playout history record
+                        var nextHistory = new PlayoutHistory
+                        {
+                            PlayoutId = playout.Id,
+                            PlaybackOrder = PlaybackOrder.Shuffle,
+                            Index = enumerator.State.Index,
+                            When = current.UtcDateTime,
+                            Key = historyKey,
+                            Details = HistoryDetails.ForMediaItem(mediaItem)
+                        };
+
+                        playout.PlayoutHistory.Add(nextHistory);
 
                         current += itemDuration;
                         enumerator.MoveNext();

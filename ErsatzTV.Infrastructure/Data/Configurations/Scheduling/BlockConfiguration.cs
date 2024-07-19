@@ -26,6 +26,7 @@ public class BlockConfiguration : IEntityTypeConfiguration<Block>
         builder.HasMany(b => b.PlayoutHistory)
             .WithOne(h => h.Block)
             .HasForeignKey(h => h.BlockId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,8 +1,9 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Core.Interfaces.Scheduling;
 
 public interface IBlockPlayoutFillerBuilder
 {
-    Task<Playout> Build(Playout playout, CancellationToken cancellationToken);
+    Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken);
 }

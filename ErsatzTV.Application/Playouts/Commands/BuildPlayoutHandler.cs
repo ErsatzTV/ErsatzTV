@@ -72,7 +72,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 case ProgramSchedulePlayoutType.Block:
                     await _blockPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
-                    await _blockPlayoutFillerBuilder.Build(playout, cancellationToken);
+                    await _blockPlayoutFillerBuilder.Build(playout, request.Mode, cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
                     await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
