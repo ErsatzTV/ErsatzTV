@@ -13,6 +13,18 @@ public class Deco
     public int? WatermarkId { get; set; }
     public ChannelWatermark Watermark { get; set; }
 
+    // default filler
+    public DecoMode DefaultFillerMode { get; set; }
+    public ProgramScheduleItemCollectionType DefaultFillerCollectionType { get; set; }
+    public int? DefaultFillerCollectionId { get; set; }
+    public Collection DefaultFillerCollection { get; set; }
+    public int? DefaultFillerMediaItemId { get; set; }
+    public MediaItem DefaultFillerMediaItem { get; set; }
+    public int? DefaultFillerMultiCollectionId { get; set; }
+    public MultiCollection DefaultFillerMultiCollection { get; set; }
+    public int? DefaultFillerSmartCollectionId { get; set; }
+    public SmartCollection DefaultFillerSmartCollection { get; set; }
+
     // dead air fallback
     public DecoMode DeadAirFallbackMode { get; set; }
     public ProgramScheduleItemCollectionType DeadAirFallbackCollectionType { get; set; }

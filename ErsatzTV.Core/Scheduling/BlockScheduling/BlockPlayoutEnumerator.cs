@@ -107,4 +107,34 @@ public static class BlockPlayoutEnumerator
         // as long as already-played items are not included
         return new BlockPlayoutShuffledMediaCollectionEnumerator(mediaItems, state);
     }
+
+    public static IMediaCollectionEnumerator Shuffle(
+        List<MediaItem> collectionItems,
+        DateTimeOffset currentTime,
+        Playout playout,
+        Deco deco,
+        string historyKey)
+    {
+        DateTime historyTime = currentTime.UtcDateTime;
+        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When < historyTime)
+            .OrderByDescending(h => h.When)
+            .HeadOrNone();
+
+        var state = new CollectionEnumeratorState { Seed = playout.Seed + deco.Id, Index = 0 };
+        foreach (PlayoutHistory h in maybeHistory)
+        {
+            state.Index = h.Index + 1;
+        }
+
+        // TODO: fix multi-collection groups, keep multi-part episodes together
+        var mediaItems = collectionItems
+            .Map(mi => new GroupedMediaItem(mi, null))
+            .ToList();
+
+        // it shouldn't matter which order the remaining items are shuffled in,
+        // as long as already-played items are not included
+        return new BlockPlayoutShuffledMediaCollectionEnumerator(mediaItems, state);
+    }
 }
