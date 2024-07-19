@@ -654,6 +654,7 @@ public class Startup
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IBlockPlayoutBuilder, BlockPlayoutBuilder>();
         services.AddScoped<IBlockPlayoutPreviewBuilder, BlockPlayoutPreviewBuilder>();
+        services.AddScoped<IBlockPlayoutFillerBuilder, BlockPlayoutFillerBuilder>();
         services.AddScoped<IExternalJsonPlayoutBuilder, ExternalJsonPlayoutBuilder>();
         services.AddScoped<IPlayoutTimeShifter, PlayoutTimeShifter>();
         services.AddScoped<IImageCache, ImageCache>();

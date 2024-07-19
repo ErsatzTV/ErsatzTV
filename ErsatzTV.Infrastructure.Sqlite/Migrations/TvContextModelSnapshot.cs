@@ -2170,6 +2170,24 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("DecoGroupId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DefaultFillerCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DefaultFillerCollectionType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DefaultFillerMediaItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DefaultFillerMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DefaultFillerMultiCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DefaultFillerSmartCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
@@ -2188,6 +2206,14 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasIndex("DeadAirFallbackMultiCollectionId");
 
                     b.HasIndex("DeadAirFallbackSmartCollectionId");
+
+                    b.HasIndex("DefaultFillerCollectionId");
+
+                    b.HasIndex("DefaultFillerMediaItemId");
+
+                    b.HasIndex("DefaultFillerMultiCollectionId");
+
+                    b.HasIndex("DefaultFillerSmartCollectionId");
 
                     b.HasIndex("WatermarkId");
 
@@ -4499,6 +4525,22 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.Collection", "DefaultFillerCollection")
+                        .WithMany()
+                        .HasForeignKey("DefaultFillerCollectionId");
+
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "DefaultFillerMediaItem")
+                        .WithMany()
+                        .HasForeignKey("DefaultFillerMediaItemId");
+
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "DefaultFillerMultiCollection")
+                        .WithMany()
+                        .HasForeignKey("DefaultFillerMultiCollectionId");
+
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "DefaultFillerSmartCollection")
+                        .WithMany()
+                        .HasForeignKey("DefaultFillerSmartCollectionId");
+
                     b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
                         .WithMany()
                         .HasForeignKey("WatermarkId")
@@ -4513,6 +4555,14 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Navigation("DeadAirFallbackSmartCollection");
 
                     b.Navigation("DecoGroup");
+
+                    b.Navigation("DefaultFillerCollection");
+
+                    b.Navigation("DefaultFillerMediaItem");
+
+                    b.Navigation("DefaultFillerMultiCollection");
+
+                    b.Navigation("DefaultFillerSmartCollection");
 
                     b.Navigation("Watermark");
                 });

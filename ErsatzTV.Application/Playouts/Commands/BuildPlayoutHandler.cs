@@ -18,6 +18,7 @@ namespace ErsatzTV.Application.Playouts;
 public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseError, Unit>>
 {
     private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
+    private readonly IBlockPlayoutFillerBuilder _blockPlayoutFillerBuilder;
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
@@ -31,6 +32,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IDbContextFactory<TvContext> dbContextFactory,
         IPlayoutBuilder playoutBuilder,
         IBlockPlayoutBuilder blockPlayoutBuilder,
+        IBlockPlayoutFillerBuilder blockPlayoutFillerBuilder,
         IExternalJsonPlayoutBuilder externalJsonPlayoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
@@ -40,6 +42,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
         _blockPlayoutBuilder = blockPlayoutBuilder;
+        _blockPlayoutFillerBuilder = blockPlayoutFillerBuilder;
         _externalJsonPlayoutBuilder = externalJsonPlayoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
@@ -69,6 +72,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 case ProgramSchedulePlayoutType.Block:
                     await _blockPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
+                    await _blockPlayoutFillerBuilder.Build(playout, cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
                     await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
@@ -154,6 +158,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         BuildPlayout buildPlayout) =>
         dbContext.Playouts
             .Include(p => p.Channel)
+            .Include(p => p.Deco)
             .Include(p => p.Items)
             .Include(p => p.PlayoutHistory)
             .Include(p => p.Templates)
@@ -161,6 +166,10 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             .ThenInclude(t => t.Items)
             .ThenInclude(i => i.Block)
             .ThenInclude(b => b.Items)
+            .Include(p => p.Templates)
+            .ThenInclude(t => t.DecoTemplate)
+            .ThenInclude(t => t.Items)
+            .ThenInclude(i => i.Deco)
             .Include(p => p.FillGroupIndices)
             .ThenInclude(fgi => fgi.EnumeratorState)
             .Include(p => p.ProgramScheduleAlternates)
