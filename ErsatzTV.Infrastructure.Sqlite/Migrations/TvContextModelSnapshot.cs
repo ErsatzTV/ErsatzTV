@@ -2188,6 +2188,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("DefaultFillerSmartCollectionId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("DefaultFillerTrimToFit")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 

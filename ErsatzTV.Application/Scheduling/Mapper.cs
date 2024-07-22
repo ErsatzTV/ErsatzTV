@@ -62,6 +62,7 @@ internal static class Mapper
             deco.DefaultFillerMediaItemId,
             deco.DefaultFillerMultiCollectionId,
             deco.DefaultFillerSmartCollectionId,
+            deco.DefaultFillerTrimToFit,
             deco.DeadAirFallbackMode,
             deco.DeadAirFallbackCollectionType,
             deco.DeadAirFallbackCollectionId,
