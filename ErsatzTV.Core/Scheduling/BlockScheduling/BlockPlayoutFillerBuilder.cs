@@ -4,6 +4,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Scheduling.BlockScheduling;
@@ -11,7 +12,8 @@ namespace ErsatzTV.Core.Scheduling.BlockScheduling;
 public class BlockPlayoutFillerBuilder(
     IMediaCollectionRepository mediaCollectionRepository,
     ITelevisionRepository televisionRepository,
-    IArtistRepository artistRepository) : IBlockPlayoutFillerBuilder
+    IArtistRepository artistRepository,
+    ILogger<BlockPlayoutFillerBuilder> logger) : IBlockPlayoutFillerBuilder
 {
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
@@ -45,6 +47,9 @@ public class BlockPlayoutFillerBuilder(
             // find applicable deco
             foreach (Deco deco in GetDecoFor(playout, start))
             {
+                if (!HasDefaultFiller(deco))
+                    continue;
+
                 var collectionKey = CollectionKey.ForDecoDefaultFiller(deco);
                 string historyKey = HistoryDetails.ForDefaultFiller(deco);
 
@@ -64,8 +69,19 @@ public class BlockPlayoutFillerBuilder(
                         deco,
                         historyKey);
 
+                    if (enumerator.Count == 0)
+                    {
+                        logger.LogWarning(
+                            "Block filler contains empty collection {@Key}; no filler will be scheduled",
+                            collectionKey);
+                    }
+
                     collectionEnumerators.Add(collectionKey, enumerator);
                 }
+
+                // skip this deco if the collection has no items
+                if (enumerator.Count == 0)
+                    continue;
 
                 DateTimeOffset current = start;
                 var pastTime = false;
@@ -155,6 +171,27 @@ public class BlockPlayoutFillerBuilder(
         }
 
         return Optional(playout.Deco);
+    }
+
+    private static bool HasDefaultFiller(Deco deco)
+    {
+        switch (deco.DefaultFillerCollectionType)
+        {
+            case ProgramScheduleItemCollectionType.Collection:
+                return deco.DefaultFillerCollectionId.HasValue;
+            case ProgramScheduleItemCollectionType.TelevisionShow:
+                return deco.DefaultFillerMediaItemId.HasValue;
+            case ProgramScheduleItemCollectionType.TelevisionSeason:
+                return deco.DefaultFillerMediaItemId.HasValue;
+            case ProgramScheduleItemCollectionType.Artist:
+                return deco.DefaultFillerMediaItemId.HasValue;
+            case ProgramScheduleItemCollectionType.MultiCollection:
+                return deco.DefaultFillerMultiCollectionId.HasValue;
+            case ProgramScheduleItemCollectionType.SmartCollection:
+                return deco.DefaultFillerSmartCollectionId.HasValue;
+            default:
+                return false;
+        }
     }
 
     private static TimeSpan DurationForMediaItem(MediaItem mediaItem)
