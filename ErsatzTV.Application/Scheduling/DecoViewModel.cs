@@ -15,6 +15,7 @@ public record DecoViewModel(
     int? DefaultFillerMediaItemId,
     int? DefaultFillerMultiCollectionId,
     int? DefaultFillerSmartCollectionId,
+    bool DefaultFillerTrimToFit,
     DecoMode DeadAirFallbackMode,
     ProgramScheduleItemCollectionType DeadAirFallbackCollectionType,
     int? DeadAirFallbackCollectionId,

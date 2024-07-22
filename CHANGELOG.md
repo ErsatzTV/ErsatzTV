@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - After all blocks are scheduled/added to the playout, a second pass will be made to insert filler
   - Default filler will be shuffled and inserted in all unscheduled time between blocks
   - Default filler will stop scheduling when the next item would extend into primary content
+  - Alternatively, default filler can be configured to `Trim To Fit`
+    - In this case, the last item that would extend into primary content is trimmed to end exactly when the primary content starts
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs

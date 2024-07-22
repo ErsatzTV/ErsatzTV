@@ -159,6 +159,7 @@
                         }
                     </MudSelect>
                 }
+                <MudSwitch T="bool" Class="mt-3" Label="Trim To Fit" @bind-Value="_deco.DefaultFillerTrimToFit" Color="Color.Primary" />
             </MudCardContent>
         </MudCard>
         <MudCard Class="mb-6" Style="width: 350px">
@@ -173,7 +174,7 @@
                             </MudText>
                         </ChildContent>
                         <TooltipContent>
-                            <MudText Typo="Typo.body2">When no playout item is found for the current time, *one* item will be randomly selected from this collection and looped and cut to exactly fit until the start of the next playout item.</MudText>
+                            <MudText Typo="Typo.body2">When no playout item is found for the current time, *one* item will be randomly selected from this collection and looped and trimmed to exactly fit until the start of the next playout item.</MudText>
                             <MudText Typo="Typo.body2" Class="mt-3">This replaces the "Channel is Offline" image that would otherwise display.</MudText>
                         </TooltipContent>
                     </MudTooltip>
@@ -359,6 +360,7 @@
                 DefaultFillerSmartCollection = deco.DefaultFillerSmartCollectionId.HasValue
                     ? _smartCollections.Find(c => c.Id == deco.DefaultFillerSmartCollectionId.Value)
                     : null,
+                DefaultFillerTrimToFit = deco.DefaultFillerTrimToFit,
 
                 DeadAirFallbackMode = deco.DeadAirFallbackMode,
                 DeadAirFallbackCollectionType = deco.DeadAirFallbackCollectionType,
@@ -393,6 +395,7 @@
             _deco.DefaultFillerMediaItem?.MediaItemId,
             _deco.DefaultFillerMultiCollection?.Id,
             _deco.DefaultFillerSmartCollection?.Id,
+            _deco.DefaultFillerTrimToFit,
             _deco.DeadAirFallbackMode,
             _deco.DeadAirFallbackCollectionType,
             _deco.DeadAirFallbackCollection?.Id,

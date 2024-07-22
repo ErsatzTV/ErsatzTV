@@ -18,6 +18,7 @@ public class DecoEditViewModel
     public MultiCollectionViewModel DefaultFillerMultiCollection { get; set; }
     public SmartCollectionViewModel DefaultFillerSmartCollection { get; set; }
     public NamedMediaItemViewModel DefaultFillerMediaItem { get; set; }
+    public bool DefaultFillerTrimToFit { get; set; }
 
     public DecoMode DeadAirFallbackMode { get; set; }
     public ProgramScheduleItemCollectionType DeadAirFallbackCollectionType { get; set; }

@@ -24,6 +24,7 @@ public class Deco
     public MultiCollection DefaultFillerMultiCollection { get; set; }
     public int? DefaultFillerSmartCollectionId { get; set; }
     public SmartCollection DefaultFillerSmartCollection { get; set; }
+    public bool DefaultFillerTrimToFit { get; set; }
 
     // dead air fallback
     public DecoMode DeadAirFallbackMode { get; set; }

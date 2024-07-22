@@ -42,6 +42,7 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         existing.DefaultFillerSmartCollectionId = request.DefaultFillerMode is DecoMode.Override
             ? request.DefaultFillerSmartCollectionId
             : null;
+        existing.DefaultFillerTrimToFit = request.DefaultFillerTrimToFit;
 
         // dead air fallback
         existing.DeadAirFallbackMode = request.DeadAirFallbackMode;
