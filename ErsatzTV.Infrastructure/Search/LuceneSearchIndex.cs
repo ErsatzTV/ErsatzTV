@@ -540,7 +540,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
 
         var englishNames = new System.Collections.Generic.HashSet<string>();
-        foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
+        foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
         {
             Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
                 ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
@@ -564,7 +564,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         }
 
         var englishNames = new System.Collections.Generic.HashSet<string>();
-        foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
+        foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
         {
             Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
                 ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));

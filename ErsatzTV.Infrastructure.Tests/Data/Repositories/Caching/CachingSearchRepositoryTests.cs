@@ -19,15 +19,15 @@ public class CachingSearchRepositoryTests
         var frenchResult = new List<string> { "french_result" };
 
         ISearchRepository searchRepo = Substitute.For<ISearchRepository>();
-        searchRepo.GetAllLanguageCodes(englishMediaCodes).Returns(englishResult.AsTask());
-        searchRepo.GetAllLanguageCodes(frenchMediaCodes).Returns(frenchResult.AsTask());
+        searchRepo.GetAllThreeLetterLanguageCodes(englishMediaCodes).Returns(englishResult.AsTask());
+        searchRepo.GetAllThreeLetterLanguageCodes(frenchMediaCodes).Returns(frenchResult.AsTask());
 
         var repo = new CachingSearchRepository(searchRepo);
 
-        List<string> result1 = await repo.GetAllLanguageCodes(englishMediaCodes);
+        List<string> result1 = await repo.GetAllThreeLetterLanguageCodes(englishMediaCodes);
         result1.Should().BeEquivalentTo(englishResult);
 
-        List<string> result2 = await repo.GetAllLanguageCodes(frenchMediaCodes);
+        List<string> result2 = await repo.GetAllThreeLetterLanguageCodes(frenchMediaCodes);
         result2.Should().BeEquivalentTo(frenchResult);
     }
 }

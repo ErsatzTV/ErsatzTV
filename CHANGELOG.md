@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix adding items to empty playlists
 - Fix filler preset editor and deco dead air fallback editor to only show supported collection types
 - Fix infinite loop caused by impossible schedule (all collection items longer than schedule item duration)
+- Fix selecting audio and subtitle streams with two-letter language codes
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging

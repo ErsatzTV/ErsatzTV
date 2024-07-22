@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -69,7 +70,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 });
         }
 
-        List<string> allLanguageCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
+        List<string> allLanguageCodes = await _searchRepository.GetAllThreeLetterLanguageCodes([language])
+            .Map(GetTwoAndThreeLetterLanguageCodes);
         if (allLanguageCodes.Count > 1)
         {
             _logger.LogDebug("Preferred audio language has multiple codes {Codes}", allLanguageCodes);
@@ -178,7 +180,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         else
         {
             // filter to preferred language
-            allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
+            allCodes = await _searchRepository.GetAllThreeLetterLanguageCodes([language])
+                .Map(GetTwoAndThreeLetterLanguageCodes);
             if (allCodes.Count > 1)
             {
                 _logger.LogDebug("Preferred subtitle language has multiple codes {Codes}", allCodes);
@@ -400,6 +403,26 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         }
 
         return Option<MediaStream>.None;
+    }
+
+    private static List<string> GetTwoAndThreeLetterLanguageCodes(List<string> threeLetterLanguageCodes)
+    {
+        CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
+        var result = new System.Collections.Generic.HashSet<string>();
+
+        foreach (string code in threeLetterLanguageCodes)
+        {
+            IEnumerable<CultureInfo> cultures = allCultures
+                .Filter(ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
+
+            foreach (CultureInfo culture in cultures)
+            {
+                result.Add(culture.ThreeLetterISOLanguageName);
+                result.Add(culture.TwoLetterISOLanguageName);
+            }
+        }
+
+        return result.ToList();
     }
 
     private static AudioStream[] GetAudioStreamsForScript(MediaVersion version) => version.Streams

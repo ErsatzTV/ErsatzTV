@@ -11,6 +11,6 @@ public interface ISearchRepository
     Task<List<string>> GetSubLanguagesForSeason(Season season);
     Task<List<string>> GetLanguagesForArtist(Artist artist);
     Task<List<string>> GetSubLanguagesForArtist(Artist artist);
-    Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes);
+    Task<List<string>> GetAllThreeLetterLanguageCodes(List<string> mediaCodes);
     IAsyncEnumerable<MediaItem> GetAllMediaItems();
 }

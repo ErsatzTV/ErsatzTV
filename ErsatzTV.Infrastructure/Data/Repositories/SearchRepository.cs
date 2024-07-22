@@ -231,7 +231,7 @@ public class SearchRepository : ISearchRepository
             new { ArtistId = artist.Id }).Map(result => result.ToList());
     }
 
-    public virtual async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
+    public virtual async Task<List<string>> GetAllThreeLetterLanguageCodes(List<string> mediaCodes)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);

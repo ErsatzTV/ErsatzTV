@@ -35,7 +35,7 @@ public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowByI
                     .Map(list => list.HeadOrNone());
 
                 List<string> mediaCodes = await _searchRepository.GetLanguagesForShow(show);
-                List<string> languageCodes = await _searchRepository.GetAllLanguageCodes(mediaCodes);
+                List<string> languageCodes = await _searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes);
                 return ProjectToViewModel(show, languageCodes, maybeJellyfin, maybeEmby);
             },
             () => Task.FromResult(Option<TelevisionShowViewModel>.None));
