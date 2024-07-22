@@ -29,14 +29,14 @@ public class CachingSearchRepository : ICachingSearchRepository
     public Task<List<string>> GetSubLanguagesForArtist(Artist artist) =>
         _searchRepository.GetSubLanguagesForArtist(artist);
 
-    public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
+    public async Task<List<string>> GetAllThreeLetterLanguageCodes(List<string> mediaCodes)
     {
         if (!_cache.ContainsKey(mediaCodes))
         {
             await _slim.WaitAsync();
             try
             {
-                _cache.TryAdd(mediaCodes, await _searchRepository.GetAllLanguageCodes(mediaCodes));
+                _cache.TryAdd(mediaCodes, await _searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes));
             }
             finally
             {

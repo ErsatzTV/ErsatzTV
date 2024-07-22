@@ -852,7 +852,7 @@ public class ElasticSearchIndex : ISearchIndex
     private async Task<List<string>> GetLanguages(ISearchRepository searchRepository, List<string> mediaCodes)
     {
         var englishNames = new System.Collections.Generic.HashSet<string>();
-        foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
+        foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
         {
             Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
                 ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));

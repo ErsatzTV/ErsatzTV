@@ -24,7 +24,7 @@ public class GetArtistByIdHandler : IRequestHandler<GetArtistById, Option<Artist
             async artist =>
             {
                 List<string> mediaCodes = await _searchRepository.GetLanguagesForArtist(artist);
-                List<string> languageCodes = await _searchRepository.GetAllLanguageCodes(mediaCodes);
+                List<string> languageCodes = await _searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes);
                 return ProjectToViewModel(artist, languageCodes);
             },
             () => Task.FromResult(Option<ArtistViewModel>.None));
