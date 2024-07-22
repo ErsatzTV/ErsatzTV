@@ -108,12 +108,19 @@ public class BlockPlayoutFillerBuilder(
 
                         if (filler.FinishOffset > finish)
                         {
-                            pastTime = true;
-                            break;
+                            if (deco.DefaultFillerTrimToFit)
+                            {
+                                filler.Finish = finish.UtcDateTime;
+                                filler.OutPoint = filler.Finish - filler.Start;
+                            }
+                            else
+                            {
+                                pastTime = true;
+                                break;
+                            }
                         }
 
                         playout.Items.Add(filler);
-
 
                         // create a playout history record
                         var nextHistory = new PlayoutHistory
