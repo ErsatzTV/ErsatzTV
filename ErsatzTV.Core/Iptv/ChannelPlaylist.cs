@@ -64,7 +64,7 @@ public class ChannelPlaylist
                 .HeadOrNone()
                 .Match(
                     artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
-                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/images/ersatztv-500.png{accessTokenUri}");
+                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/gen?str={channel.Name}{accessTokenUriAmp}");
 
             string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                 .TrimEnd('=')

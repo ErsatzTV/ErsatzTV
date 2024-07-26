@@ -81,7 +81,8 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                 ChannelName = channel.Name,
                 ChannelCategories = GetCategories(channel.Categories),
                 ChannelHasArtwork = !string.IsNullOrWhiteSpace(channel.ArtworkPath),
-                ChannelArtworkPath = channel.ArtworkPath
+                ChannelArtworkPath = channel.ArtworkPath,
+                ChannelNameEncoded = channel.Name.Replace(" ", "%20")
             };
 
             var scriptObject = new ScriptObject();
