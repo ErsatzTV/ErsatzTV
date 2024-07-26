@@ -261,14 +261,13 @@ public class ArtworkController : ControllerBase
     }
 
     [HttpGet("/iptv/logos/gen")]
-    public async Task<IActionResult> GenerateChannelLogo(
+    public IActionResult GenerateChannelLogo(
         string text,
         CancellationToken cancellationToken)
     {
-        return await _channelLogoGenerator.GenerateChannelLogo(text, 100, 200, cancellationToken)
-            .Match(
-                Left: _ => new NotFoundResult().AsTask<IActionResult>(),
-                Right: img => File(img, "image/png").AsTask<IActionResult>()
-            );
+        return _channelLogoGenerator.GenerateChannelLogo(text, 100, 200, cancellationToken).Match<IActionResult>(
+            Left: _ => new RedirectResult("/images/ersatztv-500.png"),
+            Right: img => File(img, "image/png")
+        );
     }
 }
