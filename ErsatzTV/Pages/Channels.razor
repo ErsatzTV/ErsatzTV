@@ -1,4 +1,4 @@
-﻿@page "/channels"
+@page "/channels"
 @using System.Globalization
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Configuration
@@ -47,6 +47,10 @@
                 {
                     <MudElement HtmlTag="img" src="@($"iptv/logos/{context.Logo}")" Style="max-height: 50px"/>
                 }
+				else
+				{
+				<MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.Name}")" Style="max-height: 50px" />
+				}
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Language">@context.PreferredAudioLanguageCode</MudTd>

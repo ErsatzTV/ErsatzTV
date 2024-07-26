@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `duration`: play the referenced content for the specified duration
     - `pad to next`: add items from the referenced content until the wall clock is a multiple of the specified minutes value
     - `repeat`: continue building the playout from the first instruction in the YAML file
+- Add channel logo generation by @raknam
+  - Channels without custom uploaded logos will automatically generate a logo that includes the channel name
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs
