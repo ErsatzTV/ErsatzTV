@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling.TemplateScheduling;
@@ -9,7 +10,8 @@ public class PlayoutTemplateSchedulerPadToNext : PlayoutTemplateScheduler
         Playout playout,
         DateTimeOffset currentTime,
         PlayoutTemplatePadToNextItem padToNext,
-        IMediaCollectionEnumerator enumerator)
+        IMediaCollectionEnumerator enumerator,
+        Option<IMediaCollectionEnumerator> fallbackEnumerator)
     {
         int currentMinute = currentTime.Minute;
 
@@ -31,10 +33,10 @@ public class PlayoutTemplateSchedulerPadToNext : PlayoutTemplateScheduler
         if (targetTime <= currentTime)
             targetTime = targetTime.AddMinutes(padToNext.PadToNext);
 
+        int discardAttempts = padToNext.DiscardAttempts;
         bool done = false;
         TimeSpan remainingToFill = targetTime - currentTime;
-        while (!done && enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero &&
-               remainingToFill >= enumerator.MinimumDuration)
+        while (!done && enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
@@ -55,21 +57,51 @@ public class PlayoutTemplateSchedulerPadToNext : PlayoutTemplateScheduler
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
                     remainingToFill -= itemDuration;
+                    currentTime += itemDuration;
+
                     playout.Items.Add(playoutItem);
+                    enumerator.MoveNext();
+                }
+                else if (discardAttempts > 0)
+                {
+                    // item won't fit; try the next one
+                    discardAttempts--;
                     enumerator.MoveNext();
                 }
                 else if (padToNext.Trim)
                 {
                     // trim item to exactly fit
                     remainingToFill = TimeSpan.Zero;
+                    currentTime = targetTime;
+
                     playoutItem.Finish = targetTime.UtcDateTime;
                     playoutItem.OutPoint = playoutItem.Finish - playoutItem.Start;
+
                     playout.Items.Add(playoutItem);
                     enumerator.MoveNext();
                 }
+                else if (fallbackEnumerator.IsSome)
+                {
+                    foreach (IMediaCollectionEnumerator fallback in fallbackEnumerator)
+                    {
+                        remainingToFill = TimeSpan.Zero;
+                        done = true;
+
+                        // replace with fallback content
+                        foreach (MediaItem fallbackItem in fallback.Current)
+                        {
+                            playoutItem.MediaItemId = fallbackItem.Id;
+                            playoutItem.Finish = targetTime.UtcDateTime;
+                            playoutItem.FillerKind = FillerKind.Fallback;
+
+                            playout.Items.Add(playoutItem);
+                            fallback.MoveNext();
+                        }
+                    }
+                }
                 else
                 {
-                    // item won't fit; we're done for now
+                    // item won't fit; we're done
                     done = true;
                 }
             }

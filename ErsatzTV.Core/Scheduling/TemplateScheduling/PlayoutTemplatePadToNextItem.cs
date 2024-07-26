@@ -8,4 +8,9 @@ public class PlayoutTemplatePadToNextItem : PlayoutTemplateItem
     public int PadToNext { get; set; }
 
     public bool Trim { get; set; }
+
+    public string Fallback { get; set; }
+
+    [YamlMember(Alias = "discard_attempts", ApplyNamingConventions = false)]
+    public int DiscardAttempts { get; set; }
 }
