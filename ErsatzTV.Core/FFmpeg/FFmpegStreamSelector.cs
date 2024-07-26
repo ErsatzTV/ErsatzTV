@@ -408,7 +408,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     private static List<string> GetTwoAndThreeLetterLanguageCodes(List<string> threeLetterLanguageCodes)
     {
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
-        var result = new System.Collections.Generic.HashSet<string>();
+        var result = new System.Collections.Generic.HashSet<string>(threeLetterLanguageCodes);
 
         foreach (string code in threeLetterLanguageCodes)
         {
