@@ -45,6 +45,7 @@ public class TemplatePlayoutBuilder(
         // load content and content enumerators on demand
         Dictionary<string, IMediaCollectionEnumerator> enumerators = new();
 
+        int itemsAfterRepeat = playout.Items.Count;
         var index = 0;
         while (currentTime < finish)
         {
@@ -60,6 +61,13 @@ public class TemplatePlayoutBuilder(
             if (playoutItem is PlayoutTemplateRepeatItem)
             {
                 index = 0;
+                if (playout.Items.Count == itemsAfterRepeat)
+                {
+                    logger.LogWarning("Repeat encountered without adding any playout items; aborting");
+                    break;
+                }
+
+                itemsAfterRepeat = playout.Items.Count;
                 continue;
             }
 
