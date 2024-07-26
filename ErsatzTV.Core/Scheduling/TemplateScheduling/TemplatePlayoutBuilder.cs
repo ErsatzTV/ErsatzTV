@@ -30,10 +30,15 @@ public class TemplatePlayoutBuilder(
         int daysToBuild = await GetDaysToBuild();
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
-        if (mode == PlayoutBuildMode.Reset)
+        if (mode is not PlayoutBuildMode.Reset)
         {
-            playout.Items.Clear();
+            logger.LogWarning("Template playouts can only be reset; ignoring build mode {Mode}", mode.ToString());
+            return playout;
         }
+
+        // these are only for reset
+        playout.Seed = new Random().Next();
+        playout.Items.Clear();
 
         DateTimeOffset currentTime = start;
 
@@ -61,7 +66,7 @@ public class TemplatePlayoutBuilder(
             if (!enumerators.TryGetValue(playoutItem.Content, out IMediaCollectionEnumerator enumerator))
             {
                 Option<IMediaCollectionEnumerator> maybeEnumerator =
-                    await GetEnumeratorForContent(playoutItem.Content, playoutTemplate, cancellationToken);
+                    await GetEnumeratorForContent(playout, playoutItem.Content, playoutTemplate, cancellationToken);
 
                 if (maybeEnumerator.IsNone)
                 {
@@ -102,31 +107,28 @@ public class TemplatePlayoutBuilder(
             .IfNoneAsync(2);
 
     private async Task<Option<IMediaCollectionEnumerator>> GetEnumeratorForContent(
+        Playout playout,
         string contentKey,
         PlayoutTemplate playoutTemplate,
         CancellationToken cancellationToken)
     {
-        Option<PlayoutTemplateContentSearchItem> maybeContent =
-            playoutTemplate.Content.Where(c => c.Key == contentKey).HeadOrNone();
-
-        if (maybeContent.IsNone)
+        int index = playoutTemplate.Content.FindIndex(c => c.Key == contentKey);
+        if (index < 0)
         {
             return Option<IMediaCollectionEnumerator>.None;
         }
 
-        foreach (PlayoutTemplateContentSearchItem content in maybeContent)
+        PlayoutTemplateContentSearchItem content = playoutTemplate.Content[index];
+        List<MediaItem> items = await mediaCollectionRepository.GetSmartCollectionItems(content.Query);
+        var state = new CollectionEnumeratorState { Seed = playout.Seed + index, Index = 0 };
+        switch (Enum.Parse<PlaybackOrder>(content.Order, true))
         {
-            List<MediaItem> items = await mediaCollectionRepository.GetSmartCollectionItems(content.Query);
-            var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
-            switch (Enum.Parse<PlaybackOrder>(content.Order, true))
-            {
-                case PlaybackOrder.Chronological:
-                    return new ChronologicalMediaCollectionEnumerator(items, state);
-                case PlaybackOrder.Shuffle:
-                    // TODO: fix this
-                    var groupedMediaItems = items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-                    return new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, cancellationToken);
-            }
+            case PlaybackOrder.Chronological:
+                return new ChronologicalMediaCollectionEnumerator(items, state);
+            case PlaybackOrder.Shuffle:
+                // TODO: fix this
+                var groupedMediaItems = items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+                return new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, cancellationToken);
         }
 
         return Option<IMediaCollectionEnumerator>.None;
