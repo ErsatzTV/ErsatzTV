@@ -422,6 +422,43 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.DistinctBy(x => x.Id).ToList();
     }
 
+    public async Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var result = new List<MediaItem>();
+
+        System.Collections.Generic.HashSet<int> showIds = [];
+
+        foreach (string guid in guids)
+        {
+            // don't search any more once we have a matching show
+            if (showIds.Count > 0)
+            {
+                break;
+            }
+
+            List<int> nextIds = await dbContext.ShowMetadata
+                .Filter(
+                    sm => sm.Guids.Any(g => EF.Functions.Collate(g.Guid, TvContext.CaseInsensitiveCollation) == guid))
+                .Map(sm => sm.ShowId)
+                .ToListAsync();
+
+            foreach (int showId in nextIds)
+            {
+                showIds.Add(showId);
+            }
+        }
+
+        // multiple shows are not supported here, just use the first match
+        foreach (int showId in showIds.HeadOrNone())
+        {
+            result.AddRange(await GetShowItemsFromShowId(dbContext, showId));
+        }
+
+        return result;
+    }
+
     public async Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

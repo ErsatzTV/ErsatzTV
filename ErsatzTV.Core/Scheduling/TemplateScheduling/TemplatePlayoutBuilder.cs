@@ -181,8 +181,20 @@ public class TemplatePlayoutBuilder(
             return Option<IMediaCollectionEnumerator>.None;
         }
 
-        PlayoutTemplateContentSearchItem content = playoutTemplate.Content[index];
-        List<MediaItem> items = await mediaCollectionRepository.GetSmartCollectionItems(content.Query);
+        List<MediaItem> items = [];
+
+        PlayoutTemplateContentItem content = playoutTemplate.Content[index];
+        switch (content)
+        {
+            case PlayoutTemplateContentSearchItem search:
+                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query);
+                break;
+            case PlayoutTemplateContentShowItem show:
+                items = await mediaCollectionRepository.GetShowItemsByShowGuids(
+                    show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
+                break;
+        }
+
         var state = new CollectionEnumeratorState { Seed = playout.Seed + index, Index = 0 };
         switch (Enum.Parse<PlaybackOrder>(content.Order, true))
         {
@@ -206,7 +218,15 @@ public class TemplatePlayoutBuilder(
             .WithTypeDiscriminatingNodeDeserializer(
                 o =>
                 {
-                    var keyMappings = new Dictionary<string, Type>
+                    var contentKeyMappings = new Dictionary<string, Type>
+                    {
+                        { "search", typeof(PlayoutTemplateContentSearchItem) },
+                        { "show", typeof(PlayoutTemplateContentShowItem) }
+                    };
+
+                    o.AddUniqueKeyTypeDiscriminator<PlayoutTemplateContentItem>(contentKeyMappings);
+
+                    var instructionKeyMappings = new Dictionary<string, Type>
                     {
                         { "count", typeof(PlayoutTemplateCountItem) },
                         { "duration", typeof(PlayoutTemplateDurationItem) },
@@ -214,7 +234,7 @@ public class TemplatePlayoutBuilder(
                         { "repeat", typeof(PlayoutTemplateRepeatItem) }
                     };
 
-                    o.AddUniqueKeyTypeDiscriminator<PlayoutTemplateItem>(keyMappings);
+                    o.AddUniqueKeyTypeDiscriminator<PlayoutTemplateItem>(instructionKeyMappings);
                 })
             .Build();
 
