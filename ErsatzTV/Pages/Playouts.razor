@@ -19,6 +19,11 @@
             </MudButton>
         </MudTooltip>
         <MudTooltip Text="This feature is experimental">
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.Yaml}")">
+                Add YAML Playout
+            </MudButton>
+        </MudTooltip>
+        <MudTooltip Text="This feature is experimental">
             <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.ExternalJson}")">
                 Add External Json Playout
             </MudButton>
@@ -62,6 +67,9 @@
                 {
                     case ProgramSchedulePlayoutType.Block:
                         <span>Block</span>
+                        break;
+                    case ProgramSchedulePlayoutType.Yaml:
+                        <span>YAML</span>
                         break;
                     case ProgramSchedulePlayoutType.ExternalJson:
                         <span>External Json</span>
@@ -121,6 +129,22 @@
                             </MudIconButton>
                         </MudTooltip>
                         <div style="width: 48px"></div>
+                        <div style="width: 48px"></div>
+                    }
+                    else if (context.PlayoutType == ProgramSchedulePlayoutType.Yaml)
+                    {
+                        <MudTooltip Text="Edit YAML File">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => EditYamlFile(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                        <MudTooltip Text="Reset Playout">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
+                                           OnClick="@(_ => ResetPlayout(context))">
+                            </MudIconButton>
+                        </MudTooltip>
                         <div style="width: 48px"></div>
                     }
                     else if (context.PlayoutType == ProgramSchedulePlayoutType.Block)
@@ -232,8 +256,8 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        // only show details for flood and block playouts
-        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Flood or ProgramSchedulePlayoutType.Block
+        // only show details for flood, block and YAML playouts
+        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Flood or ProgramSchedulePlayoutType.Block or ProgramSchedulePlayoutType.Yaml
             ? playout.PlayoutId
             : null;
 
@@ -253,6 +277,25 @@
         if (!result.Canceled)
         {
             await Mediator.Send(new UpdateExternalJsonPlayout(playout.PlayoutId, result.Data as string ?? playout.ExternalJsonFile), _cts.Token);
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
+
+            _selectedPlayoutId = null;
+        }
+    }
+
+    private async Task EditYamlFile(PlayoutNameViewModel playout)
+    {
+        var parameters = new DialogParameters { { "YamlFile", $"{playout.TemplateFile}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+
+        IDialogReference dialog = await Dialog.ShowAsync<EditYamlFileDialog>("Edit YAML File", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await Mediator.Send(new UpdateYamlPlayout(playout.PlayoutId, result.Data as string ?? playout.TemplateFile), _cts.Token);
             if (_table != null)
             {
                 await _table.ReloadServerData();

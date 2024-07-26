@@ -11,6 +11,8 @@ public interface IMediaCollectionRepository
     Task<List<MediaItem>> GetItems(int id);
     Task<List<MediaItem>> GetMultiCollectionItems(int id);
     Task<List<MediaItem>> GetSmartCollectionItems(int id);
+    Task<List<MediaItem>> GetSmartCollectionItems(string query);
+    Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids);
     Task<List<MediaItem>> GetPlaylistItems(int id);
     Task<List<Movie>> GetMovie(int id);
     Task<List<Episode>> GetEpisode(int id);

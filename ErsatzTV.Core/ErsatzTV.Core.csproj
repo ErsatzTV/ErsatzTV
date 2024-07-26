@@ -29,6 +29,8 @@
       <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
       <PackageReference Include="SkiaSharp" Version="2.88.8" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
+      <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
+      <PackageReference Include="YamlDotNet" Version="16.0.0" />
     </ItemGroup>
     
     <ItemGroup>

@@ -9,13 +9,13 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Playouts;
 
 public class
-    UpdateExternalJsonPlayoutHandler : IRequestHandler<UpdateExternalJsonPlayout,
+    UpdateTemplatePlayoutHandler : IRequestHandler<UpdateYamlPlayout,
     Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
-    public UpdateExternalJsonPlayoutHandler(
+    public UpdateTemplatePlayoutHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         ChannelWriter<IBackgroundServiceRequest> workerChannel)
     {
@@ -24,7 +24,7 @@ public class
     }
 
     public async Task<Either<BaseError, PlayoutNameViewModel>> Handle(
-        UpdateExternalJsonPlayout request,
+        UpdateYamlPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -34,10 +34,10 @@ public class
 
     private async Task<PlayoutNameViewModel> ApplyUpdateRequest(
         TvContext dbContext,
-        UpdateExternalJsonPlayout request,
+        UpdateYamlPlayout request,
         Playout playout)
     {
-        playout.ExternalJsonFile = request.ExternalJsonFile;
+        playout.TemplateFile = request.TemplateFile;
 
         if (await dbContext.SaveChangesAsync() > 0)
         {
@@ -58,12 +58,12 @@ public class
 
     private static Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        UpdateExternalJsonPlayout request) =>
+        UpdateYamlPlayout request) =>
         PlayoutMustExist(dbContext, request);
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
-        UpdateExternalJsonPlayout updatePlayout) =>
+        UpdateYamlPlayout updatePlayout) =>
         dbContext.Playouts
             .Include(p => p.Channel)
             .SelectOneAsync(p => p.Id, p => p.Id == updatePlayout.PlayoutId)

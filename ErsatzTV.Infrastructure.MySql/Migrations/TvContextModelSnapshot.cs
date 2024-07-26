@@ -1714,6 +1714,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Seed")
                         .HasColumnType("int");
 
+                    b.Property<string>("TemplateFile")
+                        .HasColumnType("longtext");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ChannelId");
