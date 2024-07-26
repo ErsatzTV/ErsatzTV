@@ -82,6 +82,11 @@ public class TemplatePlayoutBuilder(
                     currentTime = PlayoutTemplateSchedulerCount.Schedule(playout, currentTime, count, enumerator);
                     break;
                 case PlayoutTemplatePadToNextItem padToNext:
+                    currentTime = PlayoutTemplateSchedulerPadToNext.Schedule(
+                        playout,
+                        currentTime,
+                        padToNext,
+                        enumerator);
                     break;
             }
 

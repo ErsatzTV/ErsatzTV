@@ -6,4 +6,6 @@ public class PlayoutTemplatePadToNextItem : PlayoutTemplateItem
 {
     [YamlMember(Alias = "pad_to_next", ApplyNamingConventions = false)]
     public int PadToNext { get; set; }
+
+    public bool Trim { get; set; }
 }
