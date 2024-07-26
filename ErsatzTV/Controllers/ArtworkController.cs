@@ -275,41 +275,35 @@ public class ArtworkController : ControllerBase
             }
 
             //Custom Font
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            using (var fontStream = assembly.GetManifestResourceStream("ErsatzTV.Fonts.Sen.ttf"))
+            string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "Sen.ttf");
+            using (var fontTypeface = SKTypeface.FromFile(fontPath))
             {
-                byte[] fontData = new byte[fontStream.Length];
-                fontStream.Read(fontData, 0, (int)fontStream.Length);
-                using (var skData = SKData.CreateCopy(fontData))
-                using (var fontTypeface = SKTypeface.FromData(skData))
+                var fontSize = 30f;
+                var paint = new SKPaint
                 {
-                    var fontSize = 30f;
-                    var paint = new SKPaint
-                    {
-                        Typeface = fontTypeface,
-                        TextSize = fontSize,
-                        IsAntialias = true,
-                        Color = SKColors.White,
-                        Style = SKPaintStyle.Fill,
-                        TextAlign = SKTextAlign.Center
-                    };
+                    Typeface = fontTypeface,
+                    TextSize = fontSize,
+                    IsAntialias = true,
+                    Color = SKColors.White,
+                    Style = SKPaintStyle.Fill,
+                    TextAlign = SKTextAlign.Center
+                };
 
-                    SKRect textBounds = new SKRect();
+                SKRect textBounds = new SKRect();
+                paint.MeasureText(text, ref textBounds);
+
+                // Ajuster la taille de la police si nécessaire
+                while (textBounds.Width > logoWidth - 10 && fontSize > 16)
+                {
+                    fontSize -= 2;
+                    paint.TextSize = fontSize;
                     paint.MeasureText(text, ref textBounds);
-
-                    // Ajuster la taille de la police si nécessaire
-                    while (textBounds.Width > logoWidth - 10 && fontSize > 16)
-                    {
-                        fontSize -= 2;
-                        paint.TextSize = fontSize;
-                        paint.MeasureText(text, ref textBounds);
-                    }
-
-                    // Dessiner le texte
-                    float x = logoWidth / 2;
-                    float y = logoHeight / 2 - textBounds.MidY;
-                    canvas.DrawText(text, x, y, paint);
                 }
+
+                // Dessiner le texte
+                float x = logoWidth / 2;
+                float y = logoHeight / 2 - textBounds.MidY;
+                canvas.DrawText(text, x, y, paint);
             }
 
             using (var image = surface.Snapshot())
