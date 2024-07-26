@@ -15,8 +15,8 @@
             case PlayoutKind.ExternalJson:
                 <span>Add External Json Playout</span>
                 break;
-            case PlayoutKind.Template:
-                <span>Add Template Playout</span>
+            case PlayoutKind.Yaml:
+                <span>Add YAML Playout</span>
                 break;
             case PlayoutKind.Block:
                 <span>Add Block Playout</span>
@@ -47,8 +47,8 @@
                         case PlayoutKind.ExternalJson:
                             <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
                             break;
-                        case PlayoutKind.Template:
-                            <MudTextField Label="Template File" @bind-Value="_model.TemplateFile" For="@(() => _model.TemplateFile)"/>
+                        case PlayoutKind.Yaml:
+                            <MudTextField Label="YAML File" @bind-Value="_model.YamlFile" For="@(() => _model.YamlFile)"/>
                             break;
                         default:
                             <MudSelect Class="mt-3"

@@ -22,13 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Default filler will stop scheduling when the next item would extend into primary content
   - Alternatively, default filler can be configured to `Trim To Fit`
     - In this case, the last item that would extend into primary content is trimmed to end exactly when the primary content starts
-- Add **experimental** playout type `Template`
+- Add **experimental** playout type `YAML`
   - This playout type uses a YAML file to declare content and describe how the playout should be built
   - Content currently supports search queries
   - Playout instructions currently include `count`, `pad to next`, and `repeat`
     - `count`: add the specified number of items (from the referenced content) to the playout
+    - `duration`: play the referenced content for the specified duration
     - `pad to next`: add items from the referenced content until the wall clock is a multiple of the specified minutes value
-    - `repeat`: continue building the playout from the first instruction in the template
+    - `repeat`: continue building the playout from the first instruction in the YAML file
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs
