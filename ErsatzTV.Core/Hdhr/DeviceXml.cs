@@ -1,4 +1,4 @@
-namespace ErsatzTV.Core.Hdhr;
+﻿namespace ErsatzTV.Core.Hdhr;
 
 public record DeviceXml(string Scheme, string Host, Guid uuid)
 {

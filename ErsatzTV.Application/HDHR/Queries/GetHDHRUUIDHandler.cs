@@ -10,13 +10,15 @@ public class GetHDHRUUIDHandler : IRequestHandler<GetHDHRUUID, Guid>
     public GetHDHRUUIDHandler(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    public Task<Guid> Handle(GetHDHRUUID request, CancellationToken cancellationToken) =>
-        _configElementRepository.GetValue<Guid>(ConfigElementKey.HDHRUUID)
-            .Map(result => result.IfNone(() =>
-                {
-                    Guid guid = Guid.NewGuid();
-                    var tmp = _configElementRepository.Upsert<Guid>(ConfigElementKey.HDHRUUID, guid);
-                    return guid;
-                })
-            );
+    public async Task<Guid> Handle(GetHDHRUUID request, CancellationToken cancellationToken)
+    {
+        Option<Guid> maybeGuid = await _configElementRepository.GetValue<Guid>(ConfigElementKey.HDHRUUID);
+        return await maybeGuid.IfNoneAsync(
+            async () =>
+            {
+                Guid guid = Guid.NewGuid();
+                await _configElementRepository.Upsert(ConfigElementKey.HDHRUUID, guid);
+                return guid;
+            });
+    }
 }

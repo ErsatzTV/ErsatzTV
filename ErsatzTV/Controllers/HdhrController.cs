@@ -1,8 +1,7 @@
-using ErsatzTV.Application.Channels;
+﻿using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.HDHR;
 using ErsatzTV.Core.Hdhr;
 using ErsatzTV.Extensions;
-using LanguageExt;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,22 +9,23 @@ namespace ErsatzTV.Controllers;
 
 [ApiController]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class HdhrController : ControllerBase
+public class HdhrController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public HdhrController(IMediator mediator) => _mediator = mediator;
-
     [HttpGet("device.xml")]
-    public Task<IActionResult> DeviceXml() =>
-        _mediator.Send(new GetHDHRUUID()).Map<Guid, IActionResult>(
-            uuid => new OkObjectResult(new DeviceXml(Request.Scheme, Request.Host.ToString(), uuid)));
+    public async Task<IActionResult> DeviceXml()
+    {
+        Guid uuid = await mediator.Send(new GetHDHRUUID());
+        return new OkObjectResult(new DeviceXml(Request.Scheme, Request.Host.ToString(), uuid));
+    }
 
     [HttpGet("discover.json")]
     [ResponseCache(NoStore = true)]
-    public Task<IActionResult> Discover() => _mediator.Send(new GetHDHRUUID()).MapAsync(
-        uuid => _mediator.Send(new GetHDHRTunerCount()).Map<int, IActionResult>(
-            tunerCount => new OkObjectResult(new Discover(Request.Scheme, Request.Host.ToString(), tunerCount, uuid))));
+    public async Task<IActionResult> Discover()
+    {
+        Guid uuid = await mediator.Send(new GetHDHRUUID());
+        int tunerCount = await mediator.Send(new GetHDHRTunerCount());
+        return new OkObjectResult(new Discover(Request.Scheme, Request.Host.ToString(), tunerCount, uuid));
+    }
 
     [HttpGet("lineup_status.json")]
     public IActionResult LineupStatus() =>
@@ -33,5 +33,5 @@ public class HdhrController : ControllerBase
 
     [HttpGet("lineup.json")]
     public Task<IActionResult> Lineup() =>
-        _mediator.Send(new GetChannelLineup(Request.Scheme, Request.Host.ToString())).ToActionResult();
+        mediator.Send(new GetChannelLineup(Request.Scheme, Request.Host.ToString())).ToActionResult();
 }
