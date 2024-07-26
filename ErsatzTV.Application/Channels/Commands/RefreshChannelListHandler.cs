@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Net;
 using System.Xml;
 using Dapper;
 using ErsatzTV.Core;
@@ -82,7 +83,7 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                 ChannelCategories = GetCategories(channel.Categories),
                 ChannelHasArtwork = !string.IsNullOrWhiteSpace(channel.ArtworkPath),
                 ChannelArtworkPath = channel.ArtworkPath,
-                ChannelNameEncoded = channel.Name.Replace(" ", "%20")
+                ChannelNameEncoded = WebUtility.UrlEncode(channel.Name)
             };
 
             var scriptObject = new ScriptObject();
