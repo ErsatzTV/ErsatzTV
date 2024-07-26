@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text;
 using ErsatzTV.Core.Domain;
 
@@ -64,7 +65,7 @@ public class ChannelPlaylist
                 .HeadOrNone()
                 .Match(
                     artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
-                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/gen?str={channel.Name}{accessTokenUriAmp}");
+                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/gen?text={WebUtility.UrlEncode(channel.Name)}{accessTokenUriAmp}");
 
             string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                 .TrimEnd('=')
