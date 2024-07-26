@@ -44,6 +44,7 @@ public class TemplatePlayoutBuilder(
 
         // load content and content enumerators on demand
         Dictionary<string, IMediaCollectionEnumerator> enumerators = new();
+        System.Collections.Generic.HashSet<string> missingContentKeys = [];
 
         int itemsAfterRepeat = playout.Items.Count;
         var index = 0;
@@ -80,31 +81,49 @@ public class TemplatePlayoutBuilder(
 
             if (maybeEnumerator.IsNone)
             {
-                logger.LogWarning("Unable to locate content with key {Key}", playoutItem.Content);
-                continue;
+                if (!missingContentKeys.Contains(playoutItem.Content))
+                {
+                    logger.LogWarning("Unable to locate content with key {Key}", playoutItem.Content);
+                    missingContentKeys.Add(playoutItem.Content);
+                }
             }
 
-            IMediaCollectionEnumerator enumerator = maybeEnumerator.ValueUnsafe();
-
-            switch (playoutItem)
+            foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
             {
-                case PlayoutTemplateCountItem count:
-                    currentTime = PlayoutTemplateSchedulerCount.Schedule(playout, currentTime, count, enumerator);
-                    break;
-                case PlayoutTemplatePadToNextItem padToNext:
-                    Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetCachedEnumeratorForContent(
-                        playout,
-                        playoutTemplate,
-                        enumerators,
-                        padToNext.Fallback,
-                        cancellationToken);
-                    currentTime = PlayoutTemplateSchedulerPadToNext.Schedule(
-                        playout,
-                        currentTime,
-                        padToNext,
-                        enumerator,
-                        fallbackEnumerator);
-                    break;
+                switch (playoutItem)
+                {
+                    case PlayoutTemplateCountItem count:
+                        currentTime = PlayoutTemplateSchedulerCount.Schedule(playout, currentTime, count, enumerator);
+                        break;
+                    case PlayoutTemplateDurationItem duration:
+                        Option<IMediaCollectionEnumerator> durationFallbackEnumerator = await GetCachedEnumeratorForContent(
+                            playout,
+                            playoutTemplate,
+                            enumerators,
+                            duration.Fallback,
+                            cancellationToken);
+                        currentTime = PlayoutTemplateSchedulerDuration.Schedule(
+                            playout,
+                            currentTime,
+                            duration,
+                            enumerator,
+                            durationFallbackEnumerator);
+                        break;
+                    case PlayoutTemplatePadToNextItem padToNext:
+                        Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetCachedEnumeratorForContent(
+                            playout,
+                            playoutTemplate,
+                            enumerators,
+                            padToNext.Fallback,
+                            cancellationToken);
+                        currentTime = PlayoutTemplateSchedulerPadToNext.Schedule(
+                            playout,
+                            currentTime,
+                            padToNext,
+                            enumerator,
+                            fallbackEnumerator);
+                        break;
+                }
             }
 
             index++;
@@ -190,6 +209,7 @@ public class TemplatePlayoutBuilder(
                     var keyMappings = new Dictionary<string, Type>
                     {
                         { "count", typeof(PlayoutTemplateCountItem) },
+                        { "duration", typeof(PlayoutTemplateDurationItem) },
                         { "pad_to_next", typeof(PlayoutTemplatePadToNextItem) },
                         { "repeat", typeof(PlayoutTemplateRepeatItem) }
                     };
