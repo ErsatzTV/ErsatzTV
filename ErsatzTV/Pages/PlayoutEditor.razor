@@ -15,6 +15,9 @@
             case PlayoutKind.ExternalJson:
                 <span>Add External Json Playout</span>
                 break;
+            case PlayoutKind.Template:
+                <span>Add Template Playout</span>
+                break;
             case PlayoutKind.Block:
                 <span>Add Block Playout</span>
                 break;
@@ -39,21 +42,25 @@
                             </MudSelectItem>
                         }
                     </MudSelect>
-                    @if (Kind == PlayoutKind.ExternalJson)
+                    @switch (Kind)
                     {
-                        <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
-                    }
-                    else if (string.IsNullOrWhiteSpace(Kind))
-                    {
-                        <MudSelect Class="mt-3"
-                                   T="ProgramScheduleViewModel"
-                                   Label="Schedule"
-                                   @bind-value="_model.ProgramSchedule">
-                            @foreach (ProgramScheduleViewModel schedule in _programSchedules)
-                            {
-                                <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
-                            }
-                        </MudSelect>
+                        case PlayoutKind.ExternalJson:
+                            <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
+                            break;
+                        case PlayoutKind.Template:
+                            <MudTextField Label="Template File" @bind-Value="_model.TemplateFile" For="@(() => _model.TemplateFile)"/>
+                            break;
+                        default:
+                            <MudSelect Class="mt-3"
+                                       T="ProgramScheduleViewModel"
+                                       Label="Schedule"
+                                       @bind-value="_model.ProgramSchedule">
+                                @foreach (ProgramScheduleViewModel schedule in _programSchedules)
+                                {
+                                    <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            break;
                     }
                 </MudCardContent>
                 <MudCardActions>

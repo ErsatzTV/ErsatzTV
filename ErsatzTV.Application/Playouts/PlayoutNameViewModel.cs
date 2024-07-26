@@ -9,6 +9,7 @@ public record PlayoutNameViewModel(
     string ChannelNumber,
     ChannelProgressMode ProgressMode,
     string ScheduleName,
+    string TemplateFile,
     string ExternalJsonFile,
     TimeSpan? DbDailyRebuildTime)
 {

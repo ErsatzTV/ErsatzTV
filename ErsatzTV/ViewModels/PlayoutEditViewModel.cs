@@ -10,11 +10,13 @@ public class PlayoutEditViewModel
     public ChannelViewModel Channel { get; set; }
     public ProgramScheduleViewModel ProgramSchedule { get; set; }
     public string ExternalJsonFile { get; set; }
+    public string TemplateFile { get; set; }
 
     public CreatePlayout ToCreate() =>
         Kind switch
         {
             PlayoutKind.ExternalJson => new CreateExternalJsonPlayout(Channel.Id, ExternalJsonFile),
+            PlayoutKind.Template => new CreateTemplatePlayout(Channel.Id, TemplateFile),
             PlayoutKind.Block => new CreateBlockPlayout(Channel.Id),
             _ => new CreateFloodPlayout(Channel.Id, ProgramSchedule.Id)
         };
