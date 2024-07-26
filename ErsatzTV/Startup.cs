@@ -16,6 +16,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
+using ErsatzTV.Core.Images;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
@@ -680,6 +681,7 @@ public class Startup
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
         services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
             MultiEpisodeShuffleCollectionEnumeratorFactory>();
+        services.AddScoped<IChannelLogoGenerator, ChannelLogoGenerator>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();
