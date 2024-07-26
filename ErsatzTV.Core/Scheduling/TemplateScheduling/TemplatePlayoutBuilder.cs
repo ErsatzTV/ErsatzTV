@@ -71,23 +71,20 @@ public class TemplatePlayoutBuilder(
                 continue;
             }
 
-            if (!enumerators.TryGetValue(playoutItem.Content, out IMediaCollectionEnumerator enumerator))
+            Option<IMediaCollectionEnumerator> maybeEnumerator = await GetCachedEnumeratorForContent(
+                playout,
+                playoutTemplate,
+                enumerators,
+                playoutItem.Content,
+                cancellationToken);
+
+            if (maybeEnumerator.IsNone)
             {
-                Option<IMediaCollectionEnumerator> maybeEnumerator =
-                    await GetEnumeratorForContent(playout, playoutItem.Content, playoutTemplate, cancellationToken);
-
-                if (maybeEnumerator.IsNone)
-                {
-                    logger.LogWarning("Unable to locate content with key {Key}", playoutItem.Content);
-                    continue;
-                }
-
-                foreach (IMediaCollectionEnumerator e in maybeEnumerator)
-                {
-                    enumerator = maybeEnumerator.ValueUnsafe();
-                    enumerators.Add(playoutItem.Content, enumerator);
-                }
+                logger.LogWarning("Unable to locate content with key {Key}", playoutItem.Content);
+                continue;
             }
+
+            IMediaCollectionEnumerator enumerator = maybeEnumerator.ValueUnsafe();
 
             switch (playoutItem)
             {
@@ -95,11 +92,18 @@ public class TemplatePlayoutBuilder(
                     currentTime = PlayoutTemplateSchedulerCount.Schedule(playout, currentTime, count, enumerator);
                     break;
                 case PlayoutTemplatePadToNextItem padToNext:
+                    Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetCachedEnumeratorForContent(
+                        playout,
+                        playoutTemplate,
+                        enumerators,
+                        padToNext.Fallback,
+                        cancellationToken);
                     currentTime = PlayoutTemplateSchedulerPadToNext.Schedule(
                         playout,
                         currentTime,
                         padToNext,
-                        enumerator);
+                        enumerator,
+                        fallbackEnumerator);
                     break;
             }
 
@@ -113,6 +117,38 @@ public class TemplatePlayoutBuilder(
         await configElementRepository
             .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
             .IfNoneAsync(2);
+
+    private async Task<Option<IMediaCollectionEnumerator>> GetCachedEnumeratorForContent(
+        Playout playout,
+        PlayoutTemplate playoutTemplate,
+        Dictionary<string, IMediaCollectionEnumerator> enumerators,
+        string contentKey,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(contentKey))
+        {
+            return Option<IMediaCollectionEnumerator>.None;
+        }
+
+        if (!enumerators.TryGetValue(contentKey, out IMediaCollectionEnumerator enumerator))
+        {
+            Option<IMediaCollectionEnumerator> maybeEnumerator =
+                await GetEnumeratorForContent(playout, contentKey, playoutTemplate, cancellationToken);
+
+            if (maybeEnumerator.IsNone)
+            {
+                return Option<IMediaCollectionEnumerator>.None;
+            }
+
+            foreach (IMediaCollectionEnumerator e in maybeEnumerator)
+            {
+                enumerator = maybeEnumerator.ValueUnsafe();
+                enumerators.Add(contentKey, enumerator);
+            }
+        }
+
+        return Some(enumerator);
+    }
 
     private async Task<Option<IMediaCollectionEnumerator>> GetEnumeratorForContent(
         Playout playout,
@@ -164,6 +200,4 @@ public class TemplatePlayoutBuilder(
 
         return deserializer.Deserialize<PlayoutTemplate>(yaml);
     }
-
-
 }
