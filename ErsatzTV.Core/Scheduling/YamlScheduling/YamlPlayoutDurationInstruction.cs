@@ -1,8 +1,8 @@
 using YamlDotNet.Serialization;
 
-namespace ErsatzTV.Core.Scheduling.TemplateScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class PlayoutTemplateDurationItem : PlayoutTemplateItem
+public class YamlPlayoutDurationInstruction : YamlPlayoutInstruction
 {
     public string Duration { get; set; }
 

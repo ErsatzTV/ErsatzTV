@@ -1,8 +1,8 @@
 using YamlDotNet.Serialization;
 
-namespace ErsatzTV.Core.Scheduling.TemplateScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class PlayoutTemplatePadToNextItem : PlayoutTemplateItem
+public class YamlPlayoutPadToNextInstruction : YamlPlayoutInstruction
 {
     [YamlMember(Alias = "pad_to_next", ApplyNamingConventions = false)]
     public int PadToNext { get; set; }

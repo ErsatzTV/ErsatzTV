@@ -19,7 +19,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 {
     private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
     private readonly IBlockPlayoutFillerBuilder _blockPlayoutFillerBuilder;
-    private readonly ITemplatePlayoutBuilder _templatePlayoutBuilder;
+    private readonly IYamlPlayoutBuilder _yamlPlayoutBuilder;
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
@@ -34,7 +34,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         IPlayoutBuilder playoutBuilder,
         IBlockPlayoutBuilder blockPlayoutBuilder,
         IBlockPlayoutFillerBuilder blockPlayoutFillerBuilder,
-        ITemplatePlayoutBuilder templatePlayoutBuilder,
+        IYamlPlayoutBuilder yamlPlayoutBuilder,
         IExternalJsonPlayoutBuilder externalJsonPlayoutBuilder,
         IFFmpegSegmenterService ffmpegSegmenterService,
         IEntityLocker entityLocker,
@@ -45,7 +45,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         _playoutBuilder = playoutBuilder;
         _blockPlayoutBuilder = blockPlayoutBuilder;
         _blockPlayoutFillerBuilder = blockPlayoutFillerBuilder;
-        _templatePlayoutBuilder = templatePlayoutBuilder;
+        _yamlPlayoutBuilder = yamlPlayoutBuilder;
         _externalJsonPlayoutBuilder = externalJsonPlayoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _entityLocker = entityLocker;
@@ -77,8 +77,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
                     await _blockPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
                     await _blockPlayoutFillerBuilder.Build(playout, request.Mode, cancellationToken);
                     break;
-                case ProgramSchedulePlayoutType.Template:
-                    await _templatePlayoutBuilder.Build(playout, request.Mode, cancellationToken);
+                case ProgramSchedulePlayoutType.Yaml:
+                    await _yamlPlayoutBuilder.Build(playout, request.Mode, cancellationToken);
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
                     await _externalJsonPlayoutBuilder.Build(playout, request.Mode, cancellationToken);

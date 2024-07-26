@@ -7,24 +7,24 @@ using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace ErsatzTV.Core.Scheduling.TemplateScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class TemplatePlayoutBuilder(
+public class YamlPlayoutBuilder(
     ILocalFileSystem localFileSystem,
     IConfigElementRepository configElementRepository,
     IMediaCollectionRepository mediaCollectionRepository,
-    ILogger<TemplatePlayoutBuilder> logger)
-    : ITemplatePlayoutBuilder
+    ILogger<YamlPlayoutBuilder> logger)
+    : IYamlPlayoutBuilder
 {
     public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode, CancellationToken cancellationToken)
     {
         if (!localFileSystem.FileExists(playout.TemplateFile))
         {
-            logger.LogWarning("Playout template file {File} does not exist; aborting.", playout.TemplateFile);
+            logger.LogWarning("YAML playout file {File} does not exist; aborting.", playout.TemplateFile);
             return playout;
         }
 
-        PlayoutTemplate playoutTemplate = await LoadTemplate(playout, cancellationToken);
+        YamlPlayoutDefinition playoutDefinition = await LoadYamlDefinition(playout, cancellationToken);
 
         DateTimeOffset start = DateTimeOffset.Now;
         int daysToBuild = await GetDaysToBuild();
@@ -32,7 +32,7 @@ public class TemplatePlayoutBuilder(
 
         if (mode is not PlayoutBuildMode.Reset)
         {
-            logger.LogWarning("Template playouts can only be reset; ignoring build mode {Mode}", mode.ToString());
+            logger.LogWarning("YAML playouts can only be reset; ignoring build mode {Mode}", mode.ToString());
             return playout;
         }
 
@@ -50,16 +50,16 @@ public class TemplatePlayoutBuilder(
         var index = 0;
         while (currentTime < finish)
         {
-            if (index >= playoutTemplate.Playout.Count)
+            if (index >= playoutDefinition.Playout.Count)
             {
-                logger.LogInformation("Reached the end of the playout template; stopping");
+                logger.LogInformation("Reached the end of the YAML playout definition; stopping");
                 break;
             }
 
-            PlayoutTemplateItem playoutItem = playoutTemplate.Playout[index];
+            YamlPlayoutInstruction playoutItem = playoutDefinition.Playout[index];
 
-            // repeat resets index into template playout
-            if (playoutItem is PlayoutTemplateRepeatItem)
+            // repeat resets index into YAML playout
+            if (playoutItem is YamlPlayoutRepeatInstruction)
             {
                 index = 0;
                 if (playout.Items.Count == itemsAfterRepeat)
@@ -74,7 +74,7 @@ public class TemplatePlayoutBuilder(
 
             Option<IMediaCollectionEnumerator> maybeEnumerator = await GetCachedEnumeratorForContent(
                 playout,
-                playoutTemplate,
+                playoutDefinition,
                 enumerators,
                 playoutItem.Content,
                 cancellationToken);
@@ -92,31 +92,31 @@ public class TemplatePlayoutBuilder(
             {
                 switch (playoutItem)
                 {
-                    case PlayoutTemplateCountItem count:
-                        currentTime = PlayoutTemplateSchedulerCount.Schedule(playout, currentTime, count, enumerator);
+                    case YamlPlayoutCountInstruction count:
+                        currentTime = YamlPlayoutSchedulerCount.Schedule(playout, currentTime, count, enumerator);
                         break;
-                    case PlayoutTemplateDurationItem duration:
+                    case YamlPlayoutDurationInstruction duration:
                         Option<IMediaCollectionEnumerator> durationFallbackEnumerator = await GetCachedEnumeratorForContent(
                             playout,
-                            playoutTemplate,
+                            playoutDefinition,
                             enumerators,
                             duration.Fallback,
                             cancellationToken);
-                        currentTime = PlayoutTemplateSchedulerDuration.Schedule(
+                        currentTime = YamlPlayoutSchedulerDuration.Schedule(
                             playout,
                             currentTime,
                             duration,
                             enumerator,
                             durationFallbackEnumerator);
                         break;
-                    case PlayoutTemplatePadToNextItem padToNext:
+                    case YamlPlayoutPadToNextInstruction padToNext:
                         Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetCachedEnumeratorForContent(
                             playout,
-                            playoutTemplate,
+                            playoutDefinition,
                             enumerators,
                             padToNext.Fallback,
                             cancellationToken);
-                        currentTime = PlayoutTemplateSchedulerPadToNext.Schedule(
+                        currentTime = YamlPlayoutSchedulerPadToNext.Schedule(
                             playout,
                             currentTime,
                             padToNext,
@@ -139,7 +139,7 @@ public class TemplatePlayoutBuilder(
 
     private async Task<Option<IMediaCollectionEnumerator>> GetCachedEnumeratorForContent(
         Playout playout,
-        PlayoutTemplate playoutTemplate,
+        YamlPlayoutDefinition playoutDefinition,
         Dictionary<string, IMediaCollectionEnumerator> enumerators,
         string contentKey,
         CancellationToken cancellationToken)
@@ -152,7 +152,7 @@ public class TemplatePlayoutBuilder(
         if (!enumerators.TryGetValue(contentKey, out IMediaCollectionEnumerator enumerator))
         {
             Option<IMediaCollectionEnumerator> maybeEnumerator =
-                await GetEnumeratorForContent(playout, contentKey, playoutTemplate, cancellationToken);
+                await GetEnumeratorForContent(playout, contentKey, playoutDefinition, cancellationToken);
 
             if (maybeEnumerator.IsNone)
             {
@@ -172,10 +172,10 @@ public class TemplatePlayoutBuilder(
     private async Task<Option<IMediaCollectionEnumerator>> GetEnumeratorForContent(
         Playout playout,
         string contentKey,
-        PlayoutTemplate playoutTemplate,
+        YamlPlayoutDefinition playoutDefinition,
         CancellationToken cancellationToken)
     {
-        int index = playoutTemplate.Content.FindIndex(c => c.Key == contentKey);
+        int index = playoutDefinition.Content.FindIndex(c => c.Key == contentKey);
         if (index < 0)
         {
             return Option<IMediaCollectionEnumerator>.None;
@@ -183,13 +183,13 @@ public class TemplatePlayoutBuilder(
 
         List<MediaItem> items = [];
 
-        PlayoutTemplateContentItem content = playoutTemplate.Content[index];
+        YamlPlayoutContentItem content = playoutDefinition.Content[index];
         switch (content)
         {
-            case PlayoutTemplateContentSearchItem search:
+            case YamlPlayoutContentSearchItem search:
                 items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query);
                 break;
-            case PlayoutTemplateContentShowItem show:
+            case YamlPlayoutContentShowItem show:
                 items = await mediaCollectionRepository.GetShowItemsByShowGuids(
                     show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
                 break;
@@ -209,7 +209,7 @@ public class TemplatePlayoutBuilder(
         return Option<IMediaCollectionEnumerator>.None;
     }
 
-    private static async Task<PlayoutTemplate> LoadTemplate(Playout playout, CancellationToken cancellationToken)
+    private static async Task<YamlPlayoutDefinition> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)
     {
         string yaml = await File.ReadAllTextAsync(playout.TemplateFile, cancellationToken);
 
@@ -220,24 +220,24 @@ public class TemplatePlayoutBuilder(
                 {
                     var contentKeyMappings = new Dictionary<string, Type>
                     {
-                        { "search", typeof(PlayoutTemplateContentSearchItem) },
-                        { "show", typeof(PlayoutTemplateContentShowItem) }
+                        { "search", typeof(YamlPlayoutContentSearchItem) },
+                        { "show", typeof(YamlPlayoutContentShowItem) }
                     };
 
-                    o.AddUniqueKeyTypeDiscriminator<PlayoutTemplateContentItem>(contentKeyMappings);
+                    o.AddUniqueKeyTypeDiscriminator<YamlPlayoutContentItem>(contentKeyMappings);
 
                     var instructionKeyMappings = new Dictionary<string, Type>
                     {
-                        { "count", typeof(PlayoutTemplateCountItem) },
-                        { "duration", typeof(PlayoutTemplateDurationItem) },
-                        { "pad_to_next", typeof(PlayoutTemplatePadToNextItem) },
-                        { "repeat", typeof(PlayoutTemplateRepeatItem) }
+                        { "count", typeof(YamlPlayoutCountInstruction) },
+                        { "duration", typeof(YamlPlayoutDurationInstruction) },
+                        { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
+                        { "repeat", typeof(YamlPlayoutRepeatInstruction) }
                     };
 
-                    o.AddUniqueKeyTypeDiscriminator<PlayoutTemplateItem>(instructionKeyMappings);
+                    o.AddUniqueKeyTypeDiscriminator<YamlPlayoutInstruction>(instructionKeyMappings);
                 })
             .Build();
 
-        return deserializer.Deserialize<PlayoutTemplate>(yaml);
+        return deserializer.Deserialize<YamlPlayoutDefinition>(yaml);
     }
 }

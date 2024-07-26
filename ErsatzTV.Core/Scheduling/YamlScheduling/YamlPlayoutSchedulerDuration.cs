@@ -3,14 +3,14 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using TimeSpanParserUtil;
 
-namespace ErsatzTV.Core.Scheduling.TemplateScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class PlayoutTemplateSchedulerDuration : PlayoutTemplateScheduler
+public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
 {
     public static DateTimeOffset Schedule(
         Playout playout,
         DateTimeOffset currentTime,
-        PlayoutTemplateDurationItem duration,
+        YamlPlayoutDurationInstruction duration,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
     {
