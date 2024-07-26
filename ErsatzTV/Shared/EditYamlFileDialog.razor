@@ -4,14 +4,14 @@
     <DialogContent>
         <MudContainer Class="mb-6">
             <MudText>
-                Edit the playout's template file
+                Edit the playout's YAML file
             </MudText>
         </MudContainer>
-        <MudTextField Label="Template File" @bind-Value="_templateFile"/>
+        <MudTextField Label="YAML File" @bind-Value="_yamlFile"/>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(string.IsNullOrWhiteSpace(_templateFile))" OnClick="Submit">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(string.IsNullOrWhiteSpace(_yamlFile))" OnClick="Submit">
             Save Changes
         </MudButton>
     </DialogActions>
@@ -21,12 +21,12 @@
     private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
-    public string TemplateFile { get; set; }
+    public string YamlFile { get; set; }
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
 
-    private string _templateFile;
+    private string _yamlFile;
 
     public void Dispose()
     {
@@ -34,9 +34,9 @@
         _cts.Dispose();
     }
 
-    protected override void OnParametersSet() => _templateFile = TemplateFile;
+    protected override void OnParametersSet() => _yamlFile = YamlFile;
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(_templateFile));
+    private void Submit() => MudDialog.Close(DialogResult.Ok(_yamlFile));
 
     private void Cancel() => MudDialog.Cancel();
 }

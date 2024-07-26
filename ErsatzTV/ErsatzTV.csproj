@@ -59,6 +59,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <EmbeddedResource Include="Resources\Fonts\Sen.ttf" />
       <EmbeddedResource Include="Resources\background.png" />
       <EmbeddedResource Include="Resources\Fonts\OPTIKabel-Heavy.otf" />
       <EmbeddedResource Include="Resources\Fonts\Roboto-Regular.ttf" />

@@ -1,9 +1,9 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 
-namespace ErsatzTV.Core.Scheduling.TemplateScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public abstract class PlayoutTemplateScheduler
+public abstract class YamlPlayoutScheduler
 {
     protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)
     {

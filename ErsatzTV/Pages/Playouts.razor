@@ -19,8 +19,8 @@
             </MudButton>
         </MudTooltip>
         <MudTooltip Text="This feature is experimental">
-            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.Template}")">
-                Add Template Playout
+            <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Warning" Href="@($"playouts/add/{PlayoutKind.Yaml}")">
+                Add YAML Playout
             </MudButton>
         </MudTooltip>
         <MudTooltip Text="This feature is experimental">
@@ -68,8 +68,8 @@
                     case ProgramSchedulePlayoutType.Block:
                         <span>Block</span>
                         break;
-                    case ProgramSchedulePlayoutType.Template:
-                        <span>Template</span>
+                    case ProgramSchedulePlayoutType.Yaml:
+                        <span>YAML</span>
                         break;
                     case ProgramSchedulePlayoutType.ExternalJson:
                         <span>External Json</span>
@@ -131,12 +131,12 @@
                         <div style="width: 48px"></div>
                         <div style="width: 48px"></div>
                     }
-                    else if (context.PlayoutType == ProgramSchedulePlayoutType.Template)
+                    else if (context.PlayoutType == ProgramSchedulePlayoutType.Yaml)
                     {
-                        <MudTooltip Text="Edit Template File">
+                        <MudTooltip Text="Edit YAML File">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Disabled="@EntityLocker.IsPlayoutLocked(context.PlayoutId)"
-                                           OnClick="@(_ => EditTemplateFile(context))">
+                                           OnClick="@(_ => EditYamlFile(context))">
                             </MudIconButton>
                         </MudTooltip>
                         <MudTooltip Text="Reset Playout">
@@ -256,8 +256,8 @@
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        // only show details for flood, block and template playouts
-        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Flood or ProgramSchedulePlayoutType.Block or ProgramSchedulePlayoutType.Template
+        // only show details for flood, block and YAML playouts
+        _selectedPlayoutId = playout.PlayoutType is ProgramSchedulePlayoutType.Flood or ProgramSchedulePlayoutType.Block or ProgramSchedulePlayoutType.Yaml
             ? playout.PlayoutId
             : null;
 
@@ -286,16 +286,16 @@
         }
     }
 
-    private async Task EditTemplateFile(PlayoutNameViewModel playout)
+    private async Task EditYamlFile(PlayoutNameViewModel playout)
     {
-        var parameters = new DialogParameters { { "TemplateFile", $"{playout.TemplateFile}" } };
+        var parameters = new DialogParameters { { "YamlFile", $"{playout.TemplateFile}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
 
-        IDialogReference dialog = await Dialog.ShowAsync<EditTemplateFileDialog>("Edit Template File", parameters, options);
+        IDialogReference dialog = await Dialog.ShowAsync<EditYamlFileDialog>("Edit YAML File", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Canceled)
         {
-            await Mediator.Send(new UpdateTemplatePlayout(playout.PlayoutId, result.Data as string ?? playout.TemplateFile), _cts.Token);
+            await Mediator.Send(new UpdateYamlPlayout(playout.PlayoutId, result.Data as string ?? playout.TemplateFile), _cts.Token);
             if (_table != null)
             {
                 await _table.ReloadServerData();

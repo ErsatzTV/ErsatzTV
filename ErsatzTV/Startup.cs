@@ -16,6 +16,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
+using ErsatzTV.Core.Images;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
@@ -36,7 +37,7 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
-using ErsatzTV.Core.Scheduling.TemplateScheduling;
+using ErsatzTV.Core.Scheduling.YamlScheduling;
 using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Pipeline;
@@ -656,7 +657,7 @@ public class Startup
         services.AddScoped<IBlockPlayoutBuilder, BlockPlayoutBuilder>();
         services.AddScoped<IBlockPlayoutPreviewBuilder, BlockPlayoutPreviewBuilder>();
         services.AddScoped<IBlockPlayoutFillerBuilder, BlockPlayoutFillerBuilder>();
-        services.AddScoped<ITemplatePlayoutBuilder, TemplatePlayoutBuilder>();
+        services.AddScoped<IYamlPlayoutBuilder, YamlPlayoutBuilder>();
         services.AddScoped<IExternalJsonPlayoutBuilder, ExternalJsonPlayoutBuilder>();
         services.AddScoped<IPlayoutTimeShifter, PlayoutTimeShifter>();
         services.AddScoped<IImageCache, ImageCache>();
@@ -682,6 +683,7 @@ public class Startup
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();
         services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
             MultiEpisodeShuffleCollectionEnumeratorFactory>();
+        services.AddScoped<IChannelLogoGenerator, ChannelLogoGenerator>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

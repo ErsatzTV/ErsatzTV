@@ -6,6 +6,7 @@ using ErsatzTV.Application.Plex;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Jellyfin;
 using Flurl;
 using MediatR;
@@ -20,11 +21,16 @@ public class ArtworkController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMediator _mediator;
+    private readonly IChannelLogoGenerator _channelLogoGenerator;
 
-    public ArtworkController(IMediator mediator, IHttpClientFactory httpClientFactory)
+    public ArtworkController(
+        IMediator mediator,
+        IHttpClientFactory httpClientFactory,
+        IChannelLogoGenerator channelLogoGenerator)
     {
         _mediator = mediator;
         _httpClientFactory = httpClientFactory;
+        _channelLogoGenerator = channelLogoGenerator;
     }
 
     [HttpHead("/artwork/{id}")]
@@ -252,5 +258,16 @@ public class ArtworkController : ControllerBase
                     response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
             });
 #endif
+    }
+
+    [HttpGet("/iptv/logos/gen")]
+    public IActionResult GenerateChannelLogo(
+        string text,
+        CancellationToken cancellationToken)
+    {
+        return _channelLogoGenerator.GenerateChannelLogo(text, 100, 200, cancellationToken).Match<IActionResult>(
+            Left: _ => new RedirectResult("/iptv/images/ersatztv-500.png"),
+            Right: img => File(img, "image/png")
+        );
     }
 }

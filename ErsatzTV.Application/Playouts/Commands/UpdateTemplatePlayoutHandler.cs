@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.Playouts;
 
 public class
-    UpdateTemplatePlayoutHandler : IRequestHandler<UpdateTemplatePlayout,
+    UpdateTemplatePlayoutHandler : IRequestHandler<UpdateYamlPlayout,
     Either<BaseError, PlayoutNameViewModel>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -24,7 +24,7 @@ public class
     }
 
     public async Task<Either<BaseError, PlayoutNameViewModel>> Handle(
-        UpdateTemplatePlayout request,
+        UpdateYamlPlayout request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -34,7 +34,7 @@ public class
 
     private async Task<PlayoutNameViewModel> ApplyUpdateRequest(
         TvContext dbContext,
-        UpdateTemplatePlayout request,
+        UpdateYamlPlayout request,
         Playout playout)
     {
         playout.TemplateFile = request.TemplateFile;
@@ -58,12 +58,12 @@ public class
 
     private static Task<Validation<BaseError, Playout>> Validate(
         TvContext dbContext,
-        UpdateTemplatePlayout request) =>
+        UpdateYamlPlayout request) =>
         PlayoutMustExist(dbContext, request);
 
     private static Task<Validation<BaseError, Playout>> PlayoutMustExist(
         TvContext dbContext,
-        UpdateTemplatePlayout updatePlayout) =>
+        UpdateYamlPlayout updatePlayout) =>
         dbContext.Playouts
             .Include(p => p.Channel)
             .SelectOneAsync(p => p.Id, p => p.Id == updatePlayout.PlayoutId)
