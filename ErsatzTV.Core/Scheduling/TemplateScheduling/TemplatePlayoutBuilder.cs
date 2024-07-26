@@ -95,6 +95,20 @@ public class TemplatePlayoutBuilder(
                     case PlayoutTemplateCountItem count:
                         currentTime = PlayoutTemplateSchedulerCount.Schedule(playout, currentTime, count, enumerator);
                         break;
+                    case PlayoutTemplateDurationItem duration:
+                        Option<IMediaCollectionEnumerator> durationFallbackEnumerator = await GetCachedEnumeratorForContent(
+                            playout,
+                            playoutTemplate,
+                            enumerators,
+                            duration.Fallback,
+                            cancellationToken);
+                        currentTime = PlayoutTemplateSchedulerDuration.Schedule(
+                            playout,
+                            currentTime,
+                            duration,
+                            enumerator,
+                            durationFallbackEnumerator);
+                        break;
                     case PlayoutTemplatePadToNextItem padToNext:
                         Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetCachedEnumeratorForContent(
                             playout,
