@@ -346,69 +346,78 @@ public class MediaCollectionRepository : IMediaCollectionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        var result = new List<MediaItem>();
-
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
             .SelectOneAsync(sc => sc.Id, sc => sc.Id == id);
 
         foreach (SmartCollection collection in maybeCollection)
         {
-            // elasticsearch doesn't like when we ask for a limit of zero, so use 10,000
-            SearchResult searchResults = await _searchIndex.Search(_client, collection.Query, 0, 10_000);
-
-            var movieIds = searchResults.Items
-                .Filter(i => i.Type == LuceneSearchIndex.MovieType)
-                .Map(i => i.Id)
-                .ToList();
-            result.AddRange(await GetMovieItems(dbContext, movieIds));
-
-            foreach (int showId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.ShowType).Map(i => i.Id))
-            {
-                result.AddRange(await GetShowItemsFromShowId(dbContext, showId));
-            }
-
-            foreach (int seasonId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.SeasonType)
-                         .Map(i => i.Id))
-            {
-                result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, seasonId));
-            }
-
-            foreach (int artistId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.ArtistType)
-                         .Map(i => i.Id))
-            {
-                result.AddRange(await GetArtistItemsFromArtistId(dbContext, artistId));
-            }
-
-            var musicVideoIds = searchResults.Items
-                .Filter(i => i.Type == LuceneSearchIndex.MusicVideoType)
-                .Map(i => i.Id)
-                .ToList();
-            result.AddRange(await GetMusicVideoItems(dbContext, musicVideoIds));
-
-            var episodeIds = searchResults.Items
-                .Filter(i => i.Type == LuceneSearchIndex.EpisodeType)
-                .Map(i => i.Id)
-                .ToList();
-            result.AddRange(await GetEpisodeItems(dbContext, episodeIds));
-
-            var otherVideoIds = searchResults.Items
-                .Filter(i => i.Type == LuceneSearchIndex.OtherVideoType)
-                .Map(i => i.Id)
-                .ToList();
-            result.AddRange(await GetOtherVideoItems(dbContext, otherVideoIds));
-
-            var songIds = searchResults.Items
-                .Filter(i => i.Type == LuceneSearchIndex.SongType)
-                .Map(i => i.Id)
-                .ToList();
-            result.AddRange(await GetSongItems(dbContext, songIds));
-
-            var imageIds = searchResults.Items
-                .Filter(i => i.Type == LuceneSearchIndex.ImageType)
-                .Map(i => i.Id)
-                .ToList();
-            result.AddRange(await GetImageItems(dbContext, imageIds));
+            return await GetSmartCollectionItems(collection.Query);
         }
+
+        return [];
+    }
+
+    public async Task<List<MediaItem>> GetSmartCollectionItems(string query)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var result = new List<MediaItem>();
+
+        // elasticsearch doesn't like when we ask for a limit of zero, so use 10,000
+        SearchResult searchResults = await _searchIndex.Search(_client, query, 0, 10_000);
+
+        var movieIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.MovieType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetMovieItems(dbContext, movieIds));
+
+        foreach (int showId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.ShowType).Map(i => i.Id))
+        {
+            result.AddRange(await GetShowItemsFromShowId(dbContext, showId));
+        }
+
+        foreach (int seasonId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.SeasonType)
+                     .Map(i => i.Id))
+        {
+            result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, seasonId));
+        }
+
+        foreach (int artistId in searchResults.Items.Filter(i => i.Type == LuceneSearchIndex.ArtistType)
+                     .Map(i => i.Id))
+        {
+            result.AddRange(await GetArtistItemsFromArtistId(dbContext, artistId));
+        }
+
+        var musicVideoIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.MusicVideoType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetMusicVideoItems(dbContext, musicVideoIds));
+
+        var episodeIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.EpisodeType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetEpisodeItems(dbContext, episodeIds));
+
+        var otherVideoIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.OtherVideoType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetOtherVideoItems(dbContext, otherVideoIds));
+
+        var songIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.SongType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetSongItems(dbContext, songIds));
+
+        var imageIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.ImageType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetImageItems(dbContext, imageIds));
 
         return result.DistinctBy(x => x.Id).ToList();
     }
