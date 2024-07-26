@@ -1,6 +1,6 @@
-﻿namespace ErsatzTV.Core.Hdhr;
+namespace ErsatzTV.Core.Hdhr;
 
-public record DeviceXml(string Scheme, string Host)
+public record DeviceXml(string Scheme, string Host, Guid uuid)
 {
     public string ToXml() =>
         @$"<root xmlns=""urn:schemas-upnp-org:device-1-0"">
@@ -15,8 +15,8 @@ public record DeviceXml(string Scheme, string Host)
         <manufacturer>Silicondust</manufacturer>
         <modelName>HDTC-2US</modelName>
         <modelNumber>HDTC-2US</modelNumber>
-        <serialNumber/>
-        <UDN>uuid:2020-03-S3LA-BG3LIA:2</UDN>
+        <serialNumber>{uuid}</serialNumber>
+        <UDN>uuid:{uuid}</UDN>
     </device>
 </root>";
 }
