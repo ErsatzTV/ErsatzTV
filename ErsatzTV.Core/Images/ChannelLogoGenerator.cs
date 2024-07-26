@@ -57,8 +57,8 @@ public class ChannelLogoGenerator : IChannelLogoGenerator
             }
 
             // Dessiner le texte
-            float x = logoWidth / 2;
-            float y = logoHeight / 2 - textBounds.MidY;
+            float x = logoWidth / 2f;
+            float y = logoHeight / 2f - textBounds.MidY;
             canvas.DrawText(text, x, y, paint);
 
             using SKImage image = surface.Snapshot();

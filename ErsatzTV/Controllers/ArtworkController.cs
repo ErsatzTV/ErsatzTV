@@ -266,7 +266,7 @@ public class ArtworkController : ControllerBase
         CancellationToken cancellationToken)
     {
         return _channelLogoGenerator.GenerateChannelLogo(text, 100, 200, cancellationToken).Match<IActionResult>(
-            Left: _ => new RedirectResult("/images/ersatztv-500.png"),
+            Left: _ => new RedirectResult("/iptv/images/ersatztv-500.png"),
             Right: img => File(img, "image/png")
         );
     }
