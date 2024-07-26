@@ -10,6 +10,7 @@ public class Playout
     public int? ProgramScheduleId { get; set; }
     public ProgramSchedule ProgramSchedule { get; set; }
     public string ExternalJsonFile { get; set; }
+    public string TemplateFile { get; set; }
     public List<ProgramScheduleAlternate> ProgramScheduleAlternates { get; set; }
     public ProgramSchedulePlayoutType ProgramSchedulePlayoutType { get; set; }
     public List<PlayoutItem> Items { get; set; }

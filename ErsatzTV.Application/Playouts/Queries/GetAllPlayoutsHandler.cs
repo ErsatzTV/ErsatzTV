@@ -27,6 +27,7 @@ public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<Playou
                     p.Channel.Number,
                     p.Channel.ProgressMode,
                     p.ProgramScheduleId == null ? string.Empty : p.ProgramSchedule.Name,
+                    p.TemplateFile,
                     p.ExternalJsonFile,
                     p.DailyRebuildTime))
             .ToListAsync(cancellationToken);
