@@ -417,7 +417,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                               TimeSpan.FromMinutes(currentMinute) +
                                               TimeSpan.FromMinutes(targetMinute);
 
-
             var targetTime = new DateTimeOffset(
                 almostTargetTime.Year,
                 almostTargetTime.Month,
@@ -426,6 +425,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                 almostTargetTime.Minute,
                 0,
                 almostTargetTime.Offset);
+
+            // ensure filler works for content less than one minute
+            if (targetTime <= playoutItem.StartOffset + totalDuration)
+                targetTime = targetTime.AddMinutes(padFiller.PadToNearestMinute.Value);
 
             TimeSpan remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
 
