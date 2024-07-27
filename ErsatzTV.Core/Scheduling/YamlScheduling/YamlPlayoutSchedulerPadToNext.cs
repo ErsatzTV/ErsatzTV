@@ -8,6 +8,7 @@ public class YamlPlayoutSchedulerPadToNext : YamlPlayoutSchedulerDuration
     public static DateTimeOffset Schedule(
         Playout playout,
         DateTimeOffset currentTime,
+        int guideGroup,
         YamlPlayoutPadToNextInstruction padToNext,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
@@ -38,6 +39,8 @@ public class YamlPlayoutSchedulerPadToNext : YamlPlayoutSchedulerDuration
             targetTime,
             padToNext.DiscardAttempts,
             padToNext.Trim,
+            GetFillerKind(padToNext),
+            guideGroup,
             enumerator,
             fallbackEnumerator);
     }

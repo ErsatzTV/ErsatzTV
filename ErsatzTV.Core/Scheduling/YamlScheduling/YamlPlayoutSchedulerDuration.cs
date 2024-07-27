@@ -10,6 +10,7 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
     public static DateTimeOffset Schedule(
         Playout playout,
         DateTimeOffset currentTime,
+        int guideGroup,
         YamlPlayoutDurationInstruction duration,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
@@ -28,6 +29,8 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
             targetTime,
             duration.DiscardAttempts,
             duration.Trim,
+            GetFillerKind(duration),
+            guideGroup,
             enumerator,
             fallbackEnumerator);
     }
@@ -38,6 +41,8 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
         DateTimeOffset targetTime,
         int discardAttempts,
         bool trim,
+        FillerKind fillerKind,
+        int guideGroup,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
     {
@@ -56,8 +61,8 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
                     Finish = currentTime.UtcDateTime + itemDuration,
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
-                    //GuideGroup = playoutBuilderState.NextGuideGroup,
-                    //FillerKind = fillerKind,
+                    GuideGroup = guideGroup,
+                    FillerKind = fillerKind
                     //DisableWatermarks = !allowWatermarks
                 };
 

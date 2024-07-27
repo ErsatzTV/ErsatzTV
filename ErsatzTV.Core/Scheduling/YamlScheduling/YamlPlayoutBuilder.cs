@@ -44,6 +44,7 @@ public class YamlPlayoutBuilder(
         System.Collections.Generic.HashSet<string> missingContentKeys = [];
 
         int itemsAfterRepeat = playout.Items.Count;
+        int guideGroup = 1;
         var index = 0;
         while (currentTime < finish)
         {
@@ -60,7 +61,8 @@ public class YamlPlayoutBuilder(
             {
                 case YamlPlayoutWaitUntilInstruction waitUntil:
                     currentTime = HandleWaitUntil(currentTime, waitUntil);
-                    break;
+                    index++;
+                    continue;
                 case YamlPlayoutRepeatInstruction:
                     // repeat resets index into YAML playout
                     index = 0;
@@ -71,6 +73,10 @@ public class YamlPlayoutBuilder(
                     }
 
                     itemsAfterRepeat = playout.Items.Count;
+                    continue;
+                case YamlPlayoutNewEpgGroupInstruction:
+                    guideGroup *= -1;
+                    index++;
                     continue;
             }
 
@@ -96,7 +102,7 @@ public class YamlPlayoutBuilder(
                 switch (playoutItem)
                 {
                     case YamlPlayoutCountInstruction count:
-                        currentTime = YamlPlayoutSchedulerCount.Schedule(playout, currentTime, count, enumerator);
+                        currentTime = YamlPlayoutSchedulerCount.Schedule(playout, currentTime, guideGroup, count, enumerator);
                         break;
                     case YamlPlayoutDurationInstruction duration:
                         Option<IMediaCollectionEnumerator> durationFallbackEnumerator = await GetCachedEnumeratorForContent(
@@ -109,6 +115,7 @@ public class YamlPlayoutBuilder(
                         currentTime = YamlPlayoutSchedulerDuration.Schedule(
                             playout,
                             currentTime,
+                            guideGroup,
                             duration,
                             enumerator,
                             durationFallbackEnumerator);
@@ -124,6 +131,7 @@ public class YamlPlayoutBuilder(
                         currentTime = YamlPlayoutSchedulerPadToNext.Schedule(
                             playout,
                             currentTime,
+                            guideGroup,
                             padToNext,
                             enumerator,
                             fallbackEnumerator);
@@ -307,6 +315,7 @@ public class YamlPlayoutBuilder(
                     {
                         { "count", typeof(YamlPlayoutCountInstruction) },
                         { "duration", typeof(YamlPlayoutDurationInstruction) },
+                        { "new_epg_group", typeof(YamlPlayoutNewEpgGroupInstruction) },
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },
                         { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
