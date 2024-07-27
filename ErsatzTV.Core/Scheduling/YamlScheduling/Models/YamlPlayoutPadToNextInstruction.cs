@@ -1,10 +1,11 @@
 using YamlDotNet.Serialization;
 
-namespace ErsatzTV.Core.Scheduling.YamlScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
-public class YamlPlayoutDurationInstruction : YamlPlayoutInstruction
+public class YamlPlayoutPadToNextInstruction : YamlPlayoutInstruction
 {
-    public string Duration { get; set; }
+    [YamlMember(Alias = "pad_to_next", ApplyNamingConventions = false)]
+    public int PadToNext { get; set; }
 
     public bool Trim { get; set; }
 

@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using TimeSpanParserUtil;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
@@ -8,9 +9,7 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
 {
     public static DateTimeOffset Schedule(
-        Playout playout,
-        DateTimeOffset currentTime,
-        int guideGroup,
+        YamlPlayoutContext context,
         YamlPlayoutDurationInstruction duration,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
@@ -18,36 +17,32 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
         // TODO: move to up-front validation somewhere
         if (!TimeSpanParser.TryParse(duration.Duration, out TimeSpan timeSpan))
         {
-            return currentTime;
+            return context.CurrentTime;
         }
 
-        DateTimeOffset targetTime = currentTime.Add(timeSpan);
+        DateTimeOffset targetTime = context.CurrentTime.Add(timeSpan);
 
         return Schedule(
-            playout,
-            currentTime,
+            context,
             targetTime,
             duration.DiscardAttempts,
             duration.Trim,
             GetFillerKind(duration),
-            guideGroup,
             enumerator,
             fallbackEnumerator);
     }
 
     protected static DateTimeOffset Schedule(
-        Playout playout,
-        DateTimeOffset currentTime,
+        YamlPlayoutContext context,
         DateTimeOffset targetTime,
         int discardAttempts,
         bool trim,
         FillerKind fillerKind,
-        int guideGroup,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
     {
         bool done = false;
-        TimeSpan remainingToFill = targetTime - currentTime;
+        TimeSpan remainingToFill = targetTime - context.CurrentTime;
         while (!done && enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
         {
             foreach (MediaItem mediaItem in enumerator.Current)
@@ -57,11 +52,11 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
-                    Start = currentTime.UtcDateTime,
-                    Finish = currentTime.UtcDateTime + itemDuration,
+                    Start = context.CurrentTime.UtcDateTime,
+                    Finish = context.CurrentTime.UtcDateTime + itemDuration,
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
-                    GuideGroup = guideGroup,
+                    GuideGroup = context.GuideGroup,
                     FillerKind = fillerKind
                     //DisableWatermarks = !allowWatermarks
                 };
@@ -69,9 +64,9 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
                     remainingToFill -= itemDuration;
-                    currentTime += itemDuration;
+                    context.CurrentTime += itemDuration;
 
-                    playout.Items.Add(playoutItem);
+                    context.Playout.Items.Add(playoutItem);
                     enumerator.MoveNext();
                 }
                 else if (discardAttempts > 0)
@@ -84,12 +79,12 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
                 {
                     // trim item to exactly fit
                     remainingToFill = TimeSpan.Zero;
-                    currentTime = targetTime;
+                    context.CurrentTime = targetTime;
 
                     playoutItem.Finish = targetTime.UtcDateTime;
                     playoutItem.OutPoint = playoutItem.Finish - playoutItem.Start;
 
-                    playout.Items.Add(playoutItem);
+                    context.Playout.Items.Add(playoutItem);
                     enumerator.MoveNext();
                 }
                 else if (fallbackEnumerator.IsSome)
@@ -106,7 +101,7 @@ public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
                             playoutItem.Finish = targetTime.UtcDateTime;
                             playoutItem.FillerKind = FillerKind.Fallback;
 
-                            playout.Items.Add(playoutItem);
+                            context.Playout.Items.Add(playoutItem);
                             fallback.MoveNext();
                         }
                     }

@@ -1,6 +1,6 @@
 using YamlDotNet.Serialization;
 
-namespace ErsatzTV.Core.Scheduling.YamlScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 public class YamlPlayoutSkipItemsInstruction : YamlPlayoutInstruction
 {

@@ -1,14 +1,13 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class YamlPlayoutSchedulerCount : YamlPlayoutScheduler
 {
     public static DateTimeOffset Schedule(
-        Playout playout,
-        DateTimeOffset currentTime,
-        int guideGroup,
+        YamlPlayoutContext context,
         YamlPlayoutCountInstruction count,
         IMediaCollectionEnumerator enumerator)
     {
@@ -22,8 +21,8 @@ public class YamlPlayoutSchedulerCount : YamlPlayoutScheduler
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
-                    Start = currentTime.UtcDateTime,
-                    Finish = currentTime.UtcDateTime + itemDuration,
+                    Start = context.CurrentTime.UtcDateTime,
+                    Finish = context.CurrentTime.UtcDateTime + itemDuration,
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
                     FillerKind = GetFillerKind(count),
@@ -33,7 +32,7 @@ public class YamlPlayoutSchedulerCount : YamlPlayoutScheduler
                     //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                     //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                     //SubtitleMode = scheduleItem.SubtitleMode
-                    GuideGroup = guideGroup
+                    GuideGroup = context.GuideGroup
                     //GuideStart = effectiveBlock.Start.UtcDateTime,
                     //GuideFinish = blockFinish.UtcDateTime,
                     //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
@@ -41,13 +40,13 @@ public class YamlPlayoutSchedulerCount : YamlPlayoutScheduler
                     //CollectionEtag = collectionEtags[collectionKey]
                 };
 
-                playout.Items.Add(playoutItem);
+                context.Playout.Items.Add(playoutItem);
 
-                currentTime += itemDuration;
+                context.CurrentTime += itemDuration;
                 enumerator.MoveNext();
             }
         }
 
-        return currentTime;
+        return context.CurrentTime;
     }
 }

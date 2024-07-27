@@ -2,6 +2,8 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -35,53 +37,54 @@ public class YamlPlayoutBuilder(
             return playout;
         }
 
-        YamlPlayoutInitialState initialState = HandleResetActions(playout, playoutDefinition, start);
-
-        DateTimeOffset currentTime = initialState.CurrentTime;
+        YamlPlayoutContext context = HandleResetActions(playout, playoutDefinition, start);
 
         // load content and content enumerators on demand
+        Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
         Dictionary<string, IMediaCollectionEnumerator> enumerators = new();
         System.Collections.Generic.HashSet<string> missingContentKeys = [];
 
-        int itemsAfterRepeat = playout.Items.Count;
-        int guideGroup = 1;
-        var index = 0;
-        while (currentTime < finish)
+        context.GuideGroup = 1;
+        context.InstructionIndex = 0;
+
+        while (context.CurrentTime < finish)
         {
-            if (index >= playoutDefinition.Playout.Count)
+            if (context.InstructionIndex >= playoutDefinition.Playout.Count)
             {
                 logger.LogInformation("Reached the end of the YAML playout definition; stopping");
                 break;
             }
 
-            YamlPlayoutInstruction playoutItem = playoutDefinition.Playout[index];
-
-            // handle instructions that don't reference content
-            switch (playoutItem)
+            YamlPlayoutInstruction playoutItem = playoutDefinition.Playout[context.InstructionIndex];
+            if (!handlers.TryGetValue(playoutItem, out IYamlPlayoutHandler handler))
             {
-                case YamlPlayoutWaitUntilInstruction waitUntil:
-                    currentTime = HandleWaitUntil(currentTime, waitUntil);
-                    index++;
-                    continue;
-                case YamlPlayoutRepeatInstruction:
-                    // repeat resets index into YAML playout
-                    index = 0;
-                    if (playout.Items.Count == itemsAfterRepeat)
-                    {
-                        logger.LogWarning("Repeat encountered without adding any playout items; aborting");
-                        break;
-                    }
+                handler = playoutItem switch
+                {
+                    YamlPlayoutRepeatInstruction => new YamlPlayoutRepeatHandler(),
+                    YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
+                    YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
+                    _ => null
+                };
 
-                    itemsAfterRepeat = playout.Items.Count;
-                    continue;
-                case YamlPlayoutNewEpgGroupInstruction:
-                    guideGroup *= -1;
-                    index++;
-                    continue;
+                if (handler != null)
+                {
+                    handlers.Add(playoutItem, handler);
+                }
+            }
+
+            if (handler != null)
+            {
+                if (!handler.Handle(context, playoutItem, logger))
+                {
+                    logger.LogInformation("YAML playout instruction handler failed");
+                    break;
+                }
+
+                continue;
             }
 
             Option<IMediaCollectionEnumerator> maybeEnumerator = await GetCachedEnumeratorForContent(
-                initialState,
+                context,
                 playout,
                 playoutDefinition,
                 enumerators,
@@ -102,36 +105,32 @@ public class YamlPlayoutBuilder(
                 switch (playoutItem)
                 {
                     case YamlPlayoutCountInstruction count:
-                        currentTime = YamlPlayoutSchedulerCount.Schedule(playout, currentTime, guideGroup, count, enumerator);
+                        context.CurrentTime = YamlPlayoutSchedulerCount.Schedule(context, count, enumerator);
                         break;
                     case YamlPlayoutDurationInstruction duration:
                         Option<IMediaCollectionEnumerator> durationFallbackEnumerator = await GetCachedEnumeratorForContent(
-                            initialState,
+                            context,
                             playout,
                             playoutDefinition,
                             enumerators,
                             duration.Fallback,
                             cancellationToken);
-                        currentTime = YamlPlayoutSchedulerDuration.Schedule(
-                            playout,
-                            currentTime,
-                            guideGroup,
+                        context.CurrentTime = YamlPlayoutSchedulerDuration.Schedule(
+                            context,
                             duration,
                             enumerator,
                             durationFallbackEnumerator);
                         break;
                     case YamlPlayoutPadToNextInstruction padToNext:
                         Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetCachedEnumeratorForContent(
-                            initialState,
+                            context,
                             playout,
                             playoutDefinition,
                             enumerators,
                             padToNext.Fallback,
                             cancellationToken);
-                        currentTime = YamlPlayoutSchedulerPadToNext.Schedule(
-                            playout,
-                            currentTime,
-                            guideGroup,
+                        context.CurrentTime = YamlPlayoutSchedulerPadToNext.Schedule(
+                            context,
                             padToNext,
                             enumerator,
                             fallbackEnumerator);
@@ -139,18 +138,18 @@ public class YamlPlayoutBuilder(
                 }
             }
 
-            index++;
+            context.InstructionIndex++;
         }
 
         return playout;
     }
 
-    private YamlPlayoutInitialState HandleResetActions(
+    private YamlPlayoutContext HandleResetActions(
         Playout playout,
         YamlPlayoutDefinition playoutDefinition,
         DateTimeOffset currentTime)
     {
-        var result = new YamlPlayoutInitialState { CurrentTime = currentTime };
+        var result = new YamlPlayoutContext(playout) { CurrentTime = currentTime };
 
         // these are only for reset
         playout.Seed = new Random().Next();
@@ -161,7 +160,7 @@ public class YamlPlayoutBuilder(
             switch (instruction)
             {
                 case YamlPlayoutWaitUntilInstruction waitUntil:
-                    result.CurrentTime = HandleWaitUntil(result.CurrentTime, waitUntil);
+                    new YamlPlayoutWaitUntilHandler().Handle(result, waitUntil, logger);
                     break;
                 case YamlPlayoutSkipItemsInstruction skipItems:
                     if (result.ContentIndex.TryGetValue(skipItems.Content, out int value))
@@ -186,39 +185,13 @@ public class YamlPlayoutBuilder(
         return result;
     }
 
-    private static DateTimeOffset HandleWaitUntil(DateTimeOffset currentTime, YamlPlayoutWaitUntilInstruction waitUntil)
-    {
-        if (TimeOnly.TryParse(waitUntil.WaitUntil, out TimeOnly result))
-        {
-            var dayOnly = DateOnly.FromDateTime(currentTime.LocalDateTime);
-            var timeOnly = TimeOnly.FromDateTime(currentTime.LocalDateTime);
-
-            if (timeOnly > result)
-            {
-                if (waitUntil.Tomorrow)
-                {
-                    // this is wrong when offset changes
-                    dayOnly = dayOnly.AddDays(1);
-                    currentTime = new DateTimeOffset(dayOnly, result, currentTime.Offset);
-                }
-            }
-            else
-            {
-                // this is wrong when offset changes
-                currentTime = new DateTimeOffset(dayOnly, result, currentTime.Offset);
-            }
-        }
-
-        return currentTime;
-    }
-
     private async Task<int> GetDaysToBuild() =>
         await configElementRepository
             .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
             .IfNoneAsync(2);
 
     private async Task<Option<IMediaCollectionEnumerator>> GetCachedEnumeratorForContent(
-        YamlPlayoutInitialState initialState,
+        YamlPlayoutContext context,
         Playout playout,
         YamlPlayoutDefinition playoutDefinition,
         Dictionary<string, IMediaCollectionEnumerator> enumerators,
@@ -233,7 +206,7 @@ public class YamlPlayoutBuilder(
         if (!enumerators.TryGetValue(contentKey, out IMediaCollectionEnumerator enumerator))
         {
             Option<IMediaCollectionEnumerator> maybeEnumerator =
-                await GetEnumeratorForContent(initialState, playout, contentKey, playoutDefinition, cancellationToken);
+                await GetEnumeratorForContent(context, playout, contentKey, playoutDefinition, cancellationToken);
 
             if (maybeEnumerator.IsNone)
             {
@@ -251,7 +224,7 @@ public class YamlPlayoutBuilder(
     }
 
     private async Task<Option<IMediaCollectionEnumerator>> GetEnumeratorForContent(
-        YamlPlayoutInitialState initialState,
+        YamlPlayoutContext context,
         Playout playout,
         string contentKey,
         YamlPlayoutDefinition playoutDefinition,
@@ -278,7 +251,7 @@ public class YamlPlayoutBuilder(
         }
 
         // start at the appropriate place in the enumerator
-        initialState.ContentIndex.TryGetValue(contentKey, out int enumeratorIndex);
+        context.ContentIndex.TryGetValue(contentKey, out int enumeratorIndex);
 
         var state = new CollectionEnumeratorState { Seed = playout.Seed + index, Index = enumeratorIndex };
         switch (Enum.Parse<PlaybackOrder>(content.Order, true))

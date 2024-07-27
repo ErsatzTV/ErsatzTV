@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 

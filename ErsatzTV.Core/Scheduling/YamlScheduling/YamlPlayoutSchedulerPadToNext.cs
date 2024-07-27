@@ -1,24 +1,23 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class YamlPlayoutSchedulerPadToNext : YamlPlayoutSchedulerDuration
 {
     public static DateTimeOffset Schedule(
-        Playout playout,
-        DateTimeOffset currentTime,
-        int guideGroup,
+        YamlPlayoutContext context,
         YamlPlayoutPadToNextInstruction padToNext,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
     {
-        int currentMinute = currentTime.Minute;
+        int currentMinute = context.CurrentTime.Minute;
 
         int targetMinute = (currentMinute + padToNext.PadToNext - 1) / padToNext.PadToNext * padToNext.PadToNext;
 
         DateTimeOffset almostTargetTime =
-            currentTime - TimeSpan.FromMinutes(currentMinute) + TimeSpan.FromMinutes(targetMinute);
+            context.CurrentTime - TimeSpan.FromMinutes(currentMinute) + TimeSpan.FromMinutes(targetMinute);
 
         var targetTime = new DateTimeOffset(
             almostTargetTime.Year,
@@ -30,17 +29,15 @@ public class YamlPlayoutSchedulerPadToNext : YamlPlayoutSchedulerDuration
             almostTargetTime.Offset);
 
         // ensure filler works for content less than one minute
-        if (targetTime <= currentTime)
+        if (targetTime <= context.CurrentTime)
             targetTime = targetTime.AddMinutes(padToNext.PadToNext);
 
         return Schedule(
-            playout,
-            currentTime,
+            context,
             targetTime,
             padToNext.DiscardAttempts,
             padToNext.Trim,
             GetFillerKind(padToNext),
-            guideGroup,
             enumerator,
             fallbackEnumerator);
     }
