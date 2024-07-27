@@ -7,15 +7,18 @@ public class YamlPlayoutNewEpgGroupHandler : IYamlPlayoutHandler
 {
     public bool Reset => false;
 
-    public bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger)
+    public Task<bool> Handle(
+        YamlPlayoutContext context,
+        YamlPlayoutInstruction instruction,
+        ILogger<YamlPlayoutBuilder> logger,
+        CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutNewEpgGroupInstruction)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         context.GuideGroup *= -1;
-        context.InstructionIndex++;
-        return true;
+        return Task.FromResult(true);
     }
 }

@@ -7,5 +7,9 @@ public interface IYamlPlayoutHandler
 {
     bool Reset { get; }
 
-    bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger);
+    Task<bool> Handle(
+        YamlPlayoutContext context,
+        YamlPlayoutInstruction instruction,
+        ILogger<YamlPlayoutBuilder> logger,
+        CancellationToken cancellationToken);
 }

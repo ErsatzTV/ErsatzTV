@@ -7,11 +7,15 @@ public class YamlPlayoutWaitUntilHandler : IYamlPlayoutHandler
 {
     public bool Reset => true;
 
-    public bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger)
+    public Task<bool> Handle(
+        YamlPlayoutContext context,
+        YamlPlayoutInstruction instruction,
+        ILogger<YamlPlayoutBuilder> logger,
+        CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutWaitUntilInstruction waitUntil)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         DateTimeOffset currentTime = context.CurrentTime;
@@ -38,7 +42,6 @@ public class YamlPlayoutWaitUntilHandler : IYamlPlayoutHandler
         }
 
         context.CurrentTime = currentTime;
-        context.InstructionIndex++;
-        return true;
+        return Task.FromResult(true);
     }
 }

@@ -9,21 +9,25 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
 
     public bool Reset => false;
 
-    public bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger)
+    public Task<bool> Handle(
+        YamlPlayoutContext context,
+        YamlPlayoutInstruction instruction,
+        ILogger<YamlPlayoutBuilder> logger,
+        CancellationToken cancellationToken)
     {
         if (instruction is not YamlPlayoutRepeatInstruction)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         if (_itemsSinceLastRepeat == context.Playout.Items.Count)
         {
             logger.LogWarning("Repeat encountered without adding any playout items; aborting");
-            return false;
+            return Task.FromResult(false);
         }
 
         _itemsSinceLastRepeat = context.Playout.Items.Count;
         context.InstructionIndex = 0;
-        return true;
+        return Task.FromResult(true);
     }
 }

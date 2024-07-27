@@ -2,34 +2,59 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
+using Microsoft.Extensions.Logging;
 using TimeSpanParserUtil;
 
-namespace ErsatzTV.Core.Scheduling.YamlScheduling;
+namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
-public class YamlPlayoutSchedulerDuration : YamlPlayoutScheduler
+public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlPlayoutContentHandler(enumeratorCache)
 {
-    public static DateTimeOffset Schedule(
+    public override async Task<bool> Handle(
         YamlPlayoutContext context,
-        YamlPlayoutDurationInstruction duration,
-        IMediaCollectionEnumerator enumerator,
-        Option<IMediaCollectionEnumerator> fallbackEnumerator)
+        YamlPlayoutInstruction instruction,
+        ILogger<YamlPlayoutBuilder> logger,
+        CancellationToken cancellationToken)
     {
+        if (instruction is not YamlPlayoutDurationInstruction duration)
+        {
+            return false;
+        }
+
         // TODO: move to up-front validation somewhere
         if (!TimeSpanParser.TryParse(duration.Duration, out TimeSpan timeSpan))
         {
-            return context.CurrentTime;
+            return false;
         }
 
         DateTimeOffset targetTime = context.CurrentTime.Add(timeSpan);
 
-        return Schedule(
+        Option<IMediaCollectionEnumerator> maybeEnumerator = await GetContentEnumerator(
             context,
-            targetTime,
-            duration.DiscardAttempts,
-            duration.Trim,
-            GetFillerKind(duration),
-            enumerator,
-            fallbackEnumerator);
+            instruction.Content,
+            logger,
+            cancellationToken);
+
+        Option<IMediaCollectionEnumerator> fallbackEnumerator = await GetContentEnumerator(
+            context,
+            duration.Fallback,
+            logger,
+            cancellationToken);
+
+        foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
+        {
+            context.CurrentTime = Schedule(
+                context,
+                targetTime,
+                duration.DiscardAttempts,
+                duration.Trim,
+                GetFillerKind(duration),
+                enumerator,
+                fallbackEnumerator);
+
+            return true;
+        }
+
+        return false;
     }
 
     protected static DateTimeOffset Schedule(
