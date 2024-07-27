@@ -2,7 +2,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
-using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -36,11 +35,9 @@ public class YamlPlayoutBuilder(
             return playout;
         }
 
-        // these are only for reset
-        playout.Seed = new Random().Next();
-        playout.Items.Clear();
-
         DateTimeOffset currentTime = start;
+
+        currentTime = HandleResetActions(playout, playoutDefinition, currentTime);
 
         // load content and content enumerators on demand
         Dictionary<string, IMediaCollectionEnumerator> enumerators = new();
@@ -58,18 +55,23 @@ public class YamlPlayoutBuilder(
 
             YamlPlayoutInstruction playoutItem = playoutDefinition.Playout[index];
 
-            // repeat resets index into YAML playout
-            if (playoutItem is YamlPlayoutRepeatInstruction)
+            // handle instructions that don't reference content
+            switch (playoutItem)
             {
-                index = 0;
-                if (playout.Items.Count == itemsAfterRepeat)
-                {
-                    logger.LogWarning("Repeat encountered without adding any playout items; aborting");
+                case YamlPlayoutWaitUntilInstruction waitUntil:
+                    currentTime = HandleWaitUntil(currentTime, waitUntil);
                     break;
-                }
+                case YamlPlayoutRepeatInstruction:
+                    // repeat resets index into YAML playout
+                    index = 0;
+                    if (playout.Items.Count == itemsAfterRepeat)
+                    {
+                        logger.LogWarning("Repeat encountered without adding any playout items; aborting");
+                        break;
+                    }
 
-                itemsAfterRepeat = playout.Items.Count;
-                continue;
+                    itemsAfterRepeat = playout.Items.Count;
+                    continue;
             }
 
             Option<IMediaCollectionEnumerator> maybeEnumerator = await GetCachedEnumeratorForContent(
@@ -132,6 +134,59 @@ public class YamlPlayoutBuilder(
         return playout;
     }
 
+    private DateTimeOffset HandleResetActions(
+        Playout playout,
+        YamlPlayoutDefinition playoutDefinition,
+        DateTimeOffset currentTime)
+    {
+        // these are only for reset
+        playout.Seed = new Random().Next();
+        playout.Items.Clear();
+
+        foreach (YamlPlayoutInstruction instruction in playoutDefinition.Reset)
+        {
+            switch (instruction)
+            {
+                case YamlPlayoutWaitUntilInstruction waitUntil:
+                    currentTime = HandleWaitUntil(currentTime, waitUntil);
+                    break;
+                default:
+                    logger.LogInformation(
+                        "Skipping unsupported reset instruction {Instruction}",
+                        instruction.GetType().Name);
+                    break;
+            }
+        }
+
+        return currentTime;
+    }
+
+    private static DateTimeOffset HandleWaitUntil(DateTimeOffset currentTime, YamlPlayoutWaitUntilInstruction waitUntil)
+    {
+        if (TimeOnly.TryParse(waitUntil.WaitUntil, out TimeOnly result))
+        {
+            var dayOnly = DateOnly.FromDateTime(currentTime.LocalDateTime);
+            var timeOnly = TimeOnly.FromDateTime(currentTime.LocalDateTime);
+
+            if (timeOnly > result)
+            {
+                if (waitUntil.Tomorrow)
+                {
+                    // this is wrong when offset changes
+                    dayOnly = dayOnly.AddDays(1);
+                    currentTime = new DateTimeOffset(dayOnly, result, currentTime.Offset);
+                }
+            }
+            else
+            {
+                // this is wrong when offset changes
+                currentTime = new DateTimeOffset(dayOnly, result, currentTime.Offset);
+            }
+        }
+
+        return currentTime;
+    }
+
     private async Task<int> GetDaysToBuild() =>
         await configElementRepository
             .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
@@ -161,7 +216,7 @@ public class YamlPlayoutBuilder(
 
             foreach (IMediaCollectionEnumerator e in maybeEnumerator)
             {
-                enumerator = maybeEnumerator.ValueUnsafe();
+                enumerator = e;
                 enumerators.Add(contentKey, enumerator);
             }
         }
@@ -231,7 +286,8 @@ public class YamlPlayoutBuilder(
                         { "count", typeof(YamlPlayoutCountInstruction) },
                         { "duration", typeof(YamlPlayoutDurationInstruction) },
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
-                        { "repeat", typeof(YamlPlayoutRepeatInstruction) }
+                        { "repeat", typeof(YamlPlayoutRepeatInstruction) },
+                        { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
                     };
 
                     o.AddUniqueKeyTypeDiscriminator<YamlPlayoutInstruction>(instructionKeyMappings);
