@@ -42,6 +42,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix infinite loop caused by impossible schedule (all collection items longer than schedule item duration)
 - Fix selecting audio and subtitle streams with two-letter language codes
 - Fix adding pad filler to content that is less than one minute in duration
+- Generate unique identifier for virtual HDHomeRun tuner by @raknam
+  - This allows a single Plex server to connect to multiple ETV instances
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging
