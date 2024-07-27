@@ -7,6 +7,8 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
 {
     private int _itemsSinceLastRepeat;
 
+    public bool Reset => false;
+
     public bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger)
     {
         if (instruction is not YamlPlayoutRepeatInstruction)

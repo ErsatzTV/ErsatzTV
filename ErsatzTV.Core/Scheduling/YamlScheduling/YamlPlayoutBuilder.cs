@@ -37,15 +37,42 @@ public class YamlPlayoutBuilder(
             return playout;
         }
 
-        YamlPlayoutContext context = HandleResetActions(playout, playoutDefinition, start);
-
         // load content and content enumerators on demand
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
         Dictionary<string, IMediaCollectionEnumerator> enumerators = new();
         System.Collections.Generic.HashSet<string> missingContentKeys = [];
 
-        context.GuideGroup = 1;
-        context.InstructionIndex = 0;
+        var context = new YamlPlayoutContext(playout)
+        {
+            CurrentTime = start,
+            GuideGroup = 1,
+            InstructionIndex = 0
+        };
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (mode is PlayoutBuildMode.Reset)
+        {
+            context.Playout.Seed = new Random().Next();
+            context.Playout.Items.Clear();
+
+            foreach (YamlPlayoutInstruction instruction in playoutDefinition.Reset)
+            {
+                Option<IYamlPlayoutHandler> maybeHandler = GetHandlerForInstruction(handlers, instruction);
+                foreach (IYamlPlayoutHandler handler in maybeHandler)
+                {
+                    if (!handler.Reset)
+                    {
+                        logger.LogInformation(
+                            "Skipping unsupported reset instruction {Instruction}",
+                            instruction.GetType().Name);
+                    }
+                    else
+                    {
+                        handler.Handle(context, instruction, logger);
+                    }
+                }
+            }
+        }
 
         while (context.CurrentTime < finish)
         {
@@ -55,31 +82,22 @@ public class YamlPlayoutBuilder(
                 break;
             }
 
-            YamlPlayoutInstruction playoutItem = playoutDefinition.Playout[context.InstructionIndex];
-            if (!handlers.TryGetValue(playoutItem, out IYamlPlayoutHandler handler))
-            {
-                handler = playoutItem switch
-                {
-                    YamlPlayoutRepeatInstruction => new YamlPlayoutRepeatHandler(),
-                    YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
-                    YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
-                    _ => null
-                };
+            YamlPlayoutInstruction instruction = playoutDefinition.Playout[context.InstructionIndex];
+            Option<IYamlPlayoutHandler> maybeHandler = GetHandlerForInstruction(handlers, instruction);
 
-                if (handler != null)
-                {
-                    handlers.Add(playoutItem, handler);
-                }
-            }
-
-            if (handler != null)
+            var handled = false;
+            foreach (IYamlPlayoutHandler handler in maybeHandler)
             {
-                if (!handler.Handle(context, playoutItem, logger))
+                if (!handler.Handle(context, instruction, logger))
                 {
                     logger.LogInformation("YAML playout instruction handler failed");
-                    break;
                 }
 
+                handled = true;
+            }
+
+            if (handled)
+            {
                 continue;
             }
 
@@ -88,21 +106,21 @@ public class YamlPlayoutBuilder(
                 playout,
                 playoutDefinition,
                 enumerators,
-                playoutItem.Content,
+                instruction.Content,
                 cancellationToken);
 
             if (maybeEnumerator.IsNone)
             {
-                if (!missingContentKeys.Contains(playoutItem.Content))
+                if (!missingContentKeys.Contains(instruction.Content))
                 {
-                    logger.LogWarning("Unable to locate content with key {Key}", playoutItem.Content);
-                    missingContentKeys.Add(playoutItem.Content);
+                    logger.LogWarning("Unable to locate content with key {Key}", instruction.Content);
+                    missingContentKeys.Add(instruction.Content);
                 }
             }
 
             foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
             {
-                switch (playoutItem)
+                switch (instruction)
                 {
                     case YamlPlayoutCountInstruction count:
                         context.CurrentTime = YamlPlayoutSchedulerCount.Schedule(context, count, enumerator);
@@ -142,47 +160,6 @@ public class YamlPlayoutBuilder(
         }
 
         return playout;
-    }
-
-    private YamlPlayoutContext HandleResetActions(
-        Playout playout,
-        YamlPlayoutDefinition playoutDefinition,
-        DateTimeOffset currentTime)
-    {
-        var result = new YamlPlayoutContext(playout) { CurrentTime = currentTime };
-
-        // these are only for reset
-        playout.Seed = new Random().Next();
-        playout.Items.Clear();
-
-        foreach (YamlPlayoutInstruction instruction in playoutDefinition.Reset)
-        {
-            switch (instruction)
-            {
-                case YamlPlayoutWaitUntilInstruction waitUntil:
-                    new YamlPlayoutWaitUntilHandler().Handle(result, waitUntil, logger);
-                    break;
-                case YamlPlayoutSkipItemsInstruction skipItems:
-                    if (result.ContentIndex.TryGetValue(skipItems.Content, out int value))
-                    {
-                        value += skipItems.SkipItems;
-                    }
-                    else
-                    {
-                        value = skipItems.SkipItems;
-                    }
-
-                    result.ContentIndex[skipItems.Content] = value;
-                    break;
-                default:
-                    logger.LogInformation(
-                        "Skipping unsupported reset instruction {Instruction}",
-                        instruction.GetType().Name);
-                    break;
-            }
-        }
-
-        return result;
     }
 
     private async Task<int> GetDaysToBuild() =>
@@ -265,6 +242,32 @@ public class YamlPlayoutBuilder(
         }
 
         return Option<IMediaCollectionEnumerator>.None;
+    }
+
+    private static Option<IYamlPlayoutHandler> GetHandlerForInstruction(
+        Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers,
+        YamlPlayoutInstruction instruction)
+    {
+        if (handlers.TryGetValue(instruction, out IYamlPlayoutHandler handler))
+        {
+            return Optional(handler);
+        }
+
+        handler = instruction switch
+        {
+            YamlPlayoutRepeatInstruction => new YamlPlayoutRepeatHandler(),
+            YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
+            YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
+            YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(),
+            _ => null
+        };
+
+        if (handler != null)
+        {
+            handlers.Add(instruction, handler);
+        }
+
+        return Optional(handler);
     }
 
     private static async Task<YamlPlayoutDefinition> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)

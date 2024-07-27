@@ -5,6 +5,8 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
 public class YamlPlayoutWaitUntilHandler : IYamlPlayoutHandler
 {
+    public bool Reset => true;
+
     public bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger)
     {
         if (instruction is not YamlPlayoutWaitUntilInstruction waitUntil)

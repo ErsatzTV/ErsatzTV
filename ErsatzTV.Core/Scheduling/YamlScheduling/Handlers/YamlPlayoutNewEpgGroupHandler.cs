@@ -5,6 +5,8 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
 public class YamlPlayoutNewEpgGroupHandler : IYamlPlayoutHandler
 {
+    public bool Reset => false;
+
     public bool Handle(YamlPlayoutContext context, YamlPlayoutInstruction instruction, ILogger<YamlPlayoutBuilder> logger)
     {
         if (instruction is not YamlPlayoutNewEpgGroupInstruction)
