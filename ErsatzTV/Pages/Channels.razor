@@ -47,10 +47,10 @@
                 {
                     <MudElement HtmlTag="img" src="@($"iptv/logos/{context.Logo}")" Style="max-height: 50px"/>
                 }
-				else
-				{
-				<MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.Name}")" Style="max-height: 50px" />
-				}
+                else
+                {
+                    <MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.WebEncodedName}")" Style="max-height: 50px" />
+                }
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Language">@context.PreferredAudioLanguageCode</MudTd>
@@ -252,5 +252,4 @@
         StreamingMode.TransportStreamHybrid => "MPEG-TS",
         _ => "MPEG-TS (Legacy)"
     };
-
 }
