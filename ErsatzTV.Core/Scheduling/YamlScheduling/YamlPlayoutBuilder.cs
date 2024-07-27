@@ -130,6 +130,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(),
 
             // content handlers
+            YamlPlayoutAllInstruction => new YamlPlayoutAllHandler(enumeratorCache),
             YamlPlayoutCountInstruction => new YamlPlayoutCountHandler(enumeratorCache),
             YamlPlayoutDurationInstruction => new YamlPlayoutDurationHandler(enumeratorCache),
             YamlPlayoutPadToNextInstruction => new YamlPlayoutPadToNextHandler(enumeratorCache),
@@ -164,6 +165,7 @@ public class YamlPlayoutBuilder(
 
                     var instructionKeyMappings = new Dictionary<string, Type>
                     {
+                        { "all", typeof(YamlPlayoutAllInstruction) },
                         { "count", typeof(YamlPlayoutCountInstruction) },
                         { "duration", typeof(YamlPlayoutDurationInstruction) },
                         { "new_epg_group", typeof(YamlPlayoutNewEpgGroupInstruction) },
