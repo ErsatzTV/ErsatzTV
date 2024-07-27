@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Domain.Filler;
+using System.Net;
 
 namespace ErsatzTV.Core.Domain;
 
@@ -29,4 +30,5 @@ public class Channel
     public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
     public string MusicVideoCreditsTemplate { get; set; }
     public ChannelProgressMode ProgressMode { get; set; }
+    public string WebEncodedName => WebUtility.UrlEncode(Name);
 }
