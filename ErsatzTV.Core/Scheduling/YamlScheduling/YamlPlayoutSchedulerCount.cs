@@ -1,5 +1,4 @@
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
@@ -9,6 +8,7 @@ public class YamlPlayoutSchedulerCount : YamlPlayoutScheduler
     public static DateTimeOffset Schedule(
         Playout playout,
         DateTimeOffset currentTime,
+        int guideGroup,
         YamlPlayoutCountInstruction count,
         IMediaCollectionEnumerator enumerator)
     {
@@ -26,14 +26,14 @@ public class YamlPlayoutSchedulerCount : YamlPlayoutScheduler
                     Finish = currentTime.UtcDateTime + itemDuration,
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
-                    FillerKind = FillerKind.None, //blockItem.IncludeInProgramGuide ? FillerKind.None : FillerKind.GuideMode,
+                    FillerKind = GetFillerKind(count),
                     //CustomTitle = scheduleItem.CustomTitle,
                     //WatermarkId = scheduleItem.WatermarkId,
                     //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                     //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                     //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                     //SubtitleMode = scheduleItem.SubtitleMode
-                    //GuideGroup = effectiveBlock.TemplateItemId,
+                    GuideGroup = guideGroup
                     //GuideStart = effectiveBlock.Start.UtcDateTime,
                     //GuideFinish = blockFinish.UtcDateTime,
                     //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),

@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Extensions;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
@@ -14,5 +15,17 @@ public abstract class YamlPlayoutScheduler
 
         MediaVersion version = mediaItem.GetHeadVersion();
         return version.Duration;
+    }
+
+    protected static FillerKind GetFillerKind(YamlPlayoutInstruction instruction)
+    {
+        if (string.IsNullOrWhiteSpace(instruction.FillerKind))
+        {
+            return FillerKind.None;
+        }
+
+        return Enum.TryParse(instruction.FillerKind, ignoreCase: true, out FillerKind result)
+            ? result
+            : FillerKind.None;
     }
 }
