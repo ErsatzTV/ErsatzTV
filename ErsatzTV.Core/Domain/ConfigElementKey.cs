@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.Core.Domain;
+namespace ErsatzTV.Core.Domain;
 
 public class ConfigElementKey
 {
@@ -27,6 +27,7 @@ public class ConfigElementKey
     public static ConfigElementKey FFmpegHlsDirectOutputFormat => new("ffmpeg.hls_direct.output_format");
     public static ConfigElementKey SearchIndexVersion => new("search_index.version");
     public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
+    public static ConfigElementKey HDHRUUID => new("hdhr.uuid");
     public static ConfigElementKey ChannelsPageSize => new("pages.channels.page_size");
     public static ConfigElementKey CollectionsPageSize => new("pages.collections.page_size");
     public static ConfigElementKey MultiCollectionsPageSize => new("pages.multi_collections.page_size");

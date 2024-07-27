@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Extensions;
@@ -54,6 +54,11 @@ public class ConfigElementRepository : IConfigElementRepository
         GetConfigElement(key).MapT(
             ce =>
             {
+                if (typeof(T).Name == "Guid")
+                {
+                    return (T)Convert.ChangeType(Guid.Parse(ce.Value), typeof(T), CultureInfo.InvariantCulture);
+                }
+
                 if (typeof(T).IsEnum)
                 {
                     return (T)Enum.Parse(typeof(T), ce.Value);
