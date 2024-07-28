@@ -3,4 +3,9 @@
         <InformationalVersion>develop</InformationalVersion>
         <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     </PropertyGroup>
+
+    <!-- Remove when https://github.com/dotnet/sdk/issues/13808 is resolved -->
+    <PropertyGroup>
+        <IntermediateOutputPath>/tmp/$(USER)/project/obj/</IntermediateOutputPath>
+    </PropertyGroup>
 </Project>

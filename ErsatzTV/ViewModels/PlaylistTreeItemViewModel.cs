@@ -36,5 +36,5 @@ public class PlaylistTreeItemViewModel
 
     public int? PlaylistGroupId { get; }
 
-    public S.HashSet<PlaylistTreeItemViewModel> TreeItems { get; }
+    public List<TreeItemData<PlaylistTreeItemViewModel>> TreeItems { get; }
 }

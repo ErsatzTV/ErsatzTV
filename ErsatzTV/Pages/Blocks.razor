@@ -1,6 +1,5 @@
 @page "/blocks"
 @using ErsatzTV.Application.Scheduling
-@using S = System.Collections.Generic
 @implements IDisposable
 @inject ILogger<Blocks> Logger
 @inject ISnackbar Snackbar
@@ -48,28 +47,28 @@
         </MudItem>
         <MudItem xs="8">
             <MudCard>
-                <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+                <MudTreeView T="BlockTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
                     <ItemTemplate Context="item">
-                        <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                        <MudTreeViewItem T="BlockTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudGrid Justify="Justify.FlexStart">
                                         <MudItem xs="5">
-                                            <MudText>@item.Text</MudText>
+                                            <MudText>@item.Value.Text</MudText>
                                         </MudItem>
-                                        @if (!string.IsNullOrWhiteSpace(item.EndText))
+                                        @if (!string.IsNullOrWhiteSpace(item.Value.EndText))
                                         {
                                             <MudItem xs="6">
-                                                <MudText>@item.EndText</MudText>
+                                                <MudText>@item.Value.EndText</MudText>
                                             </MudItem>
                                         }
                                     </MudGrid>
                                     <div style="justify-self: end;">
-                                        @foreach (int blockId in Optional(item.BlockId))
+                                        @foreach (int blockId in Optional(item.Value.BlockId))
                                         {
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"blocks/{blockId}")"/>
                                         }
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item.Value))"/>
                                     </div>
                                 </div>
                             </BodyContent>
@@ -83,7 +82,7 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private S.HashSet<BlockTreeItemViewModel> TreeItems { get; set; } = [];
+    private List<TreeItemData<BlockTreeItemViewModel>> TreeItems { get; set; } = [];
     private List<BlockGroupViewModel> _blockGroups = [];
     private BlockGroupViewModel _selectedBlockGroup;
     private string _blockGroupName;
@@ -104,7 +103,7 @@
     private async Task ReloadBlockGroups()
     {
         _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
-        TreeItems = _blockGroups.Map(g => new BlockTreeItemViewModel(g)).ToHashSet();
+        TreeItems = _blockGroups.Map(g => new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(g) }).ToList();
     }
 
     private async Task AddBlockGroup()
@@ -121,7 +120,7 @@
 
             foreach (BlockGroupViewModel blockGroup in result.RightToSeq())
             {
-                TreeItems.Add(new BlockTreeItemViewModel(blockGroup));
+                TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(blockGroup) });
                 _blockGroupName = null;
 
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
@@ -144,9 +143,9 @@
 
             foreach (BlockViewModel block in result.RightToSeq())
             {
-                foreach (BlockTreeItemViewModel item in TreeItems.Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
+                foreach (BlockTreeItemViewModel item in TreeItems.Map(i => i.Value).Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
                 {
-                    item.TreeItems.Add(new BlockTreeItemViewModel(block));
+                    item.TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(block) });
                 }
 
                 _blockName = null;
@@ -155,14 +154,14 @@
         }
     }
 
-    private async Task<S.HashSet<BlockTreeItemViewModel>> LoadServerData(BlockTreeItemViewModel parentNode)
+    private async Task<IReadOnlyCollection<TreeItemData<BlockTreeItemViewModel>>> LoadServerData(BlockTreeItemViewModel parentNode)
     {
         foreach (int blockGroupId in Optional(parentNode.BlockGroupId))
         {
             List<BlockViewModel> result = await Mediator.Send(new GetBlocksByBlockGroupId(blockGroupId), _cts.Token);
             foreach (BlockViewModel block in result)
             {
-                parentNode.TreeItems.Add(new BlockTreeItemViewModel(block));
+                parentNode.TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(block) });
             }
         }
 
@@ -178,10 +177,10 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block Group", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
-                TreeItems.RemoveWhere(i => i.BlockGroupId == blockGroupId);
+                TreeItems.RemoveAll(i => i.Value?.BlockGroupId == blockGroupId);
 
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
@@ -195,12 +194,12 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Block", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteBlock(blockId), _cts.Token);
-                foreach (BlockTreeItemViewModel parent in TreeItems)
+                foreach (BlockTreeItemViewModel parent in TreeItems.Map(i => i.Value))
                 {
-                    parent.TreeItems.Remove(treeItem);
+                    parent.TreeItems.RemoveAll(i => i.Value == treeItem);
                 }
 
                 await InvokeAsync(StateHasChanged);

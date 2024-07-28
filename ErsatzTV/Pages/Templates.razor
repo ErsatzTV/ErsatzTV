@@ -1,6 +1,5 @@
 @page "/templates"
 @using ErsatzTV.Application.Scheduling
-@using S = System.Collections.Generic
 @implements IDisposable
 @inject ILogger<Templates> Logger
 @inject ISnackbar Snackbar
@@ -48,22 +47,22 @@
         </MudItem>
         <MudItem xs="8">
             <MudCard>
-                <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+                <MudTreeView T="TemplateTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
                     <ItemTemplate Context="item">
-                        <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                        <MudTreeViewItem T="TemplateTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudGrid Justify="Justify.FlexStart">
                                         <MudItem xs="8">
-                                            <MudText>@item.Text</MudText>
+                                            <MudText>@item.Value.Text</MudText>
                                         </MudItem>
                                     </MudGrid>
                                     <div style="justify-self: end;">
-                                        @foreach (int templateId in Optional(item.TemplateId))
+                                        @foreach (int templateId in Optional(item.Value.TemplateId))
                                         {
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"templates/{templateId}")"/>
                                         }
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item.Value))"/>
                                     </div>
                                 </div>
                             </BodyContent>
@@ -77,7 +76,7 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private S.HashSet<TemplateTreeItemViewModel> TreeItems { get; set; } = [];
+    private List<TreeItemData<TemplateTreeItemViewModel>> TreeItems { get; set; } = [];
     private List<TemplateGroupViewModel> _templateGroups = [];
     private TemplateGroupViewModel _selectedTemplateGroup;
     private string _templateGroupName;
@@ -98,7 +97,7 @@
     private async Task ReloadTemplateGroups()
     {
         _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
-        TreeItems = _templateGroups.Map(g => new TemplateTreeItemViewModel(g)).ToHashSet();
+        TreeItems = _templateGroups.Map(g => new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(g) }).ToList();
     }
 
     private async Task AddTemplateGroup()
@@ -115,7 +114,7 @@
 
             foreach (TemplateGroupViewModel templateGroup in result.RightToSeq())
             {
-                TreeItems.Add(new TemplateTreeItemViewModel(templateGroup));
+                TreeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(templateGroup) });
                 _templateGroupName = null;
 
                 _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
@@ -138,9 +137,9 @@
 
             foreach (TemplateViewModel template in result.RightToSeq())
             {
-                foreach (TemplateTreeItemViewModel item in TreeItems.Where(item => item.TemplateGroupId == _selectedTemplateGroup.Id))
+                foreach (TemplateTreeItemViewModel item in TreeItems.Map(i => i.Value).Where(item => item.TemplateGroupId == _selectedTemplateGroup.Id))
                 {
-                    item.TreeItems.Add(new TemplateTreeItemViewModel(template));
+                    item.TreeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(template) });
                 }
 
                 _templateName = null;
@@ -149,14 +148,14 @@
         }
     }
 
-    private async Task<S.HashSet<TemplateTreeItemViewModel>> LoadServerData(TemplateTreeItemViewModel parentNode)
+    private async Task<IReadOnlyCollection<TreeItemData<TemplateTreeItemViewModel>>> LoadServerData(TemplateTreeItemViewModel parentNode)
     {
         foreach (int templateGroupId in Optional(parentNode.TemplateGroupId))
         {
             List<TemplateViewModel> result = await Mediator.Send(new GetTemplatesByTemplateGroupId(templateGroupId), _cts.Token);
             foreach (TemplateViewModel template in result)
             {
-                parentNode.TreeItems.Add(new TemplateTreeItemViewModel(template));
+                parentNode.TreeItems.Add(new TreeItemData<TemplateTreeItemViewModel> { Value = new TemplateTreeItemViewModel(template) });
             }
         }
 
@@ -172,10 +171,10 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template Group", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteTemplateGroup(templateGroupId), _cts.Token);
-                TreeItems.RemoveWhere(i => i.TemplateGroupId == templateGroupId);
+                TreeItems.RemoveAll(i => i.Value?.TemplateGroupId == templateGroupId);
 
                 _templateGroups = await Mediator.Send(new GetAllTemplateGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
@@ -189,12 +188,12 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Template", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteTemplate(templateId), _cts.Token);
-                foreach (TemplateTreeItemViewModel parent in TreeItems)
+                foreach (TemplateTreeItemViewModel parent in TreeItems.Map(i => i.Value))
                 {
-                    parent.TreeItems.Remove(treeItem);
+                    parent.TreeItems.RemoveAll(i => i.Value == treeItem);
                 }
 
                 await InvokeAsync(StateHasChanged);

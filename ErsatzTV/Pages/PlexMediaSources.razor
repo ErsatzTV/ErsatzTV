@@ -12,7 +12,7 @@
 @inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Dense="true" Items="_mediaSources">
+    <MudTable T="PlexMediaSourceViewModel" Hover="true" Dense="true" Items="_mediaSources">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Plex Media Sources</MudText>
         </ToolBarContent>

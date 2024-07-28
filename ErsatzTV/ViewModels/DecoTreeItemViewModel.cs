@@ -36,5 +36,5 @@ public class DecoTreeItemViewModel
 
     public int? DecoGroupId { get; }
 
-    public S.HashSet<DecoTreeItemViewModel> TreeItems { get; }
+    public List<TreeItemData<DecoTreeItemViewModel>> TreeItems { get; }
 }

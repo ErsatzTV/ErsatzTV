@@ -450,7 +450,7 @@
         }
     }
 
-    private async Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value)
+    private async Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -460,7 +460,7 @@
         return await Mediator.Send(new SearchCollections(value), _cts.Token);
     }
 
-    private async Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value)
+    private async Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -470,7 +470,7 @@
         return await Mediator.Send(new SearchMultiCollections(value), _cts.Token);
     }
 
-    private async Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value)
+    private async Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -480,7 +480,7 @@
         return await Mediator.Send(new SearchSmartCollections(value), _cts.Token);
     }
 
-    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value)
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -490,7 +490,7 @@
         return await Mediator.Send(new SearchTelevisionShows(value), _cts.Token);
     }
 
-    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value)
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -500,7 +500,7 @@
         return await Mediator.Send(new SearchTelevisionSeasons(value), _cts.Token);
     }
 
-    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value)
+    private async Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {

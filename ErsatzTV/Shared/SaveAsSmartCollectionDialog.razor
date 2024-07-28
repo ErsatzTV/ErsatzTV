@@ -11,8 +11,9 @@
         <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
             <MudContainer Class="mb-6">
                 <MudText Class="mud-primary-text"
-                         Style="background-color: transparent; font-weight: bold"
-                         Text="Select the desired smart collection"/>
+                         Style="background-color: transparent; font-weight: bold">
+                    Select the desired smart collection
+                </MudText>
             </MudContainer>
             <MudSelect Label="Collection" @bind-Value="_selectedCollection" Class="mb-6 mx-4">
                 @foreach (SmartCollectionViewModel collection in _collections)

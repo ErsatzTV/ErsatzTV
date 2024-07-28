@@ -33,5 +33,5 @@ public class TemplateTreeItemViewModel
 
     public int? TemplateGroupId { get; }
 
-    public S.HashSet<TemplateTreeItemViewModel> TreeItems { get; }
+    public List<TreeItemData<TemplateTreeItemViewModel>> TreeItems { get; }
 }

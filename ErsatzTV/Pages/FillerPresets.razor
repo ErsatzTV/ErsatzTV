@@ -15,7 +15,7 @@
     <MudTable Class="mt-4"
               Hover="true"
               @bind-RowsPerPage="@_fillerPresetsRowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<FillerPresetViewModel>>>(ServerReloadFillerPresets))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<FillerPresetViewModel>>>(ServerReloadFillerPresets))"
               Dense="true"
               @ref="_fillerPresetsTable">
         <ToolBarContent>
@@ -100,7 +100,7 @@
         }
     }
 
-    private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state)
+    private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), _cts.Token);
 

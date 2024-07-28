@@ -46,7 +46,7 @@ public class ImageTreeItemViewModel
 
     public bool CanExpand { get; }
 
-    public S.HashSet<ImageTreeItemViewModel> TreeItems { get; }
+    public S.HashSet<TreeItemData<ImageTreeItemViewModel>> TreeItems { get; }
 
     public void UpdateDuration(double? imageFolderDuration)
     {

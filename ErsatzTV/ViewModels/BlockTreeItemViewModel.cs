@@ -50,5 +50,5 @@ public class BlockTreeItemViewModel
 
     public int? BlockGroupId { get; }
 
-    public S.HashSet<BlockTreeItemViewModel> TreeItems { get; }
+    public List<TreeItemData<BlockTreeItemViewModel>> TreeItems { get; }
 }

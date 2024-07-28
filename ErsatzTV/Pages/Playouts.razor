@@ -34,7 +34,7 @@
               Class="mt-4"
               SelectedItemChanged="@(async (PlayoutNameViewModel x) => await PlayoutSelected(x))"
               @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<PlayoutNameViewModel>>>(ServerReload))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutNameViewModel>>>(ServerReload))"
               @ref="_table">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Playouts</MudText>
@@ -183,7 +183,7 @@
                   Hover="true"
                   Dense="true"
                   @bind-RowsPerPage="@_detailRowsPerPage"
-                  ServerData="@(new Func<TableState, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
+                  ServerData="@(new Func<TableState, CancellationToken, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
                   @ref="_detailTable">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Playout Detail</MudText>
@@ -361,7 +361,7 @@
         }
     }
 
-    private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)
+    private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), _cts.Token);
 
@@ -386,7 +386,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state)
+    private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()), _cts.Token);
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailShowFiller, _showFiller.ToString()), _cts.Token);
