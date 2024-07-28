@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktList, Either<BaseError, Unit>>
+public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktList, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
@@ -47,8 +48,11 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
 
     private static Validation<BaseError, Parameters> ValidateUrl(AddTraktList request)
     {
-        const string PATTERN = @"(?:https:\/\/trakt\.tv\/users\/)?([\w\-_]+)\/(?:lists\/)?([\w\-_]+)";
-        Match match = Regex.Match(request.TraktListUrl, PATTERN);
+        // if we get a url, ensure it's for trakt.tv
+        Match match = Uri.IsWellFormedUriString(request.TraktListUrl, UriKind.Absolute)
+            ? UriTraktListRegex().Match(request.TraktListUrl)
+            : ShorthandTraktListRegex().Match(request.TraktListUrl);
+
         if (match.Success)
         {
             string user = match.Groups[1].Value;
@@ -63,14 +67,33 @@ public class AddTraktListHandler : TraktCommandBase, IRequestHandler<AddTraktLis
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        return await TraktApiClient.GetUserList(parameters.User, parameters.List)
-            .BindT(list => SaveList(dbContext, list))
-            .BindT(list => SaveListItems(dbContext, list))
-            .BindT(list => MatchListItems(dbContext, list))
-            .MapT(_ => Unit.Default);
+        Logger.LogDebug("Searching for trakt list: {User}/{List}", parameters.User, parameters.List);
+        Either<BaseError, TraktList> maybeList = await TraktApiClient.GetUserList(parameters.User, parameters.List);
 
-        // match list items (and update in search index)
+        foreach (TraktList list in maybeList.RightToSeq())
+        {
+            maybeList = await SaveList(dbContext, list);
+        }
+
+        foreach (TraktList list in maybeList.RightToSeq())
+        {
+            maybeList = await SaveListItems(dbContext, list);
+        }
+
+        foreach (TraktList list in maybeList.RightToSeq())
+        {
+            // match list items (and update in search index)
+            maybeList = await MatchListItems(dbContext, list);
+        }
+
+        return maybeList.Map(_ => Unit.Default);
     }
 
     private sealed record Parameters(string User, string List);
+
+    [GeneratedRegex(@"https:\/\/trakt\.tv\/users\/([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
+    private static partial Regex UriTraktListRegex();
+
+    [GeneratedRegex(@"([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
+    private static partial Regex ShorthandTraktListRegex();
 }

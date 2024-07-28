@@ -30,10 +30,14 @@ public abstract class TraktCommandBase
         _searchIndex = searchIndex;
         _fallbackMetadataProvider = fallbackMetadataProvider;
         _logger = logger;
+
         TraktApiClient = traktApiClient;
+        Logger = logger;
     }
 
     protected ITraktApiClient TraktApiClient { get; }
+
+    protected ILogger Logger { get; }
 
     protected static Task<Validation<BaseError, TraktList>>
         TraktListMustExist(TvContext dbContext, int traktListId) =>
@@ -43,8 +47,10 @@ public abstract class TraktCommandBase
             .SelectOneAsync(c => c.Id, c => c.Id == traktListId)
             .Map(o => o.ToValidation<BaseError>($"TraktList {traktListId} does not exist."));
 
-    protected static async Task<Either<BaseError, TraktList>> SaveList(TvContext dbContext, TraktList list)
+    protected async Task<Either<BaseError, TraktList>> SaveList(TvContext dbContext, TraktList list)
     {
+        _logger.LogDebug("Saving trakt list to database: {User}/{List}", list.User, list.List);
+
         Option<TraktList> maybeExisting = await dbContext.TraktLists
             .Include(l => l.Items)
             .ThenInclude(i => i.Guids)
@@ -72,6 +78,8 @@ public abstract class TraktCommandBase
 
     protected async Task<Either<BaseError, TraktList>> SaveListItems(TvContext dbContext, TraktList list)
     {
+        _logger.LogDebug("Saving trakt list items to database: {User}/{List}", list.User, list.List);
+
         Either<BaseError, List<TraktListItemWithGuids>> maybeItems =
             await TraktApiClient.GetUserListItems(list.User, list.List);
 
@@ -118,6 +126,8 @@ public abstract class TraktCommandBase
     {
         try
         {
+            _logger.LogDebug("Matching trakt list items: {User}/{List}", list.User, list.List);
+
             var ids = new System.Collections.Generic.HashSet<int>();
 
             foreach (TraktListItem item in list.Items

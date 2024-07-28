@@ -43,7 +43,7 @@ public class TraktApiClient : ITraktApiClient
                 Name = response.Name,
                 Description = response.Description,
                 ItemCount = response.ItemCount,
-                Items = new List<TraktListItem>()
+                Items = []
             };
         }
         catch (Exception ex)
