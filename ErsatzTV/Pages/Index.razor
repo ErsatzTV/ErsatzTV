@@ -49,7 +49,7 @@
     {
         <MudTable Hover="true"
                   Dense="true"
-                  ServerData="@(new Func<TableState, Task<TableData<HealthCheckResult>>>(ServerReload))"
+                  ServerData="@(new Func<TableState, CancellationToken, Task<TableData<HealthCheckResult>>>(ServerReload))"
                   @ref="_table">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Health Checks</MudText>
@@ -196,7 +196,7 @@
         }
     }
 
-    private async Task<TableData<HealthCheckResult>> ServerReload(TableState state)
+    private async Task<TableData<HealthCheckResult>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
         List<HealthCheckResult> healthCheckResults = await Mediator.Send(new GetAllHealthCheckResults(), _cts.Token);
 

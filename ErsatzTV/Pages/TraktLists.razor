@@ -19,7 +19,7 @@
     <MudTable Class="mt-4"
               Hover="true"
               @bind-RowsPerPage="@_traktListsRowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<TraktListViewModel>>>(ServerReloadTraktLists))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<TraktListViewModel>>>(ServerReloadTraktLists))"
               Dense="true"
               @ref="_traktListsTable">
         <ToolBarContent>
@@ -127,7 +127,7 @@
         }
     }
 
-    private async Task<TableData<TraktListViewModel>> ServerReloadTraktLists(TableState state)
+    private async Task<TableData<TraktListViewModel>> ServerReloadTraktLists(TableState state, CancellationToken cancellationToken)
     {
         try
         {

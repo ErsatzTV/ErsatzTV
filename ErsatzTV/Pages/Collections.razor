@@ -18,7 +18,7 @@
     <MudTable Class="mt-4"
               Hover="true"
               @bind-RowsPerPage="@_collectionsRowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
               Dense="true"
               @ref="_collectionsTable">
         <ToolBarContent>
@@ -56,7 +56,7 @@
     <MudTable Class="mt-4"
               Hover="true"
               @bind-RowsPerPage="@_multiCollectionsRowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))"
               Dense="true"
               @ref="_multiCollectionsTable">
         <ToolBarContent>
@@ -94,7 +94,7 @@
     <MudTable Class="mt-4"
               Hover="true"
               @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
               Dense="true"
               @ref="_smartCollectionsTable">
         <ToolBarContent>
@@ -211,7 +211,7 @@
         }
     }
 
-    private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state)
+    private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()), _cts.Token);
 
@@ -219,7 +219,7 @@
         return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
-    private async Task<TableData<MultiCollectionViewModel>> ServerReloadMultiCollections(TableState state)
+    private async Task<TableData<MultiCollectionViewModel>> ServerReloadMultiCollections(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
 
@@ -227,7 +227,7 @@
         return new TableData<MultiCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
-    private async Task<TableData<SmartCollectionViewModel>> ServerReloadSmartCollections(TableState state)
+    private async Task<TableData<SmartCollectionViewModel>> ServerReloadSmartCollections(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()), _cts.Token);
 

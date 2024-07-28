@@ -33,5 +33,5 @@ public class DecoTemplateTreeItemViewModel
 
     public int? DecoTemplateGroupId { get; }
 
-    public S.HashSet<DecoTemplateTreeItemViewModel> TreeItems { get; }
+    public List<TreeItemData<DecoTemplateTreeItemViewModel>> TreeItems { get; }
 }

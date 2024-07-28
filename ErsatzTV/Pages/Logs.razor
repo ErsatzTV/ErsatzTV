@@ -7,7 +7,7 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable FixedHeader="true"
               @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<LogEntryViewModel>>>(ServerReload))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<LogEntryViewModel>>>(ServerReload))"
               Dense="true"
               @ref="_table">
         <ToolBarContent>
@@ -64,7 +64,7 @@
         await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.LogsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
-    private async Task<TableData<LogEntryViewModel>> ServerReload(TableState state)
+    private async Task<TableData<LogEntryViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.LogsPageSize, state.PageSize.ToString()), _cts.Token);
 

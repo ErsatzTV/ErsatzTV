@@ -14,7 +14,7 @@
       <PackageReference Include="Flurl" Version="4.0.0" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
       <PackageReference Include="LanguageExt.Transformers" Version="4.4.8" />
-      <PackageReference Include="MediatR" Version="12.3.0" />
+      <PackageReference Include="MediatR" Version="12.4.0" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
@@ -25,7 +25,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-      <PackageReference Include="Serilog" Version="4.0.0" />
+      <PackageReference Include="Serilog" Version="4.0.1" />
       <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
       <PackageReference Include="SkiaSharp" Version="2.88.8" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />

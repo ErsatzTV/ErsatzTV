@@ -1,6 +1,5 @@
 @page "/deco-templates"
 @using ErsatzTV.Application.Scheduling
-@using S = System.Collections.Generic
 @implements IDisposable
 @inject ILogger<DecoTemplates> Logger
 @inject ISnackbar Snackbar
@@ -48,22 +47,22 @@
         </MudItem>
         <MudItem xs="8">
             <MudCard>
-                <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+                <MudTreeView T="DecoTemplateTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
                     <ItemTemplate Context="item">
-                        <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                        <MudTreeViewItem T="DecoTemplateTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudGrid Justify="Justify.FlexStart">
                                         <MudItem xs="8">
-                                            <MudText>@item.Text</MudText>
+
                                         </MudItem>
                                     </MudGrid>
                                     <div style="justify-self: end;">
-                                        @foreach (int decoTemplateId in Optional(item.DecoTemplateId))
+                                        @foreach (int decoTemplateId in Optional(item.Value.DecoTemplateId))
                                         {
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"deco-templates/{decoTemplateId}")"/>
                                         }
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item.Value))"/>
                                     </div>
                                 </div>
                             </BodyContent>
@@ -77,7 +76,7 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private S.HashSet<DecoTemplateTreeItemViewModel> TreeItems { get; set; } = [];
+    private List<TreeItemData<DecoTemplateTreeItemViewModel>> TreeItems { get; set; } = [];
     private List<DecoTemplateGroupViewModel> _decoTemplateGroups = [];
     private DecoTemplateGroupViewModel _selectedDecoTemplateGroup;
     private string _decoTemplateGroupName;
@@ -98,7 +97,7 @@
     private async Task ReloadDecoTemplateGroups()
     {
         _decoTemplateGroups = await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token);
-        TreeItems = _decoTemplateGroups.Map(g => new DecoTemplateTreeItemViewModel(g)).ToHashSet();
+        TreeItems = _decoTemplateGroups.Map(g => new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(g) }).ToList();
     }
 
     private async Task AddDecoTemplateGroup()
@@ -115,7 +114,7 @@
 
             foreach (DecoTemplateGroupViewModel decoTemplateGroup in result.RightToSeq())
             {
-                TreeItems.Add(new DecoTemplateTreeItemViewModel(decoTemplateGroup));
+                TreeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplateGroup) });
                 _decoTemplateGroupName = null;
 
                 _decoTemplateGroups = await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token);
@@ -138,9 +137,9 @@
 
             foreach (DecoTemplateViewModel decoTemplate in result.RightToSeq())
             {
-                foreach (DecoTemplateTreeItemViewModel item in TreeItems.Where(item => item.DecoTemplateGroupId == _selectedDecoTemplateGroup.Id))
+                foreach (DecoTemplateTreeItemViewModel item in TreeItems.Map(i => i.Value).Where(item => item.DecoTemplateGroupId == _selectedDecoTemplateGroup.Id))
                 {
-                    item.TreeItems.Add(new DecoTemplateTreeItemViewModel(decoTemplate));
+                    item.TreeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplate) });
                 }
 
                 _decoTemplateName = null;
@@ -149,14 +148,14 @@
         }
     }
 
-    private async Task<S.HashSet<DecoTemplateTreeItemViewModel>> LoadServerData(DecoTemplateTreeItemViewModel parentNode)
+    private async Task<IReadOnlyCollection<TreeItemData<DecoTemplateTreeItemViewModel>>> LoadServerData(DecoTemplateTreeItemViewModel parentNode)
     {
         foreach (int decoTemplateGroupId in Optional(parentNode.DecoTemplateGroupId))
         {
             List<DecoTemplateViewModel> result = await Mediator.Send(new GetDecoTemplatesByDecoTemplateGroupId(decoTemplateGroupId), _cts.Token);
             foreach (DecoTemplateViewModel decoTemplate in result)
             {
-                parentNode.TreeItems.Add(new DecoTemplateTreeItemViewModel(decoTemplate));
+                parentNode.TreeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplate) });
             }
         }
 
@@ -172,10 +171,10 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Deco Template Group", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteDecoTemplateGroup(decoTemplateGroupId), _cts.Token);
-                TreeItems.RemoveWhere(i => i.DecoTemplateGroupId == decoTemplateGroupId);
+                TreeItems.RemoveAll(i => i.Value?.DecoTemplateGroupId == decoTemplateGroupId);
 
                 _decoTemplateGroups = await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
@@ -189,12 +188,12 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Deco Template", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteDecoTemplate(decoTemplateId), _cts.Token);
-                foreach (DecoTemplateTreeItemViewModel parent in TreeItems)
+                foreach (DecoTemplateTreeItemViewModel parent in TreeItems.Map(i => i.Value))
                 {
-                    parent.TreeItems.Remove(treeItem);
+                    parent.TreeItems.RemoveAll(i => i.Value == treeItem);
                 }
 
                 await InvokeAsync(StateHasChanged);

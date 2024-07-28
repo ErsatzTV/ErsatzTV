@@ -12,7 +12,7 @@
               Dense="true"
               SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))"
               @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<ProgramScheduleViewModel>>>(ServerReload))"
+              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleViewModel>>>(ServerReload))"
               @ref="_table">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Schedules</MudText>
@@ -69,7 +69,7 @@
         <MudTable Hover="true"
                   Class="mt-8"
                   @bind-RowsPerPage="@_detailRowsPerPage"
-                  ServerData="@(new Func<TableState, Task<TableData<ProgramScheduleItemViewModel>>>(DetailServerReload))"
+                  ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleItemViewModel>>>(DetailServerReload))"
                   @ref="_detailTable">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
@@ -160,7 +160,7 @@
         }
     }
 
-    private async Task<TableData<ProgramScheduleViewModel>> ServerReload(TableState state)
+    private async Task<TableData<ProgramScheduleViewModel>> ServerReload(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()), _cts.Token);
 
@@ -175,7 +175,7 @@
         };
     }
 
-    private async Task<TableData<ProgramScheduleItemViewModel>> DetailServerReload(TableState state)
+    private async Task<TableData<ProgramScheduleItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
     {
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize, state.PageSize.ToString()), _cts.Token);
 

@@ -1,7 +1,6 @@
 ﻿@page "/media/browser/images"
 @using System.Net
 @using ErsatzTV.Application.Images
-@using S = System.Collections.Generic
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
@@ -10,23 +9,23 @@
     <MudGrid>
         <MudItem xs="8">
             <MudCard>
-                <MudTreeView ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+                <MudTreeView T="ImageTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
                     <ItemTemplate Context="item">
-                        <MudTreeViewItem Items="@item.TreeItems" Icon="@item.Icon" CanExpand="@item.CanExpand" Value="@item">
+                        <MudTreeViewItem T="ImageTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <div style="justify-self: start;">
-                                        <MudText>@item.Text</MudText>
+                                        <MudText>@item.Value.Text</MudText>
                                     </div>
                                     <div style="justify-self: end;">
-                                        <span>@item.EndText</span>
+                                        <span>@item.Value.EndText</span>
                                         <MudTooltip Text="Edit Image Folder Duration" ShowOnHover="true" ShowOnClick="false" ShowOnFocus="false">
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                           OnClick="@(_ => EditImageFolderDuration(item))">
+                                                           OnClick="@(_ => EditImageFolderDuration(item.Value))">
                                             </MudIconButton>
                                         </MudTooltip>
                                         @{
-                                            string query = GetSearchQuery(item);
+                                            string query = GetSearchQuery(item.Value);
                                             if (!string.IsNullOrWhiteSpace(query))
                                             {
                                                 <MudIconButton
@@ -47,7 +46,7 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private S.HashSet<ImageTreeItemViewModel> TreeItems { get; set; } = [];
+    private List<TreeItemData<ImageTreeItemViewModel>> TreeItems { get; set; } = [];
 
     public void Dispose()
     {
@@ -64,15 +63,15 @@
     private async Task ReloadImageFolders()
     {
         List<ImageFolderViewModel> imageFolders = await Mediator.Send(new GetImageFolders(Option<int>.None), _cts.Token);
-        TreeItems = imageFolders.Map(g => new ImageTreeItemViewModel(g)).ToHashSet();
+        TreeItems = imageFolders.Map(g => new TreeItemData<ImageTreeItemViewModel> { Value = new ImageTreeItemViewModel(g) }).ToList();
     }
 
-    private async Task<S.HashSet<ImageTreeItemViewModel>> LoadServerData(ImageTreeItemViewModel parentNode)
+    private async Task<IReadOnlyCollection<TreeItemData<ImageTreeItemViewModel>>> LoadServerData(ImageTreeItemViewModel parentNode)
     {
         List<ImageFolderViewModel> result = await Mediator.Send(new GetImageFolders(parentNode.LibraryFolderId), _cts.Token);
         foreach (ImageFolderViewModel imageFolder in result)
         {
-            parentNode.TreeItems.Add(new ImageTreeItemViewModel(imageFolder));
+            parentNode.TreeItems.Add(new TreeItemData<ImageTreeItemViewModel> { Value = new ImageTreeItemViewModel(imageFolder) });
         }
 
         return parentNode.TreeItems;

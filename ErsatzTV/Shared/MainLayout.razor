@@ -10,8 +10,9 @@
 @inject ISearchTargets SearchTargets;
 
 <MudThemeProvider Theme="ErsatzTvTheme"/>
-<MudDialogProvider DisableBackdropClick="true"/>
+<MudDialogProvider BackdropClick="false"/>
 <MudSnackbarProvider/>
+<MudPopoverProvider />
 
 <MudLayout @onclick="@(() => _isOpen = false)">
     <MudAppBar Elevation="1" Class="app-bar">
@@ -40,7 +41,7 @@
                             var matches = _searchTargets.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();
                             if (matches.Any())
                             {
-                                <MudList Clickable="true" Dense="true">
+                                <MudList T="SearchTargetViewModel" ReadOnly="false" Dense="true">
                                     @foreach (SearchTargetViewModel searchTarget in matches)
                                     {
                                         <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
@@ -182,7 +183,7 @@
 
     private static MudTheme ErsatzTvTheme => new()
     {
-        Palette = new PaletteDark
+        PaletteLight = new PaletteLight
         {
             ActionDefault = "rgba(255,255,255, 0.80)",
             Primary = "#009000",
@@ -197,6 +198,7 @@
             TextDisabled = "rgba(255,255,255, 0.40)",
             ActionDisabled = "rgba(255,255,255, 0.40)",
             TableHover = "rgba(255,255,255, 0.10)",
+            TableLines = "rgba(255,255,255,0.11)",
             Info = "#00c0c0",
             Tertiary = "#00c000",
             White = Colors.Shades.White
