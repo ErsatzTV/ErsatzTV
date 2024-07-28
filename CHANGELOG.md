@@ -46,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This allows a single Plex server to connect to multiple ETV instances
 - Include *all* language codes from media library in preferred audio and subtitle language options
   - Language codes where an English name cannot be found will be at the bottom of the list
+- Fix local libraries to detect external subtitle files with unrecognized language codes
+- Fix playback selection of subtitles with unrecognized language codes
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging
