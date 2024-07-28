@@ -55,7 +55,7 @@ public static class LanguageCodeQueryableExtensions
             .Filter(lc => validCodes.Contains(lc.ThreeCode1) || validCodes.Contains(lc.ThreeCode2))
             .ToListAsync();
 
-        var result = new System.Collections.Generic.HashSet<string>();
+        var result = new System.Collections.Generic.HashSet<string>(validCodes);
         foreach (LanguageCode language in maybeLanguages)
         {
             if (!string.IsNullOrWhiteSpace(language.ThreeCode1))

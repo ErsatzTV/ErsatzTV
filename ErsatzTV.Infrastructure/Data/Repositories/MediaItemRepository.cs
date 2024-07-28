@@ -217,6 +217,8 @@ public class MediaItemRepository : IMediaItemRepository
                 @"SELECT LanguageCode FROM
                     (SELECT Language AS LanguageCode
                     FROM MediaStream WHERE Language IS NOT NULL
+                    UNION ALL SELECT Language AS LanguageCode
+                    FROM Subtitle WHERE Language IS NOT NULL
                     UNION ALL SELECT PreferredAudioLanguageCode AS LanguageCode
                     FROM Channel WHERE PreferredAudioLanguageCode IS NOT NULL) AS A
                     GROUP BY LanguageCode

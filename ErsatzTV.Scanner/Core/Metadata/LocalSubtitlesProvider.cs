@@ -156,6 +156,29 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             Option<CultureInfo> maybeCulture = languageCodes.Find(
                 ci => ci.TwoLetterISOLanguageName == language || ci.ThreeLetterISOLanguageName == language);
 
+            if (maybeCulture.IsNone)
+            {
+                _logger.LogDebug(
+                    "Located {Attribute} with unknown language code {Code} at {Path}",
+                    "External Subtitles",
+                    language,
+                    file);
+
+                result.Add(
+                    new Subtitle
+                    {
+                        SubtitleKind = SubtitleKind.Sidecar,
+                        Codec = codec,
+                        Default = false,
+                        Forced = forced,
+                        SDH = sdh,
+                        Language = language,
+                        Path = saveFullPath ? file : Path.GetFileName(file),
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = _localFileSystem.GetLastWriteTime(file)
+                    });
+            }
+
             foreach (CultureInfo culture in maybeCulture)
             {
                 _logger.LogDebug("Located {Attribute} at {Path}", "External Subtitles", file);
