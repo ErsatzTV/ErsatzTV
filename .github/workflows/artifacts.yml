@@ -189,8 +189,8 @@ jobs:
           dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "scanner" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           dotnet publish ErsatzTV/ErsatzTV.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "main" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           mkdir "$release_name"
-          mv "scanner/*" "$release_name/"
-          mv "main/*" "$release_name/"
+          mv scanner/* "$release_name/"
+          mv main/* "$release_name/"
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
