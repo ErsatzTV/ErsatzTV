@@ -13,4 +13,7 @@ public class YamlPlayoutInstruction
 
     [YamlIgnore]
     public string SequenceKey { get; set; }
+
+    [YamlIgnore]
+    public Guid SequenceGuid { get; set; }
 }
