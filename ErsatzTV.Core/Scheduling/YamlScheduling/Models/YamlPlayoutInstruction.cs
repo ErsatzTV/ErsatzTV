@@ -10,4 +10,7 @@ public class YamlPlayoutInstruction
 
     [YamlMember(Alias = "filler_kind", ApplyNamingConventions = false)]
     public string FillerKind { get; set; }
+
+    [YamlIgnore]
+    public string SequenceKey { get; set; }
 }

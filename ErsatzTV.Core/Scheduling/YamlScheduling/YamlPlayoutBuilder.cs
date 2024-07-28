@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -78,6 +79,8 @@ public class YamlPlayoutBuilder(
             }
         }
 
+        FlattenSequences(context);
+
         // handle all playout instructions
         while (context.CurrentTime < finish)
         {
@@ -111,6 +114,38 @@ public class YamlPlayoutBuilder(
         await configElementRepository
             .GetValue<int>(ConfigElementKey.PlayoutDaysToBuild)
             .IfNoneAsync(2);
+
+    private static void FlattenSequences(YamlPlayoutContext context)
+    {
+        var rawInstructions = context.Definition.Playout.ToImmutableList();
+        context.Definition.Playout.Clear();
+
+        foreach (YamlPlayoutInstruction instruction in rawInstructions)
+        {
+            switch (instruction)
+            {
+                case YamlPlayoutSequenceInstruction sequenceInstruction:
+                    IEnumerable<YamlPlayoutInstruction> sequenceInstructions = context.Definition.Sequence
+                        .Filter(s => s.Key == sequenceInstruction.Sequence)
+                        .HeadOrNone()
+                        .Map(s => s.Items)
+                        .Flatten();
+
+                    // insert all instructions from the sequence
+                    foreach (YamlPlayoutInstruction i in sequenceInstructions)
+                    {
+                        // maybe used for shuffling later?
+                        i.SequenceKey = sequenceInstruction.Sequence;
+
+                        context.Definition.Playout.Add(i);
+                    }
+                    break;
+                default:
+                    context.Definition.Playout.Add(instruction);
+                    break;
+            }
+        }
+    }
 
     private static Option<IYamlPlayoutHandler> GetHandlerForInstruction(
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers,
@@ -171,6 +206,7 @@ public class YamlPlayoutBuilder(
                         { "new_epg_group", typeof(YamlPlayoutNewEpgGroupInstruction) },
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },
+                        { "sequence", typeof(YamlPlayoutSequenceInstruction) },
                         { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
                         { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
                     };
