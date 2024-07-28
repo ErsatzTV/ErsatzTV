@@ -39,7 +39,6 @@ public class CreateChannelHandler(
     private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
         (ValidateName(request), await ValidateNumber(dbContext, request),
             await FFmpegProfileMustExist(dbContext, request),
-            ValidatePreferredAudioLanguage(request),
             ValidatePreferredSubtitleLanguage(request),
             await WatermarkMustExist(dbContext, request),
             await FillerPresetMustExist(dbContext, request))
@@ -48,7 +47,6 @@ public class CreateChannelHandler(
                 name,
                 number,
                 ffmpegProfileId,
-                preferredAudioLanguageCode,
                 preferredSubtitleLanguageCode,
                 watermarkId,
                 fillerPresetId) =>
@@ -76,7 +74,7 @@ public class CreateChannelHandler(
                     ProgressMode = request.ProgressMode,
                     StreamingMode = request.StreamingMode,
                     Artwork = artwork,
-                    PreferredAudioLanguageCode = preferredAudioLanguageCode,
+                    PreferredAudioLanguageCode = request.PreferredAudioLanguageCode,
                     PreferredAudioTitle = request.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = preferredSubtitleLanguageCode,
                     SubtitleMode = request.SubtitleMode,
@@ -100,13 +98,6 @@ public class CreateChannelHandler(
     private static Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>
         createChannel.NotEmpty(c => c.Name)
             .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
-
-    private static Validation<BaseError, string> ValidatePreferredAudioLanguage(CreateChannel createChannel) =>
-        Optional(createChannel.PreferredAudioLanguageCode ?? string.Empty)
-            .Filter(
-                lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
-                    ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
-            .ToValidation<BaseError>("Preferred audio language code is invalid");
 
     private static Validation<BaseError, string> ValidatePreferredSubtitleLanguage(CreateChannel createChannel) =>
         Optional(createChannel.PreferredSubtitleLanguageCode ?? string.Empty)

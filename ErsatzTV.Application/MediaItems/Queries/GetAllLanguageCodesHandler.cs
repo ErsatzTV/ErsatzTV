@@ -1,20 +1,18 @@
 ﻿using System.Globalization;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 
 namespace ErsatzTV.Application.MediaItems;
 
-public class GetAllLanguageCodesHandler : IRequestHandler<GetAllLanguageCodes, List<LanguageCodeViewModel>>
+public class GetAllLanguageCodesHandler(IMediaItemRepository mediaItemRepository)
+    : IRequestHandler<GetAllLanguageCodes, List<LanguageCodeViewModel>>
 {
-    private readonly IMediaItemRepository _mediaItemRepository;
-
-    public GetAllLanguageCodesHandler(IMediaItemRepository mediaItemRepository) =>
-        _mediaItemRepository = mediaItemRepository;
-
     public async Task<List<LanguageCodeViewModel>> Handle(
         GetAllLanguageCodes request,
         CancellationToken cancellationToken)
     {
-        List<CultureInfo> cultures = await _mediaItemRepository.GetAllLanguageCodeCultures();
-        return cultures.Map(c => new LanguageCodeViewModel(c.ThreeLetterISOLanguageName, c.EnglishName)).ToList();
+        List<LanguageCodeAndName> languageCodes = await mediaItemRepository.GetAllLanguageCodesAndNames();
+        return languageCodes.Map(c => new LanguageCodeViewModel(c.Code, c.Name)).ToList();
     }
 }

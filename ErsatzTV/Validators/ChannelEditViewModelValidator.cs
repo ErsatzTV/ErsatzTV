@@ -15,16 +15,5 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.Group).NotEmpty();
         RuleFor(x => x.FFmpegProfileId).GreaterThan(0);
-
-        RuleFor(x => x.PreferredAudioLanguageCode)
-            .Must(
-                languageCode => CultureInfo.GetCultures(CultureTypes.NeutralCultures)
-                    .Any(
-                        ci => string.Equals(
-                            ci.ThreeLetterISOLanguageName,
-                            languageCode,
-                            StringComparison.OrdinalIgnoreCase)))
-            .When(vm => !string.IsNullOrWhiteSpace(vm.PreferredAudioLanguageCode))
-            .WithMessage("Preferred audio language code is invalid");
     }
 }
