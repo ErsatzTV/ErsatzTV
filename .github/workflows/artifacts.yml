@@ -186,12 +186,11 @@ jobs:
 
           # Build everything
           sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
-          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name/scanner" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name/main" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
-          mv "$release_name/scanner/*" "$release_name/"
-          mv "$release_name/main/*" "$release_name/"
-          rmdir "$release_name/scanner"
-          rmdir "$release_name/main"
+          dotnet publish ErsatzTV.Scanner/ErsatzTV.Scanner.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "scanner" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net8.0 --runtime "${{ matrix.target }}" -c Release -o "main" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          mkdir "$release_name"
+          mv "scanner/*" "$release_name/"
+          mv "main/*" "$release_name/"
 
           # Build Windows launcher
           if [ "${{ matrix.kind }}" == "windows" ]; then
