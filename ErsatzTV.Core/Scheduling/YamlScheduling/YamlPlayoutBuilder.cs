@@ -131,11 +131,14 @@ public class YamlPlayoutBuilder(
                         .Map(s => s.Items)
                         .Flatten();
 
+                    var sequenceGuid = Guid.NewGuid();
+
                     // insert all instructions from the sequence
                     foreach (YamlPlayoutInstruction i in sequenceInstructions)
                     {
-                        // maybe used for shuffling later?
+                        // used for shuffling
                         i.SequenceKey = sequenceInstruction.Sequence;
+                        i.SequenceGuid = sequenceGuid;
 
                         context.Definition.Playout.Add(i);
                     }
@@ -162,6 +165,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutRepeatInstruction => new YamlPlayoutRepeatHandler(),
             YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
             YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
+            YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(),
 
             // content handlers
@@ -207,6 +211,7 @@ public class YamlPlayoutBuilder(
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },
                         { "sequence", typeof(YamlPlayoutSequenceInstruction) },
+                        { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
                         { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
                         { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
                     };
