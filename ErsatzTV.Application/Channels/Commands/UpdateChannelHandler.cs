@@ -93,9 +93,8 @@ public class UpdateChannelHandler(
 
     private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
         (await ChannelMustExist(dbContext, request), ValidateName(request),
-            await ValidateNumber(dbContext, request),
-            ValidatePreferredAudioLanguage(request))
-        .Apply((channelToUpdate, _, _, _) => channelToUpdate);
+            await ValidateNumber(dbContext, request))
+        .Apply((channelToUpdate, _, _) => channelToUpdate);
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
         TvContext dbContext,
@@ -130,11 +129,4 @@ public class UpdateChannelHandler(
 
         return BaseError.New("Channel number must be unique");
     }
-
-    private static Validation<BaseError, string> ValidatePreferredAudioLanguage(UpdateChannel updateChannel) =>
-        Optional(updateChannel.PreferredAudioLanguageCode ?? string.Empty)
-            .Filter(
-                lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
-                    ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
-            .ToValidation<BaseError>("Preferred audio language code is invalid");
 }
