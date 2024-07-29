@@ -1,0 +1,122 @@
+﻿@page "/playouts/yaml/{Id:int}"
+@using ErsatzTV.Application.Channels
+@using ErsatzTV.Application.Playouts
+@using ErsatzTV.Application.Scheduling
+@implements IDisposable
+@inject IDialogService Dialog
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IEntityLocker EntityLocker;
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Edit YAML Playout - @_channelName</MudText>
+    <MudGrid>
+        <MudItem xs="4">
+            <div style="max-width: 400px;" class="mr-4">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5">YAML File</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => EditYamlFile())" Class="mt-4">
+                            Edit YAML File
+                        </MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </div>
+        </MudItem>
+        <MudItem xs="4">
+            <div style="max-width: 400px;" class="mb-6">
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5">Playout Items and History</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <!-- reset will erase all items -->
+                        <!--
+                        <div>
+                            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(_ => EraseItems(eraseHistory: false))" Class="mt-4">
+                                Erase Items
+                            </MudButton>
+                        </div>
+                        -->
+                        <div>
+                            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))" Class="mt-4">
+                                Erase Items and History
+                            </MudButton>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </div>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private PlayoutNameViewModel _playout;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private string _channelName;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Option<string> maybeName = await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token);
+        if (maybeName.IsNone)
+        {
+            NavigationManager.NavigateTo("/playouts");
+            return;
+        }
+
+        foreach (string name in maybeName)
+        {
+            _channelName = name;
+        }
+
+        Option<PlayoutNameViewModel> maybePlayout = await Mediator.Send(new GetPlayoutById(Id), _cts.Token);
+        foreach (PlayoutNameViewModel playout in maybePlayout)
+        {
+            _playout = playout;
+        }
+    }
+
+    private async Task EraseItems(bool eraseHistory)
+    {
+        IRequest request = eraseHistory ? new ErasePlayoutHistory(Id) : new ErasePlayoutItems(Id);
+        await Mediator.Send(request, _cts.Token);
+
+        string message = eraseHistory ? "Erased playout items and history" : "Erased playout items";
+        Snackbar.Add(message, Severity.Info);
+    }
+
+    private async Task EditYamlFile()
+    {
+        if (_playout is null)
+        {
+            return;
+        }
+
+        var parameters = new DialogParameters { { "YamlFile", $"{_playout.TemplateFile}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+
+        IDialogReference dialog = await Dialog.ShowAsync<EditYamlFileDialog>("Edit YAML File", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await Mediator.Send(new UpdateYamlPlayout(_playout.PlayoutId, result.Data as string ?? _playout.TemplateFile), _cts.Token);
+        }
+    }
+}

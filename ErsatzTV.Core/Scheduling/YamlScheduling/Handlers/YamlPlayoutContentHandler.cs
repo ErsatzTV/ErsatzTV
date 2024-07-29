@@ -74,6 +74,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
             PlaybackOrder = playbackOrder,
             Index = enumerator.State.Index,
             When = playoutItem.StartOffset.UtcDateTime,
+            Finish = playoutItem.FinishOffset.UtcDateTime,
             Key = historyKey,
             Details = HistoryDetails.ForMediaItem(mediaItem)
         };

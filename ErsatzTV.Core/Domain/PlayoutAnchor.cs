@@ -9,6 +9,7 @@ public class PlayoutAnchor
     public bool InFlood { get; set; }
     public bool InDurationFiller { get; set; }
     public int NextGuideGroup { get; set; }
+    public int NextInstructionIndex { get; set; }
 
     public DateTimeOffset NextStartOffset => new DateTimeOffset(NextStart, TimeSpan.Zero).ToLocalTime();
 

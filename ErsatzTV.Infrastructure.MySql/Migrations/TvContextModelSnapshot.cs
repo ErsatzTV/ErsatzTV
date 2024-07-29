@@ -2452,6 +2452,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Details")
                         .HasColumnType("longtext");
 
+                    b.Property<DateTime>("Finish")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("Index")
                         .HasColumnType("int");
 
@@ -4310,6 +4313,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                                 .HasColumnType("int");
 
                             b1.Property<int>("NextGuideGroup")
+                                .HasColumnType("int");
+
+                            b1.Property<int>("NextInstructionIndex")
                                 .HasColumnType("int");
 
                             b1.Property<DateTime>("NextStart")
