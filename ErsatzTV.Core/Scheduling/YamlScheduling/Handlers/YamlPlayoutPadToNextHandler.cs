@@ -59,7 +59,6 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
                 offlineTail: true,
-                guideGroupPerItem: false,
                 GetFillerKind(padToNext),
                 enumerator,
                 fallbackEnumerator);

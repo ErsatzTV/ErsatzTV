@@ -18,7 +18,7 @@ public class YamlPlayoutNewEpgGroupHandler : IYamlPlayoutHandler
             return Task.FromResult(false);
         }
 
-        context.GuideGroup *= -1;
+        // context.NextGuideGroup() *= -1;
         return Task.FromResult(true);
     }
 }
