@@ -37,10 +37,9 @@ public class YamlPlayoutBuilder(
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
         var enumeratorCache = new EnumeratorCache(mediaCollectionRepository);
 
-        var context = new YamlPlayoutContext(playout, playoutDefinition)
+        var context = new YamlPlayoutContext(playout, playoutDefinition, guideGroup: 1)
         {
-            CurrentTime = start,
-            GuideGroup = 1
+            CurrentTime = start
 
             // no need to init default value and throw off visited count
             // InstructionIndex = 0
@@ -61,10 +60,10 @@ public class YamlPlayoutBuilder(
         {
             foreach (PlayoutAnchor prevAnchor in Optional(playout.Anchor))
             {
-                context.GuideGroup = prevAnchor.NextGuideGroup;
+                // TODO: does this matter?
+                //context.GuideGroup = prevAnchor.NextGuideGroup;
 
-                start = new DateTimeOffset(prevAnchor.NextStart.ToLocalTime(), start.Offset);
-                context.CurrentTime = start;
+                context.CurrentTime = new DateTimeOffset(prevAnchor.NextStart.ToLocalTime(), start.Offset);
 
                 context.InstructionIndex = prevAnchor.NextInstructionIndex;
             }
@@ -171,7 +170,7 @@ public class YamlPlayoutBuilder(
         {
             NextStart = maxTime,
             NextInstructionIndex = context.InstructionIndex,
-            NextGuideGroup = context.GuideGroup
+            NextGuideGroup = context.NextGuideGroup()
         };
 
         // logger.LogDebug(

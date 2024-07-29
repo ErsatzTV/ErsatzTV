@@ -3,7 +3,7 @@ using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definition)
+public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definition, int guideGroup)
 {
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
     private int _instructionIndex;
@@ -26,5 +26,14 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public bool VisitedAll => _visitedInstructions.Count >= Definition.Playout.Count;
 
-    public int GuideGroup { get; set; }
+    public int NextGuideGroup()
+    {
+        guideGroup++;
+        if (guideGroup > 1000)
+        {
+            guideGroup = 1;
+        }
+
+        return guideGroup;
+    }
 }

@@ -11,9 +11,6 @@ public class YamlPlayoutDurationInstruction : YamlPlayoutInstruction
     [YamlMember(Alias = "offline_tail", ApplyNamingConventions = false)]
     public bool OfflineTail { get; set; }
 
-    [YamlMember(Alias = "epg_group_per_item", ApplyNamingConventions = false)]
-    public bool EpgGroupPerItem { get; set; } = true;
-
     public string Fallback { get; set; }
 
     [YamlMember(Alias = "discard_attempts", ApplyNamingConventions = false)]

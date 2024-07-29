@@ -48,7 +48,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
-                        GuideGroup = context.GuideGroup
+                        GuideGroup = context.NextGuideGroup()
                         //GuideStart = effectiveBlock.Start.UtcDateTime,
                         //GuideFinish = blockFinish.UtcDateTime,
                         //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),

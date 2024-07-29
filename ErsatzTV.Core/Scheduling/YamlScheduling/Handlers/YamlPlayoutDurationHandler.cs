@@ -51,7 +51,6 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 duration.DiscardAttempts,
                 duration.Trim,
                 duration.OfflineTail,
-                duration.EpgGroupPerItem,
                 GetFillerKind(duration),
                 enumerator,
                 fallbackEnumerator);
@@ -70,7 +69,6 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         int discardAttempts,
         bool trim,
         bool offlineTail,
-        bool guideGroupPerItem,
         FillerKind fillerKind,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
@@ -81,11 +79,6 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
-                if (guideGroupPerItem)
-                {
-                    context.GuideGroup *= -1;
-                }
-
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
                 var playoutItem = new PlayoutItem
@@ -95,14 +88,13 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     Finish = context.CurrentTime.UtcDateTime + itemDuration,
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
-                    GuideGroup = context.GuideGroup,
+                    GuideGroup = context.NextGuideGroup(),
                     FillerKind = fillerKind
                     //DisableWatermarks = !allowWatermarks
                 };
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
-
                     context.Playout.Items.Add(playoutItem);
 
                     // create history record
