@@ -14,7 +14,4 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     public int InstructionIndex { get; set; }
 
     public int GuideGroup { get; set; }
-
-    // only used for initial state (skip items)
-    public Dictionary<string, int> ContentIndex { get; } = [];
 }

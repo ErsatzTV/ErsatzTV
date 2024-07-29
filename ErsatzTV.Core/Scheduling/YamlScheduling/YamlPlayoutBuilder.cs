@@ -169,7 +169,8 @@ public class YamlPlayoutBuilder(
             YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
             YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
-            YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(),
+
+            YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
             YamlPlayoutSkipToItemInstruction => new YamlPlayoutSkipToItemHandler(enumeratorCache),
 
             // content handlers

@@ -1,13 +1,14 @@
+using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
-public class YamlPlayoutSkipItemsHandler : IYamlPlayoutHandler
+public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYamlPlayoutHandler
 {
     public bool Reset => true;
 
-    public Task<bool> Handle(
+    public async Task<bool> Handle(
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
         ILogger<YamlPlayoutBuilder> logger,
@@ -15,19 +16,28 @@ public class YamlPlayoutSkipItemsHandler : IYamlPlayoutHandler
     {
         if (instruction is not YamlPlayoutSkipItemsInstruction skipItems)
         {
-            return Task.FromResult(false);
+            return false;
         }
 
-        if (context.ContentIndex.TryGetValue(skipItems.Content, out int value))
+        if (skipItems.SkipItems < 0)
         {
-            value += skipItems.SkipItems;
-        }
-        else
-        {
-            value = skipItems.SkipItems;
+            logger.LogWarning("Unable to skip invalid number: {Skip}", skipItems.SkipItems);
+            return false;
         }
 
-        context.ContentIndex[skipItems.Content] = value;
-        return Task.FromResult(true);
+        Option<IMediaCollectionEnumerator> maybeEnumerator = await enumeratorCache.GetCachedEnumeratorForContent(
+            context,
+            skipItems.Content,
+            cancellationToken);
+
+        foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
+        {
+            for (var i = 0; i < skipItems.SkipItems; i++)
+            {
+                enumerator.MoveNext();
+            }
+        }
+
+        return true;
     }
 }

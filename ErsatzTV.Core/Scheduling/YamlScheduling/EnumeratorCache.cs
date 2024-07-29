@@ -66,17 +66,16 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 break;
         }
 
-        // start at the appropriate place in the enumerator
-        context.ContentIndex.TryGetValue(contentKey, out int enumeratorIndex);
-
-        var state = new CollectionEnumeratorState { Seed = context.Playout.Seed + index, Index = enumeratorIndex };
+        var state = new CollectionEnumeratorState { Seed = context.Playout.Seed + index, Index = 0 };
         switch (Enum.Parse<PlaybackOrder>(content.Order, true))
         {
             case PlaybackOrder.Chronological:
                 return new ChronologicalMediaCollectionEnumerator(items, state);
             case PlaybackOrder.Shuffle:
-                // TODO: fix this
-                var groupedMediaItems = items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+                bool keepMultiPartEpisodesTogether = content.MultiPart;
+                List<GroupedMediaItem> groupedMediaItems = keepMultiPartEpisodesTogether
+                    ? MultiPartEpisodeGrouper.GroupMediaItems(items, treatCollectionsAsShows: false)
+                    : items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
                 return new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, cancellationToken);
         }
 
