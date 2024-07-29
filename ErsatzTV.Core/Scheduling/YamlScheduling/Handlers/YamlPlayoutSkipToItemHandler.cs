@@ -52,7 +52,6 @@ public class YamlPlayoutSkipToItemHandler(EnumeratorCache enumeratorCache) : IYa
                         if (episode.Season?.SeasonNumber == skipToItem.Season
                             && episode.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber) == skipToItem.Episode)
                         {
-                            context.ContentIndex[skipToItem.Content] = index;
                             done = true;
                             break;
                         }

@@ -50,6 +50,8 @@
                         case PlayoutKind.Yaml:
                             <MudTextField Label="YAML File" @bind-Value="_model.YamlFile" For="@(() => _model.YamlFile)"/>
                             break;
+                        case PlayoutKind.Block:
+                            break;
                         default:
                             <MudSelect Class="mt-3"
                                        T="ProgramScheduleViewModel"

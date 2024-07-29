@@ -6,17 +6,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Scheduling;
 
-public class EraseBlockPlayoutItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<EraseBlockPlayoutItems>
+public class ErasePlayoutItemsHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<ErasePlayoutItems>
 {
-    public async Task Handle(EraseBlockPlayoutItems request, CancellationToken cancellationToken)
+    public async Task Handle(ErasePlayoutItems request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playout> maybePlayout = await dbContext.Playouts
             .Include(p => p.Items)
             .Include(p => p.PlayoutHistory)
-            .Filter(p => p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Block)
+            .Filter(
+                p => p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Block ||
+                     p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Yaml)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
 
         foreach (Playout playout in maybePlayout)

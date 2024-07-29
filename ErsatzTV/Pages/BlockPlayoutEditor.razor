@@ -142,7 +142,7 @@
 
     private async Task EraseItems(bool eraseHistory)
     {
-        IRequest request = eraseHistory ? new EraseBlockPlayoutHistory(Id) : new EraseBlockPlayoutItems(Id);
+        IRequest request = eraseHistory ? new ErasePlayoutHistory(Id) : new ErasePlayoutItems(Id);
         await Mediator.Send(request, _cts.Token);
 
         string message = eraseHistory ? "Erased playout items and history" : "Erased playout items";

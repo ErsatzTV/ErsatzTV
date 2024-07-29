@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -29,32 +30,80 @@ public class YamlPlayoutBuilder(
         YamlPlayoutDefinition playoutDefinition = await LoadYamlDefinition(playout, cancellationToken);
 
         DateTimeOffset start = DateTimeOffset.Now;
+
         int daysToBuild = await GetDaysToBuild();
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
-        if (mode is not PlayoutBuildMode.Reset)
-        {
-            logger.LogWarning("YAML playouts can only be reset; ignoring build mode {Mode}", mode.ToString());
-            return playout;
-        }
-
-        // load content and content enumerators on demand
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
         var enumeratorCache = new EnumeratorCache(mediaCollectionRepository);
 
         var context = new YamlPlayoutContext(playout, playoutDefinition)
         {
             CurrentTime = start,
-            GuideGroup = 1,
-            InstructionIndex = 0
+            GuideGroup = 1
+
+            // no need to init default value and throw off visited count
+            // InstructionIndex = 0
         };
 
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        // logger.LogDebug(
+        //     "Default yaml context from {Start} to {Finish}, instruction {Instruction}",
+        //     context.CurrentTime,
+        //     finish,
+        //     context.InstructionIndex);
+
+        // remove old items
+        // importantly, this should not remove their history
+        playout.Items.RemoveAll(i => i.FinishOffset < start);
+
+        // load saved state
+        if (mode is not PlayoutBuildMode.Reset)
+        {
+            foreach (PlayoutAnchor prevAnchor in Optional(playout.Anchor))
+            {
+                context.GuideGroup = prevAnchor.NextGuideGroup;
+
+                start = new DateTimeOffset(prevAnchor.NextStart.ToLocalTime(), start.Offset);
+                context.CurrentTime = start;
+
+                context.InstructionIndex = prevAnchor.NextInstructionIndex;
+            }
+        }
+        else
+        {
+            // reset (remove items and "currently active" history)
+
+            // for testing
+            // start = start.AddHours(-2);
+
+            // erase items, not history
+            playout.Items.Clear();
+
+            // remove any future or "currently active" history items
+            // this prevents "walking" the playout forward by repeatedly resetting
+            var toRemove = new List<PlayoutHistory>();
+            toRemove.AddRange(playout.PlayoutHistory.Filter(h => h.When > start.UtcDateTime || h.When <= start.UtcDateTime && h.Finish >= start.UtcDateTime));
+            foreach (PlayoutHistory history in toRemove)
+            {
+                playout.PlayoutHistory.Remove(history);
+            }
+        }
+
+        // logger.LogDebug(
+        //     "Saved yaml context from {Start} to {Finish}, instruction {Instruction}",
+        //     context.CurrentTime,
+        //     finish,
+        //     context.InstructionIndex);
+
+        // apply all history
+        var applyHistoryHandler = new YamlPlayoutApplyHistoryHandler(enumeratorCache);
+        foreach (YamlPlayoutContentItem contentItem in playoutDefinition.Content)
+        {
+            await applyHistoryHandler.Handle(context, contentItem, logger, cancellationToken);
+        }
+
         if (mode is PlayoutBuildMode.Reset)
         {
-            context.Playout.Seed = new Random().Next();
-            context.Playout.Items.Clear();
-
             // handle all on-reset instructions
             foreach (YamlPlayoutInstruction instruction in playoutDefinition.Reset)
             {
@@ -109,6 +158,28 @@ public class YamlPlayoutBuilder(
                 context.InstructionIndex++;
             }
         }
+
+        CleanUpHistory(playout, start);
+
+        DateTime maxTime = context.CurrentTime.UtcDateTime;
+        if (playout.Items.Count > 0)
+        {
+            maxTime = playout.Items.Max(i => i.Finish);
+        }
+
+        var anchor = new PlayoutAnchor
+        {
+            NextStart = maxTime,
+            NextInstructionIndex = context.InstructionIndex,
+            NextGuideGroup = context.GuideGroup
+        };
+
+        // logger.LogDebug(
+        //     "Saving yaml context at {Start}, instruction {Instruction}",
+        //     maxTime,
+        //     context.InstructionIndex);
+
+        playout.Anchor = anchor;
 
         return playout;
     }
@@ -169,7 +240,8 @@ public class YamlPlayoutBuilder(
             YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
             YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
-            YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(),
+
+            YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
             YamlPlayoutSkipToItemInstruction => new YamlPlayoutSkipToItemHandler(enumeratorCache),
 
             // content handlers
@@ -235,6 +307,36 @@ public class YamlPlayoutBuilder(
         {
             logger.LogWarning(ex, "Error loading YAML");
             throw;
+        }
+    }
+
+    private static void CleanUpHistory(Playout playout, DateTimeOffset start)
+    {
+        var groups = new Dictionary<string, List<PlayoutHistory>>();
+        foreach (PlayoutHistory history in playout.PlayoutHistory)
+        {
+            if (!groups.TryGetValue(history.Key, out List<PlayoutHistory> group))
+            {
+                group = [];
+                groups[history.Key] = group;
+            }
+
+            group.Add(history);
+        }
+
+        foreach ((string _, List<PlayoutHistory> group) in groups)
+        {
+            //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
+
+            IEnumerable<PlayoutHistory> toDelete = group
+                .Filter(h => h.When < start.UtcDateTime)
+                .OrderByDescending(h => h.When)
+                .Tail();
+
+            foreach (PlayoutHistory delete in toDelete)
+            {
+                playout.PlayoutHistory.Remove(delete);
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
@@ -56,6 +57,19 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                     };
 
                     context.Playout.Items.Add(playoutItem);
+
+                    // create history record
+                    Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
+                        context,
+                        instruction.Content,
+                        enumerator,
+                        playoutItem,
+                        mediaItem);
+
+                    foreach (PlayoutHistory history in maybeHistory)
+                    {
+                        context.Playout.PlayoutHistory.Add(history);
+                    }
 
                     context.CurrentTime += itemDuration;
                     enumerator.MoveNext();

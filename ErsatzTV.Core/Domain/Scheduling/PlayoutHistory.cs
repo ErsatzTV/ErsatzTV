@@ -18,6 +18,9 @@ public class PlayoutHistory
     // last occurence of an item from this collection in the playout
     public DateTime When { get; set; }
 
+    // used to efficiently ignore/remove "still active" history items
+    public DateTime Finish { get; set; }
+
     // details about the item
     public string Details { get; set; }
 }

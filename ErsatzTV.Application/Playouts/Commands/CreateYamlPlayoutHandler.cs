@@ -55,7 +55,8 @@ public class CreateYamlPlayoutHandler
             {
                 ChannelId = channel.Id,
                 TemplateFile = externalJsonFile,
-                ProgramSchedulePlayoutType = playoutType
+                ProgramSchedulePlayoutType = playoutType,
+                Seed = new Random().Next()
             });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
