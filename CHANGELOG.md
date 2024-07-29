@@ -32,6 +32,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `repeat`: continue building the playout from the first instruction in the YAML file
 - Add channel logo generation by @raknam
   - Channels without custom uploaded logos will automatically generate a logo that includes the channel name
+- Add two new API endpoints
+  - Reset playout for channel
+    - POST `/api/channels/{channelNumber}/playout/reset`
+  - Scan library
+    - POST `/api/libraries/{libraryId}/scan`
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs
