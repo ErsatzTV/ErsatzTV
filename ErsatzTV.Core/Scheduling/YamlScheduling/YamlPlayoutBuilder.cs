@@ -327,8 +327,9 @@ public class YamlPlayoutBuilder(
         {
             //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
 
+            // keep the most recent item from each history group that has already been played completely
             IEnumerable<PlayoutHistory> toDelete = group
-                .Filter(h => h.When < start.UtcDateTime)
+                .Filter(h => h.Finish < start.UtcDateTime)
                 .OrderByDescending(h => h.When)
                 .Tail();
 
