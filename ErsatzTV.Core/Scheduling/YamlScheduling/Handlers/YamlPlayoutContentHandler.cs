@@ -1,5 +1,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
@@ -43,6 +44,41 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         }
 
         return maybeEnumerator;
+    }
+
+    protected static Option<PlayoutHistory> GetHistoryForItem(
+        YamlPlayoutContext context,
+        string contentKey,
+        IMediaCollectionEnumerator enumerator,
+        PlayoutItem playoutItem,
+        MediaItem mediaItem)
+    {
+        int index = context.Definition.Content.FindIndex(c => c.Key == contentKey);
+        if (index < 0)
+        {
+            return Option<PlayoutHistory>.None;
+        }
+
+        YamlPlayoutContentItem contentItem = context.Definition.Content[index];
+        if (!Enum.TryParse(contentItem.Order, true, out PlaybackOrder playbackOrder))
+        {
+            return Option<PlayoutHistory>.None;
+        }
+
+        string historyKey = HistoryDetails.KeyForYamlContent(contentItem);
+
+        // create a playout history record
+        var nextHistory = new PlayoutHistory
+        {
+            PlayoutId = context.Playout.Id,
+            PlaybackOrder = playbackOrder,
+            Index = enumerator.State.Index,
+            When = playoutItem.StartOffset.UtcDateTime,
+            Key = historyKey,
+            Details = HistoryDetails.ForMediaItem(mediaItem)
+        };
+
+        return nextHistory;
     }
 
     protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)

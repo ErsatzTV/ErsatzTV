@@ -1,9 +1,10 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Newtonsoft.Json;
 
-namespace ErsatzTV.Core.Scheduling.BlockScheduling;
+namespace ErsatzTV.Core.Scheduling;
 
 internal static class HistoryDetails
 {
@@ -23,6 +24,17 @@ internal static class HistoryDetails
             blockItem.MultiCollectionId,
             blockItem.SmartCollectionId,
             blockItem.MediaItemId
+        };
+
+        return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
+    }
+
+    public static string KeyForYamlContent(YamlPlayoutContentItem contentItem)
+    {
+        dynamic key = new
+        {
+            contentItem.Key,
+            contentItem.Order
         };
 
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);

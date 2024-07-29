@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -38,7 +39,6 @@ public class YamlPlayoutBuilder(
             return playout;
         }
 
-        // load content and content enumerators on demand
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
         var enumeratorCache = new EnumeratorCache(mediaCollectionRepository);
 
@@ -52,9 +52,29 @@ public class YamlPlayoutBuilder(
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (mode is PlayoutBuildMode.Reset)
         {
-            context.Playout.Seed = new Random().Next();
-            context.Playout.Items.Clear();
+            // TODO: reset seed at the appropriate time
+            if (context.Playout.Seed == 0)
+            {
+                context.Playout.Seed = new Random().Next();
+            }
 
+            context.Playout.Items.Clear();
+        }
+
+        // remove old items
+        // importantly, this should not remove their history
+        playout.Items.RemoveAll(i => i.FinishOffset < start);
+
+        // apply all history
+        var applyHistoryHandler = new YamlPlayoutApplyHistoryHandler(enumeratorCache);
+        foreach (YamlPlayoutContentItem contentItem in playoutDefinition.Content)
+        {
+            await applyHistoryHandler.Handle(context, contentItem, logger, cancellationToken);
+        }
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        if (mode is PlayoutBuildMode.Reset)
+        {
             // handle all on-reset instructions
             foreach (YamlPlayoutInstruction instruction in playoutDefinition.Reset)
             {
@@ -109,6 +129,8 @@ public class YamlPlayoutBuilder(
                 context.InstructionIndex++;
             }
         }
+
+        CleanUpHistory(playout, start);
 
         return playout;
     }
@@ -236,6 +258,36 @@ public class YamlPlayoutBuilder(
         {
             logger.LogWarning(ex, "Error loading YAML");
             throw;
+        }
+    }
+
+    private static void CleanUpHistory(Playout playout, DateTimeOffset start)
+    {
+        var groups = new Dictionary<string, List<PlayoutHistory>>();
+        foreach (PlayoutHistory history in playout.PlayoutHistory)
+        {
+            if (!groups.TryGetValue(history.Key, out List<PlayoutHistory> group))
+            {
+                group = [];
+                groups[history.Key] = group;
+            }
+
+            group.Add(history);
+        }
+
+        foreach ((string _, List<PlayoutHistory> group) in groups)
+        {
+            //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
+
+            IEnumerable<PlayoutHistory> toDelete = group
+                .Filter(h => h.When < start.UtcDateTime)
+                .OrderByDescending(h => h.When)
+                .Tail();
+
+            foreach (PlayoutHistory delete in toDelete)
+            {
+                playout.PlayoutHistory.Remove(delete);
+            }
         }
     }
 }

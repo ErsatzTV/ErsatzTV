@@ -1,5 +1,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
         Option<IMediaCollectionEnumerator> maybeEnumerator = await GetContentEnumerator(
             context,
-            instruction.Content,
+            duration.Content,
             logger,
             cancellationToken);
 
@@ -44,6 +45,8 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         {
             context.CurrentTime = Schedule(
                 context,
+                instruction.Content,
+                duration.Fallback,
                 targetTime,
                 duration.DiscardAttempts,
                 duration.Trim,
@@ -59,6 +62,8 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
     protected static DateTimeOffset Schedule(
         YamlPlayoutContext context,
+        string contentKey,
+        string fallbackContentKey,
         DateTimeOffset targetTime,
         int discardAttempts,
         bool trim,
@@ -88,10 +93,25 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
+
+                    context.Playout.Items.Add(playoutItem);
+
+                    // create history record
+                    Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
+                        context,
+                        contentKey,
+                        enumerator,
+                        playoutItem,
+                        mediaItem);
+
+                    foreach (PlayoutHistory history in maybeHistory)
+                    {
+                        context.Playout.PlayoutHistory.Add(history);
+                    }
+
                     remainingToFill -= itemDuration;
                     context.CurrentTime += itemDuration;
 
-                    context.Playout.Items.Add(playoutItem);
                     enumerator.MoveNext();
                 }
                 else if (discardAttempts > 0)
@@ -103,13 +123,27 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 else if (trim)
                 {
                     // trim item to exactly fit
-                    remainingToFill = TimeSpan.Zero;
-                    context.CurrentTime = targetTime;
-
                     playoutItem.Finish = targetTime.UtcDateTime;
                     playoutItem.OutPoint = playoutItem.Finish - playoutItem.Start;
 
                     context.Playout.Items.Add(playoutItem);
+
+                    // create history record
+                    Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
+                        context,
+                        contentKey,
+                        enumerator,
+                        playoutItem,
+                        mediaItem);
+
+                    foreach (PlayoutHistory history in maybeHistory)
+                    {
+                        context.Playout.PlayoutHistory.Add(history);
+                    }
+
+                    remainingToFill = TimeSpan.Zero;
+                    context.CurrentTime = targetTime;
+
                     enumerator.MoveNext();
                 }
                 else if (fallbackEnumerator.IsSome)
@@ -127,6 +161,20 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                             playoutItem.FillerKind = FillerKind.Fallback;
 
                             context.Playout.Items.Add(playoutItem);
+
+                            // create history record
+                            Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
+                                context,
+                                fallbackContentKey,
+                                fallback,
+                                playoutItem,
+                                mediaItem);
+
+                            foreach (PlayoutHistory history in maybeHistory)
+                            {
+                                context.Playout.PlayoutHistory.Add(history);
+                            }
+
                             fallback.MoveNext();
                         }
                     }

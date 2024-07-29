@@ -7,9 +7,13 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepository)
 {
+    private readonly Dictionary<string, List<MediaItem>> _mediaItems = new();
     private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
 
     public System.Collections.Generic.HashSet<string> MissingContentKeys { get; } = [];
+
+    public List<MediaItem> MediaItemsForContent(string contentKey) =>
+        _mediaItems.TryGetValue(contentKey, out List<MediaItem> items) ? items : [];
 
     public async Task<Option<IMediaCollectionEnumerator>> GetCachedEnumeratorForContent(
         YamlPlayoutContext context,
@@ -65,6 +69,8 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                     show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
                 break;
         }
+
+        _mediaItems[content.Key] = items;
 
         var state = new CollectionEnumeratorState { Seed = context.Playout.Seed + index, Index = 0 };
         switch (Enum.Parse<PlaybackOrder>(content.Order, true))

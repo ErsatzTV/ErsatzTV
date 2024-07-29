@@ -53,6 +53,8 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
         {
             context.CurrentTime = Schedule(
                 context,
+                padToNext.Content,
+                padToNext.Fallback,
                 targetTime,
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
