@@ -6,9 +6,6 @@
         <Nullable>enable</Nullable>
 
         <IsPackable>false</IsPackable>
-
-        <!-- works around MSB3374 error -->
-        <DisableFastUpToDateCheck>True</DisableFastUpToDateCheck>
     </PropertyGroup>
 
     <ItemGroup>
