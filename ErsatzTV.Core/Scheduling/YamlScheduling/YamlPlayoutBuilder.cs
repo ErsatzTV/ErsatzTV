@@ -167,6 +167,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(),
+            YamlPlayoutSkipToItemInstruction => new YamlPlayoutSkipToItemHandler(enumeratorCache),
 
             // content handlers
             YamlPlayoutAllInstruction => new YamlPlayoutAllHandler(enumeratorCache),
@@ -213,6 +214,7 @@ public class YamlPlayoutBuilder(
                         { "sequence", typeof(YamlPlayoutSequenceInstruction) },
                         { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
                         { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
+                        { "skip_to_item", typeof(YamlPlayoutSkipToItemInstruction) },
                         { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
                     };
 
