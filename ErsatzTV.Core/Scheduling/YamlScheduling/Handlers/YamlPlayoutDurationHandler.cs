@@ -50,6 +50,8 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 targetTime,
                 duration.DiscardAttempts,
                 duration.Trim,
+                duration.OfflineTail,
+                duration.EpgGroupPerItem,
                 GetFillerKind(duration),
                 enumerator,
                 fallbackEnumerator);
@@ -67,6 +69,8 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         DateTimeOffset targetTime,
         int discardAttempts,
         bool trim,
+        bool offlineTail,
+        bool guideGroupPerItem,
         FillerKind fillerKind,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
@@ -77,6 +81,11 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         {
             foreach (MediaItem mediaItem in enumerator.Current)
             {
+                if (guideGroupPerItem)
+                {
+                    context.GuideGroup *= -1;
+                }
+
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
                 var playoutItem = new PlayoutItem
@@ -151,6 +160,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     foreach (IMediaCollectionEnumerator fallback in fallbackEnumerator)
                     {
                         remainingToFill = TimeSpan.Zero;
+                        context.CurrentTime = targetTime;
                         done = true;
 
                         // replace with fallback content
@@ -187,6 +197,6 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
             }
         }
 
-        return targetTime;
+        return offlineTail ? targetTime : context.CurrentTime;
     }
 }

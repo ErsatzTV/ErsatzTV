@@ -68,6 +68,8 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
                 targetTime,
                 padUntil.DiscardAttempts,
                 padUntil.Trim,
+                offlineTail: true,
+                guideGroupPerItem: false,
                 GetFillerKind(padUntil),
                 enumerator,
                 fallbackEnumerator);
