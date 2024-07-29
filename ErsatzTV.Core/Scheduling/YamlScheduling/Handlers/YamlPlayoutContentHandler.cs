@@ -23,6 +23,11 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(contentKey))
+        {
+            return Option<IMediaCollectionEnumerator>.None;
+        }
+
         Option<IMediaCollectionEnumerator> maybeEnumerator = await enumeratorCache.GetCachedEnumeratorForContent(
             context,
             contentKey,

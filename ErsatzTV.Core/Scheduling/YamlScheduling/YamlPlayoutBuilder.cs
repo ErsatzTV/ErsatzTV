@@ -91,6 +91,8 @@ public class YamlPlayoutBuilder(
             }
 
             YamlPlayoutInstruction instruction = playoutDefinition.Playout[context.InstructionIndex];
+            //logger.LogDebug("Current playout instruction: {Instruction}", instruction.GetType().Name);
+
             Option<IYamlPlayoutHandler> maybeHandler = GetHandlerForInstruction(handlers, enumeratorCache, instruction);
 
             foreach (IYamlPlayoutHandler handler in maybeHandler)
@@ -103,6 +105,7 @@ public class YamlPlayoutBuilder(
 
             if (!instruction.ChangesIndex)
             {
+                //logger.LogDebug("Moving to next instruction");
                 context.InstructionIndex++;
             }
         }
@@ -174,6 +177,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutCountInstruction => new YamlPlayoutCountHandler(enumeratorCache),
             YamlPlayoutDurationInstruction => new YamlPlayoutDurationHandler(enumeratorCache),
             YamlPlayoutPadToNextInstruction => new YamlPlayoutPadToNextHandler(enumeratorCache),
+            YamlPlayoutPadUntilInstruction => new YamlPlayoutPadUntilHandler(enumeratorCache),
 
             _ => null
         };
@@ -186,42 +190,51 @@ public class YamlPlayoutBuilder(
         return Optional(handler);
     }
 
-    private static async Task<YamlPlayoutDefinition> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)
+    private async Task<YamlPlayoutDefinition> LoadYamlDefinition(Playout playout, CancellationToken cancellationToken)
     {
-        string yaml = await File.ReadAllTextAsync(playout.TemplateFile, cancellationToken);
+        try
+        {
+            string yaml = await File.ReadAllTextAsync(playout.TemplateFile, cancellationToken);
 
-        IDeserializer deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .WithTypeDiscriminatingNodeDeserializer(
-                o =>
-                {
-                    var contentKeyMappings = new Dictionary<string, Type>
+            IDeserializer deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .WithTypeDiscriminatingNodeDeserializer(
+                    o =>
                     {
-                        { "search", typeof(YamlPlayoutContentSearchItem) },
-                        { "show", typeof(YamlPlayoutContentShowItem) }
-                    };
+                        var contentKeyMappings = new Dictionary<string, Type>
+                        {
+                            { "search", typeof(YamlPlayoutContentSearchItem) },
+                            { "show", typeof(YamlPlayoutContentShowItem) }
+                        };
 
-                    o.AddUniqueKeyTypeDiscriminator<YamlPlayoutContentItem>(contentKeyMappings);
+                        o.AddUniqueKeyTypeDiscriminator<YamlPlayoutContentItem>(contentKeyMappings);
 
-                    var instructionKeyMappings = new Dictionary<string, Type>
-                    {
-                        { "all", typeof(YamlPlayoutAllInstruction) },
-                        { "count", typeof(YamlPlayoutCountInstruction) },
-                        { "duration", typeof(YamlPlayoutDurationInstruction) },
-                        { "new_epg_group", typeof(YamlPlayoutNewEpgGroupInstruction) },
-                        { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
-                        { "repeat", typeof(YamlPlayoutRepeatInstruction) },
-                        { "sequence", typeof(YamlPlayoutSequenceInstruction) },
-                        { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
-                        { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
-                        { "skip_to_item", typeof(YamlPlayoutSkipToItemInstruction) },
-                        { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
-                    };
+                        var instructionKeyMappings = new Dictionary<string, Type>
+                        {
+                            { "all", typeof(YamlPlayoutAllInstruction) },
+                            { "count", typeof(YamlPlayoutCountInstruction) },
+                            { "duration", typeof(YamlPlayoutDurationInstruction) },
+                            { "new_epg_group", typeof(YamlPlayoutNewEpgGroupInstruction) },
+                            { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
+                            { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
+                            { "repeat", typeof(YamlPlayoutRepeatInstruction) },
+                            { "sequence", typeof(YamlPlayoutSequenceInstruction) },
+                            { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
+                            { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
+                            { "skip_to_item", typeof(YamlPlayoutSkipToItemInstruction) },
+                            { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
+                        };
 
-                    o.AddUniqueKeyTypeDiscriminator<YamlPlayoutInstruction>(instructionKeyMappings);
-                })
-            .Build();
+                        o.AddUniqueKeyTypeDiscriminator<YamlPlayoutInstruction>(instructionKeyMappings);
+                    })
+                .Build();
 
-        return deserializer.Deserialize<YamlPlayoutDefinition>(yaml);
+            return deserializer.Deserialize<YamlPlayoutDefinition>(yaml);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Error loading YAML");
+            throw;
+        }
     }
 }
