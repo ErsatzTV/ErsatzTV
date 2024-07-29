@@ -23,7 +23,7 @@ public class YamlPlayoutRepeatHandler : IYamlPlayoutHandler
         if (_itemsSinceLastRepeat == context.Playout.Items.Count)
         {
             logger.LogWarning("Repeat encountered without adding any playout items; aborting");
-            return Task.FromResult(false);
+            throw new InvalidOperationException("YAML playout loop detected");
         }
 
         _itemsSinceLastRepeat = context.Playout.Items.Count;
