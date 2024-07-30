@@ -307,7 +307,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.Distinct().ToList();
     }
 
-    public async Task<List<MediaItem>> GetCollectionItemsByCollectionName(string name)
+    public async Task<List<MediaItem>> GetCollectionItemsByName(string name)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
@@ -363,6 +363,23 @@ public class MediaCollectionRepository : IMediaCollectionRepository
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
             .SelectOneAsync(sc => sc.Id, sc => sc.Id == id);
+
+        foreach (SmartCollection collection in maybeCollection)
+        {
+            return await GetSmartCollectionItems(collection.Query);
+        }
+
+        return [];
+    }
+
+    public async Task<List<MediaItem>> GetSmartCollectionItemsByName(string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
+            .SelectOneAsync(
+                sc => sc.Name,
+                sc => EF.Functions.Collate(sc.Name, TvContext.CaseInsensitiveCollation) == name);
 
         foreach (SmartCollection collection in maybeCollection)
         {

@@ -70,7 +70,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                     show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
                 break;
             case YamlPlayoutContentCollectionItem collection:
-                items = await mediaCollectionRepository.GetCollectionItemsByCollectionName(collection.Collection);
+                items = await mediaCollectionRepository.GetCollectionItemsByName(collection.Collection);
+                break;
+            case YamlPlayoutContentSmartCollectionItem smartCollection:
+                items = await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollection.SmartCollection);
                 break;
         }
 

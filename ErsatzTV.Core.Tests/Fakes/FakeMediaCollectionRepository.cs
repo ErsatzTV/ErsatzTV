@@ -20,7 +20,7 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
         throw new NotSupportedException();
 
     public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
-    public Task<List<MediaItem>> GetCollectionItemsByCollectionName(string name) => throw new NotSupportedException();
+    public Task<List<MediaItem>> GetCollectionItemsByName(string name) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetMultiCollectionItems(int id) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetSmartCollectionItems(int id) => _data[id].ToList().AsTask();
     public Task<List<MediaItem>> GetSmartCollectionItems(string query) => throw new NotSupportedException();

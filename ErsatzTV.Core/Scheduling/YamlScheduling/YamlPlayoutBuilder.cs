@@ -282,7 +282,8 @@ public class YamlPlayoutBuilder(
                         {
                             { "collection", typeof(YamlPlayoutContentCollectionItem) },
                             { "search", typeof(YamlPlayoutContentSearchItem) },
-                            { "show", typeof(YamlPlayoutContentShowItem) }
+                            { "show", typeof(YamlPlayoutContentShowItem) },
+                            { "smart_collection", typeof(YamlPlayoutContentSmartCollectionItem) }
                         };
 
                         o.AddUniqueKeyTypeDiscriminator<YamlPlayoutContentItem>(contentKeyMappings);
