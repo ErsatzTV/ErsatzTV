@@ -307,6 +307,21 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.Distinct().ToList();
     }
 
+    public async Task<List<MediaItem>> GetCollectionItemsByCollectionName(string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<Collection> maybeCollection = await dbContext.Collections
+            .SelectOneAsync(c => c.Name, c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation) == name);
+
+        foreach (Collection collection in maybeCollection)
+        {
+            return await GetItems(collection.Id);
+        }
+
+        return [];
+    }
+
     public async Task<List<MediaItem>> GetMultiCollectionItems(int id)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

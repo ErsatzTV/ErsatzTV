@@ -9,6 +9,7 @@ public interface IMediaCollectionRepository
     Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist);
     Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id);
     Task<List<MediaItem>> GetItems(int id);
+    Task<List<MediaItem>> GetCollectionItemsByCollectionName(string name);
     Task<List<MediaItem>> GetMultiCollectionItems(int id);
     Task<List<MediaItem>> GetSmartCollectionItems(int id);
     Task<List<MediaItem>> GetSmartCollectionItems(string query);

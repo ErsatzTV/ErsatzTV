@@ -280,6 +280,7 @@ public class YamlPlayoutBuilder(
                     {
                         var contentKeyMappings = new Dictionary<string, Type>
                         {
+                            { "collection", typeof(YamlPlayoutContentCollectionItem) },
                             { "search", typeof(YamlPlayoutContentSearchItem) },
                             { "show", typeof(YamlPlayoutContentShowItem) }
                         };

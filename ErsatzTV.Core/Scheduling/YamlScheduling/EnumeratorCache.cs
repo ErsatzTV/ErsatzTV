@@ -69,6 +69,9 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 items = await mediaCollectionRepository.GetShowItemsByShowGuids(
                     show.Guids.Map(g => $"{g.Source}://{g.Value}").ToList());
                 break;
+            case YamlPlayoutContentCollectionItem collection:
+                items = await mediaCollectionRepository.GetCollectionItemsByCollectionName(collection.Collection);
+                break;
         }
 
         _mediaItems[content.Key] = items;
