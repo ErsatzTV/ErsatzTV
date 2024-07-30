@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using ErsatzTV.Core.Scheduling.BlockScheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
@@ -48,7 +49,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
     private async Task<Option<IMediaCollectionEnumerator>> GetEnumeratorForContent(
         YamlPlayoutContext context,
         string contentKey,
-        CancellationToken cancellationToken)
+        CancellationToken _)
     {
         int index = context.Definition.Content.FindIndex(c => c.Key == contentKey);
         if (index < 0)
@@ -82,7 +83,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 List<GroupedMediaItem> groupedMediaItems = keepMultiPartEpisodesTogether
                     ? MultiPartEpisodeGrouper.GroupMediaItems(items, treatCollectionsAsShows: false)
                     : items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-                return new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, cancellationToken);
+                return new BlockPlayoutShuffledMediaCollectionEnumerator(groupedMediaItems, state);
         }
 
         return Option<IMediaCollectionEnumerator>.None;
