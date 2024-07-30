@@ -155,6 +155,21 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result;
     }
 
+    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(string groupName, string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<Playlist> maybePlaylist = await dbContext.Playlists
+            .SelectOneAsync(p => p.Name, p => EF.Functions.Collate(p.Name, TvContext.CaseInsensitiveCollation) == name);
+
+        foreach (Playlist playlist in maybePlaylist)
+        {
+            return await GetPlaylistItemMap(playlist.Id);
+        }
+
+        return [];
+    }
+
     public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

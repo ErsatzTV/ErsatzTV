@@ -13,6 +13,9 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(int playlistId) =>
         throw new NotSupportedException();
 
+    public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(string groupName, string name) =>
+        throw new NotSupportedException();
+
     public Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist) =>
         throw new NotSupportedException();
 
@@ -23,10 +26,8 @@ public class FakeMediaCollectionRepository : IMediaCollectionRepository
     public Task<List<MediaItem>> GetCollectionItemsByName(string name) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetMultiCollectionItems(int id) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetMultiCollectionItemsByName(string name) => throw new NotSupportedException();
-
     public Task<List<MediaItem>> GetSmartCollectionItems(int id) => _data[id].ToList().AsTask();
     public Task<List<MediaItem>> GetSmartCollectionItemsByName(string name) => throw new NotSupportedException();
-
     public Task<List<MediaItem>> GetSmartCollectionItems(string query) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetShowItemsByShowGuids(List<string> guids) => throw new NotSupportedException();
     public Task<List<MediaItem>> GetPlaylistItems(int id) => throw new NotSupportedException();

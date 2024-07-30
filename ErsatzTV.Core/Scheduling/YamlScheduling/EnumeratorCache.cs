@@ -3,10 +3,11 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
-public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepository)
+public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepository, ILogger logger)
 {
     private readonly Dictionary<string, List<MediaItem>> _mediaItems = new();
     private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
@@ -49,7 +50,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
     private async Task<Option<IMediaCollectionEnumerator>> GetEnumeratorForContent(
         YamlPlayoutContext context,
         string contentKey,
-        CancellationToken _)
+        CancellationToken cancellationToken)
     {
         int index = context.Definition.Content.FindIndex(c => c.Key == contentKey);
         if (index < 0)
@@ -78,11 +79,34 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             case YamlPlayoutContentMultiCollectionItem multiCollection:
                 items = await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollection.MultiCollection);
                 break;
+            // playlist is handled later
         }
 
         _mediaItems[content.Key] = items;
 
         var state = new CollectionEnumeratorState { Seed = context.Playout.Seed + index, Index = 0 };
+
+        // playlist is a special case that needs to be handled on its own
+        if (content is YamlPlayoutContentPlaylistItem playlist)
+        {
+            if (!string.IsNullOrWhiteSpace(playlist.Order))
+            {
+                logger.LogWarning(
+                    "Ignoring playback order {Order} for playlist {Playlist}",
+                    playlist.Order,
+                    playlist.Playlist);
+            }
+
+            Dictionary<PlaylistItem, List<MediaItem>> itemMap =
+                await mediaCollectionRepository.GetPlaylistItemMap(playlist.PlaylistGroup, playlist.Playlist);
+
+            return await PlaylistEnumerator.Create(
+                mediaCollectionRepository,
+                itemMap,
+                state,
+                cancellationToken);
+        }
+
         switch (Enum.Parse<PlaybackOrder>(content.Order, true))
         {
             case PlaybackOrder.Chronological:

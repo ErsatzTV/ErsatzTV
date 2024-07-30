@@ -35,7 +35,7 @@ public class YamlPlayoutBuilder(
         DateTimeOffset finish = start.AddDays(daysToBuild);
 
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
-        var enumeratorCache = new EnumeratorCache(mediaCollectionRepository);
+        var enumeratorCache = new EnumeratorCache(mediaCollectionRepository, logger);
 
         var context = new YamlPlayoutContext(playout, playoutDefinition, guideGroup: 1)
         {
@@ -282,6 +282,7 @@ public class YamlPlayoutBuilder(
                         {
                             { "collection", typeof(YamlPlayoutContentCollectionItem) },
                             { "multi_collection", typeof(YamlPlayoutContentMultiCollectionItem) },
+                            { "playlist", typeof(YamlPlayoutContentPlaylistItem) },
                             { "search", typeof(YamlPlayoutContentSearchItem) },
                             { "show", typeof(YamlPlayoutContentShowItem) },
                             { "smart_collection", typeof(YamlPlayoutContentSmartCollectionItem) }
