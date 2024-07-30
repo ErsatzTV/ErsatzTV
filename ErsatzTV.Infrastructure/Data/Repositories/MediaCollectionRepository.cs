@@ -155,6 +155,21 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result;
     }
 
+    public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(string groupName, string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<Playlist> maybePlaylist = await dbContext.Playlists
+            .SelectOneAsync(p => p.Name, p => EF.Functions.Collate(p.Name, TvContext.CaseInsensitiveCollation) == name);
+
+        foreach (Playlist playlist in maybePlaylist)
+        {
+            return await GetPlaylistItemMap(playlist.Id);
+        }
+
+        return [];
+    }
+
     public async Task<Dictionary<PlaylistItem, List<MediaItem>>> GetPlaylistItemMap(Playlist playlist)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -307,6 +322,21 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.Distinct().ToList();
     }
 
+    public async Task<List<MediaItem>> GetCollectionItemsByName(string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<Collection> maybeCollection = await dbContext.Collections
+            .SelectOneAsync(c => c.Name, c => EF.Functions.Collate(c.Name, TvContext.CaseInsensitiveCollation) == name);
+
+        foreach (Collection collection in maybeCollection)
+        {
+            return await GetItems(collection.Id);
+        }
+
+        return [];
+    }
+
     public async Task<List<MediaItem>> GetMultiCollectionItems(int id)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -342,12 +372,46 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return result.DistinctBy(x => x.Id).ToList();
     }
 
+    public async Task<List<MediaItem>> GetMultiCollectionItemsByName(string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<MultiCollection> maybeCollection = await dbContext.MultiCollections
+            .SelectOneAsync(
+                mc => mc.Name,
+                mc => EF.Functions.Collate(mc.Name, TvContext.CaseInsensitiveCollation) == name);
+
+        foreach (MultiCollection collection in maybeCollection)
+        {
+            return await GetMultiCollectionItems(collection.Id);
+        }
+
+        return [];
+    }
+
     public async Task<List<MediaItem>> GetSmartCollectionItems(int id)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
             .SelectOneAsync(sc => sc.Id, sc => sc.Id == id);
+
+        foreach (SmartCollection collection in maybeCollection)
+        {
+            return await GetSmartCollectionItems(collection.Query);
+        }
+
+        return [];
+    }
+
+    public async Task<List<MediaItem>> GetSmartCollectionItemsByName(string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
+            .SelectOneAsync(
+                sc => sc.Name,
+                sc => EF.Functions.Collate(sc.Name, TvContext.CaseInsensitiveCollation) == name);
 
         foreach (SmartCollection collection in maybeCollection)
         {
