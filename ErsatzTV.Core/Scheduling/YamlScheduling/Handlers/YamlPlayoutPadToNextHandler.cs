@@ -60,6 +60,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 padToNext.Trim,
                 offlineTail: true,
                 GetFillerKind(padToNext),
+                padToNext.CustomTitle,
                 enumerator,
                 fallbackEnumerator);
 

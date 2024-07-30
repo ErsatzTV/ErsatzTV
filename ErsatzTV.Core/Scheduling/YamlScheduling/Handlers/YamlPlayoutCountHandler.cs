@@ -42,7 +42,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         InPoint = TimeSpan.Zero,
                         OutPoint = itemDuration,
                         FillerKind = GetFillerKind(count),
-                        //CustomTitle = scheduleItem.CustomTitle,
+                        CustomTitle = string.IsNullOrWhiteSpace(count.CustomTitle) ? null : count.CustomTitle,
                         //WatermarkId = scheduleItem.WatermarkId,
                         //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,

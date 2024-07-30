@@ -70,6 +70,7 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
                 padUntil.Trim,
                 offlineTail: true,
                 GetFillerKind(padUntil),
+                padUntil.CustomTitle,
                 enumerator,
                 fallbackEnumerator);
 
