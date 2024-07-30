@@ -52,6 +52,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 duration.Trim,
                 duration.OfflineTail,
                 GetFillerKind(duration),
+                duration.CustomTitle,
                 enumerator,
                 fallbackEnumerator);
 
@@ -70,6 +71,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         bool trim,
         bool offlineTail,
         FillerKind fillerKind,
+        string customTitle,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator)
     {
@@ -89,7 +91,8 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
                     GuideGroup = context.NextGuideGroup(),
-                    FillerKind = fillerKind
+                    FillerKind = fillerKind,
+                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle
                     //DisableWatermarks = !allowWatermarks
                 };
 

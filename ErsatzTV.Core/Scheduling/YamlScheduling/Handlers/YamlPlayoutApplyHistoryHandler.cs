@@ -53,11 +53,17 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
             {
                 logger.LogDebug("History is applicable: {When}: {History}", h.When, h.Details);
 
-                HistoryDetails.MoveToNextItem(
-                    collectionItems,
-                    h.Details,
-                    enumerator,
-                    playbackOrder);
+                enumerator.ResetState(
+                    new CollectionEnumeratorState { Seed = enumerator.State.Seed, Index = h.Index + 1 });
+
+                if (playbackOrder is PlaybackOrder.Chronological)
+                {
+                    HistoryDetails.MoveToNextItem(
+                        collectionItems,
+                        h.Details,
+                        enumerator,
+                        playbackOrder);
+                }
             }
         }
 

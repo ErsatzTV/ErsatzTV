@@ -11,6 +11,9 @@ public class YamlPlayoutInstruction
     [YamlMember(Alias = "filler_kind", ApplyNamingConventions = false)]
     public string FillerKind { get; set; }
 
+    [YamlMember(Alias = "custom_title", ApplyNamingConventions = false)]
+    public string CustomTitle { get; set; }
+
     [YamlIgnore]
     public string SequenceKey { get; set; }
 
