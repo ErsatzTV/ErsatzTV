@@ -1,6 +1,7 @@
 ﻿@using ErsatzTV.Application.MediaCards
 @using static Prelude
 @inject IMediator Mediator
+@inject NavigationManager NavigationManager
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
     @if (SelectClicked.HasDelegate || !string.IsNullOrWhiteSpace(Href))
@@ -36,9 +37,8 @@
                 </div>
             }
             <div class="media-card-overlay" style="">
-                <MudButton Href="@(IsSelectMode ? null : Href)"
-                           Style="height: 100%; width: 100%"
-                           OnClick="@(e => IsSelectMode || string.IsNullOrWhiteSpace(Href) ? SelectClicked.InvokeAsync(e) : Task.CompletedTask)">
+                <MudButton Style="height: 100%; width: 100%"
+                           OnClick="OnOverlayClick">
                 </MudButton>
                 @if (SelectClicked.HasDelegate)
                 {
@@ -162,4 +162,15 @@
         _ => "posters"
     };
 
+    private void OnOverlayClick(MouseEventArgs e)
+    {
+        if (IsSelectMode || string.IsNullOrWhiteSpace(Href))
+        {
+            SelectClicked.InvokeAsync(e);
+        }
+        else
+        {
+            NavigationManager.NavigateTo(Href);
+        }
+    }
 }
