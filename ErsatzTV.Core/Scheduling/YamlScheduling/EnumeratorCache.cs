@@ -79,12 +79,50 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             case YamlPlayoutContentMultiCollectionItem multiCollection:
                 items = await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollection.MultiCollection);
                 break;
+
             // playlist is handled later
         }
 
         _mediaItems[content.Key] = items;
 
         var state = new CollectionEnumeratorState { Seed = context.Playout.Seed + index, Index = 0 };
+
+        // marathon is a special case that needs to be handled on its own
+        if (content is YamlPlayoutContentMarathonItem marathon)
+        {
+            if (!Enum.TryParse(marathon.ItemOrder, true, out PlaybackOrder playbackOrder))
+            {
+                playbackOrder = PlaybackOrder.Shuffle;
+            }
+
+            var allMediaItems = new List<MediaItem>();
+
+            // grab items from each show guid
+            foreach (string showGuid in marathon.Guids.Map(g => $"{g.Source}://{g.Value}"))
+            {
+                allMediaItems.AddRange(await mediaCollectionRepository.GetShowItemsByShowGuids([showGuid]));
+            }
+
+            // TODO: support different group_by
+
+            var groups = allMediaItems
+                .GroupBy(MediaItemKeyByShow)
+                .ToList();
+
+            Dictionary<PlaylistItem, List<MediaItem>> itemMap = [];
+
+            foreach (IGrouping<int, MediaItem> group in groups)
+            {
+                PlaylistItem playlistItem = GroupToPlaylistItem(marathon, playbackOrder, group);
+                itemMap.Add(playlistItem, group.ToList());
+            }
+
+            return await PlaylistEnumerator.Create(
+                mediaCollectionRepository,
+                itemMap,
+                state,
+                cancellationToken);
+        }
 
         // playlist is a special case that needs to be handled on its own
         if (content is YamlPlayoutContentPlaylistItem playlist)
@@ -121,4 +159,28 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
 
         return Option<IMediaCollectionEnumerator>.None;
     }
+
+    private int MediaItemKeyByShow(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            Episode e => e.Season?.ShowId ?? 0,
+            _ => 0
+        };
+
+    private static PlaylistItem GroupToPlaylistItem(
+        YamlPlayoutContentMarathonItem marathon,
+        PlaybackOrder playbackOrder,
+        IGrouping<int, MediaItem> group) =>
+        new()
+        {
+            Index = group.Key,
+
+            CollectionType = ProgramScheduleItemCollectionType.TelevisionShow,
+            MediaItemId = group.Key,
+
+            PlayAll = marathon.PlayAllItems,
+            PlaybackOrder = playbackOrder,
+
+            IncludeInProgramGuide = true
+        };
 }
