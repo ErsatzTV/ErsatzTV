@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
-public class YamlPlayoutNewEpgGroupHandler : IYamlPlayoutHandler
+public class YamlPlayoutEpgGroupHandler : IYamlPlayoutHandler
 {
     public bool Reset => false;
 
@@ -13,12 +13,20 @@ public class YamlPlayoutNewEpgGroupHandler : IYamlPlayoutHandler
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
-        if (instruction is not YamlPlayoutNewEpgGroupInstruction)
+        if (instruction is not YamlPlayoutEpgGroupInstruction epgGroup)
         {
             return Task.FromResult(false);
         }
 
-        // context.NextGuideGroup() *= -1;
+        if (epgGroup.EpgGroup)
+        {
+            context.LockGuideGroup();
+        }
+        else
+        {
+            context.UnlockGuideGroup();
+        }
+
         return Task.FromResult(true);
     }
 }

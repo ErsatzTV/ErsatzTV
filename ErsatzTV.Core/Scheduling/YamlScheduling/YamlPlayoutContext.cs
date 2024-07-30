@@ -7,6 +7,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 {
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
     private int _instructionIndex;
+    private bool _guideGroupLocked;
 
     public Playout Playout { get; } = playout;
 
@@ -28,6 +29,11 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public int NextGuideGroup()
     {
+        if (_guideGroupLocked)
+        {
+            return guideGroup;
+        }
+
         guideGroup++;
         if (guideGroup > 1000)
         {
@@ -35,5 +41,16 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
         }
 
         return guideGroup;
+    }
+
+    public void LockGuideGroup()
+    {
+        NextGuideGroup();
+        _guideGroupLocked = true;
+    }
+
+    public void UnlockGuideGroup()
+    {
+        _guideGroupLocked = false;
     }
 }

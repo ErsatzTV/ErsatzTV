@@ -213,6 +213,12 @@ public class YamlPlayoutBuilder(
                         i.SequenceKey = sequenceInstruction.Sequence;
                         i.SequenceGuid = sequenceGuid;
 
+                        // copy custom title
+                        if (!string.IsNullOrWhiteSpace(sequenceInstruction.CustomTitle))
+                        {
+                            i.CustomTitle = sequenceInstruction.CustomTitle;
+                        }
+
                         context.Definition.Playout.Add(i);
                     }
                     break;
@@ -237,7 +243,7 @@ public class YamlPlayoutBuilder(
         {
             YamlPlayoutRepeatInstruction => new YamlPlayoutRepeatHandler(),
             YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
-            YamlPlayoutNewEpgGroupInstruction => new YamlPlayoutNewEpgGroupHandler(),
+            YamlPlayoutEpgGroupInstruction => new YamlPlayoutEpgGroupHandler(),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
 
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
@@ -285,7 +291,7 @@ public class YamlPlayoutBuilder(
                             { "all", typeof(YamlPlayoutAllInstruction) },
                             { "count", typeof(YamlPlayoutCountInstruction) },
                             { "duration", typeof(YamlPlayoutDurationInstruction) },
-                            { "new_epg_group", typeof(YamlPlayoutNewEpgGroupInstruction) },
+                            { "epg_group", typeof(YamlPlayoutEpgGroupInstruction) },
                             { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                             { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
                             { "repeat", typeof(YamlPlayoutRepeatInstruction) },
