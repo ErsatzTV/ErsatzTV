@@ -281,6 +281,7 @@ public class YamlPlayoutBuilder(
                         var contentKeyMappings = new Dictionary<string, Type>
                         {
                             { "collection", typeof(YamlPlayoutContentCollectionItem) },
+                            { "multi_collection", typeof(YamlPlayoutContentMultiCollectionItem) },
                             { "search", typeof(YamlPlayoutContentSearchItem) },
                             { "show", typeof(YamlPlayoutContentShowItem) },
                             { "smart_collection", typeof(YamlPlayoutContentSmartCollectionItem) }

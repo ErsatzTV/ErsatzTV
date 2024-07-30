@@ -11,6 +11,7 @@ public interface IMediaCollectionRepository
     Task<List<MediaItem>> GetItems(int id);
     Task<List<MediaItem>> GetCollectionItemsByName(string name);
     Task<List<MediaItem>> GetMultiCollectionItems(int id);
+    Task<List<MediaItem>> GetMultiCollectionItemsByName(string name);
     Task<List<MediaItem>> GetSmartCollectionItems(int id);
     Task<List<MediaItem>> GetSmartCollectionItemsByName(string name);
     Task<List<MediaItem>> GetSmartCollectionItems(string query);

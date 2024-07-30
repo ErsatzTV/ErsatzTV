@@ -75,6 +75,9 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             case YamlPlayoutContentSmartCollectionItem smartCollection:
                 items = await mediaCollectionRepository.GetSmartCollectionItemsByName(smartCollection.SmartCollection);
                 break;
+            case YamlPlayoutContentMultiCollectionItem multiCollection:
+                items = await mediaCollectionRepository.GetMultiCollectionItemsByName(multiCollection.MultiCollection);
+                break;
         }
 
         _mediaItems[content.Key] = items;
