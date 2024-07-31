@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Language codes where an English name cannot be found will be at the bottom of the list
 - Fix local libraries to detect external subtitle files with unrecognized language codes
 - Fix playback selection of subtitles with unrecognized language codes
+- Fix incorrectly removing block items that are hidden from EPG when deco filler is applied
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging

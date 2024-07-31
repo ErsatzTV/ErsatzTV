@@ -25,7 +25,10 @@ public class BlockPlayoutFillerBuilder(
         if (mode is PlayoutBuildMode.Reset)
         {
             // remove all playout items with type filler
-            var toRemove = playout.Items.Where(pi => pi.FillerKind is not FillerKind.None).ToList();
+            // except block items that are hidden from the guide (guide mode)
+            var toRemove = playout.Items
+                .Where(pi => pi.FillerKind is not FillerKind.None and not FillerKind.GuideMode)
+                .ToList();
             foreach (PlayoutItem playoutItem in toRemove)
             {
                 BlockPlayoutChangeDetection.RemoveItemAndHistory(playout, playoutItem);
