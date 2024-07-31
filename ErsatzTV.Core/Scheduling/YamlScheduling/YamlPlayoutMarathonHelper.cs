@@ -48,6 +48,11 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByArtist));
         }
+        // group by album
+        else if (string.Equals(marathon.GroupBy, "album", StringComparison.OrdinalIgnoreCase))
+        {
+            groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByAlbum));
+        }
 
         Dictionary<PlaylistItem, List<MediaItem>> itemMap = [];
 
@@ -99,6 +104,18 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
                 null,
                 mv.ArtistId),
             _ => new GroupKey(ProgramScheduleItemCollectionType.Artist, null, null, null, 0)
+        };
+
+    private static GroupKey MediaItemKeyByAlbum(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            Song s => new GroupKey(
+                ProgramScheduleItemCollectionType.Collection,
+                s.SongMetadata.HeadOrNone().Map(sm => sm.Album.GetHashCode()).IfNone(0),
+                null,
+                null,
+                null),
+            _ => new GroupKey(ProgramScheduleItemCollectionType.Collection, 0, null, null, null)
         };
 
     private static PlaylistItem GroupToPlaylistItem(
