@@ -47,6 +47,11 @@ public class BlockPlayoutFillerBuilder(
             DateTimeOffset start = one.FinishOffset;
             DateTimeOffset finish = two.StartOffset;
 
+            if (start == finish)
+            {
+                continue;
+            }
+
             // find applicable deco
             foreach (Deco deco in GetDecoFor(playout, start))
             {
@@ -163,7 +168,7 @@ public class BlockPlayoutFillerBuilder(
             {
                 foreach (DecoTemplateItem decoTemplateItem in template.DecoTemplate.Items)
                 {
-                    if (decoTemplateItem.StartTime <= start.TimeOfDay && decoTemplateItem.EndTime > start.TimeOfDay)
+                    if (decoTemplateItem.StartTime <= start.TimeOfDay && decoTemplateItem.EndTime == TimeSpan.Zero || decoTemplateItem.EndTime > start.TimeOfDay)
                     {
                         switch (decoTemplateItem.Deco.DefaultFillerMode)
                         {

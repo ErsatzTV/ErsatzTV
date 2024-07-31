@@ -766,7 +766,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         {
             Option<DecoTemplateItem> maybeItem = Optional(activeTemplate.DecoTemplate)
                 .SelectMany(dt => dt.Items)
-                .Find(i => i.StartTime <= now.TimeOfDay && i.EndTime > now.TimeOfDay);
+                .Find(i => i.StartTime <= now.TimeOfDay && i.EndTime == TimeSpan.Zero || i.EndTime > now.TimeOfDay);
             foreach (DecoTemplateItem item in maybeItem)
             {
                 maybeTemplateDeco = Optional(item.Deco);
