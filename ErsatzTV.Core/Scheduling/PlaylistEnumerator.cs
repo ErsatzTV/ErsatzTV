@@ -24,7 +24,9 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public CollectionEnumeratorState State { get; private set; }
 
-    public Option<MediaItem> Current => _sortedEnumerators[_enumeratorIndex].Current;
+    public Option<MediaItem> Current => _sortedEnumerators.Count > 0
+        ? _sortedEnumerators[_enumeratorIndex].Current
+        : Option<MediaItem>.None;
 
     public Option<bool> CurrentIncludeInProgramGuide
     {

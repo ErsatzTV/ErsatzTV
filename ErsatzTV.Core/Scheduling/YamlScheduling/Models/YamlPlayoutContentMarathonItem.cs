@@ -8,6 +8,8 @@ public class YamlPlayoutContentMarathonItem : YamlPlayoutContentItem
 
     public List<YamlPlayoutContentGuid> Guids { get; set; } = [];
 
+    public List<string> Searches { get; set; } = [];
+
     [YamlMember(Alias = "group_by", ApplyNamingConventions = false)]
     public string GroupBy { get; set; }
 

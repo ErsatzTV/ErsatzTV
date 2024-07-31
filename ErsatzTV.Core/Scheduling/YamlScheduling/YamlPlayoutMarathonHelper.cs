@@ -25,6 +25,12 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
             allMediaItems.AddRange(await mediaCollectionRepository.GetShowItemsByShowGuids([showGuid]));
         }
 
+        // grab items from each search
+        foreach (string query in marathon.Searches)
+        {
+            allMediaItems.AddRange(await mediaCollectionRepository.GetSmartCollectionItems(query));
+        }
+
         List<IGrouping<GroupKey, MediaItem>> groups = [];
 
         // group by show
@@ -36,6 +42,16 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         else if (string.Equals(marathon.GroupBy, "season", StringComparison.OrdinalIgnoreCase))
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyBySeason));
+        }
+        // group by artist
+        else if (string.Equals(marathon.GroupBy, "artist", StringComparison.OrdinalIgnoreCase))
+        {
+            groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByArtist));
+        }
+        // group by album
+        else if (string.Equals(marathon.GroupBy, "album", StringComparison.OrdinalIgnoreCase))
+        {
+            groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByAlbum));
         }
 
         Dictionary<PlaylistItem, List<MediaItem>> itemMap = [];
@@ -76,6 +92,30 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
                 null,
                 e.SeasonId),
             _ => new GroupKey(ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, 0)
+        };
+
+    private static GroupKey MediaItemKeyByArtist(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            MusicVideo mv => new GroupKey(
+                ProgramScheduleItemCollectionType.Artist,
+                null,
+                null,
+                null,
+                mv.ArtistId),
+            _ => new GroupKey(ProgramScheduleItemCollectionType.Artist, null, null, null, 0)
+        };
+
+    private static GroupKey MediaItemKeyByAlbum(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            Song s => new GroupKey(
+                ProgramScheduleItemCollectionType.Collection,
+                s.SongMetadata.HeadOrNone().Map(sm => sm.Album.GetHashCode()).IfNone(0),
+                null,
+                null,
+                null),
+            _ => new GroupKey(ProgramScheduleItemCollectionType.Collection, 0, null, null, null)
         };
 
     private static PlaylistItem GroupToPlaylistItem(
