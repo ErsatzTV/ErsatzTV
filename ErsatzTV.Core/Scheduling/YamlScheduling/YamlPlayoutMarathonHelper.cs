@@ -43,6 +43,11 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         {
             groups.AddRange(allMediaItems.GroupBy(MediaItemKeyBySeason));
         }
+        // group by artist
+        else if (string.Equals(marathon.GroupBy, "artist", StringComparison.OrdinalIgnoreCase))
+        {
+            groups.AddRange(allMediaItems.GroupBy(MediaItemKeyByArtist));
+        }
 
         Dictionary<PlaylistItem, List<MediaItem>> itemMap = [];
 
@@ -82,6 +87,18 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
                 null,
                 e.SeasonId),
             _ => new GroupKey(ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, 0)
+        };
+
+    private static GroupKey MediaItemKeyByArtist(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            MusicVideo mv => new GroupKey(
+                ProgramScheduleItemCollectionType.Artist,
+                null,
+                null,
+                null,
+                mv.ArtistId),
+            _ => new GroupKey(ProgramScheduleItemCollectionType.Artist, null, null, null, 0)
         };
 
     private static PlaylistItem GroupToPlaylistItem(
