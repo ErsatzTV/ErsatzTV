@@ -68,6 +68,7 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
             mediaCollectionRepository,
             itemMap,
             state,
+            marathon.ShuffleGroups,
             cancellationToken);
     }
 

@@ -13,6 +13,9 @@ public class YamlPlayoutContentMarathonItem : YamlPlayoutContentItem
     [YamlMember(Alias = "group_by", ApplyNamingConventions = false)]
     public string GroupBy { get; set; }
 
+    [YamlMember(Alias = "shuffle_groups", ApplyNamingConventions = false)]
+    public bool ShuffleGroups { get; set; }
+
     [YamlMember(Alias = "item_order", ApplyNamingConventions = false)]
     public string ItemOrder { get; set; }
 

@@ -112,6 +112,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 mediaCollectionRepository,
                 itemMap,
                 state,
+                shufflePlaylistItems: false,
                 cancellationToken);
         }
 
