@@ -1,3 +1,4 @@
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
@@ -6,6 +7,9 @@ namespace ErsatzTV.Core.Images;
 
 public class ChannelLogoGenerator : IChannelLogoGenerator
 {
+    public const string GetRoute = "/iptv/logos/gen";
+    public const string GetRouteQueryParamName = "text";
+
     private readonly ILogger _logger;
 
     public ChannelLogoGenerator(
@@ -13,6 +17,9 @@ public class ChannelLogoGenerator : IChannelLogoGenerator
     {
         _logger = logger;
     }
+
+    public static Option<string> GenerateChannelLogoUrl(Channel channel) =>
+         $"http://localhost:{Settings.ListenPort}{GetRoute}?{GetRouteQueryParamName}={channel.WebEncodedName}";
 
     public Either<BaseError, byte[]> GenerateChannelLogo(
         string text,
