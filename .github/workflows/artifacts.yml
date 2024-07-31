@@ -100,6 +100,7 @@ jobs:
             --hide-extension "ErsatzTV.app" \
             --app-drop-link 600 185 \
             --skip-jenkins \
+            --no-internet-enable \
             "ErsatzTV.dmg" \
             "ErsatzTV.app/"
 
