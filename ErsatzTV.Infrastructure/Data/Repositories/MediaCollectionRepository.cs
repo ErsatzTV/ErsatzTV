@@ -1069,6 +1069,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Include(m => m.Artist)
             .ThenInclude(a => a.ArtistMetadata)
             .Include(m => m.MusicVideoMetadata)
+            .ThenInclude(mvm => mvm.Artists)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)

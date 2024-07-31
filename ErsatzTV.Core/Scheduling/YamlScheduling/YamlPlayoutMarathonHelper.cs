@@ -1,4 +1,5 @@
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
@@ -111,7 +112,14 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         {
             Song s => new GroupKey(
                 ProgramScheduleItemCollectionType.Collection,
-                s.SongMetadata.HeadOrNone().Map(sm => sm.Album.GetHashCode()).IfNone(0),
+                s.SongMetadata.HeadOrNone().Map(sm => sm.Album.GetStableHashCode()).IfNone(0),
+                null,
+                null,
+                null),
+            MusicVideo mv => new GroupKey(
+                ProgramScheduleItemCollectionType.Collection,
+                mv.MusicVideoMetadata.HeadOrNone()
+                    .Map(mvm => $"{mv.ArtistId}-${mvm.Album}".GetStableHashCode()).IfNone(0),
                 null,
                 null,
                 null),
