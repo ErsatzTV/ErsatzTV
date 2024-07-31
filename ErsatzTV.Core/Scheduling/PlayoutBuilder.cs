@@ -1020,6 +1020,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     _mediaCollectionRepository,
                     playlistItemMap,
                     state,
+                    shufflePlaylistItems: false,
                     cancellationToken);
             }
         }

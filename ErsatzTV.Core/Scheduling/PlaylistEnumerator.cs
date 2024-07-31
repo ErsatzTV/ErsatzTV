@@ -12,7 +12,9 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
     private int _enumeratorIndex;
     private System.Collections.Generic.HashSet<int> _idsToIncludeInEPG;
     private IList<bool> _playAll;
-    private IList<IMediaCollectionEnumerator> _sortedEnumerators;
+    private List<IMediaCollectionEnumerator> _sortedEnumerators;
+    private bool _shufflePlaylistItems;
+    private CloneableRandom _random;
 
     private PlaylistEnumerator()
     {
@@ -65,6 +67,13 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         {
             State.Index = 0;
             _remainingMediaItemIds.UnionWith(_allMediaItemIds);
+
+            if (_shufflePlaylistItems)
+            {
+                State.Seed = _random.Next();
+                _random = new CloneableRandom(State.Seed);
+                _sortedEnumerators = ShufflePlaylistItems();
+            }
         }
     }
 
@@ -72,13 +81,15 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         IMediaCollectionRepository mediaCollectionRepository,
         Dictionary<PlaylistItem, List<MediaItem>> playlistItemMap,
         CollectionEnumeratorState state,
+        bool shufflePlaylistItems,
         CancellationToken cancellationToken)
     {
         var result = new PlaylistEnumerator
         {
             _sortedEnumerators = [],
             _playAll = [],
-            _idsToIncludeInEPG = []
+            _idsToIncludeInEPG = [],
+            _shufflePlaylistItems = shufflePlaylistItems
         };
 
         // collections should share enumerators
@@ -165,6 +176,13 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             .OrderBy(identity)
             .HeadOrNone();
 
+        result._random = new CloneableRandom(state.Seed);
+
+        if (shufflePlaylistItems)
+        {
+            result._sortedEnumerators = result.ShufflePlaylistItems();
+        }
+
         result.State = new CollectionEnumeratorState { Seed = state.Seed };
         result._enumeratorIndex = 0;
 
@@ -180,5 +198,29 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
 
         return result;
+    }
+
+    private List<IMediaCollectionEnumerator> ShufflePlaylistItems()
+    {
+        if (_sortedEnumerators.Count < 3)
+        {
+            return _sortedEnumerators;
+        }
+
+        IMediaCollectionEnumerator[] copy = _sortedEnumerators.ToArray();
+        IMediaCollectionEnumerator last = _sortedEnumerators.Last();
+
+        do
+        {
+            int n = copy.Length;
+            while (n > 1)
+            {
+                n--;
+                int k = _random.Next(n + 1);
+                (copy[k], copy[n]) = (copy[n], copy[k]);
+            }
+        } while (copy.First() == last);
+
+        return copy.ToList();
     }
 }
