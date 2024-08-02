@@ -60,6 +60,7 @@ public class PlaylistEnumeratorTests
             repo,
             playlistItemMap,
             new CollectionEnumeratorState(),
+            shufflePlaylistItems: false,
             CancellationToken.None);
 
         enumerator.MoveNext();
@@ -123,6 +124,7 @@ public class PlaylistEnumeratorTests
             repo,
             playlistItemMap,
             new CollectionEnumeratorState(),
+            shufflePlaylistItems: false,
             CancellationToken.None);
 
         enumerator.MoveNext();
