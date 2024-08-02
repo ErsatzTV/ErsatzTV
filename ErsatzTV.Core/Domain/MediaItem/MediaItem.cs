@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.Core.Domain;
 
-public class MediaItem
+public abstract class MediaItem
 {
     public int Id { get; set; }
     public int LibraryPathId { get; set; }

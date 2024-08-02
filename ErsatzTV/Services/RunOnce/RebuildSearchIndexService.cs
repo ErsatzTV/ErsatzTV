@@ -25,6 +25,12 @@ public class RebuildSearchIndexService : BackgroundService
             return;
         }
 
+        await _systemStartup.WaitForDatabaseCleaned(stoppingToken);
+        if (stoppingToken.IsCancellationRequested)
+        {
+            return;
+        }
+
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         await mediator.Send(new RebuildSearchIndex(), stoppingToken);
