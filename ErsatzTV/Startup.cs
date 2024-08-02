@@ -710,6 +710,7 @@ public class Startup
         // run-once/blocking startup services
         services.AddHostedService<EndpointValidatorService>();
         services.AddHostedService<DatabaseMigratorService>();
+        services.AddHostedService<DatabaseCleanerService>();
         services.AddHostedService<LoadLoggingLevelService>();
         services.AddHostedService<CacheCleanerService>();
         services.AddHostedService<ResourceExtractorService>();

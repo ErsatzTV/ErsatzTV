@@ -50,7 +50,9 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
             .Include(mi => (mi as Show).ShowMetadata)
             .Include(mi => (mi as Season).Show)
             .ThenInclude(s => s.ShowMetadata)
-            .Include(mi => (mi as Season).SeasonMetadata);
+            .Include(mi => (mi as Season).SeasonMetadata)
+            .Include(mi => (mi as Image).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles);
 
         List<MediaItem> five = await mediaItems
             .OrderBy(mi => mi.Id)
