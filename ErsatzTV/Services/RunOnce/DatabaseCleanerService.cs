@@ -1,6 +1,10 @@
 using Dapper;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Services.RunOnce;
 
@@ -25,6 +29,16 @@ public class DatabaseCleanerService(
         using IServiceScope scope = serviceScopeFactory.CreateScope();
         await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
+        await DeleteInvalidMediaItems(dbContext);
+        await GenerateFallbackMetadata(scope, dbContext, stoppingToken);
+
+        systemStartup.DatabaseIsCleaned();
+
+        logger.LogInformation("Done cleaning database");
+    }
+
+    private static async Task DeleteInvalidMediaItems(TvContext dbContext)
+    {
         // some old version deleted items in a way that MediaItem was left over without
         // any corresponding Movie/Show/etc.
         // this cleans out that old invalid data
@@ -42,9 +56,31 @@ public class DatabaseCleanerService(
               and Id not in (select Id from Artist)
               and Id not in (select Id from Image)
             """);
+    }
 
-        systemStartup.DatabaseIsCleaned();
+    private static async Task GenerateFallbackMetadata(
+        IServiceScope scope,
+        TvContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        IFallbackMetadataProvider fallbackMetadataProvider =
+            scope.ServiceProvider.GetRequiredService<IFallbackMetadataProvider>();
 
-        logger.LogInformation("Done cleaning database");
+        List<Movie> movies = await dbContext.Movies
+            .Filter(m => m.MovieMetadata.Count == 0)
+            .Include(m => m.MovieMetadata)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .ToListAsync(cancellationToken);
+
+        foreach (Movie movie in movies)
+        {
+            MovieMetadata metadata = fallbackMetadataProvider.GetFallbackMetadata(movie);
+            metadata.SortTitle = SortTitle.GetSortTitle(metadata.Title);
+            movie.MovieMetadata ??= [];
+            movie.MovieMetadata.Add(metadata);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

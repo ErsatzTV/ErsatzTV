@@ -56,6 +56,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix incorrectly removing block items that are hidden from EPG when deco filler is applied
 - Fix deco selection when deco is scheduled until midnight
   - Previously, this deco item would be ignored so watermark and filler would be missing
+- Fix movies with missing medata by generating fallback metadata
+  - This allows these movies to appear in the Trash where they can be deleted
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging

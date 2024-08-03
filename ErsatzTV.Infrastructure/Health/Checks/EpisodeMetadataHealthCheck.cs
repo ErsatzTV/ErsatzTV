@@ -20,6 +20,7 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Episode> episodes = await dbContext.Episodes
+            .AsNoTracking()
             .Filter(e => e.EpisodeMetadata.Count == 0)
             .Include(e => e.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)

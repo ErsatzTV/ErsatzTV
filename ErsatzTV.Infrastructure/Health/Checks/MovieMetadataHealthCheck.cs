@@ -20,6 +20,7 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Movie> movies = await dbContext.Movies
+            .AsNoTracking()
             .Filter(e => e.MovieMetadata.Count == 0)
             .Include(e => e.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
