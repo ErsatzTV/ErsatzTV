@@ -58,6 +58,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Previously, this deco item would be ignored so watermark and filler would be missing
 - Fix movies with missing medata by generating fallback metadata
   - This allows these movies to appear in the Trash where they can be deleted
+- Fix synchronizing trakt lists from users with special characters in their username
+  - Note that these lists MUST be added as URLs; the short-form `user/list` will NOT work with special characters
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging

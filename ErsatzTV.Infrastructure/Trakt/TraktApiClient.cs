@@ -38,7 +38,10 @@ public class TraktApiClient : ITraktApiClient
             return new TraktList
             {
                 TraktId = response.Ids.Trakt,
-                User = response.User.Username,
+
+                // slug must be used here for proper URL generation
+                User = response.User.Ids.Slug,
+
                 List = response.Ids.Slug,
                 Name = response.Name,
                 Description = response.Description,
