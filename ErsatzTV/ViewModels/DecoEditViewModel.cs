@@ -11,6 +11,7 @@ public class DecoEditViewModel
     public string Name { get; set; }
     public DecoMode WatermarkMode { get; set; }
     public int? WatermarkId { get; set; }
+    public bool UseWatermarkDuringFiller { get; set; }
 
     public DecoMode DefaultFillerMode { get; set; }
     public ProgramScheduleItemCollectionType DefaultFillerCollectionType { get; set; }

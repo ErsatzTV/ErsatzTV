@@ -37,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - POST `/api/channels/{channelNumber}/playout/reset`
   - Scan library
     - POST `/api/libraries/{libraryId}/scan`
+- Add Deco setting to `Use Watermark During Filler`
+  - This setting is turned OFF by default, meaning filler will NOT use the configured watermark unless this is manually turned on
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs

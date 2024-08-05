@@ -45,6 +45,12 @@
                         <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
                     }
                 </MudSelect>
+                <MudSwitch T="bool"
+                           Class="mt-3"
+                           Disabled="@(_deco.WatermarkMode != DecoMode.Override)"
+                           @bind-Value="_deco.UseWatermarkDuringFiller"
+                           Color="Color.Primary"
+                           Label="Use Watermark During Filler"/>
             </MudCardContent>
         </MudCard>
         <MudCard Class="mb-6" Style="width: 350px">
@@ -159,7 +165,12 @@
                         }
                     </MudSelect>
                 }
-                <MudSwitch T="bool" Class="mt-3" Label="Trim To Fit" @bind-Value="_deco.DefaultFillerTrimToFit" Color="Color.Primary" />
+                <MudSwitch T="bool"
+                           Class="mt-3"
+                           Disabled="@(_deco.DefaultFillerMode != DecoMode.Override)"
+                           Label="Trim To Fit"
+                           @bind-Value="_deco.DefaultFillerTrimToFit"
+                           Color="Color.Primary" />
             </MudCardContent>
         </MudCard>
         <MudCard Class="mb-6" Style="width: 350px">
@@ -344,6 +355,7 @@
                 DecoGroupId = deco.DecoGroupId,
                 WatermarkMode = deco.WatermarkMode,
                 WatermarkId = deco.WatermarkId,
+                UseWatermarkDuringFiller = deco.UseWatermarkDuringFiller,
 
                 DefaultFillerMode = deco.DefaultFillerMode,
                 DefaultFillerCollectionType = deco.DefaultFillerCollectionType,
@@ -389,6 +401,7 @@
             _deco.Name,
             _deco.WatermarkMode,
             _deco.WatermarkId,
+            _deco.UseWatermarkDuringFiller,
             _deco.DefaultFillerMode,
             _deco.DefaultFillerCollectionType,
             _deco.DefaultFillerCollection?.Id,
