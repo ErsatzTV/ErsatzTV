@@ -56,6 +56,7 @@ internal static class Mapper
             deco.Name,
             deco.WatermarkMode,
             deco.WatermarkId,
+            deco.UseWatermarkDuringFiller,
             deco.DefaultFillerMode,
             deco.DefaultFillerCollectionType,
             deco.DefaultFillerCollectionId,

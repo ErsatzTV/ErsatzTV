@@ -12,6 +12,7 @@ public class Deco
     public DecoMode WatermarkMode { get; set; }
     public int? WatermarkId { get; set; }
     public ChannelWatermark Watermark { get; set; }
+    public bool UseWatermarkDuringFiller { get; set; }
 
     // default filler
     public DecoMode DefaultFillerMode { get; set; }

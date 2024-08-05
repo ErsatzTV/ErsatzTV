@@ -10,6 +10,7 @@ public record UpdateDeco(
     string Name,
     DecoMode WatermarkMode,
     int? WatermarkId,
+    bool UseWatermarkDuringFiller,
     DecoMode DefaultFillerMode,
     ProgramScheduleItemCollectionType DefaultFillerCollectionType,
     int? DefaultFillerCollectionId,

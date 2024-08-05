@@ -2312,6 +2312,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");
 
+                    b.Property<bool>("UseWatermarkDuringFiller")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int?>("WatermarkId")
                         .HasColumnType("int");
 
