@@ -21,7 +21,7 @@
       </PackageReference>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="Serilog.Formatting.Compact.Reader" Version="4.0.0" />
-      <PackageReference Include="WebMarkupMin.Core" Version="2.16.2" />
+      <PackageReference Include="WebMarkupMin.Core" Version="2.17.0" />
       <PackageReference Include="Winista.MimeDetect" Version="1.1.0" />
     </ItemGroup>
 
