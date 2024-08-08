@@ -108,13 +108,15 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
         string withoutExtension = Path.GetFileNameWithoutExtension(mediaItemPath);
         foreach (string file in _localFileSystem.ListFiles(folder, $"{withoutExtension}*"))
         {
+            string lowerFile = file.ToLowerInvariant();
+
             string fileName = Path.GetFileName(file);
             if (!fileName.StartsWith(withoutExtension, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            string extension = Path.GetExtension(file);
+            string extension = Path.GetExtension(lowerFile);
             string codec = extension switch
             {
                 ".ssa" or ".ass" => "ass",
@@ -128,30 +130,32 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                 continue;
             }
 
-            string language = fileName;
+            string language = Path.GetFileName(lowerFile);
             var forced = false;
             var sdh = false;
 
-            if (file.Contains(".forced."))
+            if (lowerFile.Contains(".forced."))
             {
                 forced = true;
                 language = language.Replace(".forced", string.Empty);
             }
 
-            if (file.Contains(".sdh"))
+            if (lowerFile.Contains(".sdh"))
             {
                 sdh = true;
                 language = language.Replace(".sdh", string.Empty);
             }
 
 
-            if (file.Contains(".cc."))
+            if (lowerFile.Contains(".cc."))
             {
                 sdh = true;
                 language = language.Replace(".cc", string.Empty);
             }
 
-            language = language.Replace($"{withoutExtension}.", string.Empty)[..3].Replace(".", string.Empty);
+            language = language
+                .Replace($"{withoutExtension.ToLowerInvariant()}.", string.Empty)[..3]
+                .Replace(".", string.Empty);
 
             Option<CultureInfo> maybeCulture = languageCodes.Find(
                 ci => ci.TwoLetterISOLanguageName == language || ci.ThreeLetterISOLanguageName == language);
