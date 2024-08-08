@@ -41,7 +41,9 @@ public class LocalSubtitlesProviderTests
             new(@"/Movies/Avatar (2009)/Avatar (2009).en.forced.ass"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).en.sdh.srt"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).de.srt"),
-            new(@"/Movies/Avatar (2009)/Avatar (2009).de.sdh.forced.srt")
+
+            // non-uniform (lower-case) extensions should also work
+            new(@"/Movies/Avatar (2009)/Avatar (2009).DE.SDH.FORCED.SRT")
         };
 
         var provider = new LocalSubtitlesProvider(
@@ -84,7 +86,9 @@ public class LocalSubtitlesProviderTests
             new(@"/Movies/Avatar (2009)/Avatar (2009).en.sdh.srt"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).sdh.en.srt"),
             new(@"/Movies/Avatar (2009)/Avatar (2009).de.srt"),
-            new(@"/Movies/Avatar (2009)/Avatar (2009).de.sdh.forced.srt")
+
+            // non-uniform (lower-case) extensions should also work
+            new(@"/Movies/Avatar (2009)/Avatar (2009).DE.SDH.FORCED.SRT")
         };
 
         var provider = new LocalSubtitlesProvider(
