@@ -134,20 +134,20 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             var forced = false;
             var sdh = false;
 
-            if (lowerFile.Contains(".forced.", StringComparison.OrdinalIgnoreCase))
+            if (lowerFile.Contains(".forced."))
             {
                 forced = true;
                 language = language.Replace(".forced", string.Empty);
             }
 
-            if (lowerFile.Contains(".sdh", StringComparison.OrdinalIgnoreCase))
+            if (lowerFile.Contains(".sdh"))
             {
                 sdh = true;
                 language = language.Replace(".sdh", string.Empty);
             }
 
 
-            if (lowerFile.Contains(".cc.", StringComparison.OrdinalIgnoreCase))
+            if (lowerFile.Contains(".cc."))
             {
                 sdh = true;
                 language = language.Replace(".cc", string.Empty);
