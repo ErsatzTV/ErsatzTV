@@ -67,6 +67,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging
 - Improve trakt list URL validation; non-trakt URLs will no longer be requested
+- Prevent saving block templates when blocks are overlapping
+  - This can happen if block durations are changed for blocks that are already on the template
 
 ## [0.8.7-beta] - 2024-06-26
 ### Added
