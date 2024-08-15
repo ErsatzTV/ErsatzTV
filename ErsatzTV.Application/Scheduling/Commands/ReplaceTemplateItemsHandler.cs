@@ -55,11 +55,58 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
         };
 
     private static Task<Validation<BaseError, Template>> Validate(TvContext dbContext, ReplaceTemplateItems request) =>
-        TemplateMustExist(dbContext, request.TemplateId);
+        TemplateMustExist(dbContext, request.TemplateId)
+            .BindT(template => TemplateItemsMustBeValid(dbContext, template, request));
+
+    private static async Task<Validation<BaseError, Template>> TemplateItemsMustBeValid(
+        TvContext dbContext,
+        Template template,
+        ReplaceTemplateItems request)
+    {
+        var allBlockIds = request.Items.Map(i => i.BlockId).Distinct().ToList();
+
+        Dictionary<int, Block> allBlocks = await dbContext.Blocks
+            .AsNoTracking()
+            .Filter(b => allBlockIds.Contains(b.Id))
+            .ToListAsync()
+            .Map(list => list.ToDictionary(b => b.Id, b => b));
+
+        var allTemplateItems = request.Items.Map(
+                i =>
+                {
+                    Block block = allBlocks[i.BlockId];
+                    return new BlockTemplateItem(
+                        i.BlockId,
+                        i.StartTime,
+                        i.StartTime + TimeSpan.FromMinutes(block.Minutes));
+                })
+            .ToList();
+
+        foreach (BlockTemplateItem item in allTemplateItems)
+        {
+            foreach (BlockTemplateItem otherItem in allTemplateItems)
+            {
+                if (item == otherItem)
+                {
+                    continue;
+                }
+
+                if (item.StartTime < otherItem.EndTime && otherItem.StartTime < item.EndTime)
+                {
+                    return BaseError.New(
+                        $"Block from {item.StartTime} to {item.EndTime} intersects block from {otherItem.StartTime} to {otherItem.EndTime}");
+                }
+            }
+        }
+
+        return template;
+    }
 
     private static Task<Validation<BaseError, Template>> TemplateMustExist(TvContext dbContext, int templateId) =>
         dbContext.Templates
             .Include(b => b.Items)
             .SelectOneAsync(b => b.Id, b => b.Id == templateId)
             .Map(o => o.ToValidation<BaseError>("[TemplateId] does not exist."));
+
+    private sealed record BlockTemplateItem(int BlockId, TimeSpan StartTime, TimeSpan EndTime);
 }
