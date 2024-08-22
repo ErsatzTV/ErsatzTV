@@ -14,7 +14,7 @@ public class WatermarkOpacityFilter : BaseFilter
         get
         {
             double opacity = _desiredState.Opacity / 100.0;
-            return $"colorchannelmixer=aa={opacity.ToString("F2", NumberFormatInfo.InvariantInfo)}";
+            return $"format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa={opacity.ToString("F2", NumberFormatInfo.InvariantInfo)}";
         }
     }
 

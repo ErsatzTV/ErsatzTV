@@ -26,7 +26,7 @@ public class WatermarkOpacityFilterTests
                 75,
                 false));
 
-        filter.Filter.Should().Be("colorchannelmixer=aa=0.75");
+        filter.Filter.Should().Be("format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.75");
     }
 
     [Test]
@@ -44,6 +44,6 @@ public class WatermarkOpacityFilterTests
                 75,
                 false));
 
-        filter.Filter.Should().Be("colorchannelmixer=aa=0.75");
+        filter.Filter.Should().Be("format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.75");
     }
 }

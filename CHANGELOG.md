@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix adding a single image to a manual collection from search results
 - Fix loading manual collection view when collection contains images
 - Fix edge case where block playout history would get stuck and repeat an item
+- Fix adjusting watermark opacity when watermark already contains alpha channel (is already transparent)
 
 ### Changed
 - Remove some unnecessary API calls related to media server scanning and paging
