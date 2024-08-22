@@ -82,7 +82,14 @@ internal static class HistoryDetails
         var copy = collectionItems.ToList();
 
         Details details = JsonConvert.DeserializeObject<Details>(detailsString);
-        if (details.SeasonNumber.HasValue && details.EpisodeNumber.HasValue)
+
+        // try for an exact match first
+        if (details.MediaItemId != null)
+        {
+            maybeMatchedItem = collectionItems.Find(mi => mi.Id == details.MediaItemId);
+        }
+
+        if (maybeMatchedItem.IsNone && details.SeasonNumber.HasValue && details.EpisodeNumber.HasValue)
         {
             int season = details.SeasonNumber.Value;
             int episode = details.EpisodeNumber.Value;
@@ -108,7 +115,7 @@ internal static class HistoryDetails
                 maybeMatchedItem = fakeItem;
             }
         }
-        else if (playbackOrder is PlaybackOrder.Chronological && details.ReleaseDate.HasValue)
+        else if (maybeMatchedItem.IsNone && playbackOrder is PlaybackOrder.Chronological && details.ReleaseDate.HasValue)
         {
             maybeMatchedItem = Optional(collectionItems.Find(ci => MatchReleaseDate(ci, details.ReleaseDate.Value)));
 
@@ -119,7 +126,6 @@ internal static class HistoryDetails
                 maybeMatchedItem = fakeItem;
             }
         }
-        // TODO: match media item
 
         foreach (MediaItem matchedItem in maybeMatchedItem)
         {
