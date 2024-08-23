@@ -168,8 +168,8 @@ public class IptvController : ControllerBase
             return NotFound();
         }
 
-        _logger.LogWarning("Unable to locate session worker for channel {Channel}", channelNumber);
-        return NotFound();
+        _logger.LogWarning("Unable to locate session worker for channel {Channel}; will redirect to start session", channelNumber);
+        return RedirectToAction(nameof(GetHttpLiveStreamingVideo), new { channelNumber });
     }
 
     [HttpHead("iptv/channel/{channelNumber}.m3u8")]
