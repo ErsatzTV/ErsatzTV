@@ -7,5 +7,6 @@ public enum PlaybackOrder
     Shuffle = 3,
     ShuffleInOrder = 4,
     MultiEpisodeShuffle = 5,
-    SeasonEpisode = 6
+    SeasonEpisode = 6,
+    RandomRotation = 7
 }
