@@ -752,7 +752,8 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         var result = new List<PlayoutItem>();
 
         Random rnd = new Random();
-        int randomCount = rnd.Next() % count + 1;
+        // randomCount is from 0 to count.
+        int randomCount = rnd.Next() % (count + 1);
 
         for (var i = 0; i < randomCount; i++)
         {

@@ -35,7 +35,7 @@
                             <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
                             <MudSelectItem Value="@(FillerMode.Count)">Count</MudSelectItem>
                             <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
-                            <MudSelectItem Value="@(FillerMode.RandomCount)">RandomCount</MudSelectItem>
+                            <MudSelectItem Value="@(FillerMode.RandomCount)">Random Count</MudSelectItem>
                         </MudSelect>
                         <MudTimePicker Class="mt-3" Label="Filler Duration" @bind-Time="@_model.Duration" For="@(() => _model.Duration)" Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
                         <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@((_model.FillerMode != FillerMode.Count) && (_model.FillerMode != FillerMode.RandomCount))"/>
@@ -188,7 +188,6 @@
                     _model.FillerMode = fillerPreset.FillerMode;
                     _model.Duration = fillerPreset.Duration;
                     _model.Count = fillerPreset.Count;
-                    //_model.RandomCount = fillerPreset.RandomCount;
                     _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
                     _model.AllowWatermarks = fillerPreset.AllowWatermarks;
                     _model.CollectionType = fillerPreset.CollectionType;
