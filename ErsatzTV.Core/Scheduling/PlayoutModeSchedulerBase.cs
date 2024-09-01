@@ -308,6 +308,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             filler.AllowWatermarks,
                             cancellationToken));
                     break;
+                case FillerMode.RandomCount when filler.Count.HasValue:
+                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                    result.AddRange(
+                        AddRandomCountFiller(
+                            playoutBuilderState,
+                            e3,
+                            filler.Count.Value,
+                            FillerKind.PreRoll,
+                            filler.AllowWatermarks,
+                            cancellationToken));
+                    break;
             }
         }
 
@@ -361,6 +372,25 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         }
 
                         break;
+                    case FillerMode.RandomCount when filler.Count.HasValue:
+                        IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        for (var i = 0; i < effectiveChapters.Count; i++)
+                        {
+                            result.Add(playoutItem.ForChapter(effectiveChapters[i]));
+                            if (i < effectiveChapters.Count - 1)
+                            {
+                                result.AddRange(
+                                    AddRandomCountFiller(
+                                        playoutBuilderState,
+                                        e3,
+                                        filler.Count.Value,
+                                        FillerKind.MidRoll,
+                                        filler.AllowWatermarks,
+                                        cancellationToken));
+                            }
+                        }
+
+                        break;
                 }
             }
         }
@@ -388,6 +418,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         AddCountFiller(
                             playoutBuilderState,
                             e2,
+                            filler.Count.Value,
+                            FillerKind.PostRoll,
+                            filler.AllowWatermarks,
+                            cancellationToken));
+                    break;
+                case FillerMode.RandomCount when filler.Count.HasValue:
+                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                    result.AddRange(
+                        AddRandomCountFiller(
+                            playoutBuilderState,
+                            e3,
                             filler.Count.Value,
                             FillerKind.PostRoll,
                             filler.AllowWatermarks,
@@ -698,5 +739,44 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         return None;
+    }
+
+    private static List<PlayoutItem> AddRandomCountFiller(
+        PlayoutBuilderState playoutBuilderState,
+        IMediaCollectionEnumerator enumerator,
+        int count,
+        FillerKind fillerKind,
+        bool allowWatermarks,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<PlayoutItem>();
+
+        Random rnd = new Random();
+        int randomCount = rnd.Next() % count + 1;
+
+        for (var i = 0; i < randomCount; i++)
+        {
+            foreach (MediaItem mediaItem in enumerator.Current)
+            {
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+                var playoutItem = new PlayoutItem
+                {
+                    MediaItemId = mediaItem.Id,
+                    Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                    Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
+                    GuideGroup = playoutBuilderState.NextGuideGroup,
+                    FillerKind = fillerKind,
+                    DisableWatermarks = !allowWatermarks
+                };
+
+                result.Add(playoutItem);
+                enumerator.MoveNext();
+            }
+        }
+
+        return result;
     }
 }
