@@ -750,32 +750,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
-
         Random rnd = new Random();
         // randomCount is from 0 to count.
         int randomCount = rnd.Next() % (count + 1);
 
-        for (var i = 0; i < randomCount; i++)
-        {
-            foreach (MediaItem mediaItem in enumerator.Current)
-            {
-                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
-
-                var playoutItem = new PlayoutItem
-                {
-                    MediaItemId = mediaItem.Id,
-                    Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
-                    Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
-                    InPoint = TimeSpan.Zero,
-                    OutPoint = itemDuration,
-                    GuideGroup = playoutBuilderState.NextGuideGroup,
-                    FillerKind = fillerKind,
-                    DisableWatermarks = !allowWatermarks
-                };
-
-                result.Add(playoutItem);
-                enumerator.MoveNext();
-            }
+        if (randomCount != 0) {
+            result = AddCountFiller(playoutBuilderState,
+                                    enumerator,
+                                    randomCount,
+                                    fillerKind,
+                                    allowWatermarks,
+                                    cancellationToken);
         }
 
         return result;
