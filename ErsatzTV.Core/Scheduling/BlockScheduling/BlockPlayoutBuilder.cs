@@ -265,9 +265,12 @@ public class BlockPlayoutBuilder(
                 playout,
                 blockItem,
                 historyKey),
-            PlaybackOrder.RandomRotation => new RandomizedRotatingMediaCollectionEnumerator(
+            PlaybackOrder.RandomRotation => BlockPlayoutEnumerator.RandomRotation(
                 collectionItems,
-                new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 }),
+                currentTime,
+                playout,
+                blockItem,
+                historyKey),
             _ => new RandomizedMediaCollectionEnumerator(
                 collectionItems,
                 new CollectionEnumeratorState { Seed = new Random().Next(), Index = 0 })
