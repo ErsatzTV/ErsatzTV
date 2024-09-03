@@ -13,8 +13,8 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.35" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.7" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
     </ItemGroup>
 
 
