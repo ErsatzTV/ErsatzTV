@@ -35,9 +35,10 @@
                             <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
                             <MudSelectItem Value="@(FillerMode.Count)">Count</MudSelectItem>
                             <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
+                            <MudSelectItem Value="@(FillerMode.RandomCount)">Random Count</MudSelectItem>
                         </MudSelect>
                         <MudTimePicker Class="mt-3" Label="Filler Duration" @bind-Time="@_model.Duration" For="@(() => _model.Duration)" Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
-                        <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@(_model.FillerMode != FillerMode.Count)"/>
+                        <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@((_model.FillerMode != FillerMode.Count) && (_model.FillerMode != FillerMode.RandomCount))"/>
                         <MudSelect Class="mt-3" Label="Filler Pad To Nearest Minute" @bind-Value="_model.PadToNearestMinute" For="@(() => _model.PadToNearestMinute)" Disabled="@(_model.FillerMode != FillerMode.Pad)">
                             <MudSelectItem T="int?" Value="5">5 (:00, :05, :10, :15, :20, etc)</MudSelectItem>
                             <MudSelectItem T="int?" Value="10">10 (:00, :10, :20, :30, :40, :50)</MudSelectItem>

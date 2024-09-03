@@ -11,6 +11,8 @@ namespace ErsatzTV.Core.Scheduling;
 [SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
 public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> where T : ProgramScheduleItem
 {
+    private readonly Random _random = new();
+
     protected PlayoutModeSchedulerBase(ILogger logger) => Logger = logger;
     protected ILogger Logger { get; }
 
@@ -308,6 +310,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             filler.AllowWatermarks,
                             cancellationToken));
                     break;
+                case FillerMode.RandomCount when filler.Count.HasValue:
+                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                    result.AddRange(
+                        AddRandomCountFiller(
+                            playoutBuilderState,
+                            e3,
+                            filler.Count.Value,
+                            FillerKind.PreRoll,
+                            filler.AllowWatermarks,
+                            cancellationToken));
+                    break;
             }
         }
 
@@ -361,6 +374,25 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         }
 
                         break;
+                    case FillerMode.RandomCount when filler.Count.HasValue:
+                        IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        for (var i = 0; i < effectiveChapters.Count; i++)
+                        {
+                            result.Add(playoutItem.ForChapter(effectiveChapters[i]));
+                            if (i < effectiveChapters.Count - 1)
+                            {
+                                result.AddRange(
+                                    AddRandomCountFiller(
+                                        playoutBuilderState,
+                                        e3,
+                                        filler.Count.Value,
+                                        FillerKind.MidRoll,
+                                        filler.AllowWatermarks,
+                                        cancellationToken));
+                            }
+                        }
+
+                        break;
                 }
             }
         }
@@ -388,6 +420,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         AddCountFiller(
                             playoutBuilderState,
                             e2,
+                            filler.Count.Value,
+                            FillerKind.PostRoll,
+                            filler.AllowWatermarks,
+                            cancellationToken));
+                    break;
+                case FillerMode.RandomCount when filler.Count.HasValue:
+                    IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                    result.AddRange(
+                        AddRandomCountFiller(
+                            playoutBuilderState,
+                            e3,
                             filler.Count.Value,
                             FillerKind.PostRoll,
                             filler.AllowWatermarks,
@@ -698,5 +741,31 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         return None;
+    }
+
+    private List<PlayoutItem> AddRandomCountFiller(
+        PlayoutBuilderState playoutBuilderState,
+        IMediaCollectionEnumerator enumerator,
+        int count,
+        FillerKind fillerKind,
+        bool allowWatermarks,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<PlayoutItem>();
+        // randomCount is from 0 to count.
+        int randomCount = _random.Next(count + 1);
+
+        if (randomCount != 0)
+        {
+            result = AddCountFiller(
+                playoutBuilderState,
+                enumerator,
+                randomCount,
+                fillerKind,
+                allowWatermarks,
+                cancellationToken);
+        }
+
+        return result;
     }
 }

@@ -47,7 +47,7 @@ public class FillerPresetEditViewModel
 
     public int? Count
     {
-        get => FillerMode == FillerMode.Count ? _count : null;
+        get => FillerMode is FillerMode.Count or FillerMode.RandomCount ? _count : null;
         set => _count = value;
     }
 
