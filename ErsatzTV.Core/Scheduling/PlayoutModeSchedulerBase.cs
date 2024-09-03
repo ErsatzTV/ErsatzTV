@@ -11,6 +11,8 @@ namespace ErsatzTV.Core.Scheduling;
 [SuppressMessage("Design", "CA1000:Do not declare static members on generic types")]
 public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> where T : ProgramScheduleItem
 {
+    private readonly Random _random = new();
+
     protected PlayoutModeSchedulerBase(ILogger logger) => Logger = logger;
     protected ILogger Logger { get; }
 
@@ -741,7 +743,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         return None;
     }
 
-    private static List<PlayoutItem> AddRandomCountFiller(
+    private List<PlayoutItem> AddRandomCountFiller(
         PlayoutBuilderState playoutBuilderState,
         IMediaCollectionEnumerator enumerator,
         int count,
@@ -750,17 +752,18 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         CancellationToken cancellationToken)
     {
         var result = new List<PlayoutItem>();
-        Random rnd = new Random();
         // randomCount is from 0 to count.
-        int randomCount = rnd.Next() % (count + 1);
+        int randomCount = _random.Next(count + 1);
 
-        if (randomCount != 0) {
-            result = AddCountFiller(playoutBuilderState,
-                                    enumerator,
-                                    randomCount,
-                                    fillerKind,
-                                    allowWatermarks,
-                                    cancellationToken);
+        if (randomCount != 0)
+        {
+            result = AddCountFiller(
+                playoutBuilderState,
+                enumerator,
+                randomCount,
+                fillerKind,
+                allowWatermarks,
+                cancellationToken);
         }
 
         return result;
