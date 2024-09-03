@@ -74,8 +74,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Prevent saving block templates when blocks are overlapping
   - This can happen if block durations are changed for blocks that are already on the template
 - Redirect variant playlist request to proper URL for starting `HLS Segmenter` session when no session is active
-  - This can happen when some clients "pause" for long enough for the session to stop in ETV
-  - When this happens, the client requests the temporary playlist URL e.g. `/iptv/session/1/hls.m3u8` (not the original URL `/iptv/channel/1.m3u8`)
+  - This can happen when some clients "pause" long enough for the session to stop in ETV
+  - When the client resumes playback, it requests the temp playlist URL which is now invalid e.g. `/iptv/session/1/hls.m3u8` (not the original URL `/iptv/channel/1.m3u8`)
   - To fix, the client will be redirected back to the original URL in this case which will create a new session
 
 ## [0.8.7-beta] - 2024-06-26

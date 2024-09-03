@@ -20,7 +20,7 @@
       <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
       <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.11.20">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -30,7 +30,7 @@
       <PackageReference Include="SkiaSharp" Version="2.88.8" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
       <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
-      <PackageReference Include="YamlDotNet" Version="16.0.0" />
+      <PackageReference Include="YamlDotNet" Version="16.1.0" />
     </ItemGroup>
     
     <ItemGroup>
