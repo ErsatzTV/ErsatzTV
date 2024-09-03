@@ -39,7 +39,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - POST `/api/libraries/{libraryId}/scan`
 - Add Deco setting to `Use Watermark During Filler`
   - This setting is turned OFF by default, meaning filler will NOT use the configured watermark unless this is manually turned on
-- Add `Random Count` filler mode to randomly schedule between zero and the provided count number of items
+- Add `Random Count` filler mode by @embolon
+  - This mode will randomly schedule between zero and the provided count number of items
   - e.g. random count 3 will schedule between 0 and 3 filler items
 
 ### Fixed
