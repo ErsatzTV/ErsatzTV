@@ -11,6 +11,7 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
     private readonly Random _random;
     private readonly Dictionary<int, IList<int>> _groupMedia;
     private int _index;
+    private int _groupNumber;
 
     public RandomizedRotatingMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
     {
@@ -42,6 +43,8 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
             }
         }
 
+        _groupNumber = 0;
+
         State = new CollectionEnumeratorState { Seed = state.Seed };
         // we want to move at least once so we start with a random item and not the first
         // because _index defaults to 0
@@ -65,11 +68,25 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
         IList<int> groups = _groupMedia.Keys.ToList();
         int nextRandom = _random.Next();
 
-        // It is possible to get the same group (show/artist) as the previous scheduled item,
-        // but when the number of shows/artists is large, the chance is small.
         int groupNumber = nextRandom % groups.Count;
-        int itemNumber = nextRandom % _groupMedia[groups[groupNumber]].Count;
-        _index = _groupMedia[groups[groupNumber]][itemNumber];
+        if (_groupNumber == groupNumber)
+        {
+            if (groupNumber == groups.Count - 1)
+            {
+                _groupNumber = 0;
+            }
+            else
+            {
+                _groupNumber = groupNumber + 1;
+            }
+        }
+        else
+        {
+            _groupNumber = groupNumber;
+        }
+
+        int itemNumber = nextRandom % _groupMedia[groups[_groupNumber]].Count;
+        _index = _groupMedia[groups[_groupNumber]][itemNumber];
         State.Index++;
     }
 
