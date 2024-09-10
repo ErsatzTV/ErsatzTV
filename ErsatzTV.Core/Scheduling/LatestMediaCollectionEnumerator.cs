@@ -8,6 +8,7 @@ public sealed class LatestMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly IList<MediaItem> _sortedMediaItems;
+    private int _latest;
 
     public LatestMediaCollectionEnumerator(
         IEnumerable<MediaItem> mediaItems,
@@ -19,32 +20,36 @@ public sealed class LatestMediaCollectionEnumerator : IMediaCollectionEnumerator
         _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(
             () => _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
 
+        // State isn't needed in latest play mode.
+        // Here we simply use State.Index to track how many times we repeated.
         State = new CollectionEnumeratorState { Seed = state.Seed };
 
-        if (state.Index >= _sortedMediaItems.Count)
-        {
-            state.Index = 0;
-            state.Seed = 0;
-        }
-
-        State.Index = _sortedMediaItems.Count - 1;
-
-        //while (State.Index < state.Index)
+        //if (state.Index >= _sortedMediaItems.Count)
         //{
-        //    MoveNext();
+        //    state.Index = 0;
+        //    state.Seed = 0;
         //}
+
+        //State.Index = _sortedMediaItems.Count - 1;
+
+        _latest = _sortedMediaItems.Count - 1;
+
+        while (State.Index < state.Index)
+        {
+            MoveNext();
+        }
     }
 
     public void ResetState(CollectionEnumeratorState state) =>
-        // seed doesn't matter in chronological
+        // seed doesn't matter in latest
         State.Index = state.Index;
 
     public CollectionEnumeratorState State { get; }
 
-    public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
+    public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[_latest] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
-    public void MoveNext() => State.Index = _sortedMediaItems.Count - 1;
+    public void MoveNext() => State.Index++;
 
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
 
