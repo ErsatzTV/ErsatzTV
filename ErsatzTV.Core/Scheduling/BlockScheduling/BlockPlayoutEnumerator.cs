@@ -137,4 +137,31 @@ public static class BlockPlayoutEnumerator
         // as long as already-played items are not included
         return new BlockPlayoutShuffledMediaCollectionEnumerator(mediaItems, state);
     }
+
+    public static IMediaCollectionEnumerator RandomRotation(
+        List<MediaItem> collectionItems,
+        DateTimeOffset currentTime,
+        Playout playout,
+        BlockItem blockItem,
+        string historyKey)
+    {
+        DateTime historyTime = currentTime.UtcDateTime;
+        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+            .Filter(h => h.BlockId == blockItem.BlockId)
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When < historyTime)
+            .OrderByDescending(h => h.When)
+            .HeadOrNone();
+
+        var state = new CollectionEnumeratorState { Seed = playout.Seed + blockItem.BlockId, Index = 0 };
+        foreach (PlayoutHistory h in maybeHistory)
+        {
+            // Make sure to only increase the index by 1 since we can only
+            // guarantee the next one is a different show. h.Index comes from
+            // the previous play item which already increased by 1.
+            state.Index = h.Index;
+        }
+
+        return new RandomizedRotatingMediaCollectionEnumerator(collectionItems, state);
+    }
 }

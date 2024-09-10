@@ -43,7 +43,8 @@ public class BlockPlayoutBuilder(
             PlaybackOrder.Chronological,
             PlaybackOrder.SeasonEpisode,
             PlaybackOrder.Shuffle,
-            PlaybackOrder.Random
+            PlaybackOrder.Random,
+            PlaybackOrder.RandomRotation
         ];
 
         DateTimeOffset start = DateTimeOffset.Now;
@@ -259,6 +260,12 @@ public class BlockPlayoutBuilder(
                 historyKey,
                 Logger),
             PlaybackOrder.Shuffle => BlockPlayoutEnumerator.Shuffle(
+                collectionItems,
+                currentTime,
+                playout,
+                blockItem,
+                historyKey),
+            PlaybackOrder.RandomRotation => BlockPlayoutEnumerator.RandomRotation(
                 collectionItems,
                 currentTime,
                 playout,
