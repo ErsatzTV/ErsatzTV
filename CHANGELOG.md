@@ -42,6 +42,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Random Count` filler mode by @embolon
   - This mode will randomly schedule between zero and the provided count number of items
   - e.g. random count 3 will schedule between 0 and 3 filler items
+- Add `Random Rotation` playback order for block scheduling by @embolon
+  - This playback order will pick a random item from a randomly selected group (show or artist)
+  - It is somewhat similar to the `Fill With Group` mode used in flood scheduling
 
 ### Fixed
 - Add basic cache busting to XMLTV image URLs
