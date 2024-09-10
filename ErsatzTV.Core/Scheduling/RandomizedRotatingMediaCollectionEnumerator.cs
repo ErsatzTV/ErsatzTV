@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 
@@ -10,7 +9,7 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly IList<MediaItem> _mediaItems;
     private readonly Random _random;
-    private Dictionary<int, IList<int>> _groupMedia;
+    private readonly Dictionary<int, IList<int>> _groupMedia;
     private int _index;
 
     public RandomizedRotatingMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
@@ -24,17 +23,22 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
         _random = new Random(state.Seed);
 
         _groupMedia = new Dictionary<int, IList<int>>();
-        for (int i = 0; i < mediaItems.Count; i++) {
-            int id = mediaItems[i] switch {
+        for (int i = 0; i < mediaItems.Count; i++)
+        {
+            int id = mediaItems[i] switch
+            {
                 Episode e => e.Season.ShowId,
                 MusicVideo mv => mv.ArtistId,
                 _ => mediaItems[i].Id
             };
 
-            if (_groupMedia.TryGetValue(id, out IList<int> newList)) {
+            if (_groupMedia.TryGetValue(id, out IList<int> newList))
+            {
                 newList.Add(i);
-            } else {
-                _groupMedia.Add(id, new List<int>(){i});
+            }
+            else
+            {
+                _groupMedia.Add(id, new List<int> { i });
             }
         }
 
