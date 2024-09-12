@@ -24,14 +24,6 @@ public sealed class LatestMediaCollectionEnumerator : IMediaCollectionEnumerator
         // Here we simply use State.Index to track how many times we repeated.
         State = new CollectionEnumeratorState { Seed = state.Seed };
 
-        //if (state.Index >= _sortedMediaItems.Count)
-        //{
-        //    state.Index = 0;
-        //    state.Seed = 0;
-        //}
-
-        //State.Index = _sortedMediaItems.Count - 1;
-
         _latest = _sortedMediaItems.Count - 1;
 
         while (State.Index < state.Index)
