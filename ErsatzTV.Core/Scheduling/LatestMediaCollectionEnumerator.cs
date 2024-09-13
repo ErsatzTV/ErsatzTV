@@ -21,7 +21,7 @@ public sealed class LatestMediaCollectionEnumerator : IMediaCollectionEnumerator
             () => _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
 
         // State isn't needed in latest play mode.
-        // Here we simply use State.Index to track how many times we repeated.
+        // Here we simply use State.Index to track how many times we were scheduled.
         State = new CollectionEnumeratorState { Seed = state.Seed };
 
         _latest = _sortedMediaItems.Count - 1;

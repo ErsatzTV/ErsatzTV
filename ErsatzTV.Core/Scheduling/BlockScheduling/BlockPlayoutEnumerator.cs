@@ -180,21 +180,11 @@ public static class BlockPlayoutEnumerator
             .OrderByDescending(h => h.When)
             .HeadOrNone();    
         var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
+        foreach (PlayoutHistory h in maybeHistory)
+        {
+            state.Index = h.Index + 1;
+        }
 
-        var enumerator = new LatestMediaCollectionEnumerator(collectionItems, state);
-
-        // seek to the appropriate place in the collection enumerator
-        //foreach (PlayoutHistory h in maybeHistory)
-        //{
-            //logger.LogDebug("History is applicable: {When}: {History}", h.When, h.Details);
-
-            //HistoryDetails.MoveToNextItem(
-            //    collectionItems,
-            //    h.Details,
-            //    enumerator,
-            //    blockItem.PlaybackOrder);
-        //}
-
-        return enumerator;
+        return new LatestMediaCollectionEnumerator(collectionItems, state);
     }
 }
