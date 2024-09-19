@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.8.8-beta] - 2024-09-19
 ### Added
 - Add support for Plex Other Video libraries
   - These libraries will now appear as ETV Other Video libraries
@@ -2129,7 +2131,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.7-beta...HEAD
+[Unreleased]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.8-beta...HEAD
+[0.8.8-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.7-beta...v0.8.8-beta
 [0.8.7-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.6-beta...v0.8.7-beta
 [0.8.6-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.5-beta...v0.8.6-beta
 [0.8.5-beta]: https://github.com/ErsatzTV/ErsatzTV/compare/v0.8.4-beta...v0.8.5-beta
