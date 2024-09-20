@@ -45,16 +45,16 @@ public class DatabaseCleanerService(
         await dbContext.Connection.ExecuteAsync(
             """
             delete
-            from MediaItem
-            where Id not in (select Id from Movie)
-              and Id not in (select Id from Show)
-              and Id not in (select Id from Season)
-              and Id not in (select Id from Episode)
-              and Id not in (select Id from OtherVideo)
-              and Id not in (select Id from MusicVideo)
-              and Id not in (select Id from Song)
-              and Id not in (select Id from Artist)
-              and Id not in (select Id from Image)
+            from `MediaItem`
+            where Id not in (select Id from `Movie`)
+              and Id not in (select Id from `Show`)
+              and Id not in (select Id from `Season`)
+              and Id not in (select Id from `Episode`)
+              and Id not in (select Id from `OtherVideo`)
+              and Id not in (select Id from `MusicVideo`)
+              and Id not in (select Id from `Song`)
+              and Id not in (select Id from `Artist`)
+              and Id not in (select Id from `Image`)
             """);
     }
 

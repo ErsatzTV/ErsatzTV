@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix startup error with MySql backend caused by database cleaner
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added
