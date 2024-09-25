@@ -2,6 +2,7 @@ using System.Globalization;
 using Bugsnag;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Aggregations;
+using Elastic.Clients.Elasticsearch.Core.Bulk;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -146,15 +147,17 @@ public class ElasticSearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public async Task<Unit> RemoveItems(IEnumerable<int> ids)
+    public async Task<bool> RemoveItems(IEnumerable<int> ids)
     {
-        await _client.BulkAsync(
-            descriptor => descriptor
-                .Index(IndexName)
-                .DeleteMany(ids.Map(id => new Id(id)))
-        );
+        var deleteBulkRequest = new BulkRequest { Operations = [] };
+        foreach (int id in ids)
+        {
+            var deleteOperation = new BulkDeleteOperation<ElasticSearchItem>(new Id(id)) { Index = IndexName };
+            deleteBulkRequest.Operations.Add(deleteOperation);
+        }
 
-        return Unit.Default;
+        BulkResponse deleteResponse = await _client.BulkAsync(deleteBulkRequest).ConfigureAwait(false);
+        return deleteResponse.IsValidResponse;
     }
 
     public async Task<SearchResult> Search(IClient client, string query, int skip, int limit)

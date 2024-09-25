@@ -186,14 +186,14 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Unit.Default;
     }
 
-    public Task<Unit> RemoveItems(IEnumerable<int> ids)
+    public Task<bool> RemoveItems(IEnumerable<int> ids)
     {
         foreach (int id in ids)
         {
             _writer.DeleteDocuments(new Term(IdField, id.ToString(CultureInfo.InvariantCulture)));
         }
 
-        return Task.FromResult(Unit.Default);
+        return Task.FromResult(true);
     }
 
     public Task<SearchResult> Search(IClient client, string query, int skip, int limit)
