@@ -3,7 +3,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
-using ErsatzTV.Infrastructure.Search;
 
 namespace ErsatzTV.Application.Maintenance;
 
@@ -27,33 +26,16 @@ public class EmptyTrashHandler : IRequestHandler<EmptyTrash, Either<BaseError, U
         EmptyTrash request,
         CancellationToken cancellationToken)
     {
-        string[] types =
-        {
-            LuceneSearchIndex.MovieType,
-            LuceneSearchIndex.ShowType,
-            LuceneSearchIndex.SeasonType,
-            LuceneSearchIndex.EpisodeType,
-            LuceneSearchIndex.MusicVideoType,
-            LuceneSearchIndex.OtherVideoType,
-            LuceneSearchIndex.SongType,
-            LuceneSearchIndex.ArtistType
-        };
+        SearchResult result = await _searchIndex.Search(_client, "state:FileNotFound", 0, 10_000);
+        var ids = result.Items.Map(i => i.Id).ToList();
 
-        var ids = new List<int>();
-
-        foreach (string type in types)
+        // ElasticSearch remove items may fail, so do that first
+        if (await _searchIndex.RemoveItems(ids))
         {
-            SearchResult result = await _searchIndex.Search(_client, $"type:{type} AND (state:FileNotFound)", 0, 0);
-            ids.AddRange(result.Items.Map(i => i.Id));
-        }
-
-        Either<BaseError, Unit> deleteResult = await _mediaItemRepository.DeleteItems(ids);
-        if (deleteResult.IsRight)
-        {
-            await _searchIndex.RemoveItems(ids);
             _searchIndex.Commit();
+            return await _mediaItemRepository.DeleteItems(ids);
         }
 
-        return deleteResult;
+        return BaseError.New("Failed to empty trash");
     }
 }

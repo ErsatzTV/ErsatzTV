@@ -24,7 +24,7 @@ public interface ISearchIndex : IDisposable
         IFallbackMetadataProvider fallbackMetadataProvider,
         List<MediaItem> items);
 
-    Task<Unit> RemoveItems(IEnumerable<int> ids);
+    Task<bool> RemoveItems(IEnumerable<int> ids);
     Task<SearchResult> Search(IClient client, string query, int skip, int limit);
     void Commit();
 }
