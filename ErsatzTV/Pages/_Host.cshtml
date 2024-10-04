@@ -50,7 +50,7 @@
             $("h2").addClass("mud-typography mud-typography-h4");
             $("h3").addClass("mud-typography mud-typography-h5");
         }
-        
+
         function previewChannel(uri) {
           var video = document.getElementById('video');
           if (Hls.isSupported()) {
@@ -80,7 +80,7 @@
             });
           }
         }
-        
+
         function stopPreview() {
             var hls = $('#video').data('hls');
             hls && hls.destroy();
@@ -114,7 +114,7 @@
             }
         }
     };
-    
+
     window.clipboardCopy = {
         copyText: async function (codeElement) {
             if (navigator.clipboard && window.isSecureContext) {
@@ -124,10 +124,10 @@
                 textArea.value = codeElement.textContent;
                 textArea.style.position = "absolute";
                 textArea.style.left = "-999999px";
-                    
+
                 document.body.prepend(textArea);
                 textArea.select();
-        
+
                 try {
                     document.execCommand('copy');
                 } catch (error) {

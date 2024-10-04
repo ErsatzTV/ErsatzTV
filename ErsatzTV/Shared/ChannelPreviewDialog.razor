@@ -1,4 +1,5 @@
 ﻿@inject IJSRuntime JsRuntime
+@implements IDisposable
 
 <div>
     <MudDialog>
@@ -44,16 +45,20 @@
 
     private void Close()
     {
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    public void Dispose()
+    {
         try
         {
             JsRuntime.InvokeVoidAsync("stopPreview");
         }
         catch (Exception)
         {
-            // ignored
+            // ignore
         }
 
-        MudDialog.Close(DialogResult.Ok(true));
+        MudDialog?.Dispose();
     }
-
 }
