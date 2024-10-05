@@ -30,7 +30,7 @@
       <PackageReference Include="SkiaSharp" Version="2.88.8" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
       <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
-      <PackageReference Include="YamlDotNet" Version="16.1.0" />
+      <PackageReference Include="YamlDotNet" Version="16.1.3" />
     </ItemGroup>
     
     <ItemGroup>
