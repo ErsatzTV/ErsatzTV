@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix double loading of trash UI elements, and fix reloading of all UI elements after emptying trash
 - Fix destroying channel preview player when preview dialog is closed
   - This bug made it difficult to "stop" a channel after previewing it
+- Fix bug where deco default filler would never use hardware acceleration
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added

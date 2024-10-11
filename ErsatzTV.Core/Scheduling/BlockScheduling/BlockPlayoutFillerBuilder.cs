@@ -107,7 +107,10 @@ public class BlockPlayoutFillerBuilder(
                             Finish = current.UtcDateTime + itemDuration,
                             InPoint = TimeSpan.Zero,
                             OutPoint = itemDuration,
-                            FillerKind = FillerKind.Fallback,
+
+                            // FillerKind.Fallback will loop and avoid hw accel, so don't use that
+                            FillerKind = FillerKind.GuideMode,
+
                             CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                             GuideStart = one.GuideStart,
                             GuideFinish = one.GuideFinish,
