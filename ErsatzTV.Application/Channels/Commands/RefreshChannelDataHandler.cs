@@ -286,7 +286,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
             int finishIndex = j;
             while (finishIndex + 1 < sorted.Count && (sorted[finishIndex + 1].GuideGroup == startItem.GuideGroup
                                                       || sorted[finishIndex + 1].FillerKind is FillerKind.GuideMode
-                                                          or FillerKind.Tail or FillerKind.Fallback))
+                                                          or FillerKind.Tail or FillerKind.Fallback or FillerKind.DecoDefault))
             {
                 finishIndex++;
             }
