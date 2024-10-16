@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix destroying channel preview player when preview dialog is closed
   - This bug made it difficult to "stop" a channel after previewing it
 - Fix bug where deco default filler would never use hardware acceleration
+- Fix deleting local libraries with MySql backend
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added

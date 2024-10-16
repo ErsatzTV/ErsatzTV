@@ -47,9 +47,12 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
             """
             DELETE FROM MediaItem WHERE Id IN
             (
-                SELECT MI.Id FROM MediaItem MI
-                INNER JOIN LibraryPath LP ON MI.LibraryPathId = LP.Id
-                WHERE LP.LibraryId = @LibraryId
+                SELECT Id FROM
+                (
+                    SELECT MI.Id FROM MediaItem MI
+                    INNER JOIN LibraryPath LP ON MI.LibraryPathId = LP.Id
+                    WHERE LP.LibraryId = @LibraryId
+                ) AS MI
             )
             """,
             new { LibraryId = localLibrary.Id });
