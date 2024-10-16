@@ -10,27 +10,27 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blurhash.ImageSharp" Version="3.0.0" />
+      <PackageReference Include="Blurhash.ImageSharp" Version="4.0.0" />
       <PackageReference Include="CliWrap" Version="3.6.6" />
       <PackageReference Include="Dapper" Version="2.1.35" />
-      <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.6" />
-      <PackageReference Include="Jint" Version="4.0.2" />
+      <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.15.10" />
+      <PackageReference Include="Jint" Version="4.0.3" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00016" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.11.20">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Refit" Version="7.1.2" />
-      <PackageReference Include="Refit.Newtonsoft.Json" Version="7.1.2" />
-      <PackageReference Include="Refit.Xml" Version="7.1.2" />
+      <PackageReference Include="Refit" Version="7.2.1" />
+      <PackageReference Include="Refit.Newtonsoft.Json" Version="7.2.1" />
+      <PackageReference Include="Refit.Xml" Version="7.2.1" />
       <PackageReference Include="Scriban.Signed" Version="5.10.0" />
       <PackageReference Include="TagLibSharp" Version="2.3.0" />
     </ItemGroup>
