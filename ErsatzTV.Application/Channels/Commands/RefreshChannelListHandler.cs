@@ -4,6 +4,7 @@ using System.Xml;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Iptv;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -78,6 +79,8 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
         {
             var data = new
             {
+                ChannelId = ChannelIdentifier.FromNumber(channel.Number),
+                ChannelIdLegacy = ChannelIdentifier.LegacyFromNumber(channel.Number),
                 ChannelNumber = channel.Number,
                 ChannelName = channel.Name,
                 ChannelCategories = GetCategories(channel.Categories),

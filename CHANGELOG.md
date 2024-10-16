@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- **BREAKING CHANGE**: Change channel identifiers used in XMLTV to work around bad behavior in Plex
+
 ### Fixed
 - Fix startup error with MySql backend caused by database cleaner
 - Fix emptying trash with ElasticSearch backend

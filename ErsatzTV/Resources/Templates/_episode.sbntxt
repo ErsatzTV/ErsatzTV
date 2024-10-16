@@ -3,6 +3,8 @@
 Available values:
   - programme_start
   - programme_stop
+  - channel_id
+  - channel_id_legacy
   - channel_number
   - has_custom_title
   - custom_title
@@ -22,12 +24,12 @@ Available values:
   - show_content_rating
   - show_guids
   - episode_guids
- 
+
 The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
 
 ## }}
 
-<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_number }}.etv">
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_id }}">
   {{ if has_custom_title }}
       <title lang="en">{{ custom_title }}</title>
   {{ else }}
@@ -51,7 +53,7 @@ The resulting XML will be minified by ErsatzTV - so feel free to keep things nic
   {{ if show_has_content_rating }}
     {{ for rating in show_content_rating | string.split '/' }}
         {{ if rating | string.downcase | string.starts_with 'us:' }}
-          <rating system="VCHIP"> 
+          <rating system="VCHIP">
         {{ else }}
           <rating>
         {{ end }}
