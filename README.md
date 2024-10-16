@@ -2,7 +2,7 @@
 
 **ErsatzTV** is beta software for configuring and streaming custom live channels using your media library. The software may be unstable and is under active development.
 
-Documentation is available at [ersatztv.org](https://ersatztv.org/).
+Documentation is available at [ersatztv.org](https://ersatztv.org/). You can also [Ask ErsatzTV Guru](https://gurubase.io/g/ersatztv), it is an ErsatzTV-focused AI to answer your questions.
 
 Want to join the community or have a question? Join us at the [ErsatzTV Community](https://discuss.ersatztv.org/) or on [Discord](https://discord.gg/hHaJm3yGy6).
 
