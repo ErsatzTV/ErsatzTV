@@ -1,13 +1,15 @@
 {{ ##
 
 Available values:
+  - channel_id
+  - channel_id_legacy
   - channel_number
   - channel_name
   - channel_categories
   - channel_has_artwork
   - channel_artwork_path
   - channel_name_encoded
- 
+
 {RequestBase} and {AccessTokenUri} are replaced dynamically when XMLTV is requested,
 and must remain as-is in this template to work properly with ETV URLs.
 External URLs do not require these placeholders.
@@ -16,7 +18,7 @@ The resulting XML will be minified by ErsatzTV - so feel free to keep things nic
 
 ## }}
 
-<channel id="{{ channel_number }}.etv">
+<channel id="{{ channel_id }}">
   <display-name>{{ channel_number }} {{ channel_name }}</display-name>
   <display-name>{{ channel_number }}</display-name>
   <display-name>{{ channel_name }}</display-name>
@@ -24,7 +26,7 @@ The resulting XML will be minified by ErsatzTV - so feel free to keep things nic
     <category lang="en">{{ category }}</category>
   {{ end }}
   {{ if channel_has_artwork }}
-    <icon src="{RequestBase}/iptv/logos/{{ channel_artwork_path }}.jpg{AccessTokenUri}" />  
+    <icon src="{RequestBase}/iptv/logos/{{ channel_artwork_path }}.jpg{AccessTokenUri}" />
   {{ else }}
     <icon src="{RequestBase}/iptv/logos/gen{AccessTokenUri}&text={{ channel_name_encoded }}" />
   {{ end }}

@@ -3,6 +3,8 @@
 Available values:
   - programme_start
   - programme_stop
+  - channel_id
+  - channel_id_legacy
   - channel_number
   - has_custom_title
   - custom_title
@@ -25,12 +27,12 @@ Available values:
   - music_video_all_artists
   - music_video_studios
   - music_video_directors
- 
+
 The resulting XML will be minified by ErsatzTV - so feel free to keep things nicely formatted here.
 
 ## }}
 
-<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_number }}.etv">
+<programme start="{{ programme_start }}" stop="{{ programme_stop }}" channel="{{ channel_id }}">
   {{ if has_custom_title }}
       <title lang="en">{{ custom_title }}</title>
   {{ else }}

@@ -86,7 +86,7 @@ public class ChannelPlaylist
 
             sb.AppendLine(
                 CultureInfo.InvariantCulture,
-                $"#EXTINF:0 tvg-id=\"{channel.Number}.etv\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"{channel.Group}\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
+                $"#EXTINF:0 tvg-id=\"{ChannelIdentifier.FromNumber(channel.Number)}\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"{channel.Group}\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
             sb.AppendLine(
                 CultureInfo.InvariantCulture,
                 $"{_scheme}://{_host}{_baseUrl}/iptv/channel/{channel.Number}.{format}");
