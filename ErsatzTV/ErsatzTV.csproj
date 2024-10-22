@@ -40,7 +40,7 @@
       <PackageReference Include="MudBlazor" Version="7.12.1" />
       <PackageReference Include="NaturalSort.Extension" Version="4.3.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="7.2.1" />
-      <PackageReference Include="Serilog" Version="4.0.2" />
+      <PackageReference Include="Serilog" Version="4.1.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
       <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
