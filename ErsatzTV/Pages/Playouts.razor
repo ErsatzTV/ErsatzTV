@@ -28,6 +28,9 @@
                 Add External Json Playout
             </MudButton>
         </MudTooltip>
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@ResetAllPlayouts">
+            Reset All Playouts
+        </MudButton>
     </div>
     <MudTable Hover="true"
               Dense="true"
@@ -274,7 +277,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<EditExternalJsonFileDialog>("Edit External Json File", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new UpdateExternalJsonPlayout(playout.PlayoutId, result.Data as string ?? playout.ExternalJsonFile), _cts.Token);
             if (_table != null)
@@ -293,7 +296,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Playout", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeletePlayout(playout.PlayoutId), _cts.Token);
             if (_table != null)
@@ -306,6 +309,12 @@
                 _selectedPlayoutId = null;
             }
         }
+    }
+
+    private async Task ResetAllPlayouts()
+    {
+        _selectedPlayoutId = null;
+        await Mediator.Send(new ResetAllPlayouts(), _cts.Token);
     }
 
     private async Task ResetPlayout(PlayoutNameViewModel playout)
