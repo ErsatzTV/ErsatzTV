@@ -357,6 +357,66 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
+        public void Should_ScaleBeyondMinSize_ForCrop_ForTransportStream()
+        {
+            FFmpegProfile ffmpegProfile = TestProfile() with
+            {
+                Resolution = new Resolution { Width = 1280, Height = 720 },
+                ScalingBehavior = ScalingBehavior.Crop
+            };
+
+            var version = new MediaVersion { Width = 944, Height = 720, SampleAspectRatio = "1:1" };
+
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
+                StreamingMode.TransportStream,
+                ffmpegProfile,
+                version,
+                new MediaStream(),
+                new MediaStream(),
+                DateTimeOffset.Now,
+                DateTimeOffset.Now,
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                false,
+                None);
+
+            IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
+            scaledSize.Width.Should().Be(1280);
+            scaledSize.Height.Should().Be(976);
+            actual.PadToDesiredResolution.Should().BeFalse();
+        }
+
+        [Test]
+        public void Should_ScaleDownToMinSize_ForCrop_ForTransportStream()
+        {
+            FFmpegProfile ffmpegProfile = TestProfile() with
+            {
+                Resolution = new Resolution { Width = 1280, Height = 720 },
+                ScalingBehavior = ScalingBehavior.Crop
+            };
+
+            var version = new MediaVersion { Width = 1920, Height = 816, SampleAspectRatio = "1:1" };
+
+            FFmpegPlaybackSettings actual = FFmpegPlaybackSettingsCalculator.CalculateSettings(
+                StreamingMode.TransportStream,
+                ffmpegProfile,
+                version,
+                new MediaStream(),
+                new MediaStream(),
+                DateTimeOffset.Now,
+                DateTimeOffset.Now,
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                false,
+                None);
+
+            IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
+            scaledSize.Width.Should().Be(1694);
+            scaledSize.Height.Should().Be(720);
+            actual.PadToDesiredResolution.Should().BeFalse();
+        }
+
+        [Test]
         public void Should_NotPadToDesiredResolution_When_UnscaledContentIsUnderSized_ForHttpLiveStreaming()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
