@@ -335,8 +335,24 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         if (channel.FFmpegProfile.ScalingBehavior is ScalingBehavior.Crop)
         {
-            paddedSize = ffmpegVideoStream.SquarePixelFrameSizeForCrop(
-                new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height));
+            bool isTooSmallToCrop = videoVersion.Height < channel.FFmpegProfile.Resolution.Height ||
+                                    videoVersion.Width < channel.FFmpegProfile.Resolution.Width;
+
+            // if any dimension is smaller than the crop, scale beyond the crop (beyond the target resolution)
+            if (isTooSmallToCrop)
+            {
+                foreach (IDisplaySize size in playbackSettings.ScaledSize)
+                {
+                    scaledSize = new FrameSize(size.Width, size.Height);
+                }
+
+                paddedSize = scaledSize;
+            }
+            else
+            {
+                paddedSize = ffmpegVideoStream.SquarePixelFrameSizeForCrop(
+                    new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height));
+            }
 
             cropSize = new FrameSize(
                 channel.FFmpegProfile.Resolution.Width,

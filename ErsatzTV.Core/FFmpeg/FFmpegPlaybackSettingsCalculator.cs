@@ -99,7 +99,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 }
 
                 IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
-                if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution) && ffmpegProfile.ScalingBehavior is not ScalingBehavior.Crop)
                 {
                     result.PadToDesiredResolution = true;
                 }
@@ -229,7 +229,8 @@ public static class FFmpegPlaybackSettingsCalculator
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
         IsIncorrectSize(ffmpegProfile.Resolution, version) ||
         IsTooLarge(ffmpegProfile.Resolution, version) ||
-        IsOddSize(version);
+        IsOddSize(version) ||
+        TooSmallToCrop(ffmpegProfile, version);
 
     private static bool IsIncorrectSize(IDisplaySize desiredResolution, MediaVersion version) =>
         IsAnamorphic(version) ||
@@ -242,6 +243,16 @@ public static class FFmpegPlaybackSettingsCalculator
 
     private static bool IsOddSize(MediaVersion version) =>
         version.Height % 2 == 1 || version.Width % 2 == 1;
+
+    private static bool TooSmallToCrop(FFmpegProfile ffmpegProfile, MediaVersion version)
+    {
+        if (ffmpegProfile.ScalingBehavior is not ScalingBehavior.Crop)
+        {
+            return false;
+        }
+
+        return version.Height < ffmpegProfile.Resolution.Height || version.Width < ffmpegProfile.Resolution.Width;
+    }
 
     private static DisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
     {
@@ -256,12 +267,20 @@ public static class FFmpegPlaybackSettingsCalculator
         int hh1 = hw1 * q / p;
         int hh2 = targetSize.Height;
         int hw2 = targetSize.Height * p / q;
-        if (hh1 <= targetSize.Height)
+
+        // crop needs to return whichever version has *both* dimensions >= required
+        // because it will never pad
+        if (ffmpegProfile.ScalingBehavior is ScalingBehavior.Crop)
         {
-            return new DisplaySize(hw1, hh1);
+            if (hw1 >= targetSize.Width && hh1 >= targetSize.Height)
+            {
+                return new DisplaySize(hw1, hh1);
+            }
+
+            return new DisplaySize(hw2, hh2);
         }
 
-        return new DisplaySize(hw2, hh2);
+        return hh1 <= targetSize.Height ? new DisplaySize(hw1, hh1) : new DisplaySize(hw2, hh2);
     }
 
     private static int Gcd(int a, int b)
