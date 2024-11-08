@@ -10,7 +10,7 @@ internal static class Mapper
             GetDisplayTitle(playoutItem),
             playoutItem.StartOffset,
             playoutItem.FinishOffset,
-            GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
+            playoutItem.GetDisplayDuration());
 
     internal static PlayoutAlternateScheduleViewModel ProjectToViewModel(
         ProgramScheduleAlternate programScheduleAlternate) =>
@@ -81,10 +81,4 @@ internal static class Mapper
                 return string.Empty;
         }
     }
-
-    internal static string GetDisplayDuration(TimeSpan duration) =>
-        string.Format(
-            CultureInfo.InvariantCulture,
-            duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
-            duration);
 }

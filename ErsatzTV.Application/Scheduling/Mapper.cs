@@ -116,5 +116,5 @@ internal static class Mapper
             Playouts.Mapper.GetDisplayTitle(playoutItem),
             playoutItem.StartOffset.TimeOfDay,
             playoutItem.FinishOffset.TimeOfDay,
-            Playouts.Mapper.GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
+            playoutItem.GetDisplayDuration());
 }
