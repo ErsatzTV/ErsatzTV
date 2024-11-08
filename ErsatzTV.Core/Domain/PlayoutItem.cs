@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain;
@@ -55,4 +56,20 @@ public class PlayoutItem
             OutPoint = chapter.EndTime,
             ChapterTitle = chapter.Title
         };
+
+    public string GetDisplayDuration()
+    {
+        TimeSpan duration = FinishOffset - StartOffset;
+
+        if (duration >= TimeSpan.FromHours(24))
+        {
+            var ms = string.Format(CultureInfo.InvariantCulture, @"{0:mm\:ss}", duration);
+            return $"{(int)duration.TotalHours}:{ms}";
+        }
+
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
+            duration);
+    }
 }
