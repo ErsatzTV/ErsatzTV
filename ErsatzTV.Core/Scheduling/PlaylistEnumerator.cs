@@ -195,6 +195,12 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         while (result.State.Index < state.Index)
         {
             result.MoveNext();
+
+            // previous state is no longer valid; playlist now has fewer items
+            if (result.State.Index == 0)
+            {
+                break;
+            }
         }
 
         return result;

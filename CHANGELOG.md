@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix `Scaling Behavior` `Crop` when content is smaller than FFmpeg Profile resolution
   - Now, content will properly scale beyond the desired resolution before cropping
 - Fix displaying playout item durations that are greater than 24 hours
+- Fix building playouts when playlist has been changed to have fewer items
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added
