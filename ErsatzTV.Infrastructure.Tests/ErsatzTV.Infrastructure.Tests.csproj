@@ -14,7 +14,7 @@
         <PackageReference Include="NSubstitute" Version="5.3.0" />
         <PackageReference Include="NUnit" Version="4.2.2" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
-        <PackageReference Include="NUnit.Analyzers" Version="4.3.0">
+        <PackageReference Include="NUnit.Analyzers" Version="4.4.0">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
         </PackageReference>
