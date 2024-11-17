@@ -275,7 +275,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 matchingTitle.Count,
                 title);
 
-            return PrioritizeDefault(streams);
+            return PrioritizeDefault(matchingTitle);
         }
 
         _logger.LogDebug("Unable to find audio stream with preferred title {Title}", title);
