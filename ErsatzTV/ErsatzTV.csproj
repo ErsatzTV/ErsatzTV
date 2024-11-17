@@ -18,22 +18,22 @@
     <ItemGroup>
       <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
       <PackageReference Include="Bugsnag.AspNet.Core" Version="3.1.0" />
-      <PackageReference Include="FluentValidation" Version="11.10.0" />
+      <PackageReference Include="FluentValidation" Version="11.11.0" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
       <PackageReference Include="Heron.MudCalendar" Version="2.0.3" />
       <PackageReference Include="HtmlSanitizer" Version="8.1.870" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
       <PackageReference Include="Markdig" Version="0.38.0" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.10" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.10" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.10" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.11.20">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -47,6 +47,11 @@
       <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
       <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
       <PackageReference Include="VueCliMiddleware" Version="6.0.0" />
+
+      <!-- transitive; upgrading due to vuln -->
+      <PackageReference Include="Microsoft.AspnetCore.Http" Version="2.2.2" />
+      <PackageReference Include="System.Text.Encodings.Web" Version="4.7.2" />
+      <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     </ItemGroup>
 
     <ItemGroup>

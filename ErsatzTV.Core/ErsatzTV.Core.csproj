@@ -20,7 +20,7 @@
       <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
       <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.11.20">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.12.19">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -30,15 +30,18 @@
       <PackageReference Include="SkiaSharp" Version="2.88.9" />
       <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
       <PackageReference Include="TimeSpanParserUtil" Version="1.2.0" />
-      <PackageReference Include="YamlDotNet" Version="16.1.3" />
+      <PackageReference Include="YamlDotNet" Version="16.2.0" />
+
+      <!-- transitive; upgrading due to vuln -->
+      <PackageReference Include="System.Net.Http" Version="4.3.4" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>ErsatzTV.Core.Tests</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-    
+
     <ItemGroup>
       <ProjectReference Include="..\ErsatzTV.FFmpeg\ErsatzTV.FFmpeg.csproj" />
     </ItemGroup>
