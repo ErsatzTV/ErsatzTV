@@ -26,5 +26,5 @@ public class PlexCollectionMetadataResponse
     public int LibrarySectionId { get; set; }
 
     [XmlAttribute("childCount")]
-    public string ChildCount { get; set; }
+    public int ChildCount { get; set; }
 }
