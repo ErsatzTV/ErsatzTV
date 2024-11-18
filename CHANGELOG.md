@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix displaying playout item durations that are greater than 24 hours
 - Fix building playouts when playlist has been changed to have fewer items
 - Fix selecting audio stream with preferred title
+- Fix synchronizing Plex collections
+  - If this breaks collection sync for you, you will need to update your Plex server
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added
