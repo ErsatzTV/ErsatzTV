@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add `Reset All Playouts` button to top of playouts page
-- Add `rewind_on_reset` option to `wait_until` YAML playout instruction to allow
+- Add `rewind_on_reset` option to `wait_until` YAML playout instruction
   - This option allows YAML playouts to start in the past
+- Add `advance` option to `epg_group` YAML playout instruction
+  - When set to `false`, this option will lock the guide group without starting a new guide group
+  - This can be helpful for "post roll" items that should be part of the previous item's guide group
 
 ### Changed
 - **BREAKING CHANGE**: Change channel identifiers used in XMLTV to work around bad behavior in Plex
