@@ -121,7 +121,7 @@ public class YamlPlayoutBuilder(
                     }
                     else
                     {
-                        await handler.Handle(context, instruction, logger, cancellationToken);
+                        await handler.Handle(context, instruction, mode, logger, cancellationToken);
                     }
                 }
             }
@@ -145,7 +145,7 @@ public class YamlPlayoutBuilder(
 
             foreach (IYamlPlayoutHandler handler in maybeHandler)
             {
-                if (!await handler.Handle(context, instruction, logger, cancellationToken))
+                if (!await handler.Handle(context, instruction, mode, logger, cancellationToken))
                 {
                     logger.LogInformation("YAML playout instruction handler failed");
                 }

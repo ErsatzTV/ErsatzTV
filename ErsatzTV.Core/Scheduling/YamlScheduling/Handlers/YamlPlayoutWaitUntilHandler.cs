@@ -10,6 +10,7 @@ public class YamlPlayoutWaitUntilHandler : IYamlPlayoutHandler
     public Task<bool> Handle(
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
+        PlayoutBuildMode mode,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
@@ -31,6 +32,11 @@ public class YamlPlayoutWaitUntilHandler : IYamlPlayoutHandler
                 {
                     // this is wrong when offset changes
                     dayOnly = dayOnly.AddDays(1);
+                    currentTime = new DateTimeOffset(dayOnly, result, currentTime.Offset);
+                }
+                else if (waitUntil.RewindOnReset && mode == PlayoutBuildMode.Reset)
+                {
+                    // maybe wrong when offset changes?
                     currentTime = new DateTimeOffset(dayOnly, result, currentTime.Offset);
                 }
             }
