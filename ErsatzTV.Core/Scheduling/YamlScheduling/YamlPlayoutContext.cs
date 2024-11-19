@@ -28,11 +28,27 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
 
     public bool VisitedAll => _visitedInstructions.Count >= Definition.Playout.Count;
 
-    public int NextGuideGroup()
+    public int PeekNextGuideGroup()
     {
         if (_guideGroupLocked)
         {
             return _guideGroup;
+        }
+
+        int result = _guideGroup + 1;
+        if (result > 1000)
+        {
+            result = 1;
+        }
+
+        return result;
+    }
+
+    public void AdvanceGuideGroup()
+    {
+        if (_guideGroupLocked)
+        {
+            return;
         }
 
         _guideGroup++;
@@ -40,15 +56,13 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
         {
             _guideGroup = 1;
         }
-
-        return _guideGroup;
     }
 
     public void LockGuideGroup(bool advance = true)
     {
         if (advance)
         {
-            NextGuideGroup();
+            AdvanceGuideGroup();
         }
 
         _guideGroupLocked = true;

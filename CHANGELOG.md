@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix selecting audio stream with preferred title
 - Fix synchronizing Plex collections
   - If this breaks collection sync for you, you will need to update your Plex server
+- Fix guide group generation for `duration` YAML instructions
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added
