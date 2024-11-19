@@ -170,8 +170,10 @@ public class YamlPlayoutBuilder(
         {
             NextStart = maxTime,
             NextInstructionIndex = context.InstructionIndex,
-            NextGuideGroup = context.NextGuideGroup()
+            NextGuideGroup = context.PeekNextGuideGroup()
         };
+
+        context.AdvanceGuideGroup();
 
         // logger.LogDebug(
         //     "Saving yaml context at {Start}, instruction {Instruction}",

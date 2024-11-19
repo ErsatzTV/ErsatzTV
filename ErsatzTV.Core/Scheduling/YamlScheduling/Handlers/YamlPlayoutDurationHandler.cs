@@ -91,7 +91,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     Finish = context.CurrentTime.UtcDateTime + itemDuration,
                     InPoint = TimeSpan.Zero,
                     OutPoint = itemDuration,
-                    GuideGroup = context.NextGuideGroup(),
+                    GuideGroup = context.PeekNextGuideGroup(),
                     FillerKind = fillerKind,
                     CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle
                     //DisableWatermarks = !allowWatermarks
@@ -100,6 +100,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 if (remainingToFill - itemDuration >= TimeSpan.Zero)
                 {
                     context.Playout.Items.Add(playoutItem);
+                    context.AdvanceGuideGroup();
 
                     // create history record
                     Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
@@ -132,6 +133,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     playoutItem.OutPoint = playoutItem.Finish - playoutItem.Start;
 
                     context.Playout.Items.Add(playoutItem);
+                    context.AdvanceGuideGroup();
 
                     // create history record
                     Option<PlayoutHistory> maybeHistory = GetHistoryForItem(

@@ -49,7 +49,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                         //SubtitleMode = scheduleItem.SubtitleMode
-                        GuideGroup = context.NextGuideGroup()
+                        GuideGroup = context.PeekNextGuideGroup()
                         //GuideStart = effectiveBlock.Start.UtcDateTime,
                         //GuideFinish = blockFinish.UtcDateTime,
                         //BlockKey = JsonConvert.SerializeObject(effectiveBlock.BlockKey),
@@ -58,6 +58,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
                     };
 
                     context.Playout.Items.Add(playoutItem);
+                    context.AdvanceGuideGroup();
 
                     // create history record
                     Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
