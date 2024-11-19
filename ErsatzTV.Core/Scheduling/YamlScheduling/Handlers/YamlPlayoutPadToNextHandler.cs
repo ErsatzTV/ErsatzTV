@@ -9,6 +9,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
     public override async Task<bool> Handle(
         YamlPlayoutContext context,
         YamlPlayoutInstruction instruction,
+        PlayoutBuildMode mode,
         ILogger<YamlPlayoutBuilder> logger,
         CancellationToken cancellationToken)
     {
