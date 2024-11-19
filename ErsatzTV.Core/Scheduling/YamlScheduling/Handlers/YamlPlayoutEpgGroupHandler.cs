@@ -21,7 +21,8 @@ public class YamlPlayoutEpgGroupHandler : IYamlPlayoutHandler
 
         if (epgGroup.EpgGroup)
         {
-            context.LockGuideGroup();
+            // advance guide group by default
+            context.LockGuideGroup(epgGroup.Advance is null or true);
         }
         else
         {
