@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `advance` option to `epg_group` YAML playout instruction
   - When set to `false`, this option will lock the guide group without starting a new guide group
   - This can be helpful for "post roll" items that should be part of the previous item's guide group
+- Add `Song Video Mode` to channel settings
+  - `Default` - existing behavior
+  - `With Progress` - show animated progress bar at bottom of generated video
 
 ### Changed
 - **BREAKING CHANGE**: Change channel identifiers used in XMLTV to work around bad behavior in Plex
