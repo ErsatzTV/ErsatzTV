@@ -733,12 +733,21 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
     protected static void SetStillImageLoop(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
+        FFmpegState ffmpegState,
         FrameState desiredState,
         ICollection<IPipelineStep> pipelineSteps)
     {
         if (videoStream.StillImage)
         {
-            videoInputFile.FilterSteps.Add(new LoopFilter());
+            if (ffmpegState.IsSongWithProgress)
+            {
+                videoInputFile.FilterSteps.Add(new SongProgressFilter(videoStream.FrameSize, ffmpegState.Finish));
+            }
+            else
+            {
+                videoInputFile.FilterSteps.Add(new LoopFilter());
+            }
+
             if (desiredState.Realtime)
             {
                 videoInputFile.FilterSteps.Add(new RealtimeFilter());

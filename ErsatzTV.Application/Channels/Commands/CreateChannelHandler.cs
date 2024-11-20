@@ -76,7 +76,8 @@ public class CreateChannelHandler(
                     PreferredSubtitleLanguageCode = request.PreferredSubtitleLanguageCode,
                     SubtitleMode = request.SubtitleMode,
                     MusicVideoCreditsMode = request.MusicVideoCreditsMode,
-                    MusicVideoCreditsTemplate = request.MusicVideoCreditsTemplate
+                    MusicVideoCreditsTemplate = request.MusicVideoCreditsTemplate,
+                    SongVideoMode = request.SongVideoMode
                 };
 
                 foreach (int id in watermarkId)

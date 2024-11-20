@@ -396,7 +396,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsSegmentTemplate,
             ptsOffset,
             playbackSettings.ThreadCount,
-            qsvExtraHardwareFrames);
+            qsvExtraHardwareFrames,
+            videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true });
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -547,7 +548,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsSegmentTemplate,
             ptsOffset,
             Option<int>.None,
-            qsvExtraHardwareFrames);
+            qsvExtraHardwareFrames,
+            IsSongWithProgress: false);
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 
@@ -737,7 +739,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsSegmentTemplate,
             0,
             playbackSettings.ThreadCount,
-            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
+            Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
+            IsSongWithProgress: false);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 

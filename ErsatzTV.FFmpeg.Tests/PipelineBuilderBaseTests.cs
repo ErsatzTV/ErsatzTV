@@ -92,7 +92,8 @@ public class PipelineBuilderBaseTests
             Option<string>.None,
             0,
             Option<int>.None,
-            Option<int>.None);
+            Option<int>.None,
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
@@ -185,7 +186,8 @@ public class PipelineBuilderBaseTests
             Option<string>.None,
             0,
             Option<int>.None,
-            Option<int>.None);
+            Option<int>.None,
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
@@ -334,7 +336,8 @@ public class PipelineBuilderBaseTests
             Option<string>.None,
             0,
             Option<int>.None,
-            Option<int>.None);
+            Option<int>.None,
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
@@ -421,7 +424,8 @@ public class PipelineBuilderBaseTests
             Option<string>.None,
             0,
             Option<int>.None,
-            Option<int>.None);
+            Option<int>.None,
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),

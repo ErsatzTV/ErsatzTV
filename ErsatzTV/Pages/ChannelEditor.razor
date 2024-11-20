@@ -92,6 +92,10 @@
                             <MudSelectItem T="string" Value="@template">@template</MudSelectItem>
                         }
                     </MudSelect>
+                    <MudSelect Class="mt-3" Label="Song Video Mode" @bind-Value="_model.SongVideoMode" For="@(() => _model.SongVideoMode)">
+                        <MudSelectItem Value="@(ChannelSongVideoMode.Default)">Default</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSongVideoMode.WithProgress)">With Progress</MudSelectItem>
+                    </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
                             <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
@@ -194,6 +198,7 @@
                     _model.SubtitleMode = channelViewModel.SubtitleMode;
                     _model.MusicVideoCreditsMode = channelViewModel.MusicVideoCreditsMode;
                     _model.MusicVideoCreditsTemplate = channelViewModel.MusicVideoCreditsTemplate;
+                    _model.SongVideoMode = channelViewModel.SongVideoMode;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }

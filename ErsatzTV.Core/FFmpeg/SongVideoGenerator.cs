@@ -232,7 +232,10 @@ public class SongVideoGenerator : ISongVideoGenerator
         foreach (string si in maybeSongImage.RightToSeq())
         {
             videoPath = si;
-            videoVersion = BackgroundImageMediaVersion.ForPath(si, channel.FFmpegProfile.Resolution);
+            videoVersion = BackgroundImageMediaVersion.ForPath(
+                si,
+                channel.FFmpegProfile.Resolution,
+                isSongWithProgress: channel.SongVideoMode is ChannelSongVideoMode.WithProgress);
         }
 
         return Tuple(videoPath, videoVersion);

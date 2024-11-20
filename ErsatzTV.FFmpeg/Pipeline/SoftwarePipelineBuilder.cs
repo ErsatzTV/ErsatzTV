@@ -107,7 +107,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetCrop(videoInputFile, desiredState, currentState);
-            SetStillImageLoop(videoInputFile, videoStream, desiredState, pipelineSteps);
+            SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
             SetSubtitle(
                 videoInputFile,
                 subtitleInputFile,
