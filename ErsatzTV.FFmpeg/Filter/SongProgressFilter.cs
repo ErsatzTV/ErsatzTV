@@ -21,7 +21,7 @@ public class SongProgressFilter(FrameSize frameSize, Option<TimeSpan> maybeStart
                 var scaleToFullWidth = $"scale=iw*{alreadyPlayed}+iw*(t/{seconds})*{scale}:ih:eval=frame";
                 var overlayBar = "overlay=W*0.05:H-h-H*0.05:shortest=1:enable='gt(t,0.1)'";
 
-                return $"loop=-1:1[si],{generateWhiteBar},{scaleToFullWidth}[sbar];[si][sbar]{overlayBar}";
+                return $"loop=-1:1[si],{generateWhiteBar},format=rgba,colorchannelmixer=aa=0.9,{scaleToFullWidth}[sbar];[si][sbar]{overlayBar}";
             }
 
             return string.Empty;
