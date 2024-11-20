@@ -64,11 +64,16 @@ public class SongVideoGenerator : ISongVideoGenerator
         var boxBlur = false;
 
         const int HORIZONTAL_MARGIN_PERCENT = 3;
-        const int VERTICAL_MARGIN_PERCENT = 5;
+        var verticalMarginPercent = 5;
         const int WATERMARK_WIDTH_PERCENT = 25;
         WatermarkLocation watermarkLocation = NextRandom(2) == 0
             ? WatermarkLocation.BottomLeft
             : WatermarkLocation.BottomRight;
+
+        if (channel.SongVideoMode is ChannelSongVideoMode.WithProgress)
+        {
+            verticalMarginPercent += 10;
+        }
 
         foreach (SongMetadata metadata in song.SongMetadata)
         {
@@ -138,7 +143,7 @@ public class SongVideoGenerator : ISongVideoGenerator
             var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
             var rightMargin = (int)Math.Round(rightMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
             var verticalMargin =
-                (int)Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * channel.FFmpegProfile.Resolution.Height);
+                (int)Math.Round(verticalMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Height);
 
             subtitleFile = await new SubtitleBuilder(_tempFilePool)
                 .WithResolution(channel.FFmpegProfile.Resolution)
@@ -225,7 +230,7 @@ public class SongVideoGenerator : ISongVideoGenerator
             watermarkPath,
             watermarkLocation,
             HORIZONTAL_MARGIN_PERCENT,
-            VERTICAL_MARGIN_PERCENT,
+            verticalMarginPercent,
             WATERMARK_WIDTH_PERCENT,
             cancellationToken);
 
