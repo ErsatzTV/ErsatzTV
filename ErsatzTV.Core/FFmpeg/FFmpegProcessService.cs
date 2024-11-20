@@ -179,6 +179,13 @@ public class FFmpegProcessService
             {
                 switch (watermark.ImageSource)
                 {
+                    // used for song progress overlay
+                    case ChannelWatermarkImageSource.Resource:
+                        return new WatermarkOptions(
+                            await watermarkOverride.IfNoneAsync(watermark),
+                            Path.Combine(FileSystemLayout.ResourcesCacheFolder, watermark.Image),
+                            Option<int>.None,
+                            false);
                     case ChannelWatermarkImageSource.Custom:
                         string customPath = _imageCache.GetPathForImage(
                             watermark.Image,

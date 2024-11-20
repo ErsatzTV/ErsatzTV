@@ -71,6 +71,7 @@
       <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.js" />
       <EmbeddedResource Include="Resources\Scripts\_episode.js" />
       <EmbeddedResource Include="Resources\Scripts\_movie.js" />
+      <EmbeddedResource Include="Resources\song_progress_overlay.png" />
       <EmbeddedResource Include="Resources\song_background_1.png" />
       <EmbeddedResource Include="Resources\song_background_2.png" />
       <EmbeddedResource Include="Resources\song_background_3.png" />

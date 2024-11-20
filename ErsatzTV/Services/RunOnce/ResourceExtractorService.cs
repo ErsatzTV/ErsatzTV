@@ -17,6 +17,7 @@ public class ResourceExtractorService : BackgroundService
         Assembly assembly = typeof(ResourceExtractorService).GetTypeInfo().Assembly;
 
         await ExtractResource(assembly, "background.png", stoppingToken);
+        await ExtractResource(assembly, "song_progress_overlay.png", stoppingToken);
         await ExtractResource(assembly, "song_background_1.png", stoppingToken);
         await ExtractResource(assembly, "song_background_2.png", stoppingToken);
         await ExtractResource(assembly, "song_background_3.png", stoppingToken);
