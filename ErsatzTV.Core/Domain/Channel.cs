@@ -29,6 +29,7 @@ public class Channel
     public ChannelSubtitleMode SubtitleMode { get; set; }
     public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
     public string MusicVideoCreditsTemplate { get; set; }
+    public ChannelSongVideoMode SongVideoMode { get; set; }
     public ChannelProgressMode ProgressMode { get; set; }
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }

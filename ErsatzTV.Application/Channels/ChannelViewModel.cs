@@ -21,7 +21,8 @@ public record ChannelViewModel(
     string PreferredSubtitleLanguageCode,
     ChannelSubtitleMode SubtitleMode,
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
-    string MusicVideoCreditsTemplate)
+    string MusicVideoCreditsTemplate,
+    ChannelSongVideoMode SongVideoMode)
 {
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }

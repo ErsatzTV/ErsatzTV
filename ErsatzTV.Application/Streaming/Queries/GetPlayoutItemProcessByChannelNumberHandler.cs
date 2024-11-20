@@ -16,6 +16,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Scheduling;
+using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -256,6 +257,24 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     ffmpegPath,
                     ffprobePath,
                     cancellationToken);
+
+                // override watermark as song_progress_overlay.png
+                if (videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true })
+                {
+                    disableWatermarks = false;
+                    playoutItemWatermark = new ChannelWatermark
+                    {
+                        Mode = ChannelWatermarkMode.Permanent,
+                        Size = WatermarkSize.Scaled,
+                        WidthPercent = 100,
+                        HorizontalMarginPercent = 0,
+                        VerticalMarginPercent = 0,
+                        Opacity = 100,
+                        Location = WatermarkLocation.TopLeft,
+                        ImageSource = ChannelWatermarkImageSource.Resource,
+                        Image = "song_progress_overlay.png"
+                    };
+                }
             }
 
             if (playoutItemWithPath.PlayoutItem.MediaItem is Image)
