@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Song Video Mode` to channel settings
   - `Default` - existing behavior
   - `With Progress` - show animated progress bar at bottom of generated video
+- Add fallback album art image for songs that have no album art
 
 ### Changed
 - **BREAKING CHANGE**: Change channel identifiers used in XMLTV to work around bad behavior in Plex
