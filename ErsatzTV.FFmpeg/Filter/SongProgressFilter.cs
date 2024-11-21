@@ -17,7 +17,7 @@ public class SongProgressFilter(FrameSize frameSize, Option<TimeSpan> maybeStart
                 double alreadyPlayed = start.TotalSeconds / finish.TotalSeconds;
                 double scale = 1 - alreadyPlayed;
 
-                var generateGrayBar = $"color=c=#323232:s={width}x{height},format=rgba,colorchannelmixer=aa=0.3";
+                var generateGrayBar = $"color=c=#323232:s={width}x{height},format=rgba,colorchannelmixer=aa=0.4";
                 var generateWhiteBar = $"color=c=white:s={width}x{height}";
                 var scaleToFullWidth = $"scale=iw*{alreadyPlayed}+iw*(t/{seconds})*{scale}:ih:eval=frame";
                 var overlayBar = "overlay=W*0.05:H-h-H*0.05:shortest=1:enable='gt(t,0.1)'";
