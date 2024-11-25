@@ -172,19 +172,19 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
         var lines = new List<string>();
 
+        string arguments = display == "drm"
+            ? $"--display drm --device {vaapiDevice} -a"
+            : $"--display {display} -a";
+
         await Cli.Wrap("vainfo")
-            .WithArguments($"--display {display} --device {vaapiDevice} -a")
+            .WithArguments(arguments)
             .WithEnvironmentVariables(envVars)
             .WithValidation(CommandResultValidation.None)
             .WithStandardOutputPipe(PipeTarget.ToDelegate(lines.Add))
             .WithStandardErrorPipe(PipeTarget.ToDelegate(lines.Add))
             .ExecuteAsync();
 
-        var mergedOutput = string.Join(System.Environment.NewLine, lines);
-
-        return mergedOutput.Contains("trying display", StringComparison.OrdinalIgnoreCase)
-            ? mergedOutput
-            : string.Empty;
+        return string.Join(System.Environment.NewLine, lines);
     }
 
     public async Task<List<string>> GetVaapiDisplays()
