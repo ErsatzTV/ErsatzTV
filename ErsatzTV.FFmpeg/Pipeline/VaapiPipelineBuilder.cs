@@ -75,16 +75,13 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             encodeCapability = FFmpegCapability.Software;
         }
 
-        foreach (string driverName in ffmpegState.VaapiDriver)
+        foreach (string vaapiDevice in ffmpegState.VaapiDevice)
         {
-            pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
-        }
+            pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
 
-        if (ffmpegState.VaapiDisplay.IfNone("drm") == "drm")
-        {
-            foreach (string vaapiDevice in ffmpegState.VaapiDevice)
+            foreach (string driverName in ffmpegState.VaapiDriver)
             {
-                pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
+                pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
             }
         }
 
