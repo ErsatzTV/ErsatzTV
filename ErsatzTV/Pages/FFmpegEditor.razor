@@ -110,12 +110,10 @@
                                         @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
                                         {
                                             <MudElement HtmlTag="div" Class="mt-3">
-                                                <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)"
-                                                           Label="VAAPI Display"
-                                                           @bind-Value="_model.VaapiDisplay" For="@(() => _model.VaapiDisplay)">
-                                                    @foreach (string display in _vaapiDisplays)
+                                                <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Driver" @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
+                                                    @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
                                                     {
-                                                        <MudSelectItem Value="@display">@display</MudSelectItem>
+                                                        <MudSelectItem Value="@driver">@driver</MudSelectItem>
                                                     }
                                                 </MudSelect>
                                             </MudElement>
@@ -124,10 +122,12 @@
                                         @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
                                         {
                                             <MudElement HtmlTag="div" Class="mt-3">
-                                                <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Driver" @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
-                                                    @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
+                                                <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)"
+                                                           Label="VAAPI Display"
+                                                           @bind-Value="_model.VaapiDisplay" For="@(() => _model.VaapiDisplay)">
+                                                    @foreach (string display in _vaapiDisplays)
                                                     {
-                                                        <MudSelectItem Value="@driver">@driver</MudSelectItem>
+                                                        <MudSelectItem Value="@display">@display</MudSelectItem>
                                                     }
                                                 </MudSelect>
                                             </MudElement>

@@ -326,12 +326,22 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
             if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
             {
-                _logger.LogDebug(
-                    "Detected {Count} VAAPI profile entrypoints for using {Display} {Driver} {Device}",
-                    profileEntrypoints.Count,
-                    display,
-                    driver,
-                    device);
+                if (display == "drm")
+                {
+                    _logger.LogDebug(
+                        "Detected {Count} VAAPI profile entrypoints using {Driver} {Device}",
+                        profileEntrypoints.Count,
+                        driver,
+                        device);
+                }
+                else
+                {
+                    _logger.LogDebug(
+                        "Detected {Count} VAAPI profile entrypoints using {Display} {Driver}",
+                        profileEntrypoints.Count,
+                        display,
+                        driver);
+                }
                 _memoryCache.Set(cacheKey, profileEntrypoints);
                 return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }
@@ -394,7 +404,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                 if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
                 {
                     _logger.LogDebug(
-                        "Detected {Count} VAAPI profile entrypoints for using QSV device {Device}",
+                        "Detected {Count} VAAPI profile entrypoints using QSV device {Device}",
                         profileEntrypoints.Count,
                         device);
 
