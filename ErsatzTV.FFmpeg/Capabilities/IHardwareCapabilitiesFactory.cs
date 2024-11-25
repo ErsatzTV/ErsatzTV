@@ -10,6 +10,7 @@ public interface IHardwareCapabilitiesFactory
         IFFmpegCapabilities ffmpegCapabilities,
         string ffmpegPath,
         HardwareAccelerationMode hardwareAccelerationMode,
+        Option<string> vaapiDisplay,
         Option<string> vaapiDriver,
         Option<string> vaapiDevice);
 
@@ -17,5 +18,7 @@ public interface IHardwareCapabilitiesFactory
 
     Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice);
 
-    Task<Option<string>> GetVaapiOutput(Option<string> vaapiDriver, string vaapiDevice);
+    Task<Option<string>> GetVaapiOutput(string display, Option<string> vaapiDriver, string vaapiDevice);
+
+    Task<List<string>> GetVaapiDisplays();
 }

@@ -32,6 +32,7 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
             request.ErrorMessage,
             request.HlsRealtime,
             request.PtsOffset,
+            channel.FFmpegProfile.VaapiDisplay,
             channel.FFmpegProfile.VaapiDriver,
             channel.FFmpegProfile.VaapiDevice,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));

@@ -640,6 +640,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("VaapiDevice")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("VaapiDisplay")
+                        .HasColumnType("longtext");
+
                     b.Property<int>("VaapiDriver")
                         .HasColumnType("int");
 
