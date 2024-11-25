@@ -20,7 +20,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
     private const string ModelCacheKey = "ffmpeg.hardware.nvidia.model";
 
     private static readonly CompositeFormat
-        VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}");
+        VaapiCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.vaapi.{0}.{1}.{2}");
 
     private static readonly CompositeFormat QsvCacheKeyFormat = CompositeFormat.Parse("ffmpeg.hardware.qsv.{0}");
     private static readonly CompositeFormat FFmpegCapabilitiesCacheKeyFormat = CompositeFormat.Parse("ffmpeg.{0}");
@@ -304,7 +304,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             string display = vaapiDisplay.IfNone("drm");
             string driver = vaapiDriver.IfNone(string.Empty);
             string device = vaapiDevice.IfNone(string.Empty);
-            var cacheKey = string.Format(CultureInfo.InvariantCulture, VaapiCacheKeyFormat, driver, device);
+            var cacheKey = string.Format(CultureInfo.InvariantCulture, VaapiCacheKeyFormat, display, driver, device);
 
             if (_memoryCache.TryGetValue(cacheKey, out List<VaapiProfileEntrypoint>? profileEntrypoints) &&
                 profileEntrypoints is not null)
