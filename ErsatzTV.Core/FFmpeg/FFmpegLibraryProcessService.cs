@@ -382,6 +382,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             saveReports,
             hwAccel,
             hwAccel,
+            VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.StreamSeek,
@@ -536,6 +537,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             false,
             HardwareAccelerationMode.None, // no hw accel decode since errors loop
             hwAccel,
+            VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.StreamSeek,
@@ -730,6 +732,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             saveReports,
             HardwareAccelerationMode.None,
             hwAccel,
+            vaapiDisplay,
             vaapiDriver,
             vaapiDevice,
             playbackSettings.StreamSeek,
