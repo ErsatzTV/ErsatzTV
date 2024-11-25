@@ -36,6 +36,7 @@ public class
         p.Name = update.Name;
         p.ThreadCount = update.ThreadCount;
         p.HardwareAcceleration = update.HardwareAcceleration;
+        p.VaapiDisplay = update.VaapiDisplay;
         p.VaapiDriver = update.VaapiDriver;
         p.VaapiDevice = update.VaapiDevice;
         p.QsvExtraHardwareFrames = update.QsvExtraHardwareFrames;

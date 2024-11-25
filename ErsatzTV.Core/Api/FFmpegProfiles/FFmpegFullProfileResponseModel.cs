@@ -5,6 +5,7 @@ public record FFmpegFullProfileResponseModel(
     string Name,
     int ThreadCount,
     int HardwareAcceleration,
+    string VaapiDisplay,
     int VaapiDriver,
     string VaapiDevice,
     int ResolutionId,

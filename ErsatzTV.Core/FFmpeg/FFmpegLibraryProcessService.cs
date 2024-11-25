@@ -59,6 +59,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         DateTimeOffset now,
         Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark,
+        string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames,
@@ -408,6 +409,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkInputFile,
             subtitleInputFile,
             Option<ConcatInputFile>.None,
+            VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
@@ -428,6 +430,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string errorMessage,
         bool hlsRealtime,
         long ptsOffset,
+        string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames)
@@ -569,6 +572,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             subtitleInputFile,
             Option<ConcatInputFile>.None,
+            VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
             FileSystemLayout.FFmpegReportsFolder,
@@ -600,6 +604,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             concatInputFile,
+            Option<string>.None,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
@@ -717,6 +722,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
 
+        Option<string> vaapiDisplay = VaapiDisplayName(hwAccel, channel.FFmpegProfile.VaapiDisplay);
         Option<string> vaapiDriver = VaapiDriverName(hwAccel, channel.FFmpegProfile.VaapiDriver);
         Option<string> vaapiDevice = VaapiDeviceName(hwAccel, channel.FFmpegProfile.VaapiDevice);
 
@@ -751,6 +757,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkInputFile,
             subtitleInputFile,
             concatInputFile,
+            vaapiDisplay,
             vaapiDriver,
             vaapiDevice,
             FileSystemLayout.FFmpegReportsFolder,
@@ -790,6 +797,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             concatInputFile,
+            Option<string>.None,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
@@ -830,6 +838,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             Option<ConcatInputFile>.None,
+            Option<string>.None,
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
@@ -987,6 +996,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null))
             .WithEnvironmentVariables(environmentVariables.ToDictionary(e => e.Key, e => e.Value));
     }
+
+    private static Option<string> VaapiDisplayName(HardwareAccelerationMode accelerationMode, string vaapiDisplay) =>
+        accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDisplay : Option<string>.None;
 
     private static Option<string> VaapiDriverName(HardwareAccelerationMode accelerationMode, VaapiDriver driver)
     {

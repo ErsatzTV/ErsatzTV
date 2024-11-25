@@ -92,7 +92,12 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
 
                 if (!_memoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
                 {
-                    vaapiDevices = new List<string> { "/dev/dri/renderD128" };
+                    vaapiDevices = ["/dev/dri/renderD128"];
+                }
+
+                if (!_memoryCache.TryGetValue("ffmpeg.vaapi_displays", out List<string> vaapiDisplays))
+                {
+                    vaapiDisplays = ["drm"];
                 }
 
                 foreach (string qsvDevice in vaapiDevices)
@@ -109,19 +114,19 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
                     var allDrivers = new List<VaapiDriver>
                         { VaapiDriver.iHD, VaapiDriver.i965, VaapiDriver.RadeonSI, VaapiDriver.Nouveau };
 
+                    foreach (string display in vaapiDisplays)
                     foreach (VaapiDriver activeDriver in allDrivers)
+                    foreach (string vaapiDevice in vaapiDevices)
                     {
-                        foreach (string vaapiDevice in vaapiDevices)
+                        foreach (string output in await _hardwareCapabilitiesFactory.GetVaapiOutput(
+                                     display,
+                                     Optional(GetDriverName(activeDriver)),
+                                     vaapiDevice))
                         {
-                            foreach (string output in await _hardwareCapabilitiesFactory.GetVaapiOutput(
-                                         Optional(GetDriverName(activeDriver)),
-                                         vaapiDevice))
-                            {
-                                vaapiCapabilities +=
-                                    $"Checking driver {activeDriver} device {vaapiDevice}{Environment.NewLine}{Environment.NewLine}";
-                                vaapiCapabilities += output;
-                                vaapiCapabilities += Environment.NewLine + Environment.NewLine;
-                            }
+                            vaapiCapabilities +=
+                                $"Checking display [{display}] driver [{activeDriver}] device [{vaapiDevice}]{Environment.NewLine}{Environment.NewLine}";
+                            vaapiCapabilities += output;
+                            vaapiCapabilities += Environment.NewLine + Environment.NewLine;
                         }
                     }
                 }

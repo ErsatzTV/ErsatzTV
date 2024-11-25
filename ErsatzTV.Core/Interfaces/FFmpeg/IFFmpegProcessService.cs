@@ -28,6 +28,7 @@ public interface IFFmpegProcessService
         DateTimeOffset now,
         Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark,
+        string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames,
@@ -47,6 +48,7 @@ public interface IFFmpegProcessService
         string errorMessage,
         bool hlsRealtime,
         long ptsOffset,
+        string vaapiDisplay,
         VaapiDriver vaapiDriver,
         string vaapiDevice,
         Option<int> qsvExtraHardwareFrames);

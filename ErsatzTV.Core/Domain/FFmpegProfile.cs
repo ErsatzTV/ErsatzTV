@@ -8,6 +8,7 @@ public record FFmpegProfile
     public string Name { get; set; }
     public int ThreadCount { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
+    public string VaapiDisplay { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
     public string VaapiDevice { get; set; }
     public int? QsvExtraHardwareFrames { get; set; }

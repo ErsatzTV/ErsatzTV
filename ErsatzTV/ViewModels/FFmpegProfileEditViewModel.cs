@@ -27,6 +27,7 @@ public class FFmpegProfileEditViewModel
         ScalingBehavior = viewModel.ScalingBehavior;
         ThreadCount = viewModel.ThreadCount;
         HardwareAcceleration = viewModel.HardwareAcceleration;
+        VaapiDisplay = viewModel.VaapiDisplay;
         VaapiDriver = viewModel.VaapiDriver;
         VaapiDevice = viewModel.VaapiDevice;
         QsvExtraHardwareFrames = viewModel.QsvExtraHardwareFrames;
@@ -53,6 +54,7 @@ public class FFmpegProfileEditViewModel
     public ScalingBehavior ScalingBehavior { get; set; }
     public int ThreadCount { get; set; }
     public HardwareAccelerationKind HardwareAcceleration { get; set; }
+    public string VaapiDisplay { get; set; }
     public VaapiDriver VaapiDriver { get; set; }
     public string VaapiDevice { get; set; }
     public int? QsvExtraHardwareFrames { get; set; }
@@ -69,6 +71,7 @@ public class FFmpegProfileEditViewModel
             Name,
             ThreadCount,
             HardwareAcceleration,
+            VaapiDisplay,
             VaapiDriver,
             VaapiDevice,
             QsvExtraHardwareFrames,
@@ -97,6 +100,7 @@ public class FFmpegProfileEditViewModel
             Name,
             ThreadCount,
             HardwareAcceleration,
+            VaapiDisplay,
             VaapiDriver,
             VaapiDevice,
             QsvExtraHardwareFrames,

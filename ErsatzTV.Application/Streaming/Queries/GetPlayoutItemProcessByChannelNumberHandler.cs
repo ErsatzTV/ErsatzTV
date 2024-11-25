@@ -312,6 +312,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.StartAtZero ? start : now,
                 playoutItemWatermark,
                 maybeGlobalWatermark,
+                channel.FFmpegProfile.VaapiDisplay,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
                 Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
@@ -357,6 +358,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         "Channel is Offline",
                         request.HlsRealtime,
                         request.PtsOffset,
+                        channel.FFmpegProfile.VaapiDisplay,
                         channel.FFmpegProfile.VaapiDriver,
                         channel.FFmpegProfile.VaapiDevice,
                         Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
@@ -370,6 +372,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         error.Value,
                         request.HlsRealtime,
                         request.PtsOffset,
+                        channel.FFmpegProfile.VaapiDisplay,
                         channel.FFmpegProfile.VaapiDriver,
                         channel.FFmpegProfile.VaapiDevice,
                         Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));
@@ -383,6 +386,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         "Channel is Offline",
                         request.HlsRealtime,
                         request.PtsOffset,
+                        channel.FFmpegProfile.VaapiDisplay,
                         channel.FFmpegProfile.VaapiDriver,
                         channel.FFmpegProfile.VaapiDevice,
                         Optional(channel.FFmpegProfile.QsvExtraHardwareFrames));

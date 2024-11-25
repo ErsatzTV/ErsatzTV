@@ -9,6 +9,7 @@ public interface IPipelineBuilderFactory
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<string> vaapiDisplay,
         Option<string> vaapiDriver,
         Option<string> vaapiDevice,
         string reportsFolder,

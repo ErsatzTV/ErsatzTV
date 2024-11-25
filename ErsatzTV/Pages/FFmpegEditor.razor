@@ -110,6 +110,20 @@
                                         @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
                                         {
                                             <MudElement HtmlTag="div" Class="mt-3">
+                                                <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)"
+                                                           Label="VAAPI Display"
+                                                           @bind-Value="_model.VaapiDisplay" For="@(() => _model.VaapiDisplay)">
+                                                    @foreach (string display in _vaapiDisplays)
+                                                    {
+                                                        <MudSelectItem Value="@display">@display</MudSelectItem>
+                                                    }
+                                                </MudSelect>
+                                            </MudElement>
+                                        }
+
+                                        @if (_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
+                                        {
+                                            <MudElement HtmlTag="div" Class="mt-3">
                                                 <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Driver" @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
                                                     @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
                                                     {
@@ -198,7 +212,8 @@
 
     private List<ResolutionViewModel> _resolutions = new();
     private List<HardwareAccelerationKind> _hardwareAccelerationKinds = new();
-    private List<string> _vaapiDevices = new();
+    private List<string> _vaapiDisplays = [];
+    private List<string> _vaapiDevices = [];
     private PersistingComponentStateSubscription _persistingSubscription;
 
     public void Dispose()
@@ -275,6 +290,13 @@
         }
 
         _vaapiDevices = vaapiDevices.OrderBy(s => s).ToList();
+
+        if (!MemoryCache.TryGetValue("ffmpeg.vaapi_displays", out List<string> vaapiDisplays))
+        {
+            vaapiDisplays = ["drm"];
+        }
+
+        _vaapiDisplays = vaapiDisplays.OrderBy(s => s).ToList();
     }
 
     private Task PersistData()

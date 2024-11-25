@@ -9,6 +9,7 @@ public record UpdateFFmpegProfile(
     string Name,
     int ThreadCount,
     HardwareAccelerationKind HardwareAcceleration,
+    string VaapiDisplay,
     VaapiDriver VaapiDriver,
     string VaapiDevice,
     int? QsvExtraHardwareFrames,

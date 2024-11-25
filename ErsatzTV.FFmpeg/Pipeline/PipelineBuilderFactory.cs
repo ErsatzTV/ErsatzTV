@@ -23,6 +23,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         Option<ConcatInputFile> concatInputFile,
+        Option<string> vaapiDisplay,
         Option<string> vaapiDriver,
         Option<string> vaapiDevice,
         string reportsFolder,
@@ -35,6 +36,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
             ffmpegCapabilities,
             ffmpegPath,
             hardwareAccelerationMode,
+            vaapiDisplay,
             vaapiDriver,
             vaapiDevice);
 
