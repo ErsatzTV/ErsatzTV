@@ -81,7 +81,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         }
 
         Option<string> vaapiDevice = ffmpegState.VaapiDevice;
-        if (ffmpegState.VaapiDisplay.IfNone("drm") == "drm")
+        if (ffmpegState.VaapiDisplay.IfNone("drm") != "drm")
         {
             vaapiDevice = Option<string>.None;
         }
