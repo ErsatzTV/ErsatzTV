@@ -5,28 +5,17 @@ namespace ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 public class VaapiHardwareAccelerationOption : GlobalOption
 {
     private readonly FFmpegCapability _decodeCapability;
-    private readonly Option<string> _vaapiDevice;
+    private readonly string _vaapiDevice;
 
-    public VaapiHardwareAccelerationOption(Option<string> vaapiDevice, FFmpegCapability decodeCapability)
+    public VaapiHardwareAccelerationOption(string vaapiDevice, FFmpegCapability decodeCapability)
     {
         _vaapiDevice = vaapiDevice;
         _decodeCapability = decodeCapability;
     }
 
-    public override string[] GlobalOptions
-    {
-        get
-        {
-            foreach (string vaapiDevice in _vaapiDevice)
-            {
-                return _decodeCapability == FFmpegCapability.Hardware
-                    ? ["-hwaccel", "vaapi", "-vaapi_device", vaapiDevice]
-                    : ["-vaapi_device", vaapiDevice];
-            }
-
-            return [ "-hwaccel", "vaapi" ];
-        }
-    }
+    public override string[] GlobalOptions => _decodeCapability == FFmpegCapability.Hardware
+        ? new[] { "-hwaccel", "vaapi", "-vaapi_device", _vaapiDevice }
+        : new[] { "-vaapi_device", _vaapiDevice };
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {
