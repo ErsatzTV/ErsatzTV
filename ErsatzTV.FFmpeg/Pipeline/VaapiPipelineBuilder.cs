@@ -80,13 +80,13 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             pipelineSteps.Add(new LibvaDriverNameVariable(driverName));
         }
 
+        Option<string> vaapiDevice = ffmpegState.VaapiDevice;
         if (ffmpegState.VaapiDisplay.IfNone("drm") == "drm")
         {
-            foreach (string vaapiDevice in ffmpegState.VaapiDevice)
-            {
-                pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
-            }
+            vaapiDevice = Option<string>.None;
         }
+
+        pipelineSteps.Add(new VaapiHardwareAccelerationOption(vaapiDevice, decodeCapability));
 
         // use software decoding with an extensive pipeline
         if (context is { HasSubtitleOverlay: true, HasWatermark: true })
