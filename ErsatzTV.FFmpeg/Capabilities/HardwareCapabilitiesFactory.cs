@@ -327,8 +327,9 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
             if (profileEntrypoints is not null && profileEntrypoints.Count != 0)
             {
                 _logger.LogDebug(
-                    "Detected {Count} VAAPI profile entrypoints for using {Driver} {Device}",
+                    "Detected {Count} VAAPI profile entrypoints for using {Display} {Driver} {Device}",
                     profileEntrypoints.Count,
+                    display,
                     driver,
                     device);
                 _memoryCache.Set(cacheKey, profileEntrypoints);
