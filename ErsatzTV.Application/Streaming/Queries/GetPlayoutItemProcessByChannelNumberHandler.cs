@@ -261,6 +261,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 // override watermark as song_progress_overlay.png
                 if (videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true })
                 {
+                    string image = "song_progress_overlay.png";
+
                     disableWatermarks = false;
                     playoutItemWatermark = new ChannelWatermark
                     {
@@ -272,7 +274,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         Opacity = 100,
                         Location = WatermarkLocation.TopLeft,
                         ImageSource = ChannelWatermarkImageSource.Resource,
-                        Image = "song_progress_overlay.png"
+                        Image = image
                     };
                 }
             }
