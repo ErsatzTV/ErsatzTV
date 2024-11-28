@@ -39,6 +39,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix synchronizing Plex collections
   - If this breaks collection sync for you, you will need to update your Plex server
 - Fix guide group generation for `duration` YAML instructions
+- Fix default song background when targeting 4:3 resolutions
+  - Previously the background was always 16:9 and was padded, now it will fill 4:3
 
 ## [0.8.8-beta] - 2024-09-19
 ### Added

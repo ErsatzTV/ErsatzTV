@@ -41,8 +41,8 @@ public class SongVideoGenerator : ISongVideoGenerator
         {
             Id = -1,
             Chapters = [],
-            Width = 192,
-            Height = 108,
+            Width = channel.FFmpegProfile.Resolution.Width / 10,
+            Height = channel.FFmpegProfile.Resolution.Height / 10,
             SampleAspectRatio = "1:1",
             Streams = [new MediaStream { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" }]
         };
@@ -173,8 +173,8 @@ public class SongVideoGenerator : ISongVideoGenerator
             {
                 Chapters = [],
                 // always stretch cover art
-                Width = 192,
-                Height = 108,
+                Width = channel.FFmpegProfile.Resolution.Width / 10,
+                Height = channel.FFmpegProfile.Resolution.Height / 10,
                 SampleAspectRatio = "1:1",
                 Streams = new List<MediaStream>
                 {
