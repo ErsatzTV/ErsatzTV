@@ -47,7 +47,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 44;
+    public int Version => 45;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -231,6 +231,7 @@ public class ElasticSearchIndex : ISearchIndex
                         .Text(t => t.Plot, t => t.Store(false))
                         .Text(t => t.Genre, t => t.Store(false))
                         .Text(t => t.Tag, t => t.Store(false))
+                        .Keyword(t => t.TagFull, t => t.Store(false))
                         .Text(t => t.Studio, t => t.Store(false))
                         .Text(t => t.Actor, t => t.Store(false))
                         .Text(t => t.Director, t => t.Store(false))
@@ -312,6 +313,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     Director = metadata.Directors.Map(d => d.Name).ToList(),
@@ -367,6 +369,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     TraktList = show.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture))
@@ -431,7 +434,8 @@ public class ElasticSearchIndex : ISearchIndex
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     TraktList = season.TraktListItems
                         .Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture)).ToList(),
-                    Tag = metadata.Tags.Map(a => a.Name).ToList()
+                    Tag = metadata.Tags.Map(a => a.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList()
                 };
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
@@ -524,6 +528,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList()
                 };
 
@@ -604,6 +609,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     Director = metadata.Directors.Map(d => d.Name).ToList(),
@@ -667,6 +673,7 @@ public class ElasticSearchIndex : ISearchIndex
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
                     Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     Director = metadata.Directors.Map(d => d.Name).ToList(),
@@ -717,7 +724,8 @@ public class ElasticSearchIndex : ISearchIndex
                     Artist = metadata.Artists.ToList(),
                     AlbumArtist = metadata.AlbumArtists.ToList(),
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
-                    Tag = metadata.Tags.Map(t => t.Name).ToList()
+                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList()
                 };
 
                 AddStatistics(doc, song.MediaVersions);
@@ -761,7 +769,8 @@ public class ElasticSearchIndex : ISearchIndex
                     SubLanguageTag = GetSubLanguageTags(image.MediaVersions),
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
-                    Tag = metadata.Tags.Map(t => t.Name).ToList()
+                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Map(t => t.Name).ToList()
                 };
 
                 IEnumerable<int> libraryFolderIds = image.MediaVersions

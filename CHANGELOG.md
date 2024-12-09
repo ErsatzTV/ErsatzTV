@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Possible values will be install-specific and sourced from `vainfo`
   - `drm` was the previous default value, and should be used in most cases
 - Test all `Vaapi Display` values in `Troubleshooting` > `VAAPI Capabilities`
+- Add `tag_full` field to search index
+  - This field contains the same values as the existing `tag` field, but it is not analyzed or tokenized
 
 ### Changed
 - **BREAKING CHANGE**: Change channel identifiers used in XMLTV to work around bad behavior in Plex
