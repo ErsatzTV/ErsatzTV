@@ -35,6 +35,7 @@ public static class SearchQueryParser
             { LuceneSearchIndex.LibraryFolderIdField, keywordAnalyzer },
             { LuceneSearchIndex.VideoCodecField, keywordAnalyzer },
             { LuceneSearchIndex.VideoDynamicRange, keywordAnalyzer },
+            { LuceneSearchIndex.TagFullField, keywordAnalyzer },
 
             { LuceneSearchIndex.PlotField, new StandardAnalyzer(LuceneSearchIndex.AppLuceneVersion) }
         };
