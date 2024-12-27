@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Song Video Mode` to channel settings
   - `Default` - existing behavior
   - `With Progress` - show animated progress bar at bottom of generated video
+    - Thanks to @JeckDev for the idea and the artwork
 - Add fallback album art image for songs that have no album art
 - Add `Vaapi Display` option to FFmpeg Profile
   - Possible values will be install-specific and sourced from `vainfo`
