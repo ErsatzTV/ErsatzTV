@@ -130,7 +130,7 @@ jobs:
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
-          prerelease: true
+          prerelease: false
           tag_name: ${{ inputs.release_tag }}
           files: |
             ${{ env.RELEASE_NAME }}.dmg
@@ -230,7 +230,7 @@ jobs:
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
-          prerelease: true
+          prerelease: false
           tag_name: ${{ inputs.release_tag }}
           files: |
             ${{ env.RELEASE_NAME }}.zip
