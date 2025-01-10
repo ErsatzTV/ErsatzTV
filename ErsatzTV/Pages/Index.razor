@@ -161,7 +161,7 @@
 
                         if (version != "develop")
                         {
-                            string gitHubVersion = version.Split("-").Head() + "-beta";
+                            string gitHubVersion = version.Split("-").Head();
                             if (!gitHubVersion.StartsWith("v"))
                             {
                                 gitHubVersion = $"v{gitHubVersion}";

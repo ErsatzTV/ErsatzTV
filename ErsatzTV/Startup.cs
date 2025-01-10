@@ -325,7 +325,6 @@ public class Startup
             Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                 ?.InformationalVersion ?? "unknown");
 
-        Log.Logger.Warning("This is beta software and may be unstable");
         Log.Logger.Warning(
             "Give feedback at {GitHub} or {Discord}",
             "https://github.com/ErsatzTV/ErsatzTV",

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [25.1.0] - 2025-01-10
 ### Added
 - Add `Reset All Playouts` button to top of playouts page
 - Add `rewind_on_reset` option to `wait_until` YAML playout instruction
