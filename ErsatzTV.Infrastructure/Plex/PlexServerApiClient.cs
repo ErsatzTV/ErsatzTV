@@ -348,6 +348,10 @@ public class PlexServerApiClient : IPlexServerApiClient
         IPlexServerApi xmlService = XmlServiceFor(connection.Uri);
 
         int size = await countItems(xmlService).Map(r => r.TotalSize);
+        if (size == 0)
+        {
+            yield break;
+        }
 
         const int PAGE_SIZE = 10;
 
