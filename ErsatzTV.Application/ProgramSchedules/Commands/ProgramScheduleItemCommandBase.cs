@@ -58,6 +58,7 @@ public abstract class ProgramScheduleItemCommandBase
                 case PlaybackOrder.MultiEpisodeShuffle:
                 case PlaybackOrder.SeasonEpisode:
                 case PlaybackOrder.RandomRotation:
+                case PlaybackOrder.Latest:
                     return BaseError.New($"Invalid playback order for multi collection: '{item.PlaybackOrder}'");
                 case PlaybackOrder.Shuffle:
                 case PlaybackOrder.ShuffleInOrder:
