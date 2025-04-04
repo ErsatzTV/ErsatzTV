@@ -148,6 +148,9 @@ jobs:
             target: linux-x64
           - os: ubuntu-latest
             kind: linux
+            target: linux-musl-x64
+          - os: ubuntu-latest
+            kind: linux
             target: linux-arm
           - os: ubuntu-latest
             kind: linux
