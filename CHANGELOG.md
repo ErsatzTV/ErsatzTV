@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `linux-musl-x64` artifact for users running Alpine x64
 - Add API endpoint to empty trash (POST to `/api/maintenance/empty_trash`)
   - e.g. `curl -XPOST -d '' http://localhost:8409/api/maintenance/empty_trash`
+- Add remote IP and user agent to HTTP request logging
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections

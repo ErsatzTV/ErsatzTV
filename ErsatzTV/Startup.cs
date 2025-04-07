@@ -506,6 +506,14 @@ public class Startup
 
                     return LogEventLevel.Verbose;
                 };
+
+                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                {
+                    diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
+                    diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"]);
+                };
+
+                options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.00} ms from {UserAgent} at {RemoteIP}";
             });
 
         app.UseRequestLocalization(
