@@ -138,31 +138,50 @@ public class Program
         {
             uiPort = 8409;
         }
+
         Settings.UiPort = uiPort;
+
+        string publicUiPortVariable = Environment.GetEnvironmentVariable("ETV_PUBLIC_UI_PORT");
+        if (!int.TryParse(publicUiPortVariable, out int publicUiPort))
+        {
+            publicUiPort = 8409;
+        }
+
+        Settings.PublicUiPort = publicUiPort;
 
         string streamingPortVariable = Environment.GetEnvironmentVariable("ETV_STREAMING_PORT");
         if (!int.TryParse(streamingPortVariable, out int streamingPort))
         {
             streamingPort = 8409;
         }
+
         Settings.StreamingPort = streamingPort;
+
+        string publicStreamingPortVariable = Environment.GetEnvironmentVariable("ETV_PUBLIC_STREAMING_PORT");
+        if (!int.TryParse(publicStreamingPortVariable, out int publicStreamingPort))
+        {
+            publicStreamingPort = 8409;
+        }
+
+        Settings.PublicStreamingPort = publicStreamingPort;
 
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitches))
             .ConfigureWebHostDefaults(
                 webBuilder => webBuilder.UseStartup<Startup>()
                     .UseConfiguration(Configuration)
-                    .UseKestrel(options =>
-                    {
-                        options.ListenAnyIP(Settings.UiPort);
-
-                        if (Settings.StreamingPort != Settings.UiPort)
+                    .UseKestrel(
+                        options =>
                         {
-                            options.ListenAnyIP(Settings.StreamingPort);
-                        }
+                            options.ListenAnyIP(Settings.UiPort);
 
-                        options.AddServerHeader = false;
-                    })
+                            if (Settings.StreamingPort != Settings.UiPort)
+                            {
+                                options.ListenAnyIP(Settings.StreamingPort);
+                            }
+
+                            options.AddServerHeader = false;
+                        })
                     .UseContentRoot(BasePath))
             .UseSerilog();
     }

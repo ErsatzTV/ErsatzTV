@@ -592,22 +592,10 @@ public class Startup
         else
         {
             app.MapWhen(
-                ctx => ctx.Request.Host.Port == Settings.UiPort,
+                ctx => ctx.Request.Host.Port == Settings.UiPort || ctx.Request.Host.Port == Settings.PublicUiPort,
                 uiApp =>
                 {
                     uiApp.UseRouting();
-
-                    uiApp.UseWhen(
-                        c => c.Request.Path.StartsWithSegments("/iptv"), // && !IPAddress.IsLoopback(c.Connection.RemoteIpAddress ?? IPAddress.None),
-                        a =>
-                        {
-                            a.Run(
-                                c =>
-                                {
-                                    c.Response.StatusCode = 404;
-                                    return Task.CompletedTask;
-                                });
-                        });
 
                     if (OidcHelper.IsEnabled)
                     {
@@ -627,7 +615,7 @@ public class Startup
                 });
 
             app.MapWhen(
-                ctx => ctx.Request.Host.Port == Settings.StreamingPort,
+                ctx => ctx.Request.Host.Port == Settings.StreamingPort || ctx.Request.Host.Port == Settings.PublicStreamingPort,
                 streamingApp =>
                 {
                     streamingApp.UseRouting();
