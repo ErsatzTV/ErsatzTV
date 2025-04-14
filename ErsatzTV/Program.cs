@@ -141,14 +141,6 @@ public class Program
 
         Settings.UiPort = uiPort;
 
-        string publicUiPortVariable = Environment.GetEnvironmentVariable("ETV_PUBLIC_UI_PORT");
-        if (!int.TryParse(publicUiPortVariable, out int publicUiPort))
-        {
-            publicUiPort = 8409;
-        }
-
-        Settings.PublicUiPort = publicUiPort;
-
         string streamingPortVariable = Environment.GetEnvironmentVariable("ETV_STREAMING_PORT");
         if (!int.TryParse(streamingPortVariable, out int streamingPort))
         {
@@ -156,14 +148,6 @@ public class Program
         }
 
         Settings.StreamingPort = streamingPort;
-
-        string publicStreamingPortVariable = Environment.GetEnvironmentVariable("ETV_PUBLIC_STREAMING_PORT");
-        if (!int.TryParse(publicStreamingPortVariable, out int publicStreamingPort))
-        {
-            publicStreamingPort = 8409;
-        }
-
-        Settings.PublicStreamingPort = publicStreamingPort;
 
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitches))
