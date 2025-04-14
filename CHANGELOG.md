@@ -12,8 +12,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add environment variables to allow ETV to run UI and streaming on separate ports
     - `ETV_STREAMING_PORT`: port used for streaming requests, defaults to 8409
     - `ETV_UI_PORT`: port used for admin UI, defaults to 8409
-    - `ETV_PUBLIC_STREAMING_PORT`: port used for streaming requests at reverse proxy, defaults to 8409
-    - `ETV_PUBLIC_UI_PORT`: port used for admin UI at reverse proxy, defaults to 8409
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections
