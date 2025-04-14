@@ -131,13 +131,39 @@ public class Program
         }
     }
 
-    private static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
+    private static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        string uiPortVariable = Environment.GetEnvironmentVariable("ETV_UI_PORT");
+        if (!int.TryParse(uiPortVariable, out int uiPort))
+        {
+            uiPort = 8409;
+        }
+        Settings.UiPort = uiPort;
+
+        string streamingPortVariable = Environment.GetEnvironmentVariable("ETV_STREAMING_PORT");
+        if (!int.TryParse(streamingPortVariable, out int streamingPort))
+        {
+            streamingPort = 8409;
+        }
+        Settings.StreamingPort = streamingPort;
+
+        return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitches))
             .ConfigureWebHostDefaults(
                 webBuilder => webBuilder.UseStartup<Startup>()
                     .UseConfiguration(Configuration)
-                    .UseKestrel(options => options.AddServerHeader = false)
+                    .UseKestrel(options =>
+                    {
+                        options.ListenAnyIP(Settings.UiPort);
+
+                        if (Settings.StreamingPort != Settings.UiPort)
+                        {
+                            options.ListenAnyIP(Settings.StreamingPort);
+                        }
+
+                        options.AddServerHeader = false;
+                    })
                     .UseContentRoot(BasePath))
             .UseSerilog();
+    }
 }

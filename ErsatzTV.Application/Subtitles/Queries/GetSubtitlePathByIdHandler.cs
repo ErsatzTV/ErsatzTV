@@ -79,7 +79,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
         {
             foreach (string subtitlePath in maybeSubtitle.Map(s => s.Path))
             {
-                return $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{subtitlePath}";
+                return $"http://localhost:{Settings.StreamingPort}/media/plex/{plexMediaSourceId}/{subtitlePath}";
             }
         }
 
@@ -120,7 +120,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                 string extension = Subtitle.ExtensionForCodec(subtitle.Codec);
                 var subtitlePath =
                     $"Videos/{jellyfinItemId}/{jellyfinItemId}/Subtitles/{index}/{index}/Stream.{extension}";
-                return $"http://localhost:{Settings.ListenPort}/media/jellyfin/{subtitlePath}";
+                return $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{subtitlePath}";
             }
         }
 
@@ -160,7 +160,7 @@ public class GetSubtitlePathByIdHandler : IRequestHandler<GetSubtitlePathById, E
                 string extension = Subtitle.ExtensionForCodec(subtitle.Codec);
                 var subtitlePath =
                     $"Videos/{embyItemId}/{subtitle.Path}/Subtitles/{subtitle.StreamIndex}/Stream.{extension}";
-                return $"http://localhost:{Settings.ListenPort}/media/emby/{subtitlePath}";
+                return $"http://localhost:{Settings.StreamingPort}/media/emby/{subtitlePath}";
             }
         }
 

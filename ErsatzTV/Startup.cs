@@ -556,36 +556,98 @@ public class Startup
 
         app.UseResponseCompression();
 
-        app.MapWhen(
-            ctx => !ctx.Request.Path.StartsWithSegments("/iptv"),
-            blazor =>
-            {
-                blazor.UseRouting();
-
-                if (OidcHelper.IsEnabled)
+        if (Settings.StreamingPort == Settings.UiPort)
+        {
+            app.MapWhen(
+                ctx => !ctx.Request.Path.StartsWithSegments("/iptv"),
+                blazor =>
                 {
-                    blazor.UseAuthentication();
-#pragma warning disable ASP0001
-                    blazor.UseAuthorization();
-#pragma warning restore ASP0001
-                }
+                    blazor.UseRouting();
 
-                blazor.UseEndpoints(
-                    endpoints =>
+                    if (OidcHelper.IsEnabled)
                     {
-                        endpoints.MapControllers();
-                        endpoints.MapBlazorHub();
-                        endpoints.MapFallbackToPage("/_Host");
-                    });
-            });
+                        blazor.UseAuthentication();
+#pragma warning disable ASP0001
+                        blazor.UseAuthorization();
+#pragma warning restore ASP0001
+                    }
 
-        app.MapWhen(
-            ctx => ctx.Request.Path.StartsWithSegments("/iptv"),
-            iptv =>
-            {
-                iptv.UseRouting();
-                iptv.UseEndpoints(endpoints => endpoints.MapControllers());
-            });
+                    blazor.UseEndpoints(
+                        endpoints =>
+                        {
+                            endpoints.MapControllers();
+                            endpoints.MapBlazorHub();
+                            endpoints.MapFallbackToPage("/_Host");
+                        });
+                });
+
+            app.MapWhen(
+                ctx => ctx.Request.Path.StartsWithSegments("/iptv"),
+                iptv =>
+                {
+                    iptv.UseRouting();
+                    iptv.UseEndpoints(endpoints => endpoints.MapControllers());
+                });
+        }
+        else
+        {
+            app.MapWhen(
+                ctx => ctx.Request.Host.Port == Settings.UiPort,
+                uiApp =>
+                {
+                    uiApp.UseRouting();
+
+                    uiApp.UseWhen(
+                        c => c.Request.Path.StartsWithSegments("/iptv"), // && !IPAddress.IsLoopback(c.Connection.RemoteIpAddress ?? IPAddress.None),
+                        a =>
+                        {
+                            a.Run(
+                                c =>
+                                {
+                                    c.Response.StatusCode = 404;
+                                    return Task.CompletedTask;
+                                });
+                        });
+
+                    if (OidcHelper.IsEnabled)
+                    {
+                        uiApp.UseAuthentication();
+#pragma warning disable ASP0001
+                        uiApp.UseAuthorization();
+#pragma warning restore ASP0001
+                    }
+
+                    uiApp.UseEndpoints(
+                        endpoints =>
+                        {
+                            endpoints.MapControllers();
+                            endpoints.MapBlazorHub();
+                            endpoints.MapFallbackToPage("/_Host");
+                        });
+                });
+
+            app.MapWhen(
+                ctx => ctx.Request.Host.Port == Settings.StreamingPort,
+                streamingApp =>
+                {
+                    streamingApp.UseRouting();
+
+                    streamingApp.UseWhen(
+                        c => !c.Request.Path.StartsWithSegments("/iptv"),
+                        a =>
+                        {
+                            a.Run(
+                                c =>
+                                {
+                                    c.Response.StatusCode = 404;
+                                    return Task.CompletedTask;
+                                });
+                        });
+
+                    streamingApp.UseEndpoints(endpoints => endpoints.MapControllers());
+
+                });
+        }
     }
 
     private static void CustomServices(IServiceCollection services)

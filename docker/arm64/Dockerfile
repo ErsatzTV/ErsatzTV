@@ -42,7 +42,6 @@ FROM runtime-base
 ENV FONTCONFIG_PATH=/etc/fonts
 RUN fc-cache update
 WORKDIR /app
-EXPOSE 8409
 COPY --from=build /app ./
 ENV ETV_CONFIG_FOLDER=/config
 ENV ETV_TRANSCODE_FOLDER=/transcode

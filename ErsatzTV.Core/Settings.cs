@@ -2,5 +2,6 @@
 
 public static class Settings
 {
-    public static int ListenPort { get; set; }
+    public static int UiPort { get; set; }
+    public static int StreamingPort { get; set; }
 }
