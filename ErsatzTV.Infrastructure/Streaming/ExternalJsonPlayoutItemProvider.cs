@@ -218,7 +218,7 @@ public class ExternalJsonPlayoutItemProvider : IExternalJsonPlayoutItemProvider
 
                     return new PlayoutItemWithPath(
                         GetPlayoutItem(startTime, mediaItem, program),
-                        $"http://localhost:{Settings.ListenPort}/media/plex/{server.Id}/{program.PlexFile}");
+                        $"http://localhost:{Settings.StreamingPort}/media/plex/{server.Id}/{program.PlexFile}");
                 }
             }
         }

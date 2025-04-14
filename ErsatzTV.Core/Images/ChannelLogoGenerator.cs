@@ -19,7 +19,7 @@ public class ChannelLogoGenerator : IChannelLogoGenerator
     }
 
     public static Option<string> GenerateChannelLogoUrl(Channel channel) =>
-         $"http://localhost:{Settings.ListenPort}{GetRoute}?{GetRouteQueryParamName}={channel.WebEncodedName}";
+         $"http://localhost:{Settings.StreamingPort}{GetRoute}?{GetRouteQueryParamName}={channel.WebEncodedName}";
 
     public Either<BaseError, byte[]> GenerateChannelLogo(
         string text,

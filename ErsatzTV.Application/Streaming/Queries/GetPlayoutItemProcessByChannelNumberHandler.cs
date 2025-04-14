@@ -618,7 +618,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                     return new PlayoutItemWithPath(
                         playoutItem,
-                        $"http://localhost:{Settings.ListenPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
+                        $"http://localhost:{Settings.StreamingPort}/media/plex/{plexMediaSourceId}/{pmf.Key}");
                 }
 
                 break;
@@ -636,7 +636,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         {
             return new PlayoutItemWithPath(
                 playoutItem,
-                $"http://localhost:{Settings.ListenPort}/media/jellyfin/{itemId}");
+                $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{itemId}");
         }
 
         // attempt to remotely stream emby
@@ -651,7 +651,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         {
             return new PlayoutItemWithPath(
                 playoutItem,
-                $"http://localhost:{Settings.ListenPort}/media/emby/{itemId}");
+                $"http://localhost:{Settings.StreamingPort}/media/emby/{itemId}");
         }
 
         return new PlayoutItemDoesNotExistOnDisk(path);

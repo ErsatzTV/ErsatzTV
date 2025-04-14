@@ -1855,6 +1855,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use "single-file" deployments for releases
     - Non-docker releases will have significantly fewer files
     - It is recommended to empty your installation folder before copying in the latest release.
+- Add environment variables to allow ETV to run UI and streaming on separate ports
+  - `ETV_STREAMING_PORT`: port used for streaming requests, defaults to 8409
+  - `ETV_UI_PORT`: port used for admin UI, defaults to 8409
 
 ### Fixed
 - Fix some cases where Jellyfin artwork would not display

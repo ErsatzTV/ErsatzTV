@@ -108,7 +108,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
             {
                 // proxy to avoid dealing with escaping
-                subtitle.Path = $"http://localhost:{Settings.ListenPort}/media/subtitle/{subtitle.Id}";
+                subtitle.Path = $"http://localhost:{Settings.StreamingPort}/media/subtitle/{subtitle.Id}";
             }
         }
 
@@ -594,7 +594,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
         var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}?mode=ts-legacy",
+            $"http://localhost:{Settings.StreamingPort}/ffmpeg/concat/{channel.Number}?mode=ts-legacy",
             resolution);
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
@@ -627,7 +627,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
         var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}?mode=segmenter-v2",
+            $"http://localhost:{Settings.StreamingPort}/ffmpeg/concat/{channel.Number}?mode=segmenter-v2",
             resolution);
 
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateConcatSegmenterSettings(
@@ -787,7 +787,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             : $"&access_token={accessToken}";
 
         var concatInputFile = new ConcatInputFile(
-            $"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter{accessTokenQuery}",
+            $"http://localhost:{Settings.StreamingPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter{accessTokenQuery}",
             resolution);
 
         IPipelineBuilder pipelineBuilder = await _pipelineBuilderFactory.GetBuilder(
