@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `ETV_UI_PORT`: port used for admin UI, defaults to 8409
 - Publish docker images to ghcr.io (`ghcr.io/ersatztv/ersatztv`)
 
+### Changed
+- Start to make UI minimally responsive (functional on smaller screens)
+
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections
 

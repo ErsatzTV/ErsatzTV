@@ -16,7 +16,8 @@
 
 <MudLayout @onclick="@(() => _isOpen = false)">
     <MudAppBar Elevation="1" Class="app-bar">
-        <div style="min-width: 240px">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
             <a href="">
                 <img src="images/ersatztv.png" alt="ErsatzTV"/>
             </a>
@@ -70,33 +71,35 @@
                 </EditForm>
             </div>
         }
-        <MudSpacer/>
-        @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
-        {
-            <MudLink Color="Color.Info" Href="@IptvUrl("channels.m3u")" Target="_blank" Underline="Underline.None">M3U</MudLink>
-            <MudLink Color="Color.Info" Href="@IptvUrl("xmltv.xml")" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
-        }
-        @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
-        <MudTooltip Text="Documentation">
-            <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Href="https://ersatztv.org" Target="_blank"/>
-        </MudTooltip>
-        <MudTooltip Text="Discord">
-            <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
-        </MudTooltip>
-        <MudTooltip Text="GitHub">
-            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
-        </MudTooltip>
-        <AuthorizeView>
-            <form action="/account/logout" method="post">
-                <MudTooltip Text="Logout">
-                    <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Secondary" ButtonType="ButtonType.Submit"/>
-                </MudTooltip>
-            </form>
-        </AuthorizeView>
+        <div class="flex-grow-1 d-none d-md-flex"></div>
+        <div style="align-items: center; display: flex;" class="d-none d-md-flex">
+            @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
+            {
+                <MudLink Color="Color.Info" Href="@IptvUrl("channels.m3u")" Target="_blank" Underline="Underline.None">M3U</MudLink>
+                <MudLink Color="Color.Info" Href="@IptvUrl("xmltv.xml")" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+            }
+            @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
+            <MudTooltip Text="Documentation">
+                <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Href="https://ersatztv.org" Target="_blank"/>
+            </MudTooltip>
+            <MudTooltip Text="Discord">
+                <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+            </MudTooltip>
+            <MudTooltip Text="GitHub">
+                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
+            </MudTooltip>
+            <AuthorizeView>
+                <form action="/account/logout" method="post">
+                    <MudTooltip Text="Logout">
+                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Secondary" ButtonType="ButtonType.Submit"/>
+                    </MudTooltip>
+                </form>
+            </AuthorizeView>
+        </div>
     </MudAppBar>
     @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
     {
-        <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
+        <MudDrawer @bind-Open="@_drawerIsOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
             <MudNavMenu>
                 <MudNavLink Href="channels">Channels</MudNavLink>
                 <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
@@ -133,6 +136,7 @@
                 </MudNavGroup>
                 <MudNavLink Href="settings">Settings</MudNavLink>
                 <MudNavGroup Title="Support" Expanded="true">
+                    <MudNavLink Href="system/health">Health Checks</MudNavLink>
                     <MudNavLink Href="system/logs">Logs</MudNavLink>
                     <MudNavLink Href="system/troubleshooting">Troubleshooting</MudNavLink>
                 </MudNavGroup>
@@ -159,6 +163,7 @@
     private record SearchModel;
 
     private readonly SearchModel _dummyModel = new();
+    private bool _drawerIsOpen = true;
     private bool _isOpen;
     private List<SearchTargetViewModel> _searchTargets;
 
@@ -188,11 +193,12 @@
             ActionDefault = "rgba(255,255,255, 0.80)",
             Primary = "#009000",
             Secondary = "#009090",
-            AppbarBackground = "#121212",
-            Background = "#272727",
-            DrawerBackground = "#1f1f1f",
             Surface = "#1f1f1f",
+            AppbarBackground = "#121212",
+            AppbarText = "rgba(255,255,255, 0.80)",
+            DrawerBackground = "#1f1f1f",
             DrawerText = "rgba(255,255,255, 0.80)",
+            Background = "#272727",
             TextPrimary = "rgba(255,255,255, 0.80)",
             TextSecondary = "rgba(255,255,255, 0.80)",
             TextDisabled = "rgba(255,255,255, 0.40)",
@@ -289,5 +295,10 @@
     {
         var uri = new Uri(NavigationManager.Uri);
         return $"{uri.Scheme}://{uri.Host}:{Settings.StreamingPort}/iptv/{path}";
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerIsOpen = !_drawerIsOpen;
     }
 }
