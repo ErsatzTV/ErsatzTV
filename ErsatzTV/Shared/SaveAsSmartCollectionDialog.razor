@@ -41,7 +41,7 @@
     private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; }
+    IMudDialogInstance MudDialog { get; set; }
 
     private readonly SmartCollectionViewModel _newCollection = new(-1, "(New Collection)", string.Empty);
     private string _newCollectionName;

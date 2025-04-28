@@ -7,7 +7,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
         "ETV_STREAMING_PORT": "8409",
-        "ETV_UI_PORT": "8410",
+        "ETV_UI_PORT": "8410"
       }
     }
   }

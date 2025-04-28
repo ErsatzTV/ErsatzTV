@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using ExistsResponse = Elastic.Clients.Elasticsearch.IndexManagement.ExistsResponse;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 using Query = Lucene.Net.Search.Query;
+using ES = Elastic.Clients.Elasticsearch;
 
 namespace ErsatzTV.Infrastructure.Search;
 
@@ -168,7 +169,7 @@ public class ElasticSearchIndex : ISearchIndex
         Query parsedQuery = SearchQueryParser.ParseQuery(query);
 
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
-            s => s.Index(IndexName)
+            s => s.Indices(IndexName)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
                 .From(skip)
                 .Size(limit)
@@ -329,7 +330,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -381,7 +382,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -443,7 +444,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -490,7 +491,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -556,7 +557,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -635,7 +636,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -687,7 +688,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -735,7 +736,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -789,7 +790,7 @@ public class ElasticSearchIndex : ISearchIndex
                     doc.AdditionalProperties.Add(key, value);
                 }
 
-                await _client.IndexAsync(doc, index: IndexName);
+                await _client.IndexAsync(doc, IndexName, ES.Id.From(doc));
             }
             catch (Exception ex)
             {
@@ -960,7 +961,7 @@ public class ElasticSearchIndex : ISearchIndex
     private async Task<SearchPageMap> GetSearchPageMap(string query, int limit)
     {
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
-            s => s.Index(IndexName)
+            s => s.Indices(IndexName)
                 .Size(0)
                 .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
                 .Aggregations(a => a.Add("count", agg => agg.Terms(v => v.Field(i => i.JumpLetter).Size(30))))

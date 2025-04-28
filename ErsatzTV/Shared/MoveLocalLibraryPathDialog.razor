@@ -40,7 +40,7 @@
     private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; }
+    IMudDialogInstance MudDialog { get; set; }
 
     [Parameter]
     public LibraryMediaKind MediaKind { get; set; }

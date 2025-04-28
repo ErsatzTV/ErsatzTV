@@ -41,7 +41,7 @@
     private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; }
+    IMudDialogInstance MudDialog { get; set; }
 
     [Parameter]
     public string EntityType { get; set; }
