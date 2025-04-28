@@ -35,7 +35,7 @@
                                   @onclick="@(() => _isOpen = true)"
                                   OnKeyUp="OnKeyUp">
                     </MudTextField>
-                    <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="true">
+                    <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="DropdownWidth.Relative">
                         @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
                         {
                             var matches = _searchTargets.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();

@@ -20,7 +20,7 @@
     public string Name { get; set; }
 
     [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; }
+    IMudDialogInstance MudDialog { get; set; }
 
     private void Submit() => MudDialog.Close(DialogResult.Ok(true));
 

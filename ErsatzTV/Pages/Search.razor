@@ -513,7 +513,7 @@
             var parameters = new DialogParameters { { "EntityType", "movie" }, { "EntityName", movie.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
@@ -534,7 +534,7 @@
             var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", show.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
@@ -555,7 +555,7 @@
             var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
@@ -576,7 +576,7 @@
             var parameters = new DialogParameters { { "EntityType", "artist" }, { "EntityName", artist.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
@@ -597,7 +597,7 @@
             var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
@@ -618,7 +618,7 @@
             var parameters = new DialogParameters { { "EntityType", "other video" }, { "EntityName", otherVideo.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
@@ -639,7 +639,7 @@
             var parameters = new DialogParameters { { "EntityType", "song" }, { "EntityName", song.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
             {
