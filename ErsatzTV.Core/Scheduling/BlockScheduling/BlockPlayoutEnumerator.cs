@@ -164,4 +164,27 @@ public static class BlockPlayoutEnumerator
 
         return new RandomizedRotatingMediaCollectionEnumerator(collectionItems, state);
     }
+
+    public static IMediaCollectionEnumerator Latest(
+        List<MediaItem> collectionItems,
+        DateTimeOffset currentTime,
+        Playout playout,
+        BlockItem blockItem,
+        string historyKey)
+    {
+        DateTime historyTime = currentTime.UtcDateTime;
+        Option<PlayoutHistory> maybeHistory = playout.PlayoutHistory
+            .Filter(h => h.BlockId == blockItem.BlockId)
+            .Filter(h => h.Key == historyKey)
+            .Filter(h => h.When < historyTime)
+            .OrderByDescending(h => h.When)
+            .HeadOrNone();    
+        var state = new CollectionEnumeratorState { Seed = 0, Index = 0 };
+        foreach (PlayoutHistory h in maybeHistory)
+        {
+            state.Index = h.Index + 1;
+        }
+
+        return new LatestMediaCollectionEnumerator(collectionItems, state);
+    }
 }
