@@ -20,7 +20,7 @@
       <PackageReference Include="Bugsnag.AspNet.Core" Version="4.0.0" />
       <PackageReference Include="FluentValidation" Version="11.11.0" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-      <PackageReference Include="Heron.MudCalendar" Version="3.0.0" />
+      <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
       <PackageReference Include="HtmlSanitizer" Version="8.1.870" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
       <PackageReference Include="Markdig" Version="0.41.1" />
@@ -37,7 +37,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="8.5.1" />
+      <PackageReference Include="MudBlazor" Version="8.6.0" />
       <PackageReference Include="NaturalSort.Extension" Version="4.3.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
       <PackageReference Include="Serilog" Version="4.2.0" />

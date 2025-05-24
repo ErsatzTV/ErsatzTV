@@ -1,52 +1,112 @@
-﻿.media-card-grid {
+:root {
+    --etv-primary-color: #1976D2;
+    --etv-secondary-color: #FFC107;
+    --etv-background-color: #FFFFFF;
+    --etv-surface-color: #F5F5F5;
+    --etv-text-primary-color: rgba(0, 0, 0, 0.87);
+    --etv-text-secondary-color: rgba(0, 0, 0, 0.60);
+    --etv-text-disabled-color: rgba(0, 0, 0, 0.38);
+    --etv-action-default-color: rgba(0, 0, 0, 0.54);
+    --etv-action-disabled-color: rgba(0, 0, 0, 0.26);
+    --etv-appbar-background-color: var(--etv-primary-color);
+    --etv-appbar-text-color: #FFFFFF;
+    --etv-drawer-background-color: var(--etv-surface-color);
+    --etv-drawer-text-color: var(--etv-text-primary-color);
+    --etv-lines-default-color: rgba(0,0,0, 0.12);
+    --etv-table-hover-color: rgba(0,0,0, 0.04);
+    --etv-info-color: #2196F3;
+    --etv-success-color: #4CAF50;
+    --etv-warning-color: #FB8C00;
+    --etv-error-color: #F44336;
+
+    --etv-default-border-radius: 6px;
+    --etv-softer-border-radius: 8px;
+}
+
+body {
+    background-color: var(--etv-background-color);
+    color: var(--etv-text-primary-color);
+    font-size: 1rem; /* Base font size */
+}
+
+.media-card-grid {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 16px; /* Add gap for spacing between cards */
 }
 
-.media-card-container { width: 152px; }
+.media-card-container { 
+    width: 152px; 
+    /* Consider removing fixed width for more fluid responsive behavior if cards are to resize */
+}
 
-.media-card-episode-container { width: 392px; }
+.media-card-episode-container { 
+    width: 392px; 
+    /* Consider making this responsive too */
+}
 
 .media-card {
     display: flex;
-    /*filter: brightness(100%);*/
     flex-direction: column;
-    height: 220px;
+    height: 220px; /* This can be problematic for responsiveness if content varies */
     justify-content: center;
     transition: all 0.2s ease;
-    width: 152px;
+    width: 152px; /* Or 100% if inside a sized container */
+    border: 1px solid var(--etv-lines-default-color);
+    border-radius: var(--etv-default-border-radius);
+    background-color: var(--etv-surface-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Softer shadow for light theme */
 }
 
-.media-card-selected { box-shadow: 0 0 0 3px #00c000, 0 0 4px rgba(0, 0, 0, 0.3); }
+.media-card-selected { 
+    box-shadow: 0 0 0 2px var(--etv-primary-color), 0 1px 3px rgba(0,0,0,0.1); 
+    border-color: var(--etv-primary-color);
+}
 
-.media-card-selected-delete { box-shadow: 0 0 0 3px #f44336, 0 0 4px rgba(0, 0, 0, 0.3); }
+.media-card-selected-delete { 
+    box-shadow: 0 0 0 2px var(--etv-error-color), 0 1px 3px rgba(0,0,0,0.1); 
+    border-color: var(--etv-error-color);
+}
 
-.media-card-episode { width: 392px; }
+.media-card-episode { 
+    width: 392px; /* This should be responsive if possible */
+}
 
-.media-card:hover { /*filter: brightness(75%);*/ }
+.media-card:hover { 
+    border-color: var(--etv-primary-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Slightly more pronounced shadow on hover */
+}
 
 .media-card-title {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     width: 100%;
+    color: var(--etv-text-primary-color);
+    padding: 4px 8px 0px 8px; /* Add some padding */
+    font-size: 0.875rem; /* Adjust font size */
 }
 
-.media-card-poster-placeholder { font-weight: bold; }
+.media-card-poster-placeholder { 
+    font-weight: bold; 
+    color: var(--etv-text-secondary-color);
+    text-align: center; /* Center placeholder text */
+    padding: 8px;
+}
 
 .media-card-menu {
-    bottom: 0;
+    bottom: 4px; /* Adjust position */
     display: none;
     position: absolute;
-    right: 0;
+    right: 4px; /* Adjust position */
 }
 
 .media-card:hover .media-card-menu { display: block; }
 
 .media-card-overlay {
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 4px;
+    background: rgba(var(--etv-primary-color-rgb, 25, 118, 210), 0.1); /* Use primary color with low opacity for overlay */
+    border-radius: var(--etv-default-border-radius); /* Match card radius */
     bottom: 0;
     left: 0;
     opacity: 0;
@@ -54,89 +114,380 @@
     right: 0;
     top: 0;
     transition: opacity 0.2s;
+    display: flex; /* For centering content if any */
+    align-items: center;
+    justify-content: center;
 }
 
 .media-card-overlay:hover { opacity: 1; }
+/* Add a helper for primary color RGB if not already available, for rgba() */
+/* :root { --etv-primary-color-rgb: 25, 118, 210; } */
 
-.search-bar .mud-input { height: 42px; }
+/* Search bar styling for light theme */
+.search-bar .mud-input { 
+    height: 42px; 
+}
 
 .search-bar {
-    background-color: rgba(255, 255, 255, .15);
-    border-radius: 4px;
+    background-color: var(--etv-surface-color); /* Light background */
+    border-radius: var(--etv-default-border-radius); /* Use theme variable */
     height: 42px;
-    margin-bottom: 5px;
+    margin-bottom: 5px; /* Retain margin, or adjust if needed */
+    border: 1px solid var(--etv-lines-default-color); /* Add border for definition */
 }
 
-.search-bar div .mud-input-root { color: #fafafa; }
+.search-bar div .mud-input-root { 
+    color: var(--etv-text-primary-color); /* Dark text for light theme */
+}
 
 .search-bar .mud-input.mud-input-outlined .mud-input-outlined-border {
-    border: none;
-    border-radius: 4px;
+    border: none; /* Keep this if visual style is handled by .search-bar border */
+    border-radius: var(--etv-default-border-radius); /* Ensure consistency */
 }
 
-.app-bar .search-form { flex-grow: 1; }
+.app-bar .search-form { 
+    flex-grow: 1; 
+    /* Max width for desktop search bar if needed */
+    /* max-width: 400px; */ 
+}
 
+/* Fanart styling for light theme */
 .fanart-container {
     position: relative;
     width: 100%;
-    z-index: -1;
+    /* z-index: -1; */ /* Usually not needed unless specific stacking issues */
 }
 
 .fanart-container img {
     -o-object-fit: cover;
-    height: 400px;
+    height: 400px; /* Consider if this height should be responsive */
     object-fit: cover;
-    position: absolute;
+    position: absolute; /* If using absolute, ensure parent has relative or defined height */
     transition: opacity 5s ease;
     width: 100%;
+    left: 0; /* Ensure it aligns correctly */
+    top: 0; /* Ensure it aligns correctly */
 }
 
 .fanart-container > .fanart-tint {
-    background: linear-gradient(360deg, black, transparent);
-    height: 400px;
-    opacity: 0.85;
+    background: linear-gradient(to top, 
+        var(--etv-background-color) 0%, 
+        rgba(255,255,255,0.8) 30%, /* Increase opaque area slightly */
+        rgba(255,255,255,0) 70%); /* Fade out quicker */
+    height: 400px; /* Match image height */
+    opacity: 1; /* Tint should be fully opaque where defined */
     position: absolute;
     width: 100%;
-    z-index: 1;
+    z-index: 1; /* Above the image, below text */
+    left: 0;
+    top: 0;
 }
 
 .media-item-title {
-    color: #fff;
-    text-shadow: 1px 1px 5px #000;
+    color: var(--etv-text-primary-color); /* Dark text for light theme */
+    text-shadow: none; /* Remove text shadow for cleaner look on light bg */
+    position: relative; /* Ensure z-index works if needed */
+    z-index: 2; /* Above tint */
 }
 
 .media-item-subtitle {
-    color: #fff;
-    text-shadow: 1px 1px 5px #000;
+    color: var(--etv-text-secondary-color); /* Dark text for light theme */
+    text-shadow: none; /* Remove text shadow */
+    position: relative;
+    z-index: 2; /* Above tint */
 }
 
 .letter-bar-container {
-    height: calc(100vh - 128px);
+    height: calc(100vh - 64px - 64px); /* Full height minus appbar and some padding */
     position: fixed;
-    right: 1em;
-    top: 128px;
+    right: 0.5em; /* Closer to edge */
+    top: 80px; /* Below appbar with some space */
+    z-index: 100; /* Ensure it's above other content if needed */
+    padding: 8px 4px; /* Add some padding */
+    background-color: rgba(var(--etv-surface-color-rgb, 245, 245, 245), 0.8); /* Use surface with transparency */
+    border-radius: var(--etv-default-border-radius);
 }
+/* Helper for surface color RGB, assuming F5F5F5 = 245,245,245 */
+/* :root { --etv-surface-color-rgb: 245, 245, 245; } */
+
 
 .letter-bar {
     display: flex;
     flex-direction: column;
     height: 100%;
-    justify-content: space-around;
+    justify-content: space-around; /* Distributes items evenly */
+    align-items: center;
 }
 
-.release-notes ul { list-style: unset; }
+.letter-bar a {
+    color: var(--etv-primary-color);
+    text-decoration: none;
+    padding: 2px 4px; /* Small padding for touch targets */
+    font-size: 0.75rem; /* Smaller font for letter bar */
+    border-radius: var(--etv-default-border-radius);
+}
 
-.release-notes > ul { margin-top: 10px; }
+.letter-bar a:hover {
+    background-color: var(--etv-primary-color);
+    color: var(--etv-appbar-text-color); /* White text on primary bg */
+}
 
-.release-notes ul > li { margin-left: 30px; }
+.release-notes ul { 
+    list-style: disc; /* Standard disc for ul */
+    color: var(--etv-text-primary-color);
+    padding-left: 20px; /* Standard padding for lists */
+}
 
-.release-notes h3 { margin-top: 20px; }
+.release-notes > ul { 
+    margin-top: 10px; 
+}
+
+.release-notes ul > li { 
+    margin-left: 20px; /* Standard indent for li */
+    margin-bottom: 8px; /* Space between items */
+}
+
+.release-notes h1, .release-notes h2, .release-notes h3, .release-notes h4 { 
+    margin-top: 20px; 
+    margin-bottom: 10px;
+    color: var(--etv-text-primary-color);
+    font-weight: 500; /* Slightly bolder headers */
+}
+
 
 .mud-table-container {
-    overflow-x: unset;
-    overflow-y: unset;
+    overflow-x: auto; /* Allow horizontal scroll for tables on small screens */
+    /* overflow-y: unset; */ /* Default is fine */
+    border: 1px solid var(--etv-lines-default-color);
+    border-radius: var(--etv-default-border-radius);
 }
 
-#blazor-error-ui { color: black; }
+#blazor-error-ui { 
+    background: var(--etv-background-color); 
+    color: var(--etv-text-primary-color); 
+}
 
-#blazor-error-ui a { color: unset; }
+#blazor-error-ui a { 
+    color: var(--etv-primary-color); 
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) { /* Broader than 600px for some general mobile tweaks */
+    body {
+        font-size: 0.95rem; /* Slightly smaller base font on mobile */
+    }
+    .letter-bar-container { 
+        display: none; /* Hide letter bar on smaller screens */
+    }
+    .media-card-grid {
+        justify-content: space-around; /* Center cards if space allows */
+    }
+    .media-card-container { 
+        width: calc(50% - 16px); /* 2 cards per row, considering gap */
+        /* margin: 8px; */ /* Gap handles spacing */
+    }
+    .media-card-episode-container { 
+        width: 100%; 
+    }
+    .media-card { 
+        width: 100%; 
+        height: auto; /* Auto height for varying content on mobile */
+    }
+    .media-card img { 
+        max-height: 280px; /* Adjust image height for mobile card layout */
+        object-fit: contain;
+    }
+}
+
+@media (max-width: 960px) and (min-width: 769px) { /* Tablet */
+    .media-card-container { 
+        width: calc(33.333% - 16px); /* 3 cards, considering gap */
+    }
+     .letter-bar-container { 
+        font-size: 0.9rem; /* Slightly smaller letter bar on tablet */
+        right: 0.25em;
+    }
+}
+
+
+/* General MudBlazor component overrides for light theme & border radius */
+/* Ensure these are specific enough or use !important carefully if needed */
+
+.mud-button {
+    border-radius: var(--etv-default-border-radius) !important;
+    text-transform: none !important; /* Softer button text */
+}
+
+.mud-card {
+    border-radius: var(--etv-softer-border-radius) !important; 
+    background-color: var(--etv-surface-color) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02) !important; /* Softer shadows */
+    border: 1px solid var(--etv-lines-default-color) !important; /* Add subtle border to cards */
+}
+
+.mud-input-control > .mud-input-control-input-container > div.mud-input.mud-input-outlined {
+    border-radius: var(--etv-default-border-radius) !important;
+}
+.mud-input-control > .mud-input-control-input-container > div.mud-input.mud-input-filled {
+    border-radius: var(--etv-default-border-radius) var(--etv-default-border-radius) 0 0 !important; /* Top corners for filled */
+}
+
+.mud-table > thead > tr > .mud-table-cell {
+    color: var(--etv-text-secondary-color);
+    font-weight: 500;
+}
+
+.mud-nav-link, .mud-nav-group .mud-nav-link-text {
+    color: var(--etv-drawer-text-color); 
+    border-radius: var(--etv-default-border-radius); /* Rounded nav links */
+    margin: 2px 4px !important; /* Add some margin */
+}
+.mud-nav-link:hover {
+    background-color: var(--etv-table-hover-color) !important; /* Use table hover for consistency */
+}
+.mud-nav-link.active, .mud-nav-link.active .mud-nav-link-text, .mud-nav-link.active .mud-icon-root {
+    color: var(--etv-primary-color); 
+}
+.mud-nav-group > .mud-nav-link.active {
+    /* border-left: 3px solid var(--etv-primary-color); */ /* Remove border, rely on text color or background */
+    background-color: rgba(var(--etv-primary-color-rgb, 25, 118, 210), 0.1) !important; /* Primary with low opacity */
+}
+
+/* App bar needs to use theme variables (already set in MainLayout.razor theme) */
+/* Ensure specificity if styles here are needed to override */
+.app-bar {
+    background-color: var(--etv-appbar-background-color) !important; 
+    color: var(--etv-appbar-text-color) !important;
+}
+
+/* Drawer needs to use theme variables (already set in MainLayout.razor theme) */
+.mud-drawer {
+    background-color: var(--etv-drawer-background-color) !important;
+}
+.mud-drawer-content .mud-list-item .mud-typography {
+    color: var(--etv-drawer-text-color) !important;
+}
+.mud-drawer-content .mud-list-item .mud-icon-root {
+    color: var(--etv-action-default-color) !important; 
+}
+
+/* Markdown Content Styling */
+/* Add a class like "markdown-content-container" to the div that wraps @HtmlContent in MarkdownView.razor's parent, or style globally if preferred */
+/* For example, if MarkdownView is always in a MudCardContent, you could do .mud-card-content .markdown-content-container h1 { ... } */
+
+.markdown-content-container h1,
+.markdown-content-container h2,
+.markdown-content-container h3,
+.markdown-content-container h4,
+.markdown-content-container h5,
+.markdown-content-container h6 {
+    color: var(--etv-text-primary-color);
+    font-weight: 500; 
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    line-height: 1.3;
+}
+
+.markdown-content-container h1 { font-size: 2rem; }
+.markdown-content-container h2 { font-size: 1.75rem; }
+.markdown-content-container h3 { font-size: 1.5rem; }
+.markdown-content-container h4 { font-size: 1.25rem; }
+.markdown-content-container h5 { font-size: 1.1rem; }
+.markdown-content-container h6 { font-size: 1rem; }
+
+.markdown-content-container p {
+    color: var(--etv-text-primary-color);
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+.markdown-content-container a {
+    color: var(--etv-primary-color);
+    text-decoration: none;
+}
+
+.markdown-content-container a:hover {
+    text-decoration: underline;
+    color: var(--etv-secondary-color); 
+}
+
+.markdown-content-container ul,
+.markdown-content-container ol {
+    color: var(--etv-text-primary-color);
+    padding-left: 2em; 
+    margin-bottom: 1em;
+}
+
+.markdown-content-container li {
+    margin-bottom: 0.5em;
+}
+
+.markdown-content-container pre {
+    background-color: var(--etv-surface-color);
+    border: 1px solid var(--etv-lines-default-color);
+    border-radius: var(--etv-default-border-radius);
+    padding: 1em;
+    overflow-x: auto; 
+    font-family: monospace; 
+    font-size: 0.9rem;
+    white-space: pre-wrap; /* Allow wrapping of long lines within pre, but still scroll if needed */
+    word-break: break-all; /* Break long words if necessary to prevent overflow */
+}
+
+.markdown-content-container code {
+    font-family: monospace;
+    background-color: rgba(var(--etv-primary-color-rgb, 25, 118, 210), 0.08); 
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em; 
+}
+
+.markdown-content-container pre code {
+    background-color: transparent; 
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit; 
+}
+
+.markdown-content-container blockquote {
+    border-left: 4px solid var(--etv-primary-color);
+    padding: 0.5em 1em;
+    margin: 1em 0;
+    background-color: var(--etv-surface-color);
+    color: var(--etv-text-secondary-color);
+    border-radius: 0 var(--etv-default-border-radius) var(--etv-default-border-radius) 0;
+}
+
+.markdown-content-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--etv-default-border-radius);
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    display: block; /* Ensure it behaves as a block for centering/margins */
+}
+
+.markdown-content-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+    border: 1px solid var(--etv-lines-default-color);
+    /* border-radius: var(--etv-default-border-radius); */ /* Radius on table can be tricky, apply to cells or wrapper */
+}
+
+.markdown-content-container th,
+.markdown-content-container td {
+    border: 1px solid var(--etv-lines-default-color);
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+
+.markdown-content-container th {
+    background-color: var(--etv-surface-color);
+    color: var(--etv-text-primary-color);
+    font-weight: 600; 
+}
+
+.markdown-content-container tr:nth-child(even) {
+    background-color: rgba(0,0,0,0.02); 
+}

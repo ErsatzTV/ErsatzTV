@@ -1,12 +1,8 @@
 ﻿<MudDialog>
     <DialogContent>
         <EditForm Model="@_model" OnSubmit="@(_ => Submit())">
-            <MudElement HtmlTag="div" Class="mt-3">
-                <MudTextField Label="Width" @bind-Value="@_model.Width" For="@(() => _model.Width)" Style="min-width: 400px"/>
-            </MudElement>
-            <MudElement HtmlTag="div" Class="mt-3">
-                <MudTextField Label="Height" @bind-Value="@_model.Height" For="@(() => _model.Height)" Style="min-width: 400px"/>
-            </MudElement>
+            <MudTextField Label="Width" @bind-Value="@_model.Width" For="@(() => _model.Width)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3"/>
+            <MudTextField Label="Height" @bind-Value="@_model.Height" For="@(() => _model.Height)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-3"/>
         </EditForm>
     </DialogContent>
     <DialogActions>

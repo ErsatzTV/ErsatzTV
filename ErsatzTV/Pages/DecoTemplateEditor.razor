@@ -122,6 +122,7 @@
                          Use24HourClock="@(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern.Contains("H"))"
                          EnableDragItems="true"
                          EnableResizeItems="false"
+                         T="DecoTemplateItemEditViewModel"
                          ItemChanged="@(ci => CalendarItemChanged(ci))"/>
         </MudItem>
     </MudGrid>

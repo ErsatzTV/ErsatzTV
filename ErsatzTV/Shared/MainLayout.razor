@@ -3,11 +3,12 @@
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Core.Interfaces.Search
 @using ErsatzTV.Extensions
+@using MudBlazor 
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
 @inject SystemStartup SystemStartup
-@inject ISearchTargets SearchTargets;
+@inject ISearchTargets SearchTargets
 
 <MudThemeProvider Theme="ErsatzTvTheme"/>
 <MudDialogProvider BackdropClick="false"/>
@@ -17,81 +18,63 @@
 <MudLayout @onclick="@(() => _isOpen = false)">
     <MudAppBar Elevation="1" Class="app-bar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
-        <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
-            <a href="">
-                <img src="images/ersatztv.png" alt="ErsatzTV"/>
-            </a>
-        </div>
+        
+        <!-- Desktop Logo: Visible on MD and up -->
+        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+            <div style="min-width: 240px" class="ml-3">
+                <a href="">
+                    <img src="images/ersatztv.png" alt="ErsatzTV"/>
+                </a>
+            </div>
+        </MudHidden>
+
         @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
         {
-            <div class="search-form">
-                <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
-                    <MudTextField T="string"
-                                  @bind-Value="@Query"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  Adornment="Adornment.Start"
-                                  Variant="Variant.Outlined"
-                                  Immediate="true"
-                                  Class="search-bar"
-                                  @onclick="@(() => _isOpen = true)"
-                                  OnKeyUp="OnKeyUp">
-                    </MudTextField>
-                    <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="DropdownWidth.Relative">
-                        @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
-                        {
-                            var matches = _searchTargets.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();
-                            if (matches.Any())
-                            {
-                                <MudList T="SearchTargetViewModel" ReadOnly="false" Dense="true">
-                                    @foreach (SearchTargetViewModel searchTarget in matches)
-                                    {
-                                        <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
-                                            <MudText Typo="Typo.body1">@searchTarget.Name</MudText>
-                                            <MudText Typo="Typo.subtitle1" Class="mud-text-disabled">
-                                                @(
-                                                searchTarget.Kind switch
-                                                {
-                                                    SearchTargetKind.Channel => "Channel",
-                                                    SearchTargetKind.FFmpegProfile => "FFmpeg Profile",
-                                                    SearchTargetKind.ChannelWatermark => "Channel Watermark",
-                                                    SearchTargetKind.Collection => "Collection",
-                                                    SearchTargetKind.MultiCollection => "Multi Collection",
-                                                    SearchTargetKind.SmartCollection => "Smart Collection",
-                                                    SearchTargetKind.Schedule => "Schedule",
-                                                    SearchTargetKind.ScheduleItems => "Schedule Items",
-                                                    _ => string.Empty
-                                                })
-                                            </MudText>
-                                        </MudListItem>
-                                    }
-                                </MudList>
-                            }
-                        }
-                    </MudPopover>
-                </EditForm>
-            </div>
+            <!-- Mobile Search Toggle Button: Visible on SM and XS, only if mobile search is NOT active -->
+            <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true" Hidden="@_mobileSearchActive">
+                <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" OnClick="@ToggleMobileSearch"/>
+            </MudHidden>
+
+            <!-- Desktop Search Bar: Visible on MD and up -->
+            <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+                <div class="search-form">
+                    @SearchFieldContentProperty(false)
+                </div>
+            </MudHidden>
+
+            <!-- Mobile Search Bar: Visible on SM and XS, only if mobile search IS active -->
+            <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true" Hidden="@(!_mobileSearchActive)">
+                <div class="search-form" style="flex-grow: 1; margin-left: 8px; margin-right: 8px;">
+                    @SearchFieldContentProperty(true)
+                </div>
+            </MudHidden>
         }
-        <div class="flex-grow-1 d-none d-md-flex"></div>
+
+        <!-- Spacer: Takes up remaining space. Hidden on mobile if search is active. -->
+        @if (!_mobileSearchActive)
+        {
+            <div class="flex-grow-1"></div>
+        }
+        
         <div style="align-items: center; display: flex;" class="d-none d-md-flex">
             @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
             {
-                <MudLink Color="Color.Info" Href="@IptvUrl("channels.m3u")" Target="_blank" Underline="Underline.None">M3U</MudLink>
-                <MudLink Color="Color.Info" Href="@IptvUrl("xmltv.xml")" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+                <MudLink Color="Color.Inherit" Href="@IptvUrl("channels.m3u")" Target="_blank" Underline="Underline.None">M3U</MudLink>
+                <MudLink Color="Color.Inherit" Href="@IptvUrl("xmltv.xml")" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
             }
-            @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
             <MudTooltip Text="Documentation">
-                <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Primary" Href="https://ersatztv.org" Target="_blank"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Help" Color="Color.Inherit" Href="https://ersatztv.org" Target="_blank"/>
             </MudTooltip>
             <MudTooltip Text="Discord">
-                <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+                <MudIconButton Icon="fab fa-discord" Color="Color.Inherit" Href="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
             </MudTooltip>
             <MudTooltip Text="GitHub">
-                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
+                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/ErsatzTV/ErsatzTV" Target="_blank"/>
             </MudTooltip>
             <AuthorizeView>
                 <form action="/account/logout" method="post">
                     <MudTooltip Text="Logout">
-                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Secondary" ButtonType="ButtonType.Submit"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" ButtonType="ButtonType.Submit"/>
                     </MudTooltip>
                 </form>
             </AuthorizeView>
@@ -99,8 +82,8 @@
     </MudAppBar>
     @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
     {
-        <MudDrawer @bind-Open="@_drawerIsOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
-            <MudNavMenu>
+        <MudDrawer @bind-Open="@_drawerIsOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive">
+            <MudNavMenu Rounded="true" Margin="Margin.Dense" Color="Color.Primary">
                 <MudNavLink Href="channels">Channels</MudNavLink>
                 <MudNavLink Href="ffmpeg">FFmpeg Profiles</MudNavLink>
                 <MudNavLink Href="watermarks">Watermarks</MudNavLink>
@@ -143,12 +126,12 @@
                 <MudDivider Class="my-6" DividerType="DividerType.Middle"/>
                 <MudContainer Style="text-align: right" Class="mr-6">
                     <MudText Typo="Typo.body2">ErsatzTV Version</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Info">@InfoVersion</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@InfoVersion</MudText> 
                 </MudContainer>
             </MudNavMenu>
         </MudDrawer>
     }
-    <MudMainContent>
+    <MudMainContent Class="pt-16 px-4" Style="background-color: var(--mud-palette-background);"> 
         @Body
     </MudMainContent>
 </MudLayout>
@@ -164,14 +147,15 @@
 
     private readonly SearchModel _dummyModel = new();
     private bool _drawerIsOpen = true;
-    private bool _isOpen;
+    private bool _isOpen; // For search popover
     private List<SearchTargetViewModel> _searchTargets;
+    
+    private bool _mobileSearchActive = false;
 
-    protected override void OnInitialized()
+    protected override void OnInitialized() 
     {
         SystemStartup.OnDatabaseReady += OnStartupProgress;
         SystemStartup.OnSearchIndexReady += OnStartupProgress;
-
         SearchTargets.OnSearchTargetsChanged += OnSearchTargetsChanged;
     }
 
@@ -179,35 +163,68 @@
     {
         SystemStartup.OnDatabaseReady -= OnStartupProgress;
         SystemStartup.OnSearchIndexReady -= OnStartupProgress;
-
         SearchTargets.OnSearchTargetsChanged -= OnSearchTargetsChanged;
-
         _cts.Cancel();
         _cts.Dispose();
     }
 
     private static MudTheme ErsatzTvTheme => new()
     {
-        PaletteLight = new PaletteLight
+        PaletteLight = new MudBlazor.PaletteLight() 
         {
-            ActionDefault = "rgba(255,255,255, 0.80)",
-            Primary = "#009000",
-            Secondary = "#009090",
-            Surface = "#1f1f1f",
-            AppbarBackground = "#121212",
-            AppbarText = "rgba(255,255,255, 0.80)",
-            DrawerBackground = "#1f1f1f",
-            DrawerText = "rgba(255,255,255, 0.80)",
-            Background = "#272727",
-            TextPrimary = "rgba(255,255,255, 0.80)",
-            TextSecondary = "rgba(255,255,255, 0.80)",
-            TextDisabled = "rgba(255,255,255, 0.40)",
-            ActionDisabled = "rgba(255,255,255, 0.40)",
-            TableHover = "rgba(255,255,255, 0.10)",
-            TableLines = "rgba(255,255,255,0.11)",
-            Info = "#00c0c0",
-            Tertiary = "#00c000",
-            White = Colors.Shades.White
+            Primary = "#1976D2",
+            Secondary = "#FFC107",
+            Background = "#FFFFFF", 
+            Surface = "#F5F5F5", 
+            
+            AppbarBackground = "#1976D2", 
+            AppbarText = MudBlazor.Colors.Shades.White, 
+            
+            DrawerBackground = "#F5F5F5", 
+            DrawerText = "rgba(0,0,0, 0.87)", 
+            DrawerIcon = "rgba(0,0,0, 0.54)",
+
+            TextPrimary = "rgba(0,0,0, 0.87)",
+            TextSecondary = "rgba(0,0,0, 0.60)",
+            TextDisabled = "rgba(0,0,0, 0.38)",
+            
+            ActionDefault = "rgba(0,0,0, 0.54)",
+            ActionDisabled = "rgba(0,0,0, 0.26)",
+            ActionDisabledBackground = "rgba(0,0,0, 0.12)",
+
+            LinesDefault = "rgba(0,0,0, 0.12)",
+            LinesInputs = "rgba(0,0,0, 0.42)",
+
+            TableLines = "rgba(0,0,0, 0.12)",
+            TableStriped = "rgba(0,0,0, 0.02)", 
+            TableHover = "rgba(0,0,0, 0.04)",
+            
+            Divider = "rgba(0,0,0, 0.12)",
+            
+            Info = "#2196F3", 
+            Success = "#4CAF50",
+            Warning = "#FB8C00",
+            Error = "#F44336",
+            Dark = "#27272f", 
+
+            White = MudBlazor.Colors.Shades.White 
+        },
+        LayoutProperties = new MudBlazor.LayoutProperties()
+        {
+            DefaultBorderRadius = "6px",
+            AppbarHeight = "64px" 
+        },
+        Typography = new MudBlazor.Typography()
+        {
+            Default = new MudBlazor.DefaultTypography()
+            {
+                FontFamily = new[] { "Roboto", "Helvetica", "Arial", "sans-serif" },
+                FontSize = ".875rem", 
+                // FontWeight = global::System.Convert.ToInt32(400), // REMOVED
+                // LineHeight = global::System.Convert.ToDouble(1.43), // REMOVED
+                LetterSpacing = ".01071em"
+            },
+            H6 = new MudBlazor.H6Typography() { FontSize = "1.1rem" }, 
         }
     };
 
@@ -222,10 +239,67 @@
             }
 
             _query = value;
-            _isOpen = true;
+            _isOpen = true; 
             StateHasChanged();
         }
     }
+    
+    private void ToggleMobileSearch()
+    {
+        _mobileSearchActive = !_mobileSearchActive;
+        if (!_mobileSearchActive) 
+        {
+            Query = string.Empty; 
+            _isOpen = false;      
+        }
+        StateHasChanged();
+    }
+
+    private RenderFragment<bool> SearchFieldContentProperty => (isMobile) =>@<EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
+        <MudTextField T="string"
+                      @bind-Value="@Query"
+                      AdornmentIcon="@(isMobile && _mobileSearchActive ? Icons.Material.Filled.ArrowBack : Icons.Material.Filled.Search)"
+                      OnAdornmentClick="@(isMobile && _mobileSearchActive ? (Action)ToggleMobileSearch : null)"
+                      Adornment="Adornment.Start"
+                      Placeholder="Search..."
+                      Variant="Variant.Outlined"
+                      Immediate="true"
+                      Margin="Margin.Dense" 
+                      Class="search-bar">
+        </MudTextField>
+        <MudPopover Open="@_isOpen" MaxHeight="300" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" RelativeWidth="DropdownWidth.Relative">
+            @if (!string.IsNullOrWhiteSpace(_query) && _query.Length >= 3)
+            {
+                var matches = _searchTargets?.Where(s => s.Name.Contains(_query, StringComparison.CurrentCultureIgnoreCase)).ToList();
+                if (matches != null && matches.Any())
+                {
+                    <MudList T="SearchTargetViewModel" ReadOnly="false" Dense="true">
+                        @foreach (SearchTargetViewModel searchTarget in matches)
+                        {
+                            <MudListItem @key="@searchTarget" OnClick="@(() => NavigateTo(searchTarget))">
+                                <MudText Typo="Typo.body1">@searchTarget.Name</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="mud-text-disabled">
+                                    @(
+                                    searchTarget.Kind switch
+                                    {
+                                        SearchTargetKind.Channel => "Channel",
+                                        SearchTargetKind.FFmpegProfile => "FFmpeg Profile",
+                                        SearchTargetKind.ChannelWatermark => "Channel Watermark",
+                                        SearchTargetKind.Collection => "Collection",
+                                        SearchTargetKind.MultiCollection => "Multi Collection",
+                                        SearchTargetKind.SmartCollection => "Smart Collection",
+                                        SearchTargetKind.Schedule => "Schedule",
+                                        SearchTargetKind.ScheduleItems => "Schedule Items",
+                                        _ => string.Empty
+                                    })
+                                </MudText>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            }
+        </MudPopover>
+    </EditForm>;
 
     private async void OnStartupProgress(object sender, EventArgs e)
     {
@@ -255,6 +329,11 @@
     private void PerformSearch()
     {
         NavigationManager.NavigateTo(_query.GetRelativeSearchQuery(), true);
+        _isOpen = false; 
+        if(_mobileSearchActive)
+        {
+            _mobileSearchActive = false;
+        }
         StateHasChanged();
     }
 
@@ -264,17 +343,29 @@
         {
             case "Enter":
             case "NumpadEnter":
-                _isOpen = false;
+                PerformSearch(); 
                 break;
             case "Escape":
                 _isOpen = false;
+                if (_mobileSearchActive)
+                {
+                    _mobileSearchActive = false; 
+                    Query = string.Empty;
+                }
                 break;
         }
     }
 
-    private void NavigateTo(SearchTargetViewModel searchTarget) =>
-        // need to force smart collections to navigate since the query string is all that differs
+    private void NavigateTo(SearchTargetViewModel searchTarget)
+    {
+        _isOpen = false; 
+        if(_mobileSearchActive)
+        {
+            _mobileSearchActive = false; 
+            Query = string.Empty;
+        }
         NavigationManager.NavigateTo(UrlFor(searchTarget), searchTarget.Kind is SearchTargetKind.SmartCollection);
+    }
 
     private string UrlFor(SearchTargetViewModel searchTarget) =>
         searchTarget.Kind switch

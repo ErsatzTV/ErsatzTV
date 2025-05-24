@@ -12,6 +12,8 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true"
+              Dense="true"
+              HorizontalScrollbar="true"
               @bind-RowsPerPage="@_rowsPerPage"
               ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ChannelViewModel>>>(ServerReload))"
               @ref="_table">
@@ -19,23 +21,23 @@
             <MudText Typo="Typo.h6">Channels</MudText>
         </ToolBarContent>
         <ColGroup>
-            <col style="width: 60px;"/>
-            <col/>
-            <col style="width: 15%"/>
-            <col style="width: 15%"/>
-            <col style="width: 15%"/>
-            <col style="width: 15%"/>
-            <col style="width: 240px;"/>
+            <col style="width: 60px;"/>   <!-- Number -->
+            <col style="width: 70px;"/>   <!-- Logo -->
+            <col />                       <!-- Name (flexible) -->
+            <col style="width: 120px;"/>  <!-- Language -->
+            <col style="width: 150px;"/>  <!-- Mode -->
+            <col style="width: 150px;"/>  <!-- FFmpeg Profile -->
+            <col style="width: 200px;"/>  <!-- Actions -->
         </ColGroup>
         <HeaderContent>
-            <MudTh>
+            <MudTh> <!-- Number -->
                 <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number))">Number</MudTableSortLabel>
             </MudTh>
-            <MudTh>Logo</MudTh>
-            <MudTh>
+            <MudTh>Logo</MudTh> <!-- Logo -->
+            <MudTh> <!-- Name -->
                 <MudTableSortLabel SortBy="new Func<ChannelViewModel, object>(x => x.Name)">Name</MudTableSortLabel>
             </MudTh>
-            <MudTh>Language</MudTh>
+            <MudTh>Language</MudTh> <!-- Language -->
             <MudTh>Mode</MudTh>
             <MudTh>FFmpeg Profile</MudTh>
             <MudTh/>

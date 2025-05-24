@@ -26,15 +26,15 @@
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
-                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudTextField Class="mt-3" Label="Group" @bind-Value="_model.Group" For="@(() => _model.Group)"/>
-                    <MudTextField Class="mt-3" Label="Categories" @bind-Value="_model.Categories" For="@(() => _model.Categories)" Placeholder="Comma-separated list of categories"/>
-                    <MudSelect Class="mt-3" Label="Progress Mode" @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)">
+                    <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    <MudTextField Class="mt-3" Label="Group" @bind-Value="_model.Group" For="@(() => _model.Group)" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    <MudTextField Class="mt-3" Label="Categories" @bind-Value="_model.Categories" For="@(() => _model.Categories)" Placeholder="Comma-separated list of categories" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                    <MudSelect Class="mt-3" Label="Progress Mode" @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@(ChannelProgressMode.Always)">Always</MudSelectItem>
                         <MudSelectItem Value="@(ChannelProgressMode.OnDemand)">On Demand</MudSelectItem>
                     </MudSelect>
-                    <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
+                    <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
@@ -42,7 +42,7 @@
                         <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterV2)">HLS Segmenter V2</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3" Label="FFmpeg Profile" @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
-                               Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)">
+                               Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
                         {
                             <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
@@ -52,32 +52,32 @@
                                Label="Preferred Audio Language"
                                @bind-Value="_model.PreferredAudioLanguageCode"
                                For="@(() => _model.PreferredAudioLanguageCode)"
-                               Clearable="true">
+                               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
                         @foreach (LanguageCodeViewModel culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudTextField Label="Preferred Audio Title" @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
+                    <MudTextField Class="mt-3" Label="Preferred Audio Title" @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)" Variant="Variant.Outlined" Margin="Margin.Dense"/>
                     <MudSelect Class="mt-3"
                                Label="Preferred Subtitle Language"
                                @bind-Value="_model.PreferredSubtitleLanguageCode"
                                For="@(() => _model.PreferredSubtitleLanguageCode)"
-                               Clearable="true">
+                               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
                         @foreach (LanguageCodeViewModel culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                    <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
                         <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
                         <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
                         <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
                     </MudSelect>
-                    <MudSelect Class="mt-3" Label="Music Video Credits Mode" @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
+                    <MudSelect Class="mt-3" Label="Music Video Credits Mode" @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
                     </MudSelect>
@@ -85,14 +85,14 @@
                                Label="Music Video Credits Template"
                                @bind-Value="_model.MusicVideoCreditsTemplate"
                                For="@(() => _model.MusicVideoCreditsTemplate)"
-                               Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.GenerateSubtitles)">
+                               Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.GenerateSubtitles)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
                         @foreach (string template in _musicVideoCreditsTemplates)
                         {
                             <MudSelectItem T="string" Value="@template">@template</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="mt-3" Label="Song Video Mode" @bind-Value="_model.SongVideoMode" For="@(() => _model.SongVideoMode)">
+                    <MudSelect Class="mt-3" Label="Song Video Mode" @bind-Value="_model.SongVideoMode" For="@(() => _model.SongVideoMode)" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@(ChannelSongVideoMode.Default)">Default</MudSelectItem>
                         <MudSelectItem Value="@(ChannelSongVideoMode.WithProgress)">With Progress</MudSelectItem>
                     </MudSelect>
@@ -116,7 +116,7 @@
                     </MudGrid>
                     <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
                                Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
-                               Clearable="true">
+                               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
@@ -127,7 +127,7 @@
                                Label="Fallback Filler"
                                @bind-Value="_model.FallbackFillerId"
                                For="@(() => _model.FallbackFillerId)"
-                               Clearable="true">
+                               Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
                         {

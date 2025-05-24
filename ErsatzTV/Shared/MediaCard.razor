@@ -3,15 +3,15 @@
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 
-<div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
+<div class="@((ContainerClass ?? "media-card-container") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
     @if (SelectClicked.HasDelegate || !string.IsNullOrWhiteSpace(Href))
     {
         <div class="@(IsSelected ? DeleteClicked.HasDelegate ? "media-card-selected-delete" : "media-card-selected" : "")"
-             style="border-radius: 4px; position: relative;">
+             style="border-radius: var(--etv-default-border-radius); position: relative;">
             <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
-                    <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-primary">
+                    <MudText Align="Align.Center" Typo="Typo.h5" Class="media-card-poster-placeholder mud-text-primary">
                         @GetPlaceholder(Data.SortTitle)
                     </MudText>
                 }
@@ -69,16 +69,16 @@
         <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
             @if (string.IsNullOrWhiteSpace(Data.Poster))
             {
-                <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-primary">
+                    <MudText Align="Align.Center" Typo="Typo.h5" Class="media-card-poster-placeholder mud-text-primary">
                     @GetPlaceholder(Data.SortTitle)
                 </MudText>
             }
         </MudPaper>
     }
-    <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
         @(Title ?? Data.Title)
     </MudText>
-    <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
+    <MudText Typo="Typo.caption" Align="Align.Center" Class="mud-text-secondary">
         @(Subtitle ?? Data.Subtitle)
     </MudText>
 </div>

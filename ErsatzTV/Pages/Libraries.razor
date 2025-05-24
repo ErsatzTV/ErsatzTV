@@ -14,19 +14,19 @@
 @inject ICourier Courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_libraries" Dense="true">
+    <MudTable Hover="true" Items="_libraries" Dense="true" HorizontalScrollbar="true">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Libraries</MudText>
         </ToolBarContent>
         <ColGroup>
-            <col/>
+            <col/> <!-- Library Kind -->
             @if (_showServerNames)
             {
-                <col/>
+                <col/> <!-- Server Name -->
             }
-            <col/>
-            <col/>
-            <col style="width: 180px;"/>
+            <col/> <!-- Library Name -->
+            <col/> <!-- Media Kind -->
+            <col style="width: 160px;"/> <!-- Actions -->
         </ColGroup>
         <HeaderContent>
             <MudTh>Library Kind</MudTh>
@@ -68,6 +68,7 @@
                         {
                             <MudTooltip Text="Deep Scan Library">
                                 <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
+                                               Size="Size.Small"
                                                Disabled="@Locker.IsLibraryLocked(context.Id)"
                                                OnClick="@(_ => ScanLibrary(context, true))">
                                 </MudIconButton>
@@ -75,11 +76,12 @@
                         }
                         else
                         {
-                            <div style="width: 48px"></div>
+                            <div style="width: 34px"></div> <!-- Adjusted for small icon button size -->
                         }
 
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Size="Size.Small"
                                            Disabled="@Locker.IsLibraryLocked(context.Id)"
                                            OnClick="@(_ => ScanLibrary(context))">
                             </MudIconButton>
@@ -87,6 +89,7 @@
                     }
                     <MudTooltip Text="Search Library">
                         <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                       Size="Size.Small"
                                        Href="@($"search?query=library_id%3a{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
@@ -99,13 +102,13 @@
 @if (_externalCollections.Any())
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-        <MudTable Hover="true" Items="_externalCollections" Dense="true">
+        <MudTable Hover="true" Items="_externalCollections" Dense="true" HorizontalScrollbar="true">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">External Collections</MudText>
             </ToolBarContent>
             <ColGroup>
-                <col/>
-                <col style="width: 180px;"/>
+                <col/> <!-- Library Kind -->
+                <col style="width: 160px;"/> <!-- Actions -->
             </ColGroup>
             <HeaderContent>
                 <MudTh>Library Kind</MudTh>
@@ -127,12 +130,13 @@
                             <div style="width: 48px"></div>
                             <MudTooltip Text="Scan Collections">
                                 <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Size="Size.Small"
                                                Disabled="@AreCollectionsLocked(context.LibraryKind)"
                                                OnClick="@(_ => ScanExternalCollections(context))">
                                 </MudIconButton>
                             </MudTooltip>
                         }
-                        <div style="width: 48px"></div>
+                        <div style="width: 34px"></div> <!-- Adjusted for small icon button size -->
                     </div>
                 </MudTd>
             </RowTemplate>

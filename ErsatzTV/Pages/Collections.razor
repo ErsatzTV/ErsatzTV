@@ -7,19 +7,20 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div>
+    <MudStack Row="true" Spacing="2" Class="mb-4">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="media/collections/add">
             Add Collection
         </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Href="media/multi-collections/add">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="media/multi-collections/add">
             Add Multi Collection
         </MudButton>
-    </div>
-    <MudTable Class="mt-4"
+    </MudStack>
+    <MudTable Class="mt-0"
               Hover="true"
               @bind-RowsPerPage="@_collectionsRowsPerPage"
               ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
               Dense="true"
+              HorizontalScrollbar="true"
               @ref="_collectionsTable">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Collections</MudText>
@@ -58,6 +59,7 @@
               @bind-RowsPerPage="@_multiCollectionsRowsPerPage"
               ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))"
               Dense="true"
+              HorizontalScrollbar="true"
               @ref="_multiCollectionsTable">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Multi Collections</MudText>
@@ -96,6 +98,7 @@
               @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
               ServerData="@(new Func<TableState, CancellationToken, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
               Dense="true"
+              HorizontalScrollbar="true"
               @ref="_smartCollectionsTable">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Smart Collections</MudText>
