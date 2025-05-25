@@ -640,7 +640,7 @@
                 Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/schedules"));
+            () => NavigationManager.NavigateTo("schedules"));
     }
 
     private async Task SelectedItemChanged(ProgramScheduleItemEditViewModel vm)

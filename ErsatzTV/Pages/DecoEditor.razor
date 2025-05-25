@@ -426,7 +426,7 @@
                 Snackbar.Add($"Unexpected error saving deco: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving deco: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/decos"));
+            () => NavigationManager.NavigateTo("decos"));
     }
 
 }

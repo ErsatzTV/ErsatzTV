@@ -252,7 +252,7 @@
                     Snackbar.Add(error.Value, Severity.Error);
                     Logger.LogError("Unexpected error saving channel: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo("/channels"));
+                () => NavigationManager.NavigateTo("channels"));
         }
     }
 

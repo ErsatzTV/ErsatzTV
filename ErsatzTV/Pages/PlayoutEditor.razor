@@ -127,7 +127,7 @@
                     Snackbar.Add(error.Value, Severity.Error);
                     Logger.LogError("Unexpected error saving playout: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo("/playouts"));
+                () => NavigationManager.NavigateTo("playouts"));
         }
     }
 

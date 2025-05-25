@@ -477,7 +477,7 @@
                 Snackbar.Add($"Unexpected error saving block: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving block: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/blocks"));
+            () => NavigationManager.NavigateTo("blocks"));
     }
 
     private ReplaceBlockItems GenerateReplaceRequest()

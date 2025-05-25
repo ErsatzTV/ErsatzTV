@@ -77,7 +77,7 @@
         Option<string> maybeName = await Mediator.Send(new GetChannelNameByPlayoutId(Id), _cts.Token);
         if (maybeName.IsNone)
         {
-            NavigationManager.NavigateTo("/playouts");
+            NavigationManager.NavigateTo("playouts");
             return;
         }
 

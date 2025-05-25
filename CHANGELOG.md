@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections
+- Fix navigation after form submission when using `ETV_BASE_URL` environment variable
 
 ## [25.1.0] - 2025-01-10
 ### Added
