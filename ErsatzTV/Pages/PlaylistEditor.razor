@@ -305,7 +305,7 @@
         Option<PlaylistViewModel> maybePlaylist = await Mediator.Send(new GetPlaylistById(Id), _cts.Token);
         if (maybePlaylist.IsNone)
         {
-            NavigationManager.NavigateTo("/media/playlists");
+            NavigationManager.NavigateTo("media/playlists");
             return;
         }
 
@@ -483,7 +483,7 @@
                 Snackbar.Add($"Unexpected error saving playlist: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving playlist: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/media/playlists"));
+            () => NavigationManager.NavigateTo("media/playlists"));
     }
 
     private ReplacePlaylistItems GenerateReplaceRequest()

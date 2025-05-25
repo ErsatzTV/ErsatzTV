@@ -543,7 +543,7 @@ else
                 Snackbar.Add($"Unexpected error saving playout templates: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving playout templates: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/playouts"));
+            () => NavigationManager.NavigateTo("playouts"));
     }
 
     private async Task PreviewCalendar()

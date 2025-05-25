@@ -403,7 +403,7 @@
                 Snackbar.Add($"Unexpected error saving alternate schedules: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving alternate schedules: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/playouts"));
+            () => NavigationManager.NavigateTo("playouts"));
     }
 
     private string ToDaysOfWeekString(List<DayOfWeek> daysOfWeek)

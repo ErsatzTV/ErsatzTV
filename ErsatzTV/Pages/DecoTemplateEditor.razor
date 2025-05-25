@@ -310,7 +310,7 @@
                 Snackbar.Add($"Unexpected error saving template: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving template: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/deco-templates"));
+            () => NavigationManager.NavigateTo("deco-templates"));
     }
 
 }

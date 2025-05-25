@@ -215,7 +215,7 @@
                     Snackbar.Add("Unexpected error saving watermark");
                     Logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo("/watermarks"));
+                () => NavigationManager.NavigateTo("watermarks"));
         }
     }
 
