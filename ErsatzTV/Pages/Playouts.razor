@@ -1,4 +1,5 @@
 ﻿@page "/playouts"
+@using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Core.Scheduling
@@ -50,7 +51,7 @@
         </ColGroup>
         <HeaderContent>
             <MudTh>
-                <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => decimal.Parse(x.Channel.Number))">
+                <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => decimal.Parse(x.Channel.Number, CultureInfo.InvariantCulture))">
                     Channel
                 </MudTableSortLabel>
             </MudTh>
@@ -356,7 +357,7 @@
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()), _cts.Token);
 
         List<PlayoutNameViewModel> playouts = await Mediator.Send(new GetAllPlayouts(), _cts.Token);
-        IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber));
+        IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber, CultureInfo.InvariantCulture));
 
         // TODO: properly page this data
         return new TableData<PlayoutNameViewModel>
