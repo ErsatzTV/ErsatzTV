@@ -69,7 +69,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     {
         try
         {
-            _entityLocker.LockPlayout(playout.Id);
+            await _entityLocker.LockPlayout(playout.Id);
 
             switch (playout.ProgramSchedulePlayoutType)
             {
@@ -135,7 +135,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
         }
         finally
         {
-            _entityLocker.UnlockPlayout(playout.Id);
+            await _entityLocker.UnlockPlayout(playout.Id);
         }
 
         return Unit.Default;

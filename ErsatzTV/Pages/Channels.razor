@@ -29,7 +29,7 @@
         </ColGroup>
         <HeaderContent>
             <MudTh>
-                <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number))">Number</MudTableSortLabel>
+                <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number, CultureInfo.InvariantCulture))">Number</MudTableSortLabel>
             </MudTh>
             <MudTh>Logo</MudTh>
             <MudTh>
@@ -219,7 +219,7 @@
         await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), _cts.Token);
 
         List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels(), _cts.Token);
-        IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number));
+        IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number, CultureInfo.InvariantCulture));
 
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
         var processedChannels = new List<ChannelViewModel>();

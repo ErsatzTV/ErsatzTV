@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using ErsatzTV.Core.Interfaces.Locking;
+using ErsatzTV.Core.Notifications;
+using MediatR;
 
 namespace ErsatzTV.Infrastructure.Locking;
 
-public class EntityLocker : IEntityLocker
+public class EntityLocker(IMediator mediator) : IEntityLocker
 {
     private readonly ConcurrentDictionary<int, byte> _lockedLibraries = new();
     private readonly ConcurrentDictionary<int, byte> _lockedPlayouts = new();
@@ -21,7 +23,6 @@ public class EntityLocker : IEntityLocker
     public event EventHandler OnEmbyCollectionsChanged;
     public event EventHandler OnJellyfinCollectionsChanged;
     public event EventHandler OnPlexCollectionsChanged;
-    public event EventHandler<int> OnPlayoutChanged;
 
     public bool LockLibrary(int libraryId)
     {
@@ -208,22 +209,22 @@ public class EntityLocker : IEntityLocker
 
     public bool ArePlexCollectionsLocked() => _plexCollections;
 
-    public bool LockPlayout(int playoutId)
+    public async Task<bool> LockPlayout(int playoutId)
     {
         if (!_lockedPlayouts.ContainsKey(playoutId) && _lockedPlayouts.TryAdd(playoutId, 0))
         {
-            OnPlayoutChanged?.Invoke(this, playoutId);
+            await mediator.Publish(new PlayoutUpdatedNotification(playoutId, true));
             return true;
         }
 
         return false;
     }
 
-    public bool UnlockPlayout(int playoutId)
+    public async Task<bool> UnlockPlayout(int playoutId)
     {
         if (_lockedPlayouts.TryRemove(playoutId, out byte _))
         {
-            OnPlayoutChanged?.Invoke(this, playoutId);
+            await mediator.Publish(new PlayoutUpdatedNotification(playoutId, false));
             return true;
         }
 
