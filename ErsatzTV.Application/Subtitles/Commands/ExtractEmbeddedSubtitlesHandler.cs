@@ -135,7 +135,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             foreach (int playoutId in playoutIdsToCheck)
             {
-                _entityLocker.LockPlayout(playoutId);
+                await _entityLocker.LockPlayout(playoutId);
             }
 
             _logger.LogDebug("Checking playouts {PlayoutIds} for text subtitles to extract", playoutIdsToCheck);
@@ -193,7 +193,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
             foreach (int playoutId in playoutIdsToCheck)
             {
-                _entityLocker.UnlockPlayout(playoutId);
+                await _entityLocker.UnlockPlayout(playoutId);
             }
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)

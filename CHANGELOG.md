@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections
 - Fix navigation after form submission when using `ETV_BASE_URL` environment variable
 - Fix UI crashes when channel numbers contain a period `.` in locales that have a different decimal separator (e.g. `,`)
+- Fix playout detail table to only reload once when resetting a playout
+- Fix date formatting in playout detail table on reload (will now respect browser's `Accept-Language` header)
 
 ## [25.1.0] - 2025-01-10
 ### Added

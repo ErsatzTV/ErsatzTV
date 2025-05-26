@@ -1,13 +1,16 @@
-﻿@page "/playouts"
+@page "/playouts"
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Core.Scheduling
+@using ErsatzTV.Core.Notifications
+@using MediatR.Courier
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
 @inject IEntityLocker EntityLocker;
+@inject ICourier Courier;
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div>
@@ -200,8 +203,8 @@
                 <MudTh>Duration</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Start">@context.Start.ToString("G")</MudTd>
-                <MudTd DataLabel="Finish">@context.Finish.ToString("G")</MudTd>
+                <MudTd DataLabel="Start">@context.Start.ToString("G", _dtf)</MudTd>
+                <MudTd DataLabel="Finish">@context.Finish.ToString("G", _dtf)</MudTd>
                 <MudTd DataLabel="Media Item">@context.Title</MudTd>
                 <MudTd DataLabel="Duration">@context.Duration</MudTd>
             </RowTemplate>
@@ -214,6 +217,8 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
+
+    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
     private MudTable<PlayoutNameViewModel> _table;
     private MudTable<PlayoutItemViewModel> _detailTable;
@@ -238,15 +243,30 @@
         }
     }
 
+    protected override void OnInitialized()
+    {
+        Courier.Subscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
+    }
+
     public void Dispose()
     {
-        EntityLocker.OnPlayoutChanged -= ReloadDetailsIfNeeded;
-
         _cts.Cancel();
         _cts.Dispose();
     }
 
-    protected override void OnInitialized() => EntityLocker.OnPlayoutChanged += ReloadDetailsIfNeeded;
+    public async Task HandlePlayoutUpdated(PlayoutUpdatedNotification notification, CancellationToken cancellationToken)
+    {
+        // only refresh detail table on unlock operations (after playout has been modified)
+        if (notification.IsLocked == false)
+        {
+            if (notification.PlayoutId == _selectedPlayoutId && _detailTable is not null)
+            {
+                await InvokeAsync(() => _detailTable.ReloadServerData());
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -321,15 +341,6 @@
     private async Task ResetPlayout(PlayoutNameViewModel playout)
     {
         await WorkerChannel.WriteAsync(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
-        if (_table != null)
-        {
-            await _table.ReloadServerData();
-        }
-
-        if (_selectedPlayoutId == playout.PlayoutId)
-        {
-            await PlayoutSelected(playout);
-        }
     }
 
     private async Task ScheduleReset(PlayoutNameViewModel playout)
@@ -365,16 +376,6 @@
             TotalItems = playouts.Count,
             Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
         };
-    }
-
-    private async void ReloadDetailsIfNeeded(object sender, int playoutId)
-    {
-        if (playoutId == _selectedPlayoutId && _detailTable is not null)
-        {
-            await InvokeAsync(() => _detailTable.ReloadServerData());
-        }
-
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state, CancellationToken cancellationToken)
