@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Scheduling;
 using Newtonsoft.Json;
 
 namespace ErsatzTV.Core.Domain;
@@ -9,6 +10,7 @@ public abstract class ProgramScheduleItem
     public int Index { get; set; }
     public StartType StartType => StartTime.HasValue ? StartType.Fixed : StartType.Dynamic;
     public TimeSpan? StartTime { get; set; }
+    public FixedStartTimeBehavior? FixedStartTimeBehavior { get; set; }
     public ProgramScheduleItemCollectionType CollectionType { get; set; }
     public GuideMode GuideMode { get; set; }
     public string CustomTitle { get; set; }

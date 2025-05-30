@@ -3,6 +3,7 @@ using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -13,6 +14,7 @@ public record ProgramScheduleItemFloodViewModel : ProgramScheduleItemViewModel
         int index,
         StartType startType,
         TimeSpan? startTime,
+        FixedStartTimeBehavior? fixedStartTimeBehavior,
         ProgramScheduleItemCollectionType collectionType,
         MediaCollectionViewModel collection,
         MultiCollectionViewModel multiCollection,
@@ -37,6 +39,7 @@ public record ProgramScheduleItemFloodViewModel : ProgramScheduleItemViewModel
         index,
         startType,
         startTime,
+        fixedStartTimeBehavior,
         PlayoutMode.Flood,
         collectionType,
         collection,

@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -7,6 +8,7 @@ public record ReplaceProgramScheduleItem(
     int Index,
     StartType StartType,
     TimeSpan? StartTime,
+    FixedStartTimeBehavior? FixedStartTimeBehavior,
     PlayoutMode PlayoutMode,
     ProgramScheduleItemCollectionType CollectionType,
     int? CollectionId,

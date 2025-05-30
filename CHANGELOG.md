@@ -13,6 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `ETV_STREAMING_PORT`: port used for streaming requests, defaults to 8409
     - `ETV_UI_PORT`: port used for admin UI, defaults to 8409
 - Publish docker images to ghcr.io (`ghcr.io/ersatztv/ersatztv`)
+- Add new option `Fixed Start Time Behavior` to Schedules and Schedule Items
+  - Schedules can set a default behavior for all items
+  - Schedule items can override this default behavior
+  - Possible values are:
+    - `Strict`: Always wait for the exact start time, even if that means waiting (adding unscheduled time) until the next day
+    - `Flexible`: Start scheduling immediately (do not wait) if waiting (adding unscheduled time) would go into the next day
+  - As an example, if the current scheduling time is 6:02 AM and the next schedule item has a fixed start time of 6:00 AM
+    - `Strict` will add nearly 24h (23:58) of unscheduled time so that it can start exactly at 6:00 AM the next day
+    - `Flexible` will NOT add unscheduled time, and will schedule its item at 6:02 AM (which may also affect the scheduling of later items)
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

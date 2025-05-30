@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Application.ProgramSchedules;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.ViewModels;
 
@@ -10,10 +11,24 @@ public class ProgramScheduleEditViewModel
     public bool TreatCollectionsAsShows { get; set; }
     public bool ShuffleScheduleItems { get; set; }
     public bool RandomStartPoint { get; set; }
+    public FixedStartTimeBehavior FixedStartTimeBehavior { get; set; }
 
     public UpdateProgramSchedule ToUpdate() =>
-        new(Id, Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems, RandomStartPoint);
+        new(
+            Id,
+            Name,
+            KeepMultiPartEpisodesTogether,
+            TreatCollectionsAsShows,
+            ShuffleScheduleItems,
+            RandomStartPoint,
+            FixedStartTimeBehavior);
 
     public CreateProgramSchedule ToCreate() =>
-        new(Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems, RandomStartPoint);
+        new(
+            Name,
+            KeepMultiPartEpisodesTogether,
+            TreatCollectionsAsShows,
+            ShuffleScheduleItems,
+            RandomStartPoint,
+            FixedStartTimeBehavior);
 }

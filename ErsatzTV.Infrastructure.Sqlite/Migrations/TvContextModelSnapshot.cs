@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.15");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -1868,6 +1868,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("FixedStartTimeBehavior")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("KeepMultiPartEpisodesTogether")
                         .HasColumnType("INTEGER");
 
@@ -1946,6 +1949,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("FillWithGroupMode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("FixedStartTimeBehavior")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("GuideMode")

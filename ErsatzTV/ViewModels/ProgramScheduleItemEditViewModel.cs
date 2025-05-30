@@ -6,6 +6,7 @@ using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.ViewModels;
 
@@ -18,6 +19,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private int _playoutDurationHours;
     private int _playoutDurationMinutes;
     private TimeSpan? _startTime;
+    private FixedStartTimeBehavior? _fixedStartTimeBehavior;
 
     public int Id { get; set; }
     public int Index { get; set; }
@@ -27,6 +29,12 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     {
         get => StartType == StartType.Fixed ? _startTime : null;
         set => _startTime = value;
+    }
+
+    public FixedStartTimeBehavior? FixedStartTimeBehavior
+    {
+        get => StartType == StartType.Fixed ? _fixedStartTimeBehavior : null;
+        set => _fixedStartTimeBehavior = value;
     }
 
     public FillWithGroupMode FillWithGroupMode { get; set; }

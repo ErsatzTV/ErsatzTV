@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Application.ProgramSchedules;
+﻿using ErsatzTV.Core.Scheduling;
+
+namespace ErsatzTV.Application.ProgramSchedules;
 
 public record ProgramScheduleViewModel(
     int Id,
@@ -6,4 +8,5 @@ public record ProgramScheduleViewModel(
     bool KeepMultiPartEpisodesTogether,
     bool TreatCollectionsAsShows,
     bool ShuffleScheduleItems,
-    bool RandomStartPoint);
+    bool RandomStartPoint,
+    FixedStartTimeBehavior FixedStartTimeBehavior);

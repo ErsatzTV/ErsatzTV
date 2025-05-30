@@ -11,7 +11,8 @@ internal static class Mapper
             programSchedule.KeepMultiPartEpisodesTogether,
             programSchedule.TreatCollectionsAsShows,
             programSchedule.ShuffleScheduleItems,
-            programSchedule.RandomStartPoint);
+            programSchedule.RandomStartPoint,
+            programSchedule.FixedStartTimeBehavior);
 
     internal static ProgramScheduleItemViewModel ProjectToViewModel(ProgramScheduleItem programScheduleItem) =>
         programScheduleItem switch
@@ -22,6 +23,7 @@ internal static class Mapper
                     duration.Index,
                     duration.StartType,
                     duration.StartTime,
+                    duration.FixedStartTimeBehavior,
                     duration.CollectionType,
                     duration.Collection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(duration.Collection)
@@ -77,6 +79,7 @@ internal static class Mapper
                     flood.Index,
                     flood.StartType,
                     flood.StartTime,
+                    flood.FixedStartTimeBehavior,
                     flood.CollectionType,
                     flood.Collection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(flood.Collection)
@@ -129,6 +132,7 @@ internal static class Mapper
                     multiple.Index,
                     multiple.StartType,
                     multiple.StartTime,
+                    multiple.FixedStartTimeBehavior,
                     multiple.CollectionType,
                     multiple.Collection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(multiple.Collection)
@@ -182,6 +186,7 @@ internal static class Mapper
                     one.Index,
                     one.StartType,
                     one.StartTime,
+                    one.FixedStartTimeBehavior,
                     one.CollectionType,
                     one.Collection != null
                         ? MediaCollections.Mapper.ProjectToViewModel(one.Collection)

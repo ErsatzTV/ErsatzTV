@@ -6,6 +6,7 @@
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Core.Domain.Filler
+@using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleItemsEditor> Logger
@@ -105,6 +106,14 @@
                     }
                 </MudSelect>
                 <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)" Editable="true"/>
+                @if (_selectedItem.StartType == StartType.Fixed)
+                {
+                    <MudSelect Class="mt-3" Label="Fixed Start Time Behavior" @bind-Value="_selectedItem.FixedStartTimeBehavior" For="@(() => _selectedItem.FixedStartTimeBehavior)">
+                        <MudSelectItem Value="@((FixedStartTimeBehavior?)null)">Inherit</MudSelectItem>
+                        <MudSelectItem T="FixedStartTimeBehavior?" Value="FixedStartTimeBehavior.Strict">Strict - Always Wait For Exact Start Time</MudSelectItem>
+                        <MudSelectItem T="FixedStartTimeBehavior?" Value="FixedStartTimeBehavior.Flexible">Flexible - Start As Soon As Possible After Start Time</MudSelectItem>
+                    </MudSelect>
+                }
                 <MudSelect Class="mt-3" Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
                     <MudSelectItem Value="ProgramScheduleItemCollectionType.Collection">Collection</MudSelectItem>
                     <MudSelectItem Value="ProgramScheduleItemCollectionType.TelevisionShow">Television Show</MudSelectItem>
@@ -526,6 +535,7 @@
             Index = item.Index,
             StartType = item.StartType,
             StartTime = item.StartTime,
+            FixedStartTimeBehavior = item.FixedStartTimeBehavior,
             PlayoutMode = item.PlayoutMode,
             CollectionType = item.CollectionType,
             Collection = item.Collection,
@@ -606,6 +616,7 @@
                 item.Index,
                 item.StartType,
                 item.StartTime,
+                item.FixedStartTimeBehavior,
                 item.PlayoutMode,
                 item.CollectionType,
                 item.Collection?.Id,

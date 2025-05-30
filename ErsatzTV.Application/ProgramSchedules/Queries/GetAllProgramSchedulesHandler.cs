@@ -3,18 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
-public class GetAllProgramSchedulesHandler : IRequestHandler<GetAllProgramSchedules, List<ProgramScheduleViewModel>>
+public class GetAllProgramSchedulesHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetAllProgramSchedules, List<ProgramScheduleViewModel>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public GetAllProgramSchedulesHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<List<ProgramScheduleViewModel>> Handle(
         GetAllProgramSchedules request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ProgramSchedules
             .Map(
                 ps => new ProgramScheduleViewModel(
@@ -23,7 +19,8 @@ public class GetAllProgramSchedulesHandler : IRequestHandler<GetAllProgramSchedu
                     ps.KeepMultiPartEpisodesTogether,
                     ps.TreatCollectionsAsShows,
                     ps.ShuffleScheduleItems,
-                    ps.RandomStartPoint))
+                    ps.RandomStartPoint,
+                    ps.FixedStartTimeBehavior))
             .ToListAsync(cancellationToken);
     }
 }
