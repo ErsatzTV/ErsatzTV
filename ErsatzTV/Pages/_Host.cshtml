@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using System.Reflection
 @namespace ErsatzTV.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
@@ -102,7 +103,7 @@
 </div>
 
 <script src="_framework/blazor.server.js"></script>
-<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js?v=@(Assembly.GetAssembly(typeof(MudBlazor.AbstractLocalizationInterceptor))?.GetName().Version?.ToString())"></script>
 <script type="text/javascript">
     window.blazorHelpers = {
         scrollToFragment: (elementId) => {
