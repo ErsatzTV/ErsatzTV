@@ -1,10 +1,12 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
 public interface IProgramScheduleItemRequest
 {
     TimeSpan? StartTime { get; }
+    FixedStartTimeBehavior? FixedStartTimeBehavior { get; }
     ProgramScheduleItemCollectionType CollectionType { get; }
     int? CollectionId { get; }
     int? MultiCollectionId { get; }

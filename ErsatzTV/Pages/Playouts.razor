@@ -250,6 +250,8 @@
 
     public void Dispose()
     {
+        Courier.UnSubscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
+
         _cts.Cancel();
         _cts.Dispose();
     }

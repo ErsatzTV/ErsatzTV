@@ -42,7 +42,8 @@ public class UpdateProgramScheduleHandler :
             programSchedule.KeepMultiPartEpisodesTogether != request.KeepMultiPartEpisodesTogether ||
             programSchedule.TreatCollectionsAsShows != request.TreatCollectionsAsShows ||
             programSchedule.ShuffleScheduleItems != request.ShuffleScheduleItems ||
-            programSchedule.RandomStartPoint != request.RandomStartPoint;
+            programSchedule.RandomStartPoint != request.RandomStartPoint ||
+            programSchedule.FixedStartTimeBehavior != request.FixedStartTimeBehavior;
 
         programSchedule.Name = request.Name;
         programSchedule.KeepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;
@@ -50,6 +51,7 @@ public class UpdateProgramScheduleHandler :
                                                   request.TreatCollectionsAsShows;
         programSchedule.ShuffleScheduleItems = request.ShuffleScheduleItems;
         programSchedule.RandomStartPoint = request.RandomStartPoint;
+        programSchedule.FixedStartTimeBehavior = request.FixedStartTimeBehavior;
 
         await dbContext.SaveChangesAsync();
 

@@ -5,19 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
-public class CreateProgramScheduleHandler :
+public class CreateProgramScheduleHandler(IDbContextFactory<TvContext> dbContextFactory) :
     IRequestHandler<CreateProgramSchedule, Either<BaseError, CreateProgramScheduleResult>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
-
-    public CreateProgramScheduleHandler(IDbContextFactory<TvContext> dbContextFactory) =>
-        _dbContextFactory = dbContextFactory;
-
     public async Task<Either<BaseError, CreateProgramScheduleResult>> Handle(
         CreateProgramSchedule request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
         return await validation.Apply(ps => PersistProgramSchedule(dbContext, ps));
@@ -45,7 +40,8 @@ public class CreateProgramScheduleHandler :
                     KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
                     TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows,
                     ShuffleScheduleItems = request.ShuffleScheduleItems,
-                    RandomStartPoint = request.RandomStartPoint
+                    RandomStartPoint = request.RandomStartPoint,
+                    FixedStartTimeBehavior = request.FixedStartTimeBehavior
                 };
             });
 

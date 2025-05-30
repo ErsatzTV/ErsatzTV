@@ -1,6 +1,7 @@
 ﻿@page "/schedules/{Id:int}"
 @page "/schedules/add"
 @using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Core.Scheduling
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleEditor> Logger
@@ -43,6 +44,14 @@
                                      @bind-Value="@_model.RandomStartPoint"
                                      For="@(() => _model.RandomStartPoint)"/>
                     </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudSelect Label="Fixed Start Time Behavior"
+                                   @bind-Value="@_model.FixedStartTimeBehavior"
+                                   For="@(() => _model.FixedStartTimeBehavior)">
+                            <MudSelectItem Value="FixedStartTimeBehavior.Strict">Strict - Always Wait For Exact Start Time</MudSelectItem>
+                            <MudSelectItem Value="FixedStartTimeBehavior.Flexible">Flexible - Start As Soon As Possible After Start Time</MudSelectItem>
+                        </MudSelect>
+                    </MudElement>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -84,6 +93,7 @@
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                     _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
                     _model.RandomStartPoint = viewModel.RandomStartPoint;
+                    _model.FixedStartTimeBehavior = viewModel.FixedStartTimeBehavior;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }

@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Scheduling;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -7,4 +8,5 @@ public record CreateProgramSchedule(
     bool KeepMultiPartEpisodesTogether,
     bool TreatCollectionsAsShows,
     bool ShuffleScheduleItems,
-    bool RandomStartPoint) : IRequest<Either<BaseError, CreateProgramScheduleResult>>;
+    bool RandomStartPoint,
+    FixedStartTimeBehavior FixedStartTimeBehavior) : IRequest<Either<BaseError, CreateProgramScheduleResult>>;
