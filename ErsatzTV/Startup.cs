@@ -559,7 +559,8 @@ public class Startup
         app.Use(
             async (context, next) =>
             {
-                if (!context.Request.Path.StartsWithSegments("/iptv") &&
+                if (!context.Request.Host.Value.StartsWith("localhost", StringComparison.OrdinalIgnoreCase) &&
+                    !context.Request.Path.StartsWithSegments("/iptv") &&
                     context.Connection.LocalPort != Settings.UiPort)
                 {
                     context.Response.StatusCode = 404;

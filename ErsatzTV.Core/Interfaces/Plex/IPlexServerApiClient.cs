@@ -7,7 +7,8 @@ public interface IPlexServerApiClient
 {
     Task<bool> Ping(
         PlexConnection connection,
-        PlexServerAuthToken token);
+        PlexServerAuthToken token,
+        CancellationToken cancellationToken);
 
     Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
         PlexConnection connection,
