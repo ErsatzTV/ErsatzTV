@@ -23,12 +23,12 @@ public class PlexServerApiClient : IPlexServerApiClient
         _logger = logger;
     }
 
-    public async Task<bool> Ping(PlexConnection connection, PlexServerAuthToken token)
+    public async Task<bool> Ping(PlexConnection connection, PlexServerAuthToken token, CancellationToken cancellationToken)
     {
         try
         {
             IPlexServerApi service = XmlServiceFor(connection.Uri, TimeSpan.FromSeconds(5));
-            PlexXmlMediaContainerPingResponse pingResult = await service.Ping(token.AuthToken);
+            PlexXmlMediaContainerPingResponse pingResult = await service.Ping(token.AuthToken, cancellationToken);
             return token.ClientIdentifier == pingResult.MachineIdentifier;
         }
         catch (Exception)

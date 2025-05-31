@@ -9,7 +9,8 @@ public interface IPlexServerApi
     [Headers("Accept: text/xml")]
     public Task<PlexXmlMediaContainerPingResponse> Ping(
         [Query] [AliasAs("X-Plex-Token")]
-        string token);
+        string token,
+        CancellationToken cancellationToken);
 
     [Get("/library/sections")]
     [Headers("Accept: application/json")]

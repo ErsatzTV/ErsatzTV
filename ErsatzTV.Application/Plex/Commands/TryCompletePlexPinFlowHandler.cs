@@ -20,14 +20,15 @@ public class TryCompletePlexPinFlowHandler : IRequestHandler<TryCompletePlexPinF
     public async Task<Either<BaseError, bool>>
         Handle(TryCompletePlexPinFlow request, CancellationToken cancellationToken)
     {
-        var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-        CancellationToken token = cts.Token;
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+        using var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, cancellationToken);
+        CancellationToken token = linkedTokenSource.Token;
         while (!token.IsCancellationRequested)
         {
             bool result = await _plexTvApiClient.TryCompletePinFlow(request.AuthPin);
             if (result)
             {
-                await _channel.WriteAsync(new SynchronizePlexMediaSources(), cancellationToken);
+                await _channel.WriteAsync(new SynchronizePlexMediaSources(), token);
                 return true;
             }
 

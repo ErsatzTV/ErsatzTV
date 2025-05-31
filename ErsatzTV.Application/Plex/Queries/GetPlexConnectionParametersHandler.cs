@@ -4,24 +4,32 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Plex;
 
-public class GetPlexConnectionParametersHandler : IRequestHandler<GetPlexConnectionParameters,
+public class GetPlexConnectionParametersHandler : PlexBaseConnectionHandler, IRequestHandler<GetPlexConnectionParameters,
     Either<BaseError, PlexConnectionParametersViewModel>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMemoryCache _memoryCache;
+    private readonly IPlexServerApiClient _plexServerApiClient;
     private readonly IPlexSecretStore _plexSecretStore;
+    private readonly ILogger<GetPlexConnectionParametersHandler> _logger;
 
     public GetPlexConnectionParametersHandler(
         IMemoryCache memoryCache,
+        IPlexServerApiClient plexServerApiClient,
         IMediaSourceRepository mediaSourceRepository,
-        IPlexSecretStore plexSecretStore)
+        IPlexSecretStore plexSecretStore,
+        ILogger<GetPlexConnectionParametersHandler> logger)
+        : base(plexServerApiClient, mediaSourceRepository, logger)
     {
         _memoryCache = memoryCache;
+        _plexServerApiClient = plexServerApiClient;
         _mediaSourceRepository = mediaSourceRepository;
         _plexSecretStore = plexSecretStore;
+        _logger = logger;
     }
 
     public async Task<Either<BaseError, PlexConnectionParametersViewModel>> Handle(
@@ -33,55 +41,43 @@ public class GetPlexConnectionParametersHandler : IRequestHandler<GetPlexConnect
             return parameters;
         }
 
-        Either<BaseError, PlexConnectionParametersViewModel> maybeParameters =
-            await Validate(request)
-                .MapT(
-                    cp => new PlexConnectionParametersViewModel(
-                        new Uri(cp.ActiveConnection.Uri),
-                        cp.PlexServerAuthToken.AuthToken))
-                .Map(v => v.ToEither<PlexConnectionParametersViewModel>());
-
-        return maybeParameters.Match(
-            p =>
+        Option<PlexMediaSource> maybeMediaSource = await _mediaSourceRepository.GetPlex(request.PlexMediaSourceId);
+        foreach (PlexMediaSource mediaSource in maybeMediaSource)
+        {
+            Option<PlexServerAuthToken> maybeToken =
+                await _plexSecretStore.GetServerAuthToken(mediaSource.ClientIdentifier);
+            foreach (PlexServerAuthToken token in maybeToken)
             {
-                _memoryCache.Set(request, p, TimeSpan.FromHours(1));
-                return maybeParameters;
-            },
-            error => error);
-    }
+                // try to keep the same connection
+                Option<PlexConnection> maybeActiveConnection = mediaSource.Connections.Filter(c => c.IsActive).HeadOrNone();
+                foreach (PlexConnection activeConnection in maybeActiveConnection)
+                {
+                    if (await _plexServerApiClient.Ping(activeConnection, token, cancellationToken))
+                    {
+                        _logger.LogDebug("Plex connection is still active at {Uri}", activeConnection.Uri);
+                        var p = new PlexConnectionParametersViewModel(new Uri(activeConnection.Uri), token.AuthToken);
+                        _memoryCache.Set(request, p, TimeSpan.FromSeconds(30));
+                        return p;
+                    }
+                }
 
-    private Task<Validation<BaseError, ConnectionParameters>> Validate(GetPlexConnectionParameters request) =>
-        PlexMediaSourceMustExist(request)
-            .BindT(MediaSourceMustHaveActiveConnection)
-            .BindT(MediaSourceMustHaveToken);
+                _logger.LogInformation("Plex connection is no longer active, searching for a new connection");
 
-    private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
-        GetPlexConnectionParameters request) =>
-        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId)
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    $"Plex media source {request.PlexMediaSourceId} does not exist."));
+                // check all connections for a working one
+                Option<PlexConnection> maybeConnection = await FindConnectionToActivate(mediaSource, token);
+                foreach (PlexConnection connection in maybeConnection)
+                {
+                    var p = new PlexConnectionParametersViewModel(new Uri(connection.Uri), token.AuthToken);
+                    _memoryCache.Set(request, p, TimeSpan.FromMinutes(30));
+                    return p;
+                }
 
-    private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
-        PlexMediaSource plexMediaSource)
-    {
-        Option<PlexConnection> maybeConnection =
-            plexMediaSource.Connections.SingleOrDefault(c => c.IsActive);
-        return maybeConnection.Map(connection => new ConnectionParameters(plexMediaSource, connection))
-            .ToValidation<BaseError>("Plex media source requires an active connection");
-    }
+                return BaseError.New($"Plex media source {request.PlexMediaSourceId} requires an active connection");
+            }
 
-    private async Task<Validation<BaseError, ConnectionParameters>> MediaSourceMustHaveToken(
-        ConnectionParameters connectionParameters)
-    {
-        Option<PlexServerAuthToken> maybeToken = await
-            _plexSecretStore.GetServerAuthToken(connectionParameters.PlexMediaSource.ClientIdentifier);
-        return maybeToken.Map(token => connectionParameters with { PlexServerAuthToken = token })
-            .ToValidation<BaseError>("Plex media source requires a token");
-    }
+            return BaseError.New($"Plex media source {request.PlexMediaSourceId} requires a token");
+        }
 
-    private sealed record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
-    {
-        public PlexServerAuthToken PlexServerAuthToken { get; set; }
+        return BaseError.New($"Plex media source {request.PlexMediaSourceId} does not exist.");
     }
 }
