@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using CliWrap;
 using ErsatzTV.Application.Channels;
@@ -301,16 +302,18 @@ public class IptvController : ControllerBase
                 "Failed to return ffmpeg multi-variant playlist; falling back to generated playlist");
         }
 
-        Option<ResolutionViewModel> maybeResolution = await _mediator.Send(new GetChannelResolution(channelNumber));
+        Option<ResolutionAndBitrateViewModel> maybeResolutionAndBitrate = await _mediator.Send(new GetChannelResolutionAndBitrate(channelNumber));
         string resolution = string.Empty;
-        foreach (ResolutionViewModel res in maybeResolution)
+        string bitrate = "10000000";
+        foreach (ResolutionAndBitrateViewModel res in maybeResolutionAndBitrate)
         {
             resolution = $",RESOLUTION={res.Width}x{res.Height}";
+            bitrate = res.Bitrate.ToString(CultureInfo.InvariantCulture);
         }
 
         return $@"#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-STREAM-INF:BANDWIDTH=10000000{resolution}
+#EXT-X-STREAM-INF:BANDWIDTH={bitrate}{resolution}
 {variantPlaylist}";
     }
 

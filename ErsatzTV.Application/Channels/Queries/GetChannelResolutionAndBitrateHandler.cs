@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Channels;
 
-public class GetChannelResolutionHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<GetChannelResolution, Option<ResolutionViewModel>>
+public class GetChannelResolutionAndBitrateHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetChannelResolutionAndBitrate, Option<ResolutionAndBitrateViewModel>>
 {
-    public async Task<Option<ResolutionViewModel>> Handle(
-        GetChannelResolution request,
+    public async Task<Option<ResolutionAndBitrateViewModel>> Handle(
+        GetChannelResolutionAndBitrate request,
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -20,6 +20,8 @@ public class GetChannelResolutionHandler(IDbContextFactory<TvContext> dbContextF
             .ThenInclude(ff => ff.Resolution)
             .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber);
 
-        return maybeChannel.Map(c => Mapper.ProjectToViewModel(c.FFmpegProfile.Resolution));
+        return maybeChannel.Map(c => Mapper.ProjectToViewModel(
+            c.FFmpegProfile.Resolution,
+            (int)((c.FFmpegProfile.VideoBitrate * 1000 + c.FFmpegProfile.AudioBitrate * 1000) * 1.2)));
     }
 }

@@ -39,6 +39,9 @@ internal static class Mapper
     internal static ResolutionViewModel ProjectToViewModel(Resolution resolution) =>
         new(resolution.Height, resolution.Width);
 
+    internal static ResolutionAndBitrateViewModel ProjectToViewModel(Resolution resolution, int bitrate) =>
+        new(resolution.Height, resolution.Width, bitrate);
+
     private static string GetLogo(Channel channel) =>
         Optional(channel.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo))
             .Match(a => a.Path, string.Empty);
