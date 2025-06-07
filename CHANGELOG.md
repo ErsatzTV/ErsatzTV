@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playout detail table to only reload once when resetting a playout
 - Fix date formatting in playout detail table on reload (will now respect browser's `Accept-Language` header)
 - Use cache busting to avoid UI errors after upgrading the MudBlazor library
+- Fix multi-variant playlist to report more accurate `BANDWIDTH` value based on ffmpeg profile
 
 ## [25.1.0] - 2025-01-10
 ### Added
