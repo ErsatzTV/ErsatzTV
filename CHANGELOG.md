@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - When the connection is no longer cached, a ping will be sent to the last used address for Plex (the last address that had a successful ping)
   - If the ping is successful, the address will be cached for another 30 seconds
   - If the ping is not successful, all addresses will be checked again, and the first address to return a successful ping will be cached for 30 seconds
+- Remove requirement to have Jellyfin admin user; user id is no longer required on requests to latest Jellyfin server
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections

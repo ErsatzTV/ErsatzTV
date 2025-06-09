@@ -7,7 +7,6 @@ public interface IJellyfinApiClient
 {
     Task<Either<BaseError, JellyfinServerInformation>> GetServerInformation(string address, string apiKey);
     Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string apiKey);
-    Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey);
 
     IAsyncEnumerable<Tuple<JellyfinMovie, int>> GetMovieLibraryItems(string address, string apiKey, JellyfinLibrary library);
 
