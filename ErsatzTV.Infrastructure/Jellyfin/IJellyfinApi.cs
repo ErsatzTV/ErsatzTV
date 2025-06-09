@@ -27,8 +27,6 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         [Query]
-        string userId,
-        [Query]
         string parentId,
         [Query]
         string fields =
@@ -49,8 +47,6 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         [Query]
-        string userId,
-        [Query]
         string parentId,
         [Query]
         string fields =
@@ -69,8 +65,6 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         [Query]
-        string userId,
-        [Query]
         string parentId,
         [Query]
         string fields = "Path,DateCreated,Etag,Taglines,ProviderIds",
@@ -87,8 +81,6 @@ public interface IJellyfinApi
     public Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItems(
         [Header("X-Emby-Token")]
         string apiKey,
-        [Query]
-        string userId,
         [Query]
         string parentId,
         [Query]
@@ -107,8 +99,6 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         [Query]
-        string userId,
-        [Query]
         string parentId,
         [Query]
         string fields = "Etag",
@@ -126,8 +116,6 @@ public interface IJellyfinApi
         [Header("X-Emby-Token")]
         string apiKey,
         [Query]
-        string userId,
-        [Query]
         string parentId,
         [Query]
         string fields = "Etag",
@@ -144,7 +132,5 @@ public interface IJellyfinApi
     public Task<JellyfinPlaybackInfoResponse> GetPlaybackInfo(
         [Header("X-Emby-Token")]
         string apiKey,
-        [Query]
-        string userId,
         string itemId);
 }

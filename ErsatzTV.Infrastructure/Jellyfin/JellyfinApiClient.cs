@@ -73,26 +73,6 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    public async Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey)
-    {
-        try
-        {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-            List<JellyfinUserResponse> users = await service.GetUsers(apiKey);
-            Option<string> maybeUserId = users
-                .Filter(user => user.Policy.IsAdministrator && !user.Policy.IsDisabled && user.Policy.EnableAllFolders)
-                .Map(user => user.Id)
-                .HeadOrNone();
-
-            return maybeUserId.ToEither(BaseError.New("Unable to locate jellyfin admin user"));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting jellyfin admin user id");
-            return BaseError.New(ex.Message);
-        }
-    }
-
     public IAsyncEnumerable<Tuple<JellyfinMovie, int>> GetMovieLibraryItems(
         string address,
         string apiKey,
@@ -102,9 +82,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             library,
             library.MediaSourceId,
             library.ItemId,
-            (service, userId, itemId, skip, pageSize) => service.GetMovieLibraryItems(
+            (service, itemId, skip, pageSize) => service.GetMovieLibraryItems(
                 apiKey,
-                userId,
                 itemId,
                 startIndex: skip,
                 limit: pageSize),
@@ -119,9 +98,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             library,
             library.MediaSourceId,
             library.ItemId,
-            (service, userId, itemId, skip, pageSize) => service.GetShowLibraryItems(
+            (service, itemId, skip, pageSize) => service.GetShowLibraryItems(
                 apiKey,
-                userId,
                 itemId,
                 startIndex: skip,
                 limit: pageSize),
@@ -137,9 +115,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             library,
             library.MediaSourceId,
             showId,
-            (service, userId, _, skip, pageSize) => service.GetSeasonLibraryItems(
+            (service, _, skip, pageSize) => service.GetSeasonLibraryItems(
                 apiKey,
-                userId,
                 showId,
                 startIndex: skip,
                 limit: pageSize),
@@ -155,9 +132,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             library,
             library.MediaSourceId,
             seasonId,
-            (service, userId, _, skip, pageSize) => service.GetEpisodeLibraryItems(
+            (service, _, skip, pageSize) => service.GetEpisodeLibraryItems(
                 apiKey,
-                userId,
                 seasonId,
                 startIndex: skip,
                 limit: pageSize),
@@ -177,9 +153,8 @@ public class JellyfinApiClient : IJellyfinApiClient
                 None,
                 mediaSourceId,
                 itemId,
-                (service, userId, _, skip, pageSize) => service.GetCollectionLibraryItems(
+                (service, _, skip, pageSize) => service.GetCollectionLibraryItems(
                     apiKey,
-                    userId,
                     itemId,
                     startIndex: skip,
                     limit: pageSize),
@@ -199,9 +174,8 @@ public class JellyfinApiClient : IJellyfinApiClient
             None,
             mediaSourceId,
             collectionId,
-            (service, userId, _, skip, pageSize) => service.GetCollectionItems(
+            (service, _, skip, pageSize) => service.GetCollectionItems(
                 apiKey,
-                userId,
                 collectionId,
                 startIndex: skip,
                 limit: pageSize),
@@ -215,15 +189,10 @@ public class JellyfinApiClient : IJellyfinApiClient
     {
         try
         {
-            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{library.MediaSourceId}", out string userId))
-            {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, userId, itemId);
-                Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
-                return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
-            }
-
-            return BaseError.New("Jellyfin admin user id is not available");
+            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            JellyfinPlaybackInfoResponse playbackInfo = await service.GetPlaybackInfo(apiKey, itemId);
+            Option<MediaVersion> maybeVersion = ProjectToMediaVersion(playbackInfo);
+            return maybeVersion.ToEither(() => BaseError.New("Unable to locate Jellyfin statistics"));
         }
         catch (Exception ex)
         {
@@ -232,34 +201,31 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
+    private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryItems<TItem>(
         string address,
         Option<JellyfinLibrary> maybeLibrary,
         int mediaSourceId,
         string parentId,
-        Func<IJellyfinApi, string, string, int, int, Task<JellyfinLibraryItemsResponse>> getItems,
+        Func<IJellyfinApi, string, int, int, Task<JellyfinLibraryItemsResponse>> getItems,
         Func<Option<JellyfinLibrary>, JellyfinLibraryItemResponse, Option<TItem>> mapper)
     {
-        if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+        IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+
+        const int PAGE_SIZE = 10;
+
+        int pages = int.MaxValue;
+        for (var i = 0; i < pages; i++)
         {
-            IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+            int skip = i * PAGE_SIZE;
 
-            const int PAGE_SIZE = 10;
+            JellyfinLibraryItemsResponse result = await getItems(service, parentId, skip, PAGE_SIZE);
 
-            int pages = int.MaxValue;
-            for (var i = 0; i < pages; i++)
+            // update page count
+            pages = Math.Min(pages, (result.TotalRecordCount - 1) / PAGE_SIZE + 1);
+
+            foreach (TItem item in result.Items.Map(item => mapper(maybeLibrary, item)).Somes())
             {
-                int skip = i * PAGE_SIZE;
-
-                JellyfinLibraryItemsResponse result = await getItems(service, userId, parentId, skip, PAGE_SIZE);
-
-                // update page count
-                pages = Math.Min(pages, (result.TotalRecordCount - 1) / PAGE_SIZE + 1);
-
-                foreach (TItem item in result.Items.Map(item => mapper(maybeLibrary, item)).Somes())
-                {
-                    yield return new Tuple<TItem, int>(item, result.TotalRecordCount);
-                }
+                yield return new Tuple<TItem, int>(item, result.TotalRecordCount);
             }
         }
     }

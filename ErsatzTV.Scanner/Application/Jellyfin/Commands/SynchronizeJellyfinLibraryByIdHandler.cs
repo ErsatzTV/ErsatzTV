@@ -59,17 +59,6 @@ public class
         DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
         if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
-            // need the jellyfin admin user id for now
-            Either<BaseError, Unit> syncAdminResult = await _mediator.Send(
-                new SynchronizeJellyfinAdminUserId(parameters.Library.MediaSourceId),
-                cancellationToken);
-
-            foreach (BaseError error in syncAdminResult.LeftToSeq())
-            {
-                _logger.LogError("Error synchronizing jellyfin admin user id: {Error}", error);
-                return error;
-            }
-
             Either<BaseError, Unit> result = parameters.Library.MediaKind switch
             {
                 LibraryMediaKind.Movies =>

@@ -57,9 +57,6 @@ public class ScannerService : BackgroundService
                         case SynchronizePlexCollections synchronizePlexCollections:
                             requestTask = SynchronizePlexCollections(synchronizePlexCollections, stoppingToken);
                             break;
-                        case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
-                            requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, stoppingToken);
-                            break;
                         case SynchronizeJellyfinLibraries synchronizeJellyfinLibraries:
                             requestTask = SynchronizeLibraries(synchronizeJellyfinLibraries, stoppingToken);
                             break;
@@ -221,24 +218,6 @@ public class ScannerService : BackgroundService
         {
             entityLocker.UnlockPlexCollections();
         }
-    }
-
-    private async Task SynchronizeAdminUserId(
-        SynchronizeJellyfinAdminUserId request,
-        CancellationToken cancellationToken)
-    {
-        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
-        result.BiIter(
-            _ => _logger.LogInformation(
-                "Successfully synchronized Jellyfin admin user id for source {MediaSourceId}",
-                request.JellyfinMediaSourceId),
-            error => _logger.LogWarning(
-                "Unable to synchronize Jellyfin admin user id for source {MediaSourceId}: {Error}",
-                request.JellyfinMediaSourceId,
-                error.Value));
     }
 
     private async Task SynchronizeLibraries(SynchronizeJellyfinLibraries request, CancellationToken cancellationToken)

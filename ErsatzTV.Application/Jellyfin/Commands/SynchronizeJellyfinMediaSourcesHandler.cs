@@ -26,9 +26,6 @@ public class SynchronizeJellyfinMediaSourcesHandler : IRequestHandler<Synchroniz
         List<JellyfinMediaSource> mediaSources = await _mediaSourceRepository.GetAllJellyfin();
         foreach (JellyfinMediaSource mediaSource in mediaSources)
         {
-            await _scannerWorkerChannel.WriteAsync(
-                new SynchronizeJellyfinAdminUserId(mediaSource.Id),
-                cancellationToken);
             await _scannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSource.Id), cancellationToken);
         }
 
