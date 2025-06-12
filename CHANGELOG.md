@@ -23,7 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `Strict` will add nearly 24h (23:58) of unscheduled time so that it can start exactly at 6:00 AM the next day
     - `Flexible` will NOT add unscheduled time, and will schedule its item at 6:02 AM (which may also affect the scheduling of later items)
 - Add basic HDR transcoding support
-  - VAAPI may use hardware-accelerated tone mapping
+  - VAAPI may use hardware-accelerated tone mapping (when opencl accel is also available)
+  - NVIDIA may use hardware-accelerated tone mapping (when vulkan accel and libplacebo filter are also available)
   - In all other cases, HDR content will use a software pipeline
 
 ### Changed

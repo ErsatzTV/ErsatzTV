@@ -29,8 +29,11 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
     public FFmpegCapability CanDecode(
         string videoFormat,
         Option<string> videoProfile,
-        Option<IPixelFormat> maybePixelFormat)
+        Option<IPixelFormat> maybePixelFormat,
+        bool isHdr)
     {
+        // we use vulkan for hdr, so only support h264, hevc and av1 when isHdr == true
+
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
         bool isHardware = videoFormat switch
@@ -39,17 +42,17 @@ public class NvidiaHardwareCapabilities : IHardwareCapabilities
             VideoFormat.Hevc => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
 
             // pascal is required to decode vp9 10-bit
-            VideoFormat.Vp9 when bitDepth == 10 => _architecture >= 60,
+            VideoFormat.Vp9 when bitDepth == 10 => !isHdr && _architecture >= 60,
 
             // some second gen maxwell can decode vp9, otherwise pascal is required
-            VideoFormat.Vp9 => _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
+            VideoFormat.Vp9 => !isHdr && _architecture == 52 && _maxwellGm206.Contains(_model) || _architecture >= 60,
 
             // no hardware decoding of 10-bit h264
             VideoFormat.H264 => bitDepth < 10,
 
-            VideoFormat.Mpeg2Video => true,
+            VideoFormat.Mpeg2Video => !isHdr,
 
-            VideoFormat.Vc1 => true,
+            VideoFormat.Vc1 => !isHdr,
 
             // too many issues with odd mpeg4 content, so use software
             VideoFormat.Mpeg4 => false,

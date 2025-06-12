@@ -57,10 +57,10 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
 
-            // force software pipeline when content is HDR (and not VAAPI)
-            _ when isHdrContent => new SoftwarePipelineBuilder(
+            HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
                 ffmpegCapabilities,
-                HardwareAccelerationMode.None,
+                capabilities,
+                hardwareAccelerationMode,
                 videoInputFile,
                 audioInputFile,
                 watermarkInputFile,
@@ -70,10 +70,10 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 fontsFolder,
                 _logger),
 
-            HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
+            // force software pipeline when content is HDR (and not VAAPI or NVENC)
+            _ when isHdrContent => new SoftwarePipelineBuilder(
                 ffmpegCapabilities,
-                capabilities,
-                hardwareAccelerationMode,
+                HardwareAccelerationMode.None,
                 videoInputFile,
                 audioInputFile,
                 watermarkInputFile,

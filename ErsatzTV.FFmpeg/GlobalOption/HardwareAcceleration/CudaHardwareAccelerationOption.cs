@@ -1,6 +1,17 @@
 ﻿namespace ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 
-public class CudaHardwareAccelerationOption : GlobalOption
+public class CudaHardwareAccelerationOption(bool isVulkanHdr) : GlobalOption
 {
-    public override string[] GlobalOptions => new[] { "-hwaccel", "cuda" };
+    public override string[] GlobalOptions
+    {
+        get
+        {
+            if (isVulkanHdr)
+            {
+                return ["-init_hw_device", "cuda=nv", "-init_hw_device", "vulkan=vk@nv", "-hwaccel", "vulkan"];
+            }
+
+            return ["-hwaccel", "cuda"];
+        }
+    }
 }

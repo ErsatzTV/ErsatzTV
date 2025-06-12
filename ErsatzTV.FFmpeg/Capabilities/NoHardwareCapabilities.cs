@@ -7,7 +7,8 @@ public class NoHardwareCapabilities : IHardwareCapabilities
     public FFmpegCapability CanDecode(
         string videoFormat,
         Option<string> videoProfile,
-        Option<IPixelFormat> maybePixelFormat) =>
+        Option<IPixelFormat> maybePixelFormat,
+        bool isHdr) =>
         FFmpegCapability.Software;
 
     public FFmpegCapability CanEncode(

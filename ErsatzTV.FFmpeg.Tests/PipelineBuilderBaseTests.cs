@@ -93,6 +93,7 @@ public class PipelineBuilderBaseTests
             0,
             Option<int>.None,
             Option<int>.None,
+            false,
             false);
 
         var builder = new SoftwarePipelineBuilder(
@@ -187,6 +188,7 @@ public class PipelineBuilderBaseTests
             0,
             Option<int>.None,
             Option<int>.None,
+            false,
             false);
 
         var builder = new SoftwarePipelineBuilder(
@@ -337,6 +339,7 @@ public class PipelineBuilderBaseTests
             0,
             Option<int>.None,
             Option<int>.None,
+            false,
             false);
 
         var builder = new SoftwarePipelineBuilder(
@@ -425,6 +428,7 @@ public class PipelineBuilderBaseTests
             0,
             Option<int>.None,
             Option<int>.None,
+            false,
             false);
 
         var builder = new SoftwarePipelineBuilder(
