@@ -59,7 +59,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FFmpegCapability decodeCapability = _hardwareCapabilities.CanDecode(
             videoStream.Codec,
             videoStream.Profile,
-            videoStream.PixelFormat);
+            videoStream.PixelFormat,
+            videoStream.ColorParams.IsHdr);
         FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
             desiredState.VideoProfile,
@@ -77,9 +78,13 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
+        bool isHdrTonemap = decodeCapability == FFmpegCapability.Hardware
+                            && _ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.Vulkan)
+                            && videoStream.ColorParams.IsHdr;
+
         if (decodeCapability == FFmpegCapability.Hardware || encodeCapability == FFmpegCapability.Hardware)
         {
-            pipelineSteps.Add(new CudaHardwareAccelerationOption());
+            pipelineSteps.Add(new CudaHardwareAccelerationOption(isHdrTonemap));
         }
 
         // disable hw accel if decoder/encoder isn't supported
@@ -90,7 +95,9 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 : HardwareAccelerationMode.None,
             EncoderHardwareAccelerationMode = encodeCapability == FFmpegCapability.Hardware
                 ? HardwareAccelerationMode.Nvenc
-                : HardwareAccelerationMode.None
+                : HardwareAccelerationMode.None,
+
+            IsHdrTonemap = isHdrTonemap
         };
     }
 
@@ -100,6 +107,14 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         FFmpegState ffmpegState,
         PipelineContext context)
     {
+        // use implicit vulkan decoder with HDR tonemap
+        if (ffmpegState.IsHdrTonemap)
+        {
+            IDecoder decoder = new DecoderImplicitVulkan();
+            videoInputFile.AddOption(decoder);
+            return Some(decoder);
+        }
+
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new DecoderHevcCuvid(HardwareAccelerationMode.Nvenc),
@@ -166,6 +181,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         //     desiredState = desiredState with { PixelFormat = Some(pixelFormat) };
         // }
 
+        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
         currentState = SetDeinterlace(videoInputFile, context, currentState);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
@@ -705,6 +721,37 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 var filter = new YadifCudaFilter(currentState);
                 currentState = filter.NextState(currentState);
                 videoInputFile.FilterSteps.Add(filter);
+            }
+        }
+
+        return currentState;
+    }
+
+    private static FrameState SetTonemap(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        FrameState currentState)
+    {
+        if (videoStream.ColorParams.IsHdr)
+        {
+            foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
+            {
+                if (ffmpegState.IsHdrTonemap)
+                {
+                    var filter = new TonemapCudaFilter(pixelFormat);
+                    currentState = filter.NextState(currentState);
+                    videoStream.ResetColorParams(ColorParams.Default);
+                    videoInputFile.FilterSteps.Add(filter);
+                }
+                else
+                {
+                    var filter = new TonemapFilter(currentState, pixelFormat);
+                    currentState = filter.NextState(currentState);
+                    videoStream.ResetColorParams(ColorParams.Default);
+                    videoInputFile.FilterSteps.Add(filter);
+                }
             }
         }
 

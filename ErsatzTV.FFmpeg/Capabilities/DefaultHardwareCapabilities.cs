@@ -7,7 +7,8 @@ public class DefaultHardwareCapabilities : IHardwareCapabilities
     public FFmpegCapability CanDecode(
         string videoFormat,
         Option<string> videoProfile,
-        Option<IPixelFormat> maybePixelFormat)
+        Option<IPixelFormat> maybePixelFormat,
+        bool isHdr)
     {
         int bitDepth = maybePixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 

@@ -22,7 +22,8 @@ public record FFmpegState(
     long PtsOffset,
     Option<int> ThreadCount,
     Option<int> MaybeQsvExtraHardwareFrames,
-    bool IsSongWithProgress)
+    bool IsSongWithProgress,
+    bool IsHdrTonemap)
 {
     public int QsvExtraHardwareFrames => MaybeQsvExtraHardwareFrames.IfNone(64);
 
@@ -47,5 +48,6 @@ public record FFmpegState(
             0,
             Option<int>.None,
             Option<int>.None,
+            false,
             false);
 }

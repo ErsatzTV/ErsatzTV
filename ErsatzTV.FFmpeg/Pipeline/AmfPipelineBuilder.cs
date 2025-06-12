@@ -51,7 +51,8 @@ public class AmfPipelineBuilder : SoftwarePipelineBuilder
         FFmpegCapability decodeCapability = _hardwareCapabilities.CanDecode(
             videoStream.Codec,
             videoStream.Profile,
-            videoStream.PixelFormat);
+            videoStream.PixelFormat,
+            videoStream.ColorParams.IsHdr);
         FFmpegCapability encodeCapability = _hardwareCapabilities.CanEncode(
             desiredState.VideoFormat,
             desiredState.VideoProfile,
