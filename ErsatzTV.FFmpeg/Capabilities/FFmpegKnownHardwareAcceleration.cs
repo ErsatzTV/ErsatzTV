@@ -7,6 +7,7 @@ public record FFmpegKnownHardwareAcceleration
     public static readonly FFmpegKnownHardwareAcceleration Qsv = new("qsv");
     public static readonly FFmpegKnownHardwareAcceleration Vaapi = new("vaapi");
     public static readonly FFmpegKnownHardwareAcceleration VideoToolbox = new("videotoolbox");
+    public static readonly FFmpegKnownHardwareAcceleration OpenCL = new("opencl");
 
     private FFmpegKnownHardwareAcceleration(string Name) => this.Name = Name;
 
@@ -19,6 +20,7 @@ public record FFmpegKnownHardwareAcceleration
             Cuda.Name,
             Qsv.Name,
             Vaapi.Name,
-            VideoToolbox.Name
+            VideoToolbox.Name,
+            OpenCL.Name
         };
 }

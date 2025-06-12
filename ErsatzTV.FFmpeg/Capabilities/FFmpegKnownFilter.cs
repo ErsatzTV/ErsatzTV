@@ -3,6 +3,7 @@ namespace ErsatzTV.FFmpeg.Capabilities;
 public record FFmpegKnownFilter
 {
     public static readonly FFmpegKnownFilter ScaleNpp = new("scale_npp");
+    public static readonly FFmpegKnownFilter TonemapOpenCL = new("tonemap_opencl");
 
     private FFmpegKnownFilter(string Name) => this.Name = Name;
 
@@ -11,6 +12,7 @@ public record FFmpegKnownFilter
     public static IList<string> AllFilters =>
         new[]
         {
-            ScaleNpp.Name
+            ScaleNpp.Name,
+            TonemapOpenCL.Name,
         };
 }
