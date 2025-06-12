@@ -104,6 +104,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         {
             SetDeinterlace(videoInputFile, context, currentState);
 
+            currentState = SetTonemap(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetCrop(videoInputFile, desiredState, currentState);
@@ -312,6 +313,26 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             var padStep = new PadFilter(currentState, desiredState.PaddedSize);
             currentState = padStep.NextState(currentState);
             videoInputFile.FilterSteps.Add(padStep);
+        }
+
+        return currentState;
+    }
+
+    private static FrameState SetTonemap(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FrameState desiredState,
+        FrameState currentState)
+    {
+        if (videoStream.ColorParams.IsHdr)
+        {
+            foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
+            {
+                var tonemapStep = new TonemapFilter(currentState, pixelFormat);
+                currentState = tonemapStep.NextState(currentState);
+                videoStream.ResetColorParams(ColorParams.Default);
+                videoInputFile.FilterSteps.Add(tonemapStep);
+            }
         }
 
         return currentState;

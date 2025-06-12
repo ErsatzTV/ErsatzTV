@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - As an example, if the current scheduling time is 6:02 AM and the next schedule item has a fixed start time of 6:00 AM
     - `Strict` will add nearly 24h (23:58) of unscheduled time so that it can start exactly at 6:00 AM the next day
     - `Flexible` will NOT add unscheduled time, and will schedule its item at 6:02 AM (which may also affect the scheduling of later items)
+- Add basic HDR transcoding support
+  - For this initial implementation, HDR content will *always* use a software pipeline
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

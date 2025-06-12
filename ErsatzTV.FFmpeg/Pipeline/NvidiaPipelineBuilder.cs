@@ -307,7 +307,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             // clearing color params will force it to be re-added
             if (videoStream.Codec == "vp9")
             {
-                videoStream = videoStream with { ColorParams = ColorParams.Unknown };
+                videoStream.ResetColorParams(ColorParams.Unknown);
             }
 
             if (!videoStream.ColorParams.IsBt709)
