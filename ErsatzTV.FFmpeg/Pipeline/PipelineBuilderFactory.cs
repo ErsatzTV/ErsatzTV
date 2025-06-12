@@ -40,8 +40,23 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
             vaapiDriver,
             vaapiDevice);
 
+        bool isHdrContent = videoInputFile.Any(vif => vif.VideoStreams.Any(vs => vs.ColorParams.IsHdr));
+
         return hardwareAccelerationMode switch
         {
+            // force software pipeline when content is HDR
+            _ when isHdrContent => new SoftwarePipelineBuilder(
+                ffmpegCapabilities,
+                HardwareAccelerationMode.None,
+                videoInputFile,
+                audioInputFile,
+                watermarkInputFile,
+                subtitleInputFile,
+                concatInputFile,
+                reportsFolder,
+                fontsFolder,
+                _logger),
+
             HardwareAccelerationMode.Nvenc when capabilities is not NoHardwareCapabilities => new NvidiaPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,

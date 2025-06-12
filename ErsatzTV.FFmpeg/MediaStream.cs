@@ -30,6 +30,8 @@ public record VideoStream(
     Codec,
     StreamKind.Video)
 {
+    public ColorParams ColorParams { get; private set; } = ColorParams;
+
     public int BitDepth => PixelFormat.Map(pf => pf.BitDepth).IfNone(8);
 
     public string SampleAspectRatio
@@ -151,6 +153,8 @@ public record VideoStream(
 
         return result;
     }
+
+    public void ResetColorParams(ColorParams colorParams) => ColorParams = colorParams;
 
     private double GetSAR()
     {
