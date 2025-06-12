@@ -44,7 +44,20 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
 
         return hardwareAccelerationMode switch
         {
-            // force software pipeline when content is HDR
+            HardwareAccelerationMode.Vaapi when capabilities is not NoHardwareCapabilities => new VaapiPipelineBuilder(
+                ffmpegCapabilities,
+                capabilities,
+                hardwareAccelerationMode,
+                videoInputFile,
+                audioInputFile,
+                watermarkInputFile,
+                subtitleInputFile,
+                concatInputFile,
+                reportsFolder,
+                fontsFolder,
+                _logger),
+
+            // force software pipeline when content is HDR (and not VAAPI)
             _ when isHdrContent => new SoftwarePipelineBuilder(
                 ffmpegCapabilities,
                 HardwareAccelerationMode.None,
@@ -69,18 +82,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
-            HardwareAccelerationMode.Vaapi when capabilities is not NoHardwareCapabilities => new VaapiPipelineBuilder(
-                ffmpegCapabilities,
-                capabilities,
-                hardwareAccelerationMode,
-                videoInputFile,
-                audioInputFile,
-                watermarkInputFile,
-                subtitleInputFile,
-                concatInputFile,
-                reportsFolder,
-                fontsFolder,
-                _logger),
+
             HardwareAccelerationMode.Qsv when capabilities is not NoHardwareCapabilities => new QsvPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,
@@ -93,6 +95,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
+
             HardwareAccelerationMode.VideoToolbox when capabilities is not NoHardwareCapabilities => new
                 VideoToolboxPipelineBuilder(
                     ffmpegCapabilities,
@@ -106,6 +109,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                     reportsFolder,
                     fontsFolder,
                     _logger),
+
             HardwareAccelerationMode.Amf when capabilities is not NoHardwareCapabilities => new AmfPipelineBuilder(
                 ffmpegCapabilities,
                 capabilities,
@@ -118,6 +122,7 @@ public class PipelineBuilderFactory : IPipelineBuilderFactory
                 reportsFolder,
                 fontsFolder,
                 _logger),
+
             _ => new SoftwarePipelineBuilder(
                 ffmpegCapabilities,
                 HardwareAccelerationMode.None,
