@@ -168,6 +168,8 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 
         // _logger.LogDebug("After decode: {PixelFormat}", currentState.PixelFormat);
 
+        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
+
         currentState = SetDeinterlace(videoInputFile, context, ffmpegState, currentState);
         // _logger.LogDebug("After deinterlace: {PixelFormat}", currentState.PixelFormat);
 
@@ -614,6 +616,37 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
                 var filter = new YadifFilter(currentState);
                 currentState = filter.NextState(currentState);
                 videoInputFile.FilterSteps.Add(filter);
+            }
+        }
+
+        return currentState;
+    }
+
+    private static FrameState SetTonemap(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        FrameState currentState)
+    {
+        if (videoStream.ColorParams.IsHdr)
+        {
+            foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
+            {
+                if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                {
+                    var filter = new TonemapVaapiFilter(currentState, pixelFormat);
+                    currentState = filter.NextState(currentState);
+                    videoStream.ResetColorParams(ColorParams.Default);
+                    videoInputFile.FilterSteps.Add(filter);
+                }
+                else
+                {
+                    var filter = new TonemapFilter(currentState, pixelFormat);
+                    currentState = filter.NextState(currentState);
+                    videoStream.ResetColorParams(ColorParams.Default);
+                    videoInputFile.FilterSteps.Add(filter);
+                }
             }
         }
 
