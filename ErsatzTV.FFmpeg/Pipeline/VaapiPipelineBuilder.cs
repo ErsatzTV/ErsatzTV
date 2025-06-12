@@ -17,6 +17,7 @@ namespace ErsatzTV.FFmpeg.Pipeline;
 
 public class VaapiPipelineBuilder : SoftwarePipelineBuilder
 {
+    private readonly IFFmpegCapabilities _ffmpegCapabilities;
     private readonly IHardwareCapabilities _hardwareCapabilities;
     private readonly ILogger _logger;
 
@@ -43,6 +44,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         fontsFolder,
         logger)
     {
+        _ffmpegCapabilities = ffmpegCapabilities;
         _hardwareCapabilities = hardwareCapabilities;
         _logger = logger;
     }
@@ -622,7 +624,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         return currentState;
     }
 
-    private static FrameState SetTonemap(
+    private FrameState SetTonemap(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
@@ -633,9 +635,9 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         {
             foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
             {
-                if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi && _ffmpegCapabilities.HasFilter(FFmpegKnownFilter.TonemapOpenCL))
                 {
-                    var filter = new TonemapVaapiFilter(currentState, pixelFormat);
+                    var filter = new TonemapVaapiFilter();
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);
