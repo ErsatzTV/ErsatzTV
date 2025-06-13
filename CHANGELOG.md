@@ -25,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add basic HDR transcoding support
   - VAAPI may use hardware-accelerated tone mapping (when opencl accel is also available)
   - NVIDIA may use hardware-accelerated tone mapping (when vulkan accel and libplacebo filter are also available)
-  - In all other cases, HDR content will use a software pipeline
+  - In all other cases, HDR content will use a software pipeline and the clip algorithm
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)
