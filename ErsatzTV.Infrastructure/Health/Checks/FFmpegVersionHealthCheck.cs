@@ -10,7 +10,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 {
     private const string BundledVersion = "6.1";
     private const string BundledVersionVaapi = "6.1";
-    private const string WindowsVersionPrefix = "n6.1";
+    private const string WindowsVersionPrefix = "n7.1.1";
 
     private static readonly string[] FFmpegVersionArguments = { "-version" };
 
@@ -84,6 +84,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         }
 
         if (!version.StartsWith("6.1", StringComparison.OrdinalIgnoreCase) &&
+            !version.StartsWith("7.1.1", StringComparison.OrdinalIgnoreCase) &&
             !version.StartsWith(WindowsVersionPrefix, StringComparison.OrdinalIgnoreCase) &&
             version != BundledVersion &&
             version != BundledVersionVaapi)
