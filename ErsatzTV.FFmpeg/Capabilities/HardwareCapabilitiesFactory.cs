@@ -445,7 +445,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         Option<string> maybeLine = Optional(output.Split("\n").FirstOrDefault(x => x.Contains("GPU")));
         foreach (string line in maybeLine)
         {
-            const string ARCHITECTURE_PATTERN = @"SM\s+(\d\.\d)";
+            const string ARCHITECTURE_PATTERN = @"SM\s+(\d+\.\d+)";
             Match match = Regex.Match(line, ARCHITECTURE_PATTERN);
             if (match.Success && int.TryParse(match.Groups[1].Value.Replace(".", string.Empty), out int architecture))
             {
