@@ -8,7 +8,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
-    private const string BundledVersion = "6.1";
+    private const string BundledVersion = "7.1.1";
     private const string BundledVersionVaapi = "7.1.1";
     private const string WindowsVersionPrefix = "n7.1.1";
 
@@ -78,19 +78,19 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
     {
         if (version.StartsWith("3.", StringComparison.OrdinalIgnoreCase) ||
             version.StartsWith("4.", StringComparison.OrdinalIgnoreCase) ||
-            version.StartsWith("5.", StringComparison.OrdinalIgnoreCase))
+            version.StartsWith("5.", StringComparison.OrdinalIgnoreCase) ||
+            version.StartsWith("6.", StringComparison.OrdinalIgnoreCase))
         {
-            return FailResult($"{app} version {version} is too old; please install 6.1!");
+            return FailResult($"{app} version {version} is too old; please install 7.1.1!");
         }
 
-        if (!version.StartsWith("6.1", StringComparison.OrdinalIgnoreCase) &&
-            !version.StartsWith("7.1.1", StringComparison.OrdinalIgnoreCase) &&
+        if (!version.StartsWith("7.1.1", StringComparison.OrdinalIgnoreCase) &&
             !version.StartsWith(WindowsVersionPrefix, StringComparison.OrdinalIgnoreCase) &&
             version != BundledVersion &&
             version != BundledVersionVaapi)
         {
             return WarningResult(
-                $"{app} version {version} is unexpected and may have problems; please install 6.1!");
+                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!");
         }
 
         return None;
