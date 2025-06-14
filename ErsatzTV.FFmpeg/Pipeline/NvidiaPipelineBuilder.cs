@@ -182,9 +182,9 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         //     desiredState = desiredState with { PixelFormat = Some(pixelFormat) };
         // }
 
-        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
         currentState = SetDeinterlace(videoInputFile, context, currentState);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
+        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
@@ -674,19 +674,19 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             scaleStep = new ScaleCudaFilter(
                 currentState with
                 {
-                    PixelFormat = !context.Is10BitOutput && (context.HasWatermark ||
-                                                             context.HasSubtitleOverlay ||
-                                                             context.ShouldDeinterlace ||
-                                                             desiredState.ScaledSize != desiredState.PaddedSize ||
-                                                             context.HasSubtitleText ||
-                                                             ffmpegState is
-                                                             {
-                                                                 DecoderHardwareAccelerationMode:
-                                                                 HardwareAccelerationMode.Nvenc,
-                                                                 EncoderHardwareAccelerationMode:
-                                                                 HardwareAccelerationMode.None
-                                                             })
-                        ? desiredState.PixelFormat.Map(pf => (IPixelFormat)new PixelFormatNv12(pf.Name))
+                    PixelFormat = context is { IsHdr: false, Is10BitOutput: false } && (context.HasWatermark ||
+                        context.HasSubtitleOverlay ||
+                        context.ShouldDeinterlace ||
+                        desiredState.ScaledSize != desiredState.PaddedSize ||
+                        context.HasSubtitleText ||
+                        ffmpegState is
+                        {
+                            DecoderHardwareAccelerationMode:
+                            HardwareAccelerationMode.Nvenc,
+                            EncoderHardwareAccelerationMode:
+                            HardwareAccelerationMode.None
+                        })
+                        ? desiredState.PixelFormat.Map(IPixelFormat (pf) => new PixelFormatNv12(pf.Name))
                         : Option<IPixelFormat>.None
                 },
                 desiredState.ScaledSize,

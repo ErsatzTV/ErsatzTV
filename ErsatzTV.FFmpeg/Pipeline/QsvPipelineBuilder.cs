@@ -169,11 +169,11 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // _logger.LogDebug("After decode: {PixelFormat}", currentState.PixelFormat);
-        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
         currentState = SetDeinterlace(videoInputFile, context, ffmpegState, currentState);
         // _logger.LogDebug("After deinterlace: {PixelFormat}", currentState.PixelFormat);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         // _logger.LogDebug("After scale: {PixelFormat}", currentState.PixelFormat);
+        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
