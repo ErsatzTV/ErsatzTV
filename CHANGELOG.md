@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove requirement to have Jellyfin admin user; user id is no longer required on requests to latest Jellyfin server
 - Upgrade bundled ffmpeg on Windows from 6.1 to 7.1.1
 - Upgrade VAAPI docker image Ubuntu base from 22 to 24; bundled ffmpeg from 6.1 to 7.1.1
+- Upgrade base, arm, arm64 docker images bundled ffmpeg from 6.1 to 7.1.1
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections
