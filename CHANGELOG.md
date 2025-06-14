@@ -28,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - QSV may use hardware-accelerated tone mapping (when hardware decoding is used)
   - In all other cases, HDR content will use a software pipeline and the clip algorithm
 - Use hardware-accelerated padding with VAAPI
+- Add environment variable `ETV_DISABLE_VULKAN`
+  - Any non-empty value will disable use of Vulkan acceleration and force software tonemapping
+  - This may be needed with misbehaving NVIDIA drivers on Windows
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

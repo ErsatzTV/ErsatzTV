@@ -80,7 +80,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         bool isHdrTonemap = decodeCapability == FFmpegCapability.Hardware
                             && _ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.Vulkan)
-                            && videoStream.ColorParams.IsHdr;
+                            && videoStream.ColorParams.IsHdr
+                            && string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("ETV_DISABLE_VULKAN"));
 
         if (decodeCapability == FFmpegCapability.Hardware || encodeCapability == FFmpegCapability.Hardware)
         {
