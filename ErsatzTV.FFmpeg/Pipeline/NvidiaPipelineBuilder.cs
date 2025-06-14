@@ -182,9 +182,20 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         //     desiredState = desiredState with { PixelFormat = Some(pixelFormat) };
         // }
 
+        // vulkan scale doesn't seem to handle HDR, so we need to tonemap before scaling
+        if (ffmpegState.IsHdrTonemap)
+        {
+            currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
+        }
+
         currentState = SetDeinterlace(videoInputFile, context, currentState);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
-        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
+
+        if (!ffmpegState.IsHdrTonemap)
+        {
+            currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
+        }
+
         currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
         currentState = SetCrop(videoInputFile, desiredState, currentState);
         SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
