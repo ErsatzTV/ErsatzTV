@@ -20,7 +20,7 @@ public class TonemapFilter : BaseFilter
             string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
 
             var tonemap =
-                $"zscale=transfer=linear,tonemap=clip,zscale=transfer=bt709,format={_desiredPixelFormat.FFmpegName}";
+                $"zscale=transfer=linear,tonemap=linear,zscale=transfer=bt709,format={_desiredPixelFormat.FFmpegName}";
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {

@@ -104,8 +104,8 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         {
             SetDeinterlace(videoInputFile, context, currentState);
 
-            currentState = SetTonemap(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
+            currentState = SetTonemap(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetCrop(videoInputFile, desiredState, currentState);
             SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
