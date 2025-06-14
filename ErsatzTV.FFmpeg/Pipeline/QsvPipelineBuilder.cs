@@ -76,7 +76,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
         pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice));
 
-        bool isHevcOrH264 = videoStream.Codec is VideoFormat.Hevc or VideoFormat.H264;
+        bool isHevcOrH264 = videoStream.Codec is /*VideoFormat.Hevc or*/ VideoFormat.H264;
         bool is10Bit = videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
 
         // 10-bit hevc/h264 qsv decoders have issues, so use software
@@ -169,6 +169,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         // _logger.LogDebug("After decode: {PixelFormat}", currentState.PixelFormat);
+        currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
         currentState = SetDeinterlace(videoInputFile, context, ffmpegState, currentState);
         // _logger.LogDebug("After deinterlace: {PixelFormat}", currentState.PixelFormat);
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
@@ -272,7 +273,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             IPixelFormat formatForDownload = pixelFormat;
 
             bool usesVppQsv =
-                videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter);
+                videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
 
             // if we have no filters, check whether we need to convert pixel format
             // since qsv doesn't seem to like doing that at the encoder
@@ -634,6 +635,37 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             var filter = new DeinterlaceQsvFilter(currentState, ffmpegState.QsvExtraHardwareFrames);
             currentState = filter.NextState(currentState);
             videoInputFile.FilterSteps.Add(filter);
+        }
+
+        return currentState;
+    }
+
+    private static FrameState SetTonemap(
+        VideoInputFile videoInputFile,
+        VideoStream videoStream,
+        FFmpegState ffmpegState,
+        FrameState desiredState,
+        FrameState currentState)
+    {
+        if (videoStream.ColorParams.IsHdr)
+        {
+            foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
+            {
+                if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
+                {
+                    var filter = new TonemapQsvFilter();
+                    currentState = filter.NextState(currentState);
+                    videoStream.ResetColorParams(ColorParams.Default);
+                    videoInputFile.FilterSteps.Add(filter);
+                }
+                else
+                {
+                    var filter = new TonemapFilter(currentState, pixelFormat);
+                    currentState = filter.NextState(currentState);
+                    videoStream.ResetColorParams(ColorParams.Default);
+                    videoInputFile.FilterSteps.Add(filter);
+                }
+            }
         }
 
         return currentState;
