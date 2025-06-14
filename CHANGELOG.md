@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - NVIDIA may use hardware-accelerated tone mapping (when vulkan accel and libplacebo filter are also available)
   - QSV may use hardware-accelerated tone mapping (when hardware decoding is used)
   - In all other cases, HDR content will use a software pipeline and the clip algorithm
+- Use hardware-accelerated padding with VAAPI
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

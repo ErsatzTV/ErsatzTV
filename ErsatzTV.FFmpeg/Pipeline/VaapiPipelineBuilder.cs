@@ -536,7 +536,7 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
     {
         if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
-            var padStep = new PadFilter(currentState, desiredState.PaddedSize);
+            var padStep = new PadVaapiFilter(currentState, desiredState.PaddedSize);
             currentState = padStep.NextState(currentState);
             videoInputFile.FilterSteps.Add(padStep);
         }
