@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.FFmpeg.Runtime;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -42,7 +42,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
-        result.Should().Be(@"C:\Something Else\Some Shared Folder\Some Movie\Some Movie.mkv");
+        result.ShouldBe(@"C:\Something Else\Some Shared Folder\Some Movie\Some Movie.mkv");
     }
 
     [Test]
@@ -74,7 +74,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
-        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
 
     [Test]
@@ -106,7 +106,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
-        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
 
     [Test]
@@ -138,7 +138,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
-        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
 
     [Test]
@@ -170,7 +170,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"\\SERVERNAME\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
-        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
 
     [Test]
@@ -202,7 +202,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
-        result.Should().Be(@"C:\Something Else\Some Shared Folder\Some Movie\Some Movie.mkv");
+        result.ShouldBe(@"C:\Something Else\Some Shared Folder\Some Movie\Some Movie.mkv");
     }
 
     [Test]
@@ -234,7 +234,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
-        result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
 
     [Test]
@@ -266,7 +266,7 @@ public class PlexPathReplacementServiceTests
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
-        result.Should().Be(@"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
 
     [Test]
@@ -298,6 +298,6 @@ public class PlexPathReplacementServiceTests
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
-        result.Should().Be(@"/Some Movie/Some Movie.mkv");
+        result.ShouldBe(@"/Some Movie/Some Movie.mkv");
     }
 }

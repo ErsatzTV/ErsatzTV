@@ -2,7 +2,7 @@
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using NSubstitute;
@@ -48,10 +48,10 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
+            list.Count.ShouldBe(1);
         }
     }
 
@@ -77,14 +77,14 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(2);
-            list.All(nfo => nfo.ShowTitle == "show").Should().BeTrue();
-            list.All(nfo => nfo.Season == 1).Should().BeTrue();
-            list.Count(nfo => nfo.Title == "episode-one" && nfo.Episode == 1).Should().Be(1);
-            list.Count(nfo => nfo.Title == "episode-two" && nfo.Episode == 2).Should().Be(1);
+            list.Count.ShouldBe(2);
+            list.All(nfo => nfo.ShowTitle == "show").ShouldBeTrue();
+            list.All(nfo => nfo.Season == 1).ShouldBeTrue();
+            list.Count(nfo => nfo.Title == "episode-one" && nfo.Episode == 1).ShouldBe(1);
+            list.Count(nfo => nfo.Title == "episode-two" && nfo.Episode == 2).ShouldBe(1);
         }
     }
 
@@ -102,13 +102,13 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
-            list[0].UniqueIds.Count.Should().Be(2);
-            list[0].UniqueIds.Count(id => id.Default && id.Type == "tvdb" && id.Guid == "12345").Should().Be(1);
-            list[0].UniqueIds.Count(id => !id.Default && id.Type == "imdb" && id.Guid == "tt54321").Should().Be(1);
+            list.Count.ShouldBe(1);
+            list[0].UniqueIds.Count.ShouldBe(2);
+            list[0].UniqueIds.Count(id => id.Default && id.Type == "tvdb" && id.Guid == "12345").ShouldBe(1);
+            list[0].UniqueIds.Count(id => !id.Default && id.Type == "imdb" && id.Guid == "tt54321").ShouldBe(1);
         }
     }
 
@@ -125,11 +125,11 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
-            list[0].ContentRating.Should().BeNullOrEmpty();
+            list.Count.ShouldBe(1);
+            list[0].ContentRating.ShouldBeNullOrEmpty();
         }
     }
 
@@ -149,12 +149,12 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(2);
-            list.Count(nfo => nfo.ContentRating == "US:Something").Should().Be(1);
-            list.Count(nfo => nfo.ContentRating == "US:Something / US:SomethingElse").Should().Be(1);
+            list.Count.ShouldBe(2);
+            list.Count(nfo => nfo.ContentRating == "US:Something").ShouldBe(1);
+            list.Count(nfo => nfo.ContentRating == "US:Something / US:SomethingElse").ShouldBe(1);
         }
     }
 
@@ -171,11 +171,11 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
-            list[0].Plot.Should().BeNullOrEmpty();
+            list.Count.ShouldBe(1);
+            list[0].Plot.ShouldBeNullOrEmpty();
         }
     }
 
@@ -192,11 +192,11 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
-            list[0].Plot.Should().Be("Some Plot");
+            list.Count.ShouldBe(1);
+            list[0].Plot.ShouldBe("Some Plot");
         }
     }
 
@@ -222,15 +222,15 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
-            list[0].Actors.Count.Should().Be(2);
+            list.Count.ShouldBe(1);
+            list[0].Actors.Count.ShouldBe(2);
             list[0].Actors.Count(a => a.Name == "Name 1" && a.Role == "Role 1" && a.Thumb == "Thumb 1")
-                .Should().Be(1);
+                .ShouldBe(1);
             list[0].Actors.Count(a => a.Name == "Name 2" && a.Role == "Role 2" && a.Thumb == "Thumb 2")
-                .Should().Be(1);
+                .ShouldBe(1);
         }
     }
 
@@ -251,13 +251,13 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(2);
-            list.Count(nfo => nfo.Writers.Count == 1 && nfo.Writers[0] == "Writer 1").Should().Be(1);
+            list.Count.ShouldBe(2);
+            list.Count(nfo => nfo.Writers.Count == 1 && nfo.Writers[0] == "Writer 1").ShouldBe(1);
             list.Count(nfo => nfo.Writers.Count == 2 && nfo.Writers[0] == "Writer 2" && nfo.Writers[1] == "Writer 3")
-                .Should().Be(1);
+                .ShouldBe(1);
         }
     }
 
@@ -278,15 +278,15 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(2);
-            list.Count(nfo => nfo.Directors.Count == 1 && nfo.Directors[0] == "Director 1").Should().Be(1);
+            list.Count.ShouldBe(2);
+            list.Count(nfo => nfo.Directors.Count == 1 && nfo.Directors[0] == "Director 1").ShouldBe(1);
             list.Count(
                     nfo => nfo.Directors.Count == 2 && nfo.Directors[0] == "Director 2" &&
                            nfo.Directors[1] == "Director 3")
-                .Should().Be(1);
+                .ShouldBe(1);
         }
     }
 
@@ -307,12 +307,12 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(2);
-            list.Count(nfo => nfo.Genres is ["Genre 1"]).Should().Be(1);
-            list.Count(nfo => nfo.Genres is ["Genre 2", "Genre 3"]).Should().Be(1);
+            list.Count.ShouldBe(2);
+            list.Count(nfo => nfo.Genres is ["Genre 1"]).ShouldBe(1);
+            list.Count(nfo => nfo.Genres is ["Genre 2", "Genre 3"]).ShouldBe(1);
         }
     }
 
@@ -333,12 +333,12 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(2);
-            list.Count(nfo => nfo.Tags is ["Tag 1"]).Should().Be(1);
-            list.Count(nfo => nfo.Tags is ["Tag 2", "Tag 3"]).Should().Be(1);
+            list.Count.ShouldBe(2);
+            list.Count(nfo => nfo.Tags is ["Tag 1"]).ShouldBe(1);
+            list.Count(nfo => nfo.Tags is ["Tag 2", "Tag 3"]).ShouldBe(1);
         }
     }
 
@@ -434,25 +434,25 @@ public class EpisodeNfoReaderTests
 
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
 
         foreach (EpisodeNfo nfo in result.RightToSeq().Flatten())
         {
-            nfo.ShowTitle.Should().Be("WandaVision");
-            nfo.Title.Should().Be("Filmed Before a Live Studio Audience");
-            nfo.Episode.Should().Be(1);
-            nfo.Season.Should().Be(1);
-            nfo.ContentRating.Should().Be("Australia:TV-14");
+            nfo.ShowTitle.ShouldBe("WandaVision");
+            nfo.Title.ShouldBe("Filmed Before a Live Studio Audience");
+            nfo.Episode.ShouldBe(1);
+            nfo.Season.ShouldBe(1);
+            nfo.ContentRating.ShouldBe("Australia:TV-14");
 
-            nfo.Aired.IsSome.Should().BeTrue();
+            nfo.Aired.IsSome.ShouldBeTrue();
             foreach (DateTime aired in nfo.Aired)
             {
-                aired.Should().Be(new DateTime(2021, 01, 15));
+                aired.ShouldBe(new DateTime(2021, 01, 15));
             }
 
-            nfo.Plot.Should().Be(
+            nfo.Plot.ShouldBe(
                 "Wanda and Vision struggle to conceal their powers during dinner with Vision’s boss and his wife.");
-            nfo.Actors.Should().BeEquivalentTo(
+            nfo.Actors.ShouldBeEquivalentTo(
                 new List<ActorNfo>
                 {
                     new()
@@ -466,9 +466,9 @@ public class EpisodeNfoReaderTests
                         Thumb = "https://image.tmdb.org/t/p/original/rrfyo9z1wW5nY9ZsFlj1Ozfj9g2.jpg"
                     }
                 });
-            nfo.Writers.Should().BeEquivalentTo(new List<string> { "Jac Schaeffer" });
-            nfo.Directors.Should().BeEquivalentTo(new List<string> { "Matt Shakman" });
-            nfo.UniqueIds.Should().BeEquivalentTo(
+            nfo.Writers.ShouldBeEquivalentTo(new List<string> { "Jac Schaeffer" });
+            nfo.Directors.ShouldBeEquivalentTo(new List<string> { "Matt Shakman" });
+            nfo.UniqueIds.ShouldBeEquivalentTo(
                 new List<UniqueIdNfo>
                 {
                     new() { Type = "imdb", Guid = "tt9601584", Default = false },
@@ -488,11 +488,11 @@ public class EpisodeNfoReaderTests
             "EpisodeInvalidCharacters.nfo");
         Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.ReadFromFile(sourceFile);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
         {
-            list.Count.Should().Be(1);
-            list[0].Title.Should().Be("Test Title");
+            list.Count.ShouldBe(1);
+            list[0].Title.ShouldBe("Test Title");
         }
     }
 }

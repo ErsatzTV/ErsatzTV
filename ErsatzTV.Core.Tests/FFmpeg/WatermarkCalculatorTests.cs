@@ -1,5 +1,5 @@
 ﻿using ErsatzTV.Core.FFmpeg;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
@@ -18,6 +18,6 @@ public class WatermarkCalculatorTests
             15,
             10);
 
-        actual.Should().HaveCount(0);
+        actual.Count.ShouldBe(0);
     }
 }

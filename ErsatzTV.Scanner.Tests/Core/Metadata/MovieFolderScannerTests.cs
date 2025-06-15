@@ -11,7 +11,7 @@ using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
-using FluentAssertions;
+using Shouldly;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -109,7 +109,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -153,7 +153,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -196,7 +196,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -240,7 +240,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -288,7 +288,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -337,7 +337,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -386,7 +386,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -434,7 +434,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -478,7 +478,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -524,7 +524,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -564,7 +564,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _movieRepository.Received(1).GetOrAdd(
                 Arg.Any<LibraryPath>(),
@@ -609,7 +609,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _mediaItemRepository.Received(1).FlagFileNotFound(Arg.Any<LibraryPath>(), Arg.Any<string>());
             await _mediaItemRepository.Received(1).FlagFileNotFound(libraryPath, oldMoviePath);
@@ -638,7 +638,7 @@ public class MovieFolderScannerTests
                 1,
                 CancellationToken.None);
 
-            result.IsRight.Should().BeTrue();
+            result.IsRight.ShouldBeTrue();
 
             await _mediaItemRepository.Received(1).FlagFileNotFound(Arg.Any<LibraryPath>(), Arg.Any<string>());
             await _mediaItemRepository.Received(1).FlagFileNotFound(libraryPath, oldMoviePath);

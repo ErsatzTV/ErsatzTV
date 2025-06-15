@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -30,7 +30,7 @@ public class ShuffledContentTests
         var list = new List<int>();
         for (var i = 1; i <= 1000; i++)
         {
-            shuffledContent.Current.IsSome.Should().BeTrue();
+            shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Do(x => list.Add(x.Id));
             shuffledContent.MoveNext();
         }
@@ -57,12 +57,12 @@ public class ShuffledContentTests
         var list = new List<int>();
         for (var i = 1; i <= 10; i++)
         {
-            shuffledContent.Current.IsSome.Should().BeTrue();
+            shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Do(x => list.Add(x.Id));
             shuffledContent.MoveNext();
         }
 
-        list.Should().Equal(1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+        list.ShouldBe([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
     }
 
     [Test]
@@ -78,13 +78,13 @@ public class ShuffledContentTests
         var list = new List<int>();
         for (var i = 1; i <= 10; i++)
         {
-            shuffledContent.Current.IsSome.Should().BeTrue();
+            shuffledContent.Current.IsSome.ShouldBeTrue();
             shuffledContent.Current.Do(x => list.Add(x.Id));
             shuffledContent.MoveNext();
         }
 
-        list.Should().NotEqual(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-        list.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+        list.ShouldNotBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        list.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], ignoreOrder: true);
     }
 
     [Test]
@@ -98,7 +98,7 @@ public class ShuffledContentTests
 
         for (var i = 0; i < 10; i++)
         {
-            shuffledContent.State.Index.Should().Be(i);
+            shuffledContent.State.Index.ShouldBe(i);
             shuffledContent.MoveNext();
         }
     }
@@ -114,9 +114,9 @@ public class ShuffledContentTests
 
         for (var i = 6; i <= 10; i++)
         {
-            shuffledContent.Current.IsSome.Should().BeTrue();
-            shuffledContent.Current.Map(x => x.Id).IfNone(-1).Should().Be(i);
-            shuffledContent.State.Index.Should().Be(i - 1);
+            shuffledContent.Current.IsSome.ShouldBeTrue();
+            shuffledContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
+            shuffledContent.State.Index.ShouldBe(i - 1);
             shuffledContent.MoveNext();
         }
     }
@@ -130,8 +130,8 @@ public class ShuffledContentTests
         var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
         var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state, _cancellationToken);
 
-        shuffledContent.State.Index.Should().Be(0);
-        shuffledContent.State.Seed.Should().NotBe(MagicSeed);
+        shuffledContent.State.Index.ShouldBe(0);
+        shuffledContent.State.Seed.ShouldNotBe(MagicSeed);
     }
 
     private static List<MediaItem> Episodes(int count) =>

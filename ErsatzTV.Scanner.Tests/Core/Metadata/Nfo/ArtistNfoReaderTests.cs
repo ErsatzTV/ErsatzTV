@@ -2,7 +2,7 @@
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using NSubstitute;
@@ -44,7 +44,7 @@ public class ArtistNfoReaderTests
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 
-        result.IsLeft.Should().BeTrue();
+        result.IsLeft.ShouldBeTrue();
     }
 
     [Test]
@@ -54,7 +54,7 @@ public class ArtistNfoReaderTests
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
     }
 
     [Test]
@@ -67,7 +67,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
     }
 
     [Test]
@@ -121,14 +121,14 @@ https://www.themoviedb.org/movie/11-star-wars"));
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
 
         foreach (ArtistNfo nfo in result.RightToSeq())
         {
-            nfo.Name.Should().Be("Billy Joel");
-            nfo.Disambiguation.Should().BeNullOrEmpty();
-            nfo.Genres.Should().BeEquivalentTo(new List<string> { "Pop/Rock" });
-            nfo.Styles.Should().BeEquivalentTo(
+            nfo.Name.ShouldBe("Billy Joel");
+            nfo.Disambiguation.ShouldBeNullOrEmpty();
+            nfo.Genres.ShouldBeEquivalentTo(new List<string> { "Pop/Rock" });
+            nfo.Styles.ShouldBeEquivalentTo(
                 new List<string>
                 {
                     "Album Rock",
@@ -137,7 +137,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
                     "Soft Rock",
                     "Keyboard"
                 });
-            nfo.Moods.Should().BeEquivalentTo(
+            nfo.Moods.ShouldBeEquivalentTo(
                 new List<string>
                 {
                     "Amiable/Good-Natured",
@@ -150,7 +150,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
                     "Cynical/Sarcastic",
                     "Earnest"
                 });
-            nfo.Biography.Should().Be(
+            nfo.Biography.ShouldBe(
                 NormalizeLineEndingsLF(
                     @"William Martin ""Billy"" Joel (born May 9, 1949, New York, USA) is an American pianist, singer-songwriter, and composer. Since releasing his first hit song, ""Piano Man"", in 1973, Joel has become the sixth-best-selling recording artist and the third-best-selling solo artist in the United States, according to the RIAA. His compilation album Greatest Hits Vol. 1 & 2 is the third-best-selling album in the United States by discs shipped.
 Joel had Top 40 hits in the 1970s, 1980s, and 1990s, achieving 33 Top 40 hits in the United States, all of which he wrote himself. He is also a six-time Grammy Award winner, a 23-time Grammy nominee and one of the world's best-selling artists of all time, having sold over 150 million records worldwide. He was inducted into the Songwriter's Hall of Fame (1992), the Rock and Roll Hall of Fame (1999), and the Long Island Music Hall of Fame (2006). In 2008, Billboard magazine released a list of the Hot 100 All-Time Top Artists to celebrate the US singles chart's 50th anniversary, with Billy Joel positioned at No. 23. With the exception of the 2007 songs ""All My Life"" and ""Christmas in Fallujah"", Joel stopped writing and recording popular music after 1993's River of Dreams, but he continued to tour extensively until 2010. Joel was born in the Bronx, May 9, 1949 and raised in Hicksville, New York in a Levitt home. His father, Howard (born Helmuth), was born in Germany, the son of German merchant and manufacturer Karl Amson Joel, who, after the advent of the Nazi regime, emigrated to Switzerland and later to the United States. Billy Joel's mother, Rosalind Nyman, was born in England to Philip and Rebecca Nyman. Both of Joel's parents were Jewish. They divorced in 1960, and his father moved to Vienna, Austria. Billy has a sister, Judith Joel, and a half-brother, Alexander Joel, who is an acclaimed classical conductor in Europe and currently chief musical director of the Staatstheater Braunschweig.
@@ -167,10 +167,10 @@ Joel attended Hicksville High School in 1967, but he did not graduate with his c
 
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (ArtistNfo nfo in result.RightToSeq())
         {
-            nfo.Disambiguation.Should().Be("Test Disambiguation");
+            nfo.Disambiguation.ShouldBe("Test Disambiguation");
         }
     }
 
@@ -184,10 +184,10 @@ Joel attended Hicksville High School in 1967, but he did not graduate with his c
             "ArtistInvalidCharacters1.nfo");
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.ReadFromFile(sourceFile);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (ArtistNfo nfo in result.RightToSeq())
         {
-            nfo.Name.Should().Be("Test Name");
+            nfo.Name.ShouldBe("Test Name");
         }
     }
 
@@ -201,12 +201,12 @@ Joel attended Hicksville High School in 1967, but he did not graduate with his c
             "ArtistInvalidCharacters2.nfo");
         Either<BaseError, ArtistNfo> result = await _artistNfoReader.ReadFromFile(sourceFile);
 
-        result.IsRight.Should().BeTrue();
+        result.IsRight.ShouldBeTrue();
         foreach (ArtistNfo nfo in result.RightToSeq())
         {
-            nfo.Name.Should().Be("Test Name");
-            nfo.Moods.Should().BeEquivalentTo(new List<string> { "Test Mood" });
-            nfo.Styles.Count.Should().Be(1);
+            nfo.Name.ShouldBe("Test Name");
+            nfo.Moods.ShouldBeEquivalentTo(new List<string> { "Test Mood" });
+            nfo.Styles.Count.ShouldBe(1);
         }
     }
 

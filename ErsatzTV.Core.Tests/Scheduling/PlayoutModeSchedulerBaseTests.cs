@@ -2,7 +2,7 @@
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -61,7 +61,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     true,
                     _cancellationToken);
 
-            playoutItems.Count.Should().Be(1);
+            playoutItems.Count.ShouldBe(1);
         }
 
         [Test]
@@ -114,7 +114,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     true,
                     _cancellationToken);
 
-            playoutItems.Count.Should().Be(1);
+            playoutItems.Count.ShouldBe(1);
         }
 
         [Test]
@@ -181,13 +181,13 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     true,
                     _cancellationToken);
 
-            playoutItems.Count.Should().Be(3);
-            playoutItems[0].MediaItemId.Should().Be(1);
-            playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-            playoutItems[1].MediaItemId.Should().Be(3);
-            playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
-            playoutItems[2].MediaItemId.Should().Be(1);
-            playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
+            playoutItems.Count.ShouldBe(3);
+            playoutItems[0].MediaItemId.ShouldBe(1);
+            playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+            playoutItems[1].MediaItemId.ShouldBe(3);
+            playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(6));
+            playoutItems[2].MediaItemId.ShouldBe(1);
+            playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(11));
         }
 
         [Test]
@@ -273,27 +273,27 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     true,
                     _cancellationToken);
 
-            playoutItems.Count.Should().Be(5);
+            playoutItems.Count.ShouldBe(5);
 
             // content chapter 1
-            playoutItems[0].MediaItemId.Should().Be(1);
-            playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+            playoutItems[0].MediaItemId.ShouldBe(1);
+            playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
 
             // mid-roll 1
-            playoutItems[1].MediaItemId.Should().Be(3);
-            playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
+            playoutItems[1].MediaItemId.ShouldBe(3);
+            playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(6));
 
             // mid-roll 2
-            playoutItems[2].MediaItemId.Should().Be(4);
-            playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
+            playoutItems[2].MediaItemId.ShouldBe(4);
+            playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(11));
 
             // content chapter 2
-            playoutItems[3].MediaItemId.Should().Be(1);
-            playoutItems[3].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(16));
+            playoutItems[3].MediaItemId.ShouldBe(1);
+            playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(16));
 
             // post-roll
-            playoutItems[4].MediaItemId.Should().Be(5);
-            playoutItems[4].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(55));
+            playoutItems[4].MediaItemId.ShouldBe(5);
+            playoutItems[4].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(55));
         }
 
         [Test]
@@ -379,27 +379,27 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     true,
                     _cancellationToken);
 
-            playoutItems.Count.Should().Be(5);
+            playoutItems.Count.ShouldBe(5);
 
             // content chapter 1
-            playoutItems[0].MediaItemId.Should().Be(1);
-            playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
+            playoutItems[0].MediaItemId.ShouldBe(1);
+            playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
 
             // mid-roll 1
-            playoutItems[1].MediaItemId.Should().Be(3);
-            playoutItems[1].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(6));
+            playoutItems[1].MediaItemId.ShouldBe(3);
+            playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(6));
 
             // content chapter 2
-            playoutItems[2].MediaItemId.Should().Be(1);
-            playoutItems[2].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(11));
+            playoutItems[2].MediaItemId.ShouldBe(1);
+            playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(11));
 
             // post-roll 1
-            playoutItems[3].MediaItemId.Should().Be(5);
-            playoutItems[3].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(50));
+            playoutItems[3].MediaItemId.ShouldBe(5);
+            playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(50));
 
             // post-roll 2
-            playoutItems[4].MediaItemId.Should().Be(6);
-            playoutItems[4].StartOffset.Should().Be(startState.CurrentTime + TimeSpan.FromMinutes(55));
+            playoutItems[4].MediaItemId.ShouldBe(6);
+            playoutItems[4].StartOffset.ShouldBe(startState.CurrentTime + TimeSpan.FromMinutes(55));
         }
     }
 
@@ -428,7 +428,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             DateTimeOffset result =
                 PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(state, scheduleItem);
 
-            result.Should().Be(DateTime.Today.AddHours(6));
+            result.ShouldBe(DateTime.Today.AddHours(6));
         }
     }
 

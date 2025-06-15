@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -24,7 +24,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(3);
+        result.Count.ShouldBe(3);
         ShouldHaveOneItem(result, mediaItems[0]);
         ShouldHaveTwoItems(result, mediaItems[1], mediaItems[2]);
         ShouldHaveOneItem(result, mediaItems[3]);
@@ -47,7 +47,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(2);
+        result.Count.ShouldBe(2);
         ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
         ShouldHaveOneItem(result, mediaItems[2]);
     }
@@ -68,7 +68,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(2);
+        result.Count.ShouldBe(2);
         ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
         ShouldHaveOneItem(result, mediaItems[2]);
     }
@@ -89,7 +89,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(2);
+        result.Count.ShouldBe(2);
         ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
         ShouldHaveOneItem(result, mediaItems[2]);
     }
@@ -117,7 +117,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(3);
+        result.Count.ShouldBe(3);
         ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
         ShouldHaveOneItem(result, mediaItems[2]);
         ShouldHaveTwoItems(result, mediaItems[3], mediaItems[4]);
@@ -140,7 +140,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(2);
+        result.Count.ShouldBe(2);
         ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
         ShouldHaveTwoItems(result, mediaItems[2], mediaItems[3]);
     }
@@ -162,7 +162,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(3);
+        result.Count.ShouldBe(3);
         ShouldHaveOneItem(result, mediaItems[0]);
         ShouldHaveOneItem(result, mediaItems[1]);
         ShouldHaveTwoItems(result, mediaItems[2], mediaItems[3]);
@@ -185,7 +185,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(3);
+        result.Count.ShouldBe(3);
         ShouldHaveOneItem(result, mediaItems[0]);
         ShouldHaveTwoItems(result, mediaItems[1], mediaItems[2]);
         ShouldHaveOneItem(result, mediaItems[3]);
@@ -208,7 +208,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(4);
+        result.Count.ShouldBe(4);
         ShouldHaveOneItem(result, mediaItems[0]);
         ShouldHaveOneItem(result, mediaItems[1]);
         ShouldHaveOneItem(result, mediaItems[2]);
@@ -232,7 +232,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(3);
+        result.Count.ShouldBe(3);
         ShouldHaveOneItem(result, mediaItems[0]);
         ShouldHaveTwoItems(result, mediaItems[1], mediaItems[2]);
         ShouldHaveOneItem(result, mediaItems[3]);
@@ -259,7 +259,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
 
-        result.Count.Should().Be(3);
+        result.Count.ShouldBe(3);
         ShouldHaveTwoItems(result, mediaItems[0], mediaItems[2]);
         ShouldHaveOneItem(result, mediaItems[1]);
         ShouldHaveOneItem(result, mediaItems[3]);
@@ -286,7 +286,7 @@ public class MultiPartEpisodeGrouperTests
 
         List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, true);
 
-        result.Count.Should().Be(2);
+        result.Count.ShouldBe(2);
         ShouldHaveMultipleItems(result, mediaItems[0], new List<MediaItem> { mediaItems[1], mediaItems[2] });
         ShouldHaveOneItem(result, mediaItems[3]);
     }
@@ -313,14 +313,14 @@ public class MultiPartEpisodeGrouperTests
 
     private static void ShouldHaveOneItem(IEnumerable<GroupedMediaItem> result, MediaItem item) =>
         result.Filter(g => g.First == item && Optional(g.Additional).Flatten().HeadOrNone() == None)
-            .Should().HaveCount(1);
+            .Count().ShouldBe(1);
 
     private static void ShouldHaveTwoItems(
         IEnumerable<GroupedMediaItem> result,
         MediaItem first,
         MediaItem additional) =>
         result.Filter(g => g.First == first && Optional(g.Additional).Flatten().HeadOrNone() == Some(additional))
-            .Should().HaveCount(1);
+            .Count().ShouldBe(1);
 
     private static void ShouldHaveMultipleItems(
         IEnumerable<GroupedMediaItem> result,
@@ -329,5 +329,5 @@ public class MultiPartEpisodeGrouperTests
         result.Filter(
                 g => g.First == first && g.Additional != null && g.Additional.Count == additional.Count &&
                      additional.ForAll(g.Additional.Contains))
-            .Should().HaveCount(1);
+            .Count().ShouldBe(1);
 }

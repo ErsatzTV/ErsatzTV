@@ -1,6 +1,6 @@
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
-using FluentAssertions;
+using Shouldly;
 using LanguageExt;
 using NSubstitute;
 using NUnit.Framework;
@@ -25,9 +25,9 @@ public class CachingSearchRepositoryTests
         var repo = new CachingSearchRepository(searchRepo);
 
         List<string> result1 = await repo.GetAllThreeLetterLanguageCodes(englishMediaCodes);
-        result1.Should().BeEquivalentTo(englishResult);
+        result1.ShouldBeEquivalentTo(englishResult);
 
         List<string> result2 = await repo.GetAllThreeLetterLanguageCodes(frenchMediaCodes);
-        result2.Should().BeEquivalentTo(frenchResult);
+        result2.ShouldBeEquivalentTo(frenchResult);
     }
 }

@@ -8,7 +8,7 @@ using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Pipeline;
 using ErsatzTV.FFmpeg.Preset;
 using ErsatzTV.FFmpeg.State;
-using FluentAssertions;
+using Shouldly;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -110,11 +110,11 @@ public class PipelineBuilderBaseTests
             _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
-        result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);
+        result.PipelineSteps.Count.ShouldBeGreaterThan(0);
+        result.PipelineSteps.ShouldContain(ps => ps is EncoderLibx265);
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
-        command.Should().Be(
+        command.ShouldBe(
             "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -readrate 1.0 -i /tmp/whatever.mkv -filter_complex [0:1]aresample=async=1:first_pts=0[a] -map 0:0 -map [a] -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -bf 0 -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
@@ -206,11 +206,11 @@ public class PipelineBuilderBaseTests
             _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
-        result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);
+        result.PipelineSteps.Count.ShouldBeGreaterThan(0);
+        result.PipelineSteps.ShouldContain(ps => ps is EncoderLibx265);
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
-        command.Should().Be(
+        command.ShouldBe(
             "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -ss 00:00:01 -c:v h264 -readrate 1.0 -i /tmp/whatever.mkv -filter_complex [0:1]aresample=async=1:first_pts=0[a] -map 0:0 -map [a] -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -bf 0 -sc_threshold 0 -video_track_timescale 90000 -b:v 2000k -maxrate:v 2000k -bufsize:v 4000k -c:v libx265 -tag:v hvc1 -x265-params log-level=error -c:a aac -ac 6 -b:a 320k -maxrate:a 320k -bufsize:a 640k -ar 48k -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
@@ -233,11 +233,11 @@ public class PipelineBuilderBaseTests
             _logger);
         FFmpegPipeline result = builder.Concat(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Count.ShouldBeGreaterThan(0);
 
         string command = PrintCommand(None, None, None, concatInputFile, result);
 
-        command.Should().Be(
+        command.ShouldBe(
             "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -readrate 1.0 -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
@@ -262,11 +262,11 @@ public class PipelineBuilderBaseTests
             _logger);
         FFmpegPipeline result = builder.WrapSegmenter(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Count.ShouldBeGreaterThan(0);
 
         string command = PrintCommand(None, None, None, concatInputFile, result);
 
-        command.Should().Be(
+        command.ShouldBe(
             "-nostdin -threads 1 -hide_banner -loglevel error -nostats -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i http://localhost:8080/iptv/channel/1.m3u8?mode=segmenter -map 0 -c copy -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts pipe:1");
     }
 
@@ -358,15 +358,15 @@ public class PipelineBuilderBaseTests
             _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
-        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyVideo);
-        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyAudio);
-        videoInputFile.InputOptions.Should().Contain(io => io is ReadrateInputOption);
+        result.PipelineSteps.Count.ShouldBeGreaterThan(0);
+        result.PipelineSteps.ShouldContain(ps => ps is EncoderCopyVideo);
+        result.PipelineSteps.ShouldContain(ps => ps is EncoderCopyAudio);
+        videoInputFile.InputOptions.ShouldContain(io => io is ReadrateInputOption);
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
 
         // 0.4.0 reference: "-nostdin -threads 1 -hide_banner -loglevel error -nostats -fflags +genpts+discardcorrupt+igndts -re -ss 00:14:33.6195516 -i /tmp/whatever.mkv -map 0:0 -map 0:a -c:v copy -flags cgop -sc_threshold 0 -c:a copy -movflags +faststart -muxdelay 0 -muxpreload 0 -metadata service_provider="ErsatzTV" -metadata service_name="ErsatzTV" -t 00:06:39.6934484 -f mpegts -mpegts_flags +initial_discontinuity pipe:1"
-        command.Should().Be(
+        command.ShouldBe(
             "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i /tmp/whatever.mkv -map 0:0 -map 0:1 -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mp4 pipe:1");
     }
 
@@ -448,13 +448,13 @@ public class PipelineBuilderBaseTests
             _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
-        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyVideo);
-        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyAudio);
+        result.PipelineSteps.Count.ShouldBeGreaterThan(0);
+        result.PipelineSteps.ShouldContain(ps => ps is EncoderCopyVideo);
+        result.PipelineSteps.ShouldContain(ps => ps is EncoderCopyAudio);
 
         string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
 
-        command.Should().Be(
+        command.ShouldBe(
             "-nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -readrate 1.0 -i /tmp/whatever.mkv -map 0:0 -map 0:a -muxdelay 0 -muxpreload 0 -movflags +faststart+frag_keyframe+separate_moof+omit_tfhd_offset+empty_moov+delay_moov -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mp4 pipe:1");
     }
 
@@ -497,7 +497,7 @@ public class PipelineBuilderBaseTests
 
         string command = PrintCommand(videoInputFile, None, None, None, result);
 
-        command.Should().Be(
+        command.ShouldBe(
             "-nostdin -hide_banner -nostats -loglevel error -i /test/input/file.png -vf scale=-1:200:force_original_aspect_ratio=decrease /test/output/file.jpg");
     }
 

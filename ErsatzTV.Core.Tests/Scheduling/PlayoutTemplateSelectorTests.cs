@@ -1,6 +1,6 @@
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -31,7 +31,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 3, 31, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -53,7 +53,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 1, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -75,7 +75,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 20, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -97,7 +97,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 15, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -119,7 +119,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 16, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -141,7 +141,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -163,7 +163,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -185,7 +185,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -207,7 +207,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -229,7 +229,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 14, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -251,7 +251,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 6, 15, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -273,7 +273,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 7, 20, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -295,7 +295,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 1, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -317,7 +317,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2024, 4, 2, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -339,7 +339,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -361,7 +361,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -383,7 +383,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 2, 28, 0, 0, 0, Offset));
 
-            result.IsSome.Should().BeTrue();
+            result.IsSome.ShouldBeTrue();
         }
 
         [Test]
@@ -405,7 +405,7 @@ public static class PlayoutTemplateSelectorTests
                 new List<PlayoutTemplate> { template },
                 new DateTimeOffset(2023, 3, 1, 0, 0, 0, Offset));
 
-            result.IsNone.Should().BeTrue();
+            result.IsNone.ShouldBeTrue();
         }
     }
 }

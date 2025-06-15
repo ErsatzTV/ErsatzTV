@@ -25,7 +25,7 @@ using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Metadata;
 using ErsatzTV.Infrastructure.Runtime;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -109,18 +109,18 @@ public class TranscodingTests
     {
         public static Watermark[] Watermarks =
         [
-            Watermark.None
-            //Watermark.PermanentOpaqueScaled,
-            // Watermark.PermanentOpaqueActualSize,
-            //Watermark.PermanentTransparentScaled
-            // Watermark.PermanentTransparentActualSize
+            Watermark.None,
+            Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueActualSize,
+            Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentActualSize
         ];
 
         public static Subtitle[] Subtitles =
         [
-            Subtitle.None
-            //Subtitle.Picture,
-            //Subtitle.Text
+            Subtitle.None,
+            Subtitle.Picture,
+            Subtitle.Text
         ];
 
         public static Padding[] Paddings =
@@ -199,7 +199,7 @@ public class TranscodingTests
         [
             HardwareAccelerationKind.None,
             //HardwareAccelerationKind.Nvenc,
-            HardwareAccelerationKind.Vaapi
+            //HardwareAccelerationKind.Vaapi
             //HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
@@ -209,7 +209,7 @@ public class TranscodingTests
         [
             StreamingMode.TransportStream,
             //StreamingMode.HttpLiveStreamingSegmenter,
-            StreamingMode.HttpLiveStreamingSegmenterV2
+            //StreamingMode.HttpLiveStreamingSegmenterV2
         ];
 
         public static string[] FilesToTest => [string.Empty];
@@ -484,7 +484,7 @@ public class TranscodingTests
 
         if (videoScanKind == VideoScanKind.Interlaced)
         {
-            v.VideoScanKind.Should().Be(VideoScanKind.Interlaced, file);
+            v.VideoScanKind.ShouldBe(VideoScanKind.Interlaced, file);
         }
 
         var subtitleStreams = v.Streams
@@ -559,7 +559,7 @@ public class TranscodingTests
             bool hasDeinterlaceFilter = filterChain.VideoFilterSteps.Any(
                 s => s is YadifFilter or YadifCudaFilter or DeinterlaceQsvFilter or DeinterlaceVaapiFilter);
 
-            hasDeinterlaceFilter.Should().Be(videoScanKind == VideoScanKind.Interlaced);
+            hasDeinterlaceFilter.ShouldBe(videoScanKind == VideoScanKind.Interlaced);
 
             bool hasScaling = filterChain.VideoFilterSteps.Filter(
                     s => s is ScaleFilter or ScaleCudaFilter or ScaleQsvFilter or ScaleVaapiFilter)
@@ -569,7 +569,7 @@ public class TranscodingTests
             // TODO: sometimes scaling is used for pixel format, so this is harder to assert the absence
             if (profileResolution.Width != 1920 && profileResolution.Width != 640)
             {
-                hasScaling.Should().BeTrue();
+                hasScaling.ShouldBeTrue();
             }
 
             // TODO: bit depth
@@ -577,16 +577,16 @@ public class TranscodingTests
             bool hasPadding = filterChain.VideoFilterSteps.Any(s => s is PadFilter);
 
             // TODO: optimize out padding
-            // hasPadding.Should().Be(padding == Padding.WithPadding);
+            // hasPadding.ShouldBe(padding == Padding.WithPadding);
             if (padding is Padding.WithPadding && scalingBehavior is not ScalingBehavior.Crop)
             {
-                hasPadding.Should().BeTrue();
+                hasPadding.ShouldBeTrue();
             }
 
             bool hasCrop = filterChain.VideoFilterSteps.Any(s => s is CropFilter);
             if (scalingBehavior is ScalingBehavior.Crop)
             {
-                hasCrop.Should().BeTrue();
+                hasCrop.ShouldBeTrue();
             }
 
             bool hasSubtitleFilters =
@@ -597,12 +597,12 @@ public class TranscodingTests
                         or OverlaySubtitleQsvFilter
                         or OverlaySubtitleVaapiFilter);
 
-            hasSubtitleFilters.Should().Be(subtitle != Subtitle.None);
+            hasSubtitleFilters.ShouldBe(subtitle != Subtitle.None);
 
             bool hasWatermarkFilters = filterChain.WatermarkOverlayFilterSteps.Any(
                 s => s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
 
-            hasWatermarkFilters.Should().Be(watermark != Watermark.None);
+            hasWatermarkFilters.ShouldBe(watermark != Watermark.None);
         }
 
         FFmpegLibraryProcessService service = GetService();
@@ -780,7 +780,7 @@ public class TranscodingTests
             ? p1.StandardError
             : p1.StandardOutput;
 
-        p1.ExitCode.Should().Be(0, output);
+        p1.ExitCode.ShouldBe(0, output);
 
         switch (subtitle)
         {
@@ -813,7 +813,7 @@ public class TranscodingTests
                     }
                 }
 
-                p2.ExitCode.Should().Be(0);
+                p2.ExitCode.ShouldBe(0);
 
                 await SetInterlacedFlag(tempFileName, sourceFile, file, videoScanKind == VideoScanKind.Interlaced);
 
@@ -850,7 +850,7 @@ public class TranscodingTests
             }
         }
 
-        p.ExitCode.Should().Be(0);
+        p.ExitCode.ShouldBe(0);
     }
 
     private static string GetStringSha256Hash(string text)
@@ -956,7 +956,7 @@ public class TranscodingTests
 
             if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
             {
-                result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
+                result.ExitCode.ShouldBe(1, $"Error message with successful exit code? {process.Arguments}");
                 Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
             }
             else if (error.Contains("Impossible to convert between"))
@@ -973,7 +973,7 @@ public class TranscodingTests
                     ' ',
                     process.Arguments.Split(" ").Map(a => a.Contains('[') ? $"\"{a}\"" : a));
 
-                result.ExitCode.Should().Be(0, error + Environment.NewLine + arguments);
+                result.ExitCode.ShouldBe(0, error + Environment.NewLine + arguments);
                 if (result.ExitCode == 0)
                 {
                     Console.WriteLine(process.Arguments);
@@ -998,11 +998,11 @@ public class TranscodingTests
             MediaVersion v = getFinalMediaVersion();
 
             // verify de-interlace
-            v.VideoScanKind.Should().NotBe(VideoScanKind.Interlaced);
+            v.VideoScanKind.ShouldNotBe(VideoScanKind.Interlaced);
 
             // verify resolution
-            v.Height.Should().Be(profileResolution.Height);
-            v.Width.Should().Be(profileResolution.Width);
+            v.Height.ShouldBe(profileResolution.Height);
+            v.Width.ShouldBe(profileResolution.Width);
 
             foreach (MediaStream videoStream in v.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Video))
             {
@@ -1014,7 +1014,7 @@ public class TranscodingTests
                     _ => PixelFormat.YUV420P
                 };
 
-                videoStream.PixelFormat.Should().Be(expectedPixelFormat);
+                videoStream.PixelFormat.ShouldBe(expectedPixelFormat);
 
                 // verify colors
                 var colorParams = new ColorParams(
@@ -1032,7 +1032,7 @@ public class TranscodingTests
                     (profileAcceleration != HardwareAccelerationKind.Vaapi || vaapiDriver != VaapiDriver.RadeonSI) &&
                     streamingMode != StreamingMode.HttpLiveStreamingSegmenterV2)
                 {
-                    colorParams.IsBt709.Should().BeTrue($"{colorParams}");
+                    colorParams.IsBt709.ShouldBeTrue($"{colorParams}");
                 }
             }
         }

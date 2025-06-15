@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -42,9 +42,9 @@ live001139.ts").Split(Environment.NewLine);
 
         TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(-30), input);
 
-        result.PlaylistStart.Should().Be(start);
-        result.Sequence.Should().Be(1137);
-        result.Playlist.Should().Be(
+        result.PlaylistStart.ShouldBe(start);
+        result.Sequence.ShouldBe(1137);
+        result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
 #EXT-X-VERSION:6
@@ -87,9 +87,9 @@ live001139.ts").Split(Environment.NewLine);
 
         TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(-30), input, 2);
 
-        result.PlaylistStart.Should().Be(start);
-        result.Sequence.Should().Be(1137);
-        result.Playlist.Should().Be(
+        result.PlaylistStart.ShouldBe(start);
+        result.Sequence.ShouldBe(1137);
+        result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
 #EXT-X-VERSION:6
@@ -134,9 +134,9 @@ live001139.ts").Split(Environment.NewLine);
             int.MaxValue,
             true);
 
-        result.PlaylistStart.Should().Be(start);
-        result.Sequence.Should().Be(1137);
-        result.Playlist.Should().Be(
+        result.PlaylistStart.ShouldBe(start);
+        result.Sequence.ShouldBe(1137);
+        result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
 #EXT-X-VERSION:6
@@ -180,9 +180,9 @@ live001139.ts").Split(Environment.NewLine);
 
         TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(6), input, 1);
 
-        result.PlaylistStart.Should().Be(start.AddSeconds(8));
-        result.Sequence.Should().Be(1139);
-        result.Playlist.Should().Be(
+        result.PlaylistStart.ShouldBe(start.AddSeconds(8));
+        result.Sequence.ShouldBe(1139);
+        result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
 #EXT-X-VERSION:6
@@ -220,9 +220,9 @@ live001139.ts").Split(Environment.NewLine);
 
         TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(6), input);
 
-        result.PlaylistStart.Should().Be(start);
-        result.Sequence.Should().Be(1137);
-        result.Playlist.Should().Be(
+        result.PlaylistStart.ShouldBe(start);
+        result.Sequence.ShouldBe(1137);
+        result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
 #EXT-X-VERSION:6
@@ -508,9 +508,9 @@ live000082.ts").Split(Environment.NewLine);
 
         TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(220), input);
 
-        // result.PlaylistStart.Should().Be(start);
-        result.Sequence.Should().Be(56);
-        result.Playlist.Should().Be(
+        // result.PlaylistStart.ShouldBe(start);
+        result.Sequence.ShouldBe(56);
+        result.Playlist.ShouldBe(
             NormalizeLineEndings(
                 @"#EXTM3U
 #EXT-X-VERSION:6
