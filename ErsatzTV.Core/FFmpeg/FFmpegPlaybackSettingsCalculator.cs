@@ -116,6 +116,7 @@ public static class FFmpegPlaybackSettingsCalculator
                     result.VideoFormat = ffmpegProfile.VideoFormat;
                     result.VideoBitrate = ffmpegProfile.VideoBitrate;
                     result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
+                    result.TonemapAlgorithm = ffmpegProfile.TonemapAlgorithm;
 
                     result.VideoDecoder =
                         (result.HardwareAcceleration, stream.Codec, stream.PixelFormat) switch
@@ -184,6 +185,7 @@ public static class FFmpegPlaybackSettingsCalculator
             VideoFormat = ffmpegProfile.VideoFormat,
             VideoBitrate = ffmpegProfile.VideoBitrate,
             VideoBufferSize = ffmpegProfile.VideoBufferSize,
+            TonemapAlgorithm = ffmpegProfile.TonemapAlgorithm,
             VideoDecoder = null,
             PixelFormat = ffmpegProfile.BitDepth switch
             {

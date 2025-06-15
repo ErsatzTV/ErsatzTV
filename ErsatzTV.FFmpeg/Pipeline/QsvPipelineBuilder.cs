@@ -660,7 +660,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 }
                 else
                 {
-                    var filter = new TonemapFilter(currentState, pixelFormat);
+                    var filter = new TonemapFilter(ffmpegState, currentState, pixelFormat);
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);

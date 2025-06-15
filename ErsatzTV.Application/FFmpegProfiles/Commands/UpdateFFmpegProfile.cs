@@ -22,6 +22,7 @@ public record UpdateFFmpegProfile(
     FFmpegProfileBitDepth BitDepth,
     int VideoBitrate,
     int VideoBufferSize,
+    FFmpegProfileTonemapAlgorithm TonemapAlgorithm,
     FFmpegProfileAudioFormat AudioFormat,
     int AudioBitrate,
     int AudioBufferSize,

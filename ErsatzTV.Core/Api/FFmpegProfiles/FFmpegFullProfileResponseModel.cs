@@ -12,6 +12,7 @@ public record FFmpegFullProfileResponseModel(
     int VideoFormat,
     int VideoBitrate,
     int VideoBufferSize,
+    int TonemapAlgorithm,
     int AudioFormat,
     int AudioBitrate,
     int AudioBufferSize,

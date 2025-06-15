@@ -4,11 +4,13 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class TonemapFilter : BaseFilter
 {
+    private readonly FFmpegState _ffmpegState;
     private readonly FrameState _currentState;
     private readonly IPixelFormat _desiredPixelFormat;
 
-    public TonemapFilter(FrameState currentState, IPixelFormat desiredPixelFormat)
+    public TonemapFilter(FFmpegState ffmpegState, FrameState currentState, IPixelFormat desiredPixelFormat)
     {
+        _ffmpegState = ffmpegState;
         _currentState = currentState;
         _desiredPixelFormat = desiredPixelFormat;
     }
@@ -20,7 +22,7 @@ public class TonemapFilter : BaseFilter
             string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
 
             var tonemap =
-                $"zscale=transfer=linear,tonemap=linear,zscale=transfer=bt709,format={_desiredPixelFormat.FFmpegName}";
+                $"zscale=transfer=linear,tonemap={_ffmpegState.TonemapAlgorithm},zscale=transfer=bt709,format={_desiredPixelFormat.FFmpegName}";
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {

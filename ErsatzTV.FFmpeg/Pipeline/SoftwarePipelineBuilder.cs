@@ -105,7 +105,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
             SetDeinterlace(videoInputFile, context, currentState);
 
             currentState = SetScale(videoInputFile, videoStream, desiredState, currentState);
-            currentState = SetTonemap(videoInputFile, videoStream, desiredState, currentState);
+            currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
             currentState = SetPad(videoInputFile, videoStream, desiredState, currentState);
             currentState = SetCrop(videoInputFile, desiredState, currentState);
             SetStillImageLoop(videoInputFile, videoStream, ffmpegState, desiredState, pipelineSteps);
@@ -321,6 +321,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
     private static FrameState SetTonemap(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
+        FFmpegState ffmpegState,
         FrameState desiredState,
         FrameState currentState)
     {
@@ -328,7 +329,7 @@ public class SoftwarePipelineBuilder : PipelineBuilderBase
         {
             foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
             {
-                var tonemapStep = new TonemapFilter(currentState, pixelFormat);
+                var tonemapStep = new TonemapFilter(ffmpegState, currentState, pixelFormat);
                 currentState = tonemapStep.NextState(currentState);
                 videoStream.ResetColorParams(ColorParams.Default);
                 videoInputFile.FilterSteps.Add(tonemapStep);

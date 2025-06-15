@@ -154,6 +154,19 @@
                                             <MudTextField Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Qsv)" Label="QSV Extra Hardware Frames" @bind-Value="_model.QsvExtraHardwareFrames" For="@(() => _model.QsvExtraHardwareFrames)"/>
                                         </MudElement>
                                     }
+                                    else
+                                    {
+                                        <MudElement HtmlTag="div" Class="mt-3">
+                                            <MudSelect Label="Tonemap Algorithm"
+                                                       @bind-Value="_model.TonemapAlgorithm"
+                                                       For="@(() => _model.TonemapAlgorithm)">
+                                                @foreach (FFmpegProfileTonemapAlgorithm algorithm in Enum.GetValues<FFmpegProfileTonemapAlgorithm>())
+                                                {
+                                                    <MudSelectItem Value="@algorithm">@algorithm</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudElement>
+                                    }
                                     <MudElement HtmlTag="div" Class="mt-3">
                                         <MudCheckBox Label="Normalize Frame Rate" @bind-Value="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
                                     </MudElement>
