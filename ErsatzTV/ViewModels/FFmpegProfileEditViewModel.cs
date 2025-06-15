@@ -38,6 +38,7 @@ public class FFmpegProfileEditViewModel
         VideoPreset = viewModel.VideoPreset;
         AllowBFrames = viewModel.AllowBFrames;
         BitDepth = viewModel.BitDepth;
+        TonemapAlgorithm = viewModel.TonemapAlgorithm;
     }
 
     public int AudioBitrate { get; set; }
@@ -65,6 +66,7 @@ public class FFmpegProfileEditViewModel
     public string VideoPreset { get; set; }
     public bool AllowBFrames { get; set; }
     public FFmpegProfileBitDepth BitDepth { get; set; }
+    public FFmpegProfileTonemapAlgorithm TonemapAlgorithm { get; set; }
 
     public CreateFFmpegProfile ToCreate() =>
         new(
@@ -84,6 +86,7 @@ public class FFmpegProfileEditViewModel
             BitDepth,
             VideoBitrate,
             VideoBufferSize,
+            TonemapAlgorithm,
             AudioFormat,
             AudioBitrate,
             AudioBufferSize,
@@ -113,6 +116,7 @@ public class FFmpegProfileEditViewModel
             BitDepth,
             VideoBitrate,
             VideoBufferSize,
+            TonemapAlgorithm,
             AudioFormat,
             AudioBitrate,
             AudioBufferSize,

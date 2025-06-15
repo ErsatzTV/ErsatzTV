@@ -54,6 +54,7 @@ public class
 
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
+        p.TonemapAlgorithm = update.TonemapAlgorithm;
         p.AudioFormat = update.AudioFormat;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;

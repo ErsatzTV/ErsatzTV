@@ -606,6 +606,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("ThreadCount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TonemapAlgorithm")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("VaapiDevice")
                         .HasColumnType("TEXT");
 

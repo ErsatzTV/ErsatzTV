@@ -399,7 +399,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.ThreadCount,
             qsvExtraHardwareFrames,
             videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true },
-            IsHdrTonemap: false);
+            IsHdrTonemap: false,
+            GetTonemapAlgorithm(playbackSettings));
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -554,7 +555,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Option<int>.None,
             qsvExtraHardwareFrames,
             IsSongWithProgress: false,
-            IsHdrTonemap: false);
+            IsHdrTonemap: false,
+            GetTonemapAlgorithm(playbackSettings));
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 
@@ -749,7 +751,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.ThreadCount,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
             IsSongWithProgress: false,
-            IsHdrTonemap: false);
+            IsHdrTonemap: false,
+            GetTonemapAlgorithm(playbackSettings));
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -1037,6 +1040,18 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,
             FFmpegProfileVideoFormat.Copy => VideoFormat.Copy,
             _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
+        };
+
+    private static string GetTonemapAlgorithm(FFmpegPlaybackSettings playbackSettings) =>
+        playbackSettings.TonemapAlgorithm switch
+        {
+            FFmpegProfileTonemapAlgorithm.Linear => TonemapAlgorithm.Linear,
+            FFmpegProfileTonemapAlgorithm.Clip => TonemapAlgorithm.Clip,
+            FFmpegProfileTonemapAlgorithm.Gamma => TonemapAlgorithm.Gamma,
+            FFmpegProfileTonemapAlgorithm.Reinhard => TonemapAlgorithm.Reinhard,
+            FFmpegProfileTonemapAlgorithm.Mobius => TonemapAlgorithm.Mobius,
+            FFmpegProfileTonemapAlgorithm.Hable => TonemapAlgorithm.Hable,
+            _ => throw new ArgumentOutOfRangeException($"unexpected tonemap algorithm {playbackSettings.TonemapAlgorithm}")
         };
 
     private static Option<string> GetVideoProfile(string videoFormat, string videoProfile) =>

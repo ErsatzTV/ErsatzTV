@@ -752,14 +752,14 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             {
                 if (ffmpegState.IsHdrTonemap)
                 {
-                    var filter = new TonemapCudaFilter(pixelFormat);
+                    var filter = new TonemapCudaFilter(ffmpegState, pixelFormat);
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);
                 }
                 else
                 {
-                    var filter = new TonemapFilter(currentState, pixelFormat);
+                    var filter = new TonemapFilter(ffmpegState, currentState, pixelFormat);
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);

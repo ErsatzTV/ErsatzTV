@@ -18,6 +18,7 @@ public class FFmpegPlaybackSettings
     public IPixelFormat PixelFormat { get; set; }
     public Option<int> VideoBitrate { get; set; }
     public Option<int> VideoBufferSize { get; set; }
+    public FFmpegProfileTonemapAlgorithm TonemapAlgorithm { get; set; }
     public Option<int> AudioBitrate { get; set; }
     public Option<int> AudioBufferSize { get; set; }
     public Option<int> AudioChannels { get; set; }

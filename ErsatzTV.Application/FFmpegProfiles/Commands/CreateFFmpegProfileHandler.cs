@@ -60,6 +60,7 @@ public class CreateFFmpegProfileHandler :
                 BitDepth = request.BitDepth,
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,
+                TonemapAlgorithm = request.TonemapAlgorithm,
                 AudioFormat = request.AudioFormat,
                 AudioBitrate = request.AudioBitrate,
                 AudioBufferSize = request.AudioBufferSize,

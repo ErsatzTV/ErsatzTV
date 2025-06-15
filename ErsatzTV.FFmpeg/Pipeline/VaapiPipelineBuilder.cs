@@ -638,14 +638,14 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
             {
                 if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Vaapi && _ffmpegCapabilities.HasFilter(FFmpegKnownFilter.TonemapOpenCL))
                 {
-                    var filter = new TonemapVaapiFilter();
+                    var filter = new TonemapVaapiFilter(ffmpegState);
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);
                 }
                 else
                 {
-                    var filter = new TonemapFilter(currentState, pixelFormat);
+                    var filter = new TonemapFilter(ffmpegState, currentState, pixelFormat);
                     currentState = filter.NextState(currentState);
                     videoStream.ResetColorParams(ColorParams.Default);
                     videoInputFile.FilterSteps.Add(filter);

@@ -22,6 +22,7 @@ public record FFmpegProfile
     public FFmpegProfileBitDepth BitDepth { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
+    public FFmpegProfileTonemapAlgorithm TonemapAlgorithm { get; set; }
     public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
@@ -45,6 +46,7 @@ public record FFmpegProfile
             AudioFormat = FFmpegProfileAudioFormat.Aac,
             VideoBitrate = 2000,
             VideoBufferSize = 4000,
+            TonemapAlgorithm = FFmpegProfileTonemapAlgorithm.Linear,
             AudioBitrate = 192,
             AudioBufferSize = 384,
             NormalizeLoudnessMode = NormalizeLoudnessMode.Off,

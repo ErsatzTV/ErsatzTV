@@ -23,7 +23,8 @@ public record FFmpegState(
     Option<int> ThreadCount,
     Option<int> MaybeQsvExtraHardwareFrames,
     bool IsSongWithProgress,
-    bool IsHdrTonemap)
+    bool IsHdrTonemap,
+    string TonemapAlgorithm)
 {
     public int QsvExtraHardwareFrames => MaybeQsvExtraHardwareFrames.IfNone(64);
 
@@ -49,5 +50,6 @@ public record FFmpegState(
             Option<int>.None,
             Option<int>.None,
             false,
-            false);
+            false,
+            "linear");
 }
