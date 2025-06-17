@@ -1,7 +1,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -71,7 +71,7 @@ public class PlaylistEnumeratorTests
             totalLength += 1;
         }
 
-        totalLength.Should().Be(8);
+        totalLength.ShouldBe(8);
     }
 
     [Test]
@@ -135,7 +135,7 @@ public class PlaylistEnumeratorTests
             totalLength += 1;
         }
 
-        totalLength.Should().Be(8);
+        totalLength.ShouldBe(8);
     }
 
     private static Movie FakeMovie(int id) => new()

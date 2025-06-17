@@ -1,5 +1,5 @@
 using ErsatzTV.Infrastructure.Search;
-using FluentAssertions;
+using Shouldly;
 using Lucene.Net.Search;
 using NUnit.Framework;
 
@@ -17,7 +17,7 @@ public class SearchQueryParserTests
         public void Test(string input, string expected)
         {
             Query result = SearchQueryParser.ParseQuery(input);
-            result.ToString().Should().Be(expected);
+            result.ToString().ShouldBe(expected);
         }
     }
 }

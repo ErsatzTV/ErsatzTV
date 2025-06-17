@@ -1,5 +1,5 @@
 using ErsatzTV.Core.Domain;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Domain;
@@ -18,7 +18,7 @@ public class PlayoutItemTests
 
         string actual = item.GetDisplayDuration();
 
-        actual.Should().Be("3:05:04");
+        actual.ShouldBe("3:05:04");
     }
 
     [Test]
@@ -32,6 +32,6 @@ public class PlayoutItemTests
 
         string actual = item.GetDisplayDuration();
 
-        actual.Should().Be("27:05:04");
+        actual.ShouldBe("27:05:04");
     }
 }

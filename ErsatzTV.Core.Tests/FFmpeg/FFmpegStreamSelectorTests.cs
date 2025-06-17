@@ -3,7 +3,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Scripting;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -64,10 +64,10 @@ public class FFmpegStreamSelectorTests
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
             Option<MediaStream> selectedStream = await selector.SelectAudioStream(audioVersion, StreamingMode.TransportStream, channel, "jpn", "Whatever");
-            selectedStream.IsSome.Should().BeTrue();
+            selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
             {
-                stream.Language.Should().Be("ja");
+                stream.Language.ShouldBe("ja");
             }
         }
 
@@ -119,10 +119,10 @@ public class FFmpegStreamSelectorTests
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
             Option<MediaStream> selectedStream = await selector.SelectAudioStream(audioVersion, StreamingMode.TransportStream, channel, null, channel.PreferredAudioTitle);
-            selectedStream.IsSome.Should().BeTrue();
+            selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
             {
-                stream.Language.Should().Be("ja");
+                stream.Language.ShouldBe("ja");
             }
         }
 
@@ -166,10 +166,10 @@ public class FFmpegStreamSelectorTests
                 channel,
                 "heb",
                 ChannelSubtitleMode.Any);
-            selectedStream.IsSome.Should().BeTrue();
+            selectedStream.IsSome.ShouldBeTrue();
             foreach (Subtitle stream in selectedStream)
             {
-                stream.Language.Should().Be("he");
+                stream.Language.ShouldBe("he");
             }
         }
     }

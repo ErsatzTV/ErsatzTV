@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -57,14 +57,14 @@ public class LocalSubtitlesProviderTests
             @"/Movies/Avatar (2009)/Avatar (2009).mkv",
             true);
 
-        result.Count.Should().Be(5);
-        result.Count(s => s.Language == "eng").Should().Be(3);
-        result.Count(s => s.Language == "deu").Should().Be(2);
-        result.Count(s => s.Forced).Should().Be(2);
-        result.Count(s => s.SDH).Should().Be(2);
-        result.Count(s => s.Codec == "subrip").Should().Be(4);
-        result.Count(s => s.Codec == "ass").Should().Be(1);
-        result.All(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).Should().BeTrue();
+        result.Count.ShouldBe(5);
+        result.Count(s => s.Language == "eng").ShouldBe(3);
+        result.Count(s => s.Language == "deu").ShouldBe(2);
+        result.Count(s => s.Forced).ShouldBe(2);
+        result.Count(s => s.SDH).ShouldBe(2);
+        result.Count(s => s.Codec == "subrip").ShouldBe(4);
+        result.Count(s => s.Codec == "ass").ShouldBe(1);
+        result.All(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).ShouldBeTrue();
     }
 
     [Test]
@@ -102,13 +102,13 @@ public class LocalSubtitlesProviderTests
             @"/Movies/Avatar (2009)/Avatar (2009).mkv",
             false);
 
-        result.Count.Should().Be(7);
-        result.Count(s => s.Language == "eng").Should().Be(5);
-        result.Count(s => s.Language == "deu").Should().Be(2);
-        result.Count(s => s.Forced).Should().Be(3);
-        result.Count(s => s.SDH).Should().Be(3);
-        result.Count(s => s.Codec == "subrip").Should().Be(5);
-        result.Count(s => s.Codec == "ass").Should().Be(2);
-        result.Count(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).Should().Be(0);
+        result.Count.ShouldBe(7);
+        result.Count(s => s.Language == "eng").ShouldBe(5);
+        result.Count(s => s.Language == "deu").ShouldBe(2);
+        result.Count(s => s.Forced).ShouldBe(3);
+        result.Count(s => s.SDH).ShouldBe(3);
+        result.Count(s => s.Codec == "subrip").ShouldBe(5);
+        result.Count(s => s.Codec == "ass").ShouldBe(2);
+        result.Count(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).ShouldBe(0);
     }
 }

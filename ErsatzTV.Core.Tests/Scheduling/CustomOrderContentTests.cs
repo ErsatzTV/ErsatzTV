@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -23,8 +23,8 @@ public class CustomOrderContentTests
 
         for (var i = 10; i >= 1; i--)
         {
-            customOrderContent.Current.IsSome.Should().BeTrue();
-            customOrderContent.Current.Map(x => x.Id).IfNone(-1).Should().Be(i);
+            customOrderContent.Current.IsSome.ShouldBeTrue();
+            customOrderContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
             customOrderContent.MoveNext();
         }
     }
@@ -40,7 +40,7 @@ public class CustomOrderContentTests
 
         for (var i = 0; i < 10; i++)
         {
-            customOrderContent.State.Index.Should().Be(i % 10);
+            customOrderContent.State.Index.ShouldBe(i % 10);
             customOrderContent.MoveNext();
         }
     }
@@ -56,9 +56,9 @@ public class CustomOrderContentTests
 
         for (var i = 5; i >= 1; i--)
         {
-            customOrderContent.Current.IsSome.Should().BeTrue();
-            customOrderContent.Current.Map(x => x.Id).IfNone(-1).Should().Be(i);
-            customOrderContent.State.Index.Should().Be(5 - i + 5); // 5 through 10
+            customOrderContent.Current.IsSome.ShouldBeTrue();
+            customOrderContent.Current.Map(x => x.Id).IfNone(-1).ShouldBe(i);
+            customOrderContent.State.Index.ShouldBe(5 - i + 5); // 5 through 10
             customOrderContent.MoveNext();
         }
     }

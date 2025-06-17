@@ -2,7 +2,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
-using FluentAssertions;
+using Shouldly;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -21,7 +21,7 @@ public static class BlockPlayoutChangeDetectionTests
         // test case: block has moved from one time to another time, nothing after
         // test case: block has moved from one time to another time, same block after
         // test case: block has moved from one time to another time, different block with same collection after
-        // test case: block was moved from one time to another time, different block with different collection after        
+        // test case: block was moved from one time to another time, different block with different collection after
 
         // test case: block was removed, nothing after
         // test case: block was removed, same block after
@@ -79,10 +79,10 @@ public static class BlockPlayoutChangeDetectionTests
                 collectionEtags);
 
             // nothing to schedule
-            result.Item1.Should().HaveCount(0);
+            result.Item1.Count.ShouldBe(0);
 
             // do not need to remove any playout items or history
-            result.Item2.Should().HaveCount(0);
+            result.Item2.Count.ShouldBe(0);
         }
 
         private static List<Block> Blocks(DateTimeOffset dateUpdated)

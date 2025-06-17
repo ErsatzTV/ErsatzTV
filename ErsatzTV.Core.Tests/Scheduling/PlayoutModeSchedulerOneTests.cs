@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -53,25 +53,25 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(1));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(1));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator.State.Index.Should().Be(1);
+        enumerator.State.Index.ShouldBe(1);
 
-        playoutItems.Count.Should().Be(1);
+        playoutItems.Count.ShouldBe(1);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
-        playoutItems[0].CustomTitle.Should().Be("CustomTitle");
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
+        playoutItems[0].CustomTitle.ShouldBe("CustomTitle");
     }
 
     [Test]
@@ -136,26 +136,26 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(1));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(1));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(0);
-        enumerator3.State.Index.Should().Be(0);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(0);
+        enumerator3.State.Index.ShouldBe(0);
 
-        playoutItems.Count.Should().Be(1);
+        playoutItems.Count.ShouldBe(1);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
     }
 
     [Test]
@@ -204,40 +204,40 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(1);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(1);
 
-        playoutItems.Count.Should().Be(4);
+        playoutItems.Count.ShouldBe(4);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
 
-        playoutItems[1].MediaItemId.Should().Be(3);
-        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-        playoutItems[1].GuideGroup.Should().Be(1);
-        playoutItems[1].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[1].MediaItemId.ShouldBe(3);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[2].MediaItemId.Should().Be(4);
-        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
-        playoutItems[2].GuideGroup.Should().Be(1);
-        playoutItems[2].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[2].MediaItemId.ShouldBe(4);
+        playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
+        playoutItems[2].GuideGroup.ShouldBe(1);
+        playoutItems[2].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[3].MediaItemId.Should().Be(3);
-        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
-        playoutItems[3].GuideGroup.Should().Be(1);
-        playoutItems[3].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[3].MediaItemId.ShouldBe(3);
+        playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
+        playoutItems[3].GuideGroup.ShouldBe(1);
+        playoutItems[3].FillerKind.ShouldBe(FillerKind.Tail);
     }
 
     [Test]
@@ -286,30 +286,30 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(1);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(1);
 
-        playoutItems.Count.Should().Be(2);
+        playoutItems.Count.ShouldBe(2);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
 
-        playoutItems[1].MediaItemId.Should().Be(3);
-        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddHours(1));
-        playoutItems[1].GuideGroup.Should().Be(1);
-        playoutItems[1].FillerKind.Should().Be(FillerKind.Fallback);
+        playoutItems[1].MediaItemId.ShouldBe(3);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.AddHours(1));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.Fallback);
     }
 
     [Test]
@@ -358,40 +358,40 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(1);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(1);
 
-        playoutItems.Count.Should().Be(4);
+        playoutItems.Count.ShouldBe(4);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
 
-        playoutItems[1].MediaItemId.Should().Be(3);
-        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-        playoutItems[1].GuideGroup.Should().Be(1);
-        playoutItems[1].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[1].MediaItemId.ShouldBe(3);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[2].MediaItemId.Should().Be(4);
-        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
-        playoutItems[2].GuideGroup.Should().Be(1);
-        playoutItems[2].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[2].MediaItemId.ShouldBe(4);
+        playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
+        playoutItems[2].GuideGroup.ShouldBe(1);
+        playoutItems[2].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[3].MediaItemId.Should().Be(3);
-        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
-        playoutItems[3].GuideGroup.Should().Be(1);
-        playoutItems[3].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[3].MediaItemId.ShouldBe(3);
+        playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
+        playoutItems[3].GuideGroup.ShouldBe(1);
+        playoutItems[3].FillerKind.ShouldBe(FillerKind.Tail);
     }
 
     [Test]
@@ -456,46 +456,46 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(1);
-        enumerator3.State.Index.Should().Be(1);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(1);
+        enumerator3.State.Index.ShouldBe(1);
 
-        playoutItems.Count.Should().Be(5);
+        playoutItems.Count.ShouldBe(5);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
 
-        playoutItems[1].MediaItemId.Should().Be(3);
-        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-        playoutItems[1].GuideGroup.Should().Be(1);
-        playoutItems[1].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[1].MediaItemId.ShouldBe(3);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[2].MediaItemId.Should().Be(4);
-        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
-        playoutItems[2].GuideGroup.Should().Be(1);
-        playoutItems[2].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[2].MediaItemId.ShouldBe(4);
+        playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
+        playoutItems[2].GuideGroup.ShouldBe(1);
+        playoutItems[2].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[3].MediaItemId.Should().Be(3);
-        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
-        playoutItems[3].GuideGroup.Should().Be(1);
-        playoutItems[3].FillerKind.Should().Be(FillerKind.Tail);
+        playoutItems[3].MediaItemId.ShouldBe(3);
+        playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
+        playoutItems[3].GuideGroup.ShouldBe(1);
+        playoutItems[3].FillerKind.ShouldBe(FillerKind.Tail);
 
-        playoutItems[4].MediaItemId.Should().Be(5);
-        playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
-        playoutItems[4].GuideGroup.Should().Be(1);
-        playoutItems[4].FillerKind.Should().Be(FillerKind.Fallback);
+        playoutItems[4].MediaItemId.ShouldBe(5);
+        playoutItems[4].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
+        playoutItems[4].GuideGroup.ShouldBe(1);
+        playoutItems[4].FillerKind.ShouldBe(FillerKind.Fallback);
     }
 
     [Test]
@@ -560,26 +560,26 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(0);
-        enumerator3.State.Index.Should().Be(0);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(0);
+        enumerator3.State.Index.ShouldBe(0);
 
-        playoutItems.Count.Should().Be(1);
+        playoutItems.Count.ShouldBe(1);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
     }
 
     [Test]
@@ -646,40 +646,40 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(1);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(1);
 
-        playoutItems.Count.Should().Be(4);
+        playoutItems.Count.ShouldBe(4);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
 
-        playoutItems[1].MediaItemId.Should().Be(3);
-        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-        playoutItems[1].GuideGroup.Should().Be(1);
-        playoutItems[1].FillerKind.Should().Be(FillerKind.PostRoll);
+        playoutItems[1].MediaItemId.ShouldBe(3);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.PostRoll);
 
-        playoutItems[2].MediaItemId.Should().Be(4);
-        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
-        playoutItems[2].GuideGroup.Should().Be(1);
-        playoutItems[2].FillerKind.Should().Be(FillerKind.PostRoll);
+        playoutItems[2].MediaItemId.ShouldBe(4);
+        playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
+        playoutItems[2].GuideGroup.ShouldBe(1);
+        playoutItems[2].FillerKind.ShouldBe(FillerKind.PostRoll);
 
-        playoutItems[3].MediaItemId.Should().Be(3);
-        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
-        playoutItems[3].GuideGroup.Should().Be(1);
-        playoutItems[3].FillerKind.Should().Be(FillerKind.PostRoll);
+        playoutItems[3].MediaItemId.ShouldBe(3);
+        playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
+        playoutItems[3].GuideGroup.ShouldBe(1);
+        playoutItems[3].FillerKind.ShouldBe(FillerKind.PostRoll);
     }
 
     [Test]
@@ -746,41 +746,41 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutBuilderState.CurrentTime.Should().Be(startState.CurrentTime.AddHours(3));
-        playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
 
-        playoutBuilderState.NextGuideGroup.Should().Be(2);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(2);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator1.State.Index.Should().Be(1);
-        enumerator2.State.Index.Should().Be(1);
-        enumerator3.State.Index.Should().Be(0);
+        enumerator1.State.Index.ShouldBe(1);
+        enumerator2.State.Index.ShouldBe(1);
+        enumerator3.State.Index.ShouldBe(0);
 
-        playoutItems.Count.Should().Be(4);
+        playoutItems.Count.ShouldBe(4);
 
-        playoutItems[0].MediaItemId.Should().Be(1);
-        playoutItems[0].StartOffset.Should().Be(startState.CurrentTime);
-        playoutItems[0].GuideGroup.Should().Be(1);
-        playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime);
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
 
-        playoutItems[1].MediaItemId.Should().Be(3);
-        playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-        playoutItems[1].GuideGroup.Should().Be(1);
-        playoutItems[1].FillerKind.Should().Be(FillerKind.PostRoll);
+        playoutItems[1].MediaItemId.ShouldBe(3);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.PostRoll);
 
-        playoutItems[2].MediaItemId.Should().Be(4);
-        playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
-        playoutItems[2].GuideGroup.Should().Be(1);
-        playoutItems[2].FillerKind.Should().Be(FillerKind.PostRoll);
+        playoutItems[2].MediaItemId.ShouldBe(4);
+        playoutItems[2].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
+        playoutItems[2].GuideGroup.ShouldBe(1);
+        playoutItems[2].FillerKind.ShouldBe(FillerKind.PostRoll);
 
-        playoutItems[3].MediaItemId.Should().Be(3);
-        playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
-        playoutItems[3].GuideGroup.Should().Be(1);
-        playoutItems[3].FillerKind.Should().Be(FillerKind.PostRoll);
+        playoutItems[3].MediaItemId.ShouldBe(3);
+        playoutItems[3].StartOffset.ShouldBe(startState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
+        playoutItems[3].GuideGroup.ShouldBe(1);
+        playoutItems[3].FillerKind.ShouldBe(FillerKind.PostRoll);
     }
 
     [Test]
@@ -825,18 +825,18 @@ public class PlayoutModeSchedulerOneTests : SchedulerTestBase
             HardStop(scheduleItemsEnumerator),
             _cancellationToken);
 
-        playoutItems.Should().BeEmpty();
+        playoutItems.ShouldBeEmpty();
 
-        playoutBuilderState.CurrentTime.Should().Be(HardStop(scheduleItemsEnumerator));
+        playoutBuilderState.CurrentTime.ShouldBe(HardStop(scheduleItemsEnumerator));
 
-        playoutBuilderState.NextGuideGroup.Should().Be(1);
-        playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
-        playoutBuilderState.InFlood.Should().BeFalse();
-        playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
-        playoutBuilderState.InDurationFiller.Should().BeFalse();
-        playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
+        playoutBuilderState.NextGuideGroup.ShouldBe(1);
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
 
-        enumerator.State.Index.Should().Be(0);
+        enumerator.State.Index.ShouldBe(0);
     }
 
     protected override ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne

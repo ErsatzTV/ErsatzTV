@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.FFmpeg.Capabilities.Vaapi;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.FFmpeg.Tests.Capabilities.Vaapi;
@@ -185,8 +185,8 @@ VAProfileNone/VAEntrypointVideoProc
         List<VaapiProfileEntrypoint> brief = VaapiCapabilityParser.Parse(BriefOutput);
         List<VaapiProfileEntrypoint> full = VaapiCapabilityParser.ParseFull(FullOutput);
 
-        brief.Count.Should().Be(20);
-        full.Count.Should().Be(20);
+        brief.Count.ShouldBe(20);
+        full.Count.ShouldBe(20);
     }
 
     [Test]
@@ -194,11 +194,11 @@ VAProfileNone/VAEntrypointVideoProc
     {
         List<VaapiProfileEntrypoint> full = VaapiCapabilityParser.ParseFull(FullOutput);
 
-        full.Count.Should().Be(20);
-        full.Count(e => e.VaapiEntrypoint.StartsWith("VAEntrypointEnc")).Should().BeGreaterThan(0);
+        full.Count.ShouldBe(20);
+        full.Count(e => e.VaapiEntrypoint.StartsWith("VAEntrypointEnc")).ShouldBeGreaterThan(0);
         foreach (VaapiProfileEntrypoint entrypoint in full.Where(e => e.VaapiEntrypoint.StartsWith("VAEntrypointEnc")))
         {
-            entrypoint.RateControlModes.Count.Should().BeGreaterThan(0);
+            entrypoint.RateControlModes.Count.ShouldBeGreaterThan(0);
         }
     }
 }

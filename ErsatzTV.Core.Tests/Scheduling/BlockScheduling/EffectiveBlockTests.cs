@@ -1,6 +1,6 @@
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
@@ -64,7 +64,7 @@ public static class EffectiveBlockTests
 
             List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, 5);
 
-            result.Should().HaveCount(0);
+            result.Count.ShouldBe(0);
         }
 
         [Test]
@@ -89,16 +89,16 @@ public static class EffectiveBlockTests
 
             List<EffectiveBlock> result = EffectiveBlock.GetEffectiveBlocks(templates, start, 5);
 
-            result.Should().HaveCount(3);
+            result.Count.ShouldBe(3);
 
-            result[0].Start.DayOfWeek.Should().Be(DayOfWeek.Monday);
-            result[0].Start.Date.Should().Be(GetLocalDate(2024, 1, 15).Date);
+            result[0].Start.DayOfWeek.ShouldBe(DayOfWeek.Monday);
+            result[0].Start.Date.ShouldBe(GetLocalDate(2024, 1, 15).Date);
 
-            result[1].Start.DayOfWeek.Should().Be(DayOfWeek.Wednesday);
-            result[1].Start.Date.Should().Be(GetLocalDate(2024, 1, 17).Date);
+            result[1].Start.DayOfWeek.ShouldBe(DayOfWeek.Wednesday);
+            result[1].Start.Date.ShouldBe(GetLocalDate(2024, 1, 17).Date);
 
-            result[2].Start.DayOfWeek.Should().Be(DayOfWeek.Friday);
-            result[2].Start.Date.Should().Be(GetLocalDate(2024, 1, 19).Date);
+            result[2].Start.DayOfWeek.ShouldBe(DayOfWeek.Friday);
+            result[2].Start.Date.ShouldBe(GetLocalDate(2024, 1, 19).Date);
         }
 
         // TODO: test when clocks spring forward

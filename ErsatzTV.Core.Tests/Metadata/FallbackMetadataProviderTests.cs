@@ -1,7 +1,7 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
-using FluentAssertions;
+using Shouldly;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -65,10 +65,10 @@ public class FallbackMetadataProviderTests
                 }
             });
 
-        metadata.Count.Should().Be(1);
+        metadata.Count.ShouldBe(1);
         // TODO: how can we test season number? do we need to?
-        // metadata.Season.Should().Be(season);
-        metadata.Head().EpisodeNumber.Should().Be(episode);
+        // metadata.Season.ShouldBe(season);
+        metadata.Head().EpisodeNumber.ShouldBe(episode);
     }
 
     [TestCase("Awesome Show - S01_BLAH.mkv", 0)]
@@ -91,8 +91,8 @@ public class FallbackMetadataProviderTests
                 }
             });
 
-        metadata.Count.Should().Be(1);
-        metadata.Head().EpisodeNumber.Should().Be(episode);
+        metadata.Count.ShouldBe(1);
+        metadata.Head().EpisodeNumber.ShouldBe(episode);
     }
 
     [Test]
@@ -122,8 +122,8 @@ public class FallbackMetadataProviderTests
                 }
             });
 
-        metadata.Count.Should().Be(2);
-        metadata.Map(m => m.EpisodeNumber).Should().BeEquivalentTo(new[] { episode1, episode2 });
+        metadata.Count.ShouldBe(2);
+        metadata.Map(m => m.EpisodeNumber).ShouldBe([episode1, episode2]);
     }
 
     [Test]
@@ -147,8 +147,8 @@ public class FallbackMetadataProviderTests
                 }
             });
 
-        metadata.Should().NotBeNull();
-        metadata.Title.Should().Be(expectedTitle);
+        metadata.ShouldNotBeNull();
+        metadata.Title.ShouldBe(expectedTitle);
     }
 
     [Test]
@@ -172,6 +172,6 @@ public class FallbackMetadataProviderTests
     public void GetSeasonNumberForFolder_ShouldHandleVariousFormats(string folder, int? season)
     {
         Option<int> actual = _fallbackMetadataProvider.GetSeasonNumberForFolder(folder);
-        actual.Should<Option<int>>().Be(Optional(season));
+        actual.ShouldBe(Optional(season));
     }
 }

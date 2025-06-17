@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.State;
-using FluentAssertions;
+using Shouldly;
 using LanguageExt;
 using NUnit.Framework;
 
@@ -26,7 +26,7 @@ public class WatermarkOpacityFilterTests
                 75,
                 false));
 
-        filter.Filter.Should().Be("format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.75");
+        filter.Filter.ShouldBe("format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.75");
     }
 
     [Test]
@@ -44,6 +44,6 @@ public class WatermarkOpacityFilterTests
                 75,
                 false));
 
-        filter.Filter.Should().Be("format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.75");
+        filter.Filter.ShouldBe("format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.75");
     }
 }

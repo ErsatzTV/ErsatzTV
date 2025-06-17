@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Jellyfin;
-using FluentAssertions;
+using Shouldly;
 using Flurl;
 using NUnit.Framework;
 
@@ -23,7 +23,7 @@ public class JellyfinUrlTests
 
         Url url = JellyfinUrl.ForArtwork(Some(mediaSource), artwork);
 
-        url.ToString().Should().Be("https://some.jellyfin.server/Items/2/Images/3?tag=4");
+        url.ToString().ShouldBe("https://some.jellyfin.server/Items/2/Images/3?tag=4");
     }
 
     [Test]
@@ -41,7 +41,7 @@ public class JellyfinUrlTests
 
         Url url = JellyfinUrl.ForArtwork(Some(mediaSource), artwork);
 
-        url.ToString().Should().Be("https://some.jellyfin.server/Items/2/Images/3?tag=4");
+        url.ToString().ShouldBe("https://some.jellyfin.server/Items/2/Images/3?tag=4");
     }
 
     [Test]
@@ -59,7 +59,7 @@ public class JellyfinUrlTests
 
         Url url = JellyfinUrl.ForArtwork(Some(mediaSource), artwork);
 
-        url.ToString().Should().Be("https://some.jellyfin.server:1000/Items/2/Images/3?tag=4");
+        url.ToString().ShouldBe("https://some.jellyfin.server:1000/Items/2/Images/3?tag=4");
     }
 
     [Test]
@@ -77,7 +77,7 @@ public class JellyfinUrlTests
 
         Url url = JellyfinUrl.ForArtwork(Some(mediaSource), artwork);
 
-        url.ToString().Should().Be("https://some.jellyfin.server:1000/Items/2/Images/3?tag=4");
+        url.ToString().ShouldBe("https://some.jellyfin.server:1000/Items/2/Images/3?tag=4");
     }
 
     [Test]
@@ -95,7 +95,7 @@ public class JellyfinUrlTests
 
         Url url = JellyfinUrl.ForArtwork(Some(mediaSource), artwork);
 
-        url.ToString().Should().Be("https://some.jellyfin.server/jellyfin/Items/2/Images/3?tag=4");
+        url.ToString().ShouldBe("https://some.jellyfin.server/jellyfin/Items/2/Images/3?tag=4");
     }
 
     [Test]
@@ -113,6 +113,6 @@ public class JellyfinUrlTests
 
         Url url = JellyfinUrl.ForArtwork(Some(mediaSource), artwork);
 
-        url.ToString().Should().Be("https://some.jellyfin.server/jellyfin/Items/2/Images/3?tag=4");
+        url.ToString().ShouldBe("https://some.jellyfin.server/jellyfin/Items/2/Images/3?tag=4");
     }
 }

@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
@@ -34,14 +34,14 @@ public class RandomizedContentTests
         var list = new List<int>();
         for (var i = 1; i <= 10; i++)
         {
-            randomizedContent.Current.IsSome.Should().BeTrue();
+            randomizedContent.Current.IsSome.ShouldBeTrue();
             randomizedContent.Current.Do(c => list.Add(c.Id));
 
             randomizedContent.MoveNext();
         }
 
-        list.Should().NotEqual(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-        list.Should().NotEqual(new[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 });
+        list.ShouldNotBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        list.ShouldNotBe([10, 9, 8, 7, 6, 5, 4, 3, 2, 1]);
     }
 
     [Test]
@@ -54,7 +54,7 @@ public class RandomizedContentTests
 
         for (var i = 1; i <= 10; i++)
         {
-            randomizedContent.State.Index.Should().Be(i);
+            randomizedContent.State.Index.ShouldBe(i);
 
             randomizedContent.MoveNext();
         }
@@ -70,10 +70,10 @@ public class RandomizedContentTests
 
         for (var i = 6; i <= 99; i++)
         {
-            randomizedContent.Current.IsSome.Should().BeTrue();
+            randomizedContent.Current.IsSome.ShouldBeTrue();
             // this test data setup/expectation is confusing
-            randomizedContent.Current.Map(c => c.Id).IfNone(-1).Should().Be(_expected[i - 2]);
-            randomizedContent.State.Index.Should().Be(i);
+            randomizedContent.Current.Map(c => c.Id).IfNone(-1).ShouldBe(_expected[i - 2]);
+            randomizedContent.State.Index.ShouldBe(i);
 
             randomizedContent.MoveNext();
         }

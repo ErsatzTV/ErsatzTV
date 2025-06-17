@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Metadata;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
@@ -43,6 +43,6 @@ public class LocalStatisticsProviderTests
 
         MediaVersion result = provider.ProjectToMediaVersion("test", input);
 
-        result.Duration.Should().Be(TimeSpan.FromSeconds(123.45));
+        result.Duration.ShouldBe(TimeSpan.FromSeconds(123.45));
     }
 }

@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
@@ -32,7 +32,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.FormatFlags.Should().NotContain("+genpts");
+            actual.FormatFlags.ShouldNotContain("+genpts");
         }
 
         [Test]
@@ -57,7 +57,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ThreadCount.Should().Be(7);
+            actual.ThreadCount.ShouldBe(7);
         }
 
         [Test]
@@ -78,7 +78,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ThreadCount.Should().Be(7);
+            actual.ThreadCount.ShouldBe(7);
         }
 
         [Test]
@@ -100,8 +100,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 None);
 
             string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
-            actual.FormatFlags.Count.Should().Be(expected.Length);
-            actual.FormatFlags.Should().Contain(expected);
+            actual.FormatFlags.Count.ShouldBe(expected.Length);
+            expected.ShouldBeSubsetOf(actual.FormatFlags);
         }
 
         [Test]
@@ -123,8 +123,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 None);
 
             string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
-            actual.FormatFlags.Count.Should().Be(expected.Length);
-            actual.FormatFlags.Should().Contain(expected);
+            actual.FormatFlags.Count.ShouldBe(expected.Length);
+            expected.ShouldBeSubsetOf(actual.FormatFlags);
         }
 
         [Test]
@@ -145,7 +145,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.RealtimeOutput.Should().BeTrue();
+            actual.RealtimeOutput.ShouldBeTrue();
         }
 
         [Test]
@@ -166,7 +166,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.RealtimeOutput.Should().BeTrue();
+            actual.RealtimeOutput.ShouldBeTrue();
         }
 
         [Test]
@@ -189,8 +189,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.StreamSeek.IsSome.Should().BeTrue();
-            actual.StreamSeek.IfNone(TimeSpan.Zero).Should().Be(TimeSpan.FromMinutes(5));
+            actual.StreamSeek.IsSome.ShouldBeTrue();
+            actual.StreamSeek.IfNone(TimeSpan.Zero).ShouldBe(TimeSpan.FromMinutes(5));
         }
 
         [Test]
@@ -213,8 +213,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.StreamSeek.IsSome.Should().BeTrue();
-            actual.StreamSeek.IfNone(TimeSpan.Zero).Should().Be(TimeSpan.FromMinutes(5));
+            actual.StreamSeek.IsSome.ShouldBeTrue();
+            actual.StreamSeek.IfNone(TimeSpan.Zero).ShouldBe(TimeSpan.FromMinutes(5));
         }
 
         [Test]
@@ -241,7 +241,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
+            actual.ScaledSize.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -268,7 +268,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
+            actual.ScaledSize.IsNone.ShouldBeTrue();
         }
 
         [Test]
@@ -295,8 +295,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
         }
 
         [Test]
@@ -323,8 +323,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeTrue();
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeTrue();
         }
 
         [Test]
@@ -351,9 +351,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 None);
 
             IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
-            scaledSize.Width.Should().Be(1280);
-            scaledSize.Height.Should().Be(554);
-            actual.PadToDesiredResolution.Should().BeTrue();
+            scaledSize.Width.ShouldBe(1280);
+            scaledSize.Height.ShouldBe(554);
+            actual.PadToDesiredResolution.ShouldBeTrue();
         }
 
         [Test]
@@ -381,9 +381,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 None);
 
             IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
-            scaledSize.Width.Should().Be(1280);
-            scaledSize.Height.Should().Be(976);
-            actual.PadToDesiredResolution.Should().BeFalse();
+            scaledSize.Width.ShouldBe(1280);
+            scaledSize.Height.ShouldBe(976);
+            actual.PadToDesiredResolution.ShouldBeFalse();
         }
 
         [Test]
@@ -411,9 +411,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 None);
 
             IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
-            scaledSize.Width.Should().Be(1694);
-            scaledSize.Height.Should().Be(720);
-            actual.PadToDesiredResolution.Should().BeFalse();
+            scaledSize.Width.ShouldBe(1694);
+            scaledSize.Height.ShouldBe(720);
+            actual.PadToDesiredResolution.ShouldBeFalse();
         }
 
         [Test]
@@ -440,8 +440,8 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
         }
 
 
@@ -470,9 +470,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeTrue();
-            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.H264);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeTrue();
+            actual.VideoFormat.ShouldBe(FFmpegProfileVideoFormat.H264);
         }
 
         [Test]
@@ -502,9 +502,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.H264);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
+            actual.VideoFormat.ShouldBe(FFmpegProfileVideoFormat.H264);
         }
 
         [Test]
@@ -533,9 +533,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.Copy);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
+            actual.VideoFormat.ShouldBe(FFmpegProfileVideoFormat.Copy);
         }
 
         [Test]
@@ -564,9 +564,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.H264);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
+            actual.VideoFormat.ShouldBe(FFmpegProfileVideoFormat.H264);
         }
 
         [Test]
@@ -594,9 +594,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeTrue();
-            actual.VideoBitrate.IfNone(0).Should().Be(2525);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeTrue();
+            actual.VideoBitrate.IfNone(0).ShouldBe(2525);
         }
 
         [Test]
@@ -625,9 +625,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoBitrate.IfNone(0).Should().Be(2525);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
+            actual.VideoBitrate.IfNone(0).ShouldBe(2525);
         }
 
         [Test]
@@ -655,9 +655,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeTrue();
-            actual.VideoBufferSize.IfNone(0).Should().Be(2525);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeTrue();
+            actual.VideoBufferSize.IfNone(0).ShouldBe(2525);
         }
 
         [Test]
@@ -686,9 +686,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoBufferSize.IfNone(0).Should().Be(2525);
+            actual.ScaledSize.IsNone.ShouldBeTrue();
+            actual.PadToDesiredResolution.ShouldBeFalse();
+            actual.VideoBufferSize.IfNone(0).ShouldBe(2525);
         }
 
         [Test]
@@ -712,7 +712,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Aac);
+            actual.AudioFormat.ShouldBe(FFmpegProfileAudioFormat.Aac);
         }
 
         [Test]
@@ -736,7 +736,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Aac);
+            actual.AudioFormat.ShouldBe(FFmpegProfileAudioFormat.Aac);
         }
 
         [Test]
@@ -760,7 +760,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Copy);
+            actual.AudioFormat.ShouldBe(FFmpegProfileAudioFormat.Copy);
         }
 
         [Test]
@@ -785,7 +785,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioBitrate.IfNone(0).Should().Be(2424);
+            actual.AudioBitrate.IfNone(0).ShouldBe(2424);
         }
 
         [Test]
@@ -810,7 +810,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioBufferSize.IfNone(0).Should().Be(2424);
+            actual.AudioBufferSize.IfNone(0).ShouldBe(2424);
         }
 
         [Test]
@@ -835,7 +835,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioChannels.IfNone(0).Should().Be(6);
+            actual.AudioChannels.IfNone(0).ShouldBe(6);
         }
 
         [Test]
@@ -860,7 +860,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioSampleRate.IfNone(0).Should().Be(48);
+            actual.AudioSampleRate.IfNone(0).ShouldBe(48);
         }
 
         [Test]
@@ -884,7 +884,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioChannels.IfNone(0).Should().Be(6);
+            actual.AudioChannels.IfNone(0).ShouldBe(6);
         }
 
         [Test]
@@ -908,7 +908,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioSampleRate.IfNone(0).Should().Be(48);
+            actual.AudioSampleRate.IfNone(0).ShouldBe(48);
         }
 
         [Test]
@@ -938,7 +938,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioDuration.IfNone(TimeSpan.MinValue).Should().Be(TimeSpan.FromMinutes(2));
+            actual.AudioDuration.IfNone(TimeSpan.MinValue).ShouldBe(TimeSpan.FromMinutes(2));
         }
 
         [Test]
@@ -962,7 +962,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.NormalizeLoudnessMode.Should().Be(NormalizeLoudnessMode.LoudNorm);
+            actual.NormalizeLoudnessMode.ShouldBe(NormalizeLoudnessMode.LoudNorm);
         }
     }
 
@@ -988,7 +988,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.HardwareAcceleration.Should().Be(HardwareAccelerationKind.Qsv);
+            actual.HardwareAcceleration.ShouldBe(HardwareAccelerationKind.Qsv);
         }
     }
 
