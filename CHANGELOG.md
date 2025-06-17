@@ -55,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use cache busting to avoid UI errors after upgrading the MudBlazor library
 - Fix multi-variant playlist to report more accurate `BANDWIDTH` value based on ffmpeg profile
 - Fix detecting NVIDIA capabilities on Blackwell GPUs
+- Fix decoder selection in NVIDIA pipeline
 
 ## [25.1.0] - 2025-01-10
 ### Added
