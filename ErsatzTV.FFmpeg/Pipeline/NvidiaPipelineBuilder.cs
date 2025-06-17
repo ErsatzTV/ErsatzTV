@@ -83,7 +83,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                             && videoStream.ColorParams.IsHdr
                             && string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("ETV_DISABLE_VULKAN"));
 
-        if (decodeCapability == FFmpegCapability.Hardware || encodeCapability == FFmpegCapability.Hardware)
+        if (decodeCapability == FFmpegCapability.Hardware)
         {
             pipelineSteps.Add(new CudaHardwareAccelerationOption(isHdrTonemap));
         }
@@ -118,18 +118,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
 
         Option<IDecoder> maybeDecoder = (ffmpegState.DecoderHardwareAccelerationMode, videoStream.Codec) switch
         {
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new DecoderHevcCuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new DecoderH264Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video) => new DecoderMpeg2Cuvid(
-                HardwareAccelerationMode.Nvenc,
-                context.ShouldDeinterlace),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1) => new DecoderVc1Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9) => new DecoderVp9Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4) =>
-                new DecoderMpeg4Cuvid(HardwareAccelerationMode.Nvenc),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Av1) =>
-                new DecoderAv1Cuvid(HardwareAccelerationMode.Nvenc),
-
+            (HardwareAccelerationMode.Nvenc, _) => new DecoderImplicitCuda(),
             _ => GetSoftwareDecoder(videoStream)
         };
 
