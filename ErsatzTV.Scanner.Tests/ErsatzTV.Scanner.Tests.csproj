@@ -53,4 +53,10 @@
         </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="Resources\song_album_cover_512.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>

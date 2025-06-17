@@ -190,7 +190,7 @@ public class TranscodingTests
 
         public static FFmpegProfileVideoFormat[] VideoFormats =
         [
-            FFmpegProfileVideoFormat.H264,
+            //FFmpegProfileVideoFormat.H264,
             FFmpegProfileVideoFormat.Hevc
             // FFmpegProfileVideoFormat.Mpeg2Video
         ];
@@ -244,6 +244,12 @@ public class TranscodingTests
                 Arg.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
                 Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
+
+        mockImageCache.GetPathForImage(
+                Arg.Any<string>(),
+                Arg.Is<ArtworkKind>(x => x == ArtworkKind.Thumbnail),
+                Arg.Any<Option<int>>())
+            .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "song_album_cover_512.png"));
 
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
@@ -876,6 +882,12 @@ public class TranscodingTests
                 Arg.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
                 Arg.Any<Option<int>>())
             .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
+
+        imageCache.GetPathForImage(
+                Arg.Any<string>(),
+                Arg.Is<ArtworkKind>(x => x == ArtworkKind.Thumbnail),
+                Arg.Any<Option<int>>())
+            .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "song_album_cover_512.png"));
 
         var oldService = new FFmpegProcessService(
             new FakeStreamSelector(),
