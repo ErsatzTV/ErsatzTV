@@ -42,6 +42,15 @@ public class ColorspaceFilter : BaseFilter
                         }
                     }
 
+                    // cuda is not a target software format
+                    if (pixelFormat is PixelFormatCuda cuda)
+                    {
+                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(cuda.Name, null))
+                        {
+                            name = pf.FFmpegName;
+                        }
+                    }
+
                     if (!string.IsNullOrWhiteSpace(name))
                     {
                         hwdownload = $"hwdownload,format={name},";

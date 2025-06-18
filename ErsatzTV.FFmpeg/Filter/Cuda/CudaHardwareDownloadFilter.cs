@@ -22,11 +22,20 @@ public class CudaHardwareDownloadFilter : BaseFilter
             var hwdownload = "hwdownload";
             foreach (IPixelFormat pixelFormat in _maybeCurrentPixelFormat)
             {
-                if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
+                IPixelFormat currentPixelFormat = pixelFormat;
+                if (pixelFormat is PixelFormatCuda cuda)
                 {
-                    hwdownload += $",format={pixelFormat.FFmpegName}";
+                    foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(cuda.Name, null))
+                    {
+                        currentPixelFormat = pf;
+                    }
+                }
 
-                    if (pixelFormat is PixelFormatNv12 nv12)
+                if (!string.IsNullOrWhiteSpace(currentPixelFormat.FFmpegName))
+                {
+                    hwdownload += $",format={currentPixelFormat.FFmpegName}";
+
+                    if (currentPixelFormat is PixelFormatNv12 nv12)
                     {
                         if (_maybeTargetPixelFormat.IsNone)
                         {
