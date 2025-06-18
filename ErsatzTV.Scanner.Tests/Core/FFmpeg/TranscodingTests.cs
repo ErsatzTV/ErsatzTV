@@ -158,7 +158,7 @@ public class TranscodingTests
             // // // //
             // new("mpeg2video", "yuv420p"),
             // //
-            new InputFormat("libx265", "yuv420p"),
+            //new InputFormat("libx265", "yuv420p"),
             new InputFormat("libx265", "yuv420p10le")
             //
             // new("mpeg4", "yuv420p"),
@@ -197,8 +197,8 @@ public class TranscodingTests
 
         public static HardwareAccelerationKind[] TestAccelerations =
         [
-            HardwareAccelerationKind.None,
-            //HardwareAccelerationKind.Nvenc,
+            //HardwareAccelerationKind.None,
+            HardwareAccelerationKind.Nvenc,
             //HardwareAccelerationKind.Vaapi
             //HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,

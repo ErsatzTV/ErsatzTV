@@ -26,6 +26,14 @@ public class HardwareDownloadFilter : BaseFilter
                         }
                     }
 
+                    if (pixelFormat is PixelFormatCuda)
+                    {
+                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(pixelFormat.Name, null))
+                        {
+                            return $"hwdownload,format={pf.FFmpegName}";
+                        }
+                    }
+
                     if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
                     {
                         hwdownload = $"hwdownload,format={pixelFormat.FFmpegName}";

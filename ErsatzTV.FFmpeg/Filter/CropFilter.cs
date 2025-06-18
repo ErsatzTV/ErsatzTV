@@ -31,6 +31,14 @@ public class CropFilter : BaseFilter
                         }
                     }
 
+                    if (pixelFormat is PixelFormatCuda)
+                    {
+                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(pixelFormat.Name, null))
+                        {
+                            return $"hwdownload,format={pf.FFmpegName},{crop}";
+                        }
+                    }
+
                     return $"hwdownload,format={pixelFormat.FFmpegName},{crop}";
                 }
 
