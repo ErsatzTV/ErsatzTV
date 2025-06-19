@@ -99,6 +99,12 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
         var keyOrders = new Dictionary<CollectionKey, System.Collections.Generic.HashSet<PlaybackOrder>>();
         foreach (ReplaceProgramScheduleItem item in request.Items)
         {
+            if (item.PlaybackOrder is PlaybackOrder.ShuffleInOrder &&
+                item.FillWithGroupMode is not FillWithGroupMode.None)
+            {
+                return new BaseError("Shuffle in Order cannot be used with Fill With Group Mode");
+            }
+
             var key = new CollectionKey(
                 item.CollectionType,
                 item.CollectionId,
