@@ -41,6 +41,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 
     public bool CanFillWithGroups =>
         PlayoutMode is PlayoutMode.Multiple or PlayoutMode.Duration
+        && PlaybackOrder is not PlaybackOrder.ShuffleInOrder
         && CollectionType is ProgramScheduleItemCollectionType.Collection
             or ProgramScheduleItemCollectionType.MultiCollection or ProgramScheduleItemCollectionType.SmartCollection;
 

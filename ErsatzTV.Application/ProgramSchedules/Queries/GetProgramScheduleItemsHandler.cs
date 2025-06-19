@@ -72,6 +72,11 @@ public class GetProgramScheduleItemsHandler :
                     item = item with { PlayoutMode = PlayoutMode.One };
                 }
             }
+
+            if (item.PlaybackOrder is PlaybackOrder.ShuffleInOrder)
+            {
+                item = item with { FillWithGroupMode = FillWithGroupMode.None };
+            }
         }
 
         return item;

@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix multi-variant playlist to report more accurate `BANDWIDTH` value based on ffmpeg profile
 - Fix detecting NVIDIA capabilities on Blackwell GPUs
 - Fix decoder selection in NVIDIA pipeline
+- Prevent playback order `Shuffle In Order` from being used with `Fill With Group Mode` as they are incompatible
 
 ## [25.1.0] - 2025-01-10
 ### Added
