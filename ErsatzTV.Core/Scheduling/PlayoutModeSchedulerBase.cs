@@ -308,7 +308,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             e1,
                             filler.Duration.Value,
-                            FillerKind.PreRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PreRoll,
                             filler.AllowWatermarks,
                             log,
                             cancellationToken));
@@ -320,7 +320,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             e2,
                             filler.Count.Value,
-                            FillerKind.PreRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PreRoll,
                             filler.AllowWatermarks,
                             cancellationToken));
                     break;
@@ -331,7 +331,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             e3,
                             filler.Count.Value,
-                            FillerKind.PreRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PreRoll,
                             filler.AllowWatermarks,
                             cancellationToken));
                     break;
@@ -361,7 +361,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         e1,
                                         filler.Duration.Value,
-                                        FillerKind.MidRoll,
+                                        scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.MidRoll,
                                         filler.AllowWatermarks,
                                         log,
                                         cancellationToken));
@@ -381,7 +381,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         e2,
                                         filler.Count.Value,
-                                        FillerKind.MidRoll,
+                                        scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.MidRoll,
                                         filler.AllowWatermarks,
                                         cancellationToken));
                             }
@@ -400,7 +400,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         e3,
                                         filler.Count.Value,
-                                        FillerKind.MidRoll,
+                                        scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.MidRoll,
                                         filler.AllowWatermarks,
                                         cancellationToken));
                             }
@@ -423,7 +423,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             e1,
                             filler.Duration.Value,
-                            FillerKind.PostRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PostRoll,
                             filler.AllowWatermarks,
                             log,
                             cancellationToken));
@@ -435,7 +435,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             e2,
                             filler.Count.Value,
-                            FillerKind.PostRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PostRoll,
                             filler.AllowWatermarks,
                             cancellationToken));
                     break;
@@ -446,7 +446,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             e3,
                             filler.Count.Value,
-                            FillerKind.PostRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PostRoll,
                             filler.AllowWatermarks,
                             cancellationToken));
                     break;
@@ -506,7 +506,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             pre1,
                             remainingToFill,
-                            FillerKind.PreRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PreRoll,
                             padFiller.AllowWatermarks,
                             log,
                             cancellationToken));
@@ -532,7 +532,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             mid1,
                             remainingToFill,
-                            FillerKind.MidRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.MidRoll,
                             padFiller.AllowWatermarks,
                             log,
                             cancellationToken));
@@ -596,7 +596,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             playoutBuilderState,
                             post1,
                             remainingToFill,
-                            FillerKind.PostRoll,
+                            scheduleItem.GuideMode == GuideMode.Filler ? FillerKind.GuideMode : FillerKind.PostRoll,
                             padFiller.AllowWatermarks,
                             log,
                             cancellationToken));
