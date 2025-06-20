@@ -15,6 +15,8 @@ public class VaapiHardwareCapabilities : IHardwareCapabilities
         _logger = logger;
     }
 
+    public int EntrypointCount => _profileEntrypoints.Count;
+
     public FFmpegCapability CanDecode(
         string videoFormat,
         Option<string> videoProfile,

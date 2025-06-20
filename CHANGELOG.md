@@ -32,6 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add environment variable `ETV_DISABLE_VULKAN`
   - Any non-empty value will disable use of Vulkan acceleration and force software tonemapping
   - This may be needed with misbehaving NVIDIA drivers on Windows
+- Add health check error when invalid VAAPI device and VAAPI driver combination is used in an active ffmpeg profile
+  - This makes it obvious when hardware acceleration will not work as configured
 - Add button in schedule editor to clone schedule item
 
 ### Changed
