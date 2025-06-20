@@ -45,6 +45,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Upgrade VAAPI docker image Ubuntu base from 22 to 24; bundled ffmpeg from 6.1 to 7.1.1
 - Upgrade NVIDIA docker image Ubuntu base from 20 to 24; bundled ffmpeg from 6.1 to 7.1.1
 - Upgrade base, arm, arm64 docker images bundled ffmpeg from 6.1 to 7.1.1
+- Unify all hardware acceleration methods in base docker images (`latest` and `develop`)
+  - VAAPI, QSV and NVIDIA are now all supported in the base docker image
+  - Other docker image tags are deprecated and will receive no new updates after the next release
+  - A health check has been added to notify users (on `-vaapi` or `-nvidia` tags) of this change
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections

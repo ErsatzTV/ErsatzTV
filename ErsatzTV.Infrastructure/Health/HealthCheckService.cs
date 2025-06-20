@@ -21,12 +21,14 @@ public class HealthCheckService : IHealthCheckService
         IUnavailableHealthCheck unavailableHealthCheck,
         IVaapiDriverHealthCheck vaapiDriverHealthCheck,
         IErrorReportsHealthCheck errorReportsHealthCheck,
+        IUnifiedDockerHealthCheck unifiedDockerHealthCheck,
         ILogger<HealthCheckService> logger)
     {
         _logger = logger;
         _checks =
         [
             macOsConfigFolderHealthCheck,
+            unifiedDockerHealthCheck,
             ffmpegVersionHealthCheck,
             ffmpegReportsHealthCheck,
             hardwareAccelerationHealthCheck,
@@ -36,7 +38,7 @@ public class HealthCheckService : IHealthCheckService
             fileNotFoundHealthCheck,
             unavailableHealthCheck,
             vaapiDriverHealthCheck,
-            errorReportsHealthCheck
+            errorReportsHealthCheck,
         ];
     }
 

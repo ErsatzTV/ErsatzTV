@@ -649,6 +649,7 @@ public class Startup
         services.AddScoped<IUnavailableHealthCheck, UnavailableHealthCheck>();
         services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
         services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
+        services.AddScoped<IUnifiedDockerHealthCheck, UnifiedDockerHealthCheck>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();
 
         services.AddScoped<IChannelRepository, ChannelRepository>();
