@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble-amd64 AS dotnet-runtime
 
-FROM jasongdove/ersatztv-ffmpeg:7.1.1-vaapi AS runtime-base
+FROM jasongdove/ersatztv-ffmpeg:7.1.1 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 
 # https://hub.docker.com/_/microsoft-dotnet
