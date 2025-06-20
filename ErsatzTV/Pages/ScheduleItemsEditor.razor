@@ -13,12 +13,19 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
+<style>
+    .selected {
+        background-color: #009000 !important;
+    }
+</style>
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
 <MudTable T="ProgramScheduleItemEditViewModel"
           Hover="true"
           Items="_schedule?.Items?.OrderBy(i => i.Index)"
           Dense="true"
-          SelectedItemChanged="@(vm => SelectedItemChanged(vm))">
+          SelectedItemChanged="@(vm => SelectedItemChanged(vm))"
+          RowClassFunc="@SelectedRowClassFunc">
     <ToolBarContent>
         <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
     </ToolBarContent>
@@ -40,17 +47,17 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Start Time">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+            <MudText Typo="@Typo.body2">
                 @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
             </MudText>
         </MudTd>
         <MudTd DataLabel="Collection">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+            <MudText Typo="@Typo.body2">
                 @context.CollectionName
             </MudText>
         </MudTd>
         <MudTd DataLabel="Playout Mode">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+            <MudText Typo="@Typo.body2">
                 @context.PlayoutMode
                 @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
                 {
@@ -675,4 +682,8 @@
         }
     }
 
+    private string SelectedRowClassFunc(ProgramScheduleItemEditViewModel element, int rowNumber)
+    {
+        return _selectedItem != null && _selectedItem == element ? "selected" : string.Empty;
+    }
 }

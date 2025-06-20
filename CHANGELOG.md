@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - VAAPI, QSV and NVIDIA are now all supported in the base docker image
   - Other docker image tags are deprecated and will receive no new updates after the next release
   - A health check has been added to notify users (on `-vaapi` or `-nvidia` tags) of this change
+- Schedule items editor: show currently selected row using background color instead of font weight
 
 ### Fixed
 - Fix error message about synchronizing Plex collections from a Plex server that has zero collections
@@ -61,6 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix detecting NVIDIA capabilities on Blackwell GPUs
 - Fix decoder selection in NVIDIA pipeline
 - Prevent playback order `Shuffle In Order` from being used with `Fill With Group Mode` as they are incompatible
+- Fix XMLTV items not grouping properly (guide mode: `Filler`) due to post-roll filler
 
 ## [25.1.0] - 2025-01-10
 ### Added

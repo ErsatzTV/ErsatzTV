@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Diagnostics;
+using System.Threading.Channels;
 using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels;
@@ -57,19 +58,24 @@ public class WorkerService : BackgroundService
                             await mediator.Send(refreshChannelData, stoppingToken);
                             break;
                         case BuildPlayout buildPlayout:
-                            var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-                            var linkedTokenSource =
-                                CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
+                            {
+                                CancellationTokenSource cts = Debugger.IsAttached
+                                    ? new CancellationTokenSource(TimeSpan.FromMinutes(10))
+                                    : new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
-                            Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
-                                buildPlayout,
-                                linkedTokenSource.Token);
-                            buildPlayoutResult.BiIter(
-                                _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
-                                error => _logger.LogWarning(
-                                    "Unable to build playout {PlayoutId}: {Error}",
-                                    buildPlayout.PlayoutId,
-                                    error.Value));
+                                var linkedTokenSource =
+                                    CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
+
+                                Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
+                                    buildPlayout,
+                                    linkedTokenSource.Token);
+                                buildPlayoutResult.BiIter(
+                                    _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
+                                    error => _logger.LogWarning(
+                                        "Unable to build playout {PlayoutId}: {Error}",
+                                        buildPlayout.PlayoutId,
+                                        error.Value));
+                            }
                             break;
                         case TimeShiftOnDemandPlayout timeShiftOnDemandPlayout:
                             await mediator.Send(timeShiftOnDemandPlayout, stoppingToken);
