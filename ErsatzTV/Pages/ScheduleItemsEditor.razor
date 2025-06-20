@@ -36,11 +36,13 @@
         <col style="width: 60px;"/>
         <col style="width: 60px;"/>
         <col style="width: 60px;"/>
+        <col style="width: 60px;"/>
     </ColGroup>
     <HeaderContent>
         <MudTh>Start Time</MudTh>
         <MudTh>Collection</MudTh>
         <MudTh>Playout Mode</MudTh>
+        <MudTh/>
         <MudTh/>
         <MudTh/>
         <MudTh/>
@@ -64,6 +66,11 @@
                     @($" ({context.MultipleCount})")
                 }
             </MudText>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                           OnClick="@(_ => CopyItem(context))">
+            </MudIconButton>
         </MudTd>
         <MudTd>
             @if (!_schedule.ShuffleScheduleItems)
@@ -607,6 +614,55 @@
     {
         _selectedItem = null;
         _schedule.Items.Remove(item);
+    }
+
+    private void CopyItem(ProgramScheduleItemEditViewModel item)
+    {
+        var newItem = new ProgramScheduleItemEditViewModel
+        {
+            Index = item.Index + 1,
+            StartType = item.StartType,
+            StartTime = item.StartTime,
+            FixedStartTimeBehavior = item.FixedStartTimeBehavior,
+            PlayoutMode = item.PlayoutMode,
+            CollectionType = item.CollectionType,
+            Collection = item.Collection,
+            MultiCollection = item.MultiCollection,
+            SmartCollection = item.SmartCollection,
+            Playlist = item.Playlist,
+            MediaItem = item.MediaItem,
+            PlaybackOrder = item.PlaybackOrder,
+            FillWithGroupMode = item.FillWithGroupMode,
+            CustomTitle = item.CustomTitle,
+            GuideMode = item.GuideMode,
+            PreRollFiller = item.PreRollFiller,
+            MidRollFiller = item.MidRollFiller,
+            PostRollFiller = item.PostRollFiller,
+            TailFiller = item.TailFiller,
+            FallbackFiller = item.FallbackFiller,
+            Watermark = item.Watermark,
+            PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+            PreferredAudioTitle = item.PreferredAudioTitle,
+            PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+            SubtitleMode = item.SubtitleMode,
+
+            MultipleCount = item.MultipleCount,
+            PlayoutDuration = item.PlayoutDuration,
+            TailMode = item.TailMode,
+            DiscardToFillAttempts = item.DiscardToFillAttempts,
+        };
+
+        foreach (ProgramScheduleItemEditViewModel i in _schedule.Items.Filter(si => si.Index >= newItem.Index))
+        {
+            i.Index += 1;
+        }
+
+        _schedule.Items.Add(newItem);
+
+        if (_selectedItem is not null)
+        {
+            _selectedItem = newItem;
+        }
     }
 
     private void MoveItemUp(ProgramScheduleItemEditViewModel item)
