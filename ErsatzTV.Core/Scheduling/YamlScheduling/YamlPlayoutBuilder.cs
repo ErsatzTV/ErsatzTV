@@ -127,7 +127,19 @@ public class YamlPlayoutBuilder(
             }
         }
 
-        FlattenSequences(context);
+        int flattenCount = 0;
+        while (context.Definition.Playout.Any(x => x is YamlPlayoutSequenceInstruction))
+        {
+            if (flattenCount > 10)
+            {
+                logger.LogError(
+                    "YAML playout definition contains sequence nesting that is too deep; this introduces undefined behavior");
+                break;
+            }
+
+            FlattenSequences(context);
+            flattenCount++;
+        }
 
         // handle all playout instructions
         while (context.CurrentTime < finish)
@@ -204,25 +216,31 @@ public class YamlPlayoutBuilder(
                         .Filter(s => s.Key == sequenceInstruction.Sequence)
                         .HeadOrNone()
                         .Map(s => s.Items)
-                        .Flatten();
+                        .Flatten()
+                        .ToList();
 
                     var sequenceGuid = Guid.NewGuid();
+                    int repeat = sequenceInstruction.Repeat > 0 ? sequenceInstruction.Repeat : 1;
 
-                    // insert all instructions from the sequence
-                    foreach (YamlPlayoutInstruction i in sequenceInstructions)
+                    for (var r = 0; r < repeat; r++)
                     {
-                        // used for shuffling
-                        i.SequenceKey = sequenceInstruction.Sequence;
-                        i.SequenceGuid = sequenceGuid;
-
-                        // copy custom title
-                        if (!string.IsNullOrWhiteSpace(sequenceInstruction.CustomTitle))
+                        // insert all instructions from the sequence
+                        foreach (YamlPlayoutInstruction i in sequenceInstructions)
                         {
-                            i.CustomTitle = sequenceInstruction.CustomTitle;
-                        }
+                            // used for shuffling
+                            i.SequenceKey = sequenceInstruction.Sequence;
+                            i.SequenceGuid = sequenceGuid;
 
-                        context.Definition.Playout.Add(i);
+                            // copy custom title
+                            if (!string.IsNullOrWhiteSpace(sequenceInstruction.CustomTitle))
+                            {
+                                i.CustomTitle = sequenceInstruction.CustomTitle;
+                            }
+
+                            context.Definition.Playout.Add(i);
+                        }
                     }
+
                     break;
                 default:
                     context.Definition.Playout.Add(instruction);
