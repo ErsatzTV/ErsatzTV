@@ -37,6 +37,7 @@ public class VaapiDriverHealthCheck(
 
         var activeFFmpegProfiles = ffmpegProfiles
             .Filter(f => channelFFmpegProfiles.Contains(f.Id))
+            .Filter(f => f.HardwareAcceleration is HardwareAccelerationKind.Vaapi)
             .ToList();
 
         if (activeFFmpegProfiles.Count == 0)
