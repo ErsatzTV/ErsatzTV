@@ -49,7 +49,7 @@ jobs:
         run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
 
       - name: Build
-        run: dotnet build --runtime linux-x64 --configuration Release --no-restore
+        run: dotnet build ErsatzTV/ErsatzTV.csproj --runtime linux-x64 --configuration Release --no-restore && dotnet build --configuration Release --no-restore
 
       - name: Test
         run: dotnet test --blame-hang-timeout "2m" --no-restore --verbosity normal
