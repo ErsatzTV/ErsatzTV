@@ -89,7 +89,7 @@ public static class FFmpegPlaybackSettingsCalculator
 
                 if (NeedToScale(ffmpegProfile, videoVersion) && videoVersion.SampleAspectRatio != "0:0")
                 {
-                    IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
+                    DisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
                     if (!scaledSize.IsSameSizeAs(videoVersion))
                     {
                         int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
@@ -234,14 +234,14 @@ public static class FFmpegPlaybackSettingsCalculator
         IsOddSize(version) ||
         TooSmallToCrop(ffmpegProfile, version);
 
-    private static bool IsIncorrectSize(IDisplaySize desiredResolution, MediaVersion version) =>
+    private static bool IsIncorrectSize(Resolution desiredResolution, MediaVersion version) =>
         IsAnamorphic(version) ||
         version.Width != desiredResolution.Width ||
         version.Height != desiredResolution.Height;
 
-    private static bool IsTooLarge(IDisplaySize desiredResolution, IDisplaySize displaySize) =>
-        displaySize.Height > desiredResolution.Height ||
-        displaySize.Width > desiredResolution.Width;
+    private static bool IsTooLarge(Resolution desiredResolution, MediaVersion version) =>
+        version.Height > desiredResolution.Height ||
+        version.Width > desiredResolution.Width;
 
     private static bool IsOddSize(MediaVersion version) =>
         version.Height % 2 == 1 || version.Width % 2 == 1;
@@ -258,13 +258,13 @@ public static class FFmpegPlaybackSettingsCalculator
 
     private static DisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
     {
-        IDisplaySize sarSize = SARSize(version);
+        DisplaySize sarSize = SARSize(version);
         int p = version.Width * sarSize.Width;
         int q = version.Height * sarSize.Height;
         int g = Gcd(q, p);
         p = p / g;
         q = q / g;
-        IDisplaySize targetSize = ffmpegProfile.Resolution;
+        Resolution targetSize = ffmpegProfile.Resolution;
         int hw1 = targetSize.Width;
         int hh1 = hw1 * q / p;
         int hh2 = targetSize.Height;

@@ -1,5 +1,5 @@
 FROM jasongdove/ersatztv-ffmpeg:7.1.1
-RUN apt-get update && apt-get install -y ca-certificates gnupg dotnet8 dotnet-sdk-8.0 aspnetcore-runtime-8.0 mkvtoolnix
+RUN apt-get update && apt-get install -y ca-certificates gnupg dotnet9 dotnet-sdk-9.0 aspnetcore-runtime-9.0 mkvtoolnix
 WORKDIR /source
 
 # copy csproj and restore as distinct layers

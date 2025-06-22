@@ -8,7 +8,7 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
 {
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
 
-    private readonly IList<MediaItem> _sortedMediaItems;
+    private readonly List<MediaItem> _sortedMediaItems;
 
     public CustomOrderCollectionEnumerator(
         Collection collection,
@@ -38,7 +38,7 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
 
     public CollectionEnumeratorState State { get; }
 
-    public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
+    public Option<MediaItem> Current => _sortedMediaItems.Count != 0 ? _sortedMediaItems[State.Index] : None;
     public Option<bool> CurrentIncludeInProgramGuide { get; }
 
     public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;

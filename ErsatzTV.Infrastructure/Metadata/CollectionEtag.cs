@@ -26,6 +26,6 @@ public class CollectionEtag : ICollectionEtag
 
         ms.Position = 0;
         byte[] hash = SHA1.Create().ComputeHash(ms);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 }

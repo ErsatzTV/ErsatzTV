@@ -8,7 +8,7 @@ public class ShuffledScheduleItemsEnumerator : IScheduleItemsEnumerator
     private readonly IList<ProgramScheduleItem> _scheduleItems;
     private readonly int _scheduleItemsCount;
     private CloneableRandom _random;
-    private IList<ProgramScheduleItem> _shuffled;
+    private ProgramScheduleItem[] _shuffled;
 
     public ShuffledScheduleItemsEnumerator(
         IList<ProgramScheduleItem> scheduleItems,
@@ -68,7 +68,7 @@ public class ShuffledScheduleItemsEnumerator : IScheduleItemsEnumerator
 
         if ((State.Index + offset) % _scheduleItemsCount == 0)
         {
-            IList<ProgramScheduleItem> shuffled;
+            ProgramScheduleItem[] shuffled;
             ProgramScheduleItem tail = Current;
 
             // clone the random

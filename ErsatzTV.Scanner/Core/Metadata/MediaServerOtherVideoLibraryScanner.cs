@@ -73,7 +73,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         CancellationToken cancellationToken)
     {
         var incomingItemIds = new List<string>();
-        IReadOnlyDictionary<string, TEtag> existingOtherVideos = (await otherVideoRepository.GetExistingOtherVideos(library))
+        var existingOtherVideos = (await otherVideoRepository.GetExistingOtherVideos(library))
             .ToImmutableDictionary(e => e.MediaServerItemId, e => e);
 
         await foreach ((TOtherVideo incoming, int totalOtherVideoCount) in otherVideoEntries.WithCancellation(cancellationToken))
@@ -253,7 +253,7 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
     private async Task<bool> ShouldScanItem(
         IMediaServerOtherVideoRepository<TLibrary, TOtherVideo, TEtag> otherVideoRepository,
         TLibrary library,
-        IReadOnlyDictionary<string, TEtag> existingOtherVideos,
+        ImmutableDictionary<string, TEtag> existingOtherVideos,
         TOtherVideo incoming,
         string localPath,
         bool deepScan)
