@@ -1,10 +1,10 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble-amd64 AS dotnet-runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-noble-amd64 AS dotnet-runtime
 
 FROM jasongdove/ersatztv-ffmpeg:7.1.1 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:8.0-noble-amd64 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-noble-amd64 AS build
 RUN apt-get update && apt-get install -y ca-certificates gnupg
 WORKDIR /source
 

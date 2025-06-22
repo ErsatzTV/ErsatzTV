@@ -48,7 +48,7 @@ public class ImageCache : IImageCache
             }
 
             byte[] hash = await ComputeFileHash(tempFileName);
-            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
+            string hex = Convert.ToHexString(hash);
             string subfolder = hex[..2];
             string baseFolder = artworkKind switch
             {
@@ -82,7 +82,7 @@ public class ImageCache : IImageCache
         {
             var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
             byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
-            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
+            string hex = Convert.ToHexString(hash);
             string subfolder = hex[..2];
             string baseFolder = artworkKind switch
             {

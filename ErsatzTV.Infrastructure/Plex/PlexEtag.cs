@@ -106,7 +106,7 @@ public class PlexEtag
 
         ms.Position = 0;
         byte[] hash = SHA1.Create().ComputeHash(ms);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 
     public string ForShow(PlexMetadataResponse response)
@@ -153,7 +153,7 @@ public class PlexEtag
 
         ms.Position = 0;
         byte[] hash = SHA1.Create().ComputeHash(ms);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 
     public string ForSeason(PlexXmlMetadataResponse response)
@@ -191,7 +191,7 @@ public class PlexEtag
 
         ms.Position = 0;
         byte[] hash = SHA1.Create().ComputeHash(ms);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 
     public string ForEpisode(PlexXmlMetadataResponse response)
@@ -287,7 +287,7 @@ public class PlexEtag
 
         ms.Position = 0;
         byte[] hash = SHA1.Create().ComputeHash(ms);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 
     public string ForCollection(PlexCollectionMetadataResponse response)
@@ -312,7 +312,7 @@ public class PlexEtag
 
         ms.Position = 0;
         byte[] hash = SHA1.Create().ComputeHash(ms);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 
     private enum FieldKey : byte

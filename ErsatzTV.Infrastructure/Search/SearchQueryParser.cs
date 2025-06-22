@@ -67,11 +67,13 @@ public partial class SearchQueryParser(IDbContextFactory<TvContext> dbContextFac
 
         using Analyzer analyzerWrapper = AnalyzerWrapper();
 
-        QueryParser parser = new CustomMultiFieldQueryParser(
+        var parser = new CustomMultiFieldQueryParser(
             LuceneSearchIndex.AppLuceneVersion,
             [LuceneSearchIndex.TitleField],
-            analyzerWrapper);
-        parser.AllowLeadingWildcard = true;
+            analyzerWrapper)
+        {
+            AllowLeadingWildcard = true
+        };
         Query result = ParseQuery(parsedQuery, parser);
 
         Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());

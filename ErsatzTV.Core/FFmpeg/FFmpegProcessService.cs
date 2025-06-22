@@ -151,7 +151,7 @@ public class FFmpegProcessService
         }
     }
 
-    private static bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
+    private static bool NeedToPad(Resolution target, IDisplaySize displaySize) =>
         displaySize.Width != target.Width || displaySize.Height != target.Height;
 
     internal async Task<WatermarkOptions> GetWatermarkOptions(

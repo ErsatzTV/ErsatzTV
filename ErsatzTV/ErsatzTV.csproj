@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
         <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
         <IsPackable>false</IsPackable>
@@ -18,31 +18,31 @@
     <ItemGroup>
       <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
       <PackageReference Include="Bugsnag.AspNet.Core" Version="4.0.0" />
-      <PackageReference Include="FluentValidation" Version="11.11.0" />
-      <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
-      <PackageReference Include="Heron.MudCalendar" Version="3.0.0" />
-      <PackageReference Include="HtmlSanitizer" Version="8.1.870" />
+      <PackageReference Include="FluentValidation" Version="12.0.0" />
+      <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+      <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
+      <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-      <PackageReference Include="Markdig" Version="0.41.1" />
+      <PackageReference Include="Markdig" Version="0.41.2" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.15" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.15" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.15" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.6" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.6" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.6" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.61">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="8.5.1" />
+      <PackageReference Include="MudBlazor" Version="8.8.0" />
       <PackageReference Include="NaturalSort.Extension" Version="4.3.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
-      <PackageReference Include="Serilog" Version="4.2.0" />
-      <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
-      <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.4" />
+      <PackageReference Include="Serilog" Version="4.3.0" />
+      <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+      <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
       <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
       <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
       <PackageReference Include="System.Runtime.Handles" Version="4.3.0" />
@@ -50,7 +50,7 @@
 
       <!-- transitive; upgrading due to vuln -->
       <PackageReference Include="Microsoft.AspnetCore.Http" Version="2.3.0" />
-      <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
+      <PackageReference Include="System.Text.Encodings.Web" Version="9.0.6" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     </ItemGroup>
 

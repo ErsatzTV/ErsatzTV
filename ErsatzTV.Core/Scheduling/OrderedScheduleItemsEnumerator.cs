@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class OrderedScheduleItemsEnumerator : IScheduleItemsEnumerator
 {
-    private readonly IList<ProgramScheduleItem> _sortedScheduleItems;
+    private readonly List<ProgramScheduleItem> _sortedScheduleItems;
 
     public OrderedScheduleItemsEnumerator(
         IEnumerable<ProgramScheduleItem> scheduleItems,

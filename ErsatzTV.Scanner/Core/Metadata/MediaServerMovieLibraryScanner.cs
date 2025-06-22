@@ -73,7 +73,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
         CancellationToken cancellationToken)
     {
         var incomingItemIds = new List<string>();
-        IReadOnlyDictionary<string, TEtag> existingMovies = (await movieRepository.GetExistingMovies(library))
+        var existingMovies = (await movieRepository.GetExistingMovies(library))
             .ToImmutableDictionary(e => e.MediaServerItemId, e => e);
 
         await foreach ((TMovie incoming, int totalMovieCount) in movieEntries.WithCancellation(cancellationToken))
@@ -253,7 +253,7 @@ public abstract class MediaServerMovieLibraryScanner<TConnectionParameters, TLib
     private async Task<bool> ShouldScanItem(
         IMediaServerMovieRepository<TLibrary, TMovie, TEtag> movieRepository,
         TLibrary library,
-        IReadOnlyDictionary<string, TEtag> existingMovies,
+        ImmutableDictionary<string, TEtag> existingMovies,
         TMovie incoming,
         string localPath,
         bool deepScan)

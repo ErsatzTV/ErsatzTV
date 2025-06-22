@@ -442,7 +442,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             channel.FFmpegProfile,
             hlsRealtime);
 
-        IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
+        Resolution desiredResolution = channel.FFmpegProfile.Resolution;
 
         var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
         var margin = (int)Math.Round(channel.FFmpegProfile.Resolution.Height * 0.05);

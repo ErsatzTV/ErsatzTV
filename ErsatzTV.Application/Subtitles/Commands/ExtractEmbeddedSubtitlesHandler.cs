@@ -532,7 +532,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
         byte[] textData = Encoding.UTF8.GetBytes(text);
         byte[] hash = MD5.HashData(textData);
-        return BitConverter.ToString(hash).Replace("-", string.Empty);
+        return Convert.ToHexString(hash);
     }
 
     private sealed record SubtitleToExtract(Subtitle Subtitle, string OutputPath);

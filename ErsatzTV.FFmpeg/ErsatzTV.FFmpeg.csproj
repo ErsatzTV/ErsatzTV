@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
@@ -9,10 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="CliWrap" Version="3.8.2" />
+      <PackageReference Include="CliWrap" Version="3.9.0" />
       <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.4" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.6" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
     </ItemGroup>
 
 

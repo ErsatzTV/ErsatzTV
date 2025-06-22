@@ -65,7 +65,7 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
 
     public void MoveNext()
     {
-        IList<int> groups = _groupMedia.Keys.ToList();
+        var groups = _groupMedia.Keys.ToList();
         int nextRandom = _random.Next();
 
         int groupNumber = nextRandom % groups.Count;
