@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `repeat` property to YAML sequence instruction
   - This tells the playout builder how many times this sequence should repeat
   - Omitting this value is the same as setting it to `1`
+- Add `collection` (name) to search index for manual collections created within ETV
+  - Collections synchronized from media servers are still indexed as `tag`
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

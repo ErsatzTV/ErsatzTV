@@ -324,6 +324,7 @@ public class ElasticSearchIndex : ISearchIndex
                 };
 
                 AddStatistics(doc, movie.MediaVersions);
+                AddCollections(doc, movie.Collections);
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
                 {
@@ -551,6 +552,7 @@ public class ElasticSearchIndex : ISearchIndex
                 doc.Artist = artists.ToList();
 
                 AddStatistics(doc, musicVideo.MediaVersions);
+                AddCollections(doc, musicVideo.Collections);
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
                 {
@@ -630,6 +632,7 @@ public class ElasticSearchIndex : ISearchIndex
                 }
 
                 AddStatistics(doc, episode.MediaVersions);
+                AddCollections(doc, episode.Collections);
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
                 {
@@ -682,6 +685,7 @@ public class ElasticSearchIndex : ISearchIndex
                 };
 
                 AddStatistics(doc, otherVideo.MediaVersions);
+                AddCollections(doc, otherVideo.Collections);
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
                 {
@@ -730,6 +734,7 @@ public class ElasticSearchIndex : ISearchIndex
                 };
 
                 AddStatistics(doc, song.MediaVersions);
+                AddCollections(doc, song.Collections);
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
                 {
@@ -784,6 +789,7 @@ public class ElasticSearchIndex : ISearchIndex
                 }
 
                 AddStatistics(doc, image.MediaVersions);
+                AddCollections(doc, image.Collections);
 
                 foreach ((string key, List<string> value) in GetMetadataGuids(metadata))
                 {
@@ -936,6 +942,14 @@ public class ElasticSearchIndex : ISearchIndex
 
                 doc.VideoDynamicRange = colorParams.IsHdr ? "hdr" : "sdr";
             }
+        }
+    }
+
+    private static void AddCollections(ElasticSearchItem doc, IEnumerable<Collection> collections)
+    {
+        foreach (Collection collection in collections)
+        {
+            doc.Collection.Add(collection.Name);
         }
     }
 
