@@ -14,9 +14,11 @@ public class SearchQueryParserTests
         [TestCase("tag:\"Will Smith\"", "tag:\"will smith\"")]
         [TestCase("library_id:4", "library_id:4")]
         [TestCase("content_rating:\"TV-14\"", "content_rating:TV-14")]
-        public void Test(string input, string expected)
+        public async Task Test(string input, string expected)
         {
-            Query result = SearchQueryParser.ParseQuery(input);
+            var parser = new SearchQueryParser(null);
+
+            Query result = await parser.ParseQuery(input);
             result.ToString().ShouldBe(expected);
         }
     }

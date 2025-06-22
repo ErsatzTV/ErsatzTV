@@ -25,11 +25,13 @@ public class ElasticSearchIndex : ISearchIndex
 {
     private readonly List<CultureInfo> _cultureInfos;
 
+    private readonly SearchQueryParser _searchQueryParser;
     private readonly ILogger<ElasticSearchIndex> _logger;
     private ElasticsearchClient _client;
 
-    public ElasticSearchIndex(ILogger<ElasticSearchIndex> logger)
+    public ElasticSearchIndex(SearchQueryParser searchQueryParser, ILogger<ElasticSearchIndex> logger)
     {
+        _searchQueryParser = searchQueryParser;
         _logger = logger;
         _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
     }
@@ -166,7 +168,7 @@ public class ElasticSearchIndex : ISearchIndex
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = SearchQueryParser.ParseQuery(query);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query);
 
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Indices(IndexName)

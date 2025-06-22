@@ -609,6 +609,7 @@ public class Startup
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
         services.AddSingleton<IEntityLocker, EntityLocker>();
         services.AddSingleton<ISearchTargets, SearchTargets>();
+        services.AddSingleton<SearchQueryParser>();
 
         if (SearchHelper.IsElasticSearchEnabled)
         {
