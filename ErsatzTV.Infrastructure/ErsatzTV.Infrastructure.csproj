@@ -33,10 +33,6 @@
       <PackageReference Include="Refit.Xml" Version="8.0.0" />
       <PackageReference Include="Scriban.Signed" Version="6.2.1" />
       <PackageReference Include="TagLibSharp" Version="2.3.0" />
-
-      <!-- transitive; upgrading due to vuln -->
-      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
-      <PackageReference Include="System.Net.Http" Version="4.3.4" />
     </ItemGroup>
 
     <ItemGroup>
