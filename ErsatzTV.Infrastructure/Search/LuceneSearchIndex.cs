@@ -90,14 +90,16 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
     private readonly List<CultureInfo> _cultureInfos;
 
+    private readonly SearchQueryParser _searchQueryParser;
     private readonly ILogger<LuceneSearchIndex> _logger;
 
     private FSDirectory _directory;
     private bool _initialized;
     private IndexWriter _writer;
 
-    public LuceneSearchIndex(ILogger<LuceneSearchIndex> logger)
+    public LuceneSearchIndex(SearchQueryParser searchQueryParser, ILogger<LuceneSearchIndex> logger)
     {
+        _searchQueryParser = searchQueryParser;
         _logger = logger;
         _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
         _cleanShutdownPath = Path.Combine(FileSystemLayout.SearchIndexFolder, ".clean-shutdown");
@@ -198,7 +200,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(true);
     }
 
-    public Task<SearchResult> Search(IClient client, string query, int skip, int limit)
+    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit)
     {
         var metadata = new Dictionary<string, string>
         {
@@ -212,13 +214,13 @@ public sealed class LuceneSearchIndex : ISearchIndex
         if (string.IsNullOrWhiteSpace(query.Replace("*", string.Empty).Replace("?", string.Empty)) ||
             _writer.MaxDoc == 0)
         {
-            return Task.FromResult(new SearchResult(new List<SearchItem>(), 0));
+            return new SearchResult([], 0);
         }
 
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query parsedQuery = SearchQueryParser.ParseQuery(query);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
@@ -239,7 +241,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
             searchResult.PageMap = GetSearchPageMap(searcher, parsedQuery, null, sort, limit);
         }
 
-        return Task.FromResult(searchResult);
+        return searchResult;
     }
 
     public void Commit() => _writer.Commit();

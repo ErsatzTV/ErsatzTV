@@ -231,6 +231,7 @@ public class Program
                     services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
                     services.AddSingleton<IEmbySecretStore, EmbySecretStore>();
                     services.AddSingleton<IJellyfinSecretStore, JellyfinSecretStore>();
+                    services.AddSingleton<SearchQueryParser>();
                     services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
                     // TODO: real bugsnag?

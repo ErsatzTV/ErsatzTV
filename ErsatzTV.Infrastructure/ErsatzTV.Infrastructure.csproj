@@ -43,4 +43,10 @@
       <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>ErsatzTV.Infrastructure.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
 </Project>

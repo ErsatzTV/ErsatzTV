@@ -1,15 +1,18 @@
+using System.Text.RegularExpressions;
+using ErsatzTV.Infrastructure.Data;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Core;
 using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
-public static class SearchQueryParser
+public partial class SearchQueryParser(IDbContextFactory<TvContext> dbContextFactory)
 {
     static SearchQueryParser() => BooleanQuery.MaxClauseCount = 1024 * 4;
 
@@ -44,8 +47,24 @@ public static class SearchQueryParser
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, customAnalyzers);
     }
 
-    public static Query ParseQuery(string query)
+    public async Task<Query> ParseQuery(string query)
     {
+        string parsedQuery = query;
+
+        var replaceCount = 0;
+        while (parsedQuery.Contains("smart_collection"))
+        {
+            if (replaceCount > 10)
+            {
+                Log.Logger.Warning("smart_collection query is nested too deep; giving up");
+                break;
+            }
+
+            parsedQuery = await ReplaceSmartCollections(parsedQuery);
+
+            replaceCount++;
+        }
+
         using Analyzer analyzerWrapper = AnalyzerWrapper();
 
         QueryParser parser = new CustomMultiFieldQueryParser(
@@ -53,11 +72,34 @@ public static class SearchQueryParser
             [LuceneSearchIndex.TitleField],
             analyzerWrapper);
         parser.AllowLeadingWildcard = true;
-        Query result = ParseQuery(query, parser);
+        Query result = ParseQuery(parsedQuery, parser);
 
         Log.Logger.Debug("Search query parsed from [{Query}] to [{ParsedQuery}]", query, result.ToString());
 
         return result;
+    }
+
+    private async Task<string> ReplaceSmartCollections(string query)
+    {
+        try
+        {
+            Regex regex = SmartCollectionRegex();
+            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+            Dictionary<string, string> smartCollectionMap = await dbContext.SmartCollections
+                .ToDictionaryAsync(x => x.Name, x => x.Query, StringComparer.OrdinalIgnoreCase);
+            return regex.Replace(query, match =>
+            {
+                string smartCollectionName = match.Groups[1].Value;
+                return smartCollectionMap.TryGetValue(smartCollectionName, out string smartCollectionQuery)
+                    ? $"({smartCollectionQuery})"
+                    : match.Value;
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return query;
+        }
     }
 
     private static Query ParseQuery(string searchQuery, QueryParser parser)
@@ -74,4 +116,9 @@ public static class SearchQueryParser
 
         return query;
     }
+
+    [GeneratedRegex("""
+                    smart_collection:"([^"]+)"
+                    """)]
+    private static partial Regex SmartCollectionRegex();
 }

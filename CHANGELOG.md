@@ -42,6 +42,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Omitting this value is the same as setting it to `1`
 - Add `collection` (name) to search index for manual collections created within ETV
   - Collections synchronized from media servers are still indexed as `tag`
+- Allow searching by `smart_collection` (name)
+  - Quotes are *always* required when using this feature
+  - e.g. `smart_collection:"one" NOT smart_collection:"two"`
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)
