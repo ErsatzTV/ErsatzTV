@@ -1,5 +1,6 @@
 ﻿using System.Threading.Channels;
 using ErsatzTV.Application.Playouts;
+using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -14,17 +15,20 @@ public class AddMusicVideoToCollectionHandler :
     IRequestHandler<AddMusicVideoToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
     public AddMusicVideoToCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IMediaCollectionRepository mediaCollectionRepository,
-        ChannelWriter<IBackgroundServiceRequest> channel)
+        ChannelWriter<IBackgroundServiceRequest> channel,
+        ChannelWriter<ISearchIndexBackgroundServiceRequest> searchChannel)
     {
         _dbContextFactory = dbContextFactory;
         _mediaCollectionRepository = mediaCollectionRepository;
         _channel = channel;
+        _searchChannel = searchChannel;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -43,6 +47,8 @@ public class AddMusicVideoToCollectionHandler :
         parameters.Collection.MediaItems.Add(parameters.MusicVideo);
         if (await dbContext.SaveChangesAsync() > 0)
         {
+            await _searchChannel.WriteAsync(new ReindexMediaItems([parameters.MusicVideo.Id]));
+
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
                          .PlayoutIdsUsingCollection(parameters.Collection.Id))

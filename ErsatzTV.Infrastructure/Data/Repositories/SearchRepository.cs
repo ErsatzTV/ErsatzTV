@@ -17,6 +17,7 @@ public class SearchRepository : ISearchRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.MediaItems
             .AsNoTracking()
+            .Include(mi => mi.Collections)
             .Include(mi => mi.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(mi => (mi as Movie).MovieMetadata)
@@ -242,6 +243,7 @@ public class SearchRepository : ISearchRepository
         TvContext dbContext = _dbContextFactory.CreateDbContext();
         return dbContext.MediaItems
             .AsNoTracking()
+            .Include(mi => mi.Collections)
             .Include(mi => mi.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(mi => (mi as Movie).MovieMetadata)

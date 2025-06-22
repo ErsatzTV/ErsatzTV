@@ -55,8 +55,11 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonPropertyName(LuceneSearchIndex.VideoBitDepthField)]
     public int VideoBitDepth { get; set; }
 
-    [JsonPropertyName(LuceneSearchIndex.VideoDynamicRange)]
+    [JsonPropertyName(LuceneSearchIndex.VideoDynamicRangeField)]
     public string VideoDynamicRange { get; set; }
+
+    [JsonPropertyName(LuceneSearchIndex.CollectionField)]
+    public List<string> Collection { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.ContentRatingField)]
     public List<string> ContentRating { get; set; }

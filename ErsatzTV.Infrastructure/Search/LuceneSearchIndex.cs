@@ -64,7 +64,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string ShowContentRatingField = "show_content_rating";
     internal const string MetadataKindField = "metadata_kind";
     internal const string VideoCodecField = "video_codec";
-    internal const string VideoDynamicRange = "video_dynamic_range";
+    internal const string VideoDynamicRangeField = "video_dynamic_range";
+    internal const string CollectionField = "collection";
 
     internal const string MinutesField = "minutes";
     internal const string SecondsField = "seconds";
@@ -111,7 +112,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 45;
+    public int Version => 46;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -425,6 +426,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await AddLanguages(searchRepository, doc, movie.MediaVersions);
 
                 AddStatistics(doc, movie.MediaVersions);
+                AddCollections(doc, movie.Collections);
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                 {
@@ -898,6 +900,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
 
                 AddStatistics(doc, musicVideo.MediaVersions);
+                AddCollections(doc, musicVideo.Collections);
 
                 if (metadata.ReleaseDate.HasValue)
                 {
@@ -1052,6 +1055,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);
 
                 AddStatistics(doc, episode.MediaVersions);
+                AddCollections(doc, episode.Collections);
 
                 if (metadata.ReleaseDate.HasValue)
                 {
@@ -1154,6 +1158,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
 
                 AddStatistics(doc, otherVideo.MediaVersions);
+                AddCollections(doc, otherVideo.Collections);
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                 {
@@ -1256,6 +1261,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await AddLanguages(searchRepository, doc, song.MediaVersions);
 
                 AddStatistics(doc, song.MediaVersions);
+                AddCollections(doc, song.Collections);
 
                 doc.Add(
                     new StringField(
@@ -1343,6 +1349,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 await AddLanguages(searchRepository, doc, image.MediaVersions);
 
                 AddStatistics(doc, image.MediaVersions);
+                AddCollections(doc, image.Collections);
 
                 doc.Add(
                     new StringField(
@@ -1417,8 +1424,16 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 string dynamicRange = colorParams.IsHdr ? "hdr" : "sdr";
 
-                doc.Add(new StringField(VideoDynamicRange, dynamicRange, Field.Store.NO));
+                doc.Add(new StringField(VideoDynamicRangeField, dynamicRange, Field.Store.NO));
             }
+        }
+    }
+
+    private static void AddCollections(Document doc, List<Collection> collections)
+    {
+        foreach (Collection collection in collections)
+        {
+            doc.Add(new StringField(CollectionField, collection.Name.ToLowerInvariant(), Field.Store.NO));
         }
     }
 
