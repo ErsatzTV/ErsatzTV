@@ -43,13 +43,13 @@ jobs:
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -p:RestoreEnablePackagePruning=true
 
       - name: Prep project file
         run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --runtime linux-x64 --configuration Release --no-restore
 
       - name: Test
         run: dotnet test --blame-hang-timeout "2m" --no-restore --verbosity normal
