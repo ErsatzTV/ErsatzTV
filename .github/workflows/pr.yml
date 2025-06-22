@@ -43,7 +43,7 @@ jobs:
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
-        run: dotnet restore -p:RestoreEnablePackagePruning=true
+        run: dotnet restore -p:RestoreEnablePackagePruning=true -r linux-x64
 
       - name: Prep project file
         run: sed -i '/Scanner/d' ErsatzTV/ErsatzTV.csproj
