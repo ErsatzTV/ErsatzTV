@@ -16,6 +16,7 @@ using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
+using ErsatzTV.Core.Search;
 using ErsatzTV.FFmpeg.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
@@ -231,6 +232,7 @@ public class Program
                     services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
                     services.AddSingleton<IEmbySecretStore, EmbySecretStore>();
                     services.AddSingleton<IJellyfinSecretStore, JellyfinSecretStore>();
+                    services.AddSingleton<ISmartCollectionCache, SmartCollectionCache>();
                     services.AddSingleton<SearchQueryParser>();
                     services.AddSingleton<ISearchIndex, LuceneSearchIndex>();
                     services.AddSingleton<RecyclableMemoryStreamManager>();
