@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
@@ -12,11 +13,16 @@ public class CreateSmartCollectionHandler :
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ISearchTargets _searchTargets;
+    private readonly ISmartCollectionCache _smartCollectionCache;
 
-    public CreateSmartCollectionHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    public CreateSmartCollectionHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ISearchTargets searchTargets,
+        ISmartCollectionCache smartCollectionCache)
     {
         _dbContextFactory = dbContextFactory;
         _searchTargets = searchTargets;
+        _smartCollectionCache = smartCollectionCache;
     }
 
     public async Task<Either<BaseError, SmartCollectionViewModel>> Handle(
@@ -35,6 +41,7 @@ public class CreateSmartCollectionHandler :
         await dbContext.SmartCollections.AddAsync(smartCollection);
         await dbContext.SaveChangesAsync();
         _searchTargets.SearchTargetsChanged();
+        await _smartCollectionCache.Refresh();
         return ProjectToViewModel(smartCollection);
     }
 

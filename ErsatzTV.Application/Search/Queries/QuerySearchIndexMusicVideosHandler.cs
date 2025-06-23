@@ -45,6 +45,7 @@ public class
         SearchResult searchResult = await _searchIndex.Search(
             _client,
             request.Query,
+            string.Empty,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);
 

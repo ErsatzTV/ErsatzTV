@@ -830,29 +830,37 @@
     private async Task SaveAsSmartCollection(MouseEventArgs _)
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-        IDialogReference dialog = await Dialog.ShowAsync<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
-        DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is SmartCollectionViewModel collection)
+        var parameters = new DialogParameters<SaveAsSmartCollectionDialog>
         {
-            var request = new UpdateSmartCollection(
-                collection.Id,
-                _query);
+            { x => x.Query, _query }
+        };
 
-            Either<BaseError, Unit> updateResult = await Mediator.Send(request, CancellationToken);
-            updateResult.Match(
-                Left: error =>
-                {
-                    Snackbar.Add($"Unexpected error saving smart collection: {error.Value}");
-                    Logger.LogError("Unexpected error saving smart collection: {Error}", error.Value);
-                },
-                Right: _ =>
-                {
-                    Snackbar.Add(
-                        $"Saved smart collection {collection.Name}",
-                        Severity.Success);
-                    ClearSelection();
-                });
+        IDialogReference dialog = await Dialog.ShowAsync<SaveAsSmartCollectionDialog>("Save As Smart Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (result is { Canceled: false, Data: Tuple<SmartCollectionViewModel, bool> collectionResult })
+        {
+            // Item2 => update is needed
+            if (collectionResult.Item2)
+            {
+                var request = new UpdateSmartCollection(
+                    collectionResult.Item1.Id,
+                    _query);
+
+                Either<BaseError, Unit> updateResult = await Mediator.Send(request, CancellationToken);
+                updateResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error saving smart collection: {error.Value}");
+                        Logger.LogError("Unexpected error saving smart collection: {Error}", error.Value);
+                    },
+                    Right: _ =>
+                    {
+                        Snackbar.Add(
+                            $"Saved smart collection {collectionResult.Item1.Name}",
+                            Severity.Success);
+                        ClearSelection();
+                    });
+            }
         }
     }
 

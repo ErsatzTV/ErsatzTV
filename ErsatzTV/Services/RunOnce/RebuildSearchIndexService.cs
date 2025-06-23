@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Application.Search;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Search;
 using MediatR;
 
 namespace ErsatzTV.Services.RunOnce;
@@ -34,5 +35,8 @@ public class RebuildSearchIndexService : BackgroundService
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         await mediator.Send(new RebuildSearchIndex(), stoppingToken);
+
+        ISmartCollectionCache cache = scope.ServiceProvider.GetRequiredService<ISmartCollectionCache>();
+        await cache.Refresh();
     }
 }

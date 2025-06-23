@@ -1,6 +1,8 @@
+using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Search;
 using Shouldly;
 using Lucene.Net.Search;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace ErsatzTV.Infrastructure.Tests.Search;
@@ -16,9 +18,10 @@ public class SearchQueryParserTests
         [TestCase("content_rating:\"TV-14\"", "content_rating:TV-14")]
         public async Task Test(string input, string expected)
         {
-            var parser = new SearchQueryParser(null);
+            ISmartCollectionCache smartCollectionCache = Substitute.For<ISmartCollectionCache>();
+            var parser = new SearchQueryParser(smartCollectionCache);
 
-            Query result = await parser.ParseQuery(input);
+            Query result = await parser.ParseQuery(input, null);
             result.ToString().ShouldBe(expected);
         }
     }

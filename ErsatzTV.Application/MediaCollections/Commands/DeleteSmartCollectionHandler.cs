@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +12,16 @@ public class DeleteSmartCollectionHandler : IRequestHandler<DeleteSmartCollectio
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ISearchTargets _searchTargets;
+    private readonly ISmartCollectionCache _smartCollectionCache;
 
-    public DeleteSmartCollectionHandler(IDbContextFactory<TvContext> dbContextFactory, ISearchTargets searchTargets)
+    public DeleteSmartCollectionHandler(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ISearchTargets searchTargets,
+        ISmartCollectionCache smartCollectionCache)
     {
         _dbContextFactory = dbContextFactory;
         _searchTargets = searchTargets;
+        _smartCollectionCache = smartCollectionCache;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -32,6 +38,7 @@ public class DeleteSmartCollectionHandler : IRequestHandler<DeleteSmartCollectio
         dbContext.SmartCollections.Remove(smartCollection);
         await dbContext.SaveChangesAsync();
         _searchTargets.SearchTargetsChanged();
+        await _smartCollectionCache.Refresh();
         return Unit.Default;
     }
 

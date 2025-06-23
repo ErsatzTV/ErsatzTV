@@ -163,12 +163,12 @@ public class ElasticSearchIndex : ISearchIndex
         return deleteResponse.IsValidResponse;
     }
 
-    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit)
+    public async Task<SearchResult> Search(IClient client, string query, string smartCollectionName, int skip, int limit)
     {
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
 
         SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
             s => s.Indices(IndexName)

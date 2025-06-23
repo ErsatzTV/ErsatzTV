@@ -29,7 +29,7 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
         // grab items from each search
         foreach (string query in marathon.Searches)
         {
-            allMediaItems.AddRange(await mediaCollectionRepository.GetSmartCollectionItems(query));
+            allMediaItems.AddRange(await mediaCollectionRepository.GetSmartCollectionItems(query, string.Empty));
         }
 
         List<IGrouping<GroupKey, MediaItem>> groups = [];
