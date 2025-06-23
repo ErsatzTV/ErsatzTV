@@ -5,6 +5,7 @@ namespace ErsatzTV.Application.Troubleshooting;
 
 public record TroubleshootingInfo(
     string Version,
+    Dictionary<string, string> Environment,
     IEnumerable<HealthCheckResultSummary> Health,
     FFmpegSettingsViewModel FFmpegSettings,
     IEnumerable<FFmpegProfile> FFmpegProfiles,

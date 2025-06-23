@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Quotes are *always* required when using this feature
     - e.g. `smart_collection:"one" NOT smart_collection:"two"`
   - Cycles will be detected and logged, and searches with cycles will not work as expected
+- Add all `ETV_*` environment variables to Troubleshooting > General info
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

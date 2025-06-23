@@ -76,7 +76,15 @@
             TroubleshootingInfo info = await Mediator.Send(new GetTroubleshootingInfo(), _cts.Token);
 
             _troubleshootingInfo = JsonSerializer.Serialize(
-                new { info.Version, info.Health, info.FFmpegSettings, info.Channels, info.FFmpegProfiles },
+                new
+                {
+                    info.Version,
+                    Environment = info.Environment.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value),
+                    info.Health,
+                    info.FFmpegSettings,
+                    info.Channels,
+                    info.FFmpegProfiles
+                },
                 new JsonSerializerOptions
                 {
                     Converters = { new JsonStringEnumConverter() },
