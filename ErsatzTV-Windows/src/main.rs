@@ -1,6 +1,7 @@
 #![windows_subsystem = "windows"]
 
 use special_folder::SpecialFolder;
+use std::env;
 use std::fs;
 use std::os::windows::process::CommandExt;
 use std::process::Child;
@@ -21,11 +22,16 @@ fn main() {
     let (tx, rx) = mpsc::channel();
 
     tray.add_menu_item("Launch Web UI", || {
+        let ui_port = env::var("ETV_UI_PORT")
+            .ok()
+            .and_then(|val| val.parse::<u16>().ok())
+            .unwrap_or(8409);
+
         let _ = Command::new("cmd")
             .creation_flags(CREATE_NO_WINDOW)
             .arg("/C")
             .arg("start")
-            .arg("http://localhost:8409")
+            .arg(format!("http://localhost:{}", ui_port))
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
