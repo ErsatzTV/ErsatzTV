@@ -38,6 +38,7 @@ using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling;
+using ErsatzTV.Core.Search;
 using ErsatzTV.Core.Trakt;
 using ErsatzTV.FFmpeg.Capabilities;
 using ErsatzTV.FFmpeg.Pipeline;
@@ -609,6 +610,7 @@ public class Startup
         services.AddSingleton<ITraktApiClient, TraktApiClient>();
         services.AddSingleton<IEntityLocker, EntityLocker>();
         services.AddSingleton<ISearchTargets, SearchTargets>();
+        services.AddSingleton<ISmartCollectionCache, SmartCollectionCache>();
         services.AddSingleton<SearchQueryParser>();
 
         if (SearchHelper.IsElasticSearchEnabled)

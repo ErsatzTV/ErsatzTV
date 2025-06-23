@@ -64,7 +64,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         switch (content)
         {
             case YamlPlayoutContentSearchItem search:
-                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query);
+                items = await mediaCollectionRepository.GetSmartCollectionItems(search.Query, string.Empty);
                 break;
             case YamlPlayoutContentShowItem show:
                 items = await mediaCollectionRepository.GetShowItemsByShowGuids(

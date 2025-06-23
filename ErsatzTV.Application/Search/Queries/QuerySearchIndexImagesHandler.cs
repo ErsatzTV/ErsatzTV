@@ -17,6 +17,7 @@ public class QuerySearchIndexImagesHandler(IClient client, ISearchIndex searchIn
         SearchResult searchResult = await searchIndex.Search(
             client,
             request.Query,
+            string.Empty,
             (request.PageNumber - 1) * request.PageSize,
             request.PageSize);
 

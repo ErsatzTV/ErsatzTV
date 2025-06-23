@@ -5,6 +5,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Scheduling;
+using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -17,17 +18,20 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly ISearchTargets _searchTargets;
+    private readonly ISmartCollectionCache _smartCollectionCache;
 
     public UpdateSmartCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IMediaCollectionRepository mediaCollectionRepository,
         ChannelWriter<IBackgroundServiceRequest> channel,
-        ISearchTargets searchTargets)
+        ISearchTargets searchTargets,
+        ISmartCollectionCache smartCollectionCache)
     {
         _dbContextFactory = dbContextFactory;
         _mediaCollectionRepository = mediaCollectionRepository;
         _channel = channel;
         _searchTargets = searchTargets;
+        _smartCollectionCache = smartCollectionCache;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -47,6 +51,7 @@ public class UpdateSmartCollectionHandler : IRequestHandler<UpdateSmartCollectio
         if (await dbContext.SaveChangesAsync() > 0)
         {
             _searchTargets.SearchTargetsChanged();
+            await _smartCollectionCache.Refresh();
 
             // refresh all playouts that use this smart collection
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingSmartCollection(request.Id))

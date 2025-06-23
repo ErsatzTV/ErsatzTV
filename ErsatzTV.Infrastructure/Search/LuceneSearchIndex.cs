@@ -200,7 +200,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(true);
     }
 
-    public async Task<SearchResult> Search(IClient client, string query, int skip, int limit)
+    public async Task<SearchResult> Search(IClient client, string query, string smartCollectionName, int skip, int limit)
     {
         var metadata = new Dictionary<string, string>
         {
@@ -220,7 +220,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         using DirectoryReader reader = _writer.GetReader(true);
         var searcher = new IndexSearcher(reader);
         int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
-        Query parsedQuery = await _searchQueryParser.ParseQuery(query);
+        Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
         // TODO: figure out if this is actually needed
         // var filter = new DuplicateFilter(TitleAndYearField);
         var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));

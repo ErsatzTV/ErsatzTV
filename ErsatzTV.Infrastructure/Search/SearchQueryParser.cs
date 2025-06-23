@@ -1,18 +1,17 @@
 using System.Text.RegularExpressions;
-using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Core.Search;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Core;
 using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 
-public partial class SearchQueryParser(IDbContextFactory<TvContext> dbContextFactory)
+public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCache)
 {
     static SearchQueryParser() => BooleanQuery.MaxClauseCount = 1024 * 4;
 
@@ -47,22 +46,41 @@ public partial class SearchQueryParser(IDbContextFactory<TvContext> dbContextFac
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, customAnalyzers);
     }
 
-    public async Task<Query> ParseQuery(string query)
+    public async Task<Query> ParseQuery(string query, string smartCollectionName)
     {
         string parsedQuery = query;
 
-        var replaceCount = 0;
-        while (parsedQuery.Contains("smart_collection"))
+        if (!string.IsNullOrWhiteSpace(smartCollectionName) && await smartCollectionCache.HasCycle(smartCollectionName))
         {
-            if (replaceCount > 10)
+            Log.Logger.Error("Smart collection {Name} contains a cycle; will not evaluate", smartCollectionName);
+        }
+        else
+        {
+            var replaceCount = 0;
+            while (parsedQuery.Contains("smart_collection"))
             {
-                Log.Logger.Warning("smart_collection query is nested too deep; giving up");
-                break;
+                if (replaceCount > 100)
+                {
+                    Log.Logger.Warning("smart_collection query is nested too deep; giving up");
+                    break;
+                }
+
+                ReplaceResult replaceResult = await ReplaceSmartCollections(parsedQuery);
+                if (replaceResult.Fatal)
+                {
+                    break;
+                }
+
+                if (parsedQuery == replaceResult.Query)
+                {
+                    Log.Logger.Warning("Failed to replace smart_collection in query; is the syntax correct? Quotes are required. Giving up...");
+                    break;
+                }
+
+                parsedQuery = replaceResult.Query;
+
+                replaceCount++;
             }
-
-            parsedQuery = await ReplaceSmartCollections(parsedQuery);
-
-            replaceCount++;
         }
 
         using Analyzer analyzerWrapper = AnalyzerWrapper();
@@ -81,26 +99,34 @@ public partial class SearchQueryParser(IDbContextFactory<TvContext> dbContextFac
         return result;
     }
 
-    private async Task<string> ReplaceSmartCollections(string query)
+    private async Task<ReplaceResult> ReplaceSmartCollections(string query)
     {
         try
         {
-            Regex regex = SmartCollectionRegex();
-            await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
-            Dictionary<string, string> smartCollectionMap = await dbContext.SmartCollections
-                .ToDictionaryAsync(x => x.Name, x => x.Query, StringComparer.OrdinalIgnoreCase);
-            return regex.Replace(query, match =>
+            string result = query;
+
+            foreach (Match match in SmartCollectionRegex().Matches(query))
             {
                 string smartCollectionName = match.Groups[1].Value;
-                return smartCollectionMap.TryGetValue(smartCollectionName, out string smartCollectionQuery)
-                    ? $"({smartCollectionQuery})"
-                    : match.Value;
-            });
+                if (await smartCollectionCache.HasCycle(smartCollectionName))
+                {
+                    Log.Logger.Error("Smart collection {Name} contains a cycle; will not evaluate", smartCollectionName);
+                    return new ReplaceResult(query, true);
+                }
+
+                Option<string> maybeQuery = await smartCollectionCache.GetQuery(smartCollectionName);
+                foreach (string smartCollectionQuery in maybeQuery)
+                {
+                    result = result.Replace(match.Value, $"({smartCollectionQuery})");
+                }
+            }
+
+            return new ReplaceResult(result, false);
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
-            return query;
+            Log.Logger.Warning(ex, "Unexpected exception replacing smart collections in search query");
+            return new ReplaceResult(query, true);
         }
     }
 
@@ -122,5 +148,7 @@ public partial class SearchQueryParser(IDbContextFactory<TvContext> dbContextFac
     [GeneratedRegex("""
                     smart_collection:"([^"]+)"
                     """)]
-    private static partial Regex SmartCollectionRegex();
+    internal static partial Regex SmartCollectionRegex();
+
+    private record ReplaceResult(string Query, bool Fatal);
 }

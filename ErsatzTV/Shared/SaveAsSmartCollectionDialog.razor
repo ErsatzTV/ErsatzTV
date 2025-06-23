@@ -43,6 +43,9 @@
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; }
 
+    [Parameter]
+    public string Query { get; set; }
+
     private readonly SmartCollectionViewModel _newCollection = new(-1, "(New Collection)", string.Empty);
     private string _newCollectionName;
 
@@ -88,13 +91,13 @@
         if (_selectedCollection == _newCollection)
         {
             Either<BaseError, SmartCollectionViewModel> maybeResult =
-                await Mediator.Send(new CreateSmartCollection(string.Empty, _newCollectionName), _cts.Token);
+                await Mediator.Send(new CreateSmartCollection(Query, _newCollectionName), _cts.Token);
 
             maybeResult.Match(
                 collection =>
                 {
                     MemoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", collection.Id);
-                    MudDialog.Close(DialogResult.Ok(collection));
+                    MudDialog.Close(DialogResult.Ok(new Tuple<SmartCollectionViewModel, bool>(collection, false)));
                 },
                 error =>
                 {
@@ -106,7 +109,7 @@
         else
         {
             MemoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
-            MudDialog.Close(DialogResult.Ok(_selectedCollection));
+            MudDialog.Close(DialogResult.Ok(new Tuple<SmartCollectionViewModel, bool>(_selectedCollection, true)));
         }
     }
 
