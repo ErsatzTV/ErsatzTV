@@ -35,8 +35,8 @@
       <PackageReference Include="TagLibSharp" Version="2.3.0" />
 
 
-        <!-- transitive; upgrading for vuln -->
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
+      <!-- transitive; upgrading for vuln -->
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
     </ItemGroup>
 
     <ItemGroup>

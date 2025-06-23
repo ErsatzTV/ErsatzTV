@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -133,8 +134,18 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             }
         }
 
+        var environment = new Dictionary<string, string>();
+        foreach (DictionaryEntry de in Environment.GetEnvironmentVariables())
+        {
+            if (de is { Key: string key, Value: string value } && key.StartsWith("ETV_", StringComparison.OrdinalIgnoreCase))
+            {
+                environment[key] = value;
+            }
+        }
+
         return new TroubleshootingInfo(
             version,
+            environment,
             healthCheckSummaries,
             ffmpegSettings,
             activeFFmpegProfiles,
