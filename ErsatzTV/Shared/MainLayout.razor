@@ -75,8 +75,8 @@
         <div style="align-items: center; display: flex;" class="d-none d-md-flex">
             @if (SystemStartup.IsDatabaseReady && SystemStartup.IsSearchIndexReady)
             {
-                <MudLink Color="Color.Info" Href="@IptvUrl("channels.m3u")" Target="_blank" Underline="Underline.None">M3U</MudLink>
-                <MudLink Color="Color.Info" Href="@IptvUrl("xmltv.xml")" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+                <MudLink Color="Color.Info" Href="iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
+                <MudLink Color="Color.Info" Href="iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
             }
             @* <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink> *@
             <MudTooltip Text="Documentation">
@@ -290,12 +290,6 @@
             SearchTargetKind.ScheduleItems => $"schedules/{searchTarget.Id}/items",
             _ => null
         };
-
-    private string IptvUrl(string path)
-    {
-        var uri = new Uri(NavigationManager.Uri);
-        return $"{uri.Scheme}://{uri.Host}:{Settings.StreamingPort}/iptv/{path}";
-    }
 
     private void ToggleDrawer()
     {
