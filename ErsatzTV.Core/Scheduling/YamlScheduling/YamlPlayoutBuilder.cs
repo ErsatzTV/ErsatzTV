@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
+using ErsatzTV.Core.Search;
 using Microsoft.Extensions.Logging;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -127,10 +128,16 @@ public class YamlPlayoutBuilder(
             }
         }
 
-        int flattenCount = 0;
+        if (DetectCycle(context.Definition))
+        {
+            logger.LogError("YAML sequence contains a cycle; unable to build playout");
+            return playout;
+        }
+
+        var flattenCount = 0;
         while (context.Definition.Playout.Any(x => x is YamlPlayoutSequenceInstruction))
         {
-            if (flattenCount > 10)
+            if (flattenCount > 100)
             {
                 logger.LogError(
                     "YAML playout definition contains sequence nesting that is too deep; this introduces undefined behavior");
@@ -195,6 +202,21 @@ public class YamlPlayoutBuilder(
         playout.Anchor = anchor;
 
         return playout;
+    }
+
+    private static bool DetectCycle(YamlPlayoutDefinition definition)
+    {
+        var graph = new AdjGraph();
+
+        foreach (YamlPlayoutSequenceItem sequence in definition.Sequence)
+        {
+            foreach (YamlPlayoutSequenceInstruction instruction in sequence.Items.OfType<YamlPlayoutSequenceInstruction>())
+            {
+                graph.AddEdge(sequence.Key, instruction.Sequence);
+            }
+        }
+
+        return graph.HasAnyCycle();
     }
 
     private async Task<int> GetDaysToBuild() =>

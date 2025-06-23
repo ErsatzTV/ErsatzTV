@@ -1,4 +1,4 @@
-namespace ErsatzTV.Infrastructure.Search;
+namespace ErsatzTV.Core.Search;
 
 public class AdjGraph
 {
@@ -19,6 +19,11 @@ public class AdjGraph
         var visited = new System.Collections.Generic.HashSet<string>();
         var stack = new System.Collections.Generic.HashSet<string>();
         return HasCycleImpl(from.ToLowerInvariant(), visited, stack);
+    }
+
+    public bool HasAnyCycle()
+    {
+        return _edges.Any(edge => HasCycle(edge.From));
     }
 
     private bool HasCycleImpl(string node, ISet<string> visited, ISet<string> stack)

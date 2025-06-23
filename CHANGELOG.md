@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This makes it obvious when hardware acceleration will not work as configured
 - Add button in schedule editor to clone schedule item
 - Allow YAML playout sequence definitions to reference other sequences
-  - Playout builder will behave in unexpected ways if nesting is too deep
+  - Cycles will be detected and logged, and sequences with cycles will prevent the playout from building
 - Add `repeat` property to YAML sequence instruction
   - This tells the playout builder how many times this sequence should repeat
   - Omitting this value is the same as setting it to `1`
