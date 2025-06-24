@@ -3,6 +3,7 @@ using System.Net;
 using System.Xml;
 using Dapper;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Iptv;
 using ErsatzTV.Infrastructure.Data;
@@ -77,6 +78,9 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
 
         await foreach (ChannelResult channel in GetChannels(dbContext).WithCancellation(cancellationToken))
         {
+            bool hasLogo = !string.IsNullOrWhiteSpace(channel.ArtworkPath);
+            bool hasExternalLogo = hasLogo && Artwork.IsExternalUrl(channel.ArtworkPath);
+
             var data = new
             {
                 ChannelId = ChannelIdentifier.FromNumber(channel.Number),
@@ -84,7 +88,8 @@ public class RefreshChannelListHandler : IRequestHandler<RefreshChannelList>
                 ChannelNumber = channel.Number,
                 ChannelName = channel.Name,
                 ChannelCategories = GetCategories(channel.Categories),
-                ChannelHasArtwork = !string.IsNullOrWhiteSpace(channel.ArtworkPath),
+                ChannelHasExternalArtwork = hasExternalLogo,
+                ChannelHasArtwork = hasLogo,
                 ChannelArtworkPath = channel.ArtworkPath,
                 ChannelNameEncoded = WebUtility.UrlEncode(channel.Name)
             };

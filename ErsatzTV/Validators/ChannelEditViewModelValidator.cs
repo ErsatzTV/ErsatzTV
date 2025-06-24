@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.ViewModels;
 using FluentValidation;
 
@@ -15,5 +14,14 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.Group).NotEmpty();
         RuleFor(x => x.FFmpegProfileId).GreaterThan(0);
+
+        When(
+            x => !string.IsNullOrWhiteSpace(x.ExternalLogoUrl),
+            () =>
+            {
+                RuleFor(x => x.ExternalLogoUrl)
+                    .Must(Artwork.IsExternalUrl)
+                    .WithMessage("External logo url is invalid");
+            });
     }
 }
