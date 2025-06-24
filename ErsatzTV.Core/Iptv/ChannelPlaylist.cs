@@ -60,12 +60,16 @@ public class ChannelPlaylist
                 sb.AppendLine("#KODIPROP:inputstream.ffmpegdirect.open_mode=ffmpeg");
             }
 
-            string logo = Optional(channel.Artwork).Flatten()
+            Option<Artwork> maybeArtwork = Optional(channel.Artwork).Flatten()
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                .HeadOrNone()
-                .Match(
-                    artwork => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}",
-                    () => $"{_scheme}://{_host}{_baseUrl}/iptv/logos/gen?text={channel.WebEncodedName}{accessTokenUriAmp}");
+                .HeadOrNone();
+            var logo = $"{_scheme}://{_host}{_baseUrl}/iptv/logos/gen?text={channel.WebEncodedName}{accessTokenUriAmp}";
+            foreach (Artwork artwork in maybeArtwork)
+            {
+                logo = artwork.IsExternalUrl()
+                    ? artwork.Path
+                    : $"{_scheme}://{_host}{_baseUrl}/iptv/logos/{artwork.Path}.jpg{accessTokenUri}";
+            }
 
             string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                 .TrimEnd('=')

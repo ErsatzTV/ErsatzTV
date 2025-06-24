@@ -42,30 +42,46 @@ public class UpdateChannelHandler(
         c.MusicVideoCreditsMode = update.MusicVideoCreditsMode;
         c.MusicVideoCreditsTemplate = update.MusicVideoCreditsTemplate;
         c.SongVideoMode = update.SongVideoMode;
-        c.Artwork ??= new List<Artwork>();
+        c.Artwork ??= [];
 
         if (!string.IsNullOrWhiteSpace(update.Logo))
         {
-            Option<Artwork> maybeLogo =
-                Optional(c.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo);
+            string logo = update.Logo;
+            if (logo.StartsWith("iptv/logos/", StringComparison.Ordinal))
+            {
+                logo = logo.Replace("iptv/logos/", string.Empty);
+            }
 
-            maybeLogo.Match(
-                artwork =>
+            Option<Artwork> maybeLogo = c.Artwork.Where(a => a.ArtworkKind == ArtworkKind.Logo).HeadOrNone();
+            foreach (Artwork artwork in maybeLogo)
+            {
+                artwork.Path = logo;
+                artwork.DateUpdated = DateTime.UtcNow;
+            }
+
+            if (maybeLogo.IsNone)
+            {
+                var artwork = new Artwork
                 {
-                    artwork.Path = update.Logo;
-                    artwork.DateUpdated = DateTime.UtcNow;
-                },
-                () =>
-                {
-                    var artwork = new Artwork
-                    {
-                        Path = update.Logo,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow,
-                        ArtworkKind = ArtworkKind.Logo
-                    };
-                    c.Artwork.Add(artwork);
-                });
+                    Path = logo,
+                    DateAdded = DateTime.UtcNow,
+                    DateUpdated = DateTime.UtcNow,
+                    ArtworkKind = ArtworkKind.Logo
+                };
+                c.Artwork.Add(artwork);
+            }
+        }
+        else
+        {
+            await dbContext.Entry(c)
+                .Collection(channel => channel.Artwork)
+                .LoadAsync();
+
+            foreach (Artwork artwork in c.Artwork.Where(x => x.ArtworkKind is ArtworkKind.Logo).ToList())
+            {
+                c.Artwork.Remove(artwork);
+                dbContext.Artwork.Remove(artwork);
+            }
         }
 
         c.ProgressMode = update.ProgressMode;

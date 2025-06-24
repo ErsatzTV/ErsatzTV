@@ -47,6 +47,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - e.g. `smart_collection:"one" NOT smart_collection:"two"`
   - Cycles will be detected and logged, and searches with cycles will not work as expected
 - Add all `ETV_*` environment variables to Troubleshooting > General info
+- Add `External Logo URL` field to channel editor
+  - Using external (public) logos should fix channel logo display for clients that don't proxy artwork (such as Plex)
+  - Users who have customized the XMLTV channel template `channel.sbntxt` will need to update their templates again
+    - This is because the templates require different logic for external URLs vs ETV-hosted URLs
 
 ### Changed
 - Start to make UI minimally responsive (functional on smaller screens)

@@ -99,9 +99,9 @@
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
                             <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
-                            @if (!string.IsNullOrWhiteSpace(_model.Logo))
+                            @if (!string.IsNullOrWhiteSpace(_model.Logo) || !string.IsNullOrWhiteSpace(_model.ExternalLogoUrl))
                             {
-                                <MudElement HtmlTag="img" src="@($"iptv/logos/{_model.Logo}")" Style="max-height: 50px"/>
+                                <MudElement HtmlTag="img" src="@(string.IsNullOrWhiteSpace(_model.ExternalLogoUrl) ? _model.Logo : _model.ExternalLogoUrl)" Style="max-height: 50px"/>
                             }
                         </MudItem>
                         <MudItem xs="6">
@@ -114,6 +114,7 @@
                             </MudButton>
                         </MudItem>
                     </MudGrid>
+                    <MudTextField Label="External Logo URL" @bind-Value="_model.ExternalLogoUrl" For="@(() => _model.ExternalLogoUrl)"/>
                     <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
                                Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
                                Clearable="true">
@@ -187,7 +188,16 @@
                     _model.Categories = channelViewModel.Categories;
                     _model.Number = channelViewModel.Number;
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
-                    _model.Logo = channelViewModel.Logo;
+
+                    if (Artwork.IsExternalUrl(channelViewModel.Logo))
+                    {
+                        _model.ExternalLogoUrl = channelViewModel.Logo;
+                    }
+                    else
+                    {
+                        _model.Logo = channelViewModel.Logo;
+                    }
+
                     _model.ProgressMode = channelViewModel.ProgressMode;
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
@@ -265,7 +275,8 @@
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
-                    _model.Logo = relativeFileName;
+                    _model.Logo = $"iptv/logos/{relativeFileName}";
+                    _model.ExternalLogoUrl = null;
                     StateHasChanged();
                 },
                 error =>

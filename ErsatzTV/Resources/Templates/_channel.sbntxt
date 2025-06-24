@@ -7,6 +7,7 @@ Available values:
   - channel_name
   - channel_categories
   - channel_has_artwork
+  - channel_has_external_artwork
   - channel_artwork_path
   - channel_name_encoded
 
@@ -25,7 +26,9 @@ The resulting XML will be minified by ErsatzTV - so feel free to keep things nic
   {{ for category in channel_categories }}
     <category lang="en">{{ category }}</category>
   {{ end }}
-  {{ if channel_has_artwork }}
+  {{ if channel_has_external_artwork }}
+    <icon src="{{ channel_artwork_path }}" />
+  {{ else if channel_has_artwork }}
     <icon src="{RequestBase}/iptv/logos/{{ channel_artwork_path }}.jpg{AccessTokenUri}" />
   {{ else }}
     <icon src="{RequestBase}/iptv/logos/gen{AccessTokenUri}&text={{ channel_name_encoded }}" />

@@ -51,10 +51,16 @@ public class CreateChannelHandler(
                 var artwork = new List<Artwork>();
                 if (!string.IsNullOrWhiteSpace(request.Logo))
                 {
+                    string logo = request.Logo;
+                    if (logo.StartsWith("iptv/logos/", StringComparison.Ordinal))
+                    {
+                        logo = logo.Replace("iptv/logos/", string.Empty);
+                    }
+
                     artwork.Add(
                         new Artwork
                         {
-                            Path = request.Logo,
+                            Path = logo,
                             ArtworkKind = ArtworkKind.Logo,
                             DateAdded = DateTime.UtcNow,
                             DateUpdated = DateTime.UtcNow

@@ -42,9 +42,19 @@ internal static class Mapper
     internal static ResolutionAndBitrateViewModel ProjectToViewModel(Resolution resolution, int bitrate) =>
         new(resolution.Height, resolution.Width, bitrate);
 
-    private static string GetLogo(Channel channel) =>
-        Optional(channel.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo))
-            .Match(a => a.Path, string.Empty);
+    private static string GetLogo(Channel channel)
+    {
+        Option<Artwork> maybeArtwork = channel.Artwork
+            .Where(a => a.ArtworkKind == ArtworkKind.Logo)
+            .HeadOrNone();
+
+        foreach (Artwork artwork in maybeArtwork)
+        {
+            return artwork.IsExternalUrl() ? artwork.Path : $"iptv/logos/{artwork.Path}";
+        }
+
+        return string.Empty;
+    }
 
     private static string GetStreamingMode(Channel channel) =>
         channel.StreamingMode switch

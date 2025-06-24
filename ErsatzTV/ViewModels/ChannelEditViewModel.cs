@@ -15,6 +15,7 @@ public class ChannelEditViewModel
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string Logo { get; set; }
+    public string ExternalLogoUrl { get; set; }
     public ChannelProgressMode ProgressMode { get; set; }
     public StreamingMode StreamingMode { get; set; }
     public int? WatermarkId { get; set; }
@@ -39,7 +40,7 @@ public class ChannelEditViewModel
             Group,
             Categories,
             FFmpegProfileId,
-            Logo,
+            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : ExternalLogoUrl,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
             ProgressMode,
@@ -59,7 +60,7 @@ public class ChannelEditViewModel
             Group,
             Categories,
             FFmpegProfileId,
-            Logo,
+            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : ExternalLogoUrl,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
             ProgressMode,
