@@ -45,8 +45,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `collection` (name) to search index for manual collections created within ETV
   - Collections synchronized from media servers are still indexed as `tag`
 - Allow searching by `smart_collection` (name)
-  - Quotes are *always* required when using this feature
-    - e.g. `smart_collection:"one" NOT smart_collection:"two"`
+  - Quotes are *always* required around each collection name when using this feature
+    - e.g. `smart_collection:"one" OR smart_collection:"two"`
   - Cycles will be detected and logged, and searches with cycles will not work as expected
 - Add all `ETV_*` environment variables to Troubleshooting > General info
 - Add `External Logo URL` field to channel editor
