@@ -107,6 +107,8 @@ public static class FileSystemLayout
         MultiEpisodeShuffleTemplatesFolder = Path.Combine(ScriptsFolder, "multi-episode-shuffle");
 
         AudioStreamSelectorScriptsFolder = Path.Combine(ScriptsFolder, "audio-stream-selector");
+
+        ChannelStreamSelectorsFolder = Path.Combine(ScriptsFolder, "channel-stream-selectors");
     }
 
     public static readonly string AppDataFolder;
@@ -155,6 +157,8 @@ public static class FileSystemLayout
     public static readonly string MultiEpisodeShuffleTemplatesFolder;
 
     public static readonly string AudioStreamSelectorScriptsFolder;
+
+    public static readonly string ChannelStreamSelectorsFolder;
 
     public static readonly string MacOsOldAppDataFolder = Path.Combine(
         Environment.GetEnvironmentVariable("HOME") ?? string.Empty,

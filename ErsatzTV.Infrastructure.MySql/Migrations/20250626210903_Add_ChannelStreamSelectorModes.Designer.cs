@@ -4,6 +4,7 @@ using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.MySql.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250626210903_Add_ChannelStreamSelectorModes")]
+    partial class Add_ChannelStreamSelectorModes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -241,6 +244,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AudioStreamSelectorMode")
+                        .HasColumnType("int");
+
                     b.Property<string>("Categories")
                         .HasColumnType("longtext");
 
@@ -283,16 +289,13 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("SongVideoMode")
                         .HasColumnType("int");
 
-                    b.Property<string>("StreamSelector")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("StreamSelectorMode")
-                        .HasColumnType("int");
-
                     b.Property<int>("StreamingMode")
                         .HasColumnType("int");
 
                     b.Property<int>("SubtitleMode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubtitleStreamSelectorMode")
                         .HasColumnType("int");
 
                     b.Property<Guid>("UniqueId")

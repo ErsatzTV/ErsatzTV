@@ -23,6 +23,8 @@ public class Channel
     public StreamingMode StreamingMode { get; set; }
     public List<Playout> Playouts { get; set; }
     public List<Artwork> Artwork { get; set; }
+    public ChannelStreamSelectorMode StreamSelectorMode { get; set; }
+    public string StreamSelector { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string PreferredSubtitleLanguageCode { get; set; }

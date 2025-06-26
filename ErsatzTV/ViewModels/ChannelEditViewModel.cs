@@ -12,6 +12,8 @@ public class ChannelEditViewModel
     public string Categories { get; set; }
     public string Number { get; set; }
     public int FFmpegProfileId { get; set; }
+    public ChannelStreamSelectorMode StreamSelectorMode { get; set; }
+    public string StreamSelector { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
     public string Logo { get; set; }
@@ -41,6 +43,8 @@ public class ChannelEditViewModel
             Categories,
             FFmpegProfileId,
             string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : ExternalLogoUrl,
+            StreamSelectorMode,
+            StreamSelector,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
             ProgressMode,
@@ -61,6 +65,8 @@ public class ChannelEditViewModel
             Categories,
             FFmpegProfileId,
             string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : ExternalLogoUrl,
+            StreamSelectorMode,
+            StreamSelector,
             PreferredAudioLanguageCode,
             PreferredAudioTitle,
             ProgressMode,

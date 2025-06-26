@@ -341,6 +341,7 @@ public class Startup
             FileSystemLayout.FontsCacheFolder,
             FileSystemLayout.TemplatesFolder,
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            FileSystemLayout.ChannelStreamSelectorsFolder,
             FileSystemLayout.ChannelGuideTemplatesFolder,
             FileSystemLayout.ScriptsFolder,
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
