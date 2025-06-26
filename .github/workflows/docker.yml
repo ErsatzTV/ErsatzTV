@@ -31,14 +31,6 @@ jobs:
             path: ''
             suffix: ''
             qemu: false
-          - name: nvidia
-            path: 'nvidia/'
-            suffix: '-nvidia'
-            qemu: false
-          - name: vaapi
-            path: 'vaapi/'
-            suffix: '-vaapi'
-            qemu: false
           - name: arm32v7
             path: 'arm32v7/'
             suffix: '-arm'
@@ -82,12 +74,12 @@ jobs:
           file: ./docker/${{ matrix.path }}Dockerfile
           push: true
           build-args: |
-            INFO_VERSION=${{ inputs.info_version }}-docker${{ matrix.suffix }}
+            INFO_VERSION=${{ inputs.info_version }}-docker
           tags: |
-            jasongdove/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
-            jasongdove/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}${{ matrix.suffix }}
-            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}${{ matrix.suffix }}
+            jasongdove/ersatztv:${{ inputs.base_version }}
+            jasongdove/ersatztv:${{ inputs.tag_version }}
+            ghcr.io/ersatztv/ersatztv:${{ inputs.base_version }}
+            ghcr.io/ersatztv/ersatztv:${{ inputs.tag_version }}
         if: ${{ matrix.name != 'arm64' && matrix.name != 'arm32v7' }}
 
       - name: Build and push
