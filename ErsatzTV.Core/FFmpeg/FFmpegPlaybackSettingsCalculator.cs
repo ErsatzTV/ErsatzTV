@@ -45,7 +45,6 @@ public static class FFmpegPlaybackSettingsCalculator
         FFmpegProfile ffmpegProfile,
         MediaVersion videoVersion,
         Option<MediaStream> videoStream,
-        Option<MediaStream> audioStream,
         DateTimeOffset start,
         DateTimeOffset now,
         TimeSpan inPoint,
@@ -151,13 +150,7 @@ public static class FFmpegPlaybackSettingsCalculator
                 result.AudioFormat = ffmpegProfile.AudioFormat;
                 result.AudioBitrate = ffmpegProfile.AudioBitrate;
                 result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
-
-                foreach (MediaStream _ in audioStream)
-                {
-                    // this can be optimized out later, depending on the audio codec
-                    result.AudioChannels = ffmpegProfile.AudioChannels;
-                }
-
+                result.AudioChannels = ffmpegProfile.AudioChannels;
                 result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
                 result.AudioDuration = outPoint - inPoint;
                 result.NormalizeLoudnessMode = ffmpegProfile.NormalizeLoudnessMode;

@@ -57,7 +57,7 @@ public class FakeLocalFileSystem : ILocalFileSystem
         Task.FromResult(Right<BaseError, Unit>(Unit.Default));
 
     public Unit EmptyFolder(string folder) => Unit.Default;
-
+    public Task<string> ReadAllText(string path) => throw new NotImplementedException();
     public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
     private static List<DirectoryInfo> Split(DirectoryInfo path)

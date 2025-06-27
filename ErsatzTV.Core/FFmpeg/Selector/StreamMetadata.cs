@@ -1,4 +1,4 @@
-namespace ErsatzTV.Core.FFmpeg.StreamSelector;
+namespace ErsatzTV.Core.FFmpeg.Selector;
 
 public enum StreamMetadata
 {

@@ -8,7 +8,7 @@ public class GetChannelStreamSelectorsHandler(ILocalFileSystem localFileSystem)
 {
     public Task<List<string>> Handle(GetChannelStreamSelectors request, CancellationToken cancellationToken) =>
         localFileSystem.ListFiles(FileSystemLayout.ChannelStreamSelectorsFolder)
-            .Map(Path.GetFileNameWithoutExtension)
+            .Map(Path.GetFileName)
             .ToList()
             .AsTask();
 }

@@ -262,6 +262,7 @@ public class TranscodingTests
         var service = new FFmpegLibraryProcessService(
             oldService,
             new FakeStreamSelector(),
+            Substitute.For<ICustomStreamSelector>(),
             tempFilePool,
             new PipelineBuilderFactory(
                 //new FakeNvidiaCapabilitiesFactory(),
@@ -900,6 +901,7 @@ public class TranscodingTests
         var service = new FFmpegLibraryProcessService(
             oldService,
             new FakeStreamSelector(),
+            Substitute.For<ICustomStreamSelector>(),
             Substitute.For<ITempFilePool>(),
             new PipelineBuilderFactory(
                 //new FakeNvidiaCapabilitiesFactory(),
