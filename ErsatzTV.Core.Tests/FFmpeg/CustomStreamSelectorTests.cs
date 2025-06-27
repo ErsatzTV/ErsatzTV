@@ -636,6 +636,29 @@ items:
             }
         }
 
+        [Test]
+        public async Task Should_Select_No_Streams_When_Languages_Do_Not_Match()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language: ["en"]
+    subtitle_language: ["es*","de*"]
+  - audio_language: ["ja"]
+    subtitle_language: ["es*","de*"]
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeFalse();
+            result.Subtitle.IsSome.ShouldBeFalse();
+        }
+
         private static MediaItemAudioVersion GetTestAudioVersion(string englishLanguage)
         {
             var mediaItem = new OtherVideo();
