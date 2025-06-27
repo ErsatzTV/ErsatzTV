@@ -530,6 +530,60 @@ items:
             }
         }
 
+        [Test]
+        public async Task Should_Select_Condition_Audio_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_condition: "title like '%movie%'"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_Audio_Channels()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_condition: "channels > 2"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
         private static MediaItemAudioVersion GetTestAudioVersion(string englishLanguage)
         {
             var mediaItem = new OtherVideo();

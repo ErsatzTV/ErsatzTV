@@ -80,6 +80,14 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         }
                     }
 
+                    if (!string.IsNullOrWhiteSpace(streamSelectorItem.AudioCondition))
+                    {
+                        if (!AudioMatchesCondition(audioStream, streamSelectorItem.AudioCondition))
+                        {
+                            matches = false;
+                        }
+                    }
+
                     if (!matches)
                     {
                         candidateAudioStreams.Remove(audioStream);
@@ -192,6 +200,27 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
         return StreamSelectorResult.None;
     }
 
+    private static bool AudioMatchesCondition(MediaStream audioStream, string audioCondition)
+    {
+        var expression = new NCalc.Expression(audioCondition);
+        expression.EvaluateParameter += (name, e) =>
+        {
+            e.Result = name switch
+            {
+                "id" => audioStream.Index,
+                "title" => (audioStream.Title ?? string.Empty).ToLowerInvariant(),
+                "lang" => (audioStream.Language ?? string.Empty).ToLowerInvariant(),
+                "default" => audioStream.Default,
+                "forced" => audioStream.Forced,
+                "codec" => (audioStream.Codec ?? string.Empty).ToLowerInvariant(),
+                "channels" => audioStream.Channels,
+                _ => e.Result
+            };
+        };
+
+        return expression.Evaluate() as bool? == true;
+    }
+
     private static bool SubtitleMatchesCondition(Subtitle subtitle, string subtitleCondition)
     {
         var expression = new NCalc.Expression(subtitleCondition);
@@ -199,7 +228,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
         {
             e.Result = name switch
             {
-                "id" => subtitle.Id,
+                "id" => subtitle.StreamIndex,
                 "title" => (subtitle.Title ?? string.Empty).ToLowerInvariant(),
                 "lang" => (subtitle.Language ?? string.Empty).ToLowerInvariant(),
                 "default" => subtitle.Default,
