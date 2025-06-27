@@ -33,8 +33,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
             foreach (StreamSelectorItem streamSelectorItem in streamSelector.Items)
             {
-                var candidateAudioStreams = audioStreams.ToList();
-                var candidateSubtitles = allSubtitles.ToList();
+                var candidateAudioStreams = audioStreams.ToDictionary(a => a, _ => int.MaxValue);
+                var candidateSubtitles = allSubtitles.ToDictionary(s => s, _ => int.MaxValue);
 
                 // try to find matching audio stream
                 foreach (MediaStream audioStream in audioStreams.ToList())
@@ -45,8 +45,10 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     if (streamSelectorItem.AudioLanguages.Count > 0)
                     {
                         // match any of the listed languages
-                        foreach (string audioLanguage in streamSelectorItem.AudioLanguages)
+                        for (var langIndex = 0; langIndex < streamSelectorItem.AudioLanguages.Count; langIndex++)
                         {
+                            string audioLanguage = streamSelectorItem.AudioLanguages[langIndex];
+
                             // special case
                             if (audioLanguage == "*")
                             {
@@ -56,6 +58,12 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                             matches = matches || FileSystemName.MatchesSimpleExpression(
                                 audioLanguage.ToLowerInvariant(),
                                 audioStream.Language.ToLowerInvariant());
+
+                            // store lang index for prioritizing later
+                            if (matches && candidateAudioStreams[audioStream] == int.MaxValue)
+                            {
+                                candidateAudioStreams[audioStream] = langIndex;
+                            }
                         }
                     }
                     else
@@ -121,8 +129,10 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         if (streamSelectorItem.SubtitleLanguages.Count > 0)
                         {
                             // match any of the listed languages
-                            foreach (string subtitleLanguage in streamSelectorItem.SubtitleLanguages)
+                            for (var langIndex = 0; langIndex < streamSelectorItem.SubtitleLanguages.Count; langIndex++)
                             {
+                                string subtitleLanguage = streamSelectorItem.SubtitleLanguages[langIndex];
+
                                 // special case
                                 if (subtitleLanguage == "*")
                                 {
@@ -132,6 +142,12 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                                 matches = matches || FileSystemName.MatchesSimpleExpression(
                                     subtitleLanguage,
                                     subtitle.Language);
+
+                                // store lang index for prioritizing later
+                                if (matches && candidateSubtitles[subtitle] == int.MaxValue)
+                                {
+                                    candidateSubtitles[subtitle] = langIndex;
+                                }
                             }
                         }
                         else
@@ -183,8 +199,15 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     }
                 }
 
-                Option<MediaStream> maybeAudioStream = candidateAudioStreams.HeadOrNone();
-                Option<Subtitle> maybeSubtitle = candidateSubtitles.HeadOrNone();
+                Option<MediaStream> maybeAudioStream = candidateAudioStreams
+                    .OrderBy(a => a.Value)
+                    .Select(a => a.Key)
+                    .HeadOrNone();
+
+                Option<Subtitle> maybeSubtitle = candidateSubtitles
+                    .OrderBy(s => s.Value)
+                    .Select(s => s.Key)
+                    .HeadOrNone();
 
                 if (maybeAudioStream.IsSome)
                 {
