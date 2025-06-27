@@ -24,4 +24,10 @@ public class StreamSelectorItem
 
     // [YamlMember(Alias = "subtitle_metadata", ApplyNamingConventions = false)]
     // public StreamMetadata SubtitleMetadata { get; set; } = StreamMetadata.None;
+
+    [YamlMember(Alias = "subtitle_title_allowlist", ApplyNamingConventions = false)]
+    public List<string> SubtitleTitleAllowlist { get; set; } = [];
+
+    [YamlMember(Alias = "subtitle_title_blocklist", ApplyNamingConventions = false)]
+    public List<string> SubtitleTitleBlocklist { get; set; } = [];
 }

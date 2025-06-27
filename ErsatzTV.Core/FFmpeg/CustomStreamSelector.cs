@@ -108,6 +108,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     foreach (Subtitle subtitle in allSubtitles.ToList())
                     {
                         var matches = false;
+                        string safeTitle = subtitle.Title ?? string.Empty;
 
                         if (streamSelectorItem.SubtitleLanguages.Count > 0)
                         {
@@ -125,9 +126,22 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                                     subtitle.Language);
                             }
                         }
-                        else
+
+                        if (streamSelectorItem.SubtitleTitleBlocklist
+                            .Any(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase)))
                         {
                             matches = false;
+                        }
+
+                        if (streamSelectorItem.SubtitleTitleAllowlist.Count > 0)
+                        {
+                            int matchCount = streamSelectorItem.SubtitleTitleAllowlist
+                                .Count(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase));
+
+                            if (matchCount == 0)
+                            {
+                                matches = false;
+                            }
                         }
 
                         if (!matches)
@@ -136,14 +150,14 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} does not match selector item {@SelectorItem}",
-                                new { subtitle.Language },
+                                new { subtitle.Language, subtitle.Title },
                                 streamSelectorItem);
                         }
                         else
                         {
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} matches selector item {@SelectorItem}",
-                                new { subtitle.Language },
+                                new { subtitle.Language, subtitle.Title },
                                 streamSelectorItem);
                         }
                     }

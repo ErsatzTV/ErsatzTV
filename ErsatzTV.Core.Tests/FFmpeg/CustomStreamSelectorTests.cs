@@ -33,7 +33,9 @@ public class CustomStreamSelectorTests
 
             _subtitles =
             [
-                new Subtitle { Id = 1, Language = "eng", Title = "Words" }
+                new Subtitle { Id = 1, Language = "eng", Title = "Words" },
+                new Subtitle { Id = 2, Language = "en", Title = "Signs" },
+                new Subtitle { Id = 3, Language = "en", Title = "Songs" }
             ];
         }
 
@@ -410,6 +412,66 @@ items:
             {
                 audioStream.Index.ShouldBe(2);
                 audioStream.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Ignore_Blocked_Subtitle_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_language:
+    - "en"
+    subtitle_title_blocklist:
+    - "signs"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(3);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Allowed_Subtitle_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_language:
+    - "en"
+    subtitle_title_allowlist:
+    - "songs"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(3);
+                subtitle.Language.ShouldBe("en");
             }
         }
 
