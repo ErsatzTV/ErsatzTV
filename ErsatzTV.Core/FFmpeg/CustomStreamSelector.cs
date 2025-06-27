@@ -80,6 +80,14 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         }
                     }
 
+                    if (!string.IsNullOrWhiteSpace(streamSelectorItem.AudioCondition))
+                    {
+                        if (!AudioMatchesCondition(audioStream, streamSelectorItem.AudioCondition))
+                        {
+                            matches = false;
+                        }
+                    }
+
                     if (!matches)
                     {
                         candidateAudioStreams.Remove(audioStream);
@@ -108,6 +116,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     foreach (Subtitle subtitle in allSubtitles.ToList())
                     {
                         var matches = false;
+                        string safeTitle = subtitle.Title ?? string.Empty;
 
                         if (streamSelectorItem.SubtitleLanguages.Count > 0)
                         {
@@ -127,7 +136,32 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         }
                         else
                         {
+                            matches = true;
+                        }
+
+                        if (streamSelectorItem.SubtitleTitleBlocklist
+                            .Any(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase)))
+                        {
                             matches = false;
+                        }
+
+                        if (streamSelectorItem.SubtitleTitleAllowlist.Count > 0)
+                        {
+                            int matchCount = streamSelectorItem.SubtitleTitleAllowlist
+                                .Count(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase));
+
+                            if (matchCount == 0)
+                            {
+                                matches = false;
+                            }
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(streamSelectorItem.SubtitleCondition))
+                        {
+                            if (!SubtitleMatchesCondition(subtitle, streamSelectorItem.SubtitleCondition))
+                            {
+                                matches = false;
+                            }
                         }
 
                         if (!matches)
@@ -136,14 +170,14 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} does not match selector item {@SelectorItem}",
-                                new { subtitle.Language },
+                                new { subtitle.Language, subtitle.Title },
                                 streamSelectorItem);
                         }
                         else
                         {
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} matches selector item {@SelectorItem}",
-                                new { subtitle.Language },
+                                new { subtitle.Language, subtitle.Title },
                                 streamSelectorItem);
                         }
                     }
@@ -164,6 +198,49 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
         }
 
         return StreamSelectorResult.None;
+    }
+
+    private static bool AudioMatchesCondition(MediaStream audioStream, string audioCondition)
+    {
+        var expression = new NCalc.Expression(audioCondition);
+        expression.EvaluateParameter += (name, e) =>
+        {
+            e.Result = name switch
+            {
+                "id" => audioStream.Index,
+                "title" => (audioStream.Title ?? string.Empty).ToLowerInvariant(),
+                "lang" => (audioStream.Language ?? string.Empty).ToLowerInvariant(),
+                "default" => audioStream.Default,
+                "forced" => audioStream.Forced,
+                "codec" => (audioStream.Codec ?? string.Empty).ToLowerInvariant(),
+                "channels" => audioStream.Channels,
+                _ => e.Result
+            };
+        };
+
+        return expression.Evaluate() as bool? == true;
+    }
+
+    private static bool SubtitleMatchesCondition(Subtitle subtitle, string subtitleCondition)
+    {
+        var expression = new NCalc.Expression(subtitleCondition);
+        expression.EvaluateParameter += (name, e) =>
+        {
+            e.Result = name switch
+            {
+                "id" => subtitle.StreamIndex,
+                "title" => (subtitle.Title ?? string.Empty).ToLowerInvariant(),
+                "lang" => (subtitle.Language ?? string.Empty).ToLowerInvariant(),
+                "default" => subtitle.Default,
+                "forced" => subtitle.Forced,
+                "sdh" => subtitle.SDH,
+                "codec" => (subtitle.Codec ?? string.Empty).ToLowerInvariant(),
+                "external" => subtitle.SubtitleKind is SubtitleKind.Sidecar,
+                _ => e.Result
+            };
+        };
+
+        return expression.Evaluate() as bool? == true;
     }
 
     private async Task<StreamSelector> LoadStreamSelector(string streamSelectorFile)

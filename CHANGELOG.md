@@ -14,6 +14,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - As an example, the custom stream selector config can specify (in priority order):
     - english audio (and disable subtitles)
     - any other audio (and english subtitles, if they exist)
+  - Criteria can include
+    - Stream language
+    - Stream title (allowed title and/or blocked title)
+    - Stream condition, which is an expression that can use
+      - `id` (index)
+      - `title`
+      - `lang`
+      - `default`
+      - `forced`
+      - `sdh` (subtitle only)
+      - `external` (subtitle only)
+      - `codec`
+      - `channels` (audio only)
+    - An example subtitle condition: `lang like 'en%' and external`
+    - An example audio condition: `title like '%movie%' and channels > 2`
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

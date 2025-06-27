@@ -33,7 +33,10 @@ public class CustomStreamSelectorTests
 
             _subtitles =
             [
-                new Subtitle { Id = 1, Language = "eng", Title = "Words" }
+                new Subtitle { Id = 1, Language = "eng", Title = "Words", SubtitleKind = SubtitleKind.Embedded },
+                new Subtitle { Id = 2, Language = "en", Title = "Signs" },
+                new Subtitle { Id = 3, Language = "en", Title = "Songs" },
+                new Subtitle { Id = 4, Language = "en", Forced = true, SubtitleKind = SubtitleKind.Sidecar }
             ];
         }
 
@@ -286,7 +289,7 @@ items:
         }
 
         [Test]
-        public async Task Should_Select_no_Subtitle_Exact_Match_Multiple_Items()
+        public async Task Should_Select_No_Subtitle_Exact_Match_Multiple_Items()
         {
             const string YAML =
 """
@@ -357,6 +360,230 @@ items:
             }
         }
 
+        [Test]
+        public async Task Should_Ignore_Blocked_Audio_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_title_blocklist:
+    - "riff"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Allowed_Audio_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_title_allowlist:
+    - "movie"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Ignore_Blocked_Subtitle_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_language:
+    - "en"
+    subtitle_title_blocklist:
+    - "signs"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(3);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Allowed_Subtitle_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_language:
+    - "en"
+    subtitle_title_allowlist:
+    - "songs"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(3);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_Forced_Subtitle()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_condition: "forced"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(4);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_External_Subtitle()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_condition: "lang like 'en%' and external"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(4);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_Audio_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_condition: "title like '%movie%'"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_Audio_Channels()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_condition: "channels > 2"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
         private static MediaItemAudioVersion GetTestAudioVersion(string englishLanguage)
         {
             var mediaItem = new OtherVideo();
@@ -376,9 +603,18 @@ items:
                     {
                         Index = 1,
                         MediaStreamKind = MediaStreamKind.Audio,
+                        Channels = 2,
+                        Language = englishLanguage,
+                        Title = "Riff Title",
+                        Default = true
+                    },
+                    new MediaStream
+                    {
+                        Index = 2,
+                        MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 6,
                         Language = englishLanguage,
-                        Title = "Another Title",
+                        Title = "Movie Title",
                         Default = true
                     }
                 ]
