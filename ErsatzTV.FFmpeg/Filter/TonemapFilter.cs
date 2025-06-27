@@ -19,16 +19,25 @@ public class TonemapFilter : BaseFilter
     {
         get
         {
-            string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
-
             var tonemap =
                 $"zscale=transfer=linear,tonemap={_ffmpegState.TonemapAlgorithm},zscale=transfer=bt709,format={_desiredPixelFormat.FFmpegName}";
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
-                if (!string.IsNullOrWhiteSpace(pixelFormat))
+                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
-                    return $"hwdownload,format={pixelFormat},{tonemap}";
+                    if (pixelFormat is PixelFormatCuda)
+                    {
+                        foreach (IPixelFormat pf in AvailablePixelFormats.ForPixelFormat(pixelFormat.Name, null))
+                        {
+                            return $"hwdownload,format={pf.FFmpegName},{tonemap}";
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(pixelFormat.FFmpegName))
+                    {
+                        return $"hwdownload,format={pixelFormat.FFmpegName},{tonemap}";
+                    }
                 }
 
                 return $"hwdownload,{tonemap}";
