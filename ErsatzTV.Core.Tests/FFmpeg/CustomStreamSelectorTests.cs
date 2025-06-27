@@ -286,7 +286,7 @@ items:
         }
 
         [Test]
-        public async Task Should_Select_no_Subtitle_Exact_Match_Multiple_Items()
+        public async Task Should_Select_No_Subtitle_Exact_Match_Multiple_Items()
         {
             const string YAML =
 """
@@ -357,6 +357,62 @@ items:
             }
         }
 
+        [Test]
+        public async Task Should_Ignore_Blocked_Audio_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_title_blocklist:
+    - "riff"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Allowed_Audio_Title()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "en*"
+    audio_title_allowlist:
+    - "movie"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(2);
+                audioStream.Language.ShouldBe("eng");
+            }
+        }
+
         private static MediaItemAudioVersion GetTestAudioVersion(string englishLanguage)
         {
             var mediaItem = new OtherVideo();
@@ -376,9 +432,18 @@ items:
                     {
                         Index = 1,
                         MediaStreamKind = MediaStreamKind.Audio,
+                        Channels = 2,
+                        Language = englishLanguage,
+                        Title = "Riff Title",
+                        Default = true
+                    },
+                    new MediaStream
+                    {
+                        Index = 2,
+                        MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 6,
                         Language = englishLanguage,
-                        Title = "Another Title",
+                        Title = "Movie Title",
                         Default = true
                     }
                 ]
