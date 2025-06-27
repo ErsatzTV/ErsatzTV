@@ -40,6 +40,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                 foreach (MediaStream audioStream in audioStreams.ToList())
                 {
                     var matches = false;
+                    string safeTitle = audioStream.Title ?? string.Empty;
 
                     if (streamSelectorItem.AudioLanguages.Count > 0)
                     {
@@ -53,8 +54,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                             }
 
                             matches = matches || FileSystemName.MatchesSimpleExpression(
-                                audioLanguage,
-                                audioStream.Language);
+                                audioLanguage.ToLowerInvariant(),
+                                audioStream.Language.ToLowerInvariant());
                         }
                     }
                     else
@@ -62,20 +63,37 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         matches = true;
                     }
 
+                    if (streamSelectorItem.AudioTitleBlocklist
+                        .Any(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        matches = false;
+                    }
+
+                    if (streamSelectorItem.AudioTitleAllowlist.Count > 0)
+                    {
+                        int matchCount = streamSelectorItem.AudioTitleAllowlist
+                            .Count(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase));
+
+                        if (matchCount == 0)
+                        {
+                            matches = false;
+                        }
+                    }
+
                     if (!matches)
                     {
                         candidateAudioStreams.Remove(audioStream);
 
                         logger.LogDebug(
-                            "Audio stream lang {Language} does not match selector item {@SelectorItem}",
-                            audioStream.Language,
+                            "Audio stream {@Stream} does not match selector item {@SelectorItem}",
+                            new { audioStream.Language, audioStream.Title },
                             streamSelectorItem);
                     }
                     else
                     {
                         logger.LogDebug(
-                            "Audio stream lang {Language} matches selector item {@SelectorItem}",
-                            audioStream.Language,
+                            "Audio stream {@Stream} matches selector item {@SelectorItem}",
+                            new { audioStream.Language, audioStream.Title },
                             streamSelectorItem);
                     }
                 }
@@ -109,12 +127,24 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         }
                         else
                         {
-                            matches = true;
+                            matches = false;
                         }
 
                         if (!matches)
                         {
                             candidateSubtitles.Remove(subtitle);
+
+                            logger.LogDebug(
+                                "Subtitle {@Subtitle} does not match selector item {@SelectorItem}",
+                                new { subtitle.Language },
+                                streamSelectorItem);
+                        }
+                        else
+                        {
+                            logger.LogDebug(
+                                "Subtitle {@Subtitle} matches selector item {@SelectorItem}",
+                                new { subtitle.Language },
+                                streamSelectorItem);
                         }
                     }
                 }

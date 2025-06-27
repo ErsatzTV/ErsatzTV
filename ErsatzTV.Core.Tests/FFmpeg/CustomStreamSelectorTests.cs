@@ -204,7 +204,7 @@ items:
 items:
   - audio_language:
     - "ja"
-  - subtitle_language:
+    subtitle_language:
     - "eng"
 """;
 
@@ -232,7 +232,7 @@ items:
 items:
   - audio_language:
     - "ja"
-  - subtitle_language:
+    subtitle_language:
     - "en*"
 """;
 
@@ -260,7 +260,7 @@ items:
 items:
   - audio_language:
     - "ja"
-  - subtitle_language:
+    subtitle_language:
     - "en*"
 """;
             _audioVersion = GetTestAudioVersion("en");

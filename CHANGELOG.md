@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add new channel stream (audio and subtitle) selector system
+  - Channel editor has a new field `Stream Selector Mode`
+    - `Default` maintains existing behavior
+    - `Custom` uses a YAML config file
+  - The YAML config contains a prioritized list of stream selector "items" (audio and subtitle criteria pairs)
+  - The items are tested against the media from top to bottom, and when (at least) a matching audio track is found, stream selection occurs
+  - As an example, the custom stream selector config can specify (in priority order):
+    - english audio (and disable subtitles)
+    - any other audio (and english subtitles, if they exist)
+
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
 
