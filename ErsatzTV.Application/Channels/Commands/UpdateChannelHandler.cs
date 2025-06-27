@@ -44,6 +44,7 @@ public class UpdateChannelHandler(
         c.MusicVideoCreditsMode = update.MusicVideoCreditsMode;
         c.MusicVideoCreditsTemplate = update.MusicVideoCreditsTemplate;
         c.SongVideoMode = update.SongVideoMode;
+        c.ActiveMode = update.ActiveMode;
         c.Artwork ??= [];
 
         if (!string.IsNullOrWhiteSpace(update.Logo))

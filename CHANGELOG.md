@@ -29,10 +29,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       - `channels` (audio only)
     - An example subtitle condition: `lang like 'en%' and external`
     - An example audio condition: `title like '%movie%' and channels > 2`
+- Add new channel setting `Active Mode`
+  - `Active` - default value, channel streams as normal and has normal visibility
+  - `Hidden` - channel streams as normal and is hidden from M3U/XMLTV/HDHR
+  - `Inactive` - channel cannot stream (will 404) and is hidden from M3U/XMLTV/HDHR
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
-- Fix software tonemap when used with NVIDIA accel (`ETV_DISABLE_VULKAN` env var)
+- Fix HDR transcoding with NVIDIA accel for:
+    - All NVIDIA docker users
+    - Windows NVIDIA users who have set the `ETV_DISABLE_VULKAN` env var
 
 ## [25.2.0] - 2025-06-24
 ### Added

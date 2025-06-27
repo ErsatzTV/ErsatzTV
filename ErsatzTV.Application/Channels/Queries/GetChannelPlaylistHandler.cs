@@ -28,6 +28,11 @@ public class GetChannelPlaylistHandler : IRequestHandler<GetChannelPlaylist, Cha
         var result = new List<Channel>();
         foreach (Channel channel in channels)
         {
+            if (channel.ActiveMode is not ChannelActiveMode.Active)
+            {
+                continue;
+            }
+
             switch (mode.ToLowerInvariant())
             {
                 case "segmenter":

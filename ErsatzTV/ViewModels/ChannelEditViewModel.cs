@@ -33,6 +33,7 @@ public class ChannelEditViewModel
         set => _musicVideoCreditsTemplate = value;
     }
     public ChannelSongVideoMode SongVideoMode { get; set; }
+    public ChannelActiveMode ActiveMode { get; set; }
 
     public UpdateChannel ToUpdate() =>
         new(
@@ -55,7 +56,8 @@ public class ChannelEditViewModel
             SubtitleMode,
             MusicVideoCreditsMode,
             MusicVideoCreditsTemplate,
-            SongVideoMode);
+            SongVideoMode,
+            ActiveMode);
 
     public CreateChannel ToCreate() =>
         new(
@@ -77,5 +79,6 @@ public class ChannelEditViewModel
             SubtitleMode,
             MusicVideoCreditsMode,
             MusicVideoCreditsTemplate,
-            SongVideoMode);
+            SongVideoMode,
+            ActiveMode);
 }

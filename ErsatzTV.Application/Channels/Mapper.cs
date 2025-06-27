@@ -27,7 +27,8 @@ internal static class Mapper
             channel.SubtitleMode,
             channel.MusicVideoCreditsMode,
             channel.MusicVideoCreditsTemplate,
-            channel.SongVideoMode);
+            channel.SongVideoMode,
+            channel.ActiveMode);
 
     internal static ChannelResponseModel ProjectToResponseModel(Channel channel) =>
         new(
