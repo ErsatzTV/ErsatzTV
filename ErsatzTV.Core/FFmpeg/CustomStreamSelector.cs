@@ -126,6 +126,10 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                                     subtitle.Language);
                             }
                         }
+                        else
+                        {
+                            matches = true;
+                        }
 
                         if (streamSelectorItem.SubtitleTitleBlocklist
                             .Any(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase)))
@@ -139,6 +143,14 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                                 .Count(block => safeTitle.Contains(block, StringComparison.OrdinalIgnoreCase));
 
                             if (matchCount == 0)
+                            {
+                                matches = false;
+                            }
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(streamSelectorItem.SubtitleCondition))
+                        {
+                            if (!SubtitleMatchesCondition(subtitle, streamSelectorItem.SubtitleCondition))
                             {
                                 matches = false;
                             }
@@ -178,6 +190,28 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
         }
 
         return StreamSelectorResult.None;
+    }
+
+    private static bool SubtitleMatchesCondition(Subtitle subtitle, string subtitleCondition)
+    {
+        var expression = new NCalc.Expression(subtitleCondition);
+        expression.EvaluateParameter += (name, e) =>
+        {
+            e.Result = name switch
+            {
+                "id" => subtitle.Id,
+                "title" => (subtitle.Title ?? string.Empty).ToLowerInvariant(),
+                "lang" => (subtitle.Language ?? string.Empty).ToLowerInvariant(),
+                "default" => subtitle.Default,
+                "forced" => subtitle.Forced,
+                "sdh" => subtitle.SDH,
+                "codec" => (subtitle.Codec ?? string.Empty).ToLowerInvariant(),
+                "external" => subtitle.SubtitleKind is SubtitleKind.Sidecar,
+                _ => e.Result
+            };
+        };
+
+        return expression.Evaluate() as bool? == true;
     }
 
     private async Task<StreamSelector> LoadStreamSelector(string streamSelectorFile)

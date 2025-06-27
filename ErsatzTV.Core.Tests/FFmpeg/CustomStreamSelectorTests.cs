@@ -33,9 +33,10 @@ public class CustomStreamSelectorTests
 
             _subtitles =
             [
-                new Subtitle { Id = 1, Language = "eng", Title = "Words" },
+                new Subtitle { Id = 1, Language = "eng", Title = "Words", SubtitleKind = SubtitleKind.Embedded },
                 new Subtitle { Id = 2, Language = "en", Title = "Signs" },
-                new Subtitle { Id = 3, Language = "en", Title = "Songs" }
+                new Subtitle { Id = 3, Language = "en", Title = "Songs" },
+                new Subtitle { Id = 4, Language = "en", Forced = true, SubtitleKind = SubtitleKind.Sidecar }
             ];
         }
 
@@ -471,6 +472,60 @@ items:
             foreach (Subtitle subtitle in result.Subtitle)
             {
                 subtitle.Id.ShouldBe(3);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_Forced_Subtitle()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_condition: "forced"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(4);
+                subtitle.Language.ShouldBe("en");
+            }
+        }
+
+        [Test]
+        public async Task Should_Select_Condition_External_Subtitle()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language:
+    - "*"
+    subtitle_condition: "lang like 'en%' and external"
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.Subtitle.IsSome.ShouldBeTrue();
+
+            foreach (Subtitle subtitle in result.Subtitle)
+            {
+                subtitle.Id.ShouldBe(4);
                 subtitle.Language.ShouldBe("en");
             }
         }
