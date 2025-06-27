@@ -36,6 +36,9 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                 var candidateAudioStreams = audioStreams.ToDictionary(a => a, _ => int.MaxValue);
                 var candidateSubtitles = allSubtitles.ToDictionary(s => s, _ => int.MaxValue);
 
+                var passesAudio = false;
+                var passesSubtitles = false;
+
                 // try to find matching audio stream
                 foreach (MediaStream audioStream in audioStreams.ToList())
                 {
@@ -107,6 +110,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     }
                     else
                     {
+                        passesAudio = true;
+
                         logger.LogDebug(
                             "Audio stream {@Stream} matches selector item {@SelectorItem}",
                             new { audioStream.Language, audioStream.Title },
@@ -118,6 +123,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                 if (streamSelectorItem.DisableSubtitles)
                 {
                     candidateSubtitles.Clear();
+                    passesSubtitles = true;
                 }
                 else
                 {
@@ -191,6 +197,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                         }
                         else
                         {
+                            passesSubtitles = true;
+
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} matches selector item {@SelectorItem}",
                                 new { subtitle.Language, subtitle.Title },
@@ -209,7 +217,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     .Select(s => s.Key)
                     .HeadOrNone();
 
-                if (maybeAudioStream.IsSome)
+                if (passesAudio && passesSubtitles)
                 {
                     return new StreamSelectorResult(maybeAudioStream, maybeSubtitle);
                 }
