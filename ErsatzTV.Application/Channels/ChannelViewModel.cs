@@ -24,7 +24,8 @@ public record ChannelViewModel(
     ChannelSubtitleMode SubtitleMode,
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
-    ChannelSongVideoMode SongVideoMode)
+    ChannelSongVideoMode SongVideoMode,
+    ChannelActiveMode ActiveMode)
 {
     public string WebEncodedName => WebUtility.UrlEncode(Name);
 }

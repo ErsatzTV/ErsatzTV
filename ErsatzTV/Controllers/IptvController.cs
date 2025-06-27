@@ -83,10 +83,15 @@ public class IptvController : ControllerBase
         [FromQuery]
         string mode = null)
     {
+        Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
+        if (maybeChannel.IsNone || await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode.Inactive)
+        {
+            return NotFound();
+        }
+
         // if mode is "unspecified" - find the configured mode and set it or redirect
         if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
         {
-            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
             foreach (ChannelViewModel channel in maybeChannel)
             {
                 switch (channel.StreamingMode)
@@ -180,10 +185,15 @@ public class IptvController : ControllerBase
         [FromQuery]
         string mode = "mixed")
     {
+        Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
+        if (maybeChannel.IsNone || await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode.Inactive)
+        {
+            return NotFound();
+        }
+
         // if mode is "unspecified" - find the configured mode and set it or redirect
         if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
         {
-            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
             foreach (ChannelViewModel channel in maybeChannel)
             {
                 switch (channel.StreamingMode)

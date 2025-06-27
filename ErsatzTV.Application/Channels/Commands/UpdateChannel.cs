@@ -23,4 +23,5 @@ public record UpdateChannel(
     ChannelSubtitleMode SubtitleMode,
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
-    ChannelSongVideoMode SongVideoMode) : IRequest<Either<BaseError, ChannelViewModel>>;
+    ChannelSongVideoMode SongVideoMode,
+    ChannelActiveMode ActiveMode) : IRequest<Either<BaseError, ChannelViewModel>>;

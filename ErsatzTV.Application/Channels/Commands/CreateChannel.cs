@@ -22,4 +22,5 @@ public record CreateChannel(
     ChannelSubtitleMode SubtitleMode,
     ChannelMusicVideoCreditsMode MusicVideoCreditsMode,
     string MusicVideoCreditsTemplate,
-    ChannelSongVideoMode SongVideoMode) : IRequest<Either<BaseError, CreateChannelResult>>;
+    ChannelSongVideoMode SongVideoMode,
+    ChannelActiveMode ActiveMode) : IRequest<Either<BaseError, CreateChannelResult>>;

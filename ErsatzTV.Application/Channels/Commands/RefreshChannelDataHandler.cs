@@ -49,6 +49,18 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         _localFileSystem.EnsureFolderExists(FileSystemLayout.ChannelGuideCacheFolder);
 
+        string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        int inactiveCount = await dbContext.Channels
+            .Where(c => c.Number == request.ChannelNumber && c.ActiveMode != ChannelActiveMode.Active)
+            .CountAsync(cancellationToken);
+        if (inactiveCount > 0)
+        {
+            File.Delete(targetFile);
+            return;
+        }
+
         string movieTemplateFileName = GetMovieTemplateFileName();
         string episodeTemplateFileName = GetEpisodeTemplateFileName();
         string musicVideoTemplateFileName = GetMusicVideoTemplateFileName();
@@ -84,8 +96,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
         string otherVideoText = await File.ReadAllTextAsync(otherVideoTemplateFileName, cancellationToken);
         var otherVideoTemplate = Template.Parse(otherVideoText, otherVideoTemplateFileName);
-
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Playout> playouts = await dbContext.Playouts
             .AsNoTracking()
@@ -244,7 +254,6 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         string tempFile = Path.GetTempFileName();
         await File.WriteAllBytesAsync(tempFile, ms.ToArray(), cancellationToken);
 
-        string targetFile = Path.Combine(FileSystemLayout.ChannelGuideCacheFolder, $"{request.ChannelNumber}.xml");
         File.Move(tempFile, targetFile, true);
     }
 

@@ -18,7 +18,7 @@ public static class AvailablePixelFormats
 
     private static Option<IPixelFormat> LogUnknownPixelFormat(string pixelFormat, ILogger? logger)
     {
-        logger?.LogWarning("Unexpected pixel format {PixelFormat} may have playback issues", pixelFormat);
+        logger?.LogDebug("Unexpected pixel format {PixelFormat} may have playback issues", pixelFormat);
         return Option<IPixelFormat>.None;
     }
 }
