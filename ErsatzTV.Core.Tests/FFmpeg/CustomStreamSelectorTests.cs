@@ -68,6 +68,31 @@ items:
         }
 
         [Test]
+        public async Task Should_Select_und_Audio_Missing_Language()
+        {
+            const string YAML =
+"""
+---
+items:
+  - audio_language: ["und"]
+""";
+
+            var streamSelector = new CustomStreamSelector(
+                new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
+                new NullLogger<CustomStreamSelector>());
+
+            StreamSelectorResult result = await streamSelector.SelectStreams(_channel, _audioVersion, _subtitles);
+
+            result.AudioStream.IsSome.ShouldBeTrue();
+
+            foreach (MediaStream audioStream in result.AudioStream)
+            {
+                audioStream.Index.ShouldBe(3);
+                audioStream.Language.ShouldBeNullOrWhiteSpace();
+            }
+        }
+
+        [Test]
         public async Task Should_Select_eng_Audio_Exact_Match_Multiple_Audio_Languages()
         {
             const string YAML =
@@ -690,7 +715,13 @@ items:
                         Channels = 6,
                         Language = englishLanguage,
                         Title = "Movie Title",
-                        Default = true
+                    },
+                    new MediaStream
+                    {
+                        Index = 3,
+                        MediaStreamKind = MediaStreamKind.Audio,
+                        Channels = 2,
+                        Title = "Who Knows",
                     }
                 ]
             };
