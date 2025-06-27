@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
+- Fix software tonemap when used with NVIDIA accel (`ETV_DISABLE_VULKAN` env var)
 
 ## [25.2.0] - 2025-06-24
 ### Added
