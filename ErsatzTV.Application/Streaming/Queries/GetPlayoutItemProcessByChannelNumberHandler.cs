@@ -410,16 +410,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         List<Subtitle> allSubtitles = playoutItemWithPath.PlayoutItem.MediaItem switch
         {
             Episode episode => await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNoneAsync(new List<Subtitle>()),
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
             Movie movie => await Optional(movie.MovieMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNoneAsync(new List<Subtitle>()),
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
             MusicVideo musicVideo => await GetMusicVideoSubtitles(musicVideo, channel, settings),
             OtherVideo otherVideo => await Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone()
-                .Map(mm => mm.Subtitles ?? new List<Subtitle>())
-                .IfNoneAsync(new List<Subtitle>()),
-            _ => new List<Subtitle>()
+                .Map(mm => mm.Subtitles ?? [])
+                .IfNoneAsync([]),
+            _ => []
         };
 
         bool isMediaServer = playoutItemWithPath.PlayoutItem.MediaItem is PlexMovie or PlexEpisode or

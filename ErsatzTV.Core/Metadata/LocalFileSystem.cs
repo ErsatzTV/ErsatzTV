@@ -164,4 +164,6 @@ public class LocalFileSystem : ILocalFileSystem
 
         return Unit.Default;
     }
+
+    public Task<string> ReadAllText(string path) => File.ReadAllTextAsync(path);
 }

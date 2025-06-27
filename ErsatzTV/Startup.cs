@@ -341,6 +341,7 @@ public class Startup
             FileSystemLayout.FontsCacheFolder,
             FileSystemLayout.TemplatesFolder,
             FileSystemLayout.MusicVideoCreditsTemplatesFolder,
+            FileSystemLayout.ChannelStreamSelectorsFolder,
             FileSystemLayout.ChannelGuideTemplatesFolder,
             FileSystemLayout.ScriptsFolder,
             FileSystemLayout.MultiEpisodeShuffleTemplatesFolder,
@@ -703,6 +704,7 @@ public class Startup
         services.AddScoped<IEmbyMovieRepository, EmbyMovieRepository>();
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
+        services.AddScoped<ICustomStreamSelector, CustomStreamSelector>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
         services.AddScoped<IStreamSelectorRepository, StreamSelectorRepository>();
         services.AddScoped<IHardwareCapabilitiesFactory, HardwareCapabilitiesFactory>();

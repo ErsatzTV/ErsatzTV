@@ -357,7 +357,7 @@ public class YamlPlayoutBuilder(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Error loading YAML");
+            logger.LogWarning(ex, "Error loading YAML playout definition");
             throw;
         }
     }

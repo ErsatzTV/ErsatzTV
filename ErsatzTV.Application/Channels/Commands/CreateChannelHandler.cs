@@ -77,6 +77,8 @@ public class CreateChannelHandler(
                     ProgressMode = request.ProgressMode,
                     StreamingMode = request.StreamingMode,
                     Artwork = artwork,
+                    StreamSelectorMode = request.StreamSelectorMode,
+                    StreamSelector = request.StreamSelector,
                     PreferredAudioLanguageCode = request.PreferredAudioLanguageCode,
                     PreferredAudioTitle = request.PreferredAudioTitle,
                     PreferredSubtitleLanguageCode = request.PreferredSubtitleLanguageCode,

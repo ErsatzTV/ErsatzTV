@@ -97,13 +97,14 @@ public class FFmpegProcessService
                 channel.FFmpegProfile,
                 videoVersion,
                 videoStream,
-                None,
                 DateTimeOffset.UnixEpoch,
                 DateTimeOffset.UnixEpoch,
                 TimeSpan.Zero,
                 TimeSpan.Zero,
                 false,
                 Option<int>.None);
+
+            scalePlaybackSettings.AudioChannels = Option<int>.None;
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
                 .WithThreads(1)

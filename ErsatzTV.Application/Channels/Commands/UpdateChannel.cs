@@ -11,6 +11,8 @@ public record UpdateChannel(
     string Categories,
     int FFmpegProfileId,
     string Logo,
+    ChannelStreamSelectorMode StreamSelectorMode,
+    string StreamSelector,
     string PreferredAudioLanguageCode,
     string PreferredAudioTitle,
     ChannelProgressMode ProgressMode,

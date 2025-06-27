@@ -14,6 +14,8 @@ internal static class Mapper
             channel.Categories,
             channel.FFmpegProfileId,
             GetLogo(channel),
+            channel.StreamSelectorMode,
+            channel.StreamSelector,
             channel.PreferredAudioLanguageCode,
             channel.PreferredAudioTitle,
             channel.ProgressMode,

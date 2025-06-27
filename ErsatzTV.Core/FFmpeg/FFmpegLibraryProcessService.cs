@@ -20,6 +20,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     private readonly IConfigElementRepository _configElementRepository;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
+    private readonly ICustomStreamSelector _customStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
     private readonly ITempFilePool _tempFilePool;
@@ -27,6 +28,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
         IFFmpegStreamSelector ffmpegStreamSelector,
+        ICustomStreamSelector customStreamSelector,
         ITempFilePool tempFilePool,
         IPipelineBuilderFactory pipelineBuilderFactory,
         IConfigElementRepository configElementRepository,
@@ -34,6 +36,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         _ffmpegProcessService = ffmpegProcessService;
         _ffmpegStreamSelector = ffmpegStreamSelector;
+        _customStreamSelector = customStreamSelector;
         _tempFilePool = tempFilePool;
         _pipelineBuilderFactory = pipelineBuilderFactory;
         _configElementRepository = configElementRepository;
@@ -73,20 +76,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Action<FFmpegPipeline> pipelineAction)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
-        Option<MediaStream> maybeAudioStream =
-            await _ffmpegStreamSelector.SelectAudioStream(
-                audioVersion,
-                channel.StreamingMode,
-                channel,
-                preferredAudioLanguage,
-                preferredAudioTitle);
 
         FFmpegPlaybackSettings playbackSettings = FFmpegPlaybackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
             channel.FFmpegProfile,
             videoVersion,
             videoStream,
-            maybeAudioStream,
             start,
             now,
             inPoint,
@@ -96,12 +91,40 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         List<Subtitle> allSubtitles = await getSubtitles(playbackSettings);
 
-        Option<Subtitle> maybeSubtitle =
-            await _ffmpegStreamSelector.SelectSubtitleStream(
-                allSubtitles,
-                channel,
-                preferredSubtitleLanguage,
-                subtitleMode);
+        Option<MediaStream> maybeAudioStream = Option<MediaStream>.None;
+        Option<Subtitle> maybeSubtitle =  Option<Subtitle>.None;
+
+        if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Custom)
+        {
+            StreamSelectorResult result = await _customStreamSelector.SelectStreams(channel, audioVersion, allSubtitles);
+            maybeAudioStream = result.AudioStream;
+            maybeSubtitle = result.Subtitle;
+
+            if (maybeAudioStream.IsNone)
+            {
+                _logger.LogWarning(
+                    "No audio stream found using custom stream selector {StreamSelector}; will use default stream selection logic",
+                    channel.StreamSelector);
+            }
+        }
+
+        if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Default || maybeAudioStream.IsNone)
+        {
+            maybeAudioStream =
+                await _ffmpegStreamSelector.SelectAudioStream(
+                    audioVersion,
+                    channel.StreamingMode,
+                    channel,
+                    preferredAudioLanguage,
+                    preferredAudioTitle);
+
+            maybeSubtitle =
+                await _ffmpegStreamSelector.SelectSubtitleStream(
+                    allSubtitles,
+                    channel,
+                    preferredSubtitleLanguage,
+                    subtitleMode);
+        }
 
         foreach (Subtitle subtitle in maybeSubtitle)
         {

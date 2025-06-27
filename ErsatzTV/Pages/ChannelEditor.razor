@@ -48,35 +48,55 @@
                             <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="mt-3"
-                               Label="Preferred Audio Language"
-                               @bind-Value="_model.PreferredAudioLanguageCode"
-                               For="@(() => _model.PreferredAudioLanguageCode)"
-                               Clearable="true">
-                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                        @foreach (LanguageCodeViewModel culture in _availableCultures)
-                        {
-                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                        }
+                    <MudSelect Class="mt-3" Label="Stream Selector Mode" @bind-Value="_model.StreamSelectorMode" For="@(() => _model.StreamSelectorMode)">
+                        <MudSelectItem Value="@(ChannelStreamSelectorMode.Default)">Default</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelStreamSelectorMode.Custom)">Custom</MudSelectItem>
                     </MudSelect>
-                    <MudTextField Label="Preferred Audio Title" @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
-                    <MudSelect Class="mt-3"
-                               Label="Preferred Subtitle Language"
-                               @bind-Value="_model.PreferredSubtitleLanguageCode"
-                               For="@(() => _model.PreferredSubtitleLanguageCode)"
-                               Clearable="true">
-                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                        @foreach (LanguageCodeViewModel culture in _availableCultures)
-                        {
-                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
-                        <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
-                    </MudSelect>
+                    @if (_model.StreamSelectorMode is ChannelStreamSelectorMode.Default)
+                    {
+                        <MudSelect Class="mt-3"
+                                   Label="Preferred Audio Language"
+                                   @bind-Value="_model.PreferredAudioLanguageCode"
+                                   For="@(() => _model.PreferredAudioLanguageCode)"
+                                   Clearable="true">
+                            <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                            @foreach (LanguageCodeViewModel culture in _availableCultures)
+                            {
+                                <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField Label="Preferred Audio Title" @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
+                        <MudSelect Class="mt-3"
+                                   Label="Preferred Subtitle Language"
+                                   @bind-Value="_model.PreferredSubtitleLanguageCode"
+                                   For="@(() => _model.PreferredSubtitleLanguageCode)"
+                                   Clearable="true">
+                            <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                            @foreach (LanguageCodeViewModel culture in _availableCultures)
+                            {
+                                <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                            <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
+                            <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
+                            <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
+                            <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
+                        </MudSelect>
+                    }
+                    else
+                    {
+                        <MudSelect Class="mt-3"
+                                   Label="Stream Selector"
+                                   @bind-Value="_model.StreamSelector"
+                                   For="@(() => _model.StreamSelector)">
+                        <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
+                            @foreach (string selector in _streamSelectors)
+                            {
+                                <MudSelectItem T="string" Value="@selector">@selector</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
                     <MudSelect Class="mt-3" Label="Music Video Credits Mode" @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
                         <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
@@ -156,11 +176,12 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
-    private List<FFmpegProfileViewModel> _ffmpegProfiles = new();
-    private List<LanguageCodeViewModel> _availableCultures = new();
-    private List<WatermarkViewModel> _watermarks = new();
-    private List<FillerPresetViewModel> _fillerPresets = new();
-    private List<string> _musicVideoCreditsTemplates = new();
+    private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
+    private List<LanguageCodeViewModel> _availableCultures = [];
+    private List<WatermarkViewModel> _watermarks = [];
+    private List<FillerPresetViewModel> _fillerPresets = [];
+    private List<string> _musicVideoCreditsTemplates = [];
+    private List<string> _streamSelectors = [];
 
     public void Dispose()
     {
@@ -175,6 +196,7 @@
         await LoadWatermarks(_cts.Token);
         await LoadFillerPresets(_cts.Token);
         await LoadMusicVideoCreditsTemplates(_cts.Token);
+        await LoadChannelStreamSelectors(_cts.Token);
 
         if (Id.HasValue)
         {
@@ -200,6 +222,8 @@
 
                     _model.ProgressMode = channelViewModel.ProgressMode;
                     _model.StreamingMode = channelViewModel.StreamingMode;
+                    _model.StreamSelectorMode = channelViewModel.StreamSelectorMode;
+                    _model.StreamSelector = channelViewModel.StreamSelector;
                     _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
                     _model.PreferredAudioTitle = channelViewModel.PreferredAudioTitle;
                     _model.WatermarkId = channelViewModel.WatermarkId;
@@ -248,6 +272,9 @@
 
     private async Task LoadMusicVideoCreditsTemplates(CancellationToken cancellationToken) =>
         _musicVideoCreditsTemplates = await Mediator.Send(new GetMusicVideoCreditTemplates(), cancellationToken);
+
+    private async Task LoadChannelStreamSelectors(CancellationToken cancellationToken) =>
+        _streamSelectors = await Mediator.Send(new GetChannelStreamSelectors(), cancellationToken);
 
     private async Task HandleSubmitAsync()
     {
