@@ -43,7 +43,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                 foreach (MediaStream audioStream in audioStreams.ToList())
                 {
                     var matches = false;
-                    string safeTitle = audioStream.Title ?? string.Empty;
+                    string safeTitle = (audioStream.Title ?? string.Empty).ToLowerInvariant();
+                    string safeLanguage = (audioStream.Language ?? "und").ToLowerInvariant();
 
                     if (streamSelectorItem.AudioLanguages.Count > 0)
                     {
@@ -60,7 +61,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                             matches = matches || FileSystemName.MatchesSimpleExpression(
                                 audioLanguage.ToLowerInvariant(),
-                                audioStream.Language.ToLowerInvariant());
+                                safeLanguage);
 
                             // store lang index for prioritizing later
                             if (matches && candidateAudioStreams[audioStream] == int.MaxValue)
@@ -105,7 +106,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                         logger.LogDebug(
                             "Audio stream {@Stream} does not match selector item {@SelectorItem}",
-                            new { audioStream.Language, audioStream.Title },
+                            new { Language = safeLanguage, Title = safeTitle },
                             streamSelectorItem);
                     }
                     else
@@ -114,7 +115,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                         logger.LogDebug(
                             "Audio stream {@Stream} matches selector item {@SelectorItem}",
-                            new { audioStream.Language, audioStream.Title },
+                            new { Language = safeLanguage, Title = safeTitle },
                             streamSelectorItem);
                     }
                 }
@@ -130,7 +131,8 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
                     foreach (Subtitle subtitle in allSubtitles.ToList())
                     {
                         var matches = false;
-                        string safeTitle = subtitle.Title ?? string.Empty;
+                        string safeTitle = (subtitle.Title ?? string.Empty).ToLowerInvariant();
+                        string safeLanguage = (subtitle.Language ?? "und").ToLowerInvariant();
 
                         if (streamSelectorItem.SubtitleLanguages.Count > 0)
                         {
@@ -147,7 +149,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                                 matches = matches || FileSystemName.MatchesSimpleExpression(
                                     subtitleLanguage,
-                                    subtitle.Language);
+                                    safeLanguage);
 
                                 // store lang index for prioritizing later
                                 if (matches && candidateSubtitles[subtitle] == int.MaxValue)
@@ -192,7 +194,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} does not match selector item {@SelectorItem}",
-                                new { subtitle.Language, subtitle.Title },
+                                new { Language = safeLanguage, Title = safeTitle },
                                 streamSelectorItem);
                         }
                         else
@@ -201,7 +203,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
                             logger.LogDebug(
                                 "Subtitle {@Subtitle} matches selector item {@SelectorItem}",
-                                new { subtitle.Language, subtitle.Title },
+                                new { Language = safeLanguage, Title = safeTitle },
                                 streamSelectorItem);
                         }
                     }
