@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Threading.Channels;
 using ErsatzTV.Application.Libraries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.FFmpeg.Runtime;
@@ -43,6 +44,7 @@ public class CallPlexNetworkScannerHandler : CallLibraryScannerHandler<Synchroni
     protected override async Task<DateTimeOffset> GetLastScan(TvContext dbContext, SynchronizePlexNetworks request)
     {
         DateTime minDateTime = await dbContext.PlexLibraries
+            .Filter(l => l.MediaKind == LibraryMediaKind.Shows)
             .SelectOneAsync(l => l.Id, l => l.Id == request.PlexLibraryId)
             .Match(l => l.LastNetworksScan ?? SystemTime.MinValueUtc, () => SystemTime.MaxValueUtc);
 
