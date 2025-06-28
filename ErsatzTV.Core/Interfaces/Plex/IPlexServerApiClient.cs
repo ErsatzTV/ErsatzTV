@@ -82,4 +82,10 @@ public interface IPlexServerApiClient
         PlexServerAuthToken token,
         int tagType,
         CancellationToken cancellationToken);
+
+    IAsyncEnumerable<Tuple<PlexShow, int>> GetTagShowContents(
+        PlexLibrary library,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexTag tag);
 }

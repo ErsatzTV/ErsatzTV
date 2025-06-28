@@ -1,19 +1,26 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
+using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Plex;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
 
-public class PlexNetworkScanner(IPlexServerApiClient plexServerApiClient, ILogger<PlexNetworkScanner> logger) : IPlexNetworkScanner
+public class PlexNetworkScanner(
+    IPlexServerApiClient plexServerApiClient,
+    IPlexTelevisionRepository plexTelevisionRepository,
+    IMediator mediator,
+    ILogger<PlexNetworkScanner> logger) : IPlexNetworkScanner
 {
     public async Task<Either<BaseError, Unit>> ScanNetworks(
+        PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token,
         CancellationToken cancellationToken)
     {
-        logger.LogInformation("Scanning Plex networks...");
+        logger.LogDebug("Scanning Plex networks...");
 
         await foreach ((PlexTag tag, int _) in plexServerApiClient.GetAllTags(
                            connection,
@@ -21,9 +28,54 @@ public class PlexNetworkScanner(IPlexServerApiClient plexServerApiClient, ILogge
                            319,
                            cancellationToken))
         {
-            logger.LogInformation("Found Plex network {Tag}", tag.Tag);
+            logger.LogDebug("Found Plex network {Tag}", tag.Tag);
+
+            await SyncNetworkItems(library, connection, token, tag, cancellationToken);
         }
 
         return Either<BaseError, Unit>.Right(Unit.Default);
+    }
+
+    private async Task SyncNetworkItems(
+        PlexLibrary library,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexTag tag,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // get network items from Plex
+            IAsyncEnumerable<Tuple<PlexShow, int>> items = plexServerApiClient.GetTagShowContents(
+                library,
+                connection,
+                token,
+                tag);
+
+            List<int> removedIds = await plexTelevisionRepository.RemoveAllTags(library, tag);
+
+            // sync tags (networks) on items
+            var addedIds = new List<int>();
+            await foreach ((PlexShow item, int _) in items)
+            {
+                addedIds.Add(await plexTelevisionRepository.AddTag(item, tag));
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
+
+            if (changedIds.Length > 0)
+            {
+                logger.LogDebug("Plex network {Name} contains {Count} changed items", tag.Tag, changedIds.Length);
+            }
+
+            await mediator.Publish(
+                new ScannerProgressUpdate(0, null, null, changedIds.ToArray(), []),
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to synchronize Plex network {Name}", tag.Tag);
+        }
     }
 }

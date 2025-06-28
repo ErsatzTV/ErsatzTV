@@ -570,4 +570,52 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             return BaseError.New("Failed to update episode path");
         }
     }
+
+    public async Task<List<int>> RemoveAllTags(PlexLibrary library, PlexTag tag)
+    {
+        var result = new List<int>();
+
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        // TODO: limit to library
+
+        // shows
+        result.AddRange(
+            await dbContext.Connection.QueryAsync<int>(
+                @"SELECT PS.Id FROM Tag T
+              INNER JOIN ShowMetadata SM on T.ShowMetadataId = SM.Id
+              INNER JOIN PlexShow PS on PS.Id = SM.ShowId
+              INNER JOIN MediaItem MI on PS.Id = MI.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+              WHERE LP.LibraryId = @LibraryId AND T.Name = @Tag AND T.ExternalTypeId = @TagType",
+                new { LibraryId = library.Id, tag.Tag, tag.TagType }));
+
+        // delete all tags
+        await dbContext.Connection.ExecuteAsync(
+            "DELETE FROM Tag WHERE Name = @Tag AND ExternalTypeId = @TagType",
+            new { tag.Tag, tag.TagType });
+
+        return result;
+    }
+
+    public async Task<int> AddTag(MediaItem item, PlexTag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        switch (item)
+        {
+            case PlexShow show:
+                int showId = await dbContext.Connection.ExecuteScalarAsync<int>(
+                    "SELECT Id FROM PlexShow WHERE `Key` = @Key",
+                    new { show.Key });
+                await dbContext.Connection.ExecuteAsync(
+                    @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
+                      SELECT @Tag, @TagType, Id FROM
+                      (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
+                    new { tag.Tag, tag.TagType, ShowId = showId });
+                return showId;
+            default:
+                return 0;
+        }
+    }
 }

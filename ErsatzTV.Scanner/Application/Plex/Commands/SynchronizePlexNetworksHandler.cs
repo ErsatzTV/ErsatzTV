@@ -93,6 +93,7 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         if (parameters.ForceScan || parameters.LibraryRefreshInterval > 0 && nextScan < DateTimeOffset.Now)
         {
             Either<BaseError, Unit> result = await _scanner.ScanNetworks(
+                parameters.Library,
                 parameters.ConnectionParameters.ActiveConnection,
                 parameters.ConnectionParameters.PlexServerAuthToken,
                 cancellationToken);
