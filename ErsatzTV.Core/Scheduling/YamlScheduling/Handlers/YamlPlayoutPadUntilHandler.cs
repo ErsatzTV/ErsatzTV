@@ -29,7 +29,17 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
 
             if (timeOnly > result)
             {
-                if (padUntil.Tomorrow)
+                var expression = new NCalc.Expression(padUntil.Tomorrow);
+                expression.EvaluateParameter += (name, e) =>
+                {
+                    e.Result = name switch
+                    {
+                        "now" => timeOnly.Hour + timeOnly.Minute / 60.0 + timeOnly.Second / 3600.0,
+                        _ => e.Result
+                    };
+                };
+
+                if (expression.Evaluate() as bool? == true)
                 {
                     // this is wrong when offset changes
                     dayOnly = dayOnly.AddDays(1);
@@ -70,7 +80,7 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
                 padUntil.StopBeforeEnd,
                 padUntil.DiscardAttempts,
                 padUntil.Trim,
-                offlineTail: padUntil.StopBeforeEnd,
+                padUntil.OfflineTail,
                 GetFillerKind(padUntil),
                 padUntil.CustomTitle,
                 enumerator,

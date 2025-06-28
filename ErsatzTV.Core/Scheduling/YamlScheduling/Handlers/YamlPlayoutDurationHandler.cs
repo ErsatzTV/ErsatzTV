@@ -203,6 +203,11 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
             }
         }
 
-        return (offlineTail && stopBeforeEnd) ? targetTime : context.CurrentTime;
+        if (!stopBeforeEnd)
+        {
+            return context.CurrentTime;
+        }
+
+        return offlineTail ? targetTime : context.CurrentTime;
     }
 }
