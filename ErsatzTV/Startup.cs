@@ -480,7 +480,7 @@ public class Startup
         app.UseCors("AllowAll");
         app.UseForwardedHeaders();
 
-        // app.UseHttpLogging();
+        //app.UseHttpLogging();
         app.UseSerilogRequestLogging(
             options =>
             {

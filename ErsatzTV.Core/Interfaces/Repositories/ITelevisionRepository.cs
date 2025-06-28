@@ -14,6 +14,7 @@ public interface ITelevisionRepository
     Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids);
     Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids);
     Task<List<Episode>> GetShowItems(int showId);
+    Task<List<int>> GetEpisodeIdsForShow(int showId);
     Task<List<Season>> GetAllSeasons();
     Task<Option<Season>> GetSeason(int seasonId);
     Task<int> GetSeasonCount(int showId);

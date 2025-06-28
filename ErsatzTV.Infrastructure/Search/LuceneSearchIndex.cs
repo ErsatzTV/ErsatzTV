@@ -42,6 +42,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string TitleAndYearField = "title_and_year";
     internal const string JumpLetterField = "jump_letter";
     internal const string StudioField = "studio";
+    internal const string NetworkField = "network";
     internal const string LanguageField = "language";
     internal const string LanguageTagField = "language_tag";
     internal const string SubLanguageField = "sub_language";
@@ -61,6 +62,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string ShowGenreField = "show_genre";
     internal const string ShowTagField = "show_tag";
     internal const string ShowStudioField = "show_studio";
+    internal const string ShowNetworkField = "show_network";
     internal const string ShowContentRatingField = "show_content_rating";
     internal const string MetadataKindField = "metadata_kind";
     internal const string VideoCodecField = "video_codec";
@@ -114,7 +116,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 46;
+    public int Version => 47;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -654,8 +656,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 foreach (Tag tag in metadata.Tags)
                 {
-                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                    doc.Add(new StringField(TagFullField, tag.Name, Field.Store.NO));
+                    if (tag.ExternalTypeId == Tag.PlexNetworkTypeId)
+                    {
+                        doc.Add(new TextField(NetworkField, tag.Name, Field.Store.NO));
+                    }
+                    else
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                        doc.Add(new StringField(TagFullField, tag.Name, Field.Store.NO));
+                    }
                 }
 
                 foreach (Studio studio in metadata.Studios)
@@ -1026,7 +1035,14 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                     foreach (Tag tag in showMetadata.Tags)
                     {
-                        doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
+                        if (tag.ExternalTypeId == Tag.PlexNetworkTypeId)
+                        {
+                            doc.Add(new TextField(ShowNetworkField, tag.Name, Field.Store.NO));
+                        }
+                        else
+                        {
+                            doc.Add(new TextField(ShowTagField, tag.Name, Field.Store.NO));
+                        }
                     }
 
                     foreach (Studio studio in showMetadata.Studios)

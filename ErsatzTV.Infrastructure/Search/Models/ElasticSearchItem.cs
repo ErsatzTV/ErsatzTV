@@ -91,6 +91,9 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonPropertyName(LuceneSearchIndex.StudioField)]
     public List<string> Studio { get; set; }
 
+    [JsonPropertyName(LuceneSearchIndex.NetworkField)]
+    public List<string> Network { get; set; }
+
     [JsonPropertyName(LuceneSearchIndex.ArtistField)]
     public List<string> Artist { get; set; }
 
@@ -123,6 +126,9 @@ public class ElasticSearchItem : MinimalElasticSearchItem
 
     [JsonPropertyName(LuceneSearchIndex.ShowStudioField)]
     public List<string> ShowStudio { get; set; }
+
+    [JsonPropertyName(LuceneSearchIndex.ShowNetworkField)]
+    public List<string> ShowNetwork { get; set; }
 
     [JsonPropertyName(LuceneSearchIndex.ShowContentRatingField)]
     public List<string> ShowContentRating { get; set; }

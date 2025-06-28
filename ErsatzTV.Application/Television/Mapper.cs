@@ -22,21 +22,21 @@ internal static class Mapper
             show.ShowMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => GetPoster(m, maybeJellyfin, maybeEmby)).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => GetFanArt(m, maybeJellyfin, maybeEmby)).IfNone(string.Empty),
-            show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone(new List<string>()),
-            show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Map(g => g.Name).ToList()).IfNone(new List<string>()),
-            show.ShowMetadata.HeadOrNone().Map(m => m.Studios.Map(s => s.Name).ToList())
-                .IfNone(new List<string>()),
+            show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone([]),
+            show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(g => g.Name).ToList()).IfNone([]),
+            show.ShowMetadata.HeadOrNone().Map(m => m.Studios.Map(s => s.Name).ToList()).IfNone([]),
+            show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(g => g.Name).ToList()).IfNone([]),
             show.ShowMetadata.HeadOrNone()
                 .Map(
                     m => (m.ContentRating ?? string.Empty).Split("/").Map(s => s.Trim())
-                        .Where(x => !string.IsNullOrWhiteSpace(x)).ToList()).IfNone(new List<string>()),
+                        .Where(x => !string.IsNullOrWhiteSpace(x)).ToList()).IfNone([]),
             LanguagesForShow(languages),
             show.ShowMetadata.HeadOrNone()
                 .Map(
                     m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
                         .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
                         .ToList())
-                .IfNone(new List<ActorCardViewModel>()));
+                .IfNone([]));
 
     internal static TelevisionSeasonViewModel ProjectToViewModel(
         Season season,

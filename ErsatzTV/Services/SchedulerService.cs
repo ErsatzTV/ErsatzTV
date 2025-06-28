@@ -247,6 +247,13 @@ public class SchedulerService : BackgroundService
                 await _scannerWorkerChannel.WriteAsync(
                     new SynchronizePlexLibraryByIdIfNeeded(library.Id),
                     cancellationToken);
+
+                if (library.MediaKind is LibraryMediaKind.Shows)
+                {
+                    await _scannerWorkerChannel.WriteAsync(
+                        new SynchronizePlexNetworks(library.Id, false),
+                        cancellationToken);
+                }
             }
         }
 

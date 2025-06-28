@@ -1,4 +1,6 @@
+using System.Collections.Specialized;
 using System.Globalization;
+using System.Web;
 using System.Xml.Serialization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -340,6 +342,60 @@ public class PlexServerApiClient : IPlexServerApiClient
         }
     }
 
+    public IAsyncEnumerable<Tuple<PlexTag, int>> GetAllTags(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        int tagType,
+        CancellationToken cancellationToken)
+    {
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.GetTagsCount(tagType, token.AuthToken);
+        }
+
+        Task<IEnumerable<PlexTag>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetTags(tagType, skip, pageSize, token.AuthToken)
+                .Map(r => r.MediaContainer.Directory)
+                .Map(list => list.Map(ProjectToTag).Somes());
+        }
+    }
+
+    public IAsyncEnumerable<Tuple<PlexShow, int>> GetTagShowContents(
+        PlexLibrary library,
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexTag tag)
+    {
+        string network = string.Empty;
+
+        NameValueCollection parsedFilter = HttpUtility.ParseQueryString(tag.Filter);
+        foreach (string key in parsedFilter.AllKeys.Filter(k => k is not null))
+        {
+            network = parsedFilter[key];
+        }
+
+        var filter = new NetworkFilter { Network = network };
+
+        return GetPagedLibraryContents(connection, CountItems, GetItems);
+
+        Task<PlexXmlMediaContainerStatsResponse> CountItems(IPlexServerApi service)
+        {
+            return service.CountTagContents(library.Key, token.AuthToken, filter);
+        }
+
+        Task<IEnumerable<PlexShow>> GetItems(IPlexServerApi _, IPlexServerApi jsonService, int skip, int pageSize)
+        {
+            return jsonService
+                .GetTagContents(library.Key, skip, pageSize, token.AuthToken, filter)
+                .Map(r => r.MediaContainer.Metadata ?? [])
+                .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)));
+        }
+    }
+
     private static async IAsyncEnumerable<Tuple<TItem, int>> GetPagedLibraryContents<TItem>(
         PlexConnection connection,
         Func<IPlexServerApi, Task<PlexXmlMediaContainerStatsResponse>> countItems,
@@ -475,6 +531,25 @@ public class PlexServerApiClient : IPlexServerApiClient
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error projecting Plex collection media item");
+            return None;
+        }
+    }
+
+    private Option<PlexTag> ProjectToTag(PlexTagMetadataResponse item)
+    {
+        try
+        {
+            return new PlexTag
+            {
+                Id = item.Id,
+                Filter = item.Filter,
+                Tag = item.Tag,
+                TagType = item.TagType
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Plex tag");
             return None;
         }
     }
