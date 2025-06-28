@@ -36,6 +36,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Synchronize Plex "network" metadata for Plex show libraries
   - Shows will have new `network` search field
   - Episodes will have new `show_network` search field
+- YAML playout: add `stop_before_end` setting to `pad_until` and `duration` instructions
+  - When `stop_before_end: false`, content can run over the desired time before executing the next instruction
+- YAML playout: add `offline_tail` setting to `pad_until` instruction
+  - This can be used to stop primary content before the desired time (`stop_before_end: true` and `offline_tail: false`)
+  - You can then have a second `pad_until` with the same target time and different content
+- YAML playout: make `tomorrow` an expression on `pad_until` instruction
+  - `true` and `false` still work as normal
+  - The current time (as a decimal) can also be used in the expression, e.g. `now > 23`
+    - `now = hours + minutes / 60.0 + seconds / 3600.0`
+    - So `10:30 AM` would be `10.5`, `10:45 PM` would be `22.75`, etc
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders

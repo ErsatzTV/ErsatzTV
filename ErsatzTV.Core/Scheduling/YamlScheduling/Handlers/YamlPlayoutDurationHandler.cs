@@ -28,6 +28,12 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
             return false;
         }
 
+        if (duration.StopBeforeEnd == false && duration.OfflineTail)
+        {
+            logger.LogError("offline_tail must be false when stop_before_end is false");
+            return false;
+        }
+
         DateTimeOffset targetTime = context.CurrentTime.Add(timeSpan);
 
         Option<IMediaCollectionEnumerator> maybeEnumerator = await GetContentEnumerator(
@@ -49,6 +55,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 instruction.Content,
                 duration.Fallback,
                 targetTime,
+                duration.StopBeforeEnd,
                 duration.DiscardAttempts,
                 duration.Trim,
                 duration.OfflineTail,
@@ -68,6 +75,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         string contentKey,
         string fallbackContentKey,
         DateTimeOffset targetTime,
+        bool stopBeforeEnd,
         int discardAttempts,
         bool trim,
         bool offlineTail,
@@ -97,7 +105,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     //DisableWatermarks = !allowWatermarks
                 };
 
-                if (remainingToFill - itemDuration >= TimeSpan.Zero)
+                if (remainingToFill - itemDuration >= TimeSpan.Zero || !stopBeforeEnd)
                 {
                     context.Playout.Items.Add(playoutItem);
                     context.AdvanceGuideGroup();
@@ -193,6 +201,11 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     done = true;
                 }
             }
+        }
+
+        if (!stopBeforeEnd)
+        {
+            return context.CurrentTime;
         }
 
         return offlineTail ? targetTime : context.CurrentTime;

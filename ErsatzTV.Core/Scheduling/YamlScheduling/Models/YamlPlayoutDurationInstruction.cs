@@ -15,4 +15,7 @@ public class YamlPlayoutDurationInstruction : YamlPlayoutInstruction
 
     [YamlMember(Alias = "discard_attempts", ApplyNamingConventions = false)]
     public int DiscardAttempts { get; set; }
+
+    [YamlMember(Alias = "stop_before_end", ApplyNamingConventions = false)]
+    public bool StopBeforeEnd { get; set; } = true;
 }
