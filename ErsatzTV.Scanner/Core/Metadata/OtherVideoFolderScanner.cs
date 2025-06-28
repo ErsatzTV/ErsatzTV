@@ -128,7 +128,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     cancellationToken);
 
                 string otherVideoFolder = folderQueue.Dequeue();
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(otherVideoFolder);
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, otherVideoFolder);
 
                 foldersCompleted++;
 

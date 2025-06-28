@@ -332,7 +332,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             }
 
             string musicVideoFolder = folderQueue.Dequeue();
-            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(musicVideoFolder);
+            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, musicVideoFolder);
 
             // _logger.LogDebug("Scanning music video folder {Folder}", musicVideoFolder);
 

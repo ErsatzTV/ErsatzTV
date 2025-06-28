@@ -141,7 +141,7 @@ public class LibraryRepository : ILibraryRepository
         }
     }
 
-    public async Task<Option<int>> GetParentFolderId(string folder)
+    public async Task<Option<int>> GetParentFolderId(LibraryPath libraryPath, string folder)
     {
         DirectoryInfo parent = new DirectoryInfo(folder).Parent;
         if (parent is null)
@@ -153,6 +153,7 @@ public class LibraryRepository : ILibraryRepository
 
         return await dbContext.LibraryFolders
             .AsNoTracking()
+            .Filter(lf => lf.LibraryPathId == libraryPath.Id)
             .SelectOneAsync(lf => lf.Path, lf => lf.Path == parent.FullName)
             .MapT(lf => lf.Id);
     }

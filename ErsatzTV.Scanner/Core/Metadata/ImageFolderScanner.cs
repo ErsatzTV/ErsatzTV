@@ -114,12 +114,12 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                         libraryPath.LibraryId,
                         null,
                         progressMin + percentCompletion * progressSpread,
-                        Array.Empty<int>(),
-                        Array.Empty<int>()),
+                        [],
+                        []),
                     cancellationToken);
 
                 string imageFolder = folderQueue.Dequeue();
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(imageFolder);
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, imageFolder);
 
                 foldersCompleted++;
 
@@ -214,7 +214,7 @@ public class ImageFolderScanner : LocalFolderScanner, IImageFolderScanner
                                     null,
                                     null,
                                     [result.Item.Id],
-                                    Array.Empty<int>()),
+                                    []),
                                 cancellationToken);
                         }
                     }

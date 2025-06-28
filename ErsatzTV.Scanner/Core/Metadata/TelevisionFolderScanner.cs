@@ -113,7 +113,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         Array.Empty<int>()),
                     cancellationToken);
 
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(showFolder);
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, showFolder);
 
                 // this folder is unused by the show, but will be used as parents of season folders
                 LibraryFolder _ = await _libraryRepository.GetOrAddFolder(
@@ -244,7 +244,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 return new ScanCanceled();
             }
 
-            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(seasonFolder);
+            Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, seasonFolder);
 
             string etag = FolderEtag.CalculateWithSubfolders(seasonFolder, _localFileSystem);
             LibraryFolder knownFolder = await _libraryRepository.GetOrAddFolder(
