@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Globalization;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
@@ -571,51 +572,67 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         }
     }
 
-    public async Task<List<int>> RemoveAllTags(PlexLibrary library, PlexTag tag)
+    public async Task<List<int>> RemoveAllTags(
+        PlexLibrary library,
+        PlexTag tag,
+        System.Collections.Generic.HashSet<int> keep)
     {
-        var result = new List<int>();
-
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        // TODO: limit to library
+        var tagType = tag.TagType.ToString(CultureInfo.InvariantCulture);
 
-        // shows
-        result.AddRange(
-            await dbContext.Connection.QueryAsync<int>(
-                @"SELECT PS.Id FROM Tag T
-              INNER JOIN ShowMetadata SM on T.ShowMetadataId = SM.Id
-              INNER JOIN PlexShow PS on PS.Id = SM.ShowId
-              INNER JOIN MediaItem MI on PS.Id = MI.Id
-              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
-              WHERE LP.LibraryId = @LibraryId AND T.Name = @Tag AND T.ExternalTypeId = @TagType",
-                new { LibraryId = library.Id, tag.Tag, tag.TagType }));
+        List<int> result = await dbContext.ShowMetadata
+            .Where(sm => !keep.Contains(sm.ShowId))
+            .Where(sm => sm.Show.LibraryPath.LibraryId == library.Id)
+            .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
+            .Select(sm => sm.ShowId)
+            .ToListAsync();
 
-        // delete all tags
-        await dbContext.Connection.ExecuteAsync(
-            "DELETE FROM Tag WHERE Name = @Tag AND ExternalTypeId = @TagType",
-            new { tag.Tag, tag.TagType });
+        if (result.Count > 0)
+        {
+            List<int> tagIds = await dbContext.ShowMetadata
+                .Where(sm => result.Contains(sm.ShowId))
+                .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
+                .SelectMany(sm => sm.Tags.Select(t => t.Id))
+                .ToListAsync();
 
+            // delete all tags
+            await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id IN @TagIds", new { TagIds = tagIds });
+        }
+
+        // show ids to refresh
         return result;
     }
 
-    public async Task<int> AddTag(MediaItem item, PlexTag tag)
+    public async Task<PlexShowAddTagResult> AddTag(PlexShow show, PlexTag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        switch (item)
+        int existingShowId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PS.Id FROM Tag
+            INNER JOIN ShowMetadata SM on SM.Id = Tag.ShowMetadataId
+            INNER JOIN PlexShow PS on PS.Id = SM.ShowId
+            WHERE PS.Key = @Key AND Tag.Name = @Tag AND Tag.ExternalTypeId = @TagType",
+            new { show.Key, tag.Tag, tag.TagType });
+
+        // already exists
+        if (existingShowId > 0)
         {
-            case PlexShow show:
-                int showId = await dbContext.Connection.ExecuteScalarAsync<int>(
-                    "SELECT Id FROM PlexShow WHERE `Key` = @Key",
-                    new { show.Key });
-                await dbContext.Connection.ExecuteAsync(
-                    @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
-                      SELECT @Tag, @TagType, Id FROM
-                      (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
-                    new { tag.Tag, tag.TagType, ShowId = showId });
-                return showId;
-            default:
-                return 0;
+            return new PlexShowAddTagResult(existingShowId, Option<int>.None);
         }
+
+        int showId = await dbContext.PlexShows
+            .Where(s => s.Key == show.Key)
+            .Select(s => s.Id)
+            .FirstOrDefaultAsync();
+
+        await dbContext.Connection.ExecuteAsync(
+            @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
+              SELECT @Tag, @TagType, Id FROM
+              (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
+            new { tag.Tag, tag.TagType, ShowId = showId });
+
+        // show id to refresh
+        return new PlexShowAddTagResult(Option<int>.None, showId);
     }
 }

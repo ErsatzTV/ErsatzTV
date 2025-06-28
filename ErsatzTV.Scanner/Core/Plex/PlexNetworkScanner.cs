@@ -20,7 +20,7 @@ public class PlexNetworkScanner(
         PlexServerAuthToken token,
         CancellationToken cancellationToken)
     {
-        logger.LogDebug("Scanning Plex networks...");
+        // logger.LogDebug("Scanning Plex networks...");
 
         await foreach ((PlexTag tag, int _) in plexServerApiClient.GetAllTags(
                            connection,
@@ -28,7 +28,7 @@ public class PlexNetworkScanner(
                            319,
                            cancellationToken))
         {
-            logger.LogDebug("Found Plex network {Tag}", tag.Tag);
+            // logger.LogDebug("Found Plex network {Tag}", tag.Tag);
 
             await SyncNetworkItems(library, connection, token, tag, cancellationToken);
         }
@@ -52,16 +52,28 @@ public class PlexNetworkScanner(
                 token,
                 tag);
 
-            List<int> removedIds = await plexTelevisionRepository.RemoveAllTags(library, tag);
-
             // sync tags (networks) on items
-            var addedIds = new List<int>();
+            var addedIds = new System.Collections.Generic.HashSet<int>();
+            var keepIds = new System.Collections.Generic.HashSet<int>();
             await foreach ((PlexShow item, int _) in items)
             {
-                addedIds.Add(await plexTelevisionRepository.AddTag(item, tag));
+                PlexShowAddTagResult result = await plexTelevisionRepository.AddTag(item, tag);
+
+                foreach (int existing in result.Existing)
+                {
+                    keepIds.Add(existing);
+                }
+
+                foreach (int added in result.Added)
+                {
+                    addedIds.Add(added);
+                    keepIds.Add(added);
+                }
+
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
+            List<int> removedIds = await plexTelevisionRepository.RemoveAllTags(library, tag, keepIds);
             int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
 
             if (changedIds.Length > 0)
