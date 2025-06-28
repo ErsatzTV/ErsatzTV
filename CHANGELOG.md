@@ -36,6 +36,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Synchronize Plex "network" metadata for Plex show libraries
   - Shows will have new `network` search field
   - Episodes will have new `show_network` search field
+- YAML playout: add `stop_before_end` setting to `pad_until` and `duration` instructions
+  - When `stop_before_end` is `false`, content can run over the desired time before executing the next instruction
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders

@@ -57,6 +57,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 padToNext.Content,
                 padToNext.Fallback,
                 targetTime,
+                false,
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
                 offlineTail: true,
