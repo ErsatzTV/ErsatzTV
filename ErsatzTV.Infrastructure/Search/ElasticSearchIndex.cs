@@ -50,7 +50,7 @@ public class ElasticSearchIndex : ISearchIndex
         return exists.IsValidResponse;
     }
 
-    public int Version => 45;
+    public int Version => 47;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -236,6 +236,7 @@ public class ElasticSearchIndex : ISearchIndex
                         .Text(t => t.Tag, t => t.Store(false))
                         .Keyword(t => t.TagFull, t => t.Store(false))
                         .Text(t => t.Studio, t => t.Store(false))
+                        .Text(t => t.Network, t => t.Store(false))
                         .Text(t => t.Actor, t => t.Store(false))
                         .Text(t => t.Director, t => t.Store(false))
                         .Text(t => t.Writer, t => t.Store(false))
@@ -245,6 +246,7 @@ public class ElasticSearchIndex : ISearchIndex
                         .Text(t => t.ShowGenre, t => t.Store(false))
                         .Text(t => t.ShowTag, t => t.Store(false))
                         .Text(t => t.ShowStudio, t => t.Store(false))
+                        .Text(t => t.ShowNetwork, t => t.Store(false))
                         .Keyword(t => t.ShowContentRating, t => t.Store(false))
                         .Text(t => t.Style, t => t.Store(false))
                         .Text(t => t.Mood, t => t.Store(false))
@@ -372,9 +374,10 @@ public class ElasticSearchIndex : ISearchIndex
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
-                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
-                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
+                    Tag = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name).ToList(),
+                    TagFull = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name).ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
+                    Network = metadata.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(t => t.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     TraktList = show.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture))
                         .ToList()
@@ -628,8 +631,9 @@ public class ElasticSearchIndex : ISearchIndex
                 {
                     doc.ShowTitle = showMetadata.Title;
                     doc.ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList();
-                    doc.ShowTag = showMetadata.Tags.Map(t => t.Name).ToList();
+                    doc.ShowTag = showMetadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name).ToList();
                     doc.ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList();
+                    doc.ShowNetwork = showMetadata.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(t => t.Name).ToList();
                     doc.ShowContentRating = GetContentRatings(showMetadata.ContentRating);
                 }
 

@@ -11,6 +11,7 @@ namespace ErsatzTV.Scanner.Core.Plex;
 public class PlexNetworkScanner(
     IPlexServerApiClient plexServerApiClient,
     IPlexTelevisionRepository plexTelevisionRepository,
+    ITelevisionRepository televisionRepository,
     IMediator mediator,
     ILogger<PlexNetworkScanner> logger) : IPlexNetworkScanner
 {
@@ -74,11 +75,16 @@ public class PlexNetworkScanner(
             }
 
             List<int> removedIds = await plexTelevisionRepository.RemoveAllTags(library, tag, keepIds);
-            int[] changedIds = removedIds.Concat(addedIds).Distinct().ToArray();
+            var changedIds = removedIds.Concat(addedIds).Distinct().ToList();
 
-            if (changedIds.Length > 0)
+            if (changedIds.Count > 0)
             {
-                logger.LogDebug("Plex network {Name} contains {Count} changed items", tag.Tag, changedIds.Length);
+                logger.LogDebug("Plex network {Name} contains {Count} changed items", tag.Tag, changedIds.Count);
+            }
+
+            foreach (int showId in changedIds.ToArray())
+            {
+                changedIds.AddRange(await televisionRepository.GetEpisodeIdsForShow(showId));
             }
 
             await mediator.Publish(

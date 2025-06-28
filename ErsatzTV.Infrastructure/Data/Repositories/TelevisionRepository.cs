@@ -136,6 +136,17 @@ public class TelevisionRepository : ITelevisionRepository
             .ToListAsync();
     }
 
+    public async Task<List<int>> GetEpisodeIdsForShow(int showId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return (await dbContext.Connection.QueryAsync<int>(
+            @"SELECT Episode.Id FROM `Show`
+            INNER JOIN Season ON Season.ShowId = `Show`.Id
+            INNER JOIN Episode ON Episode.SeasonId = Season.Id
+            WHERE `Show`.Id = @ShowId",
+            new { ShowId = showId })).ToList();
+    }
+
     public async Task<List<Season>> GetAllSeasons()
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
