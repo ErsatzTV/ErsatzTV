@@ -33,6 +33,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Active` - default value, channel streams as normal and has normal visibility
   - `Hidden` - channel streams as normal and is hidden from M3U/XMLTV/HDHR
   - `Inactive` - channel cannot stream (will 404) and is hidden from M3U/XMLTV/HDHR
+- Synchronize Plex "network" metadata for Plex show libraries
+  - Shows will have new `network` search field
+  - Episodes will have new `show_network` search field
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
