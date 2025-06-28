@@ -180,6 +180,7 @@
                 case PlexLibraryViewModel:
                     await ScannerWorkerChannel.WriteAsync(new SynchronizePlexLibraries(library.MediaSourceId), _cts.Token);
                     await ScannerWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
+                    await ScannerWorkerChannel.WriteAsync(new SynchronizePlexNetworks(library.Id, true), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
                     await ScannerWorkerChannel.WriteAsync(new SynchronizeJellyfinLibraries(library.MediaSourceId), _cts.Token);

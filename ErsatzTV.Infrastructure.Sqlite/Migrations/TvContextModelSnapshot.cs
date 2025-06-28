@@ -2859,6 +2859,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<string>("ExternalCollectionId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ExternalTypeId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("ImageMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -3107,6 +3110,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.Library");
 
                     b.Property<string>("Key")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastNetworksScan")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("ShouldSyncItems")

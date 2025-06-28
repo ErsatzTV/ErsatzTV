@@ -79,6 +79,10 @@ public class Worker : BackgroundService
         scanPlexCollectionsCommand.Arguments.Add(mediaSourceIdArgument);
         scanPlexCollectionsCommand.Options.Add(forceOption);
 
+        var scanPlexNetworksCommand = new Command("scan-plex-networks", "Scan Plex networks");
+        scanPlexNetworksCommand.Arguments.Add(libraryIdArgument);
+        scanPlexNetworksCommand.Options.Add(forceOption);
+
         var scanEmbyCommand = new Command("scan-emby", "Scan an Emby library");
         scanEmbyCommand.Arguments.Add(libraryIdArgument);
         scanEmbyCommand.Options.Add(forceOption);
@@ -148,6 +152,24 @@ public class Worker : BackgroundService
                     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                     var scan = new SynchronizePlexCollections(mediaSourceId, force);
+                    await mediator.Send(scan, token);
+                }
+            });
+
+        scanPlexNetworksCommand.SetAction(
+            async (parseResult, token) =>
+            {
+                if (IsScanningEnabled())
+                {
+                    bool force = parseResult.GetValue(forceOption);
+                    SetProcessPriority(force);
+
+                    int libraryId = parseResult.GetValue(libraryIdArgument);
+
+                    using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    var scan = new SynchronizePlexNetworks(libraryId, force);
                     await mediator.Send(scan, token);
                 }
             });
@@ -230,6 +252,7 @@ public class Worker : BackgroundService
         rootCommand.Subcommands.Add(scanLocalCommand);
         rootCommand.Subcommands.Add(scanPlexCommand);
         rootCommand.Subcommands.Add(scanPlexCollectionsCommand);
+        rootCommand.Subcommands.Add(scanPlexNetworksCommand);
         rootCommand.Subcommands.Add(scanEmbyCommand);
         rootCommand.Subcommands.Add(scanEmbyCollectionsCommand);
         rootCommand.Subcommands.Add(scanJellyfinCommand);
