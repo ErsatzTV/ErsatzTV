@@ -116,6 +116,18 @@
                     }
                 </div>
             }
+            @if (_sortedNetworks.Any())
+            {
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Networks:&nbsp;</MudText>
+                    <MudLink Href="@(@$"network:""{_sortedNetworks.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedNetworks.Head()</MudLink>
+                    @foreach (string network in _sortedNetworks.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@(@$"network:""{network.ToLowerInvariant()}""".GetRelativeSearchQuery())">@network</MudLink>
+                    }
+                </div>
+            }
             @if (_sortedGenres.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -176,11 +188,12 @@
     public int ShowId { get; set; }
 
     private TelevisionShowViewModel _show;
-    private List<string> _sortedContentRatings = new();
-    private List<CultureInfo> _sortedLanguages = new();
-    private List<string> _sortedStudios = new();
-    private List<string> _sortedGenres = new();
-    private List<string> _sortedTags = new();
+    private List<string> _sortedContentRatings = [];
+    private List<CultureInfo> _sortedLanguages = [];
+    private List<string> _sortedStudios = [];
+    private List<string> _sortedNetworks = [];
+    private List<string> _sortedGenres = [];
+    private List<string> _sortedTags = [];
 
     private int _pageSize => 100;
     private readonly int _pageNumber = 1;
@@ -197,17 +210,17 @@
 
     private async Task RefreshData()
     {
-        await Mediator.Send(new GetTelevisionShowById(ShowId), _cts.Token)
-            .IfSomeAsync(
-                vm =>
-                {
-                    _show = vm;
-                    _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
-                    _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
-                    _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
-                    _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
-                    _sortedTags = _show.Tags.OrderBy(t => t).ToList();
-                });
+        Option<TelevisionShowViewModel> maybeShow = await Mediator.Send(new GetTelevisionShowById(ShowId), _cts.Token);
+        foreach (TelevisionShowViewModel show in maybeShow)
+        {
+            _show = show;
+            _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
+            _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
+            _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
+            _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
+            _sortedTags = _show.Tags.OrderBy(t => t).ToList();
+            _sortedNetworks = _show.Networks.OrderBy(n => n).ToList();
+        }
 
         _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize), _cts.Token);
     }
