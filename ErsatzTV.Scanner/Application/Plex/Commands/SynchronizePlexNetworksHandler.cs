@@ -9,6 +9,7 @@ namespace ErsatzTV.Scanner.Application.Plex;
 public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNetworks, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
     private readonly IPlexNetworkScanner _scanner;
@@ -17,12 +18,14 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
         IMediaSourceRepository mediaSourceRepository,
         IPlexSecretStore plexSecretStore,
         IPlexNetworkScanner scanner,
-        IConfigElementRepository configElementRepository)
+        IConfigElementRepository configElementRepository,
+        IPlexTelevisionRepository plexTelevisionRepository)
     {
         _mediaSourceRepository = mediaSourceRepository;
         _plexSecretStore = plexSecretStore;
         _scanner = scanner;
         _configElementRepository = configElementRepository;
+        _plexTelevisionRepository = plexTelevisionRepository;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(
@@ -101,7 +104,7 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
             if (result.IsRight)
             {
                 parameters.Library.LastNetworksScan = DateTime.UtcNow;
-                // TODO: await _mediaSourceRepository.UpdateLastNetworkScan(parameters.MediaSource);
+                await _plexTelevisionRepository.UpdateLastNetworksScan(parameters.Library);
             }
 
             return result;

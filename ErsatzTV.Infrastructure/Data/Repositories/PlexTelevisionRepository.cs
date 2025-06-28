@@ -635,4 +635,12 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         // show id to refresh
         return new PlexShowAddTagResult(Option<int>.None, showId);
     }
+
+    public async Task UpdateLastNetworksScan(PlexLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexLibrary SET LastNetworksScan = @LastNetworksScan WHERE Id = @Id",
+            new { library.LastNetworksScan, library.Id });
+    }
 }
