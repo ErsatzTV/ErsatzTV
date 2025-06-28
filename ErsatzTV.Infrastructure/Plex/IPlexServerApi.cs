@@ -73,6 +73,25 @@ public interface IPlexServerApi
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 
+    [Get("/library/tags?type={type}&X-Plex-Container-Start=0&X-Plex-Container-Size=0")]
+    [Headers("Accept: text/xml")]
+    public Task<PlexXmlMediaContainerStatsResponse> GetTagsCount(
+        int type,
+        [Query] [AliasAs("X-Plex-Token")]
+        string token);
+
+    [Get("/library/tags?type={type}")]
+    [Headers("Accept: application/json")]
+    public Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexTagMetadataResponse>>>
+        GetTags(
+            int type,
+            [Query] [AliasAs("X-Plex-Container-Start")]
+            int skip,
+            [Query] [AliasAs("X-Plex-Container-Size")]
+            int take,
+            [Query] [AliasAs("X-Plex-Token")]
+            string token);
+
     [Get("/library/metadata/{key}?includeChapters=1")]
     [Headers("Accept: text/xml")]
     public Task<PlexXmlVideoMetadataResponseContainer>

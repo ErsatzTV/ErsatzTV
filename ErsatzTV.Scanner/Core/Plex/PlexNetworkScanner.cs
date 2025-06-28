@@ -6,14 +6,24 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Plex;
 
-public class PlexNetworkScanner(ILogger<PlexNetworkScanner> logger) : IPlexNetworkScanner
+public class PlexNetworkScanner(IPlexServerApiClient plexServerApiClient, ILogger<PlexNetworkScanner> logger) : IPlexNetworkScanner
 {
-    public Task<Either<BaseError, Unit>> ScanNetworks(
-        PlexConnection connectionParametersActiveConnection,
-        PlexServerAuthToken connectionParametersPlexServerAuthToken,
+    public async Task<Either<BaseError, Unit>> ScanNetworks(
+        PlexConnection connection,
+        PlexServerAuthToken token,
         CancellationToken cancellationToken)
     {
         logger.LogInformation("Scanning Plex networks...");
-        return Task.FromResult(Either<BaseError, Unit>.Right(Unit.Default));
+
+        await foreach ((PlexTag tag, int _) in plexServerApiClient.GetAllTags(
+                           connection,
+                           token,
+                           319,
+                           cancellationToken))
+        {
+            logger.LogInformation("Found Plex network {Tag}", tag.Tag);
+        }
+
+        return Either<BaseError, Unit>.Right(Unit.Default);
     }
 }

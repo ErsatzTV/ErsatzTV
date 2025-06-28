@@ -6,7 +6,7 @@ namespace ErsatzTV.Core.Interfaces.Plex;
 public interface IPlexNetworkScanner
 {
     Task<Either<BaseError, Unit>> ScanNetworks(
-        PlexConnection connectionParametersActiveConnection,
-        PlexServerAuthToken connectionParametersPlexServerAuthToken,
+        PlexConnection connection,
+        PlexServerAuthToken token,
         CancellationToken cancellationToken);
 }
