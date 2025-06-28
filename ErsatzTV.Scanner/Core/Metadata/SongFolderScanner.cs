@@ -117,7 +117,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                     cancellationToken);
 
                 string songFolder = folderQueue.Dequeue();
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(songFolder);
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, songFolder);
 
                 foldersCompleted++;
 

@@ -37,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Shows will have new `network` search field
   - Episodes will have new `show_network` search field
 
+### Changed
+- Allow `Other Video` libraries and `Image` libraries to use the same folders
+
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
 - Fix HDR transcoding with NVIDIA accel for:

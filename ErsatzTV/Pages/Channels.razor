@@ -144,6 +144,11 @@
 
     private bool CanPreviewChannel(ChannelViewModel channel)
     {
+        if (channel.ActiveMode is ChannelActiveMode.Inactive)
+        {
+            return false;
+        }
+
         if (channel.StreamingMode is StreamingMode.HttpLiveStreamingDirect or StreamingMode.TransportStream)
         {
             return false;

@@ -119,6 +119,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
                     {
                         Name = request.Name,
                         Paths = request.Paths.Map(p => new LibraryPath { Id = p.Id, Path = p.Path }).ToList(),
+                        MediaKind = existing.MediaKind,
                         MediaSourceId = existing.Id
                     };
 

@@ -117,7 +117,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     cancellationToken);
 
                 string movieFolder = folderQueue.Dequeue();
-                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(movieFolder);
+                Option<int> maybeParentFolder = await _libraryRepository.GetParentFolderId(libraryPath, movieFolder);
                 foldersCompleted++;
 
                 var filesForEtag = _localFileSystem.ListFiles(movieFolder).ToList();
