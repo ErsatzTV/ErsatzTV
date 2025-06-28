@@ -48,6 +48,7 @@
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(RemoteMediaSourceLibrariesEditor.SynchronizeParameters parameters)
     {
         await ScannerWorkerChannel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(parameters.LibraryId), _cts.Token);
+        await ScannerWorkerChannel.WriteAsync(new SynchronizePlexNetworks(parameters.LibraryId, false), _cts.Token);
         return Unit.Default;
     }
 
