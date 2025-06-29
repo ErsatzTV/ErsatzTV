@@ -117,6 +117,7 @@ public class Program
 
         try
         {
+            Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
             await CreateHostBuilder(args).Build().RunAsync();
             return 0;
         }

@@ -137,9 +137,14 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
         var environment = new Dictionary<string, string>();
         foreach (DictionaryEntry de in Environment.GetEnvironmentVariables())
         {
-            if (de is { Key: string key, Value: string value } && key.StartsWith("ETV_", StringComparison.OrdinalIgnoreCase))
+            if (de is { Key: string key, Value: string value })
             {
-                environment[key] = value;
+                if (key.StartsWith("ETV_", StringComparison.OrdinalIgnoreCase)
+                    || key.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase)
+                    || key.StartsWith("ASPNETCORE_", StringComparison.OrdinalIgnoreCase))
+                {
+                    environment[key] = value;
+                }
             }
         }
 
