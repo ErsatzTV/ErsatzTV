@@ -58,7 +58,7 @@ jobs:
       - name: Test
         run: dotnet test --blame-hang-timeout "2m" --no-restore --verbosity normal
   build_and_test_mac:
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - name: Get the sources
         uses: actions/checkout@v4
