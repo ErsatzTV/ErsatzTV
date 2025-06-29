@@ -135,7 +135,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
 
     public async Task<QsvOutput> GetQsvOutput(string ffmpegPath, Option<string> qsvDevice)
     {
-        var option = new QsvHardwareAccelerationOption(qsvDevice);
+        var option = new QsvHardwareAccelerationOption(qsvDevice, FFmpegCapability.Software);
         var arguments = option.GlobalOptions.ToList();
 
         arguments.AddRange(QsvArguments);

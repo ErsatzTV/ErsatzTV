@@ -74,8 +74,6 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             encodeCapability = FFmpegCapability.Software;
         }
 
-        pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice));
-
         bool isHevcOrH264 = videoStream.Codec is /*VideoFormat.Hevc or*/ VideoFormat.H264;
         bool is10Bit = videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
 
@@ -84,6 +82,14 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             decodeCapability = FFmpegCapability.Software;
         }
+
+        // QSV cannot always decode properly when seeking, so use software
+        if (decodeCapability == FFmpegCapability.Hardware && ffmpegState.Start.Filter(s => s > TimeSpan.Zero).IsSome)
+        {
+            decodeCapability = FFmpegCapability.Software;
+        }
+
+        pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice, decodeCapability));
 
         // disable hw accel if decoder/encoder isn't supported
         return ffmpegState with

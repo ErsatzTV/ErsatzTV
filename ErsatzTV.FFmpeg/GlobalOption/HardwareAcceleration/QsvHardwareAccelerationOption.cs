@@ -1,19 +1,16 @@
-﻿using ErsatzTV.FFmpeg.Format;
+﻿using ErsatzTV.FFmpeg.Capabilities;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 
-public class QsvHardwareAccelerationOption : GlobalOption
+public class QsvHardwareAccelerationOption(Option<string> device, FFmpegCapability decodeCapability) : GlobalOption
 {
-    private readonly Option<string> _qsvDevice;
-
     // TODO: read this from ffmpeg output
     private readonly List<string> _supportedFFmpegFormats = new()
     {
         FFmpegFormat.NV12,
         FFmpegFormat.P010LE
     };
-
-    public QsvHardwareAccelerationOption(Option<string> qsvDevice) => _qsvDevice = qsvDevice;
 
     public override string[] GlobalOptions
     {
@@ -29,9 +26,14 @@ public class QsvHardwareAccelerationOption : GlobalOption
                 "-hwaccel_output_format", "qsv"
             };
 
+            if (decodeCapability is not FFmpegCapability.Hardware)
+            {
+                result.Clear();
+            }
+
             if (OperatingSystem.IsLinux())
             {
-                foreach (string qsvDevice in _qsvDevice)
+                foreach (string qsvDevice in device)
                 {
                     if (!string.IsNullOrWhiteSpace(qsvDevice))
                     {

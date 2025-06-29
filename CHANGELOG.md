@@ -55,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix HDR transcoding with NVIDIA accel for:
     - All NVIDIA docker users
     - Windows NVIDIA users who have set the `ETV_DISABLE_VULKAN` env var
+- Fix audio sync issue with QSV acceleration
 
 ## [25.2.0] - 2025-06-24
 ### Added
