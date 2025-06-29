@@ -20,12 +20,6 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
             return false;
         }
 
-        if (skipItems.SkipItems < 0)
-        {
-            logger.LogWarning("Unable to skip invalid number: {Skip}", skipItems.SkipItems);
-            return false;
-        }
-
         Option<IMediaCollectionEnumerator> maybeEnumerator = await enumeratorCache.GetCachedEnumeratorForContent(
             context,
             skipItems.Content,
@@ -33,7 +27,34 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            for (var i = 0; i < skipItems.SkipItems; i++)
+            var expression = new NCalc.Expression(skipItems.SkipItems);
+            expression.EvaluateParameter += (name, e) =>
+            {
+                e.Result = name switch
+                {
+                    "count" => enumerator.Count,
+                    "random" => new Random().Next() % enumerator.Count,
+                    _ => e.Result
+                };
+            };
+
+            object expressionResult = expression.Evaluate();
+            int skipCount = expressionResult switch
+            {
+                double doubleResult => (int)Math.Floor(doubleResult),
+                int intResult => intResult,
+                _ => 0
+            };
+
+            skipCount %= enumerator.Count;
+
+            if (skipCount < 0)
+            {
+                logger.LogWarning("Unable to skip invalid number: {Skip}", skipItems.SkipItems);
+                return false;
+            }
+
+            for (var i = 0; i < skipCount; i++)
             {
                 enumerator.MoveNext();
             }

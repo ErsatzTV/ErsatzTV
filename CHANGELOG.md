@@ -46,6 +46,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The current time (as a decimal) can also be used in the expression, e.g. `now > 23`
     - `now = hours + minutes / 60.0 + seconds / 3600.0`
     - So `10:30 AM` would be `10.5`, `10:45 PM` would be `22.75`, etc
+- YAML playout: make `skip_items` an expression
+  - The following parameters can be used:
+    - `count`: the total number of items in the content
+    - `random`: a random number between zero and (count - 1)
+  - For example:
+    - `count / 2` will start in the middle of the content
+    - `random` will start at a random point in the content
+    - `2` (similar to before this change) will skip the first two items in the content
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
