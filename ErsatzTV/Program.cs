@@ -27,7 +27,7 @@ public class Program
 
         Configuration = builder
             .SetBasePath(BasePath)
-            .AddJsonFile("appsettings.json", false, true)
+            .AddJsonFile("appsettings.json", false, reloadOnChange: false)
             .AddJsonFile(
                 $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
                 true)
@@ -117,6 +117,7 @@ public class Program
 
         try
         {
+            Environment.SetEnvironmentVariable("DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE", "false");
             await CreateHostBuilder(args).Build().RunAsync();
             return 0;
         }

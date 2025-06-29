@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
+- Try to mitigate inotify limit error by disabling automatic reloading of `appsettings.json` config files
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
