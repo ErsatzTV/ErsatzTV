@@ -61,12 +61,13 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                     context.AdvanceGuideGroup();
 
                     // create history record
-                    Option<PlayoutHistory> maybeHistory = GetHistoryForItem(
+                    List<PlayoutHistory> maybeHistory = GetHistoryForItem(
                         context,
                         instruction.Content,
                         enumerator,
                         playoutItem,
-                        mediaItem);
+                        mediaItem,
+                        logger);
 
                     foreach (PlayoutHistory history in maybeHistory)
                     {

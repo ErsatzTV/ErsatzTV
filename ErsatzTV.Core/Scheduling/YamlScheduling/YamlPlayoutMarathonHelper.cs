@@ -1,14 +1,14 @@
+using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectionRepository)
 {
-    public async Task<Option<IMediaCollectionEnumerator>> GetEnumerator(
+    public async Task<Option<YamlMarathonContentResult>> GetEnumerator(
         YamlPlayoutContentMarathonItem marathon,
         CollectionEnumeratorState state,
         CancellationToken cancellationToken)
@@ -64,12 +64,16 @@ public class YamlPlayoutMarathonHelper(IMediaCollectionRepository mediaCollectio
             itemMap.Add(playlistItem, group.ToList());
         }
 
-        return await PlaylistEnumerator.Create(
+        PlaylistEnumerator enumerator = await PlaylistEnumerator.Create(
             mediaCollectionRepository,
             itemMap,
             state,
             marathon.ShuffleGroups,
             cancellationToken);
+
+        return new YamlMarathonContentResult(
+            enumerator,
+            itemMap.ToImmutableDictionary(x => CollectionKey.ForPlaylistItem(x.Key), x => x.Value));
     }
 
     private static GroupKey MediaItemKeyByShow(MediaItem mediaItem) =>

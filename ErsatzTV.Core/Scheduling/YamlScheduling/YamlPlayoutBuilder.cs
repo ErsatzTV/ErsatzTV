@@ -379,16 +379,23 @@ public class YamlPlayoutBuilder(
         foreach ((string _, List<PlayoutHistory> group) in groups)
         {
             //logger.LogDebug("History key {Key} has {Count} items in group", key, group.Count);
-
-            // keep the most recent item from each history group that has already been played completely
-            IEnumerable<PlayoutHistory> toDelete = group
+            Option<DateTime> whenToKeep = group
                 .Filter(h => h.Finish < start.UtcDateTime)
                 .OrderByDescending(h => h.When)
-                .Tail();
+                .Map(h => h.When)
+                .HeadOrNone();
 
-            foreach (PlayoutHistory delete in toDelete)
+            foreach (DateTime toKeep in whenToKeep)
             {
-                playout.PlayoutHistory.Remove(delete);
+                // keep the most recent item from each history group that has already been played completely
+                IEnumerable<PlayoutHistory> toDelete = group
+                    .Filter(h => h.Finish < start.UtcDateTime)
+                    .Filter(h => h.When != toKeep);
+
+                foreach (PlayoutHistory delete in toDelete)
+                {
+                    playout.PlayoutHistory.Remove(delete);
+                }
             }
         }
     }

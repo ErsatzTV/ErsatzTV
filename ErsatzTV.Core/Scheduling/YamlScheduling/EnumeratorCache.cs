@@ -10,12 +10,18 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepository, ILogger logger)
 {
     private readonly Dictionary<string, List<MediaItem>> _mediaItems = new();
+    private readonly Dictionary<PlaylistKey, List<MediaItem>> _playlistMediaItems = new();
     private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
 
     public System.Collections.Generic.HashSet<string> MissingContentKeys { get; } = [];
 
     public List<MediaItem> MediaItemsForContent(string contentKey) =>
         _mediaItems.TryGetValue(contentKey, out List<MediaItem> items) ? items : [];
+
+    public List<MediaItem> PlaylistMediaItemsForContent(string contentKey, CollectionKey collectionKey) =>
+        _playlistMediaItems.TryGetValue(new PlaylistKey(contentKey, collectionKey), out List<MediaItem> items)
+            ? items
+            : [];
 
     public async Task<Option<IMediaCollectionEnumerator>> GetCachedEnumeratorForContent(
         YamlPlayoutContext context,
@@ -91,7 +97,16 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         if (content is YamlPlayoutContentMarathonItem marathon)
         {
             var helper = new YamlPlayoutMarathonHelper(mediaCollectionRepository);
-            return await helper.GetEnumerator(marathon, state, cancellationToken);
+            Option<YamlMarathonContentResult> maybeResult = await helper.GetEnumerator(marathon, state, cancellationToken);
+            foreach (YamlMarathonContentResult result in maybeResult)
+            {
+                foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in result.Content)
+                {
+                    _playlistMediaItems.Add(new PlaylistKey(contentKey, collectionKey), mediaItems);
+                }
+
+                return Some(result.PlaylistEnumerator);
+            }
         }
 
         // playlist is a special case that needs to be handled on its own
@@ -130,4 +145,6 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
 
         return Option<IMediaCollectionEnumerator>.None;
     }
+
+    private record PlaylistKey(string ContentKey, CollectionKey CollectionKey);
 }

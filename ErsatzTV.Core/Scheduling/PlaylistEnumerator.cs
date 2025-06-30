@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -75,6 +76,15 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                 _sortedEnumerators = ShufflePlaylistItems();
             }
         }
+    }
+
+    public ImmutableDictionary<CollectionKey, IMediaCollectionEnumerator> ChildEnumerators { get; private set; }
+
+    public int EnumeratorIndex => _enumeratorIndex;
+
+    public void SetEnumeratorIndex(int primaryHistoryIndex)
+    {
+        _enumeratorIndex = primaryHistoryIndex;
     }
 
     public static async Task<PlaylistEnumerator> Create(
@@ -202,6 +212,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
                 break;
             }
         }
+
+        result.ChildEnumerators = enumeratorMap.ToImmutableDictionary();
 
         return result;
     }

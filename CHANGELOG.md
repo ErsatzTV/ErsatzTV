@@ -65,6 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - All NVIDIA docker users
     - Windows NVIDIA users who have set the `ETV_DISABLE_VULKAN` env var
 - Fix audio sync issue with QSV acceleration
+- YAML playout: fix history for marathon content
+  - This allows playouts to be extended correctly, instead of always resetting to the earliest item in each group
 
 ## [25.2.0] - 2025-06-24
 ### Added
