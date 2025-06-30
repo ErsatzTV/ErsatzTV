@@ -78,7 +78,7 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
         }
     }
 
-    public ImmutableDictionary<CollectionKey, IMediaCollectionEnumerator> ChildEnumerators { get; private set; }
+    public ImmutableList<PlaylistEnumeratorCollectionKey> ChildEnumerators { get; private set; }
 
     public int EnumeratorIndex => _enumeratorIndex;
 
@@ -213,7 +213,16 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
             }
         }
 
-        result.ChildEnumerators = enumeratorMap.ToImmutableDictionary();
+        var childEnumerators = new List<PlaylistEnumeratorCollectionKey>();
+        foreach (IMediaCollectionEnumerator enumerator in result._sortedEnumerators)
+        {
+            foreach ((CollectionKey collectionKey, _) in enumeratorMap.Find(e => e.Value == enumerator))
+            {
+                childEnumerators.Add(new PlaylistEnumeratorCollectionKey(enumerator, collectionKey));
+            }
+        }
+
+        result.ChildEnumerators = childEnumerators.ToImmutableList();
 
         return result;
     }

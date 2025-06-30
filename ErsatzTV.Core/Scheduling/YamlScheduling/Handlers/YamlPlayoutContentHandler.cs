@@ -91,10 +91,10 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
 
             result.Add(nextHistory);
 
-            var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Keys.ToList();
-            foreach ((CollectionKey collectionKey, IMediaCollectionEnumerator childEnumerator) in playlistEnumerator.ChildEnumerators)
+            for (var i = 0; i < playlistEnumerator.ChildEnumerators.Count; i++)
             {
-                bool isCurrentChild = childEnumeratorKeys.IndexOf(collectionKey) == playlistEnumerator.EnumeratorIndex;
+                (IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) = playlistEnumerator.ChildEnumerators[i];
+                bool isCurrentChild = i == playlistEnumerator.EnumeratorIndex;
                 foreach (MediaItem currentMediaItem in childEnumerator.Current)
                 {
                     // create a playout history record
