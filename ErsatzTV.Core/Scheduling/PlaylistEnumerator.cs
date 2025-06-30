@@ -82,9 +82,9 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public int EnumeratorIndex => _enumeratorIndex;
 
-    public void SetEnumeratorIndex(int primaryHistoryIndex)
+    public void SetEnumeratorIndex(int enumeratorIndex)
     {
-        _enumeratorIndex = primaryHistoryIndex;
+        _enumeratorIndex = enumeratorIndex % _sortedEnumerators.Count;
     }
 
     public static async Task<PlaylistEnumerator> Create(
