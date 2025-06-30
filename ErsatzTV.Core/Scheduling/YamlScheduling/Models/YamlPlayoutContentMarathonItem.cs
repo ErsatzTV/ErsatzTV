@@ -21,4 +21,10 @@ public class YamlPlayoutContentMarathonItem : YamlPlayoutContentItem
 
     [YamlMember(Alias = "play_all_items", ApplyNamingConventions = false)]
     public bool PlayAllItems { get; set; }
+
+    public override string Order
+    {
+        get => "none";
+        set => throw new NotSupportedException();
+    }
 }

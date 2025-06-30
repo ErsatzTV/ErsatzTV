@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -47,40 +49,90 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         return maybeEnumerator;
     }
 
-    protected static Option<PlayoutHistory> GetHistoryForItem(
+    protected static List<PlayoutHistory> GetHistoryForItem(
         YamlPlayoutContext context,
         string contentKey,
         IMediaCollectionEnumerator enumerator,
         PlayoutItem playoutItem,
-        MediaItem mediaItem)
+        MediaItem mediaItem,
+        ILogger<YamlPlayoutBuilder> logger)
     {
         int index = context.Definition.Content.FindIndex(c => c.Key == contentKey);
         if (index < 0)
         {
-            return Option<PlayoutHistory>.None;
+            logger.LogDebug("Unable to find history for content matching key {ContentKey}", contentKey);
+            return [];
         }
 
         YamlPlayoutContentItem contentItem = context.Definition.Content[index];
         if (!Enum.TryParse(contentItem.Order, true, out PlaybackOrder playbackOrder))
         {
-            return Option<PlayoutHistory>.None;
+            logger.LogDebug("Unable to find history for content matching playback order {PlaybackOrder}", contentItem.Order);
+            return [];
         }
+
+        var result = new List<PlayoutHistory>();
 
         string historyKey = HistoryDetails.KeyForYamlContent(contentItem);
 
-        // create a playout history record
-        var nextHistory = new PlayoutHistory
+        if (contentItem is YamlPlayoutContentMarathonItem && enumerator is PlaylistEnumerator playlistEnumerator)
         {
-            PlayoutId = context.Playout.Id,
-            PlaybackOrder = playbackOrder,
-            Index = enumerator.State.Index,
-            When = playoutItem.StartOffset.UtcDateTime,
-            Finish = playoutItem.FinishOffset.UtcDateTime,
-            Key = historyKey,
-            Details = HistoryDetails.ForMediaItem(mediaItem)
-        };
+            // create a playout history record
+            var nextHistory = new PlayoutHistory
+            {
+                PlayoutId = context.Playout.Id,
+                PlaybackOrder = playbackOrder,
+                Index = playlistEnumerator.EnumeratorIndex,
+                When = playoutItem.StartOffset.UtcDateTime,
+                Finish = playoutItem.FinishOffset.UtcDateTime,
+                Key = historyKey,
+                Details = HistoryDetails.ForMediaItem(mediaItem)
+            };
 
-        return nextHistory;
+            result.Add(nextHistory);
+
+            var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Keys.ToList();
+            foreach ((CollectionKey collectionKey, IMediaCollectionEnumerator childEnumerator) in playlistEnumerator.ChildEnumerators)
+            {
+                bool isCurrentChild = childEnumeratorKeys.IndexOf(collectionKey) == playlistEnumerator.EnumeratorIndex;
+                foreach (MediaItem currentMediaItem in childEnumerator.Current)
+                {
+                    // create a playout history record
+                    var childHistory = new PlayoutHistory
+                    {
+                        PlayoutId = context.Playout.Id,
+                        PlaybackOrder = playbackOrder,
+                        Index = childEnumerator.State.Index,
+                        When = playoutItem.StartOffset.UtcDateTime,
+                        Finish = playoutItem.FinishOffset.UtcDateTime,
+                        Key = historyKey,
+                        ChildKey = HistoryDetails.KeyForCollectionKey(collectionKey),
+                        IsCurrentChild = isCurrentChild,
+                        Details = HistoryDetails.ForMediaItem(currentMediaItem)
+                    };
+
+                    result.Add(childHistory);
+                }
+            }
+        }
+        else
+        {
+            // create a playout history record
+            var nextHistory = new PlayoutHistory
+            {
+                PlayoutId = context.Playout.Id,
+                PlaybackOrder = playbackOrder,
+                Index = enumerator.State.Index,
+                When = playoutItem.StartOffset.UtcDateTime,
+                Finish = playoutItem.FinishOffset.UtcDateTime,
+                Key = historyKey,
+                Details = HistoryDetails.ForMediaItem(mediaItem)
+            };
+
+            result.Add(nextHistory);
+        }
+
+        return result;
     }
 
     protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)

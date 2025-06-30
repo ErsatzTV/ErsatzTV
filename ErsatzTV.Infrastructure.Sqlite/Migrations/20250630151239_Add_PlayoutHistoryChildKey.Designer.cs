@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250630151239_Add_PlayoutHistoryChildKey")]
+    partial class Add_PlayoutHistoryChildKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -2361,9 +2364,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Index")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsCurrentChild")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Key")

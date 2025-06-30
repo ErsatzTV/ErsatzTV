@@ -2476,6 +2476,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("BlockId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ChildKey")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Details")
                         .HasColumnType("longtext");
 
@@ -2484,6 +2487,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<int>("Index")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsCurrentChild")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Key")
                         .HasColumnType("longtext");

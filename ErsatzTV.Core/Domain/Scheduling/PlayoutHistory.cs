@@ -15,6 +15,12 @@ public class PlayoutHistory
     // something that uniquely identifies the collection within the block
     public string Key { get; set; }
 
+    // something that uniquely identifies a child collection within the parent collection
+    // e.g. for a playlist
+    public string ChildKey { get; set; }
+
+    public bool IsCurrentChild { get; set; }
+
     // last occurence of an item from this collection in the playout
     public DateTime When { get; set; }
 

@@ -63,15 +63,18 @@ public class PlaylistEnumeratorTests
             shufflePlaylistItems: false,
             CancellationToken.None);
 
+        var items = new List<int>();
+        items.AddRange(enumerator.Current.Map(mi => mi.Id));
+
         enumerator.MoveNext();
-        var totalLength = 1;
         while (enumerator.State.Index > 0)
         {
+            items.AddRange(enumerator.Current.Map(mi => mi.Id));
             enumerator.MoveNext();
-            totalLength += 1;
         }
 
-        totalLength.ShouldBe(8);
+        items.Count.ShouldBe(8);
+        items.ShouldBe([10, 20, 21, 30, 10, 20, 21, 31]);
     }
 
     [Test]
@@ -127,15 +130,18 @@ public class PlaylistEnumeratorTests
             shufflePlaylistItems: false,
             CancellationToken.None);
 
+        var items = new List<int>();
+        items.AddRange(enumerator.Current.Map(mi => mi.Id));
+
         enumerator.MoveNext();
-        var totalLength = 1;
         while (enumerator.State.Index > 0)
         {
+            items.AddRange(enumerator.Current.Map(mi => mi.Id));
             enumerator.MoveNext();
-            totalLength += 1;
         }
 
-        totalLength.ShouldBe(8);
+        items.Count.ShouldBe(8);
+        items.ShouldBe([10, 20, 30, 31, 10, 21, 30, 31]);
     }
 
     private static Movie FakeMovie(int id) => new()
