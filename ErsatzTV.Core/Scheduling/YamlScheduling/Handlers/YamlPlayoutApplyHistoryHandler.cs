@@ -68,9 +68,8 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                         itemPlaybackOrder = PlaybackOrder.None;
                     }
 
-                    var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Keys.ToList();
-                    foreach ((CollectionKey collectionKey, IMediaCollectionEnumerator childEnumerator) in
-                             playlistEnumerator.ChildEnumerators)
+                    var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Map(x => x.CollectionKey).ToList();
+                    foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in playlistEnumerator.ChildEnumerators)
                     {
                         Option<PlayoutHistory> maybeApplicableHistory = maybeHistory
                             .Filter(h => h.ChildKey == HistoryDetails.KeyForCollectionKey(collectionKey))
@@ -82,13 +81,17 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                         foreach (PlayoutHistory h in maybeApplicableHistory)
                         {
                             // logger.LogDebug(
-                            //     "History is applicable: {When}: {ChildKey} / {History}",
+                            //     "History is applicable: {When}: {ChildKey} / {History} / {IsCurrentChild}",
                             //     h.When,
                             //     h.ChildKey,
-                            //     h.Details);
+                            //     h.Details,
+                            //     h.IsCurrentChild);
 
-                            enumerator.ResetState(
-                                new CollectionEnumeratorState { Seed = enumerator.State.Seed, Index = h.Index + 1 });
+                            enumerator.ResetState(new CollectionEnumeratorState
+                            {
+                                Seed = enumerator.State.Seed,
+                                Index = h.Index + (h.IsCurrentChild ? 1 : 0)
+                            });
 
                             if (itemPlaybackOrder is PlaybackOrder.Chronological)
                             {
@@ -97,7 +100,7 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                                     h.Details,
                                     childEnumerator,
                                     playbackOrder,
-                                    h.IsCurrentChild);
+                                    !h.IsCurrentChild);
                             }
 
                             if (h.IsCurrentChild)

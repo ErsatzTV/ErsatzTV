@@ -123,6 +123,13 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             Dictionary<PlaylistItem, List<MediaItem>> itemMap =
                 await mediaCollectionRepository.GetPlaylistItemMap(playlist.PlaylistGroup, playlist.Playlist);
 
+            // foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
+            // {
+            //     _playlistMediaItems.Add(
+            //         new PlaylistKey(contentKey, CollectionKey.ForPlaylistItem(playlistItem)),
+            //         mediaItems);
+            // }
+
             return await PlaylistEnumerator.Create(
                 mediaCollectionRepository,
                 itemMap,
