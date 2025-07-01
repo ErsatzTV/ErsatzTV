@@ -75,7 +75,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
 
         string historyKey = HistoryDetails.KeyForYamlContent(contentItem);
 
-        if (contentItem is YamlPlayoutContentMarathonItem && enumerator is PlaylistEnumerator playlistEnumerator)
+        if (enumerator is PlaylistEnumerator playlistEnumerator)
         {
             // create a playout history record
             var nextHistory = new PlayoutHistory

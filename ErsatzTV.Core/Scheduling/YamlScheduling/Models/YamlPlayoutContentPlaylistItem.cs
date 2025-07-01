@@ -8,4 +8,10 @@ public class YamlPlayoutContentPlaylistItem : YamlPlayoutContentItem
 
     [YamlMember(Alias = "playlist_group", ApplyNamingConventions = false)]
     public string PlaylistGroup { get; set; }
+
+    public override string Order
+    {
+        get => "none";
+        set => throw new NotSupportedException();
+    }
 }
