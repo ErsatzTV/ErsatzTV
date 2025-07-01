@@ -33,7 +33,15 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
         UpdateWatermark update)
     {
         p.Name = update.Name;
-        p.Image = update.ImageSource == ChannelWatermarkImageSource.Custom ? update.Image : null;
+
+        p.Image = null;
+        p.OriginalContentType = null;
+        if (update.ImageSource == ChannelWatermarkImageSource.Custom)
+        {
+            p.Image = update.Image?.Path;
+            p.OriginalContentType = update.Image?.ContentType;
+        }
+
         p.Mode = update.Mode;
         p.ImageSource = update.ImageSource;
         p.Location = update.Location;

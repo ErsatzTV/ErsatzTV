@@ -205,7 +205,7 @@ public class FFmpegProcessService
                             channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                                 .HeadOrNone()
-                                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                                .Map(a => Artwork.IsExternalUrl(a.Path) ? a.Path : _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
 
                         return new WatermarkOptions(
                             await watermarkOverride.IfNoneAsync(watermark),
@@ -242,7 +242,7 @@ public class FFmpegProcessService
                             channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                                 .HeadOrNone()
-                                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                                .Map(a => Artwork.IsExternalUrl(a.Path) ? a.Path : _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
                         return new WatermarkOptions(
                             await watermarkOverride.IfNoneAsync(channel.Watermark),
                             maybeChannelPath,
@@ -278,7 +278,7 @@ public class FFmpegProcessService
                             channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                                 .HeadOrNone()
-                                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                                .Map(a => Artwork.IsExternalUrl(a.Path) ? a.Path : _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
                         return new WatermarkOptions(
                             await watermarkOverride.IfNoneAsync(watermark),
                             maybeChannelPath,

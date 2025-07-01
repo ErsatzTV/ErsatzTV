@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Application.Artworks;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Watermarks;
 
@@ -7,7 +8,7 @@ internal static class Mapper
     public static WatermarkViewModel ProjectToViewModel(ChannelWatermark watermark) =>
         new(
             watermark.Id,
-            watermark.Image,
+            new ArtworkContentTypeModel(watermark.Image, watermark.OriginalContentType),
             watermark.Name,
             watermark.Mode,
             watermark.ImageSource,

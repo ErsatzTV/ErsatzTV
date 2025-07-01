@@ -271,10 +271,10 @@ public class IptvController : ControllerBase
     [HttpGet("iptv/logos/{fileName}")]
     [HttpHead("iptv/logos/{fileName}.jpg")]
     [HttpGet("iptv/logos/{fileName}.jpg")]
-    public async Task<IActionResult> GetImage(string fileName)
+    public async Task<IActionResult> GetImage(string fileName, [FromQuery] string contentType)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Logo));
+            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Logo, contentType));
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));

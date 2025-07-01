@@ -39,21 +39,33 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
     private static Validation<BaseError, ChannelWatermark> Validate(CreateWatermark request) =>
         ValidateName(request)
             .Map(
-                _ => new ChannelWatermark
+                _ =>
                 {
-                    Name = request.Name,
-                    Image = request.ImageSource == ChannelWatermarkImageSource.Custom ? request.Image : null,
-                    Mode = request.Mode,
-                    ImageSource = request.ImageSource,
-                    Location = request.Location,
-                    Size = request.Size,
-                    WidthPercent = request.Width,
-                    HorizontalMarginPercent = request.HorizontalMargin,
-                    VerticalMarginPercent = request.VerticalMargin,
-                    FrequencyMinutes = request.FrequencyMinutes,
-                    DurationSeconds = request.DurationSeconds,
-                    Opacity = request.Opacity,
-                    PlaceWithinSourceContent = request.PlaceWithinSourceContent
+                    var watermark = new ChannelWatermark
+                    {
+                        Name = request.Name,
+                        Image = null,
+                        OriginalContentType = null,
+                        Mode = request.Mode,
+                        ImageSource = request.ImageSource,
+                        Location = request.Location,
+                        Size = request.Size,
+                        WidthPercent = request.Width,
+                        HorizontalMarginPercent = request.HorizontalMargin,
+                        VerticalMarginPercent = request.VerticalMargin,
+                        FrequencyMinutes = request.FrequencyMinutes,
+                        DurationSeconds = request.DurationSeconds,
+                        Opacity = request.Opacity,
+                        PlaceWithinSourceContent = request.PlaceWithinSourceContent
+                    };
+
+                    if (request.ImageSource == ChannelWatermarkImageSource.Custom)
+                    {
+                        watermark.Image = request.Image?.Path;
+                        watermark.OriginalContentType = request.Image?.ContentType;
+                    }
+
+                    return watermark;
                 });
 
     private static Validation<BaseError, string> ValidateName(CreateWatermark request) =>

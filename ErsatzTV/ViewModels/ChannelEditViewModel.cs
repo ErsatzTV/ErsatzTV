@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.Channels;
+﻿using ErsatzTV.Application.Artworks;
+using ErsatzTV.Application.Channels;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels;
@@ -16,7 +17,7 @@ public class ChannelEditViewModel
     public string StreamSelector { get; set; }
     public string PreferredAudioLanguageCode { get; set; }
     public string PreferredAudioTitle { get; set; }
-    public string Logo { get; set; }
+    public ArtworkContentTypeModel Logo { get; set; }
     public string ExternalLogoUrl { get; set; }
     public ChannelProgressMode ProgressMode { get; set; }
     public StreamingMode StreamingMode { get; set; }
@@ -43,7 +44,7 @@ public class ChannelEditViewModel
             Group,
             Categories,
             FFmpegProfileId,
-            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : ExternalLogoUrl,
+            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : new ArtworkContentTypeModel(ExternalLogoUrl, string.Empty),
             StreamSelectorMode,
             StreamSelector,
             PreferredAudioLanguageCode,
@@ -66,7 +67,7 @@ public class ChannelEditViewModel
             Group,
             Categories,
             FFmpegProfileId,
-            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : ExternalLogoUrl,
+            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : new ArtworkContentTypeModel(ExternalLogoUrl, string.Empty),
             StreamSelectorMode,
             StreamSelector,
             PreferredAudioLanguageCode,

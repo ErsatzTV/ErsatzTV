@@ -63,17 +63,17 @@ public class ArtworkController : ControllerBase
     public async Task<IActionResult> GetPoster(string fileName, CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Poster, 440), cancellationToken);
+            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Poster, string.Empty, 440), cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
 
     [HttpGet("/artwork/watermarks/{fileName}")]
-    public async Task<IActionResult> GetWatermark(string fileName, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetWatermark(string fileName, [FromQuery] string contentType, CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Watermark), cancellationToken);
+            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Watermark, contentType), cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
@@ -83,7 +83,7 @@ public class ArtworkController : ControllerBase
     public async Task<IActionResult> GetFanArt(string fileName, CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.FanArt), cancellationToken);
+            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.FanArt, string.Empty), cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
@@ -155,7 +155,7 @@ public class ArtworkController : ControllerBase
     public async Task<IActionResult> GetThumbnail(string fileName, CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Thumbnail, 220), cancellationToken);
+            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Thumbnail, string.Empty, 220), cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));

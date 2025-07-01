@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using ErsatzTV.Application.Artworks;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.FFmpeg.State;
 
@@ -6,7 +7,7 @@ namespace ErsatzTV.Application.Watermarks;
 
 public record CreateWatermark(
     string Name,
-    string Image,
+    ArtworkContentTypeModel Image,
     ChannelWatermarkMode Mode,
     ChannelWatermarkImageSource ImageSource,
     WatermarkLocation Location,

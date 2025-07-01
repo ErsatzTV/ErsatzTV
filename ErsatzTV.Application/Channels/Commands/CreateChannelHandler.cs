@@ -49,9 +49,9 @@ public class CreateChannelHandler(
                 fillerPresetId) =>
             {
                 var artwork = new List<Artwork>();
-                if (!string.IsNullOrWhiteSpace(request.Logo))
+                if (!string.IsNullOrWhiteSpace(request.Logo?.Path))
                 {
-                    string logo = request.Logo;
+                    string logo = request.Logo.Path;
                     if (logo.StartsWith("iptv/logos/", StringComparison.Ordinal))
                     {
                         logo = logo.Replace("iptv/logos/", string.Empty);
@@ -62,6 +62,7 @@ public class CreateChannelHandler(
                         {
                             Path = logo,
                             ArtworkKind = ArtworkKind.Logo,
+                            OriginalContentType = !string.IsNullOrEmpty(request.Logo.ContentType) ? request.Logo.ContentType : null,
                             DateAdded = DateTime.UtcNow,
                             DateUpdated = DateTime.UtcNow
                         });

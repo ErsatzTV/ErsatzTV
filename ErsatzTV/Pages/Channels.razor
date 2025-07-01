@@ -43,9 +43,9 @@
         <RowTemplate>
             <MudTd DataLabel="Number">@context.Number</MudTd>
             <MudTd DataLabel="Logo">
-                @if (!string.IsNullOrWhiteSpace(context.Logo))
+                @if (!string.IsNullOrWhiteSpace(context.Logo?.Path))
                 {
-                    <MudElement HtmlTag="img" src="@context.Logo" Style="max-height: 50px"/>
+                    <MudElement HtmlTag="img" src="@context.Logo.UrlWithContentType" Style="max-height: 50px"/>
                 }
                 else
                 {

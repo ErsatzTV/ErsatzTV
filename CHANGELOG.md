@@ -69,6 +69,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix audio sync issue with QSV acceleration
 - YAML playout: fix history for marathon and playlist content
   - This allows playouts to be extended correctly, instead of always resetting to the earliest item in each group
+- Fix using channel External Logo URL as watermark
+- Fix display of SVG channel logo and watermark in admin UI
+  - Existing SVG logos and watermarks will have to be re-uploaded to display properly in the admin UI
+  - This does not affect streaming at all; existing artwork still works fine for streaming
 
 ## [25.2.0] - 2025-06-24
 ### Added

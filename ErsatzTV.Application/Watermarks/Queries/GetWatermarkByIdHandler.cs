@@ -16,7 +16,7 @@ public class GetWatermarkByIdHandler : IRequestHandler<GetWatermarkById, Option<
         GetWatermarkById request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ChannelWatermarks
             .SelectOneAsync(w => w.Id, w => w.Id == request.Id)
             .MapT(ProjectToViewModel);

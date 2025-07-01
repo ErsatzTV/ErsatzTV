@@ -1,5 +1,7 @@
 ﻿@page "/channels/{Id:int?}"
 @page "/channels/add"
+@using System.Net
+@using ErsatzTV.Application.Artworks
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.Filler
@@ -124,9 +126,9 @@
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
                             <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
-                            @if (!string.IsNullOrWhiteSpace(_model.Logo) || !string.IsNullOrWhiteSpace(_model.ExternalLogoUrl))
+                            @if (!string.IsNullOrWhiteSpace(_model.Logo?.Path) || !string.IsNullOrWhiteSpace(_model.ExternalLogoUrl))
                             {
-                                <MudElement HtmlTag="img" src="@(string.IsNullOrWhiteSpace(_model.ExternalLogoUrl) ? _model.Logo : _model.ExternalLogoUrl)" Style="max-height: 50px"/>
+                                <MudElement HtmlTag="img" src="@(string.IsNullOrWhiteSpace(_model.ExternalLogoUrl) ? _model.Logo.UrlWithContentType : _model.ExternalLogoUrl)" Style="max-height: 50px"/>
                             }
                         </MudItem>
                         <MudItem xs="6">
@@ -216,9 +218,9 @@
                     _model.Number = channelViewModel.Number;
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
 
-                    if (Artwork.IsExternalUrl(channelViewModel.Logo))
+                    if (channelViewModel.Logo.IsExternalUrl)
                     {
-                        _model.ExternalLogoUrl = channelViewModel.Logo;
+                        _model.ExternalLogoUrl = channelViewModel.Logo.Path;
                     }
                     else
                     {
@@ -304,11 +306,11 @@
         try
         {
             Either<BaseError, string> maybeCacheFileName =
-                await Mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
+                await Mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Logo, e.File.ContentType), _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
-                    _model.Logo = $"iptv/logos/{relativeFileName}";
+                    _model.Logo = new ArtworkContentTypeModel($"iptv/logos/{relativeFileName}", e.File.ContentType);
                     _model.ExternalLogoUrl = null;
                     StateHasChanged();
                 },

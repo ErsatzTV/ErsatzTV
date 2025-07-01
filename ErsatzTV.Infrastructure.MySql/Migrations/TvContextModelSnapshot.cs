@@ -190,6 +190,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int?>("MusicVideoMetadataId")
                         .HasColumnType("int");
 
+                    b.Property<string>("OriginalContentType")
+                        .HasColumnType("longtext");
+
                     b.Property<int?>("OtherVideoMetadataId")
                         .HasColumnType("int");
 
@@ -352,6 +355,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<int>("Opacity")
                         .HasColumnType("int");
+
+                    b.Property<string>("OriginalContentType")
+                        .HasColumnType("longtext");
 
                     b.Property<bool>("PlaceWithinSourceContent")
                         .HasColumnType("tinyint(1)");

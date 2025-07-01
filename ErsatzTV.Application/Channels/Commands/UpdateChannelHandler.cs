@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
@@ -47,9 +46,9 @@ public class UpdateChannelHandler(
         c.ActiveMode = update.ActiveMode;
         c.Artwork ??= [];
 
-        if (!string.IsNullOrWhiteSpace(update.Logo))
+        if (!string.IsNullOrWhiteSpace(update.Logo?.Path))
         {
-            string logo = update.Logo;
+            string logo = update.Logo.Path;
             if (logo.StartsWith("iptv/logos/", StringComparison.Ordinal))
             {
                 logo = logo.Replace("iptv/logos/", string.Empty);
@@ -59,6 +58,9 @@ public class UpdateChannelHandler(
             foreach (Artwork artwork in maybeLogo)
             {
                 artwork.Path = logo;
+                artwork.OriginalContentType = !string.IsNullOrEmpty(update.Logo.ContentType)
+                    ? update.Logo.ContentType
+                    : null;
                 artwork.DateUpdated = DateTime.UtcNow;
             }
 
@@ -67,6 +69,9 @@ public class UpdateChannelHandler(
                 var artwork = new Artwork
                 {
                     Path = logo,
+                    OriginalContentType = !string.IsNullOrEmpty(update.Logo.ContentType)
+                        ? update.Logo.ContentType
+                        : null,
                     DateAdded = DateTime.UtcNow,
                     DateUpdated = DateTime.UtcNow,
                     ArtworkKind = ArtworkKind.Logo
