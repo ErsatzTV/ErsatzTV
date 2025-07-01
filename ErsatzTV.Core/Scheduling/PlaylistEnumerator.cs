@@ -46,6 +46,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public int Count => throw new NotSupportedException("Count isn't used for playlist enumeration");
 
+    public int CountForRandom => _allMediaItemIds.Count;
+
     public Option<TimeSpan> MinimumDuration { get; private set; }
 
     public void MoveNext()

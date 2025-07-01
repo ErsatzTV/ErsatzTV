@@ -28,7 +28,30 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            for (var i = 0; i < count.Count; i++)
+            var random = new Random(context.Playout.Seed + context.InstructionIndex);
+            int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
+                ? playlistEnumerator.CountForRandom
+                : enumerator.Count;
+            var expression = new NCalc.Expression(count.Count);
+            expression.EvaluateParameter += (name, e) =>
+            {
+                e.Result = name switch
+                {
+                    "count" => enumeratorCount,
+                    "random" => random.Next() % enumeratorCount,
+                    _ => e.Result
+                };
+            };
+
+            object expressionResult = expression.Evaluate();
+            int countValue = expressionResult switch
+            {
+                double doubleResult => (int)Math.Floor(doubleResult),
+                int intResult => intResult,
+                _ => 0
+            };
+
+            for (var i = 0; i < countValue; i++)
             {
                 foreach (MediaItem mediaItem in enumerator.Current)
                 {
