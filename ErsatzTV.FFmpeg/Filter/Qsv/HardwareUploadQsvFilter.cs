@@ -11,11 +11,9 @@ public class HardwareUploadQsvFilter : BaseFilter
         _ffmpegState = ffmpegState;
     }
 
-    public override string Filter => _currentState.FrameDataLocation switch
-    {
-        FrameDataLocation.Hardware => string.Empty,
-        _ => $"hwupload=extra_hw_frames={_ffmpegState.QsvExtraHardwareFrames}"
-    };
+    public override string Filter => _currentState.FrameDataLocation is FrameDataLocation.Software
+        ? $"hwupload=extra_hw_frames={_ffmpegState.QsvExtraHardwareFrames},format=qsv"
+        : string.Empty;
 
     public override FrameState NextState(FrameState currentState) =>
         currentState with { FrameDataLocation = FrameDataLocation.Hardware };

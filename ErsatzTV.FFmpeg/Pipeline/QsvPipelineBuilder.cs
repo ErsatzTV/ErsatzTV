@@ -3,6 +3,7 @@ using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
+using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.Format;
@@ -47,9 +48,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         _logger = logger;
     }
 
-    protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) =>
-        ffmpegState.DecoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv ||
-        ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv;
+    protected override bool IsIntelVaapiOrQsv(FFmpegState ffmpegState) => false;
 
     protected override FFmpegState SetAccelState(
         VideoStream videoStream,
@@ -89,6 +88,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             decodeCapability = FFmpegCapability.Software;
         }
 
+        pipelineSteps.Add(new CudaVisibleDevicesVariable(string.Empty));
         pipelineSteps.Add(new QsvHardwareAccelerationOption(ffmpegState.VaapiDevice, decodeCapability));
 
         // disable hw accel if decoder/encoder isn't supported
@@ -330,35 +330,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             if (!videoStream.ColorParams.IsBt709 || usesVppQsv)
             {
-                // _logger.LogDebug("Adding colorspace filter");
-
-                // force p010/nv12 if we're still in hardware
-                if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
-                {
-                    foreach (int bitDepth in currentState.PixelFormat.Map(pf => pf.BitDepth))
-                    {
-                        if (bitDepth is 10 && formatForDownload is not PixelFormatYuv420P10Le)
-                        {
-                            formatForDownload = new PixelFormatYuv420P10Le();
-                            currentState = currentState with { PixelFormat = Some(formatForDownload) };
-                        }
-                        else if (bitDepth is 8 && formatForDownload is not PixelFormatNv12)
-                        {
-                            formatForDownload = new PixelFormatNv12(formatForDownload.Name);
-                            currentState = currentState with { PixelFormat = Some(formatForDownload) };
-                        }
-                    }
-                }
-
-                // vpp_qsv seems to strip color info, so if we use that at all, force overriding input color info
-                var colorspace = new ColorspaceFilter(
-                    currentState,
-                    videoStream,
-                    format,
-                    usesVppQsv);
-
-                currentState = colorspace.NextState(currentState);
-                result.Add(colorspace);
+                pipelineSteps.Add(new ColorMetadataOutputOption());
             }
 
             if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
@@ -657,20 +629,14 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         {
             foreach (IPixelFormat pixelFormat in desiredState.PixelFormat)
             {
-                if (ffmpegState.DecoderHardwareAccelerationMode == HardwareAccelerationMode.Qsv)
-                {
-                    var filter = new TonemapQsvFilter();
-                    currentState = filter.NextState(currentState);
-                    videoStream.ResetColorParams(ColorParams.Default);
-                    videoInputFile.FilterSteps.Add(filter);
-                }
-                else
-                {
-                    var filter = new TonemapFilter(ffmpegState, currentState, pixelFormat);
-                    currentState = filter.NextState(currentState);
-                    videoStream.ResetColorParams(ColorParams.Default);
-                    videoInputFile.FilterSteps.Add(filter);
-                }
+                var uploadFilter = new HardwareUploadQsvFilter(currentState, ffmpegState);
+                currentState = uploadFilter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(uploadFilter);
+
+                var filter = new TonemapQsvFilter(pixelFormat);
+                currentState = filter.NextState(currentState);
+                videoStream.ResetColorParams(ColorParams.Default);
+                videoInputFile.FilterSteps.Add(filter);
             }
         }
 

@@ -202,19 +202,20 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             false,
             videoStream.ColorParams.IsHdr);
 
-        SetThreadCount(ffmpegState, desiredState, pipelineSteps);
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
         SetTimeLimit(ffmpegState, pipelineSteps);
 
-        FilterChain filterChain = BuildVideoPipeline(
+        (ffmpegState, FilterChain filterChain) = BuildVideoPipeline(
             videoInputFile,
             videoStream,
             ffmpegState,
             desiredState,
             context,
             pipelineSteps);
+
+        SetThreadCount(ffmpegState, desiredState, pipelineSteps);
 
         // don't double input files for concat segmenter (v2) parent or child
         if (_concatInputFile.IsNone && ffmpegState.OutputFormat is not OutputFormatKind.Nut)
@@ -483,7 +484,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps);
 
-    private FilterChain BuildVideoPipeline(
+    private VideoPipelineResult BuildVideoPipeline(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
@@ -539,7 +540,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         SetOutputTsOffset(ffmpegState, desiredState, pipelineSteps);
 
-        return filterChain;
+        return new VideoPipelineResult(ffmpegState, filterChain);
     }
 
     protected abstract Option<IDecoder> SetDecoder(
@@ -760,19 +761,10 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private void SetThreadCount(FFmpegState ffmpegState, FrameState desiredState, List<IPipelineStep> pipelineSteps)
     {
-        if (ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.None ||
-            ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.None)
+        if (ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.None)
         {
             _logger.LogDebug(
-                "Forcing {Threads} ffmpeg thread when hardware acceleration is used",
-                1);
-
-            pipelineSteps.Insert(0, new ThreadCountOption(1));
-        }
-        else if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
-        {
-            _logger.LogDebug(
-                "Forcing {Threads} ffmpeg thread due to buggy combination of stream seek and realtime output",
+                "Forcing {Threads} ffmpeg decoding thread when hardware acceleration is used",
                 1);
 
             pipelineSteps.Insert(0, new ThreadCountOption(1));
