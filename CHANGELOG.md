@@ -73,6 +73,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix display of SVG channel logo and watermark in admin UI
   - Existing SVG logos and watermarks will have to be re-uploaded to display properly in the admin UI
   - This does not affect streaming at all; existing artwork still works fine for streaming
+- Classify HDHR endpoints as streaming endpoints
+  - This allows these endpoints to be accessed through port `ETV_STREAMING_PORT` (default `8409`)
+  - This only matters if you configured `ETV_UI_PORT` to be a different value, which makes UI endpoints inaccessible on the streaming port
 
 ## [25.2.0] - 2025-06-24
 ### Added
