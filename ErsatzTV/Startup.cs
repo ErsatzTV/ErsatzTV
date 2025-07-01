@@ -562,7 +562,7 @@ public class Startup
             async (context, next) =>
             {
                 if (!context.Request.Host.Value.StartsWith("localhost", StringComparison.OrdinalIgnoreCase) &&
-                    !context.Request.Path.StartsWithSegments("/iptv") &&
+                    !IsIptvPath(context.Request.Path) &&
                     context.Connection.LocalPort != Settings.UiPort)
                 {
                     context.Response.StatusCode = 404;
@@ -573,7 +573,7 @@ public class Startup
             });
 
         app.MapWhen(
-            ctx => !ctx.Request.Path.StartsWithSegments("/iptv"),
+            ctx => !IsIptvPath(ctx.Request.Path),
             blazor =>
             {
                 blazor.UseRouting();
@@ -596,12 +596,19 @@ public class Startup
             });
 
         app.MapWhen(
-            ctx => ctx.Request.Path.StartsWithSegments("/iptv"),
+            ctx => IsIptvPath(ctx.Request.Path),
             iptv =>
             {
                 iptv.UseRouting();
                 iptv.UseEndpoints(endpoints => endpoints.MapControllers());
             });
+        return;
+
+        bool IsIptvPath(PathString path) => path.StartsWithSegments("/iptv") ||
+                                            path.StartsWithSegments("/discover.json") ||
+                                            path.StartsWithSegments("/device.xml") ||
+                                            path.StartsWithSegments("/lineup.json") ||
+                                            path.StartsWithSegments("/lineup_status.json");
     }
 
     private static void CustomServices(IServiceCollection services)
