@@ -53,7 +53,7 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            if (contentItem is YamlPlayoutContentMarathonItem marathonItem && enumerator is PlaylistEnumerator playlistEnumerator)
+            if (enumerator is PlaylistEnumerator playlistEnumerator)
             {
                 Option<PlayoutHistory> maybePrimaryHistory = maybeHistory
                     .Filter(h => string.IsNullOrWhiteSpace(h.ChildKey))
@@ -61,16 +61,19 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
 
                 foreach (PlayoutHistory primaryHistory in maybePrimaryHistory)
                 {
-                    bool hasSetEnumeratorIndex = false;
-
-                    if (!Enum.TryParse(marathonItem.ItemOrder, true, out PlaybackOrder itemPlaybackOrder))
-                    {
-                        itemPlaybackOrder = PlaybackOrder.None;
-                    }
+                    var hasSetEnumeratorIndex = false;
 
                     var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Map(x => x.CollectionKey).ToList();
                     foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in playlistEnumerator.ChildEnumerators)
                     {
+                        PlaybackOrder itemPlaybackOrder = childEnumerator switch
+                        {
+                            ChronologicalMediaCollectionEnumerator => PlaybackOrder.Chronological,
+                            RandomizedMediaCollectionEnumerator => PlaybackOrder.Random,
+                            ShuffledMediaCollectionEnumerator => PlaybackOrder.Shuffle,
+                            _ => PlaybackOrder.None
+                        };
+
                         Option<PlayoutHistory> maybeApplicableHistory = maybeHistory
                             .Filter(h => h.ChildKey == HistoryDetails.KeyForCollectionKey(collectionKey))
                             .HeadOrNone();
@@ -99,8 +102,8 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                                     collectionItems,
                                     h.Details,
                                     childEnumerator,
-                                    playbackOrder,
-                                    !h.IsCurrentChild);
+                                    itemPlaybackOrder,
+                                    true);
                             }
 
                             if (h.IsCurrentChild)
@@ -117,6 +120,10 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                         // falling back to enumerator based on index
                         playlistEnumerator.SetEnumeratorIndex(primaryHistory.Index);
                     }
+
+                    // only move next at the end, because that may also move
+                    // the enumerator index
+                    playlistEnumerator.MoveNext();
                 }
             }
             else

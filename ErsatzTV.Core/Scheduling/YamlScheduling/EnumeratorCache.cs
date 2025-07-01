@@ -112,7 +112,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         // playlist is a special case that needs to be handled on its own
         if (content is YamlPlayoutContentPlaylistItem playlist)
         {
-            if (!string.IsNullOrWhiteSpace(playlist.Order))
+            if (!string.IsNullOrWhiteSpace(playlist.Order) && !string.Equals(playlist.Order, "none", StringComparison.OrdinalIgnoreCase))
             {
                 logger.LogWarning(
                     "Ignoring playback order {Order} for playlist {Playlist}",
@@ -123,12 +123,12 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             Dictionary<PlaylistItem, List<MediaItem>> itemMap =
                 await mediaCollectionRepository.GetPlaylistItemMap(playlist.PlaylistGroup, playlist.Playlist);
 
-            // foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
-            // {
-            //     _playlistMediaItems.Add(
-            //         new PlaylistKey(contentKey, CollectionKey.ForPlaylistItem(playlistItem)),
-            //         mediaItems);
-            // }
+            foreach ((PlaylistItem playlistItem, List<MediaItem> mediaItems) in itemMap)
+            {
+                _playlistMediaItems.Add(
+                    new PlaylistKey(contentKey, CollectionKey.ForPlaylistItem(playlistItem)),
+                    mediaItems);
+            }
 
             return await PlaylistEnumerator.Create(
                 mediaCollectionRepository,
