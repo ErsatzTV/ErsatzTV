@@ -49,7 +49,13 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                     case XmlNodeType.Element:
                         switch (reader.Name.ToLowerInvariant())
                         {
+                            case "episodedetails":
                             case "movie":
+                            case "musicvideo":
+                                if (nfo is not null)
+                                {
+                                    throw new InvalidOperationException("Cannot have multiple opening tags");
+                                }
                                 nfo = new OtherVideoNfo();
                                 break;
                             case "title":
@@ -107,7 +113,7 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
 
                         break;
                     case XmlNodeType.EndElement:
-                        if (reader.Name == "movie")
+                        if (reader.Name is "episodedetails" or "movie" or "musicvideo")
                         {
                             done = true;
                         }
