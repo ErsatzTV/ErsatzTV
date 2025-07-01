@@ -33,9 +33,12 @@ public class OtherVideoNfoReaderTests
     }
 
     [Test]
-    public async Task MetadataNfo_Should_Return_Nfo()
+    [TestCase("movie")]
+    [TestCase("episodedetails")]
+    [TestCase("musicvideo")]
+    public async Task MetadataNfo_Should_Return_Nfo(string topLevel)
     {
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<movie></movie>"));
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}></{topLevel}>"));
 
         Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
 
@@ -43,11 +46,14 @@ public class OtherVideoNfoReaderTests
     }
 
     [Test]
-    public async Task CombinationNfo_Should_Return_Nfo()
+    [TestCase("movie")]
+    [TestCase("episodedetails")]
+    [TestCase("musicvideo")]
+    public async Task CombinationNfo_Should_Return_Nfo(string topLevel)
     {
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(
-                @"<movie></movie>
+                @$"<{topLevel}></{topLevel}>
 https://www.themoviedb.org/movie/11-star-wars"));
 
         Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
@@ -56,12 +62,15 @@ https://www.themoviedb.org/movie/11-star-wars"));
     }
 
     [Test]
-    public async Task FullSample_Should_Return_Nfo()
+    [TestCase("movie")]
+    [TestCase("episodedetails")]
+    [TestCase("musicvideo")]
+    public async Task FullSample_Should_Return_Nfo(string topLevel)
     {
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(
-                @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes"" ?>
-<movie>
+                @$"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes"" ?>
+<{topLevel}>
     <title>Zack Snyder&apos;s Justice League</title>
     <originaltitle>Zack Snyder&apos;s Justice League</originaltitle>
     <sorttitle>Justice League 2</sorttitle>
@@ -166,7 +175,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
         <total>0.000000</total>
     </resume>
     <dateadded>2021-03-26 11:35:50</dateadded>
-</movie>"));
+</{topLevel}>"));
 
         Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
 
@@ -223,9 +232,12 @@ https://www.themoviedb.org/movie/11-star-wars"));
     }
 
     [Test]
-    public async Task MetadataNfo_With_Tag_Should_Return_Nfo()
+    [TestCase("movie")]
+    [TestCase("episodedetails")]
+    [TestCase("musicvideo")]
+    public async Task MetadataNfo_With_Tag_Should_Return_Nfo(string topLevel)
     {
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<movie><tag>Test Tag</tag></movie>"));
+        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}><tag>Test Tag</tag></{topLevel}>"));
 
         Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
 
@@ -237,10 +249,13 @@ https://www.themoviedb.org/movie/11-star-wars"));
     }
 
     [Test]
-    public async Task MetadataNfo_With_Outline_Should_Return_Nfo()
+    [TestCase("movie")]
+    [TestCase("episodedetails")]
+    [TestCase("musicvideo")]
+    public async Task MetadataNfo_With_Outline_Should_Return_Nfo(string topLevel)
     {
         await using var stream =
-            new MemoryStream(Encoding.UTF8.GetBytes(@"<movie><outline>Test Outline</outline></movie>"));
+            new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}><outline>Test Outline</outline></{topLevel}>"));
 
         Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
 

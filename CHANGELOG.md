@@ -58,6 +58,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
 - Try to mitigate inotify limit error by disabling automatic reloading of `appsettings.json` config files
+- Support `movie`, `musicvideo` and `episodedetails` top-level tags in other video NFO files
+  - Note that no change has been made to the metadata tags that are actually parsed, but this should help with various types of content
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
