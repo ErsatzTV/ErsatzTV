@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using ErsatzTV.Application.Artworks;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Channels;
@@ -9,7 +10,7 @@ public record CreateChannel(
     string Group,
     string Categories,
     int FFmpegProfileId,
-    string Logo,
+    ArtworkContentTypeModel Logo,
     ChannelStreamSelectorMode StreamSelectorMode,
     string StreamSelector,
     string PreferredAudioLanguageCode,

@@ -42,7 +42,7 @@ public class
     {
         try
         {
-            MimeType mimeType;
+            string mimeType;
 
             string cachePath = _imageCache.GetPathForImage(
                 request.FileName,
@@ -84,7 +84,7 @@ public class
 
                     File.Move(withExtension, cachePath);
 
-                    mimeType = new MimeType("image/jpeg");
+                    mimeType = "image/jpeg";
                 }
                 else
                 {
@@ -93,10 +93,12 @@ public class
             }
             else
             {
-                mimeType = MimeTypes.GetMimeTypeFromFile(cachePath);
+                mimeType = !string.IsNullOrWhiteSpace(request.ContentType)
+                    ? request.ContentType
+                    : MimeTypes.GetMimeTypeFromFile(cachePath).Name;
             }
 
-            return new CachedImagePathViewModel(cachePath, mimeType.Name);
+            return new CachedImagePathViewModel(cachePath, mimeType);
         }
         catch (Exception ex)
         {

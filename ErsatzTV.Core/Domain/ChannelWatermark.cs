@@ -9,6 +9,7 @@ public class ChannelWatermark
     public ChannelWatermarkMode Mode { get; set; }
     public ChannelWatermarkImageSource ImageSource { get; set; }
     public string Image { get; set; }
+    public string OriginalContentType { get; set; }
     public WatermarkLocation Location { get; set; }
     public WatermarkSize Size { get; set; }
     public int WidthPercent { get; set; }

@@ -27,9 +27,9 @@
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Image">
-                @if (!string.IsNullOrWhiteSpace(context.Image))
+                @if (!string.IsNullOrWhiteSpace(context.Image?.Path))
                 {
-                    <MudElement HtmlTag="img" src="@($"artwork/watermarks/{context.Image}")" Style="max-height: 50px"/>
+                    <MudElement HtmlTag="img" src="@($"artwork/watermarks/{context.Image.UrlWithContentType}")" Style="max-height: 50px"/>
                 }
                 else if (context.ImageSource == ChannelWatermarkImageSource.ChannelLogo)
                 {

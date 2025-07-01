@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Application.Watermarks;
+﻿using ErsatzTV.Application.Artworks;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.FFmpeg.State;
 
@@ -30,7 +31,7 @@ public class WatermarkEditViewModel
 
     public int Id { get; set; }
     public string Name { get; set; }
-    public string Image { get; set; }
+    public ArtworkContentTypeModel Image { get; set; }
     public ChannelWatermarkMode Mode { get; set; }
     public ChannelWatermarkImageSource ImageSource { get; set; }
     public WatermarkLocation Location { get; set; }

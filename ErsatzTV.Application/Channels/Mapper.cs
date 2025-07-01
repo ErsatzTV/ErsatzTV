@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Api.Channels;
+﻿using ErsatzTV.Application.Artworks;
+using ErsatzTV.Core.Api.Channels;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Channels;
@@ -45,7 +46,7 @@ internal static class Mapper
     internal static ResolutionAndBitrateViewModel ProjectToViewModel(Resolution resolution, int bitrate) =>
         new(resolution.Height, resolution.Width, bitrate);
 
-    private static string GetLogo(Channel channel)
+    private static ArtworkContentTypeModel GetLogo(Channel channel)
     {
         Option<Artwork> maybeArtwork = channel.Artwork
             .Where(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -53,10 +54,12 @@ internal static class Mapper
 
         foreach (Artwork artwork in maybeArtwork)
         {
-            return artwork.IsExternalUrl() ? artwork.Path : $"iptv/logos/{artwork.Path}";
+            return artwork.IsExternalUrl()
+                ? new ArtworkContentTypeModel(artwork.Path, string.Empty)
+                : new ArtworkContentTypeModel($"iptv/logos/{artwork.Path}", artwork.OriginalContentType);
         }
 
-        return string.Empty;
+        return ArtworkContentTypeModel.None;
     }
 
     private static string GetStreamingMode(Channel channel) =>

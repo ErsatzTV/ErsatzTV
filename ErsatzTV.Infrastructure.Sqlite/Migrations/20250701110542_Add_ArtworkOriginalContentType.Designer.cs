@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250701110542_Add_ArtworkOriginalContentType")]
+    partial class Add_ArtworkOriginalContentType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
@@ -340,9 +343,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.Property<int>("Opacity")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("OriginalContentType")
-                        .HasColumnType("TEXT");
 
                     b.Property<bool>("PlaceWithinSourceContent")
                         .HasColumnType("INTEGER");
