@@ -110,10 +110,10 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         [
             Watermark.None,
-            Watermark.PermanentOpaqueScaled,
-            Watermark.PermanentOpaqueActualSize,
+            //Watermark.PermanentOpaqueScaled,
+            //Watermark.PermanentOpaqueActualSize,
             Watermark.PermanentTransparentScaled,
-            Watermark.PermanentTransparentActualSize
+            //Watermark.PermanentTransparentActualSize
         ];
 
         public static Subtitle[] Subtitles =
@@ -145,7 +145,7 @@ public class TranscodingTests
         public static InputFormat[] InputFormats =
         [
             // // // example format that requires colorspace filter
-            // new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
+            new("libx264", "yuv420p", "tv", "smpte170m", "bt709", "smpte170m"),
             // // //
             // // // // example format that requires setparams filter
             // new("libx264", "yuv420p", string.Empty, string.Empty, string.Empty, string.Empty),
@@ -198,9 +198,9 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         [
             //HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
+            //HardwareAccelerationKind.Nvenc,
             //HardwareAccelerationKind.Vaapi
-            //HardwareAccelerationKind.Qsv,
+            HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
             // HardwareAccelerationKind.Amf
         ];

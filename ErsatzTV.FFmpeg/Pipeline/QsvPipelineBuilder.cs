@@ -330,7 +330,42 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
             if (!videoStream.ColorParams.IsBt709 || usesVppQsv)
             {
-                pipelineSteps.Add(new ColorMetadataOutputOption());
+                if (videoStream.ColorParams.IsPartiallyUnknown)
+                {
+                    // _logger.LogDebug("Adding colorspace filter");
+
+                    // force p010/nv12 if we're still in hardware
+                    if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
+                    {
+                        foreach (int bitDepth in currentState.PixelFormat.Map(pf => pf.BitDepth))
+                        {
+                            if (bitDepth is 10 && formatForDownload is not PixelFormatYuv420P10Le)
+                            {
+                                formatForDownload = new PixelFormatYuv420P10Le();
+                                currentState = currentState with { PixelFormat = Some(formatForDownload) };
+                            }
+                            else if (bitDepth is 8 && formatForDownload is not PixelFormatNv12)
+                            {
+                                formatForDownload = new PixelFormatNv12(formatForDownload.Name);
+                                currentState = currentState with { PixelFormat = Some(formatForDownload) };
+                            }
+                        }
+                    }
+
+                    // vpp_qsv seems to strip color info, so if we use that at all, force overriding input color info
+                    var colorspace = new ColorspaceFilter(
+                        currentState,
+                        videoStream,
+                        format,
+                        usesVppQsv);
+
+                    currentState = colorspace.NextState(currentState);
+                    result.Add(colorspace);
+                }
+                else
+                {
+                    pipelineSteps.Add(new ColorMetadataOutputOption());
+                }
             }
 
             if (ffmpegState.EncoderHardwareAccelerationMode == HardwareAccelerationMode.None)
