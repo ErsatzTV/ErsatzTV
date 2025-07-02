@@ -202,19 +202,20 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             false,
             videoStream.ColorParams.IsHdr);
 
-        SetThreadCount(ffmpegState, desiredState, pipelineSteps);
         SetSceneDetect(videoStream, ffmpegState, desiredState, pipelineSteps);
         SetFFReport(ffmpegState, pipelineSteps);
         SetStreamSeek(ffmpegState, videoInputFile, context, pipelineSteps);
         SetTimeLimit(ffmpegState, pipelineSteps);
 
-        FilterChain filterChain = BuildVideoPipeline(
+        (FilterChain filterChain, ffmpegState) = BuildVideoPipeline(
             videoInputFile,
             videoStream,
             ffmpegState,
             desiredState,
             context,
             pipelineSteps);
+
+        SetThreadCount(ffmpegState, pipelineSteps);
 
         // don't double input files for concat segmenter (v2) parent or child
         if (_concatInputFile.IsNone && ffmpegState.OutputFormat is not OutputFormatKind.Nut)
@@ -483,7 +484,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         PipelineContext context,
         ICollection<IPipelineStep> pipelineSteps);
 
-    private FilterChain BuildVideoPipeline(
+    private FilterChainAndState BuildVideoPipeline(
         VideoInputFile videoInputFile,
         VideoStream videoStream,
         FFmpegState ffmpegState,
@@ -514,7 +515,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             : SetDecoder(videoInputFile, videoStream, ffmpegState, context);
 
         //SetStillImageInfiniteLoop(videoInputFile, videoStream, ffmpegState);
-        SetRealtimeInput(videoInputFile, ffmpegState, desiredState);
+        SetRealtimeInput(videoInputFile, desiredState);
         SetInfiniteLoop(videoInputFile, videoStream, ffmpegState, desiredState);
         SetFrameRateOutput(desiredState, pipelineSteps);
         SetVideoTrackTimescaleOutput(desiredState, pipelineSteps);
@@ -539,7 +540,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
         SetOutputTsOffset(ffmpegState, desiredState, pipelineSteps);
 
-        return filterChain;
+        return new FilterChainAndState(filterChain, ffmpegState);
     }
 
     protected abstract Option<IDecoder> SetDecoder(
@@ -707,7 +708,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void SetRealtimeInput(VideoInputFile videoInputFile, FFmpegState ffmpegState, FrameState desiredState)
+    private void SetRealtimeInput(VideoInputFile videoInputFile, FrameState desiredState)
     {
         int initialBurst;
         if (!desiredState.Realtime)
@@ -758,21 +759,12 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         }
     }
 
-    private void SetThreadCount(FFmpegState ffmpegState, FrameState desiredState, List<IPipelineStep> pipelineSteps)
+    private void SetThreadCount(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps)
     {
-        if (ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.None ||
-            ffmpegState.EncoderHardwareAccelerationMode != HardwareAccelerationMode.None)
+        if (ffmpegState.DecoderHardwareAccelerationMode != HardwareAccelerationMode.None)
         {
             _logger.LogDebug(
-                "Forcing {Threads} ffmpeg thread when hardware acceleration is used",
-                1);
-
-            pipelineSteps.Insert(0, new ThreadCountOption(1));
-        }
-        else if (ffmpegState.Start.Exists(s => s > TimeSpan.Zero) && desiredState.Realtime)
-        {
-            _logger.LogDebug(
-                "Forcing {Threads} ffmpeg thread due to buggy combination of stream seek and realtime output",
+                "Forcing {Threads} ffmpeg decoding thread when hardware acceleration is used",
                 1);
 
             pipelineSteps.Insert(0, new ThreadCountOption(1));
@@ -835,4 +827,6 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
 
     private static void SetTimeLimit(FFmpegState ffmpegState, List<IPipelineStep> pipelineSteps) =>
         pipelineSteps.AddRange(ffmpegState.Finish.Map(finish => new TimeLimitOutputOption(finish)));
+
+    private sealed record FilterChainAndState(FilterChain FilterChain, FFmpegState FFmpegState);
 }
