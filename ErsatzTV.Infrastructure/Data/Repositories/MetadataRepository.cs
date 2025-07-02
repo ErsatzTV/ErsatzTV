@@ -456,6 +456,21 @@ public class MetadataRepository : IMetadataRepository
             new { metadata.Id, ContentRating = contentRating }).ToUnit();
     }
 
+    public async Task<Unit> SetPlot(MovieMetadata metadata, string plot)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE MovieMetadata SET Plot = @Plot WHERE Id = @Id",
+            new { metadata.Id, Plot = plot }).ToUnit();    }
+
+    public async Task<Unit> SetPlot(OtherVideoMetadata metadata, string plot)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            @"UPDATE OtherVideoMetadata SET Plot = @Plot WHERE Id = @Id",
+            new { metadata.Id, Plot = plot }).ToUnit();
+    }
+
     public async Task<bool> RemoveGuid(MetadataGuid guid)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
