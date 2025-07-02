@@ -177,6 +177,13 @@ public class PlexOtherVideoLibraryScanner :
             result.IsUpdated = true;
         }
 
+        if (existingMetadata.Plot != fullMetadata.Plot)
+        {
+            existingMetadata.Plot = fullMetadata.Plot;
+            await _metadataRepository.SetPlot(existingMetadata, fullMetadata.Plot);
+            result.IsUpdated = true;
+        }
+
         foreach (Genre genre in existingMetadata.Genres
                      .Filter(g => fullMetadata.Genres.All(g2 => g2.Name != g.Name))
                      .ToList())

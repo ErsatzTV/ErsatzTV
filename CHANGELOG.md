@@ -86,6 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Classify HDHR endpoints as streaming endpoints
   - This allows these endpoints to be accessed through port `ETV_STREAMING_PORT` (default `8409`)
   - This only matters if you configured `ETV_UI_PORT` to be a different value, which makes UI endpoints inaccessible on the streaming port
+- Update Plex movie/other video plot ("summary") during library deep scan
 
 ## [25.2.0] - 2025-06-24
 ### Added

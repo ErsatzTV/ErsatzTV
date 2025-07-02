@@ -36,6 +36,8 @@ public interface IMetadataRepository
     Task<Unit> MarkAsExternal(OtherVideoMetadata metadata);
     Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating);
     Task<Unit> SetContentRating(OtherVideoMetadata metadata, string contentRating);
+    Task<Unit> SetPlot(MovieMetadata metadata, string plot);
+    Task<Unit> SetPlot(OtherVideoMetadata metadata, string plot);
 
     [SuppressMessage("Naming", "CA1720:Identifier contains type name")]
     Task<bool> RemoveGuid(MetadataGuid guid);
