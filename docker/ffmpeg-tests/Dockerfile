@@ -1,5 +1,10 @@
 FROM jasongdove/ersatztv-ffmpeg:7.1.1
-RUN apt-get update && apt-get install -y ca-certificates gnupg dotnet9 dotnet-sdk-9.0 aspnetcore-runtime-9.0 mkvtoolnix
+RUN apt-get update && apt-get install -y ca-certificates gnupg mkvtoolnix && \
+    curl -L https://dot.net/v1/dotnet-install.sh -o dotnet-install.sh && \
+    chmod +x ./dotnet-install.sh && \
+    ./dotnet-install.sh --channel 9.0
+ENV DOTNET_ROOT="/root/.dotnet"
+ENV PATH="$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools"
 WORKDIR /source
 
 # copy csproj and restore as distinct layers
