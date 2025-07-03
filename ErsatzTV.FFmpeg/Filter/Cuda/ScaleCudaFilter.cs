@@ -7,6 +7,7 @@ public class ScaleCudaFilter : BaseFilter
     private readonly Option<FrameSize> _croppedSize;
     private readonly FrameState _currentState;
     private readonly bool _isAnamorphicEdgeCase;
+    private readonly bool _passthrough;
     private readonly FrameSize _paddedSize;
     private readonly FrameSize _scaledSize;
 
@@ -15,13 +16,15 @@ public class ScaleCudaFilter : BaseFilter
         FrameSize scaledSize,
         FrameSize paddedSize,
         Option<FrameSize> croppedSize,
-        bool isAnamorphicEdgeCase)
+        bool isAnamorphicEdgeCase,
+        bool passthrough)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
         _paddedSize = paddedSize;
         _croppedSize = croppedSize;
         _isAnamorphicEdgeCase = isAnamorphicEdgeCase;
+        _passthrough = passthrough;
     }
 
     public bool IsFormatOnly => _currentState.ScaledSize == _scaledSize;
@@ -33,10 +36,11 @@ public class ScaleCudaFilter : BaseFilter
             string scale = string.Empty;
             if (_currentState.ScaledSize == _scaledSize)
             {
+                // don't need scaling, but still need pixel format
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
-                    // don't need scaling, but still need pixel format
-                    scale = $"scale_cuda=format={pixelFormat.FFmpegName}";
+                    string passthrough = _passthrough ? ":passthrough=1" : string.Empty;
+                    scale = $"scale_cuda=format={pixelFormat.FFmpegName}{passthrough}";
                 }
             }
             else

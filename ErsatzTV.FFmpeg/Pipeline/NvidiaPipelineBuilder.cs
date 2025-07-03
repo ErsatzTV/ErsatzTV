@@ -163,6 +163,20 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         foreach (IDecoder decoder in maybeDecoder)
         {
             currentState = decoder.NextState(currentState);
+
+            // ffmpeg 7.2+ uses p016 internally for cuda, so convert to p010 for compatibility until min ver is 7.2
+            if (decoder is DecoderImplicitCuda && videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10)
+            {
+                var filter = new ScaleCudaFilter(
+                    currentState with { PixelFormat = new PixelFormatP010() },
+                    videoStream.FrameSize,
+                    videoStream.FrameSize,
+                    Option<FrameSize>.None,
+                    false,
+                    passthrough: true);
+                currentState = filter.NextState(currentState);
+                videoInputFile.FilterSteps.Add(filter);
+            }
         }
 
         // if (context.HasSubtitleOverlay || context.HasWatermark)
@@ -214,6 +228,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                             currentState.ScaledSize,
                             currentState.PaddedSize,
                             Option<FrameSize>.None,
+                            false,
                             false);
                         currentState = filter.NextState(currentState);
                         videoInputFile.FilterSteps.Add(filter);
@@ -693,7 +708,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 desiredState.ScaledSize,
                 desiredState.PaddedSize,
                 desiredState.CroppedSize,
-                VideoStream.IsAnamorphicEdgeCase);
+                VideoStream.IsAnamorphicEdgeCase,
+                false);
         }
 
         if (!string.IsNullOrWhiteSpace(scaleStep.Filter))
