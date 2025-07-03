@@ -27,7 +27,8 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
 
         foreach (IMediaCollectionEnumerator enumerator in maybeEnumerator)
         {
-            var random = new Random(context.Playout.Seed + context.InstructionIndex);
+            int seed = context.Playout.Seed + context.InstructionIndex + context.CurrentTime.DayOfYear;
+            var random = new Random(seed);
             int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
                 ? playlistEnumerator.CountForRandom
                 : enumerator.Count;
