@@ -110,29 +110,29 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         [
             Watermark.None,
-            //Watermark.PermanentOpaqueScaled,
-            //Watermark.PermanentOpaqueActualSize,
-            //Watermark.PermanentTransparentScaled,
-            //Watermark.PermanentTransparentActualSize
+            Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueActualSize,
+            Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentActualSize
         ];
 
         public static Subtitle[] Subtitles =
         [
             Subtitle.None,
-            //Subtitle.Picture,
-            //Subtitle.Text
+            Subtitle.Picture,
+            Subtitle.Text
         ];
 
         public static Padding[] Paddings =
         [
-            //Padding.NoPadding,
+            Padding.NoPadding,
             Padding.WithPadding
         ];
 
         public static ScalingBehavior[] ScalingBehaviors =
         [
-            ScalingBehavior.ScaleAndPad,
-            ScalingBehavior.Crop,
+            ScalingBehavior.ScaleAndPad
+            //ScalingBehavior.Crop,
             //ScalingBehavior.Stretch
         ];
 
@@ -212,10 +212,7 @@ public class TranscodingTests
             //StreamingMode.HttpLiveStreamingSegmenterV2
         ];
 
-        public static string[] FilesToTest =>
-        [
-            "/home/jason/Videos/ErsatzTV/test-content/Chimera-AV1-8bit-1920x1080-6736kbps.mp4"
-        ];
+        public static string[] FilesToTest => [string.Empty];
     }
 
     [Test]
@@ -584,14 +581,14 @@ public class TranscodingTests
 
             // TODO: bit depth
 
-            // bool hasPadding = filterChain.VideoFilterSteps.Any(s => s is PadFilter);
-            //
-            // // TODO: optimize out padding
-            // // hasPadding.ShouldBe(padding == Padding.WithPadding);
-            // if (padding is Padding.WithPadding && scalingBehavior is not ScalingBehavior.Crop)
-            // {
-            //     hasPadding.ShouldBeTrue();
-            // }
+            bool hasPadding = filterChain.VideoFilterSteps.Any(s => s is PadFilter);
+
+            // TODO: optimize out padding
+            // hasPadding.ShouldBe(padding == Padding.WithPadding);
+            if (padding is Padding.WithPadding && scalingBehavior is not ScalingBehavior.Crop)
+            {
+                hasPadding.ShouldBeTrue();
+            }
 
             bool hasCrop = filterChain.VideoFilterSteps.Any(s => s is CropFilter);
             if (scalingBehavior is ScalingBehavior.Crop)
@@ -1085,5 +1082,5 @@ public class TranscodingTests
     }
 
     private static string ExecutableName(string baseName) =>
-        OperatingSystem.IsWindows() ? $"{baseName}.exe" : $"/home/jason/Downloads/ffmpeg/ffmpeg-master-latest-linux64-gpl/bin/{baseName}";
+        OperatingSystem.IsWindows() ? $"{baseName}.exe" : baseName;
 }
