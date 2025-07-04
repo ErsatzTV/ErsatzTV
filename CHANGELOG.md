@@ -70,6 +70,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Note that no change has been made to the metadata tags that are actually parsed, but this should help with various types of content
 - Remove some limits on multithreading that are no longer needed with latest ffmpeg
   - Mixed transcoding (software decode, hardware filters/encode) can now use multiple decode threads
+- Split main `Settings` page into multiple pages
+- Rework `FFmpeg Settings` layout to be less cramped and to work better on mobile
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

@@ -2,7 +2,7 @@ using Serilog.Events;
 
 namespace ErsatzTV.Application.Configuration;
 
-public class GeneralSettingsViewModel
+public class LoggingSettingsViewModel
 {
     public LogEventLevel DefaultMinimumLogLevel { get; set; }
     public LogEventLevel ScanningMinimumLogLevel { get; set; }

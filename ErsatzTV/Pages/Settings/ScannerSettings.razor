@@ -1,0 +1,69 @@
+@page "/settings/scanner"
+@using ErsatzTV.Application.Configuration
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<ScannerSettings> Logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudCard Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Scanner Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_scannerSuccess">
+                <MudTextField T="int"
+                              Label="Library Refresh Interval"
+                              @bind-Value="_libraryRefreshInterval"
+                              Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
+                              Required="true"
+                              RequiredError="Library refresh interval is required!"
+                              Adornment="Adornment.End"
+                              AdornmentText="Hours"/>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+	private readonly CancellationTokenSource _cts = new();
+
+	private bool _scannerSuccess;
+	private int _libraryRefreshInterval;
+
+	public void Dispose()
+	{
+		_cts.Cancel();
+		_cts.Dispose();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+        _libraryRefreshInterval = await Mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
+        _scannerSuccess = _libraryRefreshInterval is >= 0 and < 1_000_000;
+    }
+
+    private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval switch
+    {
+        <= -1 => "Library refresh interval must be 0 (do not refresh) or greater than zero",
+        >= 1_000_000 => "Library refresh interval must be less than 1,000,000. Use 0 to disable automatic refresh",
+        _ => null
+    };
+
+    private async Task SaveScannerSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving scanner settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved scanner settings", Severity.Success));
+    }
+}

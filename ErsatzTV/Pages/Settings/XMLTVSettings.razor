@@ -1,0 +1,69 @@
+@page "/settings/xmltv"
+@using ErsatzTV.Application.Configuration
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<XMLTVSettings> Logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudCard Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">XMLTV Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTextField T="int"
+                          Label="Days To Build"
+                          @bind-Value="_xmltvSettings.DaysToBuild"
+                          Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))"
+                          Required="true"
+                          RequiredError="XMLTV days to build is required!"
+                          Adornment="Adornment.End"
+                          AdornmentText="Days"/>
+            <MudSelect Class="mt-3"
+                       Label="XMLTV Time Zone"
+                       @bind-Value="_xmltvSettings.TimeZone"
+                       For="@(() => _xmltvSettings.TimeZone)">
+                <MudSelectItem Value="@XmltvTimeZone.Local">Local</MudSelectItem>
+                <MudSelectItem Value="@XmltvTimeZone.Utc">UTC</MudSelectItem>
+            </MudSelect>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveXmltvSettings())" StartIcon="@Icons.Material.Filled.Save">
+                Save Settings
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+	private readonly CancellationTokenSource _cts = new();
+
+	private XmltvSettingsViewModel _xmltvSettings = new();
+
+	public void Dispose()
+	{
+		_cts.Cancel();
+		_cts.Dispose();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+        _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), _cts.Token);
+    }
+
+    private static string ValidateXmltvDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "XMLTV days to build must be greater than zero" : null;
+
+    private async Task SaveXmltvSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateXmltvSettings(_xmltvSettings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving xmltv settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved xmltv settings", Severity.Success));
+    }
+}

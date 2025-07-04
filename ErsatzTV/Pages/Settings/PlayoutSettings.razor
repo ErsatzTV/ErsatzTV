@@ -1,0 +1,71 @@
+@page "/settings/playout"
+@using ErsatzTV.Application.Configuration
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<PlayoutSettings> Logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudCard Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Playout Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_playoutSuccess">
+                <MudTextField T="int"
+                              Label="Days To Build"
+                              @bind-Value="_playoutSettings.DaysToBuild"
+                              Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
+                              Required="true"
+                              RequiredError="Playout days to build is required!"
+                              Adornment="Adornment.End"
+                              AdornmentText="Days"/>
+                <MudElement HtmlTag="div" Class="mt-3">
+                    <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
+                        <MudCheckBox Label="Skip Missing Items"
+                                     @bind-Value="_playoutSettings.SkipMissingItems"
+                                     For="@(() => _playoutSettings.SkipMissingItems)"/>
+                    </MudTooltip>
+                </MudElement>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+	private readonly CancellationTokenSource _cts = new();
+
+	private bool _playoutSuccess;
+	private PlayoutSettingsViewModel _playoutSettings = new();
+
+	public void Dispose()
+	{
+		_cts.Cancel();
+		_cts.Dispose();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+        _playoutSettings = await Mediator.Send(new GetPlayoutSettings(), _cts.Token);
+        _playoutSuccess = _playoutSettings.DaysToBuild > 0;
+    }
+
+    private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Playout days to build must be greater than zero" : null;
+
+    private async Task SavePlayoutSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving playout settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved playout settings", Severity.Success));
+    }
+}

@@ -1,0 +1,62 @@
+@page "/settings/hdhr"
+@using ErsatzTV.Application.HDHR
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<HDHRSettings> Logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudCard Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTextField T="Guid" Label="UUID" @bind-Value="_uuid" ReadOnly="true" Disabled="true"/>
+        </MudCardContent>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_hdhrSuccess">
+                <MudTextField T="int" Label="Tuner Count" @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+	private readonly CancellationTokenSource _cts = new();
+
+	private bool _hdhrSuccess;
+	private int _tunerCount;
+    private Guid _uuid;
+
+	public void Dispose()
+	{
+		_cts.Cancel();
+		_cts.Dispose();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+		_tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
+        _uuid = await Mediator.Send(new GetHDHRUUID(), _cts.Token);
+		_hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
+    }
+
+    private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
+
+    private async Task SaveHDHRSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
+    }
+}
