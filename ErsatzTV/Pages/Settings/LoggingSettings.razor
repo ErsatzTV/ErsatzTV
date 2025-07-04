@@ -6,69 +6,72 @@
 @inject ISnackbar Snackbar
 @inject ILogger<LoggingSettings> Logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudCard Style="width: 350px">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">Logging Settings</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudForm>
-                <MudSelect Class="mt-3"
-                           Label="Default Minimum Log Level"
-                           @bind-Value="_loggingSettings.DefaultMinimumLogLevel"
-                           For="@(() => _loggingSettings.DefaultMinimumLogLevel)">
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveLoggingSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Logging</MudText>
+            <MudDivider Class="mb-6" />
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Default Minimum Log Level</MudText>
+                </div>
+                <MudSelect @bind-Value="_loggingSettings.DefaultMinimumLogLevel">
                     <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
                 </MudSelect>
-                <MudSelect Class="mt-3"
-                           Label="Scanning Minimum Log Level"
-                           @bind-Value="_loggingSettings.ScanningMinimumLogLevel"
-                           For="@(() => _loggingSettings.ScanningMinimumLogLevel)">
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Scanning Minimum Log Level</MudText>
+                </div>
+                <MudSelect @bind-Value="_loggingSettings.ScanningMinimumLogLevel">
                     <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
                 </MudSelect>
-                <MudSelect Class="mt-3"
-                           Label="Scheduling Minimum Log Level"
-                           @bind-Value="_loggingSettings.SchedulingMinimumLogLevel"
-                           For="@(() => _loggingSettings.SchedulingMinimumLogLevel)">
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Scheduling Minimum Log Level</MudText>
+                </div>
+                <MudSelect @bind-Value="_loggingSettings.SchedulingMinimumLogLevel">
                     <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
                 </MudSelect>
-                <MudSelect Class="mt-3"
-                           Label="Streaming Minimum Log Level"
-                           @bind-Value="_loggingSettings.StreamingMinimumLogLevel"
-                           For="@(() => _loggingSettings.StreamingMinimumLogLevel)">
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Streaming Minimum Log Level</MudText>
+                </div>
+                <MudSelect @bind-Value="_loggingSettings.StreamingMinimumLogLevel">
                     <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
                 </MudSelect>
-                <MudSelect Class="mt-3"
-                           Label="Request Logging Minimum Log Level"
-                           @bind-Value="_loggingSettings.HttpMinimumLogLevel"
-                           For="@(() => _loggingSettings.HttpMinimumLogLevel)">
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Request Logging Minimum Log Level</MudText>
+                </div>
+                <MudSelect @bind-Value="_loggingSettings.HttpMinimumLogLevel">
                     <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
                     <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
                 </MudSelect>
-            </MudForm>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveLoggingSettings())" StartIcon="@Icons.Material.Filled.Save">
-                Save Settings
-            </MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudContainer>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
 	private readonly CancellationTokenSource _cts = new();
