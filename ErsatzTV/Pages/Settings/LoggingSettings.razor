@@ -1,0 +1,100 @@
+@page "/settings/logging"
+@using ErsatzTV.Application.Configuration
+@using Serilog.Events
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<LoggingSettings> Logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudCard Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Logging Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm>
+                <MudSelect Class="mt-3"
+                           Label="Default Minimum Log Level"
+                           @bind-Value="_loggingSettings.DefaultMinimumLogLevel"
+                           For="@(() => _loggingSettings.DefaultMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Scanning Minimum Log Level"
+                           @bind-Value="_loggingSettings.ScanningMinimumLogLevel"
+                           For="@(() => _loggingSettings.ScanningMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Scheduling Minimum Log Level"
+                           @bind-Value="_loggingSettings.SchedulingMinimumLogLevel"
+                           For="@(() => _loggingSettings.SchedulingMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Streaming Minimum Log Level"
+                           @bind-Value="_loggingSettings.StreamingMinimumLogLevel"
+                           For="@(() => _loggingSettings.StreamingMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+                <MudSelect Class="mt-3"
+                           Label="Request Logging Minimum Log Level"
+                           @bind-Value="_loggingSettings.HttpMinimumLogLevel"
+                           For="@(() => _loggingSettings.HttpMinimumLogLevel)">
+                    <MudSelectItem Value="@LogEventLevel.Debug">Debug</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Information">Information</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Warning">Warning</MudSelectItem>
+                    <MudSelectItem Value="@LogEventLevel.Error">Error</MudSelectItem>
+                </MudSelect>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveLoggingSettings())" StartIcon="@Icons.Material.Filled.Save">
+                Save Settings
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
+
+@code {
+	private readonly CancellationTokenSource _cts = new();
+
+	private LoggingSettingsViewModel _loggingSettings = new();
+
+	public void Dispose()
+	{
+		_cts.Cancel();
+		_cts.Dispose();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+        _loggingSettings = await Mediator.Send(new GetLoggingSettings(), _cts.Token);
+    }
+
+    private async Task SaveLoggingSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateLoggingSettings(_loggingSettings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving logging settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved logging settings", Severity.Success));
+    }
+}

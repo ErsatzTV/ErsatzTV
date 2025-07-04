@@ -1,0 +1,254 @@
+@page "/settings/ffmpeg"
+@using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.Resolutions
+@using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Core.Domain.Filler
+@using ErsatzTV.FFmpeg.OutputFormat
+@implements IDisposable
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<FFmpegSettings> Logger
+@inject IDialogService Dialog
+
+<MudForm @bind-IsValid="@_success" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveFFmpegSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">FFmpeg</MudText>
+            <MudDivider Class="mb-6" />
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>FFmpeg Path</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.FFmpegPath" HelperText="The full path to the ffmpeg executable file" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFmpeg path is required!"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>FFprobe Path</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.FFprobePath" HelperText="The full path to the ffprobe executable file" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFprobe path is required!" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Default FFmpeg Profile</MudText>
+                </div>
+                <MudSelect @bind-Value="_ffmpegSettings.DefaultFFmpegProfileId" HelperText="The FFmpeg Profile to use when creating new channels">
+                    @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
+                    {
+                        <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Preferred Audio Language</MudText>
+                </div>
+                <MudSelect @bind-Value="_ffmpegSettings.PreferredAudioLanguageCode" Required="true" RequiredError="Preferred Language Code is required!">
+                    @foreach (LanguageCodeViewModel culture in _availableCultures)
+                    {
+                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Use Embedded Subtitles</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_ffmpegSettings.UseEmbeddedSubtitles" Dense="true" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Extract Embedded (Text) Subtitles</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_ffmpegSettings.ExtractEmbeddedSubtitles" Disabled="@(_ffmpegSettings.UseEmbeddedSubtitles == false)" Dense="true" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Save Troubleshooting Reports To Disk</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_ffmpegSettings.SaveReports" Dense="true" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Global Watermark</MudText>
+                </div>
+                <MudSelect @bind-Value="_ffmpegSettings.GlobalWatermarkId" Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                    @foreach (WatermarkViewModel watermark in _watermarks)
+                    {
+                        <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Global Fallback Filler</MudText>
+                </div>
+                <MudSelect @bind-Value="_ffmpegSettings.GlobalFallbackFillerId" Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                    @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
+                    {
+                        <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>HLS Segmenter Idle Timeout</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.HlsSegmenterIdleTimeout" Validation="@(new Func<int, string>(ValidateHlsSegmenterIdleTimeout))" Required="true" RequiredError="HLS Segmenter idle timeout is required!" Adornment="Adornment.End" AdornmentText="seconds" HelperText="The number of seconds to continue transcoding a channel while no requests have been received from any client"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Work-Ahead HLS Segmenter Limit</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.WorkAheadSegmenterLimit" Validation="@(new Func<int, string>(ValidateWorkAheadSegmenterLimit))" Required="true" RequiredError="Work-ahead HLS Segmenter limit is required!" HelperText="The number of segmenters (channels) that will work-ahead (transcode at maximum speed) simultaneously, if multiple channels are being watched"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>HLS Segmenter Initial Segment Count</MudText>
+                </div>
+                <MudTextField @bind-Value="_ffmpegSettings.InitialSegmentCount" Validation="@(new Func<int, string>(ValidateInitialSegmentCount))" Required="true" RequiredError="HLS Segmenter initial segment count is required!" HelperText="Delays stream start until the specified number of (4-second) segments have been transcoded; a larger number will mean slower initial playback, but potentially less buffering" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>HLS Direct Output Format</MudText>
+                </div>
+                <MudSelect @bind-Value="_ffmpegSettings.HlsDirectOutputFormat" Clearable="true">
+                    <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.MpegTs">MPEG-TS</MudSelectItem>
+                    <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mp4">MP4</MudSelectItem>
+                    <MudSelectItem T="OutputFormatKind" Value="@OutputFormatKind.Mkv">MKV</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mb-2 mt-10">Custom Resolutions</MudText>
+            <MudDivider Class="mb-6" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddCustomResolution())" StartIcon="@Icons.Material.Filled.Add">
+                Add Custom Resolution
+            </MudButton>
+            <MudTable Hover="true" Items="_customResolutions" Dense="true" Class="mt-6 mb-12" Style="max-width: 800px">
+                <ColGroup>
+                    <col/>
+                    <col style="width: 60px;"/>
+                </ColGroup>
+                <HeaderContent>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Resolution">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           OnClick="@(() => DeleteCustomResolution(context))">
+                            </MudIconButton>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+	private readonly CancellationTokenSource _cts = new();
+
+	private bool _success;
+	private List<FFmpegProfileViewModel> _ffmpegProfiles = [];
+	private FFmpegSettingsViewModel _ffmpegSettings = new();
+	private List<LanguageCodeViewModel> _availableCultures = [];
+	private List<WatermarkViewModel> _watermarks = [];
+	private List<FillerPresetViewModel> _fillerPresets = [];
+	private List<ResolutionViewModel> _customResolutions = [];
+
+	public void Dispose()
+	{
+		_cts.Cancel();
+		_cts.Dispose();
+	}
+
+	protected override async Task OnParametersSetAsync()
+	{
+		await LoadFFmpegProfilesAsync();
+
+		_ffmpegSettings = await Mediator.Send(new GetFFmpegSettings(), _cts.Token);
+		_success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
+		_availableCultures = await Mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+		_watermarks = await Mediator.Send(new GetAllWatermarks(), _cts.Token);
+		_fillerPresets = await Mediator.Send(new GetAllFillerPresets(), _cts.Token)
+			.Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
+
+        await RefreshCustomResolutions();
+    }
+
+    private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
+
+    private static string ValidateHlsSegmenterIdleTimeout(int idleTimeout) => idleTimeout < 30 ? "HLS Segmenter idle timeout must be greater than or equal to 30" : null;
+
+    private static string ValidateWorkAheadSegmenterLimit(int limit) => limit < 0 ? "Work-Ahead HLS Segmenter limit must be greater than or equal to 0" : null;
+
+    private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
+
+    private async Task LoadFFmpegProfilesAsync() =>
+        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
+
+    private async Task SaveFFmpegSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings), _cts.Token);
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
+            },
+            Right: _ =>
+            {
+                Snackbar.Add("Successfully saved FFmpeg settings", Severity.Success);
+                _success = false;
+            });
+    }
+
+    private async Task RefreshCustomResolutions() => _customResolutions = await Mediator.Send(new GetAllResolutions(), _cts.Token)
+        .Map(list => list.Filter(r => r.IsCustom).ToList());
+
+    private async Task AddCustomResolution()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        IDialogReference dialog = await Dialog.ShowAsync<AddCustomResolutionDialog>("Add Custom Resolution", options);
+        DialogResult result = await dialog.Result;
+        if (result is { Canceled: false, Data: ResolutionEditViewModel resolution })
+        {
+            Option<BaseError> saveResult = await Mediator.Send(
+                new CreateCustomResolution(resolution.Width, resolution.Height),
+                _cts.Token);
+            foreach (BaseError error in saveResult)
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error adding custom resolution: {Error}", error.Value);
+            }
+
+            if (saveResult.IsNone)
+            {
+                await RefreshCustomResolutions();
+            }
+        }
+    }
+
+    private async Task DeleteCustomResolution(ResolutionViewModel resolution)
+    {
+        Option<BaseError> result = await Mediator.Send(new DeleteCustomResolution(resolution.Id), _cts.Token);
+        foreach (BaseError error in result)
+        {
+            Snackbar.Add(error.Value, Severity.Error);
+            Logger.LogError("Unexpected error deleting custom resolution: {Error}", error.Value);
+        }
+
+        if (result.IsNone)
+        {
+            await RefreshCustomResolutions();
+        }
+    }
+
+}

@@ -4,14 +4,14 @@ using Serilog.Events;
 
 namespace ErsatzTV.Application.Configuration;
 
-public class GetGeneralSettingsHandler : IRequestHandler<GetGeneralSettings, GeneralSettingsViewModel>
+public class GetLoggingSettingsHandler : IRequestHandler<GetLoggingSettings, LoggingSettingsViewModel>
 {
     private readonly IConfigElementRepository _configElementRepository;
 
-    public GetGeneralSettingsHandler(IConfigElementRepository configElementRepository) =>
+    public GetLoggingSettingsHandler(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    public async Task<GeneralSettingsViewModel> Handle(GetGeneralSettings request, CancellationToken cancellationToken)
+    public async Task<LoggingSettingsViewModel> Handle(GetLoggingSettings request, CancellationToken cancellationToken)
     {
         Option<LogEventLevel> maybeDefaultLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevel);
@@ -28,7 +28,7 @@ public class GetGeneralSettingsHandler : IRequestHandler<GetGeneralSettings, Gen
         Option<LogEventLevel> maybeHttpLevel =
             await _configElementRepository.GetValue<LogEventLevel>(ConfigElementKey.MinimumLogLevelHttp);
 
-        return new GeneralSettingsViewModel
+        return new LoggingSettingsViewModel
         {
             DefaultMinimumLogLevel = await maybeDefaultLevel.IfNoneAsync(LogEventLevel.Information),
             ScanningMinimumLogLevel = await maybeScanningLevel.IfNoneAsync(LogEventLevel.Information),

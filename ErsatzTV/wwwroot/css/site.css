@@ -140,3 +140,21 @@
 #blazor-error-ui { color: black; }
 
 #blazor-error-ui a { color: unset; }
+
+.form-field-stack .mud-typography {
+    padding-top: 5px;
+    font-weight: bold;
+}
+
+.form-field-stack .mud-typography,
+.mud-form .mud-typography-h5 {
+    color: rgba(255, 255, 255, 0.90);
+}
+
+.form-field-stack > div.d-flex {
+    width: 300px;
+}
+
+.form-field-stack div.mud-input-control {
+    max-width: 500px;
+}

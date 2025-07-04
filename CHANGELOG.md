@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - `count / 2` will play half of the items in the content
         - `random % 4 + 1` will play between 1 and 4 items
         - `2` (similar to before this change) will play exactly two items
+- Show health check warning and error badges in nav menu
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
@@ -70,6 +71,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Note that no change has been made to the metadata tags that are actually parsed, but this should help with various types of content
 - Remove some limits on multithreading that are no longer needed with latest ffmpeg
   - Mixed transcoding (software decode, hardware filters/encode) can now use multiple decode threads
+- Split main `Settings` page into multiple pages
+- Rework `FFmpeg Settings` layout to be less cramped and to work better on mobile
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

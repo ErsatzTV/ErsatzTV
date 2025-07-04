@@ -1,20 +1,24 @@
 @inherits LayoutComponentBase
 @using System.Reflection
 @using ErsatzTV.Application.Search
+@using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.Search
 @using ErsatzTV.Extensions
+@using MediatR.Courier
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
 @inject SystemStartup SystemStartup
 @inject ISearchTargets SearchTargets;
+@inject ICourier Courier
+@inject IHealthCheckService HealthCheckService;
 
 <MudThemeProvider Theme="ErsatzTvTheme"/>
 <MudDialogProvider BackdropClick="false"/>
 <MudSnackbarProvider/>
 <MudPopoverProvider />
 
-<MudLayout @onclick="@(() => _isOpen = false)">
+<MudLayout @onclick="@(() => _isOpen = false)" Class="d-flex d-flex-column" Style="height: 100vh">
     <MudAppBar Elevation="1" Class="app-bar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
         <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
@@ -134,11 +138,63 @@
                     <MudNavLink Href="deco-templates">Deco Templates</MudNavLink>
                     <MudNavLink Href="playouts">Playouts</MudNavLink>
                 </MudNavGroup>
-                <MudNavLink Href="settings">Settings</MudNavLink>
-                <MudNavGroup Title="Support" Expanded="true">
-                    <MudNavLink Href="system/health">Health Checks</MudNavLink>
-                    <MudNavLink Href="system/logs">Logs</MudNavLink>
-                    <MudNavLink Href="system/troubleshooting">Troubleshooting</MudNavLink>
+                <MudNavGroup Title="Settings">
+                    <MudNavLink Href="settings/ffmpeg">FFmpeg</MudNavLink>
+                    <MudNavLink Href="settings/logging">Logging</MudNavLink>
+                    <MudNavLink Href="settings/hdhr">HDHomeRun</MudNavLink>
+                    <MudNavLink Href="settings/scanner">Scanner</MudNavLink>
+                    <MudNavLink Href="settings/playout">Playout</MudNavLink>
+                    <MudNavLink Href="settings/xmltv">XMLTV</MudNavLink>
+                </MudNavGroup>
+                <MudNavGroup Expanded="true">
+                    <TitleContent>
+                        @if (_errors > 0)
+                        {
+                            <div style="align-items: center; display: flex">
+                                Support
+                                <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error" Class="mx-2"/>
+                            </div>
+                        }
+                        else if (_warnings > 0)
+                        {
+                            <div style="align-items: center; display: flex">
+                                Support
+                                <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning" Class="mx-2"/>
+                            </div>
+                        }
+                        else
+                        {
+                            @:Support
+                        }
+                    </TitleContent>
+                    <ChildContent>
+                        <MudNavLink Href="system/health">
+                            @if (_errors > 0)
+                            {
+                                <MudBadge Content="_errors"
+                                          Color="Color.Error"
+                                          Origin="Origin.CenterRight"
+                                          BadgeClass="mx-3">
+                                    Health Checks
+                                </MudBadge>
+                            }
+                            else if (_warnings > 0)
+                            {
+                                <MudBadge Content="_warnings"
+                                          Color="Color.Warning"
+                                          Origin="Origin.CenterRight"
+                                          BadgeClass="mx-3">
+                                    Health Checks
+                                </MudBadge>
+                            }
+                            else
+                            {
+                                @:Health Checks
+                            }
+                        </MudNavLink>
+                        <MudNavLink Href="system/logs">Logs</MudNavLink>
+                        <MudNavLink Href="system/troubleshooting">Troubleshooting</MudNavLink>
+                    </ChildContent>
                 </MudNavGroup>
                 <MudDivider Class="my-6" DividerType="DividerType.Middle"/>
                 <MudContainer Style="text-align: right" Class="mr-6">
@@ -166,6 +222,8 @@
     private bool _drawerIsOpen = true;
     private bool _isOpen;
     private List<SearchTargetViewModel> _searchTargets;
+    private int _errors;
+    private int _warnings;
 
     protected override void OnInitialized()
     {
@@ -173,6 +231,14 @@
         SystemStartup.OnSearchIndexReady += OnStartupProgress;
 
         SearchTargets.OnSearchTargetsChanged += OnSearchTargetsChanged;
+
+        Courier.Subscribe<HealthCheckSummary>(HandleHealthCheckSummary);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await HandleHealthCheckSummary(HealthCheckService.GetHealthCheckSummary(), CancellationToken.None);
     }
 
     public void Dispose()
@@ -181,6 +247,8 @@
         SystemStartup.OnSearchIndexReady -= OnStartupProgress;
 
         SearchTargets.OnSearchTargetsChanged -= OnSearchTargetsChanged;
+
+        Courier.UnSubscribe<HealthCheckSummary>(HandleHealthCheckSummary);
 
         _cts.Cancel();
         _cts.Dispose();
@@ -198,6 +266,7 @@
             AppbarText = "rgba(255,255,255, 0.80)",
             DrawerBackground = "#1f1f1f",
             DrawerText = "rgba(255,255,255, 0.80)",
+            Divider = "rgba(255,255,255, 0.40)",
             Background = "#272727",
             TextPrimary = "rgba(255,255,255, 0.80)",
             TextSecondary = "rgba(255,255,255, 0.80)",
@@ -294,5 +363,33 @@
     private void ToggleDrawer()
     {
         _drawerIsOpen = !_drawerIsOpen;
+    }
+
+    private async Task HandleHealthCheckSummary(HealthCheckSummary healthCheckSummary, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (healthCheckSummary.Errors > 0)
+            {
+                _errors = healthCheckSummary.Errors;
+                _warnings = 0;
+            }
+            else if (healthCheckSummary.Warnings > 0)
+            {
+                _warnings = healthCheckSummary.Warnings;
+                _errors = 0;
+            }
+            else
+            {
+                _warnings = 0;
+                _errors = 0;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception)
+        {
+            // ignore
+        }
     }
 }
