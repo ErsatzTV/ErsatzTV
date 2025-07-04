@@ -62,6 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - `count / 2` will play half of the items in the content
         - `random % 4 + 1` will play between 1 and 4 items
         - `2` (similar to before this change) will play exactly two items
+- Show health check warning and error badges in nav menu
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
