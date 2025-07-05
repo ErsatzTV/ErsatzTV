@@ -5,30 +5,23 @@
 @inject ISnackbar Snackbar
 @inject ILogger<ScannerSettings> Logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudCard Style="width: 350px">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">Scanner Settings</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudForm @bind-IsValid="@_scannerSuccess">
-                <MudTextField T="int"
-                              Label="Library Refresh Interval"
-                              @bind-Value="_libraryRefreshInterval"
-                              Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
-                              Required="true"
-                              RequiredError="Library refresh interval is required!"
-                              Adornment="Adornment.End"
-                              AdornmentText="Hours"/>
-            </MudForm>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudContainer>
+<MudForm @bind-IsValid="@_scannerSuccess" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Scanner</MudText>
+            <MudDivider Class="mb-6" />
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Library Refresh Interval</MudText>
+                </div>
+                <MudTextField @bind-Value="_libraryRefreshInterval" Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))" Required="true" RequiredError="Library refresh interval is required!" Adornment="Adornment.End" AdornmentText="hours" />
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
 	private readonly CancellationTokenSource _cts = new();
