@@ -75,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Update form layout to be less cramped and to work better on mobile
   - All new (split) settings pages
   - Channel editor
+  - FFmpeg Profile editor
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
