@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.ViewModels;
 using FluentValidation;
+using FluentValidation.Results;
 
 namespace ErsatzTV.Validators;
 
@@ -97,4 +98,12 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
                 .Must(bd => bd is FFmpegProfileBitDepth.EightBit)
                 .WithMessage("Mpeg2Video does not support 10-bit content"));
     }
+
+    public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+    {
+        ValidationResult result = await ValidateAsync(ValidationContext<FFmpegProfileEditViewModel>.CreateWithOptions((FFmpegProfileEditViewModel)model, x => x.IncludeProperties(propertyName)));
+        if (result.IsValid)
+            return [];
+        return result.Errors.Select(e => e.ErrorMessage);
+    };
 }
