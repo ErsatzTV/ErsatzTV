@@ -5,37 +5,31 @@
 @inject ISnackbar Snackbar
 @inject ILogger<PlayoutSettings> Logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudCard Style="width: 350px">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">Playout Settings</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudForm @bind-IsValid="@_playoutSuccess">
-                <MudTextField T="int"
-                              Label="Days To Build"
-                              @bind-Value="_playoutSettings.DaysToBuild"
-                              Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))"
-                              Required="true"
-                              RequiredError="Playout days to build is required!"
-                              Adornment="Adornment.End"
-                              AdornmentText="Days"/>
-                <MudElement HtmlTag="div" Class="mt-3">
-                    <MudTooltip Text="Controls whether file-not-found or unavailable items should be included in playouts">
-                        <MudCheckBox Label="Skip Missing Items"
-                                     @bind-Value="_playoutSettings.SkipMissingItems"
-                                     For="@(() => _playoutSettings.SkipMissingItems)"/>
-                    </MudTooltip>
-                </MudElement>
-            </MudForm>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())">Save Settings</MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudContainer>
+<MudForm @bind-IsValid="@_playoutSuccess" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Playout</MudText>
+            <MudDivider Class="mb-6" />
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Days To Build</MudText>
+                </div>
+                <MudTextField @bind-Value="_playoutSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))" Required="true" RequiredError="Playout days to build is required!" Adornment="Adornment.End" AdornmentText="days" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Skip Missing Items</MudText>
+                </div>
+                <MudCheckBox @bind-Value="_playoutSettings.SkipMissingItems" Dense="true">
+                    <MudText Typo="Typo.caption" Style="font-weight: normal">Controls whether file-not-found or unavailable items should be included in playouts</MudText>
+                </MudCheckBox>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
 	private readonly CancellationTokenSource _cts = new();
