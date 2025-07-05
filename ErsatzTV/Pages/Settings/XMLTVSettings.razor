@@ -5,37 +5,32 @@
 @inject ISnackbar Snackbar
 @inject ILogger<XMLTVSettings> Logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudCard Style="width: 350px">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">XMLTV Settings</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudTextField T="int"
-                          Label="Days To Build"
-                          @bind-Value="_xmltvSettings.DaysToBuild"
-                          Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))"
-                          Required="true"
-                          RequiredError="XMLTV days to build is required!"
-                          Adornment="Adornment.End"
-                          AdornmentText="Days"/>
-            <MudSelect Class="mt-3"
-                       Label="XMLTV Time Zone"
-                       @bind-Value="_xmltvSettings.TimeZone"
-                       For="@(() => _xmltvSettings.TimeZone)">
-                <MudSelectItem Value="@XmltvTimeZone.Local">Local</MudSelectItem>
-                <MudSelectItem Value="@XmltvTimeZone.Utc">UTC</MudSelectItem>
-            </MudSelect>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveXmltvSettings())" StartIcon="@Icons.Material.Filled.Save">
-                Save Settings
-            </MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveXmltvSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">XMLTV</MudText>
+            <MudDivider Class="mb-6" />
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Days To Build</MudText>
+                </div>
+                <MudTextField @bind-Value="_xmltvSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))" Required="true" RequiredError="XMLTV days to build is required!" Adornment="Adornment.End" AdornmentText="days" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>XMLTV Time Zone</MudText>
+                </div>
+                <MudSelect @bind-Value="_xmltvSettings.TimeZone">
+                    <MudSelectItem Value="@XmltvTimeZone.Local">Local</MudSelectItem>
+                    <MudSelectItem Value="@XmltvTimeZone.Utc">UTC</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
 	private readonly CancellationTokenSource _cts = new();

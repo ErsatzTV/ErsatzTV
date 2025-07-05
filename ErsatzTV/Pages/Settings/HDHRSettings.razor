@@ -1,37 +1,41 @@
 @page "/settings/hdhr"
+@using ErsatzTV.Annotations
 @using ErsatzTV.Application.HDHR
 @implements IDisposable
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject ILogger<HDHRSettings> Logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudCard Style="width: 350px">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudTextField T="Guid" Label="UUID" @bind-Value="_uuid" ReadOnly="true" Disabled="true"/>
-        </MudCardContent>
-        <MudCardContent>
-            <MudForm @bind-IsValid="@_hdhrSuccess">
-                <MudTextField T="int" Label="Tuner Count" @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
-            </MudForm>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudContainer>
+<MudForm @bind-IsValid="@_hdhrSuccess" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">HDHomeRun</MudText>
+            <MudDivider Class="mb-6" />
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>UUID</MudText>
+                </div>
+                <MudTextField @bind-Value="_uuid" Disabled="true" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex justify-md-end">
+                    <MudText>Tuner Count</MudText>
+                </div>
+                <MudTextField @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!" />
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
 	private readonly CancellationTokenSource _cts = new();
 
 	private bool _hdhrSuccess;
 	private int _tunerCount;
-    private Guid _uuid;
+    [UsedImplicitly] private Guid _uuid;
 
 	public void Dispose()
 	{
