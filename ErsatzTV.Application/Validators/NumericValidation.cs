@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using ErsatzTV.Core;
 
-namespace ErsatzTV;
+namespace ErsatzTV.Application;
 
 public static partial class Validators
 {
