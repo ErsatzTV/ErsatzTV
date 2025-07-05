@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.ViewModels;
 using FluentValidation;
+using FluentValidation.Results;
 
 namespace ErsatzTV.Validators;
 
@@ -24,4 +25,12 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
                     .WithMessage("External logo url is invalid");
             });
     }
+
+    public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+    {
+        ValidationResult result = await ValidateAsync(ValidationContext<ChannelEditViewModel>.CreateWithOptions((ChannelEditViewModel)model, x => x.IncludeProperties(propertyName)));
+        if (result.IsValid)
+            return [];
+        return result.Errors.Select(e => e.ErrorMessage);
+    };
 }
