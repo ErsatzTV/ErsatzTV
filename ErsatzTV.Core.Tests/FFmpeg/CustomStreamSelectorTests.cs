@@ -14,14 +14,6 @@ public class CustomStreamSelectorTests
     [TestFixture]
     public class SelectStreams
     {
-        private static readonly string TestFileName = Path.Combine(
-            FileSystemLayout.ChannelStreamSelectorsFolder,
-            "test.yml");
-
-        private Channel _channel;
-        private MediaItemAudioVersion _audioVersion;
-        private List<Subtitle> _subtitles;
-
         [SetUp]
         public void SetUp()
         {
@@ -42,6 +34,14 @@ public class CustomStreamSelectorTests
                 new Subtitle { Id = 5, Language = "jp" }
             ];
         }
+
+        private static readonly string TestFileName = Path.Combine(
+            FileSystemLayout.ChannelStreamSelectorsFolder,
+            "test.yml");
+
+        private Channel _channel;
+        private MediaItemAudioVersion _audioVersion;
+        private List<Subtitle> _subtitles;
 
         [Test]
         public async Task Should_Select_eng_Audio_Exact_Match()
@@ -699,7 +699,7 @@ public class CustomStreamSelectorTests
                         MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 2,
                         Language = "ja",
-                        Title = "Some Title",
+                        Title = "Some Title"
                     },
                     new MediaStream
                     {
@@ -716,14 +716,14 @@ public class CustomStreamSelectorTests
                         MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 6,
                         Language = englishLanguage,
-                        Title = "Movie Title",
+                        Title = "Movie Title"
                     },
                     new MediaStream
                     {
                         Index = 3,
                         MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 2,
-                        Title = "Who Knows",
+                        Title = "Who Knows"
                     }
                 ]
             };

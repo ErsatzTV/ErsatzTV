@@ -1,7 +1,5 @@
-﻿using System.Collections.Specialized;
-using ErsatzTV.Infrastructure.Plex.Models;
+﻿using ErsatzTV.Infrastructure.Plex.Models;
 using Refit;
-using CollectionFormat = Refit.CollectionFormat;
 
 namespace ErsatzTV.Infrastructure.Plex;
 

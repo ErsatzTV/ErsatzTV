@@ -32,13 +32,11 @@ public class GetArtworkHandler(IDbContextFactory<TvContext> dbContextFactory)
         }
     }
 
-    private static Artwork Project(Artwork artwork)
-    {
-        return new Artwork
+    private static Artwork Project(Artwork artwork) =>
+        new()
         {
             Id = artwork.Id,
             Path = artwork.Path,
             ArtworkKind = artwork.ArtworkKind
         };
-    }
 }

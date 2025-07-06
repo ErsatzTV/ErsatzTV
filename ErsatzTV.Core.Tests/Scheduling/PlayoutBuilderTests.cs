@@ -6,11 +6,11 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Tests.Fakes;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Serilog;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 

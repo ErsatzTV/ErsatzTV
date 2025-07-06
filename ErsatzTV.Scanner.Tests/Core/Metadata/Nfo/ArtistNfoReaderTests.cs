@@ -2,12 +2,12 @@
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using NSubstitute;
 using NUnit.Framework;
 using Serilog;
+using Shouldly;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata.Nfo;
 

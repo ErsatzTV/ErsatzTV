@@ -2,8 +2,8 @@
 @using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Playouts
-@using ErsatzTV.Core.Scheduling
 @using ErsatzTV.Core.Notifications
+@using ErsatzTV.Core.Scheduling
 @using MediatR.Courier
 @implements IDisposable
 @inject IDialogService Dialog
@@ -243,10 +243,7 @@
         }
     }
 
-    protected override void OnInitialized()
-    {
-        Courier.Subscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
-    }
+    protected override void OnInitialized() => Courier.Subscribe<PlayoutUpdatedNotification>(HandlePlayoutUpdated);
 
     public void Dispose()
     {
@@ -340,10 +337,7 @@
         await Mediator.Send(new ResetAllPlayouts(), _cts.Token);
     }
 
-    private async Task ResetPlayout(PlayoutNameViewModel playout)
-    {
-        await WorkerChannel.WriteAsync(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
-    }
+    private async Task ResetPlayout(PlayoutNameViewModel playout) => await WorkerChannel.WriteAsync(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
 
     private async Task ScheduleReset(PlayoutNameViewModel playout)
     {

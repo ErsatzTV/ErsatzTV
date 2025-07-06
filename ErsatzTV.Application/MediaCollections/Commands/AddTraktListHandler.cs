@@ -89,11 +89,11 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         return maybeList.Map(_ => Unit.Default);
     }
 
-    private sealed record Parameters(string User, string List);
-
     [GeneratedRegex(@"https:\/\/trakt\.tv\/users\/([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
     private static partial Regex UriTraktListRegex();
 
     [GeneratedRegex(@"([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
     private static partial Regex ShorthandTraktListRegex();
+
+    private sealed record Parameters(string User, string List);
 }

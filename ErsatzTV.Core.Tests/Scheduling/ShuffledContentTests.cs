@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
@@ -84,7 +84,7 @@ public class ShuffledContentTests
         }
 
         list.ShouldNotBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        list.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], ignoreOrder: true);
+        list.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], true);
     }
 
     [Test]

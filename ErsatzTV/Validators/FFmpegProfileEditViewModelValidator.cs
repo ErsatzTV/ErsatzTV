@@ -106,7 +106,10 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
                 (FFmpegProfileEditViewModel)model,
                 x => x.IncludeProperties(propertyName)));
         if (result.IsValid)
+        {
             return [];
+        }
+
         return result.Errors.Select(e => e.ErrorMessage);
     };
 }

@@ -360,10 +360,7 @@
             _ => null
         };
 
-    private void ToggleDrawer()
-    {
-        _drawerIsOpen = !_drawerIsOpen;
-    }
+    private void ToggleDrawer() => _drawerIsOpen = !_drawerIsOpen;
 
     private async Task HandleHealthCheckSummary(HealthCheckSummary healthCheckSummary, CancellationToken cancellationToken)
     {

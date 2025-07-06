@@ -43,10 +43,7 @@
         _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), _cts.Token);
-    }
+    protected override async Task OnParametersSetAsync() => _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), _cts.Token);
 
     private static string ValidateXmltvDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "XMLTV days to build must be greater than zero" : null;
 

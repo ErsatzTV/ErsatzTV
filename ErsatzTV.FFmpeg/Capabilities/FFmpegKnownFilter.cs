@@ -14,6 +14,6 @@ public record FFmpegKnownFilter
         new[]
         {
             ScaleNpp.Name,
-            TonemapOpenCL.Name,
+            TonemapOpenCL.Name
         };
 }

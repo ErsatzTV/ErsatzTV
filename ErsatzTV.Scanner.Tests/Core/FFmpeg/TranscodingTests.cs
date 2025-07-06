@@ -25,12 +25,12 @@ using ErsatzTV.FFmpeg.State;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Metadata;
 using ErsatzTV.Infrastructure.Runtime;
-using Shouldly;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using Serilog;
+using Shouldly;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Scanner.Tests.Core.FFmpeg;
@@ -159,7 +159,7 @@ public class TranscodingTests
             // new("mpeg2video", "yuv420p"),
             // //
             //new InputFormat("libx265", "yuv420p"),
-            new InputFormat("libx265", "yuv420p10le")
+            new("libx265", "yuv420p10le")
             //
             // new("mpeg4", "yuv420p"),
             //
@@ -177,9 +177,9 @@ public class TranscodingTests
 
         public static Resolution[] Resolutions =
         [
-            new Resolution { Width = 1920, Height = 1080 },
-            new Resolution { Width = 1280, Height = 720 },
-            new Resolution { Width = 640, Height = 480 }
+            new() { Width = 1920, Height = 1080 },
+            new() { Width = 1280, Height = 720 },
+            new() { Width = 640, Height = 480 }
         ];
 
         public static FFmpegProfileBitDepth[] BitDepths =
@@ -198,7 +198,7 @@ public class TranscodingTests
         public static HardwareAccelerationKind[] TestAccelerations =
         [
             //HardwareAccelerationKind.None,
-            HardwareAccelerationKind.Nvenc,
+            HardwareAccelerationKind.Nvenc
             //HardwareAccelerationKind.Vaapi
             //HardwareAccelerationKind.Qsv,
             // HardwareAccelerationKind.VideoToolbox,
@@ -207,7 +207,7 @@ public class TranscodingTests
 
         public static StreamingMode[] StreamingModes =
         [
-            StreamingMode.TransportStream,
+            StreamingMode.TransportStream
             //StreamingMode.HttpLiveStreamingSegmenter,
             //StreamingMode.HttpLiveStreamingSegmenterV2
         ];

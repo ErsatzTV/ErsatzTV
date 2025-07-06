@@ -9,9 +9,9 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepository, ILogger logger)
 {
+    private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
     private readonly Dictionary<string, List<MediaItem>> _mediaItems = new();
     private readonly Dictionary<PlaylistKey, List<MediaItem>> _playlistMediaItems = new();
-    private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
 
     public System.Collections.Generic.HashSet<string> MissingContentKeys { get; } = [];
 
@@ -140,7 +140,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 mediaCollectionRepository,
                 itemMap,
                 state,
-                shufflePlaylistItems: false,
+                false,
                 cancellationToken);
         }
 
@@ -151,7 +151,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             case PlaybackOrder.Shuffle:
                 bool keepMultiPartEpisodesTogether = content.MultiPart;
                 List<GroupedMediaItem> groupedMediaItems = keepMultiPartEpisodesTogether
-                    ? MultiPartEpisodeGrouper.GroupMediaItems(items, treatCollectionsAsShows: false)
+                    ? MultiPartEpisodeGrouper.GroupMediaItems(items, false)
                     : items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
                 return new BlockPlayoutShuffledMediaCollectionEnumerator(groupedMediaItems, state);
         }

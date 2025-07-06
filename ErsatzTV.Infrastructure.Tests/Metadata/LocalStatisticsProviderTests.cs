@@ -3,10 +3,10 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Metadata;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Infrastructure.Tests.Metadata;
 

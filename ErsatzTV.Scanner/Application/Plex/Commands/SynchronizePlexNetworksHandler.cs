@@ -9,9 +9,9 @@ namespace ErsatzTV.Scanner.Application.Plex;
 public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNetworks, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IPlexSecretStore _plexSecretStore;
+    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly IPlexNetworkScanner _scanner;
 
     public SynchronizePlexNetworksHandler(

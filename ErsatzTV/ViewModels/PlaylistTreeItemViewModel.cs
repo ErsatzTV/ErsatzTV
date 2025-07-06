@@ -1,6 +1,5 @@
 using ErsatzTV.Application.MediaCollections;
 using MudBlazor;
-using S = System.Collections.Generic;
 
 namespace ErsatzTV.ViewModels;
 

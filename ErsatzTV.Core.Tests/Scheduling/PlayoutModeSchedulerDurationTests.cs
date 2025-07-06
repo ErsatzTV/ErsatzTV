@@ -2,10 +2,10 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Serilog;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 

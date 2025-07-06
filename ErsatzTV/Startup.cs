@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Net.Security;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -131,7 +130,7 @@ public class Startup
             configuration.NotifyReleaseStages = new[] { "public", "develop" };
 
 #if DEBUG || DEBUG_NO_SYNC
-                configuration.ReleaseStage = "develop";
+            configuration.ReleaseStage = "develop";
 #else
             // effectively "disable" by tweaking app config
             configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
@@ -592,11 +591,14 @@ public class Startup
             });
         return;
 
-        bool IsIptvPath(PathString path) => path.StartsWithSegments("/iptv") ||
-                                            path.StartsWithSegments("/discover.json") ||
-                                            path.StartsWithSegments("/device.xml") ||
-                                            path.StartsWithSegments("/lineup.json") ||
-                                            path.StartsWithSegments("/lineup_status.json");
+        bool IsIptvPath(PathString path)
+        {
+            return path.StartsWithSegments("/iptv") ||
+                   path.StartsWithSegments("/discover.json") ||
+                   path.StartsWithSegments("/device.xml") ||
+                   path.StartsWithSegments("/lineup.json") ||
+                   path.StartsWithSegments("/lineup_status.json");
+        }
     }
 
     private static void CustomServices(IServiceCollection services)

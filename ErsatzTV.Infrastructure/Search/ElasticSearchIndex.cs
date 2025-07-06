@@ -1,6 +1,5 @@
 using System.Globalization;
 using Bugsnag;
-using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Aggregations;
 using Elastic.Clients.Elasticsearch.Core.Bulk;
 using Elastic.Clients.Elasticsearch.IndexManagement;
@@ -24,10 +23,10 @@ namespace ErsatzTV.Infrastructure.Search;
 public class ElasticSearchIndex : ISearchIndex
 {
     private readonly List<CultureInfo> _cultureInfos;
+    private readonly ILogger<ElasticSearchIndex> _logger;
 
     private readonly SearchQueryParser _searchQueryParser;
-    private readonly ILogger<ElasticSearchIndex> _logger;
-    private ElasticsearchClient _client;
+    private ES.ElasticsearchClient _client;
 
     public ElasticSearchIndex(SearchQueryParser searchQueryParser, ILogger<ElasticSearchIndex> logger)
     {
@@ -152,14 +151,14 @@ public class ElasticSearchIndex : ISearchIndex
 
     public async Task<bool> RemoveItems(IEnumerable<int> ids)
     {
-        var deleteBulkRequest = new BulkRequest { Operations = [] };
+        var deleteBulkRequest = new ES.BulkRequest { Operations = [] };
         foreach (int id in ids)
         {
-            var deleteOperation = new BulkDeleteOperation<ElasticSearchItem>(new Id(id)) { Index = IndexName };
+            var deleteOperation = new BulkDeleteOperation<ElasticSearchItem>(new ES.Id(id)) { Index = IndexName };
             deleteBulkRequest.Operations.Add(deleteOperation);
         }
 
-        BulkResponse deleteResponse = await _client.BulkAsync(deleteBulkRequest).ConfigureAwait(false);
+        ES.BulkResponse deleteResponse = await _client.BulkAsync(deleteBulkRequest).ConfigureAwait(false);
         return deleteResponse.IsValidResponse;
     }
 
@@ -175,12 +174,13 @@ public class ElasticSearchIndex : ISearchIndex
 
         Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
 
-        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s => s
-            .Indices(IndexName)
-            .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
-            .From(skip)
-            .Size(limit)
-            .QueryLuceneSyntax(parsedQuery.ToString()));
+        ES.SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s =>
+            s
+                .Indices(IndexName)
+                .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(ES.SortOrder.Asc)))
+                .From(skip)
+                .Size(limit)
+                .QueryLuceneSyntax(parsedQuery.ToString()));
 
         if (response.IsValidResponse)
         {
@@ -203,10 +203,10 @@ public class ElasticSearchIndex : ISearchIndex
         // do nothing
     }
 
-    private static ElasticsearchClient CreateClient()
+    private static ES.ElasticsearchClient CreateClient()
     {
-        ElasticsearchClientSettings settings = new ElasticsearchClientSettings(Uri).DefaultIndex(IndexName);
-        return new ElasticsearchClient(settings);
+        ES.ElasticsearchClientSettings settings = new ES.ElasticsearchClientSettings(Uri).DefaultIndex(IndexName);
+        return new ES.ElasticsearchClient(settings);
     }
 
     private async Task<CreateIndexResponse> CreateIndex() =>
@@ -989,12 +989,13 @@ public class ElasticSearchIndex : ISearchIndex
 
     private async Task<SearchPageMap> GetSearchPageMap(string query, int limit)
     {
-        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s => s
-            .Indices(IndexName)
-            .Size(0)
-            .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
-            .Aggregations(a => a.Add("count", agg => agg.Terms(v => v.Field(i => i.JumpLetter).Size(30))))
-            .QueryLuceneSyntax(query));
+        ES.SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s =>
+            s
+                .Indices(IndexName)
+                .Size(0)
+                .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(ES.SortOrder.Asc)))
+                .Aggregations(a => a.Add("count", agg => agg.Terms(v => v.Field(i => i.JumpLetter).Size(30))))
+                .QueryLuceneSyntax(query));
 
         if (!response.IsValidResponse)
         {

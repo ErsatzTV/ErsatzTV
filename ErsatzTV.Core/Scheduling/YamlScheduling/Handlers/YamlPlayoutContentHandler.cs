@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -156,7 +154,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
             return FillerKind.None;
         }
 
-        return Enum.TryParse(instruction.FillerKind, ignoreCase: true, out FillerKind result)
+        return Enum.TryParse(instruction.FillerKind, true, out FillerKind result)
             ? result
             : FillerKind.None;
     }

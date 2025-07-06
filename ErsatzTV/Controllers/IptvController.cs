@@ -319,7 +319,7 @@ public class IptvController : ControllerBase
         Option<ResolutionAndBitrateViewModel> maybeResolutionAndBitrate =
             await _mediator.Send(new GetChannelResolutionAndBitrate(channelNumber));
         string resolution = string.Empty;
-        string bitrate = "10000000";
+        var bitrate = "10000000";
         foreach (ResolutionAndBitrateViewModel res in maybeResolutionAndBitrate)
         {
             resolution = $",RESOLUTION={res.Width}x{res.Height}";

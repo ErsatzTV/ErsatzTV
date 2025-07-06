@@ -73,13 +73,19 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             // need to wrap to the next day if appropriate
             FixedStartTimeBehavior? fixedStartTimeBehavior = scheduleItem.FixedStartTimeBehavior;
             if (fixedStartTimeBehavior is null && scheduleItem.ProgramSchedule is not null)
+            {
                 fixedStartTimeBehavior = scheduleItem.ProgramSchedule.FixedStartTimeBehavior;
+            }
+
             switch (fixedStartTimeBehavior)
             {
                 case FixedStartTimeBehavior.Flexible:
                     // only wait for times on the same day
                     if (result.Day == startTime.Day && result.TimeOfDay > startTime.TimeOfDay)
+                    {
                         startTime = result;
+                    }
+
                     break;
                 case FixedStartTimeBehavior.Strict:
                 default:
@@ -491,7 +497,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
             // ensure filler works for content less than one minute
             if (targetTime <= playoutItem.StartOffset + totalDuration)
+            {
                 targetTime = targetTime.AddMinutes(padFiller.PadToNearestMinute.Value);
+            }
 
             TimeSpan remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
 

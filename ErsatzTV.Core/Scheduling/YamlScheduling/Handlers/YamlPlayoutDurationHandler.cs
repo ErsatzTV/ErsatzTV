@@ -86,7 +86,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         Option<IMediaCollectionEnumerator> fallbackEnumerator,
         ILogger<YamlPlayoutBuilder> logger)
     {
-        bool done = false;
+        var done = false;
         TimeSpan remainingToFill = targetTime - context.CurrentTime;
         while (!done && enumerator.Current.IsSome && remainingToFill > TimeSpan.Zero)
         {

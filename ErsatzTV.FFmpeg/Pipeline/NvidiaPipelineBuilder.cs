@@ -174,7 +174,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     videoStream.FrameSize,
                     Option<FrameSize>.None,
                     false,
-                    passthrough: true);
+                    true);
                 currentState = filter.NextState(currentState);
                 videoInputFile.FilterSteps.Add(filter);
             }

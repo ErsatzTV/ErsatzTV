@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
-using ErsatzTV.Scanner.Application.Jellyfin;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Jellyfin;

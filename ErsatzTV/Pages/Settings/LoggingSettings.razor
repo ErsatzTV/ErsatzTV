@@ -84,10 +84,7 @@
         _cts.Dispose();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _loggingSettings = await Mediator.Send(new GetLoggingSettings(), _cts.Token);
-    }
+    protected override async Task OnParametersSetAsync() => _loggingSettings = await Mediator.Send(new GetLoggingSettings(), _cts.Token);
 
     private async Task SaveLoggingSettings()
     {

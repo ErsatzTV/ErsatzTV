@@ -11,11 +11,11 @@ using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using ErsatzTV.Scanner.Core.Metadata;
 using ErsatzTV.Scanner.Tests.Core.Fakes;
-using Shouldly;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata;
 

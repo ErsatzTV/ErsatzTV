@@ -1,9 +1,9 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
-using Shouldly;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Metadata;
 

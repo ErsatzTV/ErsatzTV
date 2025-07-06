@@ -6,9 +6,9 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definition, int guideGroup)
 {
     private readonly System.Collections.Generic.HashSet<int> _visitedInstructions = [];
-    private int _instructionIndex;
-    private bool _guideGroupLocked;
     private int _guideGroup = guideGroup;
+    private bool _guideGroupLocked;
+    private int _instructionIndex;
 
     public Playout Playout { get; } = playout;
 
@@ -68,8 +68,5 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
         _guideGroupLocked = true;
     }
 
-    public void UnlockGuideGroup()
-    {
-        _guideGroupLocked = false;
-    }
+    public void UnlockGuideGroup() => _guideGroupLocked = false;
 }

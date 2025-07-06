@@ -1,9 +1,9 @@
 ﻿using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 

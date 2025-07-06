@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Playouts;
 

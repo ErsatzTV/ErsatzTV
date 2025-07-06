@@ -589,8 +589,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
 
         // auto_scale filter seems to muck up 10-bit software decode => hardware scale, so use software scale in that case
         useSoftwareFilter = useSoftwareFilter ||
-                            (ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
-                             OperatingSystem.IsWindows() && currentState.BitDepth == 10);
+                            ffmpegState is { DecoderHardwareAccelerationMode: HardwareAccelerationMode.None } &&
+                            OperatingSystem.IsWindows() && currentState.BitDepth == 10;
 
         if (currentState.ScaledSize != desiredState.ScaledSize && useSoftwareFilter)
         {

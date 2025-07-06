@@ -48,7 +48,7 @@ public class HealthCheckService : IHealthCheckService
             fileNotFoundHealthCheck,
             unavailableHealthCheck,
             vaapiDriverHealthCheck,
-            errorReportsHealthCheck,
+            errorReportsHealthCheck
         ];
     }
 
@@ -77,10 +77,8 @@ public class HealthCheckService : IHealthCheckService
         return result;
     }
 
-    public HealthCheckSummary GetHealthCheckSummary()
-    {
-        return _memoryCache.Get<HealthCheckSummary>(CacheKey) ?? new HealthCheckSummary(0, 0);
-    }
+    public HealthCheckSummary GetHealthCheckSummary() =>
+        _memoryCache.Get<HealthCheckSummary>(CacheKey) ?? new HealthCheckSummary(0, 0);
 
     private HealthCheckResult LogAndReturn(Exception ex, HealthCheckResult failedResult)
     {

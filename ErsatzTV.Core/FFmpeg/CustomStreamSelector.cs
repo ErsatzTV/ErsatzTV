@@ -4,6 +4,7 @@ using ErsatzTV.Core.FFmpeg.Selector;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
+using NCalc;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -239,7 +240,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
     private static bool AudioMatchesCondition(MediaStream audioStream, string audioCondition)
     {
-        var expression = new NCalc.Expression(audioCondition);
+        var expression = new Expression(audioCondition);
         expression.EvaluateParameter += (name, e) =>
         {
             e.Result = name switch
@@ -260,7 +261,7 @@ public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<Cust
 
     private static bool SubtitleMatchesCondition(Subtitle subtitle, string subtitleCondition)
     {
-        var expression = new NCalc.Expression(subtitleCondition);
+        var expression = new Expression(subtitleCondition);
         expression.EvaluateParameter += (name, e) =>
         {
             e.Result = name switch

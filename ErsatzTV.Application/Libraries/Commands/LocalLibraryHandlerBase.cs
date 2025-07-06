@@ -44,10 +44,10 @@ public abstract class LocalLibraryHandlerBase
         // Images and OtherVideos do not conflict
         if (isConflict)
         {
-            bool imagesAndOtherVideos = (path1.MediaKind is LibraryMediaKind.Images &&
-                                         path2.MediaKind is LibraryMediaKind.OtherVideos)
-                                        || (path2.MediaKind is LibraryMediaKind.Images &&
-                                            path1.MediaKind is LibraryMediaKind.OtherVideos);
+            bool imagesAndOtherVideos = path1.MediaKind is LibraryMediaKind.Images &&
+                                        path2.MediaKind is LibraryMediaKind.OtherVideos
+                                        || path2.MediaKind is LibraryMediaKind.Images &&
+                                        path1.MediaKind is LibraryMediaKind.OtherVideos;
 
             if (imagesAndOtherVideos)
             {

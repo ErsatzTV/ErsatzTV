@@ -56,7 +56,9 @@ public class BlockPlayoutFillerBuilder(
             foreach (Deco deco in GetDecoFor(playout, start))
             {
                 if (!HasDefaultFiller(deco))
+                {
                     continue;
+                }
 
                 var collectionKey = CollectionKey.ForDecoDefaultFiller(deco);
                 string historyKey = HistoryDetails.ForDefaultFiller(deco);
@@ -89,7 +91,9 @@ public class BlockPlayoutFillerBuilder(
 
                 // skip this deco if the collection has no items
                 if (enumerator.Count == 0)
+                {
                     continue;
+                }
 
                 DateTimeOffset current = start;
                 var pastTime = false;

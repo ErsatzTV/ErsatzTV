@@ -1,9 +1,9 @@
 using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Search;
-using Shouldly;
 using Lucene.Net.Search;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Infrastructure.Tests.Search;
 

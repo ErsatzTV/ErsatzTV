@@ -4,15 +4,9 @@ public class AdjGraph
 {
     private readonly List<Edge> _edges = [];
 
-    public void Clear()
-    {
-        _edges.Clear();
-    }
+    public void Clear() => _edges.Clear();
 
-    public void AddEdge(string from, string to)
-    {
-        _edges.Add(new Edge(from.ToLowerInvariant(), to.ToLowerInvariant()));
-    }
+    public void AddEdge(string from, string to) => _edges.Add(new Edge(from.ToLowerInvariant(), to.ToLowerInvariant()));
 
     public bool HasCycle(string from)
     {
@@ -21,10 +15,7 @@ public class AdjGraph
         return HasCycleImpl(from.ToLowerInvariant(), visited, stack);
     }
 
-    public bool HasAnyCycle()
-    {
-        return _edges.Any(edge => HasCycle(edge.From));
-    }
+    public bool HasAnyCycle() => _edges.Any(edge => HasCycle(edge.From));
 
     private bool HasCycleImpl(string node, ISet<string> visited, ISet<string> stack)
     {

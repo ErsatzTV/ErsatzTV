@@ -1,9 +1,9 @@
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data.Repositories.Caching;
-using Shouldly;
 using LanguageExt;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Infrastructure.Tests.Data.Repositories.Caching;
 

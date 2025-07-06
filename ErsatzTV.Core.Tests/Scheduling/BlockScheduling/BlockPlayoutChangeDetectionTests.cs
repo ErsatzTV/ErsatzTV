@@ -2,9 +2,9 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
-using Shouldly;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
 
@@ -64,8 +64,8 @@ public static class BlockPlayoutChangeDetectionTests
 
             List<EffectiveBlock> effectiveBlocks =
             [
-                new EffectiveBlock(block1, blockKey1, GetLocalDate(2024, 1, 17).AddHours(9), 1),
-                new EffectiveBlock(block2, blockKey2, GetLocalDate(2024, 1, 17).AddHours(13), 2)
+                new(block1, blockKey1, GetLocalDate(2024, 1, 17).AddHours(9), 1),
+                new(block2, blockKey2, GetLocalDate(2024, 1, 17).AddHours(13), 2)
             ];
 
             Map<CollectionKey, string> collectionEtags = LanguageExt.Map<CollectionKey, string>.Empty;
@@ -90,7 +90,7 @@ public static class BlockPlayoutChangeDetectionTests
             List<Block> blocks =
             [
                 // SHOW A
-                new Block
+                new()
                 {
                     Id = 1,
                     Items =
@@ -108,7 +108,7 @@ public static class BlockPlayoutChangeDetectionTests
                     DateUpdated = dateUpdated.UtcDateTime
                 },
                 // SHOW B
-                new Block
+                new()
                 {
                     Id = 2,
                     Items =
@@ -126,7 +126,7 @@ public static class BlockPlayoutChangeDetectionTests
                     DateUpdated = dateUpdated.UtcDateTime
                 },
                 // SHOW C
-                new Block
+                new()
                 {
                     Id = 3,
                     Items =

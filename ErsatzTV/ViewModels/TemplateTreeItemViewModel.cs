@@ -1,6 +1,5 @@
 using ErsatzTV.Application.Scheduling;
 using MudBlazor;
-using S = System.Collections.Generic;
 
 namespace ErsatzTV.ViewModels;
 

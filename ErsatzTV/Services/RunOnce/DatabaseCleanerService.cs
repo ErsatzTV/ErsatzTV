@@ -37,8 +37,7 @@ public class DatabaseCleanerService(
         logger.LogInformation("Done cleaning database");
     }
 
-    private static async Task DeleteInvalidMediaItems(TvContext dbContext)
-    {
+    private static async Task DeleteInvalidMediaItems(TvContext dbContext) =>
         // some old version deleted items in a way that MediaItem was left over without
         // any corresponding Movie/Show/etc.
         // this cleans out that old invalid data
@@ -56,7 +55,6 @@ public class DatabaseCleanerService(
               and Id not in (select Id from `Artist`)
               and Id not in (select Id from `Image`)
             """);
-    }
 
     private static async Task GenerateFallbackMetadata(
         IServiceScope scope,

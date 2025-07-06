@@ -56,7 +56,7 @@ public class PlexServerApiClient : IPlexServerApiClient
                 });
             List<PlexLibraryResponse> directory =
                 await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
-            List<PlexLibrary> response = directory
+            var response = directory
                 .Filter(l => l.Type.ToLowerInvariant() is "movie" or "show")
                 .Map(Project)
                 .Somes()
@@ -453,7 +453,7 @@ public class PlexServerApiClient : IPlexServerApiClient
     {
         List<LibraryPath> paths =
         [
-            new LibraryPath
+            new()
             {
                 Path = JsonConvert.SerializeObject(
                     new LibraryPaths { Paths = response.Location.Map(l => l.Path).ToList() })

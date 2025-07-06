@@ -38,7 +38,7 @@ public class YamlPlayoutBuilder(
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers = new();
         var enumeratorCache = new EnumeratorCache(mediaCollectionRepository, logger);
 
-        var context = new YamlPlayoutContext(playout, playoutDefinition, guideGroup: 1)
+        var context = new YamlPlayoutContext(playout, playoutDefinition, 1)
         {
             CurrentTime = start
 

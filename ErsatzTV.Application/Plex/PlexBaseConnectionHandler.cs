@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -72,7 +73,7 @@ public abstract class PlexBaseConnectionHandler(
         try
         {
             logger.LogDebug("Attempting to locate to Plex at {Uri}", connection.Uri);
-            var sw = new System.Diagnostics.Stopwatch();
+            var sw = new Stopwatch();
             sw.Start();
             bool pingResult = await plexServerApiClient.Ping(connection, token, cancellationToken);
             sw.Stop();

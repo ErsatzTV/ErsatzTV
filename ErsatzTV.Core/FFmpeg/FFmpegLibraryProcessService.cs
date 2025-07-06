@@ -18,9 +18,9 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly ICustomStreamSelector _customStreamSelector;
     private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
-    private readonly ICustomStreamSelector _customStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
     private readonly IPipelineBuilderFactory _pipelineBuilderFactory;
     private readonly ITempFilePool _tempFilePool;
@@ -421,7 +421,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.ThreadCount,
             qsvExtraHardwareFrames,
             videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true },
-            IsHdrTonemap: false,
+            false,
             GetTonemapAlgorithm(playbackSettings));
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
@@ -576,8 +576,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ptsOffset,
             Option<int>.None,
             qsvExtraHardwareFrames,
-            IsSongWithProgress: false,
-            IsHdrTonemap: false,
+            false,
+            false,
             GetTonemapAlgorithm(playbackSettings));
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
@@ -772,8 +772,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             0,
             playbackSettings.ThreadCount,
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
-            IsSongWithProgress: false,
-            IsHdrTonemap: false,
+            false,
+            false,
             GetTonemapAlgorithm(playbackSettings));
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);

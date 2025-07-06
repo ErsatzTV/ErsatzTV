@@ -1,8 +1,8 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Jellyfin;
-using Shouldly;
 using Flurl;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Jellyfin;
 

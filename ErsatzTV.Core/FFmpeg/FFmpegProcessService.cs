@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text;
-using System.Text.Encodings.Web;
 using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
@@ -198,7 +197,7 @@ public class FFmpegProcessService
                             None,
                             await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
-                        Option<string> maybeChannelPath = (channel.Artwork.Count == 0)
+                        Option<string> maybeChannelPath = channel.Artwork.Count == 0
                             ?
                             //We have to generate the logo on the fly and save it to a local temp path
                             ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
@@ -239,7 +238,7 @@ public class FFmpegProcessService
                             None,
                             await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
-                        Option<string> maybeChannelPath = (channel.Artwork.Count == 0)
+                        Option<string> maybeChannelPath = channel.Artwork.Count == 0
                             ?
                             //We have to generate the logo on the fly and save it to a local temp path
                             ChannelLogoGenerator.GenerateChannelLogoUrl(channel)
@@ -279,7 +278,7 @@ public class FFmpegProcessService
                             None,
                             await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
-                        Option<string> maybeChannelPath = (channel.Artwork.Count == 0)
+                        Option<string> maybeChannelPath = channel.Artwork.Count == 0
                             ?
                             //We have to generate the logo on the fly and save it to a local temp path
                             ChannelLogoGenerator.GenerateChannelLogoUrl(channel)

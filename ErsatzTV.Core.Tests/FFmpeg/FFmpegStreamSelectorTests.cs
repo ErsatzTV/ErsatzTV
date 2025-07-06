@@ -3,10 +3,10 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Scripting;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 
@@ -31,7 +31,7 @@ public class FFmpegStreamSelectorTests
                         MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 2,
                         Language = "ja",
-                        Title = "Some Title",
+                        Title = "Some Title"
                     },
                     new MediaStream
                     {
@@ -91,7 +91,7 @@ public class FFmpegStreamSelectorTests
                         MediaStreamKind = MediaStreamKind.Audio,
                         Channels = 2,
                         Language = "ja",
-                        Title = "Some Title",
+                        Title = "Some Title"
                     },
                     new MediaStream
                     {
@@ -153,8 +153,8 @@ public class FFmpegStreamSelectorTests
                 {
                     StreamIndex = 1,
                     SubtitleKind = SubtitleKind.Sidecar,
-                    Language = "he",
-                },
+                    Language = "he"
+                }
             };
 
             var channel = new Channel(Guid.NewGuid());

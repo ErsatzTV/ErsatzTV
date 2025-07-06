@@ -12,11 +12,11 @@ public class GetPlexConnectionParametersHandler : PlexBaseConnectionHandler,
     IRequestHandler<GetPlexConnectionParameters,
         Either<BaseError, PlexConnectionParametersViewModel>>
 {
+    private readonly ILogger<GetPlexConnectionParametersHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMemoryCache _memoryCache;
-    private readonly IPlexServerApiClient _plexServerApiClient;
     private readonly IPlexSecretStore _plexSecretStore;
-    private readonly ILogger<GetPlexConnectionParametersHandler> _logger;
+    private readonly IPlexServerApiClient _plexServerApiClient;
 
     public GetPlexConnectionParametersHandler(
         IMemoryCache memoryCache,

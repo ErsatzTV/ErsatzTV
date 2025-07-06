@@ -17,11 +17,11 @@ public class PlayoutBuilder : IPlayoutBuilder
 {
     private static readonly Random Random = new();
     private readonly IArtistRepository _artistRepository;
-    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMultiEpisodeShuffleCollectionEnumeratorFactory _multiEpisodeFactory;
+    private readonly IPlayoutTimeShifter _playoutTimeShifter;
     private readonly ITelevisionRepository _televisionRepository;
     private Playlist _debugPlaylist;
     private ILogger<PlayoutBuilder> _logger;
@@ -1018,7 +1018,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     _mediaCollectionRepository,
                     playlistItemMap,
                     state,
-                    shufflePlaylistItems: false,
+                    false,
                     cancellationToken);
             }
         }

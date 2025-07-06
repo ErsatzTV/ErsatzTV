@@ -1,9 +1,9 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
-using Shouldly;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
@@ -60,7 +60,7 @@ public class PlaylistEnumeratorTests
             repo,
             playlistItemMap,
             new CollectionEnumeratorState(),
-            shufflePlaylistItems: false,
+            false,
             CancellationToken.None);
 
         var items = new List<int>();
@@ -127,7 +127,7 @@ public class PlaylistEnumeratorTests
             repo,
             playlistItemMap,
             new CollectionEnumeratorState(),
-            shufflePlaylistItems: false,
+            false,
             CancellationToken.None);
 
         var items = new List<int>();

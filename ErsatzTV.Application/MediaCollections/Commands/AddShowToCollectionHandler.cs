@@ -15,9 +15,9 @@ public class AddShowToCollectionHandler :
     IRequestHandler<AddShowToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
 
     public AddShowToCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,

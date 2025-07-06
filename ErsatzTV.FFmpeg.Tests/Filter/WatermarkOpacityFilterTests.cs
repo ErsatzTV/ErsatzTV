@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.State;
-using Shouldly;
 using LanguageExt;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.FFmpeg.Tests.Filter;
 

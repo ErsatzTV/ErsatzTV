@@ -27,7 +27,7 @@ public class Program
 
         Configuration = builder
             .SetBasePath(BasePath)
-            .AddJsonFile("appsettings.json", false, reloadOnChange: false)
+            .AddJsonFile("appsettings.json", false, false)
             .AddJsonFile(
                 $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
                 true)

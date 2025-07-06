@@ -91,9 +91,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
     private readonly string _cleanShutdownPath;
 
     private readonly List<CultureInfo> _cultureInfos;
+    private readonly ILogger<LuceneSearchIndex> _logger;
 
     private readonly SearchQueryParser _searchQueryParser;
-    private readonly ILogger<LuceneSearchIndex> _logger;
 
     private FSDirectory _directory;
     private bool _initialized;

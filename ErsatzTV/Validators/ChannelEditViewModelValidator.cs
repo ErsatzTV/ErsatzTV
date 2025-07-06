@@ -33,7 +33,10 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
                 (ChannelEditViewModel)model,
                 x => x.IncludeProperties(propertyName)));
         if (result.IsValid)
+        {
             return [];
+        }
+
         return result.Errors.Select(e => e.ErrorMessage);
     };
 }

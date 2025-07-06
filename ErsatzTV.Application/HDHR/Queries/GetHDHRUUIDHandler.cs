@@ -15,7 +15,7 @@ public class GetHDHRUUIDHandler : IRequestHandler<GetHDHRUUID, Guid>
         Option<Guid> maybeGuid = await _configElementRepository.GetValue<Guid>(ConfigElementKey.HDHRUUID);
         return await maybeGuid.IfNoneAsync(async () =>
         {
-            Guid guid = Guid.NewGuid();
+            var guid = Guid.NewGuid();
             await _configElementRepository.Upsert(ConfigElementKey.HDHRUUID, guid);
             return guid;
         });

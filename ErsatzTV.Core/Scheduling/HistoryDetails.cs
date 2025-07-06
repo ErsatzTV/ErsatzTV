@@ -59,7 +59,7 @@ internal static class HistoryDetails
             collectionKey.SmartCollectionId,
             collectionKey.MediaItemId,
             collectionKey.PlaylistId,
-            collectionKey.FakeCollectionKey,
+            collectionKey.FakeCollectionKey
         };
 
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
@@ -74,7 +74,7 @@ internal static class HistoryDetails
             CollectionType = deco.DefaultFillerCollectionType,
             CollectionId = deco.DefaultFillerCollectionId,
             MultiCollectionId = deco.DefaultFillerMultiCollectionId,
-            SmartCollectionId = deco.DefaultFillerSmartCollectionId,
+            SmartCollectionId = deco.DefaultFillerSmartCollectionId
         };
 
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);

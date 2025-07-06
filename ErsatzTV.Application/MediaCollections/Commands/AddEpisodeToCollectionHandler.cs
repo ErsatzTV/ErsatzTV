@@ -15,9 +15,9 @@ public class AddEpisodeToCollectionHandler :
     IRequestHandler<AddEpisodeToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
 
     public AddEpisodeToCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,

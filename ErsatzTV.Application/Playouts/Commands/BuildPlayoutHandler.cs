@@ -19,7 +19,6 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 {
     private readonly IBlockPlayoutBuilder _blockPlayoutBuilder;
     private readonly IBlockPlayoutFillerBuilder _blockPlayoutFillerBuilder;
-    private readonly IYamlPlayoutBuilder _yamlPlayoutBuilder;
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
@@ -27,6 +26,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
+    private readonly IYamlPlayoutBuilder _yamlPlayoutBuilder;
 
     public BuildPlayoutHandler(
         IClient client,

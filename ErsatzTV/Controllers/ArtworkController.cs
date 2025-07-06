@@ -20,9 +20,9 @@ namespace ErsatzTV.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public class ArtworkController : ControllerBase
 {
+    private readonly IChannelLogoGenerator _channelLogoGenerator;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMediator _mediator;
-    private readonly IChannelLogoGenerator _channelLogoGenerator;
 
     public ArtworkController(
         IMediator mediator,
@@ -75,7 +75,8 @@ public class ArtworkController : ControllerBase
     [HttpGet("/artwork/watermarks/{fileName}")]
     public async Task<IActionResult> GetWatermark(
         string fileName,
-        [FromQuery] string contentType,
+        [FromQuery]
+        string contentType,
         CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =

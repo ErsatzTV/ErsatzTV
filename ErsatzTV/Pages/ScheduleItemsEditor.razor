@@ -649,7 +649,7 @@
             MultipleCount = item.MultipleCount,
             PlayoutDuration = item.PlayoutDuration,
             TailMode = item.TailMode,
-            DiscardToFillAttempts = item.DiscardToFillAttempts,
+            DiscardToFillAttempts = item.DiscardToFillAttempts
         };
 
         foreach (ProgramScheduleItemEditViewModel i in _schedule.Items.Filter(si => si.Index >= newItem.Index))
@@ -737,9 +737,6 @@
         }
     }
 
-    private string SelectedRowClassFunc(ProgramScheduleItemEditViewModel element, int rowNumber)
-    {
-        return _selectedItem != null && _selectedItem == element ? "selected" : string.Empty;
-    }
+    private string SelectedRowClassFunc(ProgramScheduleItemEditViewModel element, int rowNumber) => _selectedItem != null && _selectedItem == element ? "selected" : string.Empty;
 
 }

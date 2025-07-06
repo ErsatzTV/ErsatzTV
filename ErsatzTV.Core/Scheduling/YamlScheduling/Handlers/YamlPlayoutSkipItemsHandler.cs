@@ -1,6 +1,7 @@
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
+using NCalc;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
@@ -32,7 +33,7 @@ public class YamlPlayoutSkipItemsHandler(EnumeratorCache enumeratorCache) : IYam
             int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
                 ? playlistEnumerator.CountForRandom
                 : enumerator.Count;
-            var expression = new NCalc.Expression(skipItems.SkipItems);
+            var expression = new Expression(skipItems.SkipItems);
             expression.EvaluateParameter += (name, e) =>
             {
                 e.Result = name switch
