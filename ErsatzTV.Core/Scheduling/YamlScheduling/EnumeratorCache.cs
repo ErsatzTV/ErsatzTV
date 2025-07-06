@@ -97,7 +97,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         if (content is YamlPlayoutContentMarathonItem marathon)
         {
             var helper = new YamlPlayoutMarathonHelper(mediaCollectionRepository);
-            Option<YamlMarathonContentResult> maybeResult = await helper.GetEnumerator(marathon, state, cancellationToken);
+            Option<YamlMarathonContentResult> maybeResult = await helper.GetEnumerator(
+                marathon,
+                state,
+                cancellationToken);
             foreach (YamlMarathonContentResult result in maybeResult)
             {
                 foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in result.Content)
@@ -112,7 +115,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         // playlist is a special case that needs to be handled on its own
         if (content is YamlPlayoutContentPlaylistItem playlist)
         {
-            if (!string.IsNullOrWhiteSpace(playlist.Order) && !string.Equals(playlist.Order, "none", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(playlist.Order) && !string.Equals(
+                    playlist.Order,
+                    "none",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 logger.LogWarning(
                     "Ignoring playback order {Order} for playlist {Playlist}",

@@ -92,11 +92,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         List<Subtitle> allSubtitles = await getSubtitles(playbackSettings);
 
         Option<MediaStream> maybeAudioStream = Option<MediaStream>.None;
-        Option<Subtitle> maybeSubtitle =  Option<Subtitle>.None;
+        Option<Subtitle> maybeSubtitle = Option<Subtitle>.None;
 
         if (channel.StreamSelectorMode is ChannelStreamSelectorMode.Custom)
         {
-            StreamSelectorResult result = await _customStreamSelector.SelectStreams(channel, audioVersion, allSubtitles);
+            StreamSelectorResult result = await _customStreamSelector.SelectStreams(
+                channel,
+                audioVersion,
+                allSubtitles);
             maybeAudioStream = result.AudioStream;
             maybeSubtitle = result.Subtitle;
 
@@ -150,15 +153,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             .Map(o => o.Watermark)
             .Flatten()
             .Where(wm => wm.Mode == ChannelWatermarkMode.Intermittent)
-            .Map(
-                wm =>
-                    WatermarkCalculator.CalculateFadePoints(
-                        start,
-                        inPoint,
-                        outPoint,
-                        playbackSettings.StreamSeek,
-                        wm.FrequencyMinutes,
-                        wm.DurationSeconds));
+            .Map(wm =>
+                WatermarkCalculator.CalculateFadePoints(
+                    start,
+                    inPoint,
+                    outPoint,
+                    playbackSettings.StreamSeek,
+                    wm.FrequencyMinutes,
+                    wm.DurationSeconds));
 
         string audioFormat = playbackSettings.AudioFormat switch
         {
@@ -188,16 +190,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IPixelFormat pixelFormat = await AvailablePixelFormats
             .ForPixelFormat(videoStream.PixelFormat, pixelFormatLogger)
-            .IfNoneAsync(
-                () =>
+            .IfNoneAsync(() =>
+            {
+                return videoStream.BitsPerRawSample switch
                 {
-                    return videoStream.BitsPerRawSample switch
-                    {
-                        8 => new PixelFormatYuv420P(),
-                        10 => new PixelFormatYuv420P10Le(),
-                        _ => new PixelFormatUnknown(videoStream.BitsPerRawSample)
-                    };
-                });
+                    8 => new PixelFormatYuv420P(),
+                    10 => new PixelFormatYuv420P10Le(),
+                    _ => new PixelFormatUnknown(videoStream.BitsPerRawSample)
+                };
+            });
 
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
@@ -218,12 +219,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
-        Option<AudioInputFile> audioInputFile = maybeAudioStream.Map(
-            audioStream =>
-            {
-                var ffmpegAudioStream = new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels);
-                return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
-            });
+        Option<AudioInputFile> audioInputFile = maybeAudioStream.Map(audioStream =>
+        {
+            var ffmpegAudioStream = new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels);
+            return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
+        });
 
         // when no audio streams are available, use null audio source
         if (!audioVersion.MediaVersion.Streams.Any(s => s.MediaStreamKind is MediaStreamKind.Audio))
@@ -260,72 +260,71 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<string> subtitleLanguage = Option<string>.None;
         Option<string> subtitleTitle = Option<string>.None;
 
-        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
-            subtitle =>
+        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(subtitle =>
+        {
+            if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded &&
+                (!subtitle.IsExtracted || string.IsNullOrWhiteSpace(subtitle.Path)))
             {
-                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded &&
-                    (!subtitle.IsExtracted || string.IsNullOrWhiteSpace(subtitle.Path)))
+                _logger.LogWarning("Subtitles are not yet available for this item");
+                return None;
+            }
+
+            var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
+                subtitle.IsImage ? subtitle.StreamIndex : 0,
+                subtitle.Codec,
+                StreamKind.Video);
+
+            string path = subtitle.IsImage switch
+            {
+                true => videoPath,
+                false when subtitle.SubtitleKind == SubtitleKind.Sidecar => subtitle.Path,
+                _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
+            };
+
+            SubtitleMethod method = SubtitleMethod.Burn;
+            if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
+            {
+                method = (outputFormat, subtitle.SubtitleKind, subtitle.Codec) switch
                 {
-                    _logger.LogWarning("Subtitles are not yet available for this item");
+                    // mkv supports all subtitle codecs, maybe?
+                    (OutputFormatKind.Mkv, SubtitleKind.Embedded, _) => SubtitleMethod.Copy,
+
+                    // MP4 supports vobsub
+                    (OutputFormatKind.Mp4, SubtitleKind.Embedded, "dvdsub" or "dvd_subtitle" or "vobsub") =>
+                        SubtitleMethod.Copy,
+
+                    // MP4 does not support PGS
+                    (OutputFormatKind.Mp4, SubtitleKind.Embedded, "pgs" or "pgssub" or "hdmv_pgs_subtitle") =>
+                        SubtitleMethod.None,
+
+                    // ignore text subtitles for now
+                    _ => SubtitleMethod.None
+                };
+
+                if (method == SubtitleMethod.None)
+                {
                     return None;
                 }
 
-                var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
-                    subtitle.IsImage ? subtitle.StreamIndex : 0,
-                    subtitle.Codec,
-                    StreamKind.Video);
-
-                string path = subtitle.IsImage switch
+                // hls direct won't use extracted embedded subtitles
+                if (subtitle.SubtitleKind == SubtitleKind.Embedded)
                 {
-                    true => videoPath,
-                    false when subtitle.SubtitleKind == SubtitleKind.Sidecar => subtitle.Path,
-                    _ => Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path)
-                };
-
-                SubtitleMethod method = SubtitleMethod.Burn;
-                if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect)
-                {
-                    method = (outputFormat, subtitle.SubtitleKind, subtitle.Codec) switch
-                    {
-                        // mkv supports all subtitle codecs, maybe?
-                        (OutputFormatKind.Mkv, SubtitleKind.Embedded, _) => SubtitleMethod.Copy,
-
-                        // MP4 supports vobsub
-                        (OutputFormatKind.Mp4, SubtitleKind.Embedded, "dvdsub" or "dvd_subtitle" or "vobsub") =>
-                            SubtitleMethod.Copy,
-
-                        // MP4 does not support PGS
-                        (OutputFormatKind.Mp4, SubtitleKind.Embedded, "pgs" or "pgssub" or "hdmv_pgs_subtitle") =>
-                            SubtitleMethod.None,
-
-                        // ignore text subtitles for now
-                        _ => SubtitleMethod.None
-                    };
-
-                    if (method == SubtitleMethod.None)
-                    {
-                        return None;
-                    }
-
-                    // hls direct won't use extracted embedded subtitles
-                    if (subtitle.SubtitleKind == SubtitleKind.Embedded)
-                    {
-                        path = videoPath;
-                        ffmpegSubtitleStream = ffmpegSubtitleStream with { Index = subtitle.StreamIndex };
-                    }
+                    path = videoPath;
+                    ffmpegSubtitleStream = ffmpegSubtitleStream with { Index = subtitle.StreamIndex };
                 }
+            }
 
-                if (method == SubtitleMethod.Copy)
-                {
-                    subtitleLanguage = Optional(subtitle.Language);
-                    subtitleTitle = Optional(subtitle.Title);
-                }
+            if (method == SubtitleMethod.Copy)
+            {
+                subtitleLanguage = Optional(subtitle.Language);
+                subtitleTitle = Optional(subtitle.Title);
+            }
 
-                return new SubtitleInputFile(
-                    path,
-                    new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                    method);
-            }).Flatten();
+            return new SubtitleInputFile(
+                path,
+                new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
+                method);
+        }).Flatten();
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
 
@@ -945,23 +944,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                                     ScanKind.Progressive)
                             },
                             new WatermarkState(
-                                maybeFadePoints.Map(
-                                    lst => lst.Map(
-                                        fp =>
-                                        {
-                                            return fp switch
-                                            {
-                                                FadeInPoint fip => (WatermarkFadePoint)new WatermarkFadeIn(
-                                                    fip.Time,
-                                                    fip.EnableStart,
-                                                    fip.EnableFinish),
-                                                FadeOutPoint fop => new WatermarkFadeOut(
-                                                    fop.Time,
-                                                    fop.EnableStart,
-                                                    fop.EnableFinish),
-                                                _ => throw new NotSupportedException() // this will never happen
-                                            };
-                                        }).ToList()),
+                                maybeFadePoints.Map(lst => lst.Map(fp =>
+                                {
+                                    return fp switch
+                                    {
+                                        FadeInPoint fip => (WatermarkFadePoint)new WatermarkFadeIn(
+                                            fip.Time,
+                                            fip.EnableStart,
+                                            fip.EnableFinish),
+                                        FadeOutPoint fop => new WatermarkFadeOut(
+                                            fop.Time,
+                                            fop.EnableStart,
+                                            fop.EnableFinish),
+                                        _ => throw new NotSupportedException() // this will never happen
+                                    };
+                                }).ToList()),
                                 watermark.Location,
                                 watermark.Size,
                                 watermark.WidthPercent,
@@ -1074,7 +1071,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FFmpegProfileTonemapAlgorithm.Reinhard => TonemapAlgorithm.Reinhard,
             FFmpegProfileTonemapAlgorithm.Mobius => TonemapAlgorithm.Mobius,
             FFmpegProfileTonemapAlgorithm.Hable => TonemapAlgorithm.Hable,
-            _ => throw new ArgumentOutOfRangeException($"unexpected tonemap algorithm {playbackSettings.TonemapAlgorithm}")
+            _ => throw new ArgumentOutOfRangeException(
+                $"unexpected tonemap algorithm {playbackSettings.TonemapAlgorithm}")
         };
 
     private static Option<string> GetVideoProfile(string videoFormat, string videoProfile) =>

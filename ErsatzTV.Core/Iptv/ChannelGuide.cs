@@ -32,8 +32,8 @@ public class ChannelGuide
 
         xml.WriteRaw(_channelsFragment);
 
-        foreach ((string channelNumber, string channelDataFragment) in _channelDataFragments.OrderBy(
-                     kvp => decimal.Parse(kvp.Key, CultureInfo.InvariantCulture)))
+        foreach ((string channelNumber, string channelDataFragment) in _channelDataFragments.OrderBy(kvp =>
+                     decimal.Parse(kvp.Key, CultureInfo.InvariantCulture)))
         {
             xml.WriteRaw(channelDataFragment);
         }

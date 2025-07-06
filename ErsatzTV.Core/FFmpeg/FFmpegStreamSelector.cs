@@ -236,8 +236,8 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     {
         var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
-        var correctLanguage = audioStreams.Filter(
-                s => preferredLanguageCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
+        var correctLanguage = audioStreams.Filter(s =>
+                preferredLanguageCodes.Any(c => string.Equals(s.Language, c, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
         if (correctLanguage.Count != 0)

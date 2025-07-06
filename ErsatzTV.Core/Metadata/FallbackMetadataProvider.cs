@@ -192,11 +192,10 @@ public partial class FallbackMetadataProvider : IFallbackMetadataProvider
 
             if (matches.Count > 0)
             {
-                var episodeNumbers = matches.Bind(
-                        m => m.Groups[1].Value
-                            .Replace('e', '-')
-                            .Split('-')
-                            .Bind(ep => int.TryParse(ep, out int num) ? Some(num) : Option<int>.None))
+                var episodeNumbers = matches.Bind(m => m.Groups[1].Value
+                        .Replace('e', '-')
+                        .Split('-')
+                        .Bind(ep => int.TryParse(ep, out int num) ? Some(num) : Option<int>.None))
                     .ToList();
 
                 switch (episodeNumbers.Count)

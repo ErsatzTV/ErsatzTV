@@ -337,8 +337,8 @@ public class BlockPlayoutBuilder(
             .Distinct()
             .ToList();
 
-        IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(
-            async collectionKey => Tuple(
+        IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(async collectionKey =>
+            Tuple(
                 collectionKey,
                 await MediaItemsForCollection.Collect(
                     mediaCollectionRepository,

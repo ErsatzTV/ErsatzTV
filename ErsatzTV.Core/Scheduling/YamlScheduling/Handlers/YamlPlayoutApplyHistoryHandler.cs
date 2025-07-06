@@ -64,7 +64,8 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                     var hasSetEnumeratorIndex = false;
 
                     var childEnumeratorKeys = playlistEnumerator.ChildEnumerators.Map(x => x.CollectionKey).ToList();
-                    foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in playlistEnumerator.ChildEnumerators)
+                    foreach ((IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) in
+                             playlistEnumerator.ChildEnumerators)
                     {
                         PlaybackOrder itemPlaybackOrder = childEnumerator switch
                         {
@@ -90,11 +91,12 @@ public class YamlPlayoutApplyHistoryHandler(EnumeratorCache enumeratorCache)
                             //     h.Details,
                             //     h.IsCurrentChild);
 
-                            enumerator.ResetState(new CollectionEnumeratorState
-                            {
-                                Seed = enumerator.State.Seed,
-                                Index = h.Index + (h.IsCurrentChild ? 1 : 0)
-                            });
+                            enumerator.ResetState(
+                                new CollectionEnumeratorState
+                                {
+                                    Seed = enumerator.State.Seed,
+                                    Index = h.Index + (h.IsCurrentChild ? 1 : 0)
+                                });
 
                             if (itemPlaybackOrder is PlaybackOrder.Chronological)
                             {

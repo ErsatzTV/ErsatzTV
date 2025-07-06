@@ -98,7 +98,8 @@ public static class FFmpegPlaybackSettingsCalculator
                 }
 
                 IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
-                if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution) && ffmpegProfile.ScalingBehavior is not ScalingBehavior.Crop)
+                if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution) &&
+                    ffmpegProfile.ScalingBehavior is not ScalingBehavior.Crop)
                 {
                     result.PadToDesiredResolution = true;
                 }

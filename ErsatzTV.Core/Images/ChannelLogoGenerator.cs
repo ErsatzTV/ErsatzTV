@@ -13,13 +13,13 @@ public class ChannelLogoGenerator : IChannelLogoGenerator
     private readonly ILogger _logger;
 
     public ChannelLogoGenerator(
-            ILogger<ChannelLogoGenerator> logger)
+        ILogger<ChannelLogoGenerator> logger)
     {
         _logger = logger;
     }
 
     public static Option<string> GenerateChannelLogoUrl(Channel channel) =>
-         $"http://localhost:{Settings.StreamingPort}{GetRoute}?{GetRouteQueryParamName}={channel.WebEncodedName}";
+        $"http://localhost:{Settings.StreamingPort}{GetRoute}?{GetRouteQueryParamName}={channel.WebEncodedName}";
 
     public Either<BaseError, byte[]> GenerateChannelLogo(
         string text,

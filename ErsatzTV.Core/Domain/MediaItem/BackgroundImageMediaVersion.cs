@@ -5,7 +5,10 @@ namespace ErsatzTV.Core.Domain;
 
 public class BackgroundImageMediaVersion : MediaVersion
 {
-    public static BackgroundImageMediaVersion ForPath(string path, IDisplaySize resolution, bool isSongWithProgress = false) =>
+    public static BackgroundImageMediaVersion ForPath(
+        string path,
+        IDisplaySize resolution,
+        bool isSongWithProgress = false) =>
         new()
         {
             Chapters = [],

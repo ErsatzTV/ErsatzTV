@@ -69,20 +69,19 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         bool log)
     {
         Option<JellyfinPathReplacement> maybeReplacement = pathReplacements
-            .SingleOrDefault(
-                r =>
+            .SingleOrDefault(r =>
+            {
+                if (string.IsNullOrWhiteSpace(r.JellyfinPath))
                 {
-                    if (string.IsNullOrWhiteSpace(r.JellyfinPath))
-                    {
-                        return false;
-                    }
+                    return false;
+                }
 
-                    string separatorChar = IsWindows(r.JellyfinMediaSource, path) ? @"\" : @"/";
-                    string prefix = r.JellyfinPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
-                        ? r.JellyfinPath
-                        : r.JellyfinPath + separatorChar;
-                    return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-                });
+                string separatorChar = IsWindows(r.JellyfinMediaSource, path) ? @"\" : @"/";
+                string prefix = r.JellyfinPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
+                    ? r.JellyfinPath
+                    : r.JellyfinPath + separatorChar;
+                return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+            });
 
         foreach (JellyfinPathReplacement replacement in maybeReplacement)
         {

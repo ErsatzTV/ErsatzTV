@@ -19,8 +19,8 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
 
         _mediaItems = mediaItems;
         _lazyMinimumDuration =
-            new Lazy<Option<TimeSpan>>(
-                () => _mediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
+            new Lazy<Option<TimeSpan>>(() =>
+                _mediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
         _random = new Random(state.Seed);
 
         _groupMedia = new Dictionary<int, IList<int>>();

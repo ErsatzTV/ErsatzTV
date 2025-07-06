@@ -141,7 +141,8 @@ internal static class HistoryDetails
                 maybeMatchedItem = fakeItem;
             }
         }
-        else if (maybeMatchedItem.IsNone && playbackOrder is PlaybackOrder.Chronological && details.ReleaseDate.HasValue)
+        else if (maybeMatchedItem.IsNone && playbackOrder is PlaybackOrder.Chronological &&
+                 details.ReleaseDate.HasValue)
         {
             maybeMatchedItem = Optional(collectionItems.Find(ci => MatchReleaseDate(ci, details.ReleaseDate.Value)));
 

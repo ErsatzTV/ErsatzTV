@@ -9,9 +9,13 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<CustomStreamSelector> logger) : ICustomStreamSelector
+public class CustomStreamSelector(ILocalFileSystem localFileSystem, ILogger<CustomStreamSelector> logger)
+    : ICustomStreamSelector
 {
-    public async Task<StreamSelectorResult> SelectStreams(Channel channel, MediaItemAudioVersion audioVersion, List<Subtitle> allSubtitles)
+    public async Task<StreamSelectorResult> SelectStreams(
+        Channel channel,
+        MediaItemAudioVersion audioVersion,
+        List<Subtitle> allSubtitles)
     {
         try
         {

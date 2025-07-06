@@ -177,14 +177,13 @@ internal class FFmpegProcessBuilder
             maybeIndex,
             audioPath.IsSome && videoPath != audioPath.IfNone("NotARealPath"));
 
-        maybeFilter.IfSome(
-            filter =>
-            {
-                _arguments.Add("-filter_complex");
-                _arguments.Add(filter.ComplexFilter);
-                videoLabel = filter.VideoLabel;
-                audioLabel = filter.AudioLabel;
-            });
+        maybeFilter.IfSome(filter =>
+        {
+            _arguments.Add("-filter_complex");
+            _arguments.Add(filter.ComplexFilter);
+            videoLabel = filter.VideoLabel;
+            audioLabel = filter.AudioLabel;
+        });
 
         _arguments.Add("-map");
         _arguments.Add(videoLabel);

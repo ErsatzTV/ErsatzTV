@@ -171,7 +171,8 @@ public class BlockPlayoutFillerBuilder(
             {
                 foreach (DecoTemplateItem decoTemplateItem in template.DecoTemplate.Items)
                 {
-                    if (decoTemplateItem.StartTime <= start.TimeOfDay && decoTemplateItem.EndTime == TimeSpan.Zero || decoTemplateItem.EndTime > start.TimeOfDay)
+                    if (decoTemplateItem.StartTime <= start.TimeOfDay && decoTemplateItem.EndTime == TimeSpan.Zero ||
+                        decoTemplateItem.EndTime > start.TimeOfDay)
                     {
                         switch (decoTemplateItem.Deco.DefaultFillerMode)
                         {

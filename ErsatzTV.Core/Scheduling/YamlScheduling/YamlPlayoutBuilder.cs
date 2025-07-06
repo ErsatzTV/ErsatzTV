@@ -82,7 +82,9 @@ public class YamlPlayoutBuilder(
             // remove any future or "currently active" history items
             // this prevents "walking" the playout forward by repeatedly resetting
             var toRemove = new List<PlayoutHistory>();
-            toRemove.AddRange(playout.PlayoutHistory.Filter(h => h.When > start.UtcDateTime || h.When <= start.UtcDateTime && h.Finish >= start.UtcDateTime));
+            toRemove.AddRange(
+                playout.PlayoutHistory.Filter(h =>
+                    h.When > start.UtcDateTime || h.When <= start.UtcDateTime && h.Finish >= start.UtcDateTime));
             foreach (PlayoutHistory history in toRemove)
             {
                 playout.PlayoutHistory.Remove(history);
@@ -210,7 +212,8 @@ public class YamlPlayoutBuilder(
 
         foreach (YamlPlayoutSequenceItem sequence in definition.Sequence)
         {
-            foreach (YamlPlayoutSequenceInstruction instruction in sequence.Items.OfType<YamlPlayoutSequenceInstruction>())
+            foreach (YamlPlayoutSequenceInstruction instruction in
+                     sequence.Items.OfType<YamlPlayoutSequenceInstruction>())
             {
                 graph.AddEdge(sequence.Key, instruction.Sequence);
             }
@@ -317,40 +320,39 @@ public class YamlPlayoutBuilder(
 
             IDeserializer deserializer = new DeserializerBuilder()
                 .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .WithTypeDiscriminatingNodeDeserializer(
-                    o =>
+                .WithTypeDiscriminatingNodeDeserializer(o =>
+                {
+                    var contentKeyMappings = new Dictionary<string, Type>
                     {
-                        var contentKeyMappings = new Dictionary<string, Type>
-                        {
-                            { "collection", typeof(YamlPlayoutContentCollectionItem) },
-                            { "marathon", typeof(YamlPlayoutContentMarathonItem) },
-                            { "multi_collection", typeof(YamlPlayoutContentMultiCollectionItem) },
-                            { "playlist", typeof(YamlPlayoutContentPlaylistItem) },
-                            { "search", typeof(YamlPlayoutContentSearchItem) },
-                            { "show", typeof(YamlPlayoutContentShowItem) },
-                            { "smart_collection", typeof(YamlPlayoutContentSmartCollectionItem) }
-                        };
+                        { "collection", typeof(YamlPlayoutContentCollectionItem) },
+                        { "marathon", typeof(YamlPlayoutContentMarathonItem) },
+                        { "multi_collection", typeof(YamlPlayoutContentMultiCollectionItem) },
+                        { "playlist", typeof(YamlPlayoutContentPlaylistItem) },
+                        { "search", typeof(YamlPlayoutContentSearchItem) },
+                        { "show", typeof(YamlPlayoutContentShowItem) },
+                        { "smart_collection", typeof(YamlPlayoutContentSmartCollectionItem) }
+                    };
 
-                        o.AddUniqueKeyTypeDiscriminator<YamlPlayoutContentItem>(contentKeyMappings);
+                    o.AddUniqueKeyTypeDiscriminator<YamlPlayoutContentItem>(contentKeyMappings);
 
-                        var instructionKeyMappings = new Dictionary<string, Type>
-                        {
-                            { "all", typeof(YamlPlayoutAllInstruction) },
-                            { "count", typeof(YamlPlayoutCountInstruction) },
-                            { "duration", typeof(YamlPlayoutDurationInstruction) },
-                            { "epg_group", typeof(YamlPlayoutEpgGroupInstruction) },
-                            { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
-                            { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
-                            { "repeat", typeof(YamlPlayoutRepeatInstruction) },
-                            { "sequence", typeof(YamlPlayoutSequenceInstruction) },
-                            { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
-                            { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
-                            { "skip_to_item", typeof(YamlPlayoutSkipToItemInstruction) },
-                            { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
-                        };
+                    var instructionKeyMappings = new Dictionary<string, Type>
+                    {
+                        { "all", typeof(YamlPlayoutAllInstruction) },
+                        { "count", typeof(YamlPlayoutCountInstruction) },
+                        { "duration", typeof(YamlPlayoutDurationInstruction) },
+                        { "epg_group", typeof(YamlPlayoutEpgGroupInstruction) },
+                        { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
+                        { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
+                        { "repeat", typeof(YamlPlayoutRepeatInstruction) },
+                        { "sequence", typeof(YamlPlayoutSequenceInstruction) },
+                        { "shuffle_sequence", typeof(YamlPlayoutShuffleSequenceInstruction) },
+                        { "skip_items", typeof(YamlPlayoutSkipItemsInstruction) },
+                        { "skip_to_item", typeof(YamlPlayoutSkipToItemInstruction) },
+                        { "wait_until", typeof(YamlPlayoutWaitUntilInstruction) }
+                    };
 
-                        o.AddUniqueKeyTypeDiscriminator<YamlPlayoutInstruction>(instructionKeyMappings);
-                    })
+                    o.AddUniqueKeyTypeDiscriminator<YamlPlayoutInstruction>(instructionKeyMappings);
+                })
                 .Build();
 
             return deserializer.Deserialize<YamlPlayoutDefinition>(yaml);

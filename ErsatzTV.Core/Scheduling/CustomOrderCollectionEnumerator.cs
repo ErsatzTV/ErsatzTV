@@ -22,8 +22,8 @@ public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
             .OrderBy(ci => ci.CustomIndex)
             .Map(ci => mediaItems.First(mi => mi.Id == ci.MediaItemId))
             .ToList();
-        _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(
-            () => _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
+        _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(() =>
+            _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)

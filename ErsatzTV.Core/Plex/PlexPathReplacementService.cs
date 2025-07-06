@@ -35,20 +35,19 @@ public class PlexPathReplacementService : IPlexPathReplacementService
     public string GetReplacementPlexPath(List<PlexPathReplacement> pathReplacements, string path, bool log = true)
     {
         Option<PlexPathReplacement> maybeReplacement = pathReplacements
-            .SingleOrDefault(
-                r =>
+            .SingleOrDefault(r =>
+            {
+                if (string.IsNullOrWhiteSpace(r.PlexPath))
                 {
-                    if (string.IsNullOrWhiteSpace(r.PlexPath))
-                    {
-                        return false;
-                    }
+                    return false;
+                }
 
-                    string separatorChar = IsWindows(r.PlexMediaSource) ? @"\" : @"/";
-                    string prefix = r.PlexPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
-                        ? r.PlexPath
-                        : r.PlexPath + separatorChar;
-                    return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-                });
+                string separatorChar = IsWindows(r.PlexMediaSource) ? @"\" : @"/";
+                string prefix = r.PlexPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
+                    ? r.PlexPath
+                    : r.PlexPath + separatorChar;
+                return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+            });
 
         foreach (PlexPathReplacement replacement in maybeReplacement)
         {
