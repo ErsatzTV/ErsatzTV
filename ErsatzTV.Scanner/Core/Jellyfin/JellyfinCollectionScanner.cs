@@ -70,8 +70,8 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
-            foreach (JellyfinCollection collection in existingCollections.Filter(
-                         e => !incomingItemIds.Contains(e.ItemId)))
+            foreach (JellyfinCollection collection in existingCollections.Filter(e =>
+                         !incomingItemIds.Contains(e.ItemId)))
             {
                 await _jellyfinCollectionRepository.RemoveCollection(collection);
             }

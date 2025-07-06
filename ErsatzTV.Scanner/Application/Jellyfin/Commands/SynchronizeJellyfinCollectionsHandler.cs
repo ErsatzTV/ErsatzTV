@@ -44,12 +44,11 @@ public class
             .BindT(MediaSourceMustHaveApiKey);
 
         return (await mediaSource, await ValidateLibraryRefreshInterval())
-            .Apply(
-                (connectionParameters, libraryRefreshInterval) => new RequestParameters(
-                    connectionParameters,
-                    connectionParameters.MediaSource,
-                    request.ForceScan,
-                    libraryRefreshInterval));
+            .Apply((connectionParameters, libraryRefreshInterval) => new RequestParameters(
+                connectionParameters,
+                connectionParameters.MediaSource,
+                request.ForceScan,
+                libraryRefreshInterval));
     }
 
     private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>

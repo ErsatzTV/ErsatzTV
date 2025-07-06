@@ -45,12 +45,11 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
             .BindT(MediaSourceMustHaveToken);
 
         return (await mediaSource, await PlexLibraryMustExist(request), await ValidateLibraryRefreshInterval())
-            .Apply(
-                (connectionParameters, plexLibrary, libraryRefreshInterval) => new RequestParameters(
-                    connectionParameters,
-                    plexLibrary,
-                    request.ForceScan,
-                    libraryRefreshInterval));
+            .Apply((connectionParameters, plexLibrary, libraryRefreshInterval) => new RequestParameters(
+                connectionParameters,
+                plexLibrary,
+                request.ForceScan,
+                libraryRefreshInterval));
     }
 
     private Task<Validation<BaseError, PlexLibrary>> PlexLibraryMustExist(
@@ -66,7 +65,8 @@ public class SynchronizePlexNetworksHandler : IRequestHandler<SynchronizePlexNet
     private Task<Validation<BaseError, PlexMediaSource>> MediaSourceMustExist(
         SynchronizePlexNetworks request) =>
         _mediaSourceRepository.GetPlexByLibraryId(request.PlexLibraryId)
-            .Map(o => o.ToValidation<BaseError>($"Plex media source for library {request.PlexLibraryId} does not exist."));
+            .Map(o => o.ToValidation<BaseError>(
+                $"Plex media source for library {request.PlexLibraryId} does not exist."));
 
     private static Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         PlexMediaSource plexMediaSource)

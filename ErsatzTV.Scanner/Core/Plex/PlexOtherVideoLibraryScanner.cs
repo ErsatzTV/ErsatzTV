@@ -229,9 +229,8 @@ public class PlexOtherVideoLibraryScanner :
         }
 
         foreach (Actor actor in existingMetadata.Actors
-                     .Filter(
-                         a => fullMetadata.Actors.All(
-                             a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                     .Filter(a =>
+                         fullMetadata.Actors.All(a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
                      .ToList())
         {
             existingMetadata.Actors.Remove(actor);

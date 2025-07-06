@@ -119,15 +119,14 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(SynchronizePlexLibraryById request) =>
         (await ValidateConnection(request), await PlexLibraryMustExist(request), await ValidateLibraryRefreshInterval())
-        .Apply(
-            (connectionParameters, plexLibrary, libraryRefreshInterval) =>
-                new RequestParameters(
-                    connectionParameters,
-                    plexLibrary,
-                    request.ForceScan,
-                    libraryRefreshInterval,
-                    request.DeepScan
-                ));
+        .Apply((connectionParameters, plexLibrary, libraryRefreshInterval) =>
+            new RequestParameters(
+                connectionParameters,
+                plexLibrary,
+                request.ForceScan,
+                libraryRefreshInterval,
+                request.DeepScan
+            ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
         SynchronizePlexLibraryById request) =>
@@ -138,9 +137,8 @@ public class SynchronizePlexLibraryByIdHandler : IRequestHandler<SynchronizePlex
     private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
         SynchronizePlexLibraryById request) =>
         _mediaSourceRepository.GetPlexByLibraryId(request.PlexLibraryId)
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    $"Plex media source for library {request.PlexLibraryId} does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Plex media source for library {request.PlexLibraryId} does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         PlexMediaSource plexMediaSource)

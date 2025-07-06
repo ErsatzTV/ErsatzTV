@@ -175,13 +175,12 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
         Validation<BaseError, int> refreshIntervalResult = await ValidateLibraryRefreshInterval();
 
         return (libraryResult, ffprobePathResult, ffmpegPathResult, refreshIntervalResult)
-            .Apply(
-                (library, ffprobePath, ffmpegPath, libraryRefreshInterval) => new RequestParameters(
-                    library,
-                    ffprobePath,
-                    ffmpegPath,
-                    request.ForceScan,
-                    libraryRefreshInterval));
+            .Apply((library, ffprobePath, ffmpegPath, libraryRefreshInterval) => new RequestParameters(
+                library,
+                ffprobePath,
+                ffmpegPath,
+                request.ForceScan,
+                libraryRefreshInterval));
     }
 
     private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(ScanLocalLibrary request) =>
@@ -192,16 +191,14 @@ public class ScanLocalLibraryHandler : IRequestHandler<ScanLocalLibrary, Either<
     private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
             .FilterT(File.Exists)
-            .Map(
-                ffprobePath =>
-                    ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
+            .Map(ffprobePath =>
+                ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
     private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
             .FilterT(File.Exists)
-            .Map(
-                ffmpegPath =>
-                    ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
+            .Map(ffmpegPath =>
+                ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
 
     private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
         _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)

@@ -76,7 +76,8 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         var existingOtherVideos = (await otherVideoRepository.GetExistingOtherVideos(library))
             .ToImmutableDictionary(e => e.MediaServerItemId, e => e);
 
-        await foreach ((TOtherVideo incoming, int totalOtherVideoCount) in otherVideoEntries.WithCancellation(cancellationToken))
+        await foreach ((TOtherVideo incoming, int totalOtherVideoCount) in otherVideoEntries.WithCancellation(
+                           cancellationToken))
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -97,7 +98,13 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
 
             string localPath = getLocalPath(incoming);
 
-            if (await ShouldScanItem(otherVideoRepository, library, existingOtherVideos, incoming, localPath, deepScan) == false)
+            if (await ShouldScanItem(
+                    otherVideoRepository,
+                    library,
+                    existingOtherVideos,
+                    incoming,
+                    localPath,
+                    deepScan) == false)
             {
                 continue;
             }
@@ -108,40 +115,41 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
             {
                 maybeOtherVideo = await otherVideoRepository
                     .GetOrAdd(library, incoming, deepScan)
-                    .MapT(
-                        result =>
-                        {
-                            result.LocalPath = localPath;
-                            return result;
-                        })
-                    .BindT(
-                        existing => UpdateMetadataAndStatistics(
-                            connectionParameters,
-                            library,
-                            existing,
-                            incoming,
-                            deepScan));
+                    .MapT(result =>
+                    {
+                        result.LocalPath = localPath;
+                        return result;
+                    })
+                    .BindT(existing => UpdateMetadataAndStatistics(
+                        connectionParameters,
+                        library,
+                        existing,
+                        incoming,
+                        deepScan));
             }
             else
             {
                 maybeOtherVideo = await otherVideoRepository
                     .GetOrAdd(library, incoming, deepScan)
-                    .MapT(
-                        result =>
-                        {
-                            result.LocalPath = localPath;
-                            return result;
-                        })
-                    .BindT(
-                        existing => UpdateMetadata(connectionParameters, library, existing, incoming, deepScan, None))
-                    .BindT(
-                        existing => UpdateStatistics(
-                            connectionParameters,
-                            library,
-                            existing,
-                            incoming,
-                            deepScan,
-                            None))
+                    .MapT(result =>
+                    {
+                        result.LocalPath = localPath;
+                        return result;
+                    })
+                    .BindT(existing => UpdateMetadata(
+                        connectionParameters,
+                        library,
+                        existing,
+                        incoming,
+                        deepScan,
+                        None))
+                    .BindT(existing => UpdateStatistics(
+                        connectionParameters,
+                        library,
+                        existing,
+                        incoming,
+                        deepScan,
+                        None))
                     .BindT(UpdateSubtitles);
             }
 
@@ -322,7 +330,9 @@ public abstract class MediaServerOtherVideoLibraryScanner<TConnectionParameters,
         }
         else
         {
-            _logger.LogDebug("UPDATE: Etag has changed for other video {OtherVideo}", incoming.OtherVideoMetadata.Head().Title);
+            _logger.LogDebug(
+                "UPDATE: Etag has changed for other video {OtherVideo}",
+                incoming.OtherVideoMetadata.Head().Title);
         }
 
         return true;

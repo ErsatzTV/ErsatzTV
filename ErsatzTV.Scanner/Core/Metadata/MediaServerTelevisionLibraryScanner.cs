@@ -381,40 +381,41 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
             {
                 maybeEpisode = await televisionRepository
                     .GetOrAdd(library, incoming, deepScan)
-                    .MapT(
-                        result =>
-                        {
-                            result.LocalPath = localPath;
-                            return result;
-                        })
-                    .BindT(
-                        existing => UpdateMetadataAndStatistics(
-                            connectionParameters,
-                            library,
-                            existing,
-                            incoming,
-                            deepScan));
+                    .MapT(result =>
+                    {
+                        result.LocalPath = localPath;
+                        return result;
+                    })
+                    .BindT(existing => UpdateMetadataAndStatistics(
+                        connectionParameters,
+                        library,
+                        existing,
+                        incoming,
+                        deepScan));
             }
             else
             {
                 maybeEpisode = await televisionRepository
                     .GetOrAdd(library, incoming, deepScan)
-                    .MapT(
-                        result =>
-                        {
-                            result.LocalPath = localPath;
-                            return result;
-                        })
-                    .BindT(
-                        existing => UpdateMetadata(connectionParameters, library, existing, incoming, deepScan, None))
-                    .BindT(
-                        existing => UpdateStatistics(
-                            connectionParameters,
-                            library,
-                            existing,
-                            incoming,
-                            deepScan,
-                            None))
+                    .MapT(result =>
+                    {
+                        result.LocalPath = localPath;
+                        return result;
+                    })
+                    .BindT(existing => UpdateMetadata(
+                        connectionParameters,
+                        library,
+                        existing,
+                        incoming,
+                        deepScan,
+                        None))
+                    .BindT(existing => UpdateStatistics(
+                        connectionParameters,
+                        library,
+                        existing,
+                        incoming,
+                        deepScan,
+                        None))
                     .BindT(UpdateSubtitles);
             }
 

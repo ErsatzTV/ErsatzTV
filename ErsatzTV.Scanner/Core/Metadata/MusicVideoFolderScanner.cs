@@ -115,18 +115,16 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 Either<BaseError, MediaItemScanResult<Artist>> maybeArtist =
                     await FindOrCreateArtist(libraryPath.Id, artistFolder)
                         .BindT(artist => UpdateMetadataForArtist(artist, artistFolder))
-                        .BindT(
-                            artist => UpdateArtworkForArtist(
-                                artist,
-                                artistFolder,
-                                ArtworkKind.Thumbnail,
-                                cancellationToken))
-                        .BindT(
-                            artist => UpdateArtworkForArtist(
-                                artist,
-                                artistFolder,
-                                ArtworkKind.FanArt,
-                                cancellationToken));
+                        .BindT(artist => UpdateArtworkForArtist(
+                            artist,
+                            artistFolder,
+                            ArtworkKind.Thumbnail,
+                            cancellationToken))
+                        .BindT(artist => UpdateArtworkForArtist(
+                            artist,
+                            artistFolder,
+                            ArtworkKind.FanArt,
+                            cancellationToken));
 
                 foreach (BaseError error in maybeArtist.LeftToSeq())
                 {
@@ -296,12 +294,11 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         try
         {
             Artist artist = result.Item;
-            await LocateArtworkForArtist(artistFolder, artworkKind).IfSomeAsync(
-                async artworkFile =>
-                {
-                    ArtistMetadata metadata = artist.ArtistMetadata.Head();
-                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
-                });
+            await LocateArtworkForArtist(artistFolder, artworkKind).IfSomeAsync(async artworkFile =>
+            {
+                ArtistMetadata metadata = artist.ArtistMetadata.Head();
+                await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
+            });
 
             return result;
         }
