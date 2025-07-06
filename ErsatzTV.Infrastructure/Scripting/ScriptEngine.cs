@@ -10,14 +10,13 @@ public class ScriptEngine : IScriptEngine
     private Engine _engine;
 
     public ScriptEngine(ILogger<ScriptEngine> logger) =>
-        _engine = new Engine(
-                options =>
-                {
-                    options.AllowClr();
-                    options.LimitMemory(4_000_000);
-                    options.TimeoutInterval(TimeSpan.FromSeconds(4));
-                    options.MaxStatements(1000);
-                })
+        _engine = new Engine(options =>
+            {
+                options.AllowClr();
+                options.LimitMemory(4_000_000);
+                options.TimeoutInterval(TimeSpan.FromSeconds(4));
+                options.MaxStatements(1000);
+            })
             .SetValue("log", new Action<string>(s => logger.LogDebug("JS Script: {Message}", s)));
 
     public void Load(string jsScriptPath)

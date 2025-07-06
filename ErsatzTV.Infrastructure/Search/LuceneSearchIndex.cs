@@ -202,7 +202,12 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(true);
     }
 
-    public async Task<SearchResult> Search(IClient client, string query, string smartCollectionName, int skip, int limit)
+    public async Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit)
     {
         var metadata = new Dictionary<string, string>
         {
@@ -528,10 +533,9 @@ public sealed class LuceneSearchIndex : ISearchIndex
         await AddLanguages(searchRepository, doc, mediaCodes);
 
         var subMediaCodes = mediaVersions
-            .Map(
-                mv => mv.Streams
-                    .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
-                    .Map(ms => ms.Language))
+            .Map(mv => mv.Streams
+                .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+                .Map(ms => ms.Language))
             .Flatten()
             .Filter(c => !string.IsNullOrWhiteSpace(c))
             .Distinct()
@@ -550,8 +554,10 @@ public sealed class LuceneSearchIndex : ISearchIndex
         var englishNames = new System.Collections.Generic.HashSet<string>();
         foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
         {
-            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
-                ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
+            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(ci => string.Equals(
+                ci.ThreeLetterISOLanguageName,
+                code,
+                StringComparison.OrdinalIgnoreCase));
             foreach (CultureInfo cultureInfo in maybeCultureInfo)
             {
                 englishNames.Add(cultureInfo.EnglishName);
@@ -574,8 +580,10 @@ public sealed class LuceneSearchIndex : ISearchIndex
         var englishNames = new System.Collections.Generic.HashSet<string>();
         foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
         {
-            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
-                ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
+            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(ci => string.Equals(
+                ci.ThreeLetterISOLanguageName,
+                code,
+                StringComparison.OrdinalIgnoreCase));
             foreach (CultureInfo cultureInfo in maybeCultureInfo)
             {
                 englishNames.Add(cultureInfo.EnglishName);

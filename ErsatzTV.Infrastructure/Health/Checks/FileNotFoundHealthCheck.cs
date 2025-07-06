@@ -44,13 +44,12 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
 
         if (mediaItems.Any())
         {
-            IEnumerable<string> paths = five.Map(
-                mi => mi switch
-                {
-                    Show s => s.ShowMetadata.Head().Title,
-                    Season s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}",
-                    _ => mi.GetHeadVersion().MediaFiles.Head().Path
-                });
+            IEnumerable<string> paths = five.Map(mi => mi switch
+            {
+                Show s => s.ShowMetadata.Head().Title,
+                Season s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}",
+                _ => mi.GetHeadVersion().MediaFiles.Head().Path
+            });
 
             var files = string.Join(", ", paths);
 

@@ -104,11 +104,10 @@ public class TelevisionRepository : ITelevisionRepository
             .ThenInclude(s => s.ShowMetadata)
             .Include(sm => sm.Artwork)
             .ToListAsync()
-            .Map(
-                list => list
-                    .OrderBy(s => s.Season.Show.ShowMetadata.HeadOrNone().Match(sm => sm.SortTitle, () => string.Empty))
-                    .ThenBy(s => s.Season.SeasonNumber)
-                    .ToList());
+            .Map(list => list
+                .OrderBy(s => s.Season.Show.ShowMetadata.HeadOrNone().Match(sm => sm.SortTitle, () => string.Empty))
+                .ThenBy(s => s.Season.SeasonNumber)
+                .ToList());
     }
 
     public async Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids)
@@ -261,12 +260,9 @@ public class TelevisionRepository : ITelevisionRepository
         if (maybeId.IsNone)
         {
             List<int> maybeShowIds = await dbContext.Episodes
-                .Where(
-                    e => e.MediaVersions.Any(
-                        mv => mv.MediaFiles.Any(
-                            mf => EF.Functions.Like(
-                                EF.Functions.Collate(mf.Path, TvContext.CaseInsensitiveCollation),
-                                $"{showFolder}%"))))
+                .Where(e => e.MediaVersions.Any(mv => mv.MediaFiles.Any(mf => EF.Functions.Like(
+                    EF.Functions.Collate(mf.Path, TvContext.CaseInsensitiveCollation),
+                    $"{showFolder}%"))))
                 .Map(e => e.Season.ShowId)
                 .Distinct()
                 .ToListAsync();

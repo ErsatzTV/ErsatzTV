@@ -51,21 +51,20 @@ public class ConfigElementRepository : IConfigElementRepository
     }
 
     public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
-        GetConfigElement(key).MapT(
-            ce =>
+        GetConfigElement(key).MapT(ce =>
+        {
+            if (typeof(T).Name == "Guid")
             {
-                if (typeof(T).Name == "Guid")
-                {
-                    return (T)Convert.ChangeType(Guid.Parse(ce.Value), typeof(T), CultureInfo.InvariantCulture);
-                }
+                return (T)Convert.ChangeType(Guid.Parse(ce.Value), typeof(T), CultureInfo.InvariantCulture);
+            }
 
-                if (typeof(T).IsEnum)
-                {
-                    return (T)Enum.Parse(typeof(T), ce.Value);
-                }
+            if (typeof(T).IsEnum)
+            {
+                return (T)Enum.Parse(typeof(T), ce.Value);
+            }
 
-                return (T)Convert.ChangeType(ce.Value, typeof(T), CultureInfo.InvariantCulture);
-            });
+            return (T)Convert.ChangeType(ce.Value, typeof(T), CultureInfo.InvariantCulture);
+        });
 
     public async Task Delete(ConfigElement configElement)
     {

@@ -163,19 +163,24 @@ public class ElasticSearchIndex : ISearchIndex
         return deleteResponse.IsValidResponse;
     }
 
-    public async Task<SearchResult> Search(IClient client, string query, string smartCollectionName, int skip, int limit)
+    public async Task<SearchResult> Search(
+        IClient client,
+        string query,
+        string smartCollectionName,
+        int skip,
+        int limit)
     {
         var items = new List<MinimalElasticSearchItem>();
         var totalCount = 0;
 
         Query parsedQuery = await _searchQueryParser.ParseQuery(query, smartCollectionName);
 
-        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
-            s => s.Indices(IndexName)
-                .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
-                .From(skip)
-                .Size(limit)
-                .QueryLuceneSyntax(parsedQuery.ToString()));
+        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s => s
+            .Indices(IndexName)
+            .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
+            .From(skip)
+            .Size(limit)
+            .QueryLuceneSyntax(parsedQuery.ToString()));
 
         if (response.IsValidResponse)
         {
@@ -207,54 +212,52 @@ public class ElasticSearchIndex : ISearchIndex
     private async Task<CreateIndexResponse> CreateIndex() =>
         await _client.Indices.CreateAsync<ElasticSearchItem>(
             IndexName,
-            i => i.Mappings(
-                m => m.Properties(
-                    p => p
-                        .Keyword(t => t.Type, t => t.Store())
-                        .Text(t => t.Title, t => t.Store(false))
-                        .Keyword(t => t.SortTitle, t => t.Store(false))
-                        .Text(t => t.LibraryName, t => t.Store(false))
-                        .Keyword(t => t.LibraryId, t => t.Store(false))
-                        .Keyword(t => t.TitleAndYear, t => t.Store(false))
-                        .Keyword(t => t.JumpLetter, t => t.Store())
-                        .Keyword(t => t.State, t => t.Store(false))
-                        .Text(t => t.MetadataKind, t => t.Store(false))
-                        .Text(t => t.Language, t => t.Store(false))
-                        .Text(t => t.LanguageTag, t => t.Store(false))
-                        .Text(t => t.SubLanguage, t => t.Store(false))
-                        .Text(t => t.SubLanguageTag, t => t.Store(false))
-                        .IntegerNumber(t => t.Height, t => t.Store(false))
-                        .IntegerNumber(t => t.Width, t => t.Store(false))
-                        .Keyword(t => t.VideoCodec, t => t.Store(false))
-                        .IntegerNumber(t => t.VideoBitDepth, t => t.Store(false))
-                        .Keyword(t => t.VideoDynamicRange, t => t.Store(false))
-                        .Keyword(t => t.ContentRating, t => t.Store(false))
-                        .Keyword(t => t.ReleaseDate, t => t.Store(false))
-                        .Keyword(t => t.AddedDate, t => t.Store(false))
-                        .Text(t => t.Plot, t => t.Store(false))
-                        .Text(t => t.Genre, t => t.Store(false))
-                        .Text(t => t.Tag, t => t.Store(false))
-                        .Keyword(t => t.TagFull, t => t.Store(false))
-                        .Text(t => t.Studio, t => t.Store(false))
-                        .Text(t => t.Network, t => t.Store(false))
-                        .Text(t => t.Actor, t => t.Store(false))
-                        .Text(t => t.Director, t => t.Store(false))
-                        .Text(t => t.Writer, t => t.Store(false))
-                        .Keyword(t => t.TraktList, t => t.Store(false))
-                        .IntegerNumber(t => t.SeasonNumber, t => t.Store(false))
-                        .Text(t => t.ShowTitle, t => t.Store(false))
-                        .Text(t => t.ShowGenre, t => t.Store(false))
-                        .Text(t => t.ShowTag, t => t.Store(false))
-                        .Text(t => t.ShowStudio, t => t.Store(false))
-                        .Text(t => t.ShowNetwork, t => t.Store(false))
-                        .Keyword(t => t.ShowContentRating, t => t.Store(false))
-                        .Text(t => t.Style, t => t.Store(false))
-                        .Text(t => t.Mood, t => t.Store(false))
-                        .Text(t => t.Album, t => t.Store(false))
-                        .Text(t => t.Artist, t => t.Store(false))
-                        .IntegerNumber(t => t.EpisodeNumber, t => t.Store(false))
-                        .Text(t => t.AlbumArtist, t => t.Store(false))
-                )));
+            i => i.Mappings(m => m.Properties(p => p
+                .Keyword(t => t.Type, t => t.Store())
+                .Text(t => t.Title, t => t.Store(false))
+                .Keyword(t => t.SortTitle, t => t.Store(false))
+                .Text(t => t.LibraryName, t => t.Store(false))
+                .Keyword(t => t.LibraryId, t => t.Store(false))
+                .Keyword(t => t.TitleAndYear, t => t.Store(false))
+                .Keyword(t => t.JumpLetter, t => t.Store())
+                .Keyword(t => t.State, t => t.Store(false))
+                .Text(t => t.MetadataKind, t => t.Store(false))
+                .Text(t => t.Language, t => t.Store(false))
+                .Text(t => t.LanguageTag, t => t.Store(false))
+                .Text(t => t.SubLanguage, t => t.Store(false))
+                .Text(t => t.SubLanguageTag, t => t.Store(false))
+                .IntegerNumber(t => t.Height, t => t.Store(false))
+                .IntegerNumber(t => t.Width, t => t.Store(false))
+                .Keyword(t => t.VideoCodec, t => t.Store(false))
+                .IntegerNumber(t => t.VideoBitDepth, t => t.Store(false))
+                .Keyword(t => t.VideoDynamicRange, t => t.Store(false))
+                .Keyword(t => t.ContentRating, t => t.Store(false))
+                .Keyword(t => t.ReleaseDate, t => t.Store(false))
+                .Keyword(t => t.AddedDate, t => t.Store(false))
+                .Text(t => t.Plot, t => t.Store(false))
+                .Text(t => t.Genre, t => t.Store(false))
+                .Text(t => t.Tag, t => t.Store(false))
+                .Keyword(t => t.TagFull, t => t.Store(false))
+                .Text(t => t.Studio, t => t.Store(false))
+                .Text(t => t.Network, t => t.Store(false))
+                .Text(t => t.Actor, t => t.Store(false))
+                .Text(t => t.Director, t => t.Store(false))
+                .Text(t => t.Writer, t => t.Store(false))
+                .Keyword(t => t.TraktList, t => t.Store(false))
+                .IntegerNumber(t => t.SeasonNumber, t => t.Store(false))
+                .Text(t => t.ShowTitle, t => t.Store(false))
+                .Text(t => t.ShowGenre, t => t.Store(false))
+                .Text(t => t.ShowTag, t => t.Store(false))
+                .Text(t => t.ShowStudio, t => t.Store(false))
+                .Text(t => t.ShowNetwork, t => t.Store(false))
+                .Keyword(t => t.ShowContentRating, t => t.Store(false))
+                .Text(t => t.Style, t => t.Store(false))
+                .Text(t => t.Mood, t => t.Store(false))
+                .Text(t => t.Album, t => t.Store(false))
+                .Text(t => t.Artist, t => t.Store(false))
+                .IntegerNumber(t => t.EpisodeNumber, t => t.Store(false))
+                .Text(t => t.AlbumArtist, t => t.Store(false))
+            )));
 
     private async Task RebuildItem(
         ISearchRepository searchRepository,
@@ -374,10 +377,13 @@ public class ElasticSearchIndex : ISearchIndex
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
-                    Tag = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name).ToList(),
-                    TagFull = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name).ToList(),
+                    Tag = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name)
+                        .ToList(),
+                    TagFull = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name)
+                        .ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
-                    Network = metadata.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(t => t.Name).ToList(),
+                    Network = metadata.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(t => t.Name)
+                        .ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     TraktList = show.TraktListItems.Map(t => t.TraktList.TraktId.ToString(CultureInfo.InvariantCulture))
                         .ToList()
@@ -631,9 +637,11 @@ public class ElasticSearchIndex : ISearchIndex
                 {
                     doc.ShowTitle = showMetadata.Title;
                     doc.ShowGenre = showMetadata.Genres.Map(g => g.Name).ToList();
-                    doc.ShowTag = showMetadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name).ToList();
+                    doc.ShowTag = showMetadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId))
+                        .Map(t => t.Name).ToList();
                     doc.ShowStudio = showMetadata.Studios.Map(s => s.Name).ToList();
-                    doc.ShowNetwork = showMetadata.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(t => t.Name).ToList();
+                    doc.ShowNetwork = showMetadata.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId)
+                        .Map(t => t.Name).ToList();
                     doc.ShowContentRating = GetContentRatings(showMetadata.ContentRating);
                 }
 
@@ -879,8 +887,10 @@ public class ElasticSearchIndex : ISearchIndex
         var englishNames = new System.Collections.Generic.HashSet<string>();
         foreach (string code in await searchRepository.GetAllThreeLetterLanguageCodes(mediaCodes))
         {
-            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
-                ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
+            Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(ci => string.Equals(
+                ci.ThreeLetterISOLanguageName,
+                code,
+                StringComparison.OrdinalIgnoreCase));
             foreach (CultureInfo cultureInfo in maybeCultureInfo)
             {
                 englishNames.Add(cultureInfo.EnglishName);
@@ -900,10 +910,9 @@ public class ElasticSearchIndex : ISearchIndex
 
     private static List<string> GetSubLanguageTags(IEnumerable<MediaVersion> mediaVersions) =>
         mediaVersions
-            .Map(
-                mv => mv.Streams
-                    .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
-                    .Map(ms => ms.Language))
+            .Map(mv => mv.Streams
+                .Filter(ms => ms.MediaStreamKind is MediaStreamKind.Subtitle or MediaStreamKind.ExternalSubtitle)
+                .Map(ms => ms.Language))
             .Flatten()
             .Filter(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
@@ -980,12 +989,12 @@ public class ElasticSearchIndex : ISearchIndex
 
     private async Task<SearchPageMap> GetSearchPageMap(string query, int limit)
     {
-        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(
-            s => s.Indices(IndexName)
-                .Size(0)
-                .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
-                .Aggregations(a => a.Add("count", agg => agg.Terms(v => v.Field(i => i.JumpLetter).Size(30))))
-                .QueryLuceneSyntax(query));
+        SearchResponse<MinimalElasticSearchItem> response = await _client.SearchAsync<MinimalElasticSearchItem>(s => s
+            .Indices(IndexName)
+            .Size(0)
+            .Sort(ss => ss.Field(f => f.SortTitle, fs => fs.Order(SortOrder.Asc)))
+            .Aggregations(a => a.Add("count", agg => agg.Terms(v => v.Field(i => i.JumpLetter).Size(30))))
+            .QueryLuceneSyntax(query));
 
         if (!response.IsValidResponse)
         {

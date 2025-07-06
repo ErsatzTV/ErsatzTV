@@ -503,8 +503,8 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             }
 
             List<int> nextIds = await dbContext.ShowMetadata
-                .Filter(
-                    sm => sm.Guids.Any(g => EF.Functions.Collate(g.Guid, TvContext.CaseInsensitiveCollation) == guid))
+                .Filter(sm =>
+                    sm.Guids.Any(g => EF.Functions.Collate(g.Guid, TvContext.CaseInsensitiveCollation) == guid))
                 .Map(sm => sm.ShowId)
                 .ToListAsync();
 

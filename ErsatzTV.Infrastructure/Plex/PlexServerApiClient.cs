@@ -25,7 +25,10 @@ public class PlexServerApiClient : IPlexServerApiClient
         _logger = logger;
     }
 
-    public async Task<bool> Ping(PlexConnection connection, PlexServerAuthToken token, CancellationToken cancellationToken)
+    public async Task<bool> Ping(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -80,9 +83,8 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             return jsonService
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
-                .Map(
-                    r => r.MediaContainer.Metadata.Filter(
-                        m => m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
+                .Map(r => r.MediaContainer.Metadata.Filter(m =>
+                    m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
                 .Map(list => list.Map(metadata => ProjectToMovie(metadata, library.MediaSourceId)));
         }
 
@@ -124,9 +126,8 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             return jsonService
                 .GetLibrarySectionContents(library.Key, skip, pageSize, token.AuthToken)
-                .Map(
-                    r => r.MediaContainer.Metadata.Filter(
-                        m => m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
+                .Map(r => r.MediaContainer.Metadata.Filter(m =>
+                    m.Media.Count > 0 && m.Media.Any(media => media.Part.Count > 0)))
                 .Map(list => list.Map(metadata => ProjectToOtherVideo(metadata, library.MediaSourceId, library)));
         }
 
@@ -211,9 +212,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(
-                        m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
+                .Map(r => r.Filter(m =>
+                    m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
             return maybeResponse.Match(
                 response =>
                 {
@@ -245,9 +245,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(
-                        m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
+                .Map(r => r.Filter(m =>
+                    m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
             return maybeResponse.Match(
                 response =>
                 {
@@ -278,9 +277,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(
-                        m => m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
+                .Map(r => r.Filter(m =>
+                    m.Metadata.Media.Count > 0 && m.Metadata.Media.Any(media => media.Part.Count > 0)));
             return maybeResponse.Match(
                 response =>
                 {
@@ -494,9 +492,9 @@ public class PlexServerApiClient : IPlexServerApiClient
         try
         {
             // skip collections in libraries that are not synchronized
-            if (plexMediaSource.Libraries.OfType<PlexLibrary>().Any(
-                    l => l.Key == item.LibrarySectionId.ToString(CultureInfo.InvariantCulture) &&
-                         l.ShouldSyncItems == false))
+            if (plexMediaSource.Libraries.OfType<PlexLibrary>().Any(l =>
+                    l.Key == item.LibrarySectionId.ToString(CultureInfo.InvariantCulture) &&
+                    l.ShouldSyncItems == false))
             {
                 return Option<PlexCollection>.None;
             }
@@ -709,112 +707,110 @@ public class PlexServerApiClient : IPlexServerApiClient
         List<PlexStreamResponse> streams = media.Part.Head().Stream;
         DateTime dateUpdated = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
         Option<PlexStreamResponse> maybeVideoStream = streams.Find(s => s.StreamType == 1);
-        return maybeVideoStream.Map(
-            videoStream =>
+        return maybeVideoStream.Map(videoStream =>
+        {
+            var version = new MediaVersion
             {
-                var version = new MediaVersion
+                Duration = TimeSpan.FromMilliseconds(media.Duration),
+                SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.PixelAspectRatio)
+                    ? "1:1"
+                    : videoStream.PixelAspectRatio,
+                VideoScanKind = videoStream.ScanType switch
                 {
-                    Duration = TimeSpan.FromMilliseconds(media.Duration),
-                    SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.PixelAspectRatio)
-                        ? "1:1"
-                        : videoStream.PixelAspectRatio,
-                    VideoScanKind = videoStream.ScanType switch
-                    {
-                        "interlaced" => VideoScanKind.Interlaced,
-                        "progressive" => VideoScanKind.Progressive,
-                        _ => VideoScanKind.Unknown
-                    },
-                    Streams = new List<MediaStream>(),
-                    DateUpdated = dateUpdated,
-                    Width = videoStream.Width,
-                    Height = videoStream.Height,
-                    RFrameRate = videoStream.FrameRate,
-                    DisplayAspectRatio = media.AspectRatio == 0
-                        ? string.Empty
-                        : media.AspectRatio.ToString("0.00###", CultureInfo.InvariantCulture),
-                    Chapters = Optional(response.Chapters).Flatten().Map(ProjectToModel).ToList()
+                    "interlaced" => VideoScanKind.Interlaced,
+                    "progressive" => VideoScanKind.Progressive,
+                    _ => VideoScanKind.Unknown
+                },
+                Streams = new List<MediaStream>(),
+                DateUpdated = dateUpdated,
+                Width = videoStream.Width,
+                Height = videoStream.Height,
+                RFrameRate = videoStream.FrameRate,
+                DisplayAspectRatio = media.AspectRatio == 0
+                    ? string.Empty
+                    : media.AspectRatio.ToString("0.00###", CultureInfo.InvariantCulture),
+                Chapters = Optional(response.Chapters).Flatten().Map(ProjectToModel).ToList()
+            };
+
+            version.Streams.Add(
+                new MediaStream
+                {
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = MediaStreamKind.Video,
+                    Index = videoStream.Index!.Value,
+                    Codec = videoStream.Codec,
+                    Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
+                    Default = videoStream.Default,
+                    Language = videoStream.LanguageCode,
+                    Forced = videoStream.Forced,
+                    BitsPerRawSample = videoStream.BitDepth,
+                    ColorRange = (videoStream.ColorRange ?? string.Empty).ToLowerInvariant(),
+                    ColorSpace = (videoStream.ColorSpace ?? string.Empty).ToLowerInvariant(),
+                    ColorTransfer = (videoStream.ColorTrc ?? string.Empty).ToLowerInvariant(),
+                    ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
+                });
+
+            foreach (PlexStreamResponse audioStream in streams.Filter(s => s.StreamType == 2 && s.Index.HasValue))
+            {
+                var stream = new MediaStream
+                {
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = MediaStreamKind.Audio,
+                    Index = audioStream.Index.Value,
+                    Codec = audioStream.Codec,
+                    Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
+                    Channels = audioStream.Channels,
+                    Default = audioStream.Default,
+                    Forced = audioStream.Forced,
+                    Language = audioStream.LanguageCode,
+                    Title = audioStream.Title ?? string.Empty
                 };
 
-                version.Streams.Add(
-                    new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Video,
-                        Index = videoStream.Index!.Value,
-                        Codec = videoStream.Codec,
-                        Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
-                        Default = videoStream.Default,
-                        Language = videoStream.LanguageCode,
-                        Forced = videoStream.Forced,
-                        BitsPerRawSample = videoStream.BitDepth,
-                        ColorRange = (videoStream.ColorRange ?? string.Empty).ToLowerInvariant(),
-                        ColorSpace = (videoStream.ColorSpace ?? string.Empty).ToLowerInvariant(),
-                        ColorTransfer = (videoStream.ColorTrc ?? string.Empty).ToLowerInvariant(),
-                        ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
-                    });
+                version.Streams.Add(stream);
+            }
 
-                foreach (PlexStreamResponse audioStream in streams.Filter(s => s.StreamType == 2 && s.Index.HasValue))
+            // filter to embedded subtitles, but ignore "embedded in video" closed-caption streams
+            foreach (PlexStreamResponse subtitleStream in
+                     streams.Filter(s => s.StreamType == 3 && s.Index.HasValue && !s.EmbeddedInVideo))
+            {
+                var stream = new MediaStream
                 {
-                    var stream = new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Audio,
-                        Index = audioStream.Index.Value,
-                        Codec = audioStream.Codec,
-                        Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
-                        Channels = audioStream.Channels,
-                        Default = audioStream.Default,
-                        Forced = audioStream.Forced,
-                        Language = audioStream.LanguageCode,
-                        Title = audioStream.Title ?? string.Empty
-                    };
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = MediaStreamKind.Subtitle,
+                    Index = subtitleStream.Index.Value,
+                    Codec = subtitleStream.Codec,
+                    Default = subtitleStream.Default,
+                    Forced = subtitleStream.Forced,
+                    Language = subtitleStream.LanguageCode
+                };
 
-                    version.Streams.Add(stream);
-                }
+                version.Streams.Add(stream);
+            }
 
-                // filter to embedded subtitles, but ignore "embedded in video" closed-caption streams
-                foreach (PlexStreamResponse subtitleStream in
-                         streams.Filter(s => s.StreamType == 3 && s.Index.HasValue && !s.EmbeddedInVideo))
+            // also include external subtitles
+            foreach (PlexStreamResponse subtitleStream in
+                     streams.Filter(s => s.StreamType == 3 && !s.Index.HasValue && !string.IsNullOrWhiteSpace(s.Key)))
+            {
+                var stream = new MediaStream
                 {
-                    var stream = new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Subtitle,
-                        Index = subtitleStream.Index.Value,
-                        Codec = subtitleStream.Codec,
-                        Default = subtitleStream.Default,
-                        Forced = subtitleStream.Forced,
-                        Language = subtitleStream.LanguageCode
-                    };
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = MediaStreamKind.ExternalSubtitle,
 
-                    version.Streams.Add(stream);
-                }
+                    // hacky? maybe...
+                    FileName = subtitleStream.Key,
+                    Index = subtitleStream.Id,
 
-                // also include external subtitles
-                foreach (PlexStreamResponse subtitleStream in
-                         streams.Filter(
-                             s => s.StreamType == 3 && !s.Index.HasValue && !string.IsNullOrWhiteSpace(s.Key)))
-                {
-                    var stream = new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.ExternalSubtitle,
+                    Codec = subtitleStream.Codec,
+                    Default = subtitleStream.Default,
+                    Forced = subtitleStream.Forced,
+                    Language = subtitleStream.LanguageCode
+                };
 
-                        // hacky? maybe...
-                        FileName = subtitleStream.Key,
-                        Index = subtitleStream.Id,
+                version.Streams.Add(stream);
+            }
 
-                        Codec = subtitleStream.Codec,
-                        Default = subtitleStream.Default,
-                        Forced = subtitleStream.Forced,
-                        Language = subtitleStream.LanguageCode
-                    };
-
-                    version.Streams.Add(stream);
-                }
-
-                return version;
-            });
+            return version;
+        });
     }
 
     private PlexShow ProjectToShow(PlexMetadataResponse response, int mediaSourceId)
@@ -1186,7 +1182,11 @@ public class PlexServerApiClient : IPlexServerApiClient
         return otherVideo;
     }
 
-    private OtherVideoMetadata ProjectToOtherVideoMetadata(MediaVersion version, PlexMetadataResponse response, int mediaSourceId, PlexLibrary library)
+    private OtherVideoMetadata ProjectToOtherVideoMetadata(
+        MediaVersion version,
+        PlexMetadataResponse response,
+        int mediaSourceId,
+        PlexLibrary library)
     {
         DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
         DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;

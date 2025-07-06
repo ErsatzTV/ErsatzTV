@@ -271,9 +271,9 @@ public class JellyfinMovieRepository : IJellyfinMovieRepository
 
         // actors
         foreach (Actor actor in metadata.Actors
-                     .Filter(
-                         a => incomingMetadata.Actors.All(
-                             a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                     .Filter(a =>
+                         incomingMetadata.Actors.All(a2 =>
+                             a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
                      .ToList())
         {
             metadata.Actors.Remove(actor);

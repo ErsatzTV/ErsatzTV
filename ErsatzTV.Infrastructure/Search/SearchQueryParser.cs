@@ -73,7 +73,8 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
 
                 if (parsedQuery == replaceResult.Query)
                 {
-                    Log.Logger.Warning("Failed to replace smart_collection in query; is the syntax correct? Quotes are required. Giving up...");
+                    Log.Logger.Warning(
+                        "Failed to replace smart_collection in query; is the syntax correct? Quotes are required. Giving up...");
                     break;
                 }
 
@@ -110,7 +111,9 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
                 string smartCollectionName = match.Groups[1].Value;
                 if (await smartCollectionCache.HasCycle(smartCollectionName))
                 {
-                    Log.Logger.Error("Smart collection {Name} contains a cycle; will not evaluate", smartCollectionName);
+                    Log.Logger.Error(
+                        "Smart collection {Name} contains a cycle; will not evaluate",
+                        smartCollectionName);
                     return new ReplaceResult(query, true);
                 }
 
@@ -145,9 +148,10 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
         return query;
     }
 
-    [GeneratedRegex("""
-                    smart_collection:"([^"]+)"
-                    """)]
+    [GeneratedRegex(
+        """
+        smart_collection:"([^"]+)"
+        """)]
     internal static partial Regex SmartCollectionRegex();
 
     private record ReplaceResult(string Query, bool Fatal);
