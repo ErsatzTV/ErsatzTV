@@ -98,10 +98,9 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             // only check the requested playout if subtitles are enabled
             Option<Playout> requestedPlayout = await dbContext.Playouts
                 .AsNoTracking()
-                .Filter(
-                    p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
-                         p.ProgramSchedule.Items.Any(
-                             psi => psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
+                .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
+                             p.ProgramSchedule.Items.Any(psi =>
+                                 psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
                 .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1));
 
             playoutIdsToCheck.AddRange(requestedPlayout.Map(p => p.Id));
@@ -111,10 +110,9 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             {
                 playoutIdsToCheck = dbContext.Playouts
                     .AsNoTracking()
-                    .Filter(
-                        p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
-                             p.ProgramSchedule.Items.Any(
-                                 psi => psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
+                    .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None ||
+                                 p.ProgramSchedule.Items.Any(psi =>
+                                     psi.SubtitleMode != null && psi.SubtitleMode != ChannelSubtitleMode.None))
                     .Map(p => p.Id)
                     .ToList();
             }
@@ -216,11 +214,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             List<int> episodeIds = await dbContext.EpisodeMetadata
                 .AsNoTracking()
                 .Filter(em => mediaItemIds.Contains(em.EpisodeId))
-                .Filter(
-                    em => em.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded &&
-                             s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
-                             s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
+                .Filter(em => em.Subtitles.Any(s => s.SubtitleKind == SubtitleKind.Embedded &&
+                                                    s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" &&
+                                                    s.Codec != "dvdsub" &&
+                                                    s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
                 .Map(em => em.EpisodeId)
                 .ToListAsync(cancellationToken);
             result.AddRange(episodeIds);
@@ -228,11 +225,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             List<int> movieIds = await dbContext.MovieMetadata
                 .AsNoTracking()
                 .Filter(mm => mediaItemIds.Contains(mm.MovieId))
-                .Filter(
-                    mm => mm.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded &&
-                             s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
-                             s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
+                .Filter(mm => mm.Subtitles.Any(s => s.SubtitleKind == SubtitleKind.Embedded &&
+                                                    s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" &&
+                                                    s.Codec != "dvdsub" &&
+                                                    s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
                 .Map(mm => mm.MovieId)
                 .ToListAsync(cancellationToken);
             result.AddRange(movieIds);
@@ -240,11 +236,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             List<int> musicVideoIds = await dbContext.MusicVideoMetadata
                 .AsNoTracking()
                 .Filter(mm => mediaItemIds.Contains(mm.MusicVideoId))
-                .Filter(
-                    mm => mm.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded &&
-                             s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
-                             s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
+                .Filter(mm => mm.Subtitles.Any(s => s.SubtitleKind == SubtitleKind.Embedded &&
+                                                    s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" &&
+                                                    s.Codec != "dvdsub" &&
+                                                    s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
                 .Map(mm => mm.MusicVideoId)
                 .ToListAsync(cancellationToken);
             result.AddRange(musicVideoIds);
@@ -252,11 +247,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             List<int> otherVideoIds = await dbContext.OtherVideoMetadata
                 .AsNoTracking()
                 .Filter(ovm => mediaItemIds.Contains(ovm.OtherVideoId))
-                .Filter(
-                    ovm => ovm.Subtitles.Any(
-                        s => s.SubtitleKind == SubtitleKind.Embedded &&
-                             s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
-                             s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
+                .Filter(ovm => ovm.Subtitles.Any(s => s.SubtitleKind == SubtitleKind.Embedded &&
+                                                      s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" &&
+                                                      s.Codec != "dvdsub" &&
+                                                      s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs"))
                 .Map(ovm => ovm.OtherVideoId)
                 .ToListAsync(cancellationToken);
             result.AddRange(otherVideoIds);
@@ -284,12 +278,10 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 // find each subtitle that needs extraction
                 IEnumerable<Subtitle> subtitles = allSubtitles
                     .Filter(s => s.SubtitleKind == SubtitleKind.Embedded)
-                    .Filter(
-                        s => s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
-                             s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs")
-                    .Filter(
-                        s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path) ||
-                             FileDoesntExist(mediaItem.Id, s));
+                    .Filter(s => s.Codec != "hdmv_pgs_subtitle" && s.Codec != "dvd_subtitle" && s.Codec != "dvdsub" &&
+                                 s.Codec != "vobsub" && s.Codec != "pgssub" && s.Codec != "pgs")
+                    .Filter(s => s.IsExtracted == false || string.IsNullOrWhiteSpace(s.Path) ||
+                                 FileDoesntExist(mediaItem.Id, s));
 
                 // find cache paths for each subtitle
                 foreach (Subtitle subtitle in subtitles)

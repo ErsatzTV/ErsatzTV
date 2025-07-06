@@ -14,10 +14,9 @@ public class GetAllLocalLibrariesHandler : IRequestHandler<GetAllLocalLibraries,
         GetAllLocalLibraries request,
         CancellationToken cancellationToken) =>
         _libraryRepository.GetAll()
-            .Map(
-                list => list
-                    .OfType<LocalLibrary>()
-                    .OrderBy(l => l.MediaKind)
-                    .Map(ProjectToViewModel)
-                    .ToList());
+            .Map(list => list
+                .OfType<LocalLibrary>()
+                .OrderBy(l => l.MediaKind)
+                .Map(ProjectToViewModel)
+                .ToList());
 }

@@ -9,9 +9,9 @@ namespace ErsatzTV.Core.Scheduling.YamlScheduling;
 
 public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepository, ILogger logger)
 {
+    private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
     private readonly Dictionary<string, List<MediaItem>> _mediaItems = new();
     private readonly Dictionary<PlaylistKey, List<MediaItem>> _playlistMediaItems = new();
-    private readonly Dictionary<string, IMediaCollectionEnumerator> _enumerators = new();
 
     public System.Collections.Generic.HashSet<string> MissingContentKeys { get; } = [];
 
@@ -97,7 +97,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         if (content is YamlPlayoutContentMarathonItem marathon)
         {
             var helper = new YamlPlayoutMarathonHelper(mediaCollectionRepository);
-            Option<YamlMarathonContentResult> maybeResult = await helper.GetEnumerator(marathon, state, cancellationToken);
+            Option<YamlMarathonContentResult> maybeResult = await helper.GetEnumerator(
+                marathon,
+                state,
+                cancellationToken);
             foreach (YamlMarathonContentResult result in maybeResult)
             {
                 foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in result.Content)
@@ -112,7 +115,10 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
         // playlist is a special case that needs to be handled on its own
         if (content is YamlPlayoutContentPlaylistItem playlist)
         {
-            if (!string.IsNullOrWhiteSpace(playlist.Order) && !string.Equals(playlist.Order, "none", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(playlist.Order) && !string.Equals(
+                    playlist.Order,
+                    "none",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 logger.LogWarning(
                     "Ignoring playback order {Order} for playlist {Playlist}",
@@ -134,7 +140,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
                 mediaCollectionRepository,
                 itemMap,
                 state,
-                shufflePlaylistItems: false,
+                false,
                 cancellationToken);
         }
 
@@ -145,7 +151,7 @@ public class EnumeratorCache(IMediaCollectionRepository mediaCollectionRepositor
             case PlaybackOrder.Shuffle:
                 bool keepMultiPartEpisodesTogether = content.MultiPart;
                 List<GroupedMediaItem> groupedMediaItems = keepMultiPartEpisodesTogether
-                    ? MultiPartEpisodeGrouper.GroupMediaItems(items, treatCollectionsAsShows: false)
+                    ? MultiPartEpisodeGrouper.GroupMediaItems(items, false)
                     : items.Map(mi => new GroupedMediaItem(mi, null)).ToList();
                 return new BlockPlayoutShuffledMediaCollectionEnumerator(groupedMediaItems, state);
         }

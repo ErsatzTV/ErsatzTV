@@ -42,12 +42,11 @@ public class SynchronizePlexCollectionsHandler : IRequestHandler<SynchronizePlex
             .BindT(MediaSourceMustHaveToken);
 
         return (await mediaSource, await ValidateLibraryRefreshInterval())
-            .Apply(
-                (connectionParameters, libraryRefreshInterval) => new RequestParameters(
-                    connectionParameters,
-                    connectionParameters.PlexMediaSource,
-                    request.ForceScan,
-                    libraryRefreshInterval));
+            .Apply((connectionParameters, libraryRefreshInterval) => new RequestParameters(
+                connectionParameters,
+                connectionParameters.PlexMediaSource,
+                request.ForceScan,
+                libraryRefreshInterval));
     }
 
     private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>

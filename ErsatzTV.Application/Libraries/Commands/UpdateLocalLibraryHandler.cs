@@ -102,9 +102,8 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
         UpdateLocalLibrary request) =>
         LocalLibraryMustExist(dbContext, request)
             .BindT(parameters => NameMustBeValid(request, parameters.Incoming).MapT(_ => parameters))
-            .BindT(
-                parameters => PathsMustBeValid(dbContext, parameters.Incoming, parameters.Existing.Id)
-                    .MapT(_ => parameters));
+            .BindT(parameters => PathsMustBeValid(dbContext, parameters.Incoming, parameters.Existing.Id)
+                .MapT(_ => parameters));
 
     private static Task<Validation<BaseError, Parameters>> LocalLibraryMustExist(
         TvContext dbContext,
@@ -112,19 +111,18 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
         dbContext.LocalLibraries
             .Include(ll => ll.Paths)
             .SelectOneAsync(ll => ll.Id, ll => ll.Id == request.Id)
-            .MapT(
-                existing =>
+            .MapT(existing =>
+            {
+                var incoming = new LocalLibrary
                 {
-                    var incoming = new LocalLibrary
-                    {
-                        Name = request.Name,
-                        Paths = request.Paths.Map(p => new LibraryPath { Id = p.Id, Path = p.Path }).ToList(),
-                        MediaKind = existing.MediaKind,
-                        MediaSourceId = existing.Id
-                    };
+                    Name = request.Name,
+                    Paths = request.Paths.Map(p => new LibraryPath { Id = p.Id, Path = p.Path }).ToList(),
+                    MediaKind = existing.MediaKind,
+                    MediaSourceId = existing.Id
+                };
 
-                    return new Parameters(existing, incoming);
-                })
+                return new Parameters(existing, incoming);
+            })
             .Map(o => o.ToValidation<BaseError>("LocalLibrary does not exist."));
 
     private static string NormalizePath(string path) =>

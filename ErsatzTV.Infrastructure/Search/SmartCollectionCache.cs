@@ -10,8 +10,10 @@ public sealed class SmartCollectionCache(IDbContextFactory<TvContext> dbContextF
     : ISmartCollectionCache, IDisposable
 {
     private readonly Dictionary<string, SmartCollectionData> _data = new(StringComparer.OrdinalIgnoreCase);
-    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
     private readonly AdjGraph _graph = new();
+    private readonly SemaphoreSlim _semaphoreSlim = new(1, 1);
+
+    public void Dispose() => _semaphoreSlim.Dispose();
 
     public async Task Refresh()
     {
@@ -77,11 +79,6 @@ public sealed class SmartCollectionCache(IDbContextFactory<TvContext> dbContextF
         {
             _semaphoreSlim.Release();
         }
-    }
-
-    public void Dispose()
-    {
-        _semaphoreSlim.Dispose();
     }
 
     private record SmartCollectionData(string Query)

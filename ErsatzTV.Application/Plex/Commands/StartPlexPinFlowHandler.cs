@@ -20,13 +20,12 @@ public class StartPlexPinFlowHandler : IRequestHandler<StartPlexPinFlow, Either<
     public Task<Either<BaseError, string>> Handle(
         StartPlexPinFlow request,
         CancellationToken cancellationToken) =>
-        _plexTvApiClient.StartPinFlow().Bind(
-            result => result.Match(
-                Left: error => Task.FromResult(Left<BaseError, string>(error)),
-                Right: async pin =>
-                {
-                    await _channel.WriteAsync(new TryCompletePlexPinFlow(pin), cancellationToken);
-                    return Right<BaseError, string>(pin.Url);
-                })
+        _plexTvApiClient.StartPinFlow().Bind(result => result.Match(
+            Left: error => Task.FromResult(Left<BaseError, string>(error)),
+            Right: async pin =>
+            {
+                await _channel.WriteAsync(new TryCompletePlexPinFlow(pin), cancellationToken);
+                return Right<BaseError, string>(pin.Url);
+            })
         );
 }

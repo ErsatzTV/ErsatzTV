@@ -12,6 +12,11 @@ public interface IMediaServerOtherVideoRepository<in TLibrary, TOtherVideo, TEta
     Task<Option<int>> FlagUnavailable(TLibrary library, TOtherVideo otherVideo);
     Task<Option<int>> FlagRemoteOnly(TLibrary library, TOtherVideo otherVideo);
     Task<List<int>> FlagFileNotFound(TLibrary library, List<string> movieItemIds);
-    Task<Either<BaseError, MediaItemScanResult<TOtherVideo>>> GetOrAdd(TLibrary library, TOtherVideo item, bool deepScan);
+
+    Task<Either<BaseError, MediaItemScanResult<TOtherVideo>>> GetOrAdd(
+        TLibrary library,
+        TOtherVideo item,
+        bool deepScan);
+
     Task<Unit> SetEtag(TOtherVideo otherVideo, string etag);
 }

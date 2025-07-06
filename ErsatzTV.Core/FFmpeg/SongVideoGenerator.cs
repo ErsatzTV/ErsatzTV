@@ -165,7 +165,7 @@ public class SongVideoGenerator : ISongVideoGenerator
                     {
                         Id = 0,
                         ArtworkKind = ArtworkKind.Thumbnail,
-                        Path = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "song_album_cover_512.png"),
+                        Path = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "song_album_cover_512.png")
                     });
 
             // signal that we want to use cover art as watermark
@@ -247,7 +247,7 @@ public class SongVideoGenerator : ISongVideoGenerator
             videoVersion = BackgroundImageMediaVersion.ForPath(
                 si,
                 channel.FFmpegProfile.Resolution,
-                isSongWithProgress: channel.SongVideoMode is ChannelSongVideoMode.WithProgress);
+                channel.SongVideoMode is ChannelSongVideoMode.WithProgress);
         }
 
         return Tuple(videoPath, videoVersion);

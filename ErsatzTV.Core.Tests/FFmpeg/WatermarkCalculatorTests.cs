@@ -1,6 +1,6 @@
 ﻿using ErsatzTV.Core.FFmpeg;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 

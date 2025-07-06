@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
@@ -23,19 +22,19 @@ internal static class Mapper
             show.ShowMetadata.HeadOrNone().Map(m => GetPoster(m, maybeJellyfin, maybeEmby)).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => GetFanArt(m, maybeJellyfin, maybeEmby)).IfNone(string.Empty),
             show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone([]),
-            show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(g => g.Name).ToList()).IfNone([]),
+            show.ShowMetadata.HeadOrNone().Map(m =>
+                m.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(g => g.Name).ToList()).IfNone([]),
             show.ShowMetadata.HeadOrNone().Map(m => m.Studios.Map(s => s.Name).ToList()).IfNone([]),
-            show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(g => g.Name).ToList()).IfNone([]),
+            show.ShowMetadata.HeadOrNone().Map(m =>
+                m.Tags.Where(t => t.ExternalTypeId == Tag.PlexNetworkTypeId).Map(g => g.Name).ToList()).IfNone([]),
             show.ShowMetadata.HeadOrNone()
-                .Map(
-                    m => (m.ContentRating ?? string.Empty).Split("/").Map(s => s.Trim())
-                        .Where(x => !string.IsNullOrWhiteSpace(x)).ToList()).IfNone([]),
+                .Map(m => (m.ContentRating ?? string.Empty).Split("/").Map(s => s.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x)).ToList()).IfNone([]),
             LanguagesForShow(languages),
             show.ShowMetadata.HeadOrNone()
-                .Map(
-                    m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
-                        .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
-                        .ToList())
+                .Map(m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
+                    .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
+                    .ToList())
                 .IfNone([]));
 
     internal static TelevisionSeasonViewModel ProjectToViewModel(
@@ -104,9 +103,10 @@ internal static class Mapper
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
 
         return languages
-            .Map(
-                lang => allCultures.Filter(
-                    ci => string.Equals(ci.ThreeLetterISOLanguageName, lang, StringComparison.OrdinalIgnoreCase)))
+            .Map(lang => allCultures.Filter(ci => string.Equals(
+                ci.ThreeLetterISOLanguageName,
+                lang,
+                StringComparison.OrdinalIgnoreCase)))
             .Flatten()
             .Distinct()
             .ToList();

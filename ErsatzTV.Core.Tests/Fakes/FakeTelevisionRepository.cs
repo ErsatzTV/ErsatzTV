@@ -66,7 +66,7 @@ public class FakeTelevisionRepository : ITelevisionRepository
     public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
     public Task<bool> AddGenre(EpisodeMetadata metadata, Genre genre) => throw new NotSupportedException();
 
-    public Task<bool> AddTag(ErsatzTV.Core.Domain.Metadata metadata, Tag tag) => throw new NotSupportedException();
+    public Task<bool> AddTag(Core.Domain.Metadata metadata, Tag tag) => throw new NotSupportedException();
 
     public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) => throw new NotSupportedException();
     public Task<bool> AddActor(ShowMetadata metadata, Actor actor) => throw new NotSupportedException();

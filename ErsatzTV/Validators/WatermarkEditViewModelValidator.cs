@@ -19,9 +19,8 @@ public class WatermarkEditViewModelValidator : AbstractValidator<WatermarkEditVi
         RuleFor(x => x.Width)
             .GreaterThan(0)
             .LessThanOrEqualTo(100)
-            .When(
-                vm => vm.Mode != ChannelWatermarkMode.None &&
-                      vm.Size == WatermarkSize.Scaled);
+            .When(vm => vm.Mode != ChannelWatermarkMode.None &&
+                        vm.Size == WatermarkSize.Scaled);
 
         RuleFor(x => x.HorizontalMargin)
             .GreaterThanOrEqualTo(0)

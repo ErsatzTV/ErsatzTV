@@ -24,8 +24,8 @@ public class BlockPlayoutShuffledMediaCollectionEnumerator : IMediaCollectionEnu
 
         _shuffled = Shuffle(_mediaItems);
         _lazyMinimumDuration =
-            new Lazy<Option<TimeSpan>>(
-                () => _shuffled.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
+            new Lazy<Option<TimeSpan>>(() =>
+                _shuffled.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
     }
 
     public void ResetState(CollectionEnumeratorState state)

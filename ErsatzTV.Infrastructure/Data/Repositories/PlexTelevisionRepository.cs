@@ -416,6 +416,78 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         return ids;
     }
 
+    public async Task<List<int>> RemoveAllTags(
+        PlexLibrary library,
+        PlexTag tag,
+        System.Collections.Generic.HashSet<int> keep)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var tagType = tag.TagType.ToString(CultureInfo.InvariantCulture);
+
+        List<int> result = await dbContext.ShowMetadata
+            .Where(sm => !keep.Contains(sm.ShowId))
+            .Where(sm => sm.Show.LibraryPath.LibraryId == library.Id)
+            .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
+            .Select(sm => sm.ShowId)
+            .ToListAsync();
+
+        if (result.Count > 0)
+        {
+            List<int> tagIds = await dbContext.ShowMetadata
+                .Where(sm => result.Contains(sm.ShowId))
+                .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
+                .SelectMany(sm => sm.Tags.Select(t => t.Id))
+                .ToListAsync();
+
+            // delete all tags
+            await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id IN @TagIds", new { TagIds = tagIds });
+        }
+
+        // show ids to refresh
+        return result;
+    }
+
+    public async Task<PlexShowAddTagResult> AddTag(PlexShow show, PlexTag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        int existingShowId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PS.Id FROM Tag
+            INNER JOIN ShowMetadata SM on SM.Id = Tag.ShowMetadataId
+            INNER JOIN PlexShow PS on PS.Id = SM.ShowId
+            WHERE PS.Key = @Key AND Tag.Name = @Tag AND Tag.ExternalTypeId = @TagType",
+            new { show.Key, tag.Tag, tag.TagType });
+
+        // already exists
+        if (existingShowId > 0)
+        {
+            return new PlexShowAddTagResult(existingShowId, Option<int>.None);
+        }
+
+        int showId = await dbContext.PlexShows
+            .Where(s => s.Key == show.Key)
+            .Select(s => s.Id)
+            .FirstOrDefaultAsync();
+
+        await dbContext.Connection.ExecuteAsync(
+            @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
+              SELECT @Tag, @TagType, Id FROM
+              (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
+            new { tag.Tag, tag.TagType, ShowId = showId });
+
+        // show id to refresh
+        return new PlexShowAddTagResult(Option<int>.None, showId);
+    }
+
+    public async Task UpdateLastNetworksScan(PlexLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexLibrary SET LastNetworksScan = @LastNetworksScan WHERE Id = @Id",
+            new { library.LastNetworksScan, library.Id });
+    }
+
     private static async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> AddShow(
         TvContext dbContext,
         PlexLibrary library,
@@ -570,77 +642,5 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
         {
             return BaseError.New("Failed to update episode path");
         }
-    }
-
-    public async Task<List<int>> RemoveAllTags(
-        PlexLibrary library,
-        PlexTag tag,
-        System.Collections.Generic.HashSet<int> keep)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        var tagType = tag.TagType.ToString(CultureInfo.InvariantCulture);
-
-        List<int> result = await dbContext.ShowMetadata
-            .Where(sm => !keep.Contains(sm.ShowId))
-            .Where(sm => sm.Show.LibraryPath.LibraryId == library.Id)
-            .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
-            .Select(sm => sm.ShowId)
-            .ToListAsync();
-
-        if (result.Count > 0)
-        {
-            List<int> tagIds = await dbContext.ShowMetadata
-                .Where(sm => result.Contains(sm.ShowId))
-                .Where(sm => sm.Tags.Any(t => t.Name == tag.Tag && t.ExternalTypeId == tagType))
-                .SelectMany(sm => sm.Tags.Select(t => t.Id))
-                .ToListAsync();
-
-            // delete all tags
-            await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id IN @TagIds", new { TagIds = tagIds });
-        }
-
-        // show ids to refresh
-        return result;
-    }
-
-    public async Task<PlexShowAddTagResult> AddTag(PlexShow show, PlexTag tag)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        int existingShowId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT PS.Id FROM Tag
-            INNER JOIN ShowMetadata SM on SM.Id = Tag.ShowMetadataId
-            INNER JOIN PlexShow PS on PS.Id = SM.ShowId
-            WHERE PS.Key = @Key AND Tag.Name = @Tag AND Tag.ExternalTypeId = @TagType",
-            new { show.Key, tag.Tag, tag.TagType });
-
-        // already exists
-        if (existingShowId > 0)
-        {
-            return new PlexShowAddTagResult(existingShowId, Option<int>.None);
-        }
-
-        int showId = await dbContext.PlexShows
-            .Where(s => s.Key == show.Key)
-            .Select(s => s.Id)
-            .FirstOrDefaultAsync();
-
-        await dbContext.Connection.ExecuteAsync(
-            @"INSERT INTO Tag (Name, ExternalTypeId, ShowMetadataId)
-              SELECT @Tag, @TagType, Id FROM
-              (SELECT Id FROM ShowMetadata WHERE ShowId = @ShowId) AS A",
-            new { tag.Tag, tag.TagType, ShowId = showId });
-
-        // show id to refresh
-        return new PlexShowAddTagResult(Option<int>.None, showId);
-    }
-
-    public async Task UpdateLastNetworksScan(PlexLibrary library)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexLibrary SET LastNetworksScan = @LastNetworksScan WHERE Id = @Id",
-            new { library.LastNetworksScan, library.Id });
     }
 }

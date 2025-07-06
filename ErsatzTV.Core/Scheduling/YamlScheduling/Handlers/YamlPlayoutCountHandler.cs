@@ -3,6 +3,7 @@ using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling.YamlScheduling.Models;
 using Microsoft.Extensions.Logging;
+using NCalc;
 
 namespace ErsatzTV.Core.Scheduling.YamlScheduling.Handlers;
 
@@ -33,7 +34,7 @@ public class YamlPlayoutCountHandler(EnumeratorCache enumeratorCache) : YamlPlay
             int enumeratorCount = enumerator is PlaylistEnumerator playlistEnumerator
                 ? playlistEnumerator.CountForRandom
                 : enumerator.Count;
-            var expression = new NCalc.Expression(count.Count);
+            var expression = new Expression(count.Count);
             expression.EvaluateParameter += (name, e) =>
             {
                 e.Result = name switch

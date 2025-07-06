@@ -84,7 +84,9 @@ public class IptvController : ControllerBase
         string mode = null)
     {
         Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
-        if (maybeChannel.IsNone || await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode.Inactive)
+        if (maybeChannel.IsNone ||
+            await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode
+                .Inactive)
         {
             return NotFound();
         }
@@ -119,37 +121,36 @@ public class IptvController : ControllerBase
         };
 
         return await _mediator.Send(request)
-            .Map(
-                result => result.Match<IActionResult>(
-                    processModel =>
+            .Map(result => result.Match<IActionResult>(
+                processModel =>
+                {
+                    Command command = processModel.Process;
+
+                    _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
+                    _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+                    var process = new FFmpegProcess
                     {
-                        Command command = processModel.Process;
-
-                        _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
-                        _logger.LogDebug("ffmpeg arguments {FFmpegArguments}", command.Arguments);
-                        var process = new FFmpegProcess
+                        StartInfo = new ProcessStartInfo
                         {
-                            StartInfo = new ProcessStartInfo
-                            {
-                                FileName = command.TargetFilePath,
-                                Arguments = command.Arguments,
-                                RedirectStandardOutput = true,
-                                RedirectStandardError = false,
-                                UseShellExecute = false,
-                                CreateNoWindow = true
-                            }
-                        };
-                        HttpContext.Response.RegisterForDispose(process);
-
-                        foreach ((string key, string value) in command.EnvironmentVariables)
-                        {
-                            process.StartInfo.Environment[key] = value;
+                            FileName = command.TargetFilePath,
+                            Arguments = command.Arguments,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = false,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
                         }
+                    };
+                    HttpContext.Response.RegisterForDispose(process);
 
-                        process.Start();
-                        return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
-                    },
-                    error => BadRequest(error.Value)));
+                    foreach ((string key, string value) in command.EnvironmentVariables)
+                    {
+                        process.StartInfo.Environment[key] = value;
+                    }
+
+                    process.Start();
+                    return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
+                },
+                error => BadRequest(error.Value)));
     }
 
     [HttpHead("iptv/session/{channelNumber}/hls.m3u8")]
@@ -174,7 +175,9 @@ public class IptvController : ControllerBase
             return NotFound();
         }
 
-        _logger.LogWarning("Unable to locate session worker for channel {Channel}; will redirect to start session", channelNumber);
+        _logger.LogWarning(
+            "Unable to locate session worker for channel {Channel}; will redirect to start session",
+            channelNumber);
         return RedirectToAction(nameof(GetHttpLiveStreamingVideo), new { channelNumber });
     }
 
@@ -186,7 +189,9 @@ public class IptvController : ControllerBase
         string mode = "mixed")
     {
         Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
-        if (maybeChannel.IsNone || await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode.Inactive)
+        if (maybeChannel.IsNone ||
+            await maybeChannel.Map(c => c.ActiveMode).IfNoneAsync(ChannelActiveMode.Inactive) is ChannelActiveMode
+                .Inactive)
         {
             return NotFound();
         }
@@ -260,10 +265,9 @@ public class IptvController : ControllerBase
                             Request.Host.ToString(),
                             channelNumber,
                             mode))
-                    .Map(
-                        r => r.Match<IActionResult>(
-                            playlist => Content(playlist, "application/vnd.apple.mpegurl"),
-                            error => BadRequest(error.Value)));
+                    .Map(r => r.Match<IActionResult>(
+                        playlist => Content(playlist, "application/vnd.apple.mpegurl"),
+                        error => BadRequest(error.Value)));
         }
     }
 
@@ -312,9 +316,10 @@ public class IptvController : ControllerBase
                 "Failed to return ffmpeg multi-variant playlist; falling back to generated playlist");
         }
 
-        Option<ResolutionAndBitrateViewModel> maybeResolutionAndBitrate = await _mediator.Send(new GetChannelResolutionAndBitrate(channelNumber));
+        Option<ResolutionAndBitrateViewModel> maybeResolutionAndBitrate =
+            await _mediator.Send(new GetChannelResolutionAndBitrate(channelNumber));
         string resolution = string.Empty;
-        string bitrate = "10000000";
+        var bitrate = "10000000";
         foreach (ResolutionAndBitrateViewModel res in maybeResolutionAndBitrate)
         {
             resolution = $",RESOLUTION={res.Width}x{res.Height}";

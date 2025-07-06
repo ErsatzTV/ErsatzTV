@@ -2,8 +2,8 @@ namespace ErsatzTV.Core;
 
 public class SystemStartup : IDisposable
 {
-    private readonly SemaphoreSlim _databaseStartup = new(0, 100);
     private readonly SemaphoreSlim _databaseCleaned = new(0, 100);
+    private readonly SemaphoreSlim _databaseStartup = new(0, 100);
     private readonly SemaphoreSlim _searchIndexStartup = new(0, 100);
 
     private bool _disposedValue;

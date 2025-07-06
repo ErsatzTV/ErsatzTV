@@ -111,15 +111,14 @@ public class
         SynchronizeJellyfinLibraryById request) =>
         (await ValidateConnection(request), await JellyfinLibraryMustExist(request),
             await ValidateLibraryRefreshInterval())
-        .Apply(
-            (connectionParameters, jellyfinLibrary, libraryRefreshInterval) =>
-                new RequestParameters(
-                    connectionParameters,
-                    jellyfinLibrary,
-                    request.ForceScan,
-                    libraryRefreshInterval,
-                    request.DeepScan
-                ));
+        .Apply((connectionParameters, jellyfinLibrary, libraryRefreshInterval) =>
+            new RequestParameters(
+                connectionParameters,
+                jellyfinLibrary,
+                request.ForceScan,
+                libraryRefreshInterval,
+                request.DeepScan
+            ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
         SynchronizeJellyfinLibraryById request) =>
@@ -130,9 +129,8 @@ public class
     private Task<Validation<BaseError, JellyfinMediaSource>> JellyfinMediaSourceMustExist(
         SynchronizeJellyfinLibraryById request) =>
         _mediaSourceRepository.GetJellyfinByLibraryId(request.JellyfinLibraryId)
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    $"Jellyfin media source for library {request.JellyfinLibraryId} does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Jellyfin media source for library {request.JellyfinLibraryId} does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         JellyfinMediaSource jellyfinMediaSource)

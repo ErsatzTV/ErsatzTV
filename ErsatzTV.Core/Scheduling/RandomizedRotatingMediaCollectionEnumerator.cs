@@ -6,12 +6,12 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnumerator
 {
+    private readonly Dictionary<int, IList<int>> _groupMedia;
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly IList<MediaItem> _mediaItems;
     private readonly Random _random;
-    private readonly Dictionary<int, IList<int>> _groupMedia;
-    private int _index;
     private int _groupNumber;
+    private int _index;
 
     public RandomizedRotatingMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
     {
@@ -19,12 +19,12 @@ public class RandomizedRotatingMediaCollectionEnumerator : IMediaCollectionEnume
 
         _mediaItems = mediaItems;
         _lazyMinimumDuration =
-            new Lazy<Option<TimeSpan>>(
-                () => _mediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
+            new Lazy<Option<TimeSpan>>(() =>
+                _mediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
         _random = new Random(state.Seed);
 
         _groupMedia = new Dictionary<int, IList<int>>();
-        for (int i = 0; i < mediaItems.Count; i++)
+        for (var i = 0; i < mediaItems.Count; i++)
         {
             int id = mediaItems[i] switch
             {

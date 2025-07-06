@@ -48,9 +48,8 @@ public class GetJellyfinConnectionParametersHandler : IRequestHandler<GetJellyfi
 
     private Task<Validation<BaseError, JellyfinMediaSource>> JellyfinMediaSourceMustExist() =>
         _mediaSourceRepository.GetAllJellyfin().Map(list => list.HeadOrNone())
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    "Jellyfin media source does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                "Jellyfin media source does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         JellyfinMediaSource jellyfinMediaSource)

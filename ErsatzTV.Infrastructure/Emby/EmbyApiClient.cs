@@ -69,7 +69,10 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    public IAsyncEnumerable<Tuple<EmbyMovie, int>> GetMovieLibraryItems(string address, string apiKey, EmbyLibrary library)
+    public IAsyncEnumerable<Tuple<EmbyMovie, int>> GetMovieLibraryItems(
+        string address,
+        string apiKey,
+        EmbyLibrary library)
         => GetPagedLibraryContents(
             address,
             library,
@@ -81,7 +84,10 @@ public class EmbyApiClient : IEmbyApiClient
                 limit: pageSize),
             (maybeLibrary, item) => maybeLibrary.Map(lib => ProjectToMovie(lib, item)).Flatten());
 
-    public IAsyncEnumerable<Tuple<EmbyShow, int>> GetShowLibraryItems(string address, string apiKey, EmbyLibrary library)
+    public IAsyncEnumerable<Tuple<EmbyShow, int>> GetShowLibraryItems(
+        string address,
+        string apiKey,
+        EmbyLibrary library)
         => GetPagedLibraryContents(
             address,
             library,
@@ -277,12 +283,11 @@ public class EmbyApiClient : IEmbyApiClient
     private static List<EmbyPathInfo> GetPathInfos(EmbyLibraryResponse response) =>
         response.LibraryOptions.PathInfos
             .Filter(pi => !string.IsNullOrWhiteSpace(pi.NetworkPath))
-            .Map(
-                pi => new EmbyPathInfo
-                {
-                    Path = pi.Path,
-                    NetworkPath = pi.NetworkPath
-                }).ToList();
+            .Map(pi => new EmbyPathInfo
+            {
+                Path = pi.Path,
+                NetworkPath = pi.NetworkPath
+            }).ToList();
 
     private Option<EmbyLibrary> CacheCollectionLibraryId(string itemId)
     {
@@ -777,115 +782,113 @@ public class EmbyApiClient : IEmbyApiClient
         IList<EmbyMediaStreamResponse> streams = mediaSource.MediaStreams;
         Option<EmbyMediaStreamResponse> maybeVideoStream =
             streams.Find(s => s.Type == EmbyMediaStreamType.Video);
-        return maybeVideoStream.Map(
-            videoStream =>
+        return maybeVideoStream.Map(videoStream =>
+        {
+            int width = videoStream.Width ?? 1;
+            int height = videoStream.Height ?? 1;
+
+            var isAnamorphic = false;
+            if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(':'))
             {
-                int width = videoStream.Width ?? 1;
-                int height = videoStream.Height ?? 1;
+                // if width/height != aspect ratio, is anamorphic
+                double resolutionRatio = width / (double)height;
 
-                var isAnamorphic = false;
-                if (!string.IsNullOrWhiteSpace(videoStream.AspectRatio) && videoStream.AspectRatio.Contains(':'))
+                string[] split = videoStream.AspectRatio.Split(":");
+                var num = double.Parse(split[0], CultureInfo.InvariantCulture);
+                var den = double.Parse(split[1], CultureInfo.InvariantCulture);
+                double aspectRatio = num / den;
+
+                isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;
+            }
+            else if (videoStream.IsAnamorphic.HasValue)
+            {
+                isAnamorphic = videoStream.IsAnamorphic.Value;
+            }
+
+            var version = new MediaVersion
+            {
+                Duration = TimeSpan.FromTicks(mediaSource.RunTimeTicks),
+                SampleAspectRatio = isAnamorphic ? "0:0" : "1:1",
+                DisplayAspectRatio = string.IsNullOrWhiteSpace(videoStream.AspectRatio)
+                    ? string.Empty
+                    : videoStream.AspectRatio,
+                VideoScanKind = videoStream.IsInterlaced switch
                 {
-                    // if width/height != aspect ratio, is anamorphic
-                    double resolutionRatio = width / (double)height;
+                    true => VideoScanKind.Interlaced,
+                    false => VideoScanKind.Progressive
+                },
+                Streams = new List<MediaStream>(),
+                Width = videoStream.Width ?? 1,
+                Height = videoStream.Height ?? 1,
+                RFrameRate = videoStream.RealFrameRate.HasValue
+                    ? videoStream.RealFrameRate.Value.ToString("0.00###", CultureInfo.InvariantCulture)
+                    : string.Empty,
+                Chapters = new List<MediaChapter>()
+            };
 
-                    string[] split = videoStream.AspectRatio.Split(":");
-                    var num = double.Parse(split[0], CultureInfo.InvariantCulture);
-                    var den = double.Parse(split[1], CultureInfo.InvariantCulture);
-                    double aspectRatio = num / den;
-
-                    isAnamorphic = Math.Abs(resolutionRatio - aspectRatio) > 0.01d;
-                }
-                else if (videoStream.IsAnamorphic.HasValue)
+            version.Streams.Add(
+                new MediaStream
                 {
-                    isAnamorphic = videoStream.IsAnamorphic.Value;
-                }
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = MediaStreamKind.Video,
+                    Index = videoStream.Index,
+                    Codec = videoStream.Codec,
+                    Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
+                    Default = videoStream.IsDefault,
+                    Language = videoStream.Language,
+                    Forced = videoStream.IsForced,
+                    PixelFormat = videoStream.PixelFormat,
+                    ColorRange = (videoStream.ColorRange ?? string.Empty).ToLowerInvariant(),
+                    ColorSpace = (videoStream.ColorSpace ?? string.Empty).ToLowerInvariant(),
+                    ColorTransfer = (videoStream.ColorTransfer ?? string.Empty).ToLowerInvariant(),
+                    ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
+                });
 
-                var version = new MediaVersion
+            foreach (EmbyMediaStreamResponse audioStream in streams.Filter(s => s.Type == EmbyMediaStreamType.Audio))
+            {
+                var stream = new MediaStream
                 {
-                    Duration = TimeSpan.FromTicks(mediaSource.RunTimeTicks),
-                    SampleAspectRatio = isAnamorphic ? "0:0" : "1:1",
-                    DisplayAspectRatio = string.IsNullOrWhiteSpace(videoStream.AspectRatio)
-                        ? string.Empty
-                        : videoStream.AspectRatio,
-                    VideoScanKind = videoStream.IsInterlaced switch
-                    {
-                        true => VideoScanKind.Interlaced,
-                        false => VideoScanKind.Progressive
-                    },
-                    Streams = new List<MediaStream>(),
-                    Width = videoStream.Width ?? 1,
-                    Height = videoStream.Height ?? 1,
-                    RFrameRate = videoStream.RealFrameRate.HasValue
-                        ? videoStream.RealFrameRate.Value.ToString("0.00###", CultureInfo.InvariantCulture)
-                        : string.Empty,
-                    Chapters = new List<MediaChapter>()
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = MediaStreamKind.Audio,
+                    Index = audioStream.Index,
+                    Codec = audioStream.Codec,
+                    Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
+                    Channels = audioStream.Channels ?? 2,
+                    Default = audioStream.IsDefault,
+                    Forced = audioStream.IsForced,
+                    Language = audioStream.Language,
+                    Title = audioStream.DisplayTitle ?? string.Empty
                 };
 
-                version.Streams.Add(
-                    new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Video,
-                        Index = videoStream.Index,
-                        Codec = videoStream.Codec,
-                        Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
-                        Default = videoStream.IsDefault,
-                        Language = videoStream.Language,
-                        Forced = videoStream.IsForced,
-                        PixelFormat = videoStream.PixelFormat,
-                        ColorRange = (videoStream.ColorRange ?? string.Empty).ToLowerInvariant(),
-                        ColorSpace = (videoStream.ColorSpace ?? string.Empty).ToLowerInvariant(),
-                        ColorTransfer = (videoStream.ColorTransfer ?? string.Empty).ToLowerInvariant(),
-                        ColorPrimaries = (videoStream.ColorPrimaries ?? string.Empty).ToLowerInvariant()
-                    });
+                version.Streams.Add(stream);
+            }
 
-                foreach (EmbyMediaStreamResponse audioStream in streams.Filter(
-                             s => s.Type == EmbyMediaStreamType.Audio))
+            foreach (EmbyMediaStreamResponse subtitleStream in streams.Filter(s =>
+                         s.Type == EmbyMediaStreamType.Subtitle))
+            {
+                var stream = new MediaStream
                 {
-                    var stream = new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = MediaStreamKind.Audio,
-                        Index = audioStream.Index,
-                        Codec = audioStream.Codec,
-                        Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
-                        Channels = audioStream.Channels ?? 2,
-                        Default = audioStream.IsDefault,
-                        Forced = audioStream.IsForced,
-                        Language = audioStream.Language,
-                        Title = audioStream.DisplayTitle ?? string.Empty
-                    };
+                    MediaVersionId = version.Id,
+                    MediaStreamKind = subtitleStream.IsExternal == true
+                        ? MediaStreamKind.ExternalSubtitle
+                        : MediaStreamKind.Subtitle,
+                    Index = subtitleStream.Index,
+                    Codec = (subtitleStream.Codec ?? string.Empty).ToLowerInvariant(),
+                    Default = subtitleStream.IsDefault,
+                    Forced = subtitleStream.IsForced,
+                    Language = subtitleStream.Language
+                };
 
-                    version.Streams.Add(stream);
+                // hacky, oh well
+                if (subtitleStream.IsExternal == true)
+                {
+                    stream.FileName = mediaSource.Id;
                 }
 
-                foreach (EmbyMediaStreamResponse subtitleStream in streams.Filter(
-                             s => s.Type == EmbyMediaStreamType.Subtitle))
-                {
-                    var stream = new MediaStream
-                    {
-                        MediaVersionId = version.Id,
-                        MediaStreamKind = subtitleStream.IsExternal == true
-                            ? MediaStreamKind.ExternalSubtitle
-                            : MediaStreamKind.Subtitle,
-                        Index = subtitleStream.Index,
-                        Codec = (subtitleStream.Codec ?? string.Empty).ToLowerInvariant(),
-                        Default = subtitleStream.IsDefault,
-                        Forced = subtitleStream.IsForced,
-                        Language = subtitleStream.Language
-                    };
+                version.Streams.Add(stream);
+            }
 
-                    // hacky, oh well
-                    if (subtitleStream.IsExternal == true)
-                    {
-                        stream.FileName = mediaSource.Id;
-                    }
-
-                    version.Streams.Add(stream);
-                }
-
-                return version;
-            });
+            return version;
+        });
     }
 }

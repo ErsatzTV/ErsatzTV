@@ -7,8 +7,8 @@ public class ScaleCudaFilter : BaseFilter
     private readonly Option<FrameSize> _croppedSize;
     private readonly FrameState _currentState;
     private readonly bool _isAnamorphicEdgeCase;
-    private readonly bool _passthrough;
     private readonly FrameSize _paddedSize;
+    private readonly bool _passthrough;
     private readonly FrameSize _scaledSize;
 
     public ScaleCudaFilter(

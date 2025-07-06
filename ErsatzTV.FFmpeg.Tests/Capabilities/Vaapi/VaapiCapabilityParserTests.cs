@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.FFmpeg.Capabilities.Vaapi;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.FFmpeg.Tests.Capabilities.Vaapi;
 

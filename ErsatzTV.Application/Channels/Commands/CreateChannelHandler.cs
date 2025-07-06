@@ -40,68 +40,69 @@ public class CreateChannelHandler(
             await FFmpegProfileMustExist(dbContext, request),
             await WatermarkMustExist(dbContext, request),
             await FillerPresetMustExist(dbContext, request))
-        .Apply(
-            (
-                name,
-                number,
-                ffmpegProfileId,
-                watermarkId,
-                fillerPresetId) =>
+        .Apply((
+            name,
+            number,
+            ffmpegProfileId,
+            watermarkId,
+            fillerPresetId) =>
+        {
+            var artwork = new List<Artwork>();
+            if (!string.IsNullOrWhiteSpace(request.Logo?.Path))
             {
-                var artwork = new List<Artwork>();
-                if (!string.IsNullOrWhiteSpace(request.Logo?.Path))
+                string logo = request.Logo.Path;
+                if (logo.StartsWith("iptv/logos/", StringComparison.Ordinal))
                 {
-                    string logo = request.Logo.Path;
-                    if (logo.StartsWith("iptv/logos/", StringComparison.Ordinal))
+                    logo = logo.Replace("iptv/logos/", string.Empty);
+                }
+
+                artwork.Add(
+                    new Artwork
                     {
-                        logo = logo.Replace("iptv/logos/", string.Empty);
-                    }
+                        Path = logo,
+                        ArtworkKind = ArtworkKind.Logo,
+                        OriginalContentType = !string.IsNullOrEmpty(request.Logo.ContentType)
+                            ? request.Logo.ContentType
+                            : null,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow
+                    });
+            }
 
-                    artwork.Add(
-                        new Artwork
-                        {
-                            Path = logo,
-                            ArtworkKind = ArtworkKind.Logo,
-                            OriginalContentType = !string.IsNullOrEmpty(request.Logo.ContentType) ? request.Logo.ContentType : null,
-                            DateAdded = DateTime.UtcNow,
-                            DateUpdated = DateTime.UtcNow
-                        });
-                }
+            var channel = new Channel(Guid.NewGuid())
+            {
+                Name = name,
+                Number = number,
+                Group = request.Group,
+                Categories = request.Categories,
+                FFmpegProfileId = ffmpegProfileId,
+                ProgressMode = request.ProgressMode,
+                StreamingMode = request.StreamingMode,
+                Artwork = artwork,
+                StreamSelectorMode = request.StreamSelectorMode,
+                StreamSelector = request.StreamSelector,
+                PreferredAudioLanguageCode = request.PreferredAudioLanguageCode,
+                PreferredAudioTitle = request.PreferredAudioTitle,
+                PreferredSubtitleLanguageCode = request.PreferredSubtitleLanguageCode,
+                SubtitleMode = request.SubtitleMode,
+                MusicVideoCreditsMode = request.MusicVideoCreditsMode,
+                MusicVideoCreditsTemplate = request.MusicVideoCreditsTemplate,
+                SongVideoMode = request.SongVideoMode,
+                ActiveMode = request.ActiveMode
+            };
 
-                var channel = new Channel(Guid.NewGuid())
-                {
-                    Name = name,
-                    Number = number,
-                    Group = request.Group,
-                    Categories = request.Categories,
-                    FFmpegProfileId = ffmpegProfileId,
-                    ProgressMode = request.ProgressMode,
-                    StreamingMode = request.StreamingMode,
-                    Artwork = artwork,
-                    StreamSelectorMode = request.StreamSelectorMode,
-                    StreamSelector = request.StreamSelector,
-                    PreferredAudioLanguageCode = request.PreferredAudioLanguageCode,
-                    PreferredAudioTitle = request.PreferredAudioTitle,
-                    PreferredSubtitleLanguageCode = request.PreferredSubtitleLanguageCode,
-                    SubtitleMode = request.SubtitleMode,
-                    MusicVideoCreditsMode = request.MusicVideoCreditsMode,
-                    MusicVideoCreditsTemplate = request.MusicVideoCreditsTemplate,
-                    SongVideoMode = request.SongVideoMode,
-                    ActiveMode = request.ActiveMode
-                };
+            foreach (int id in watermarkId)
+            {
+                channel.WatermarkId = id;
+            }
 
-                foreach (int id in watermarkId)
-                {
-                    channel.WatermarkId = id;
-                }
+            foreach (int id in fillerPresetId)
+            {
+                channel.FallbackFillerId = id;
+            }
 
-                foreach (int id in fillerPresetId)
-                {
-                    channel.FallbackFillerId = id;
-                }
-
-                return channel;
-            });
+            return channel;
+        });
 
     private static Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>
         createChannel.NotEmpty(c => c.Name)
@@ -168,8 +169,7 @@ public class CreateChannelHandler(
             .Map(Optional)
             .Filter(c => c > 0)
             .MapT(_ => Optional(createChannel.FallbackFillerId))
-            .Map(
-                o => o.ToValidation<BaseError>(
-                    $"Fallback filler {createChannel.FallbackFillerId} does not exist."));
+            .Map(o => o.ToValidation<BaseError>(
+                $"Fallback filler {createChannel.FallbackFillerId} does not exist."));
     }
 }

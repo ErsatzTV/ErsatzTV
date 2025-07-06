@@ -69,20 +69,19 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         bool log)
     {
         Option<EmbyPathReplacement> maybeReplacement = pathReplacements
-            .SingleOrDefault(
-                r =>
+            .SingleOrDefault(r =>
+            {
+                if (string.IsNullOrWhiteSpace(r.EmbyPath))
                 {
-                    if (string.IsNullOrWhiteSpace(r.EmbyPath))
-                    {
-                        return false;
-                    }
+                    return false;
+                }
 
-                    string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
-                    string prefix = r.EmbyPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
-                        ? r.EmbyPath
-                        : r.EmbyPath + separatorChar;
-                    return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-                });
+                string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
+                string prefix = r.EmbyPath.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
+                    ? r.EmbyPath
+                    : r.EmbyPath + separatorChar;
+                return path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+            });
 
         foreach (EmbyPathReplacement replacement in maybeReplacement)
         {

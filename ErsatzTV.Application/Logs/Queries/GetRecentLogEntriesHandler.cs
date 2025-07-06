@@ -27,9 +27,9 @@ public class GetRecentLogEntriesHandler : IRequestHandler<GetRecentLogEntries, P
 
             if (!string.IsNullOrWhiteSpace(request.Filter))
             {
-                entries = entries.Filter(
-                    le => le.Level.ToString().Contains(request.Filter, StringComparison.OrdinalIgnoreCase) ||
-                          le.Message.Contains(request.Filter, StringComparison.OrdinalIgnoreCase));
+                entries = entries.Filter(le =>
+                    le.Level.ToString().Contains(request.Filter, StringComparison.OrdinalIgnoreCase) ||
+                    le.Message.Contains(request.Filter, StringComparison.OrdinalIgnoreCase));
             }
 
             int count = entries.Count();

@@ -20,9 +20,9 @@ namespace ErsatzTV.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public class ArtworkController : ControllerBase
 {
+    private readonly IChannelLogoGenerator _channelLogoGenerator;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMediator _mediator;
-    private readonly IChannelLogoGenerator _channelLogoGenerator;
 
     public ArtworkController(
         IMediator mediator,
@@ -37,22 +37,23 @@ public class ArtworkController : ControllerBase
     [HttpHead("/artwork/{id}")]
     [HttpGet("/artwork/{id}")]
     // This route redirect to the proper artwork from its Id
-    public async Task<IActionResult> RedirectArtwork(int id, CancellationToken cancellationToken) {
+    public async Task<IActionResult> RedirectArtwork(int id, CancellationToken cancellationToken)
+    {
         Either<BaseError, Artwork> artwork =
             await _mediator.Send(new GetArtwork(id), cancellationToken);
 
         return artwork.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => r.ArtworkKind switch
-                {
-                    ArtworkKind.Poster    => new RedirectResult("/artwork/posters/" + r.Path),
-                    ArtworkKind.Thumbnail => new RedirectResult("/artwork/thumbnails/" + r.Path),
-                    ArtworkKind.Logo      => new RedirectResult("/iptv/logos/" + r.Path),
-                    ArtworkKind.FanArt    => new RedirectResult("/artwork/fanart/" + r.Path),
-                    ArtworkKind.Watermark => new RedirectResult("/artwork/watermarks/" + r.Path),
-                    _ => new NotFoundResult()
-                }
-            );
+            {
+                ArtworkKind.Poster => new RedirectResult("/artwork/posters/" + r.Path),
+                ArtworkKind.Thumbnail => new RedirectResult("/artwork/thumbnails/" + r.Path),
+                ArtworkKind.Logo => new RedirectResult("/iptv/logos/" + r.Path),
+                ArtworkKind.FanArt => new RedirectResult("/artwork/fanart/" + r.Path),
+                ArtworkKind.Watermark => new RedirectResult("/artwork/watermarks/" + r.Path),
+                _ => new NotFoundResult()
+            }
+        );
     }
 
     [HttpHead("/iptv/artwork/posters/{fileName}")]
@@ -63,17 +64,25 @@ public class ArtworkController : ControllerBase
     public async Task<IActionResult> GetPoster(string fileName, CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Poster, string.Empty, 440), cancellationToken);
+            await _mediator.Send(
+                new GetCachedImagePath(fileName, ArtworkKind.Poster, string.Empty, 440),
+                cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
     }
 
     [HttpGet("/artwork/watermarks/{fileName}")]
-    public async Task<IActionResult> GetWatermark(string fileName, [FromQuery] string contentType, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetWatermark(
+        string fileName,
+        [FromQuery]
+        string contentType,
+        CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Watermark, contentType), cancellationToken);
+            await _mediator.Send(
+                new GetCachedImagePath(fileName, ArtworkKind.Watermark, contentType),
+                cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
@@ -155,7 +164,9 @@ public class ArtworkController : ControllerBase
     public async Task<IActionResult> GetThumbnail(string fileName, CancellationToken cancellationToken)
     {
         Either<BaseError, CachedImagePathViewModel> cachedImagePath =
-            await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Thumbnail, string.Empty, 220), cancellationToken);
+            await _mediator.Send(
+                new GetCachedImagePath(fileName, ArtworkKind.Thumbnail, string.Empty, 220),
+                cancellationToken);
         return cachedImagePath.Match<IActionResult>(
             Left: _ => new NotFoundResult(),
             Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
@@ -263,8 +274,8 @@ public class ArtworkController : ControllerBase
 
     [HttpGet(ChannelLogoGenerator.GetRoute)]
     public IActionResult GenerateChannelLogo(
-            string text,    // param name = ChannelLogoGenerator.GetRouteQueryParamName
-            CancellationToken cancellationToken) =>
+        string text, // param name = ChannelLogoGenerator.GetRouteQueryParamName
+        CancellationToken cancellationToken) =>
         _channelLogoGenerator
             .GenerateChannelLogo(text, 100, 200, cancellationToken).Match<IActionResult>(
                 Left: _ => new RedirectResult("/iptv/images/ersatztv-500.png"),

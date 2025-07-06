@@ -8,7 +8,7 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudForm @bind-IsValid="@_success" Style="max-height: 100%">
+<MudForm @ref="_form" @bind-IsValid="@_success" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Schedule" : "Add Schedule")</MudButton>
     </MudPaper>
@@ -20,7 +20,7 @@
                 <div class="d-flex justify-md-end">
                     <MudText>Name</MudText>
                 </div>
-                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Schedule name is required!" />
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Schedule name is required!"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
@@ -52,7 +52,7 @@
                 <div class="d-flex justify-md-end">
                     <MudText>Random Start Point</MudText>
                 </div>
-                <MudCheckBox @bind-Value="@_model.RandomStartPoint" For="@(() => _model.RandomStartPoint)" Dense="true" />
+                <MudCheckBox @bind-Value="@_model.RandomStartPoint" For="@(() => _model.RandomStartPoint)" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
@@ -74,6 +74,7 @@
     public int Id { get; set; }
 
     private readonly ProgramScheduleEditViewModel _model = new();
+    private MudForm _form;
     private bool _success;
 
     public void Dispose()
@@ -110,6 +111,7 @@
 
     private async Task HandleSubmitAsync()
     {
+        await _form.Validate();
         if (_success)
         {
             Either<BaseError, EntityIdResult> result = IsEdit

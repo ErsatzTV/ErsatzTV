@@ -48,12 +48,11 @@
         if (IsEdit)
         {
             Option<MediaCollectionViewModel> maybeCollection = await Mediator.Send(new GetCollectionById(Id), _cts.Token);
-            maybeCollection.IfSome(
-                collection =>
-                {
-                    _model.Id = collection.Id;
-                    _model.Name = collection.Name;
-                });
+            maybeCollection.IfSome(collection =>
+            {
+                _model.Id = collection.Id;
+                _model.Name = collection.Name;
+            });
         }
         else
         {

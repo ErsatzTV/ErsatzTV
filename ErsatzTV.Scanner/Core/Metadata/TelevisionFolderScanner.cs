@@ -126,8 +126,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
                         .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster, cancellationToken))
                         .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt, cancellationToken))
-                        .BindT(
-                            show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail, cancellationToken));
+                        .BindT(show => UpdateArtworkForShow(
+                            show,
+                            showFolder,
+                            ArtworkKind.Thumbnail,
+                            cancellationToken));
 
                 foreach (BaseError error in maybeShow.LeftToSeq())
                 {
@@ -340,9 +343,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             // TODO: figure out how to rebuild playlists
             Either<BaseError, Episode> maybeEpisode = await _televisionRepository
                 .GetOrAddEpisode(season, libraryPath, seasonFolder, file)
-                .BindT(
-                    episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffmpegPath, ffprobePath)
-                        .MapT(_ => episode))
+                .BindT(episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffmpegPath, ffprobePath)
+                    .MapT(_ => episode))
                 .BindT(video => UpdateLibraryFolderId(video, seasonFolder))
                 .BindT(UpdateMetadata)
                 .BindT(e => UpdateThumbnail(e, cancellationToken))

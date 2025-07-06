@@ -43,10 +43,7 @@
         await base.OnAfterRenderAsync(true);
     }
 
-    private void Close()
-    {
-        MudDialog.Close(DialogResult.Ok(true));
-    }
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
 
     public void Dispose()
     {
@@ -59,4 +56,5 @@
             // ignore
         }
     }
+
 }

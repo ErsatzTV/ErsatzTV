@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using System.Reflection
+@using MudBlazor
 @namespace ErsatzTV.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
@@ -15,7 +16,7 @@
     <base href="~/"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" rel="stylesheet">
-    <link href="_content/MudBlazor/MudBlazor.min.css?v=@(Assembly.GetAssembly(typeof(MudBlazor.AbstractLocalizationInterceptor))?.GetName().Version?.ToString())" rel="stylesheet"/>
+    <link href="_content/MudBlazor/MudBlazor.min.css?v=@(Assembly.GetAssembly(typeof(AbstractLocalizationInterceptor))?.GetName().Version?.ToString())" rel="stylesheet"/>
     <link href="css/site.css" rel="stylesheet"/>
     <link href="ErsatzTV.styles.css" rel="stylesheet"/>
     <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
@@ -103,7 +104,7 @@
 </div>
 
 <script src="_framework/blazor.server.js"></script>
-<script src="_content/MudBlazor/MudBlazor.min.js?v=@(Assembly.GetAssembly(typeof(MudBlazor.AbstractLocalizationInterceptor))?.GetName().Version?.ToString())"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js?v=@(Assembly.GetAssembly(typeof(AbstractLocalizationInterceptor))?.GetName().Version?.ToString())"></script>
 <script type="text/javascript">
     window.blazorHelpers = {
         scrollToFragment: (elementId) => {

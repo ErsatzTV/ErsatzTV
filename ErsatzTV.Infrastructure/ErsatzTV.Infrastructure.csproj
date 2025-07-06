@@ -10,37 +10,37 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blurhash.ImageSharp" Version="4.0.0" />
-      <PackageReference Include="CliWrap" Version="3.9.0" />
-      <PackageReference Include="Dapper" Version="2.1.66" />
-      <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.0.7" />
-      <PackageReference Include="Jint" Version="4.2.2" />
-      <PackageReference Include="Lucene.Net" Version="4.8.0-beta00017" />
-      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00017" />
-      <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00017" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Refit" Version="8.0.0" />
-      <PackageReference Include="Refit.Newtonsoft.Json" Version="8.0.0" />
-      <PackageReference Include="Refit.Xml" Version="8.0.0" />
-      <PackageReference Include="Scriban.Signed" Version="6.2.1" />
-      <PackageReference Include="TagLibSharp" Version="2.3.0" />
+        <PackageReference Include="Blurhash.ImageSharp" Version="4.0.0" />
+        <PackageReference Include="CliWrap" Version="3.9.0" />
+        <PackageReference Include="Dapper" Version="2.1.66" />
+        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.0.7" />
+        <PackageReference Include="Jint" Version="4.3.0" />
+        <PackageReference Include="Lucene.Net" Version="4.8.0-beta00017" />
+        <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00017" />
+        <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00017" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.6" />
+        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Refit" Version="8.0.0" />
+        <PackageReference Include="Refit.Newtonsoft.Json" Version="8.0.0" />
+        <PackageReference Include="Refit.Xml" Version="8.0.0" />
+        <PackageReference Include="Scriban.Signed" Version="6.2.1" />
+        <PackageReference Include="TagLibSharp" Version="2.3.0" />
 
 
-      <!-- transitive; upgrading for vuln -->
-      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
+        <!-- transitive; upgrading for vuln -->
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.10" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

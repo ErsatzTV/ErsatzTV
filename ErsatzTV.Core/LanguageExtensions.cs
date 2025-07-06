@@ -28,12 +28,11 @@ public static class LanguageExtensions
         ILogger logger,
         string message,
         params object[] args) =>
-        tryAsync.IfFail(
-            ex =>
-            {
-                logger.LogError(ex, message, args);
-                return defaultValue;
-            });
+        tryAsync.IfFail(ex =>
+        {
+            logger.LogError(ex, message, args);
+            return defaultValue;
+        });
 
     public static Task<Unit> LogFailure(
         this TryAsync<Unit> tryAsync,

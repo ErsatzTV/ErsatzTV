@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+﻿using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 
 namespace ErsatzTV.Application.MediaItems;

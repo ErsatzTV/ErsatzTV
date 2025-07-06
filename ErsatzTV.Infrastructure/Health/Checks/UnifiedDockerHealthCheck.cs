@@ -6,7 +6,9 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class UnifiedDockerHealthCheck : BaseHealthCheck, IUnifiedDockerHealthCheck
 {
-    private static readonly string InfoVersion = Assembly.GetEntryAssembly()!.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
+    private static readonly string InfoVersion =
+        Assembly.GetEntryAssembly()!.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? "unknown";
 
     public override string Title => "Unified Docker";
 
@@ -14,7 +16,8 @@ public class UnifiedDockerHealthCheck : BaseHealthCheck, IUnifiedDockerHealthChe
     {
         if (InfoVersion.Contains("docker-vaapi") || InfoVersion.Contains("docker-nvidia"))
         {
-            return WarningResult("VAAPI and NVIDIA docker tag suffixes are deprecated; please remove `-vaapi` or `-nvidia` and pull the default image.")
+            return WarningResult(
+                    "VAAPI and NVIDIA docker tag suffixes are deprecated; please remove `-vaapi` or `-nvidia` and pull the default image.")
                 .AsTask();
         }
 

@@ -17,9 +17,8 @@ public class ArtistRepository : IArtistRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<int> maybeId = await dbContext.ArtistMetadata
-            .Where(
-                s => s.Title == metadata.Title && (metadata.MetadataKind == MetadataKind.Fallback ||
-                                                   s.Disambiguation == metadata.Disambiguation))
+            .Where(s => s.Title == metadata.Title && (metadata.MetadataKind == MetadataKind.Fallback ||
+                                                      s.Disambiguation == metadata.Disambiguation))
             .Where(s => s.Artist.LibraryPathId == libraryPathId)
             .SingleOrDefaultAsync()
             .Map(Optional)

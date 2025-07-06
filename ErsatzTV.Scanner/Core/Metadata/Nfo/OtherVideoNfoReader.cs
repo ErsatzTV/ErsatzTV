@@ -56,6 +56,7 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                                 {
                                     throw new InvalidOperationException("Cannot have multiple opening tags");
                                 }
+
                                 nfo = new OtherVideoNfo();
                                 break;
                             case "title":

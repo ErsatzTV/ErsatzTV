@@ -1,6 +1,6 @@
 using ErsatzTV.Core.Iptv;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Iptv;
 
@@ -27,7 +27,7 @@ public class ChannelIdentifierTests
     [TestCase("124", "C124.247.ersatztv.org")]
     public void TestNew(string channelNumber, string expected)
     {
-         string actual = ChannelIdentifier.FromNumber(channelNumber);
-         actual.ShouldBe(expected);
+        string actual = ChannelIdentifier.FromNumber(channelNumber);
+        actual.ShouldBe(expected);
     }
 }

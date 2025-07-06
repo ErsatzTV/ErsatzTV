@@ -56,7 +56,9 @@ public class BlockPlayoutFillerBuilder(
             foreach (Deco deco in GetDecoFor(playout, start))
             {
                 if (!HasDefaultFiller(deco))
+                {
                     continue;
+                }
 
                 var collectionKey = CollectionKey.ForDecoDefaultFiller(deco);
                 string historyKey = HistoryDetails.ForDefaultFiller(deco);
@@ -89,7 +91,9 @@ public class BlockPlayoutFillerBuilder(
 
                 // skip this deco if the collection has no items
                 if (enumerator.Count == 0)
+                {
                     continue;
+                }
 
                 DateTimeOffset current = start;
                 var pastTime = false;
@@ -171,7 +175,8 @@ public class BlockPlayoutFillerBuilder(
             {
                 foreach (DecoTemplateItem decoTemplateItem in template.DecoTemplate.Items)
                 {
-                    if (decoTemplateItem.StartTime <= start.TimeOfDay && decoTemplateItem.EndTime == TimeSpan.Zero || decoTemplateItem.EndTime > start.TimeOfDay)
+                    if (decoTemplateItem.StartTime <= start.TimeOfDay && decoTemplateItem.EndTime == TimeSpan.Zero ||
+                        decoTemplateItem.EndTime > start.TimeOfDay)
                     {
                         switch (decoTemplateItem.Deco.DefaultFillerMode)
                         {

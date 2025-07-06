@@ -5,19 +5,19 @@
 @inject ISnackbar Snackbar
 @inject ILogger<PlayoutSettings> Logger
 
-<MudForm @bind-IsValid="@_playoutSuccess" Style="max-height: 100%">
+<MudForm @ref="_form" @bind-IsValid="@_playoutSuccess" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_playoutSuccess)" OnClick="@(_ => SavePlayoutSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SavePlayoutSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">Playout</MudText>
-            <MudDivider Class="mb-6" />
+            <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>Days To Build</MudText>
                 </div>
-                <MudTextField @bind-Value="_playoutSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))" Required="true" RequiredError="Playout days to build is required!" Adornment="Adornment.End" AdornmentText="days" />
+                <MudTextField @bind-Value="_playoutSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))" Required="true" RequiredError="Playout days to build is required!" Adornment="Adornment.End" AdornmentText="days"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
@@ -32,19 +32,20 @@
 </MudForm>
 
 @code {
-	private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-	private bool _playoutSuccess;
-	private PlayoutSettingsViewModel _playoutSettings = new();
+    private MudForm _form;
+    private bool _playoutSuccess;
+    private PlayoutSettingsViewModel _playoutSettings = new();
 
-	public void Dispose()
-	{
-		_cts.Cancel();
-		_cts.Dispose();
-	}
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
-	protected override async Task OnParametersSetAsync()
-	{
+    protected override async Task OnParametersSetAsync()
+    {
         _playoutSettings = await Mediator.Send(new GetPlayoutSettings(), _cts.Token);
         _playoutSuccess = _playoutSettings.DaysToBuild > 0;
     }
@@ -53,13 +54,18 @@
 
     private async Task SavePlayoutSettings()
     {
-        Either<BaseError, Unit> result = await Mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
-        result.Match(
-            Left: error =>
-            {
-                Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error saving playout settings: {Error}", error.Value);
-            },
-            Right: _ => Snackbar.Add("Successfully saved playout settings", Severity.Success));
+        await _form.Validate();
+        if (_playoutSuccess)
+        {
+            Either<BaseError, Unit> result = await Mediator.Send(new UpdatePlayoutSettings(_playoutSettings), _cts.Token);
+            result.Match(
+                Left: error =>
+                {
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving playout settings: {Error}", error.Value);
+                },
+                Right: _ => Snackbar.Add("Successfully saved playout settings", Severity.Success));
+        }
     }
+
 }

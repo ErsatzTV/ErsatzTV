@@ -125,9 +125,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                 var allFiles = filesForEtag
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
                     .Filter(f => !Path.GetFileName(f).StartsWith("._", StringComparison.OrdinalIgnoreCase))
-                    .Filter(
-                        f => !ExtraFiles.Any(
-                            e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                    .Filter(f => !ExtraFiles.Any(e =>
+                        Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
 
                 string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
@@ -356,14 +355,13 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
         string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
         string folder = Path.GetDirectoryName(path) ?? string.Empty;
-        IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(
-                ext => new[] { $"{segment}.{ext}", Path.GetFileNameWithoutExtension(path) + $"-{segment}.{ext}" })
+        IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(ext =>
+                new[] { $"{segment}.{ext}", Path.GetFileNameWithoutExtension(path) + $"-{segment}.{ext}" })
             .Map(f => Path.Combine(folder, f));
         Option<string> result = possibleMoviePosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
         if (result.IsNone && artworkKind == ArtworkKind.Poster)
         {
-            IEnumerable<string> possibleFolderPosters = ImageFileExtensions.Collect(
-                    ext => new[] { $"folder.{ext}" })
+            IEnumerable<string> possibleFolderPosters = ImageFileExtensions.Collect(ext => new[] { $"folder.{ext}" })
                 .Map(f => Path.Combine(folder, f));
             result = possibleFolderPosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
         }

@@ -26,12 +26,11 @@ public class CreateTemplateHandler(IDbContextFactory<TvContext> dbContextFactory
 
     private static Task<Validation<BaseError, Template>> Validate(CreateTemplate request) =>
         Task.FromResult(
-            ValidateName(request).Map(
-                name => new Template
-                {
-                    TemplateGroupId = request.TemplateGroupId,
-                    Name = name
-                }));
+            ValidateName(request).Map(name => new Template
+            {
+                TemplateGroupId = request.TemplateGroupId,
+                Name = name
+            }));
 
     private static Validation<BaseError, string> ValidateName(CreateTemplate createTemplate) =>
         createTemplate.NotEmpty(x => x.Name)

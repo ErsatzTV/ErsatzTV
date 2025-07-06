@@ -332,8 +332,7 @@ public class MetadataRepository : IMetadataRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<Artwork> maybeExisting = await dbContext.Artwork
             .AsNoTracking()
-            .Filter(
-                a => a.SourcePath == sourcePath && a.ArtworkKind == artworkKind && a.DateUpdated == lastWriteTime)
+            .Filter(a => a.SourcePath == sourcePath && a.ArtworkKind == artworkKind && a.DateUpdated == lastWriteTime)
             .FirstOrDefaultAsync()
             .Map(Optional);
         foreach (Artwork existing in maybeExisting)
@@ -461,7 +460,8 @@ public class MetadataRepository : IMetadataRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MovieMetadata SET Plot = @Plot WHERE Id = @Id",
-            new { metadata.Id, Plot = plot }).ToUnit();    }
+            new { metadata.Id, Plot = plot }).ToUnit();
+    }
 
     public async Task<Unit> SetPlot(OtherVideoMetadata metadata, string plot)
     {
@@ -642,8 +642,7 @@ public class MetadataRepository : IMetadataRepository
                 foreach (Subtitle incomingSubtitle in toUpdate)
                 {
                     Subtitle existingSubtitle =
-                        existing.Subtitles.First(
-                            s => s.StreamIndex == incomingSubtitle.StreamIndex);
+                        existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
 
                     existingSubtitle.Codec = incomingSubtitle.Codec;
                     existingSubtitle.Default = incomingSubtitle.Default;

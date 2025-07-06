@@ -1,6 +1,6 @@
-using ErsatzTV.Core.Domain;
 using System.Net;
 using ErsatzTV.Application.Artworks;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Channels;
 

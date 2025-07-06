@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-using System.Globalization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Domain.Scheduling;
@@ -67,7 +65,9 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
         YamlPlayoutContentItem contentItem = context.Definition.Content[index];
         if (!Enum.TryParse(contentItem.Order, true, out PlaybackOrder playbackOrder))
         {
-            logger.LogDebug("Unable to find history for content matching playback order {PlaybackOrder}", contentItem.Order);
+            logger.LogDebug(
+                "Unable to find history for content matching playback order {PlaybackOrder}",
+                contentItem.Order);
             return [];
         }
 
@@ -93,7 +93,8 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
 
             for (var i = 0; i < playlistEnumerator.ChildEnumerators.Count; i++)
             {
-                (IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) = playlistEnumerator.ChildEnumerators[i];
+                (IMediaCollectionEnumerator childEnumerator, CollectionKey collectionKey) =
+                    playlistEnumerator.ChildEnumerators[i];
                 bool isCurrentChild = i == playlistEnumerator.EnumeratorIndex;
                 foreach (MediaItem currentMediaItem in childEnumerator.Current)
                 {
@@ -153,7 +154,7 @@ public abstract class YamlPlayoutContentHandler(EnumeratorCache enumeratorCache)
             return FillerKind.None;
         }
 
-        return Enum.TryParse(instruction.FillerKind, ignoreCase: true, out FillerKind result)
+        return Enum.TryParse(instruction.FillerKind, true, out FillerKind result)
             ? result
             : FillerKind.None;
     }

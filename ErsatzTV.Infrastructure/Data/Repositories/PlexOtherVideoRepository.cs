@@ -16,7 +16,9 @@ public class PlexOtherVideoRepository : IPlexOtherVideoRepository
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILogger<PlexOtherVideoRepository> _logger;
 
-    public PlexOtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory, ILogger<PlexOtherVideoRepository> logger)
+    public PlexOtherVideoRepository(
+        IDbContextFactory<TvContext> dbContextFactory,
+        ILogger<PlexOtherVideoRepository> logger)
     {
         _dbContextFactory = dbContextFactory;
         _logger = logger;
@@ -236,7 +238,10 @@ public class PlexOtherVideoRepository : IPlexOtherVideoRepository
         }
     }
 
-    private static async Task UpdateOtherVideoPath(TvContext dbContext, PlexOtherVideo existing, PlexOtherVideo incoming)
+    private static async Task UpdateOtherVideoPath(
+        TvContext dbContext,
+        PlexOtherVideo existing,
+        PlexOtherVideo incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;

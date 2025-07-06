@@ -488,17 +488,16 @@
 
     private ReplacePlaylistItems GenerateReplaceRequest()
     {
-        var items = _playlist.Items.Map(
-            item => new ReplacePlaylistItem(
-                item.Index,
-                item.CollectionType,
-                item.Collection?.Id,
-                item.MultiCollection?.Id,
-                item.SmartCollection?.Id,
-                item.MediaItem?.MediaItemId,
-                item.PlaybackOrder,
-                item.PlayAll,
-                item.IncludeInProgramGuide)).ToList();
+        var items = _playlist.Items.Map(item => new ReplacePlaylistItem(
+            item.Index,
+            item.CollectionType,
+            item.Collection?.Id,
+            item.MultiCollection?.Id,
+            item.SmartCollection?.Id,
+            item.MediaItem?.MediaItemId,
+            item.PlaybackOrder,
+            item.PlayAll,
+            item.IncludeInProgramGuide)).ToList();
 
         return new ReplacePlaylistItems(Id, _playlist.Name, items);
     }

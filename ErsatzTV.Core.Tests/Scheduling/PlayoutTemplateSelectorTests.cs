@@ -1,7 +1,7 @@
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 

@@ -50,14 +50,13 @@ public class CreateYamlPlayoutHandler
         TvContext dbContext,
         CreateYamlPlayout request) =>
         (await ValidateChannel(dbContext, request), ValidateYamlFile(request), ValidatePlayoutType(request))
-        .Apply(
-            (channel, externalJsonFile, playoutType) => new Playout
-            {
-                ChannelId = channel.Id,
-                TemplateFile = externalJsonFile,
-                ProgramSchedulePlayoutType = playoutType,
-                Seed = new Random().Next()
-            });
+        .Apply((channel, externalJsonFile, playoutType) => new Playout
+        {
+            ChannelId = channel.Id,
+            TemplateFile = externalJsonFile,
+            ProgramSchedulePlayoutType = playoutType,
+            Seed = new Random().Next()
+        });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,

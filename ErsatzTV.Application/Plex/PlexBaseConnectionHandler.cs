@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -12,7 +13,9 @@ public abstract class PlexBaseConnectionHandler(
     IMediaSourceRepository mediaSourceRepository,
     ILogger logger)
 {
-    protected async Task<Option<PlexConnection>> FindConnectionToActivate(PlexMediaSource server, PlexServerAuthToken token)
+    protected async Task<Option<PlexConnection>> FindConnectionToActivate(
+        PlexMediaSource server,
+        PlexServerAuthToken token)
     {
         Option<PlexConnection> result = Option<PlexConnection>.None;
 
@@ -43,7 +46,8 @@ public abstract class PlexBaseConnectionHandler(
             tasks.Remove(completed);
         }
 
-        Option<PlexConnection> maybeBest = successfulTimes.OrderByDescending(kv => kv.Value).Select(kvp => kvp.Key).HeadOrNone();
+        Option<PlexConnection> maybeBest =
+            successfulTimes.OrderByDescending(kv => kv.Value).Select(kvp => kvp.Key).HeadOrNone();
         foreach (PlexConnection connection in maybeBest)
         {
             connection.IsActive = true;
@@ -60,12 +64,16 @@ public abstract class PlexBaseConnectionHandler(
         return result;
     }
 
-    private async Task PingPlexConnection(PlexConnection connection, PlexServerAuthToken token, ConcurrentDictionary<PlexConnection, TimeSpan> successfulTimes, CancellationToken cancellationToken)
+    private async Task PingPlexConnection(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        ConcurrentDictionary<PlexConnection, TimeSpan> successfulTimes,
+        CancellationToken cancellationToken)
     {
         try
         {
             logger.LogDebug("Attempting to locate to Plex at {Uri}", connection.Uri);
-            var sw = new System.Diagnostics.Stopwatch();
+            var sw = new Stopwatch();
             sw.Start();
             bool pingResult = await plexServerApiClient.Ping(connection, token, cancellationToken);
             sw.Stop();

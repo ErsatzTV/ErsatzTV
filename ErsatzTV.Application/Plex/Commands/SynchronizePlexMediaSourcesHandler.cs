@@ -10,8 +10,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Plex;
 
-public class SynchronizePlexMediaSourcesHandler : PlexBaseConnectionHandler, IRequestHandler<SynchronizePlexMediaSources,
-    Either<BaseError, List<PlexMediaSource>>>
+public class SynchronizePlexMediaSourcesHandler : PlexBaseConnectionHandler,
+    IRequestHandler<SynchronizePlexMediaSources,
+        Either<BaseError, List<PlexMediaSource>>>
 {
     private const string LocalhostUri = "http://localhost:32400";
 
@@ -56,8 +57,8 @@ public class SynchronizePlexMediaSourcesHandler : PlexBaseConnectionHandler, IRe
         }
 
         // delete removed servers
-        foreach (PlexMediaSource removed in allExisting.Filter(
-                     s => servers.All(pms => pms.ClientIdentifier != s.ClientIdentifier)))
+        foreach (PlexMediaSource removed in allExisting.Filter(s =>
+                     servers.All(pms => pms.ClientIdentifier != s.ClientIdentifier)))
         {
             _logger.LogWarning(
                 "Deleting removed Plex server {ServerName}!",

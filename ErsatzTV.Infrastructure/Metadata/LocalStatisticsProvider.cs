@@ -399,8 +399,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
-                    foreach (FFprobeStreamData attachmentStream in json.streams.Filter(
-                                 s => s.codec_type == "attachment"))
+                    foreach (FFprobeStreamData attachmentStream in
+                             json.streams.Filter(s => s.codec_type == "attachment"))
                     {
                         var stream = new MediaStream
                         {

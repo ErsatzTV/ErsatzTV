@@ -25,12 +25,11 @@ public class CreateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
     }
 
     private static async Task<Validation<BaseError, Deco>> Validate(TvContext dbContext, CreateDeco request) =>
-        await ValidateDecoName(dbContext, request).MapT(
-            name => new Deco
-            {
-                DecoGroupId = request.DecoGroupId,
-                Name = name
-            });
+        await ValidateDecoName(dbContext, request).MapT(name => new Deco
+        {
+            DecoGroupId = request.DecoGroupId,
+            Name = name
+        });
 
     private static async Task<Validation<BaseError, string>> ValidateDecoName(
         TvContext dbContext,

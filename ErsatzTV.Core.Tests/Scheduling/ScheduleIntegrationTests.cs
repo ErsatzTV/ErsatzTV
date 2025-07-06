@@ -70,14 +70,13 @@ public class ScheduleIntegrationTests
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
 
-        services.AddDbContextFactory<TvContext>(
-            options => options.UseSqlite(
-                connectionString,
-                o =>
-                {
-                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
-                }));
+        services.AddDbContextFactory<TvContext>(options => options.UseSqlite(
+            connectionString,
+            o =>
+            {
+                o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+            }));
 
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
         SqlMapper.AddTypeHandler(new GuidHandler());
@@ -193,14 +192,13 @@ public class ScheduleIntegrationTests
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
 
-        services.AddDbContextFactory<TvContext>(
-            options => options.UseSqlite(
-                connectionString,
-                o =>
-                {
-                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
-                }));
+        services.AddDbContextFactory<TvContext>(options => options.UseSqlite(
+            connectionString,
+            o =>
+            {
+                o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+            }));
 
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
         SqlMapper.AddTypeHandler(new GuidHandler());

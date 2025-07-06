@@ -743,7 +743,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
         {
             if (ffmpegState.IsSongWithProgress)
             {
-                videoInputFile.FilterSteps.Add(new SongProgressFilter(videoStream.FrameSize, ffmpegState.Start, ffmpegState.Finish));
+                videoInputFile.FilterSteps.Add(
+                    new SongProgressFilter(videoStream.FrameSize, ffmpegState.Start, ffmpegState.Finish));
             }
             else
             {

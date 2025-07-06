@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Playouts;
 
@@ -51,18 +50,16 @@ internal static class Mapper
                     .Map(am => $"{am.Title} - ").IfNone(string.Empty);
                 return mv.MusicVideoMetadata.HeadOrNone()
                     .Map(mvm => $"{artistName}{mvm.Title}")
-                    .Map(
-                        s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
-                            ? s
-                            : $"{s} ({playoutItem.ChapterTitle})")
+                    .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                        ? s
+                        : $"{s} ({playoutItem.ChapterTitle})")
                     .IfNone("[unknown music video]");
             case OtherVideo ov:
                 return ov.OtherVideoMetadata.HeadOrNone()
                     .Map(ovm => ovm.Title ?? string.Empty)
-                    .Map(
-                        s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
-                            ? s
-                            : $"{s} ({playoutItem.ChapterTitle})")
+                    .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                        ? s
+                        : $"{s} ({playoutItem.ChapterTitle})")
                     .IfNone("[unknown video]");
             case Song s:
                 string songArtist = s.SongMetadata.HeadOrNone()
@@ -70,10 +67,9 @@ internal static class Mapper
                     .IfNone(string.Empty);
                 return s.SongMetadata.HeadOrNone()
                     .Map(sm => $"{songArtist}{sm.Title ?? string.Empty}")
-                    .Map(
-                        t => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
-                            ? t
-                            : $"{s} ({playoutItem.ChapterTitle})")
+                    .Map(t => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                        ? t
+                        : $"{s} ({playoutItem.ChapterTitle})")
                     .IfNone("[unknown song]");
             case Image i:
                 return i.ImageMetadata.HeadOrNone().Map(im => im.Title ?? string.Empty).IfNone("[unknown image]");

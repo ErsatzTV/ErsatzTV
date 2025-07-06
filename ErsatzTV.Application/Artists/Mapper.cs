@@ -29,9 +29,10 @@ internal static class Mapper
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
 
         return languages
-            .Map(
-                lang => allCultures.Filter(
-                    ci => string.Equals(ci.ThreeLetterISOLanguageName, lang, StringComparison.OrdinalIgnoreCase)))
+            .Map(lang => allCultures.Filter(ci => string.Equals(
+                ci.ThreeLetterISOLanguageName,
+                lang,
+                StringComparison.OrdinalIgnoreCase)))
             .Flatten()
             .Distinct()
             .ToList();

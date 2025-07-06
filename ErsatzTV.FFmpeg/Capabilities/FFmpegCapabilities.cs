@@ -30,8 +30,9 @@ public class FFmpegCapabilities : IFFmpegCapabilities
         // AMF isn't a "hwaccel" in ffmpeg, so check for presence of encoders
         if (hardwareAccelerationMode is HardwareAccelerationMode.Amf)
         {
-            return _ffmpegEncoders.Any(
-                e => e.EndsWith($"_{FFmpegKnownHardwareAcceleration.Amf.Name}", StringComparison.OrdinalIgnoreCase));
+            return _ffmpegEncoders.Any(e => e.EndsWith(
+                $"_{FFmpegKnownHardwareAcceleration.Amf.Name}",
+                StringComparison.OrdinalIgnoreCase));
         }
 
         Option<FFmpegKnownHardwareAcceleration> maybeAccelToCheck = hardwareAccelerationMode switch
@@ -40,7 +41,7 @@ public class FFmpegCapabilities : IFFmpegCapabilities
             HardwareAccelerationMode.Qsv => FFmpegKnownHardwareAcceleration.Qsv,
             HardwareAccelerationMode.Vaapi => FFmpegKnownHardwareAcceleration.Vaapi,
             HardwareAccelerationMode.VideoToolbox => FFmpegKnownHardwareAcceleration.VideoToolbox,
-            HardwareAccelerationMode.OpenCL =>  FFmpegKnownHardwareAcceleration.OpenCL,
+            HardwareAccelerationMode.OpenCL => FFmpegKnownHardwareAcceleration.OpenCL,
             HardwareAccelerationMode.Vulkan => FFmpegKnownHardwareAcceleration.Vulkan,
             _ => Option<FFmpegKnownHardwareAcceleration>.None
         };

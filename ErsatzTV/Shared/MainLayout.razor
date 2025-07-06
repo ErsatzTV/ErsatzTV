@@ -16,11 +16,11 @@
 <MudThemeProvider Theme="ErsatzTvTheme"/>
 <MudDialogProvider BackdropClick="false"/>
 <MudSnackbarProvider/>
-<MudPopoverProvider />
+<MudPopoverProvider/>
 
 <MudLayout @onclick="@(() => _isOpen = false)" Class="d-flex d-flex-column" Style="height: 100vh">
     <MudAppBar Elevation="1" Class="app-bar">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer"/>
         <div style="min-width: 240px" class="ml-3 d-none d-md-flex">
             <a href="">
                 <img src="images/ersatztv.png" alt="ErsatzTV"/>
@@ -360,10 +360,7 @@
             _ => null
         };
 
-    private void ToggleDrawer()
-    {
-        _drawerIsOpen = !_drawerIsOpen;
-    }
+    private void ToggleDrawer() => _drawerIsOpen = !_drawerIsOpen;
 
     private async Task HandleHealthCheckSummary(HealthCheckSummary healthCheckSummary, CancellationToken cancellationToken)
     {
@@ -392,4 +389,5 @@
             // ignore
         }
     }
+
 }

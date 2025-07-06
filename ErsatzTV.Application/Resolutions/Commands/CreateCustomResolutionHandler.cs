@@ -42,14 +42,13 @@ public class CreateCustomResolutionHandler : IRequestHandler<CreateCustomResolut
         TvContext dbContext,
         CreateCustomResolution request) =>
         ResolutionMustBeUnique(dbContext, request)
-            .MapT(
-                _ => new Resolution
-                {
-                    Name = $"{request.Width}x{request.Height}",
-                    Width = request.Width,
-                    Height = request.Height,
-                    IsCustom = true
-                });
+            .MapT(_ => new Resolution
+            {
+                Name = $"{request.Width}x{request.Height}",
+                Width = request.Width,
+                Height = request.Height,
+                IsCustom = true
+            });
 
     private static async Task<Validation<BaseError, Unit>> ResolutionMustBeUnique(
         TvContext dbContext,

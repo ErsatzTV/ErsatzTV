@@ -164,8 +164,9 @@ public class SchedulerService : BackgroundService
                 .Include(p => p.Channel)
                 .ToListAsync(cancellationToken);
 
-            foreach (Playout playout in playouts.OrderBy(
-                         p => decimal.Parse(p.Channel.Number, CultureInfo.InvariantCulture)))
+            foreach (Playout playout in playouts.OrderBy(p => decimal.Parse(
+                         p.Channel.Number,
+                         CultureInfo.InvariantCulture)))
             {
                 DateTime now = DateTime.Now;
                 DateTime target = DateTime.Today.Add(playout.DailyRebuildTime ?? TimeSpan.FromDays(7));

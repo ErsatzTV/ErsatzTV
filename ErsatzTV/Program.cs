@@ -27,7 +27,7 @@ public class Program
 
         Configuration = builder
             .SetBasePath(BasePath)
-            .AddJsonFile("appsettings.json", false, reloadOnChange: false)
+            .AddJsonFile("appsettings.json", false, false)
             .AddJsonFile(
                 $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
                 true)
@@ -152,22 +152,20 @@ public class Program
 
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitches))
-            .ConfigureWebHostDefaults(
-                webBuilder => webBuilder.UseStartup<Startup>()
-                    .UseConfiguration(Configuration)
-                    .UseKestrel(
-                        options =>
-                        {
-                            options.ListenAnyIP(Settings.UiPort);
+            .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>()
+                .UseConfiguration(Configuration)
+                .UseKestrel(options =>
+                {
+                    options.ListenAnyIP(Settings.UiPort);
 
-                            if (Settings.StreamingPort != Settings.UiPort)
-                            {
-                                options.ListenAnyIP(Settings.StreamingPort);
-                            }
+                    if (Settings.StreamingPort != Settings.UiPort)
+                    {
+                        options.ListenAnyIP(Settings.StreamingPort);
+                    }
 
-                            options.AddServerHeader = false;
-                        })
-                    .UseContentRoot(BasePath))
+                    options.AddServerHeader = false;
+                })
+                .UseContentRoot(BasePath))
             .UseSerilog();
     }
 }

@@ -2,12 +2,12 @@
 using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Scanner.Core.Metadata.Nfo;
-using Shouldly;
 using Microsoft.Extensions.Logging;
 using Microsoft.IO;
 using NSubstitute;
 using NUnit.Framework;
 using Serilog;
+using Shouldly;
 
 namespace ErsatzTV.Scanner.Tests.Core.Metadata.Nfo;
 
@@ -283,9 +283,8 @@ public class EpisodeNfoReaderTests
         {
             list.Count.ShouldBe(2);
             list.Count(nfo => nfo.Directors.Count == 1 && nfo.Directors[0] == "Director 1").ShouldBe(1);
-            list.Count(
-                    nfo => nfo.Directors.Count == 2 && nfo.Directors[0] == "Director 2" &&
-                           nfo.Directors[1] == "Director 3")
+            list.Count(nfo => nfo.Directors.Count == 2 && nfo.Directors[0] == "Director 2" &&
+                              nfo.Directors[1] == "Director 3")
                 .ShouldBe(1);
         }
     }

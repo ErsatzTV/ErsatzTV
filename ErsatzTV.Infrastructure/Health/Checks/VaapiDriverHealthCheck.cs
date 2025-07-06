@@ -53,7 +53,8 @@ public class VaapiDriverHealthCheck(
 
         foreach (string ffmpegPath in maybeFFmpegPath)
         {
-            IFFmpegCapabilities ffmpegCapabilities = await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
+            IFFmpegCapabilities ffmpegCapabilities =
+                await hardwareCapabilitiesFactory.GetFFmpegCapabilities(ffmpegPath);
             foreach (FFmpegProfile profile in activeFFmpegProfiles)
             {
                 Option<string> vaapiDriver = VaapiDriverName(profile.VaapiDriver);

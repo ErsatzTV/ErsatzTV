@@ -140,30 +140,27 @@
         if (IsEdit)
         {
             Option<MultiCollectionViewModel> maybeCollection = await Mediator.Send(new GetMultiCollectionById(Id), _cts.Token);
-            maybeCollection.IfSome(
-                collection =>
-                {
-                    _model.Id = collection.Id;
-                    _model.Name = collection.Name;
-                    _model.Items = collection.Items
-                        .Map(
-                            item =>
-                                new MultiCollectionItemEditViewModel
-                                {
-                                    Collection = item.Collection,
-                                    ScheduleAsGroup = item.ScheduleAsGroup,
-                                    PlaybackOrder = item.PlaybackOrder
-                                })
-                        .Append(
-                            collection.SmartItems.Map(
-                                item =>
-                                    new MultiCollectionSmartItemEditViewModel
-                                    {
-                                        SmartCollection = item.SmartCollection,
-                                        ScheduleAsGroup = item.ScheduleAsGroup,
-                                        PlaybackOrder = item.PlaybackOrder
-                                    })).ToList();
-                });
+            maybeCollection.IfSome(collection =>
+            {
+                _model.Id = collection.Id;
+                _model.Name = collection.Name;
+                _model.Items = collection.Items
+                    .Map(item =>
+                        new MultiCollectionItemEditViewModel
+                        {
+                            Collection = item.Collection,
+                            ScheduleAsGroup = item.ScheduleAsGroup,
+                            PlaybackOrder = item.PlaybackOrder
+                        })
+                    .Append(
+                        collection.SmartItems.Map(item =>
+                            new MultiCollectionSmartItemEditViewModel
+                            {
+                                SmartCollection = item.SmartCollection,
+                                ScheduleAsGroup = item.ScheduleAsGroup,
+                                PlaybackOrder = item.PlaybackOrder
+                            })).ToList();
+            });
         }
         else
         {
@@ -198,32 +195,30 @@
     }
 
     private List<UpdateMultiCollectionItem> GetUpdateItems() =>
-        _model.Items.Map(
-            i =>
-                i switch
-                {
-                    MultiCollectionSmartItemEditViewModel smartVm =>
-                        new UpdateMultiCollectionItem(
-                            null,
-                            smartVm.SmartCollection.Id,
-                            smartVm.ScheduleAsGroup,
-                            smartVm.PlaybackOrder),
-                    _ => new UpdateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
-                }).ToList();
+        _model.Items.Map(i =>
+            i switch
+            {
+                MultiCollectionSmartItemEditViewModel smartVm =>
+                    new UpdateMultiCollectionItem(
+                        null,
+                        smartVm.SmartCollection.Id,
+                        smartVm.ScheduleAsGroup,
+                        smartVm.PlaybackOrder),
+                _ => new UpdateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
+            }).ToList();
 
     private List<CreateMultiCollectionItem> GetCreateItems() =>
-        _model.Items.Map(
-            i =>
-                i switch
-                {
-                    MultiCollectionSmartItemEditViewModel smartVm =>
-                        new CreateMultiCollectionItem(
-                            null,
-                            smartVm.SmartCollection.Id,
-                            smartVm.ScheduleAsGroup,
-                            smartVm.PlaybackOrder),
-                    _ => new CreateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
-                }).ToList();
+        _model.Items.Map(i =>
+            i switch
+            {
+                MultiCollectionSmartItemEditViewModel smartVm =>
+                    new CreateMultiCollectionItem(
+                        null,
+                        smartVm.SmartCollection.Id,
+                        smartVm.ScheduleAsGroup,
+                        smartVm.PlaybackOrder),
+                _ => new CreateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
+            }).ToList();
 
     private void RemoveCollection(MultiCollectionItemEditViewModel item) => _model.Items.Remove(item);
 

@@ -64,13 +64,12 @@ public class CreateLocalLibraryHandler : LocalLibraryHandlerBase,
             .OrderBy(lms => lms.Id)
             .FirstOrDefaultAsync()
             .Map(Optional)
-            .MapT(
-                lms => new LocalLibrary
-                {
-                    Name = request.Name,
-                    Paths = request.Paths.Map(p => new LibraryPath { Path = p }).ToList(),
-                    MediaKind = request.MediaKind,
-                    MediaSourceId = lms.Id
-                })
+            .MapT(lms => new LocalLibrary
+            {
+                Name = request.Name,
+                Paths = request.Paths.Map(p => new LibraryPath { Path = p }).ToList(),
+                MediaKind = request.MediaKind,
+                MediaSourceId = lms.Id
+            })
             .Map(o => o.ToValidation<BaseError>("LocalMediaSource does not exist."));
 }

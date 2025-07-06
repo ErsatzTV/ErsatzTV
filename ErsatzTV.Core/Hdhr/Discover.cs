@@ -6,9 +6,9 @@ namespace ErsatzTV.Core.Hdhr;
 [SuppressMessage("Performance", "CA1822:Mark members as static")]
 public class Discover
 {
+    private readonly Guid _UUID;
     private readonly string _host;
     private readonly string _scheme;
-    private readonly Guid _UUID;
 
     public Discover(string scheme, string host, int tunerCount, Guid uuid)
     {

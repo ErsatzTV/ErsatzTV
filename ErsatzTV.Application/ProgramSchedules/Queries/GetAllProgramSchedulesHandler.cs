@@ -12,15 +12,14 @@ public class GetAllProgramSchedulesHandler(IDbContextFactory<TvContext> dbContex
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ProgramSchedules
-            .Map(
-                ps => new ProgramScheduleViewModel(
-                    ps.Id,
-                    ps.Name,
-                    ps.KeepMultiPartEpisodesTogether,
-                    ps.TreatCollectionsAsShows,
-                    ps.ShuffleScheduleItems,
-                    ps.RandomStartPoint,
-                    ps.FixedStartTimeBehavior))
+            .Map(ps => new ProgramScheduleViewModel(
+                ps.Id,
+                ps.Name,
+                ps.KeepMultiPartEpisodesTogether,
+                ps.TreatCollectionsAsShows,
+                ps.ShuffleScheduleItems,
+                ps.RandomStartPoint,
+                ps.FixedStartTimeBehavior))
             .ToListAsync(cancellationToken);
     }
 }

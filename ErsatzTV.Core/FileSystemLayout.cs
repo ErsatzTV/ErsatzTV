@@ -1,9 +1,67 @@
 ﻿using System.Reflection;
+using Serilog;
 
 namespace ErsatzTV.Core;
 
 public static class FileSystemLayout
 {
+    public static readonly string AppDataFolder;
+
+    public static readonly string TranscodeFolder;
+
+    public static readonly string DataProtectionFolder;
+    public static readonly string LogsFolder;
+
+    public static readonly string DatabasePath;
+    public static readonly string LogFilePath;
+
+    public static readonly string LegacyImageCacheFolder;
+    public static readonly string ResourcesCacheFolder;
+    public static readonly string ChannelGuideCacheFolder;
+
+    public static readonly string PlexSecretsPath;
+    public static readonly string JellyfinSecretsPath;
+    public static readonly string EmbySecretsPath;
+
+    public static readonly string FFmpegReportsFolder;
+    public static readonly string SearchIndexFolder;
+    public static readonly string TempFilePoolFolder;
+
+    public static readonly string ArtworkCacheFolder;
+
+    public static readonly string PosterCacheFolder;
+    public static readonly string ThumbnailCacheFolder;
+    public static readonly string LogoCacheFolder;
+    public static readonly string FanArtCacheFolder;
+    public static readonly string WatermarkCacheFolder;
+
+    public static readonly string StreamsCacheFolder;
+
+    public static readonly string SubtitleCacheFolder;
+    public static readonly string FontsCacheFolder;
+
+    public static readonly string TemplatesFolder;
+
+    public static readonly string MusicVideoCreditsTemplatesFolder;
+
+    public static readonly string ChannelGuideTemplatesFolder;
+
+    public static readonly string ScriptsFolder;
+
+    public static readonly string MultiEpisodeShuffleTemplatesFolder;
+
+    public static readonly string AudioStreamSelectorScriptsFolder;
+
+    public static readonly string ChannelStreamSelectorsFolder;
+
+    public static readonly string MacOsOldAppDataFolder = Path.Combine(
+        Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
+        ".local",
+        "share",
+        "ersatztv");
+
+    public static readonly string MacOsOldDatabasePath = Path.Combine(MacOsOldAppDataFolder, "ersatztv.sqlite3");
+
     static FileSystemLayout()
     {
         string version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -25,7 +83,7 @@ public static class FileSystemLayout
             // check for config at old location
             if (Directory.Exists(defaultConfigFolder))
             {
-                Serilog.Log.Logger.Warning(
+                Log.Logger.Warning(
                     "Ignoring ETV_CONFIG_FOLDER {Folder} and using default {Default}",
                     customConfigFolder,
                     defaultConfigFolder);
@@ -51,7 +109,7 @@ public static class FileSystemLayout
             // check for config at old location
             if (Directory.Exists(defaultTranscodeFolder))
             {
-                Serilog.Log.Logger.Warning(
+                Log.Logger.Warning(
                     "Ignoring ETV_TRANSCODE_FOLDER {Folder} and using default {Default}",
                     customTranscodeFolder,
                     defaultTranscodeFolder);
@@ -110,61 +168,4 @@ public static class FileSystemLayout
 
         ChannelStreamSelectorsFolder = Path.Combine(ScriptsFolder, "channel-stream-selectors");
     }
-
-    public static readonly string AppDataFolder;
-
-    public static readonly string TranscodeFolder;
-
-    public static readonly string DataProtectionFolder;
-    public static readonly string LogsFolder;
-
-    public static readonly string DatabasePath;
-    public static readonly string LogFilePath;
-
-    public static readonly string LegacyImageCacheFolder;
-    public static readonly string ResourcesCacheFolder;
-    public static readonly string ChannelGuideCacheFolder;
-
-    public static readonly string PlexSecretsPath;
-    public static readonly string JellyfinSecretsPath;
-    public static readonly string EmbySecretsPath;
-
-    public static readonly string FFmpegReportsFolder;
-    public static readonly string SearchIndexFolder;
-    public static readonly string TempFilePoolFolder;
-
-    public static readonly string ArtworkCacheFolder;
-
-    public static readonly string PosterCacheFolder;
-    public static readonly string ThumbnailCacheFolder;
-    public static readonly string LogoCacheFolder;
-    public static readonly string FanArtCacheFolder;
-    public static readonly string WatermarkCacheFolder;
-
-    public static readonly string StreamsCacheFolder;
-
-    public static readonly string SubtitleCacheFolder;
-    public static readonly string FontsCacheFolder;
-
-    public static readonly string TemplatesFolder;
-
-    public static readonly string MusicVideoCreditsTemplatesFolder;
-
-    public static readonly string ChannelGuideTemplatesFolder;
-
-    public static readonly string ScriptsFolder;
-
-    public static readonly string MultiEpisodeShuffleTemplatesFolder;
-
-    public static readonly string AudioStreamSelectorScriptsFolder;
-
-    public static readonly string ChannelStreamSelectorsFolder;
-
-    public static readonly string MacOsOldAppDataFolder = Path.Combine(
-        Environment.GetEnvironmentVariable("HOME") ?? string.Empty,
-        ".local",
-        "share",
-        "ersatztv");
-
-    public static readonly string MacOsOldDatabasePath = Path.Combine(MacOsOldAppDataFolder, "ersatztv.sqlite3");
 }

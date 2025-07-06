@@ -8,14 +8,15 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Plex;
 
-public class GetPlexConnectionParametersHandler : PlexBaseConnectionHandler, IRequestHandler<GetPlexConnectionParameters,
-    Either<BaseError, PlexConnectionParametersViewModel>>
+public class GetPlexConnectionParametersHandler : PlexBaseConnectionHandler,
+    IRequestHandler<GetPlexConnectionParameters,
+        Either<BaseError, PlexConnectionParametersViewModel>>
 {
+    private readonly ILogger<GetPlexConnectionParametersHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMemoryCache _memoryCache;
-    private readonly IPlexServerApiClient _plexServerApiClient;
     private readonly IPlexSecretStore _plexSecretStore;
-    private readonly ILogger<GetPlexConnectionParametersHandler> _logger;
+    private readonly IPlexServerApiClient _plexServerApiClient;
 
     public GetPlexConnectionParametersHandler(
         IMemoryCache memoryCache,
@@ -49,7 +50,8 @@ public class GetPlexConnectionParametersHandler : PlexBaseConnectionHandler, IRe
             foreach (PlexServerAuthToken token in maybeToken)
             {
                 // try to keep the same connection
-                Option<PlexConnection> maybeActiveConnection = mediaSource.Connections.Filter(c => c.IsActive).HeadOrNone();
+                Option<PlexConnection> maybeActiveConnection =
+                    mediaSource.Connections.Filter(c => c.IsActive).HeadOrNone();
                 foreach (PlexConnection activeConnection in maybeActiveConnection)
                 {
                     if (await _plexServerApiClient.Ping(activeConnection, token, cancellationToken))

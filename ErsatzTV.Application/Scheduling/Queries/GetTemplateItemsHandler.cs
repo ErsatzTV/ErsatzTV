@@ -16,10 +16,9 @@ public class GetTemplateItemsHandler(IDbContextFactory<TvContext> dbContextFacto
             .Filter(i => i.TemplateId == request.TemplateId)
             .Include(i => i.Block)
             .ToListAsync(cancellationToken)
-            .Map(
-                items => items
-                    .Map(Mapper.ProjectToViewModel)
-                    .Filter(i => i.StartTime < i.EndTime || i.EndTime.TimeOfDay == TimeSpan.Zero)
-                    .ToList());
+            .Map(items => items
+                .Map(Mapper.ProjectToViewModel)
+                .Filter(i => i.StartTime < i.EndTime || i.EndTime.TimeOfDay == TimeSpan.Zero)
+                .ToList());
     }
 }

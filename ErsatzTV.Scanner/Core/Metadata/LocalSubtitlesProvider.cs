@@ -157,8 +157,8 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                 .Replace($"{withoutExtension.ToLowerInvariant()}.", string.Empty)[..3]
                 .Replace(".", string.Empty);
 
-            Option<CultureInfo> maybeCulture = languageCodes.Find(
-                ci => ci.TwoLetterISOLanguageName == language || ci.ThreeLetterISOLanguageName == language);
+            Option<CultureInfo> maybeCulture = languageCodes.Find(ci =>
+                ci.TwoLetterISOLanguageName == language || ci.ThreeLetterISOLanguageName == language);
 
             if (maybeCulture.IsNone)
             {

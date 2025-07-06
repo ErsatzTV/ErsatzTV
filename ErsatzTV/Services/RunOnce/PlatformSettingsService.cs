@@ -22,9 +22,8 @@ public class PlatformSettingsService(IServiceScopeFactory serviceScopeFactory) :
                 IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
 
                 var devices = localFileSystem.ListFiles("/dev/dri")
-                    .Filter(
-                        s => s.StartsWith("/dev/dri/render", StringComparison.OrdinalIgnoreCase)
-                             || s.StartsWith("/dev/dri/card", StringComparison.OrdinalIgnoreCase))
+                    .Filter(s => s.StartsWith("/dev/dri/render", StringComparison.OrdinalIgnoreCase)
+                                 || s.StartsWith("/dev/dri/card", StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 memoryCache.Set("ffmpeg.render_devices", devices);

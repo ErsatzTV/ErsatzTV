@@ -14,9 +14,9 @@ namespace ErsatzTV.Application.MediaCollections;
 public class AddImageToCollectionHandler : IRequestHandler<AddImageToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
+    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
 
     public AddImageToCollectionHandler(
         IDbContextFactory<TvContext> dbContextFactory,

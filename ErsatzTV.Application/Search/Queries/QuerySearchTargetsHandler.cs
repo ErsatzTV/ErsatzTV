@@ -42,12 +42,11 @@ public class QuerySearchTargetsHandler : IRequestHandler<QuerySearchTargets, Lis
             .ToListAsync(cancellationToken);
 
         result.AddRange(
-            schedules.SelectMany(
-                s => new[]
-                {
-                    new SearchTargetViewModel(s.Id, s.Name, SearchTargetKind.Schedule),
-                    new SearchTargetViewModel(s.Id, s.Name, SearchTargetKind.ScheduleItems)
-                }));
+            schedules.SelectMany(s => new[]
+            {
+                new SearchTargetViewModel(s.Id, s.Name, SearchTargetKind.Schedule),
+                new SearchTargetViewModel(s.Id, s.Name, SearchTargetKind.ScheduleItems)
+            }));
 
         return result;
     }

@@ -54,9 +54,8 @@ public class GetEmbyConnectionParametersHandler : IRequestHandler<GetEmbyConnect
 
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist() =>
         _mediaSourceRepository.GetAllEmby().Map(list => list.HeadOrNone())
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    "Emby media source does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                "Emby media source does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         EmbyMediaSource embyMediaSource)

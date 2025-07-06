@@ -15,10 +15,10 @@ public class AddItemsToCollectionHandler :
     IRequestHandler<AddItemsToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly ChannelWriter<ISearchIndexBackgroundServiceRequest> _searchChannel;
     private readonly ITelevisionRepository _televisionRepository;
 
     public AddItemsToCollectionHandler(

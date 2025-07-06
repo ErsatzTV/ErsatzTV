@@ -27,12 +27,12 @@ public class MediaItemRepository : IMediaItemRepository
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
         foreach (LanguageCode code in await dbContext.LanguageCodes.ToListAsync())
         {
-            Option<CultureInfo> maybeCulture = allCultures.Find(
-                c => string.Equals(code.ThreeCode1, c.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase)
-                     || string.Equals(
-                         code.ThreeCode2,
-                         c.ThreeLetterISOLanguageName,
-                         StringComparison.OrdinalIgnoreCase));
+            Option<CultureInfo> maybeCulture = allCultures.Find(c =>
+                string.Equals(code.ThreeCode1, c.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(
+                    code.ThreeCode2,
+                    c.ThreeLetterISOLanguageName,
+                    StringComparison.OrdinalIgnoreCase));
             foreach (CultureInfo culture in maybeCulture)
             {
                 result.Add(culture);
@@ -55,8 +55,10 @@ public class MediaItemRepository : IMediaItemRepository
         {
             foreach (string code in await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCode))
             {
-                Option<CultureInfo> maybeCulture = allCultures.Find(
-                    c => string.Equals(code, c.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
+                Option<CultureInfo> maybeCulture = allCultures.Find(c => string.Equals(
+                    code,
+                    c.ThreeLetterISOLanguageName,
+                    StringComparison.OrdinalIgnoreCase));
 
                 foreach (CultureInfo culture in maybeCulture)
                 {

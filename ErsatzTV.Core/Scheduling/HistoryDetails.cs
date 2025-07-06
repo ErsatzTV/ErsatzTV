@@ -59,7 +59,7 @@ internal static class HistoryDetails
             collectionKey.SmartCollectionId,
             collectionKey.MediaItemId,
             collectionKey.PlaylistId,
-            collectionKey.FakeCollectionKey,
+            collectionKey.FakeCollectionKey
         };
 
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
@@ -74,7 +74,7 @@ internal static class HistoryDetails
             CollectionType = deco.DefaultFillerCollectionType,
             CollectionId = deco.DefaultFillerCollectionId,
             MultiCollectionId = deco.DefaultFillerMultiCollectionId,
-            SmartCollectionId = deco.DefaultFillerSmartCollectionId,
+            SmartCollectionId = deco.DefaultFillerSmartCollectionId
         };
 
         return JsonConvert.SerializeObject(key, Formatting.None, JsonSettings);
@@ -141,7 +141,8 @@ internal static class HistoryDetails
                 maybeMatchedItem = fakeItem;
             }
         }
-        else if (maybeMatchedItem.IsNone && playbackOrder is PlaybackOrder.Chronological && details.ReleaseDate.HasValue)
+        else if (maybeMatchedItem.IsNone && playbackOrder is PlaybackOrder.Chronological &&
+                 details.ReleaseDate.HasValue)
         {
             maybeMatchedItem = Optional(collectionItems.Find(ci => MatchReleaseDate(ci, details.ReleaseDate.Value)));
 

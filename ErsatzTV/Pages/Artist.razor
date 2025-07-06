@@ -223,15 +223,14 @@
 
     private async Task RefreshData()
     {
-        await Mediator.Send(new GetArtistById(ArtistId), _cts.Token).IfSomeAsync(
-            vm =>
-            {
-                _artist = vm;
-                _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
-                _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
-                _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
-                _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
-            });
+        await Mediator.Send(new GetArtistById(ArtistId), _cts.Token).IfSomeAsync(vm =>
+        {
+            _artist = vm;
+            _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
+            _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
+            _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
+            _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
+        });
 
         _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), _cts.Token);
     }

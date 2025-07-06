@@ -520,20 +520,19 @@ else
             return;
         }
 
-        var items = _items.Map(
-            item => new ReplacePlayoutTemplate(
-                item.Id,
-                item.Index,
-                item.Template.Id,
-                item.DecoTemplate?.Id,
-                item.DaysOfWeek,
-                item.DaysOfMonth,
-                item.MonthsOfYear,
-                item.LimitToDateRange,
-                item.StartMonth,
-                item.StartDay,
-                item.EndMonth,
-                item.EndDay)).ToList();
+        var items = _items.Map(item => new ReplacePlayoutTemplate(
+            item.Id,
+            item.Index,
+            item.Template.Id,
+            item.DecoTemplate?.Id,
+            item.DaysOfWeek,
+            item.DaysOfMonth,
+            item.MonthsOfYear,
+            item.LimitToDateRange,
+            item.StartMonth,
+            item.StartDay,
+            item.EndMonth,
+            item.EndDay)).ToList();
 
         Option<BaseError> maybeError = await Mediator.Send(new ReplacePlayoutTemplateItems(Id, items), _cts.Token);
 

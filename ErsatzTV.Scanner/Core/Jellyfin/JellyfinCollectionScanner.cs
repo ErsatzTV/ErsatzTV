@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
-using ErsatzTV.Scanner.Application.Jellyfin;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Scanner.Core.Jellyfin;
@@ -70,8 +69,8 @@ public class JellyfinCollectionScanner : IJellyfinCollectionScanner
             }
 
             // remove missing collections (and remove any lingering tags from those collections)
-            foreach (JellyfinCollection collection in existingCollections.Filter(
-                         e => !incomingItemIds.Contains(e.ItemId)))
+            foreach (JellyfinCollection collection in existingCollections.Filter(e =>
+                         !incomingItemIds.Contains(e.ItemId)))
             {
                 await _jellyfinCollectionRepository.RemoveCollection(collection);
             }

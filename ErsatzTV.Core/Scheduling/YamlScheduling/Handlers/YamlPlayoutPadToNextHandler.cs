@@ -36,7 +36,9 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
 
         // ensure filler works for content less than one minute
         if (targetTime <= context.CurrentTime)
+        {
             targetTime = targetTime.AddMinutes(padToNext.PadToNext);
+        }
 
         Option<IMediaCollectionEnumerator> maybeEnumerator = await GetContentEnumerator(
             context,
@@ -60,7 +62,7 @@ public class YamlPlayoutPadToNextHandler(EnumeratorCache enumeratorCache) : Yaml
                 false,
                 padToNext.DiscardAttempts,
                 padToNext.Trim,
-                offlineTail: true,
+                true,
                 GetFillerKind(padToNext),
                 padToNext.CustomTitle,
                 enumerator,

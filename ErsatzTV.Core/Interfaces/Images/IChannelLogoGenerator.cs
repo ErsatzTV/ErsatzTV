@@ -1,5 +1,3 @@
-using ErsatzTV.Core.Domain;
-
 namespace ErsatzTV.Core.Interfaces.Images;
 
 public interface IChannelLogoGenerator

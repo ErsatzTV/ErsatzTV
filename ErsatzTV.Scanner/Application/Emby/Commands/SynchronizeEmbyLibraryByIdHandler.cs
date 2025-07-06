@@ -109,15 +109,14 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
     private async Task<Validation<BaseError, RequestParameters>> Validate(
         SynchronizeEmbyLibraryById request) =>
         (await ValidateConnection(request), await EmbyLibraryMustExist(request), await ValidateLibraryRefreshInterval())
-        .Apply(
-            (connectionParameters, embyLibrary, libraryRefreshInterval) =>
-                new RequestParameters(
-                    connectionParameters,
-                    embyLibrary,
-                    request.ForceScan,
-                    libraryRefreshInterval,
-                    request.DeepScan
-                ));
+        .Apply((connectionParameters, embyLibrary, libraryRefreshInterval) =>
+            new RequestParameters(
+                connectionParameters,
+                embyLibrary,
+                request.ForceScan,
+                libraryRefreshInterval,
+                request.DeepScan
+            ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
         SynchronizeEmbyLibraryById request) =>
@@ -128,9 +127,8 @@ public class SynchronizeEmbyLibraryByIdHandler : IRequestHandler<SynchronizeEmby
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist(
         SynchronizeEmbyLibraryById request) =>
         _mediaSourceRepository.GetEmbyByLibraryId(request.EmbyLibraryId)
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    $"Emby media source for library {request.EmbyLibraryId} does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Emby media source for library {request.EmbyLibraryId} does not exist."));
 
     private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
         EmbyMediaSource embyMediaSource)

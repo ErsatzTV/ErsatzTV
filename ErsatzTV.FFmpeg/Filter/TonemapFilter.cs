@@ -4,9 +4,9 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class TonemapFilter : BaseFilter
 {
-    private readonly FFmpegState _ffmpegState;
     private readonly FrameState _currentState;
     private readonly IPixelFormat _desiredPixelFormat;
+    private readonly FFmpegState _ffmpegState;
 
     public TonemapFilter(FFmpegState ffmpegState, FrameState currentState, IPixelFormat desiredPixelFormat)
     {

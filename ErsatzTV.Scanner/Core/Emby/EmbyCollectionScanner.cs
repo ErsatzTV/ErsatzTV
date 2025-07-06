@@ -38,7 +38,9 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
             // get all collections from db (item id, etag)
             List<EmbyCollection> existingCollections = await _embyCollectionRepository.GetCollections();
 
-            await foreach ((EmbyCollection collection, int _) in _embyApiClient.GetCollectionLibraryItems(address, apiKey))
+            await foreach ((EmbyCollection collection, int _) in _embyApiClient.GetCollectionLibraryItems(
+                               address,
+                               apiKey))
             {
                 incomingItemIds.Add(collection.ItemId);
 
@@ -88,7 +90,10 @@ public class EmbyCollectionScanner : IEmbyCollectionScanner
         try
         {
             // get collection items from Emby
-            IAsyncEnumerable<Tuple<MediaItem, int>> items = _embyApiClient.GetCollectionItems(address, apiKey, collection.ItemId);
+            IAsyncEnumerable<Tuple<MediaItem, int>> items = _embyApiClient.GetCollectionItems(
+                address,
+                apiKey,
+                collection.ItemId);
 
             List<int> removedIds = await _embyCollectionRepository.RemoveAllTags(collection);
 

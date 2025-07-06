@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 
@@ -84,7 +84,7 @@ public class ShuffledContentTests
         }
 
         list.ShouldNotBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        list.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], ignoreOrder: true);
+        list.ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], true);
     }
 
     [Test]
@@ -135,18 +135,17 @@ public class ShuffledContentTests
     }
 
     private static List<MediaItem> Episodes(int count) =>
-        Range(1, count).Map(
-                i => (MediaItem)new Episode
+        Range(1, count).Map(i => (MediaItem)new Episode
+            {
+                Id = i,
+                EpisodeMetadata = new List<EpisodeMetadata>
                 {
-                    Id = i,
-                    EpisodeMetadata = new List<EpisodeMetadata>
+                    new()
                     {
-                        new()
-                        {
-                            ReleaseDate = new DateTime(2020, 1, i)
-                        }
+                        ReleaseDate = new DateTime(2020, 1, i)
                     }
-                })
+                }
+            })
             .Reverse()
             .ToList();
 }

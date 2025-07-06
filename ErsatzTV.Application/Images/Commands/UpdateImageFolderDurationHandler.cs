@@ -97,9 +97,8 @@ public class UpdateImageFolderDurationHandler(IDbContextFactory<TvContext> dbCon
 
             // update all images in this folder
             await dbContext.ImageMetadata
-                .Filter(
-                    im => im.Image.MediaVersions.Any(
-                        mv => mv.MediaFiles.Any(mf => mf.LibraryFolderId == currentFolder.Id)))
+                .Filter(im =>
+                    im.Image.MediaVersions.Any(mv => mv.MediaFiles.Any(mf => mf.LibraryFolderId == currentFolder.Id)))
                 .ExecuteUpdateAsync(
                     setters => setters.SetProperty(im => im.DurationSeconds, effectiveDuration),
                     cancellationToken);

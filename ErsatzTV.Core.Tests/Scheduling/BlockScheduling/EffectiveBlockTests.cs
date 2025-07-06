@@ -1,7 +1,7 @@
 using ErsatzTV.Core.Domain.Scheduling;
 using ErsatzTV.Core.Scheduling.BlockScheduling;
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace ErsatzTV.Core.Tests.Scheduling.BlockScheduling;
 
@@ -49,7 +49,7 @@ public static class EffectiveBlockTests
 
             List<PlayoutTemplate> templates =
             [
-                new PlayoutTemplate
+                new()
                 {
                     Index = 1,
                     DaysOfWeek = [DayOfWeek.Sunday],
@@ -74,7 +74,7 @@ public static class EffectiveBlockTests
 
             List<PlayoutTemplate> templates =
             [
-                new PlayoutTemplate
+                new()
                 {
                     Index = 1,
                     DaysOfWeek = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],

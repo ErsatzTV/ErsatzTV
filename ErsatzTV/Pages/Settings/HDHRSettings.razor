@@ -6,61 +6,69 @@
 @inject ISnackbar Snackbar
 @inject ILogger<HDHRSettings> Logger
 
-<MudForm @bind-IsValid="@_hdhrSuccess" Style="max-height: 100%">
+<MudForm @ref="_form" @bind-IsValid="@_hdhrSuccess" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveHDHRSettings())" Class="ml-8" StartIcon="@Icons.Material.Filled.Save">Save Settings</MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">HDHomeRun</MudText>
-            <MudDivider Class="mb-6" />
+            <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>UUID</MudText>
                 </div>
-                <MudTextField @bind-Value="_uuid" Disabled="true" />
+                <MudTextField @bind-Value="_uuid" Disabled="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>Tuner Count</MudText>
                 </div>
-                <MudTextField @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!" />
+                <MudTextField @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
             </MudStack>
         </MudContainer>
     </div>
 </MudForm>
 
 @code {
-	private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-	private bool _hdhrSuccess;
-	private int _tunerCount;
-    [UsedImplicitly] private Guid _uuid;
+    private MudForm _form;
+    private bool _hdhrSuccess;
+    private int _tunerCount;
 
-	public void Dispose()
-	{
-		_cts.Cancel();
-		_cts.Dispose();
-	}
+    [UsedImplicitly]
+    private Guid _uuid;
 
-	protected override async Task OnParametersSetAsync()
-	{
-		_tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
         _uuid = await Mediator.Send(new GetHDHRUUID(), _cts.Token);
-		_hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
+        _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
     }
 
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
 
     private async Task SaveHDHRSettings()
     {
-        Either<BaseError, Unit> result = await Mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
-        result.Match(
-            Left: error =>
-            {
-                Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
-            },
-            Right: _ => Snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
+        await _form.Validate();
+        if (_hdhrSuccess)
+        {
+            Either<BaseError, Unit> result = await Mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
+            result.Match(
+                Left: error =>
+                {
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
+                },
+                Right: _ => Snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
+        }
     }
+
 }

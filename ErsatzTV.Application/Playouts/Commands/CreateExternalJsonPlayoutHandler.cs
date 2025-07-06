@@ -50,13 +50,12 @@ public class CreateExternalJsonPlayoutHandler
         TvContext dbContext,
         CreateExternalJsonPlayout request) =>
         (await ValidateChannel(dbContext, request), ValidateExternalJsonFile(request), ValidatePlayoutType(request))
-        .Apply(
-            (channel, externalJsonFile, playoutType) => new Playout
-            {
-                ChannelId = channel.Id,
-                ExternalJsonFile = externalJsonFile,
-                ProgramSchedulePlayoutType = playoutType
-            });
+        .Apply((channel, externalJsonFile, playoutType) => new Playout
+        {
+            ChannelId = channel.Id,
+            ExternalJsonFile = externalJsonFile,
+            ProgramSchedulePlayoutType = playoutType
+        });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,

@@ -8,9 +8,15 @@ public interface IJellyfinApiClient
     Task<Either<BaseError, JellyfinServerInformation>> GetServerInformation(string address, string apiKey);
     Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string apiKey);
 
-    IAsyncEnumerable<Tuple<JellyfinMovie, int>> GetMovieLibraryItems(string address, string apiKey, JellyfinLibrary library);
+    IAsyncEnumerable<Tuple<JellyfinMovie, int>> GetMovieLibraryItems(
+        string address,
+        string apiKey,
+        JellyfinLibrary library);
 
-    IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(string address, string apiKey, JellyfinLibrary library);
+    IAsyncEnumerable<Tuple<JellyfinShow, int>> GetShowLibraryItems(
+        string address,
+        string apiKey,
+        JellyfinLibrary library);
 
     IAsyncEnumerable<Tuple<JellyfinSeason, int>> GetSeasonLibraryItems(
         string address,
@@ -24,7 +30,10 @@ public interface IJellyfinApiClient
         JellyfinLibrary library,
         string seasonId);
 
-    IAsyncEnumerable<Tuple<JellyfinCollection, int>> GetCollectionLibraryItems(string address, string apiKey, int mediaSourceId);
+    IAsyncEnumerable<Tuple<JellyfinCollection, int>> GetCollectionLibraryItems(
+        string address,
+        string apiKey,
+        int mediaSourceId);
 
     IAsyncEnumerable<Tuple<MediaItem, int>> GetCollectionItems(
         string address,
