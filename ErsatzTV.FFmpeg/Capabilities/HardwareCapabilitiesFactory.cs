@@ -342,6 +342,7 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
                         display,
                         driver);
                 }
+
                 _memoryCache.Set(cacheKey, profileEntrypoints);
                 return new VaapiHardwareCapabilities(profileEntrypoints, _logger);
             }

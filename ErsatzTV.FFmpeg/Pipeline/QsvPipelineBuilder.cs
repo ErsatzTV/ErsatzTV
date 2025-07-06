@@ -279,7 +279,8 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
             IPixelFormat formatForDownload = pixelFormat;
 
             bool usesVppQsv =
-                videoInputFile.FilterSteps.Any(f => f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
+                videoInputFile.FilterSteps.Any(f =>
+                    f is QsvFormatFilter or ScaleQsvFilter or DeinterlaceQsvFilter or TonemapQsvFilter);
 
             // if we have no filters, check whether we need to convert pixel format
             // since qsv doesn't seem to like doing that at the encoder

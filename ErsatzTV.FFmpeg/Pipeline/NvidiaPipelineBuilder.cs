@@ -81,7 +81,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
         bool isHdrTonemap = decodeCapability == FFmpegCapability.Hardware
                             && _ffmpegCapabilities.HasHardwareAcceleration(HardwareAccelerationMode.Vulkan)
                             && videoStream.ColorParams.IsHdr
-                            && string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("ETV_DISABLE_VULKAN"));
+                            && string.IsNullOrWhiteSpace(
+                                System.Environment.GetEnvironmentVariable("ETV_DISABLE_VULKAN"));
 
         if (decodeCapability == FFmpegCapability.Hardware)
         {
@@ -581,8 +582,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                         subtitle.FilterSteps.Add(subtitleHardwareUpload);
 
                         // only scale if scaling or padding was used for main video stream
-                        if (videoInputFile.FilterSteps.Any(
-                                s => s is ScaleFilter or ScaleCudaFilter { IsFormatOnly: false } or PadFilter))
+                        if (videoInputFile.FilterSteps.Any(s =>
+                                s is ScaleFilter or ScaleCudaFilter { IsFormatOnly: false } or PadFilter))
                         {
                             var scaleFilter = new SubtitleScaleNppFilter(desiredState.PaddedSize);
                             subtitle.FilterSteps.Add(scaleFilter);
@@ -591,8 +592,8 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                     else
                     {
                         // only scale if scaling or padding was used for main video stream
-                        if (videoInputFile.FilterSteps.Any(
-                                s => s is ScaleFilter or ScaleCudaFilter { IsFormatOnly: false } or PadFilter))
+                        if (videoInputFile.FilterSteps.Any(s =>
+                                s is ScaleFilter or ScaleCudaFilter { IsFormatOnly: false } or PadFilter))
                         {
                             var scaleFilter = new ScaleImageFilter(desiredState.PaddedSize);
                             subtitle.FilterSteps.Add(scaleFilter);
