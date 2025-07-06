@@ -88,8 +88,8 @@ public class UpdateDecoHandler(IDbContextFactory<TvContext> dbContextFactory)
         }
 
         Option<Deco> maybeExisting = await dbContext.Decos
-            .FirstOrDefaultAsync(
-                d => d.Id != request.DecoId && d.DecoGroupId == request.DecoGroupId && d.Name == request.Name)
+            .FirstOrDefaultAsync(d =>
+                d.Id != request.DecoId && d.DecoGroupId == request.DecoGroupId && d.Name == request.Name)
             .Map(Optional);
 
         return maybeExisting.IsSome

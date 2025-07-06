@@ -30,20 +30,19 @@ public class CreateProgramScheduleHandler(IDbContextFactory<TvContext> dbContext
     private static Task<Validation<BaseError, ProgramSchedule>> Validate(
         TvContext dbContext,
         CreateProgramSchedule request) =>
-        ValidateName(dbContext, request).MapT(
-            name =>
+        ValidateName(dbContext, request).MapT(name =>
+        {
+            bool keepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;
+            return new ProgramSchedule
             {
-                bool keepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;
-                return new ProgramSchedule
-                {
-                    Name = name,
-                    KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
-                    TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows,
-                    ShuffleScheduleItems = request.ShuffleScheduleItems,
-                    RandomStartPoint = request.RandomStartPoint,
-                    FixedStartTimeBehavior = request.FixedStartTimeBehavior
-                };
-            });
+                Name = name,
+                KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
+                TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows,
+                ShuffleScheduleItems = request.ShuffleScheduleItems,
+                RandomStartPoint = request.RandomStartPoint,
+                FixedStartTimeBehavior = request.FixedStartTimeBehavior
+            };
+        });
 
     private static async Task<Validation<BaseError, string>> ValidateName(
         TvContext dbContext,

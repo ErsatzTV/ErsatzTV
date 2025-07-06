@@ -43,7 +43,6 @@ public class UpdateEmbyPathReplacementsHandler : IRequestHandler<UpdateEmbyPathR
     private Task<Validation<BaseError, EmbyMediaSource>> EmbyMediaSourceMustExist(
         UpdateEmbyPathReplacements request) =>
         _mediaSourceRepository.GetEmby(request.EmbyMediaSourceId)
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    $"Emby media source {request.EmbyMediaSourceId} does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Emby media source {request.EmbyMediaSourceId} does not exist."));
 }

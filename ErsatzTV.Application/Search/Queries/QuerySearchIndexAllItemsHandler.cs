@@ -30,5 +30,6 @@ public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexA
             await GetIds(LuceneSearchIndex.ImageType, request.Query));
 
     private async Task<List<int>> GetIds(string type, string query) =>
-        (await _searchIndex.Search(_client, $"type:{type} AND ({query})", string.Empty, 0, 0)).Items.Map(i => i.Id).ToList();
+        (await _searchIndex.Search(_client, $"type:{type} AND ({query})", string.Empty, 0, 0)).Items.Map(i => i.Id)
+        .ToList();
 }

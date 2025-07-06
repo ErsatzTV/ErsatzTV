@@ -43,7 +43,6 @@ public class UpdateJellyfinPathReplacementsHandler : IRequestHandler<UpdateJelly
     private Task<Validation<BaseError, JellyfinMediaSource>> JellyfinMediaSourceMustExist(
         UpdateJellyfinPathReplacements request) =>
         _mediaSourceRepository.GetJellyfin(request.JellyfinMediaSourceId)
-            .Map(
-                v => v.ToValidation<BaseError>(
-                    $"Jellyfin media source {request.JellyfinMediaSourceId} does not exist."));
+            .Map(v => v.ToValidation<BaseError>(
+                $"Jellyfin media source {request.JellyfinMediaSourceId} does not exist."));
 }

@@ -46,8 +46,13 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
             .Map(jms => jms.Id)
             .ToListAsync(cancellationToken);
 
-        return jellyfinMediaSourceIds.Map(
-            id => new LibraryViewModel("Jellyfin", 0, "Collections", 0, id, string.Empty));
+        return jellyfinMediaSourceIds.Map(id => new LibraryViewModel(
+            "Jellyfin",
+            0,
+            "Collections",
+            0,
+            id,
+            string.Empty));
     }
 
     private static async Task<IEnumerable<LibraryViewModel>> GetPlexExternalCollections(
@@ -59,7 +64,6 @@ public class GetExternalCollectionsHandler : IRequestHandler<GetExternalCollecti
             .Map(pms => pms.Id)
             .ToListAsync(cancellationToken);
 
-        return plexMediaSourceIds.Map(
-            id => new LibraryViewModel("Plex", 0, "Collections", 0, id, string.Empty));
+        return plexMediaSourceIds.Map(id => new LibraryViewModel("Plex", 0, "Collections", 0, id, string.Empty));
     }
 }

@@ -174,7 +174,9 @@ public class HlsSessionWorker : IHlsSessionWorker
             PlaylistStart = _transcodedUntil;
 
             // time shift on-demand playout if needed
-            await _mediator.Send(new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true), cancellationToken);
+            await _mediator.Send(
+                new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true),
+                cancellationToken);
 
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
             _state = initialWorkAhead ? HlsSessionState.SeekAndWorkAhead : HlsSessionState.SeekAndRealtime;
@@ -583,15 +585,14 @@ public class HlsSessionWorker : IHlsSessionWorker
                 Directory.GetFiles(
                     Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
                     "live*.mp4"))
-            .Map(
-                file =>
-                {
-                    string fileName = Path.GetFileName(file);
-                    var sequenceNumber = int.Parse(
-                        fileName.Replace("live", string.Empty).Split('.')[0],
-                        CultureInfo.InvariantCulture);
-                    return new Segment(file, sequenceNumber);
-                })
+            .Map(file =>
+            {
+                string fileName = Path.GetFileName(file);
+                var sequenceNumber = int.Parse(
+                    fileName.Replace("live", string.Empty).Split('.')[0],
+                    CultureInfo.InvariantCulture);
+                return new Segment(file, sequenceNumber);
+            })
             .ToList();
 
         var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();

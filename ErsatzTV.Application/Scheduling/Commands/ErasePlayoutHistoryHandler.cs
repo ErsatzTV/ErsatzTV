@@ -13,9 +13,8 @@ public class ErasePlayoutHistoryHandler(IDbContextFactory<TvContext> dbContextFa
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Option<Playout> maybePlayout = await dbContext.Playouts
-            .Filter(
-                p => p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Block ||
-                     p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Yaml)
+            .Filter(p => p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Block ||
+                         p.ProgramSchedulePlayoutType == ProgramSchedulePlayoutType.Yaml)
             .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId);
 
         foreach (Playout playout in maybePlayout)

@@ -17,10 +17,9 @@ public class SearchArtistsHandler : IRequestHandler<SearchArtists, List<NamedMed
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.ArtistMetadata
             .AsNoTracking()
-            .Where(
-                a => EF.Functions.Like(
-                    EF.Functions.Collate(a.Title, TvContext.CaseInsensitiveCollation),
-                    $"%{request.Query}%"))
+            .Where(a => EF.Functions.Like(
+                EF.Functions.Collate(a.Title, TvContext.CaseInsensitiveCollation),
+                $"%{request.Query}%"))
             .OrderBy(a => EF.Functions.Collate(a.Title, TvContext.CaseInsensitiveCollation))
             .Take(10)
             .ToListAsync(cancellationToken)

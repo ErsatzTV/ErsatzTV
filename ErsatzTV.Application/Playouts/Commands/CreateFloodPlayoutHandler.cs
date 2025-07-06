@@ -41,6 +41,7 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
         {
             await _channel.WriteAsync(new TimeShiftOnDemandPlayout(playout.Channel.Number, DateTimeOffset.Now, false));
         }
+
         await _channel.WriteAsync(new RefreshChannelList());
         return new CreatePlayoutResponse(playout.Id);
     }
@@ -50,13 +51,12 @@ public class CreateFloodPlayoutHandler : IRequestHandler<CreateFloodPlayout, Eit
         CreateFloodPlayout request) =>
         (await ValidateChannel(dbContext, request), await ValidateProgramSchedule(dbContext, request),
             ValidatePlayoutType(request))
-        .Apply(
-            (channel, programSchedule, playoutType) => new Playout
-            {
-                ChannelId = channel.Id,
-                ProgramScheduleId = programSchedule.Id,
-                ProgramSchedulePlayoutType = playoutType
-            });
+        .Apply((channel, programSchedule, playoutType) => new Playout
+        {
+            ChannelId = channel.Id,
+            ProgramScheduleId = programSchedule.Id,
+            ProgramSchedulePlayoutType = playoutType
+        });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,

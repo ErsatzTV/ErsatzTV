@@ -26,8 +26,11 @@ public class ResetAllPlayoutsHandler(
                 case ProgramSchedulePlayoutType.Yaml:
                     if (!locker.IsPlayoutLocked(playout.Id))
                     {
-                        await channel.WriteAsync(new BuildPlayout(playout.Id, PlayoutBuildMode.Reset), cancellationToken);
+                        await channel.WriteAsync(
+                            new BuildPlayout(playout.Id, PlayoutBuildMode.Reset),
+                            cancellationToken);
                     }
+
                     break;
                 case ProgramSchedulePlayoutType.ExternalJson:
                 case ProgramSchedulePlayoutType.None:

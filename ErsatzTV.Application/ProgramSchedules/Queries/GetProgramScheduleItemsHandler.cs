@@ -52,9 +52,8 @@ public class GetProgramScheduleItemsHandler :
             .Include(i => i.FallbackFiller)
             .Include(i => i.Watermark)
             .ToListAsync(cancellationToken)
-            .Map(
-                programScheduleItems => programScheduleItems.Map(ProjectToViewModel)
-                    .Map(psi => EnforceProperties(maybeProgramSchedule, psi)).ToList());
+            .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel)
+                .Map(psi => EnforceProperties(maybeProgramSchedule, psi)).ToList());
     }
 
     // shuffled schedule items supports a limited set of property values

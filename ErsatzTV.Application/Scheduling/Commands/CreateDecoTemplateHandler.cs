@@ -26,12 +26,11 @@ public class CreateDecoTemplateHandler(IDbContextFactory<TvContext> dbContextFac
 
     private static Task<Validation<BaseError, DecoTemplate>> Validate(CreateDecoTemplate request) =>
         Task.FromResult(
-            ValidateName(request).Map(
-                name => new DecoTemplate
-                {
-                    DecoTemplateGroupId = request.DecoTemplateGroupId,
-                    Name = name
-                }));
+            ValidateName(request).Map(name => new DecoTemplate
+            {
+                DecoTemplateGroupId = request.DecoTemplateGroupId,
+                Name = name
+            }));
 
     private static Validation<BaseError, string> ValidateName(CreateDecoTemplate createDecoTemplate) =>
         createDecoTemplate.NotEmpty(x => x.Name)

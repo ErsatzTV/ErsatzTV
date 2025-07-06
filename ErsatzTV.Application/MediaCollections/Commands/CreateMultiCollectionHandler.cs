@@ -51,45 +51,42 @@ public class CreateMultiCollectionHandler :
     private static Task<Validation<BaseError, MultiCollection>> Validate(
         TvContext dbContext,
         CreateMultiCollection request) =>
-        ValidateName(dbContext, request).MapT(
-            name => new MultiCollection
-            {
-                Name = name,
-                MultiCollectionItems = request.Items.Bind(
-                        i =>
-                        {
-                            if (i.CollectionId.HasValue)
+        ValidateName(dbContext, request).MapT(name => new MultiCollection
+        {
+            Name = name,
+            MultiCollectionItems = request.Items.Bind(i =>
+                {
+                    if (i.CollectionId.HasValue)
+                    {
+                        return Some(
+                            new MultiCollectionItem
                             {
-                                return Some(
-                                    new MultiCollectionItem
-                                    {
-                                        CollectionId = i.CollectionId.Value,
-                                        ScheduleAsGroup = i.ScheduleAsGroup,
-                                        PlaybackOrder = i.PlaybackOrder
-                                    });
-                            }
+                                CollectionId = i.CollectionId.Value,
+                                ScheduleAsGroup = i.ScheduleAsGroup,
+                                PlaybackOrder = i.PlaybackOrder
+                            });
+                    }
 
-                            return Option<MultiCollectionItem>.None;
-                        })
-                    .ToList(),
-                MultiCollectionSmartItems = request.Items.Bind(
-                        i =>
-                        {
-                            if (i.SmartCollectionId.HasValue)
+                    return Option<MultiCollectionItem>.None;
+                })
+                .ToList(),
+            MultiCollectionSmartItems = request.Items.Bind(i =>
+                {
+                    if (i.SmartCollectionId.HasValue)
+                    {
+                        return Some(
+                            new MultiCollectionSmartItem
                             {
-                                return Some(
-                                    new MultiCollectionSmartItem
-                                    {
-                                        SmartCollectionId = i.SmartCollectionId.Value,
-                                        ScheduleAsGroup = i.ScheduleAsGroup,
-                                        PlaybackOrder = i.PlaybackOrder
-                                    });
-                            }
+                                SmartCollectionId = i.SmartCollectionId.Value,
+                                ScheduleAsGroup = i.ScheduleAsGroup,
+                                PlaybackOrder = i.PlaybackOrder
+                            });
+                    }
 
-                            return Option<MultiCollectionSmartItem>.None;
-                        })
-                    .ToList()
-            });
+                    return Option<MultiCollectionSmartItem>.None;
+                })
+                .ToList()
+        });
 
     private static async Task<Validation<BaseError, string>> ValidateName(
         TvContext dbContext,

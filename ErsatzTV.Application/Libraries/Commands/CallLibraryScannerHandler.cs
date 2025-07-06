@@ -54,9 +54,9 @@ public abstract class CallLibraryScannerHandler<TRequest>
         {
             using var forcefulCts = new CancellationTokenSource();
 
-            await using CancellationTokenRegistration link = cancellationToken.Register(
-                () => forcefulCts.CancelAfter(TimeSpan.FromSeconds(10))
-            );
+            await using CancellationTokenRegistration link =
+                cancellationToken.Register(() => forcefulCts.CancelAfter(TimeSpan.FromSeconds(10))
+                );
 
             CommandResult process = await Cli.Wrap(scanner)
                 .WithArguments(arguments)

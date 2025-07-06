@@ -45,21 +45,20 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
             .Include(c => c.Artwork)
             .Include(c => c.Watermark)
             .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber)
-            .MapT(
-                channel =>
+            .MapT(channel =>
+            {
+                channel.StreamingMode = request.Mode.ToLowerInvariant() switch
                 {
-                    channel.StreamingMode = request.Mode.ToLowerInvariant() switch
-                    {
-                        "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
-                        "segmenter" => StreamingMode.HttpLiveStreamingSegmenter,
-                        "segmenter-v2" => StreamingMode.HttpLiveStreamingSegmenterV2,
-                        "ts" => StreamingMode.TransportStreamHybrid,
-                        "ts-legacy" => StreamingMode.TransportStream,
-                        _ => channel.StreamingMode
-                    };
+                    "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
+                    "segmenter" => StreamingMode.HttpLiveStreamingSegmenter,
+                    "segmenter-v2" => StreamingMode.HttpLiveStreamingSegmenterV2,
+                    "ts" => StreamingMode.TransportStreamHybrid,
+                    "ts-legacy" => StreamingMode.TransportStream,
+                    _ => channel.StreamingMode
+                };
 
-                    return channel;
-                })
+                return channel;
+            })
             .Map(o => o.ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist."));
 
     private static Task<Validation<BaseError, string>> FFmpegPathMustExist(TvContext dbContext) =>

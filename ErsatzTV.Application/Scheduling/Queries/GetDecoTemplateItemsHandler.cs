@@ -18,10 +18,9 @@ public class GetDecoTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
             .Filter(i => i.DecoTemplateId == request.DecoTemplateId)
             .Include(i => i.Deco)
             .ToListAsync(cancellationToken)
-            .Map(
-                items => items
-                    .Map(Mapper.ProjectToViewModel)
-                    .Filter(i => i.StartTime < i.EndTime || i.EndTime.TimeOfDay == TimeSpan.Zero)
-                    .ToList());
+            .Map(items => items
+                .Map(Mapper.ProjectToViewModel)
+                .Filter(i => i.StartTime < i.EndTime || i.EndTime.TimeOfDay == TimeSpan.Zero)
+                .ToList());
     }
 }

@@ -227,9 +227,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
                 .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
-                .BindT(
-                    watermarkId => dbContext.ChannelWatermarks
-                        .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
+                .BindT(watermarkId => dbContext.ChannelWatermarks
+                    .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
             Option<ChannelWatermark> playoutItemWatermark = Optional(playoutItemWithPath.PlayoutItem.Watermark);
             bool disableWatermarks = playoutItemWithPath.PlayoutItem.DisableWatermarks;
@@ -261,7 +260,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 // override watermark as song_progress_overlay.png
                 if (videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true })
                 {
-                    double ratio = channel.FFmpegProfile.Resolution.Width / (double)channel.FFmpegProfile.Resolution.Height;
+                    double ratio = channel.FFmpegProfile.Resolution.Width /
+                                   (double)channel.FFmpegProfile.Resolution.Height;
                     bool is43 = Math.Abs(ratio - 4.0 / 3.0) < 0.01;
                     string image = is43 ? "song_progress_overlay_43.png" : "song_progress_overlay.png";
 

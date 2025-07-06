@@ -25,12 +25,11 @@ public class CreatePlaylistHandler(IDbContextFactory<TvContext> dbContextFactory
     }
 
     private static async Task<Validation<BaseError, Playlist>> Validate(TvContext dbContext, CreatePlaylist request) =>
-        await ValidatePlaylistName(dbContext, request).MapT(
-            name => new Playlist
-            {
-                PlaylistGroupId = request.PlaylistGroupId,
-                Name = name
-            });
+        await ValidatePlaylistName(dbContext, request).MapT(name => new Playlist
+        {
+            PlaylistGroupId = request.PlaylistGroupId,
+            Name = name
+        });
 
     private static async Task<Validation<BaseError, string>> ValidatePlaylistName(
         TvContext dbContext,

@@ -126,7 +126,9 @@ public class HlsSessionWorkerV2 : IHlsSessionWorker
             PlaylistStart = _transcodedUntil;
 
             // time shift on-demand playout if needed
-            await _mediator.Send(new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true), cancellationToken);
+            await _mediator.Send(
+                new TimeShiftOnDemandPlayout(_channelNumber, _transcodedUntil, true),
+                cancellationToken);
 
             // start concat/segmenter process
             // other transcode processes will be started by incoming requests from concat/segmenter process

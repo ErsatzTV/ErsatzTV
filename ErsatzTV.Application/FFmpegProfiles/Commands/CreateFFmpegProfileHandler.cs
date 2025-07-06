@@ -42,34 +42,33 @@ public class CreateFFmpegProfileHandler :
         TvContext dbContext,
         CreateFFmpegProfile request) =>
         (ValidateName(request), ValidateThreadCount(request), await ResolutionMustExist(dbContext, request))
-        .Apply(
-            (name, threadCount, resolutionId) => new FFmpegProfile
-            {
-                Name = name,
-                ThreadCount = threadCount,
-                HardwareAcceleration = request.HardwareAcceleration,
-                VaapiDriver = request.VaapiDriver,
-                VaapiDevice = request.VaapiDevice,
-                QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
-                ResolutionId = resolutionId,
-                ScalingBehavior = request.ScalingBehavior,
-                VideoFormat = request.VideoFormat,
-                VideoProfile = request.VideoProfile,
-                VideoPreset = request.VideoPreset,
-                AllowBFrames = request.AllowBFrames,
-                BitDepth = request.BitDepth,
-                VideoBitrate = request.VideoBitrate,
-                VideoBufferSize = request.VideoBufferSize,
-                TonemapAlgorithm = request.TonemapAlgorithm,
-                AudioFormat = request.AudioFormat,
-                AudioBitrate = request.AudioBitrate,
-                AudioBufferSize = request.AudioBufferSize,
-                NormalizeLoudnessMode = request.NormalizeLoudnessMode,
-                AudioChannels = request.AudioChannels,
-                AudioSampleRate = request.AudioSampleRate,
-                NormalizeFramerate = request.NormalizeFramerate,
-                DeinterlaceVideo = request.DeinterlaceVideo
-            });
+        .Apply((name, threadCount, resolutionId) => new FFmpegProfile
+        {
+            Name = name,
+            ThreadCount = threadCount,
+            HardwareAcceleration = request.HardwareAcceleration,
+            VaapiDriver = request.VaapiDriver,
+            VaapiDevice = request.VaapiDevice,
+            QsvExtraHardwareFrames = request.QsvExtraHardwareFrames,
+            ResolutionId = resolutionId,
+            ScalingBehavior = request.ScalingBehavior,
+            VideoFormat = request.VideoFormat,
+            VideoProfile = request.VideoProfile,
+            VideoPreset = request.VideoPreset,
+            AllowBFrames = request.AllowBFrames,
+            BitDepth = request.BitDepth,
+            VideoBitrate = request.VideoBitrate,
+            VideoBufferSize = request.VideoBufferSize,
+            TonemapAlgorithm = request.TonemapAlgorithm,
+            AudioFormat = request.AudioFormat,
+            AudioBitrate = request.AudioBitrate,
+            AudioBufferSize = request.AudioBufferSize,
+            NormalizeLoudnessMode = request.NormalizeLoudnessMode,
+            AudioChannels = request.AudioChannels,
+            AudioSampleRate = request.AudioSampleRate,
+            NormalizeFramerate = request.NormalizeFramerate,
+            DeinterlaceVideo = request.DeinterlaceVideo
+        });
 
     private static Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>
         createFFmpegProfile.NotEmpty(x => x.Name)

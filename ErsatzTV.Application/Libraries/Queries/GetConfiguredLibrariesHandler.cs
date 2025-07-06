@@ -15,12 +15,11 @@ public class GetConfiguredLibrariesHandler : IRequestHandler<GetConfiguredLibrar
         GetConfiguredLibraries request,
         CancellationToken cancellationToken) =>
         _libraryRepository.GetAll()
-            .Map(
-                list => list.Filter(ShouldIncludeLibrary)
-                    .OrderBy(l => l.MediaSource is LocalMediaSource ? 0 : 1)
-                    .ThenBy(l => l.GetType().Name)
-                    .ThenBy(l => l.MediaKind)
-                    .Map(ProjectToViewModel).ToList());
+            .Map(list => list.Filter(ShouldIncludeLibrary)
+                .OrderBy(l => l.MediaSource is LocalMediaSource ? 0 : 1)
+                .ThenBy(l => l.GetType().Name)
+                .ThenBy(l => l.MediaKind)
+                .Map(ProjectToViewModel).ToList());
 
     private static bool ShouldIncludeLibrary(Library library) =>
         library switch

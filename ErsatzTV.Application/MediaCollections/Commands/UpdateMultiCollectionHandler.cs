@@ -50,15 +50,14 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
             .Filter(i => i.CollectionId.HasValue)
             // ReSharper disable once PossibleInvalidOperationException
             .Filter(i => c.MultiCollectionItems.All(i2 => i2.CollectionId != i.CollectionId.Value))
-            .Map(
-                i => new MultiCollectionItem
-                {
-                    // ReSharper disable once PossibleInvalidOperationException
-                    CollectionId = i.CollectionId.Value,
-                    MultiCollectionId = c.Id,
-                    ScheduleAsGroup = i.ScheduleAsGroup,
-                    PlaybackOrder = i.PlaybackOrder
-                })
+            .Map(i => new MultiCollectionItem
+            {
+                // ReSharper disable once PossibleInvalidOperationException
+                CollectionId = i.CollectionId.Value,
+                MultiCollectionId = c.Id,
+                ScheduleAsGroup = i.ScheduleAsGroup,
+                PlaybackOrder = i.PlaybackOrder
+            })
             .ToList();
         var toRemove = c.MultiCollectionItems
             .Filter(i => request.Items.All(i2 => i2.CollectionId != i.CollectionId))
@@ -70,8 +69,8 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
         // update existing items
         foreach (MultiCollectionItem item in c.MultiCollectionItems)
         {
-            foreach (UpdateMultiCollectionItem incoming in request.Items.Filter(
-                         i => i.CollectionId == item.CollectionId))
+            foreach (UpdateMultiCollectionItem incoming in
+                     request.Items.Filter(i => i.CollectionId == item.CollectionId))
             {
                 item.ScheduleAsGroup = incoming.ScheduleAsGroup;
                 item.PlaybackOrder = incoming.PlaybackOrder;
@@ -85,15 +84,14 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
             .Filter(i => i.SmartCollectionId.HasValue)
             // ReSharper disable once PossibleInvalidOperationException
             .Filter(i => c.MultiCollectionSmartItems.All(i2 => i2.SmartCollectionId != i.SmartCollectionId.Value))
-            .Map(
-                i => new MultiCollectionSmartItem
-                {
-                    // ReSharper disable once PossibleInvalidOperationException
-                    SmartCollectionId = i.SmartCollectionId.Value,
-                    MultiCollectionId = c.Id,
-                    ScheduleAsGroup = i.ScheduleAsGroup,
-                    PlaybackOrder = i.PlaybackOrder
-                })
+            .Map(i => new MultiCollectionSmartItem
+            {
+                // ReSharper disable once PossibleInvalidOperationException
+                SmartCollectionId = i.SmartCollectionId.Value,
+                MultiCollectionId = c.Id,
+                ScheduleAsGroup = i.ScheduleAsGroup,
+                PlaybackOrder = i.PlaybackOrder
+            })
             .ToList();
         var toRemoveSmart = c.MultiCollectionSmartItems
             .Filter(i => request.Items.All(i2 => i2.SmartCollectionId != i.SmartCollectionId))
@@ -105,8 +103,8 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
         // update existing items
         foreach (MultiCollectionSmartItem item in c.MultiCollectionSmartItems)
         {
-            foreach (UpdateMultiCollectionItem incoming in request.Items.Filter(
-                         i => i.SmartCollectionId == item.SmartCollectionId))
+            foreach (UpdateMultiCollectionItem incoming in request.Items.Filter(i =>
+                         i.SmartCollectionId == item.SmartCollectionId))
             {
                 item.ScheduleAsGroup = incoming.ScheduleAsGroup;
                 item.PlaybackOrder = incoming.PlaybackOrder;

@@ -71,15 +71,14 @@ public class ReplaceTemplateItemsHandler(IDbContextFactory<TvContext> dbContextF
             .ToListAsync()
             .Map(list => list.ToDictionary(b => b.Id, b => b));
 
-        var allTemplateItems = request.Items.Map(
-                i =>
-                {
-                    Block block = allBlocks[i.BlockId];
-                    return new BlockTemplateItem(
-                        i.BlockId,
-                        i.StartTime,
-                        i.StartTime + TimeSpan.FromMinutes(block.Minutes));
-                })
+        var allTemplateItems = request.Items.Map(i =>
+            {
+                Block block = allBlocks[i.BlockId];
+                return new BlockTemplateItem(
+                    i.BlockId,
+                    i.StartTime,
+                    i.StartTime + TimeSpan.FromMinutes(block.Minutes));
+            })
             .ToList();
 
         foreach (BlockTemplateItem item in allTemplateItems)

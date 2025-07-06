@@ -48,12 +48,11 @@ public class CreateSmartCollectionHandler :
     private static Task<Validation<BaseError, SmartCollection>> Validate(
         TvContext dbContext,
         CreateSmartCollection request) =>
-        ValidateName(dbContext, request).MapT(
-            name => new SmartCollection
-            {
-                Name = name,
-                Query = request.Query
-            });
+        ValidateName(dbContext, request).MapT(name => new SmartCollection
+        {
+            Name = name,
+            Query = request.Query
+        });
 
     private static async Task<Validation<BaseError, string>> ValidateName(
         TvContext dbContext,

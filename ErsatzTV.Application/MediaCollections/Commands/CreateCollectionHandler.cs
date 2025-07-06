@@ -39,12 +39,11 @@ public class CreateCollectionHandler :
     private static Task<Validation<BaseError, Collection>> Validate(
         TvContext dbContext,
         CreateCollection request) =>
-        ValidateName(dbContext, request).MapT(
-            name => new Collection
-            {
-                Name = name,
-                MediaItems = new List<MediaItem>()
-            });
+        ValidateName(dbContext, request).MapT(name => new Collection
+        {
+            Name = name,
+            MediaItems = new List<MediaItem>()
+        });
 
     private static async Task<Validation<BaseError, string>> ValidateName(
         TvContext dbContext,

@@ -37,13 +37,12 @@ public class CreateBlockPlayoutHandler(
         TvContext dbContext,
         CreateBlockPlayout request) =>
         (await ValidateChannel(dbContext, request), ValidatePlayoutType(request))
-        .Apply(
-            (channel, playoutType) => new Playout
-            {
-                ChannelId = channel.Id,
-                ProgramSchedulePlayoutType = playoutType,
-                Seed = new Random().Next()
-            });
+        .Apply((channel, playoutType) => new Playout
+        {
+            ChannelId = channel.Id,
+            ProgramSchedulePlayoutType = playoutType,
+            Seed = new Random().Next()
+        });
 
     private static Task<Validation<BaseError, Channel>> ValidateChannel(
         TvContext dbContext,

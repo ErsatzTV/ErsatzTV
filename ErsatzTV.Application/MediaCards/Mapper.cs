@@ -171,8 +171,8 @@ internal static class Mapper
             Option<EmbyMediaSource> maybeEmby) =>
         new(
                 collection.Name,
-                collection.MediaItems.OfType<Movie>().Map(
-                    m => ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin, maybeEmby) with
+                collection.MediaItems.OfType<Movie>().Map(m =>
+                    ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin, maybeEmby) with
                     {
                         CustomIndex = GetCustomIndex(collection, m.Id)
                     }).ToList(),
@@ -183,13 +183,12 @@ internal static class Mapper
                     .ToList(),
                 // collection view doesn't use local paths
                 collection.MediaItems.OfType<Episode>()
-                    .Map(
-                        e => ProjectToViewModel(
-                            e.EpisodeMetadata.Head(),
-                            maybeJellyfin,
-                            maybeEmby,
-                            false,
-                            string.Empty))
+                    .Map(e => ProjectToViewModel(
+                        e.EpisodeMetadata.Head(),
+                        maybeJellyfin,
+                        maybeEmby,
+                        false,
+                        string.Empty))
                     .ToList(),
                 collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
                 // collection view doesn't use local paths
