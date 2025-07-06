@@ -237,7 +237,8 @@ https://www.themoviedb.org/movie/11-star-wars"));
     [TestCase("musicvideo")]
     public async Task MetadataNfo_With_Tag_Should_Return_Nfo(string topLevel)
     {
-        await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}><tag>Test Tag</tag></{topLevel}>"));
+        await using var stream =
+            new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}><tag>Test Tag</tag></{topLevel}>"));
 
         Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
 

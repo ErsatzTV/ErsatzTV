@@ -63,7 +63,12 @@ public class FFmpegStreamSelectorTests
                 Substitute.For<ILocalFileSystem>(),
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
-            Option<MediaStream> selectedStream = await selector.SelectAudioStream(audioVersion, StreamingMode.TransportStream, channel, "jpn", "Whatever");
+            Option<MediaStream> selectedStream = await selector.SelectAudioStream(
+                audioVersion,
+                StreamingMode.TransportStream,
+                channel,
+                "jpn",
+                "Whatever");
             selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
             {
@@ -118,7 +123,12 @@ public class FFmpegStreamSelectorTests
                 Substitute.For<ILocalFileSystem>(),
                 Substitute.For<ILogger<FFmpegStreamSelector>>());
 
-            Option<MediaStream> selectedStream = await selector.SelectAudioStream(audioVersion, StreamingMode.TransportStream, channel, null, channel.PreferredAudioTitle);
+            Option<MediaStream> selectedStream = await selector.SelectAudioStream(
+                audioVersion,
+                StreamingMode.TransportStream,
+                channel,
+                null,
+                channel.PreferredAudioTitle);
             selectedStream.IsSome.ShouldBeTrue();
             foreach (MediaStream stream in selectedStream)
             {

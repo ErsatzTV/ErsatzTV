@@ -46,10 +46,9 @@ public class MovieFolderScannerTests
         {
             _movieRepository = Substitute.For<IMovieRepository>();
             _movieRepository.GetOrAdd(Arg.Any<LibraryPath>(), Arg.Any<LibraryFolder>(), Arg.Any<string>())
-                .Returns(
-                    args =>
-                        Right<BaseError, MediaItemScanResult<Movie>>(new FakeMovieWithPath(args.Arg<string>()))
-                            .AsTask());
+                .Returns(args =>
+                    Right<BaseError, MediaItemScanResult<Movie>>(new FakeMovieWithPath(args.Arg<string>()))
+                        .AsTask());
             _movieRepository.FindMoviePaths(Arg.Any<LibraryPath>())
                 .Returns(new List<string>().AsEnumerable().AsTask());
 
@@ -65,12 +64,11 @@ public class MovieFolderScannerTests
 
             // fallback metadata adds metadata to a movie, so we need to replicate that here
             _localMetadataProvider.RefreshFallbackMetadata(Arg.Any<Movie>())
-                .Returns(
-                    arg =>
-                    {
-                        ((Movie)arg.Arg<MediaItem>()).MovieMetadata = new List<MovieMetadata> { new() };
-                        return Task.FromResult(true);
-                    });
+                .Returns(arg =>
+                {
+                    ((Movie)arg.Arg<MediaItem>()).MovieMetadata = new List<MovieMetadata> { new() };
+                    return Task.FromResult(true);
+                });
 
             _imageCache = Substitute.For<IImageCache>();
 

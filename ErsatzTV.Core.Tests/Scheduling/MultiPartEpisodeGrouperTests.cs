@@ -326,8 +326,7 @@ public class MultiPartEpisodeGrouperTests
         IEnumerable<GroupedMediaItem> result,
         MediaItem first,
         List<MediaItem> additional) =>
-        result.Filter(
-                g => g.First == first && g.Additional != null && g.Additional.Count == additional.Count &&
-                     additional.ForAll(g.Additional.Contains))
+        result.Filter(g => g.First == first && g.Additional != null && g.Additional.Count == additional.Count &&
+                           additional.ForAll(g.Additional.Contains))
             .Count().ShouldBe(1);
 }

@@ -14,7 +14,9 @@ public class CustomStreamSelectorTests
     [TestFixture]
     public class SelectStreams
     {
-        private static readonly string TestFileName = Path.Combine(FileSystemLayout.ChannelStreamSelectorsFolder, "test.yml");
+        private static readonly string TestFileName = Path.Combine(
+            FileSystemLayout.ChannelStreamSelectorsFolder,
+            "test.yml");
 
         private Channel _channel;
         private MediaItemAudioVersion _audioVersion;
@@ -45,12 +47,12 @@ public class CustomStreamSelectorTests
         public async Task Should_Select_eng_Audio_Exact_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "eng"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "eng"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -71,11 +73,11 @@ items:
         public async Task Should_Select_und_Audio_Missing_Language()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language: ["und"]
-""";
+                """
+                ---
+                items:
+                  - audio_language: ["und"]
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -96,11 +98,11 @@ items:
         public async Task Should_Select_eng_Audio_Exact_Match_Multiple_Audio_Languages()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language: ["en", "eng"]
-""";
+                """
+                ---
+                items:
+                  - audio_language: ["en", "eng"]
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -121,17 +123,17 @@ items:
         public async Task Should_Select_eng_Audio_Exact_Match_Multiple_Items()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "de"
-    subtitle_language:
-    - "eng"
-  - audio_language:
-    - "eng"
-    disable_subtitles: true
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "de"
+                    subtitle_language:
+                    - "eng"
+                  - audio_language:
+                    - "eng"
+                    disable_subtitles: true
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -152,12 +154,12 @@ items:
         public async Task Should_Select_eng_Audio_Pattern_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "en*"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "en*"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -178,12 +180,12 @@ items:
         public async Task Should_Select_en_Audio_Pattern_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "en*"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "en*"
+                """;
             _audioVersion = GetTestAudioVersion("en");
 
             var streamSelector = new CustomStreamSelector(
@@ -205,13 +207,13 @@ items:
         public async Task disable_subtitles_Should_Select_No_Subtitles()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "eng"
-    disable_subtitles: true
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "eng"
+                    disable_subtitles: true
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -226,14 +228,14 @@ items:
         public async Task Should_Select_eng_Subtitle_Exact_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "ja"
-    subtitle_language:
-    - "eng"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "ja"
+                    subtitle_language:
+                    - "eng"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -254,14 +256,14 @@ items:
         public async Task Should_Select_eng_Subtitle_Pattern_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "ja"
-    subtitle_language:
-    - "en*"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "ja"
+                    subtitle_language:
+                    - "en*"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -282,14 +284,14 @@ items:
         public async Task Should_Select_en_Subtitle_Pattern_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "ja"
-    subtitle_language:
-    - "en*"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "ja"
+                    subtitle_language:
+                    - "en*"
+                """;
             _audioVersion = GetTestAudioVersion("en");
 
             _subtitles =
@@ -316,17 +318,17 @@ items:
         public async Task Should_Select_No_Subtitle_Exact_Match_Multiple_Items()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "de"
-    subtitle_language:
-    - "eng"
-  - audio_language:
-    - "eng"
-    disable_subtitles: true
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "de"
+                    subtitle_language:
+                    - "eng"
+                  - audio_language:
+                    - "eng"
+                    disable_subtitles: true
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -349,17 +351,17 @@ items:
         public async Task Should_Select_Foreign_Audio_And_English_Subtitle_Multiple_Items()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "ja"
-    subtitle_language:
-    - "eng"
-  - audio_language:
-    - "eng"
-    disable_subtitles: true
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "ja"
+                    subtitle_language:
+                    - "eng"
+                  - audio_language:
+                    - "eng"
+                    disable_subtitles: true
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -388,14 +390,14 @@ items:
         public async Task Should_Ignore_Blocked_Audio_Title()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "en*"
-    audio_title_blocklist:
-    - "riff"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "en*"
+                    audio_title_blocklist:
+                    - "riff"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -416,14 +418,14 @@ items:
         public async Task Should_Select_Allowed_Audio_Title()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "en*"
-    audio_title_allowlist:
-    - "movie"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "en*"
+                    audio_title_allowlist:
+                    - "movie"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -444,16 +446,16 @@ items:
         public async Task Should_Ignore_Blocked_Subtitle_Title()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "*"
-    subtitle_language:
-    - "en"
-    subtitle_title_blocklist:
-    - "signs"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "*"
+                    subtitle_language:
+                    - "en"
+                    subtitle_title_blocklist:
+                    - "signs"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -474,16 +476,16 @@ items:
         public async Task Should_Select_Allowed_Subtitle_Title()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "*"
-    subtitle_language:
-    - "en"
-    subtitle_title_allowlist:
-    - "songs"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "*"
+                    subtitle_language:
+                    - "en"
+                    subtitle_title_allowlist:
+                    - "songs"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -504,13 +506,13 @@ items:
         public async Task Should_Select_Condition_Forced_Subtitle()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "*"
-    subtitle_condition: "forced"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "*"
+                    subtitle_condition: "forced"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -531,13 +533,13 @@ items:
         public async Task Should_Select_Condition_External_Subtitle()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "*"
-    subtitle_condition: "lang like 'en%' and external"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "*"
+                    subtitle_condition: "lang like 'en%' and external"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -558,13 +560,13 @@ items:
         public async Task Should_Select_Condition_Audio_Title()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "en*"
-    audio_condition: "title like '%movie%'"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "en*"
+                    audio_condition: "title like '%movie%'"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -585,13 +587,13 @@ items:
         public async Task Should_Select_Condition_Audio_Channels()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "en*"
-    audio_condition: "channels > 2"
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "en*"
+                    audio_condition: "channels > 2"
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -612,12 +614,12 @@ items:
         public async Task Should_Select_Prioritized_Audio_Language()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language: ["en*","ja"]
-    audio_title_blocklist: ["riff"]
-""";
+                """
+                ---
+                items:
+                  - audio_language: ["en*","ja"]
+                    audio_title_blocklist: ["riff"]
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -638,13 +640,13 @@ items:
         public async Task Should_Select_Prioritized_Subtitle_Language()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language:
-    - "*"
-    subtitle_language: ["jp","en*"]
-""";
+                """
+                ---
+                items:
+                  - audio_language:
+                    - "*"
+                    subtitle_language: ["jp","en*"]
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),
@@ -665,14 +667,14 @@ items:
         public async Task Should_Select_No_Streams_When_Languages_Do_Not_Match()
         {
             const string YAML =
-"""
----
-items:
-  - audio_language: ["en"]
-    subtitle_language: ["es*","de*"]
-  - audio_language: ["ja"]
-    subtitle_language: ["es*","de*"]
-""";
+                """
+                ---
+                items:
+                  - audio_language: ["en"]
+                    subtitle_language: ["es*","de*"]
+                  - audio_language: ["ja"]
+                    subtitle_language: ["es*","de*"]
+                """;
 
             var streamSelector = new CustomStreamSelector(
                 new FakeLocalFileSystem([new FakeFileEntry(TestFileName) { Contents = YAML }]),

@@ -324,21 +324,20 @@ public class TranscodingTests
 
         IMetadataRepository metadataRepository = Substitute.For<IMetadataRepository>();
         metadataRepository.When(x => x.UpdateStatistics(Arg.Any<MediaItem>(), Arg.Any<MediaVersion>(), Arg.Any<bool>()))
-            .Do(
-                x =>
+            .Do(x =>
+            {
+                MediaVersion version = x.Arg<MediaVersion>();
+                if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video && s.AttachedPic == false))
                 {
-                    MediaVersion version = x.Arg<MediaVersion>();
-                    if (version.Streams.Any(s => s.MediaStreamKind == MediaStreamKind.Video && s.AttachedPic == false))
-                    {
-                        version.MediaFiles = videoVersion.MediaFiles;
-                        videoVersion = version;
-                    }
-                    else
-                    {
-                        version.MediaFiles = songVersion.MediaFiles;
-                        songVersion = version;
-                    }
-                });
+                    version.MediaFiles = videoVersion.MediaFiles;
+                    videoVersion = version;
+                }
+                else
+                {
+                    version.MediaFiles = songVersion.MediaFiles;
+                    songVersion = version;
+                }
+            });
 
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository,
@@ -458,13 +457,12 @@ public class TranscodingTests
         IMetadataRepository? metadataRepository = Substitute.For<IMetadataRepository>();
         metadataRepository
             .When(r => r.UpdateStatistics(Arg.Any<MediaItem>(), Arg.Any<MediaVersion>(), Arg.Any<bool>()))
-            .Do(
-                args =>
-                {
-                    MediaVersion? version = args.Arg<MediaVersion>();
-                    version.MediaFiles = v.MediaFiles;
-                    v = version;
-                });
+            .Do(args =>
+            {
+                MediaVersion? version = args.Arg<MediaVersion>();
+                version.MediaFiles = v.MediaFiles;
+                v = version;
+            });
 
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository,
@@ -563,13 +561,13 @@ public class TranscodingTests
                 }
             }
 
-            bool hasDeinterlaceFilter = filterChain.VideoFilterSteps.Any(
-                s => s is YadifFilter or YadifCudaFilter or DeinterlaceQsvFilter or DeinterlaceVaapiFilter);
+            bool hasDeinterlaceFilter = filterChain.VideoFilterSteps.Any(s =>
+                s is YadifFilter or YadifCudaFilter or DeinterlaceQsvFilter or DeinterlaceVaapiFilter);
 
             hasDeinterlaceFilter.ShouldBe(videoScanKind == VideoScanKind.Interlaced);
 
-            bool hasScaling = filterChain.VideoFilterSteps.Filter(
-                    s => s is ScaleFilter or ScaleCudaFilter or ScaleQsvFilter or ScaleVaapiFilter)
+            bool hasScaling = filterChain.VideoFilterSteps
+                .Filter(s => s is ScaleFilter or ScaleCudaFilter or ScaleQsvFilter or ScaleVaapiFilter)
                 .Filter(s => s is not ScaleCudaFilter cuda || !cuda.Filter.Contains("scale_cuda=format="))
                 .Any();
 
@@ -598,16 +596,15 @@ public class TranscodingTests
 
             bool hasSubtitleFilters =
                 filterChain.VideoFilterSteps.Any(s => s is SubtitlesFilter) ||
-                filterChain.SubtitleOverlayFilterSteps.Any(
-                    s => s is OverlaySubtitleFilter
-                        or OverlaySubtitleCudaFilter
-                        or OverlaySubtitleQsvFilter
-                        or OverlaySubtitleVaapiFilter);
+                filterChain.SubtitleOverlayFilterSteps.Any(s => s is OverlaySubtitleFilter
+                    or OverlaySubtitleCudaFilter
+                    or OverlaySubtitleQsvFilter
+                    or OverlaySubtitleVaapiFilter);
 
             hasSubtitleFilters.ShouldBe(subtitle != Subtitle.None);
 
-            bool hasWatermarkFilters = filterChain.WatermarkOverlayFilterSteps.Any(
-                s => s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
+            bool hasWatermarkFilters = filterChain.WatermarkOverlayFilterSteps.Any(s =>
+                s is OverlayWatermarkFilter or OverlayWatermarkCudaFilter or OverlayWatermarkQsvFilter);
 
             hasWatermarkFilters.ShouldBe(watermark != Watermark.None);
         }

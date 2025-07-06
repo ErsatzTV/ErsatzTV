@@ -74,19 +74,18 @@ public class ChronologicalContentTests
     }
 
     private static List<MediaItem> Episodes(int count) =>
-        Range(1, count).Map(
-                i => (MediaItem)new Episode
+        Range(1, count).Map(i => (MediaItem)new Episode
+            {
+                Id = i,
+                EpisodeMetadata = new List<EpisodeMetadata>
                 {
-                    Id = i,
-                    EpisodeMetadata = new List<EpisodeMetadata>
+                    new()
                     {
-                        new()
-                        {
-                            ReleaseDate = new DateTime(2020, 1, i),
-                            EpisodeNumber = 20 - i
-                        }
+                        ReleaseDate = new DateTime(2020, 1, i),
+                        EpisodeNumber = 20 - i
                     }
-                })
+                }
+            })
             .Reverse()
             .ToList();
 }
