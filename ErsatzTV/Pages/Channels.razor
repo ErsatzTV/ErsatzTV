@@ -49,7 +49,7 @@
                 }
                 else
                 {
-                    <MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.WebEncodedName}")" Style="max-height: 50px" />
+                    <MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.WebEncodedName}")" Style="max-height: 50px"/>
                 }
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -230,11 +230,10 @@
         var processedChannels = new List<ChannelViewModel>();
         foreach (ChannelViewModel channel in sorted)
         {
-            Option<CultureInfo> maybeCultureInfo = allCultures.Find(
-                ci => string.Equals(
-                    ci.ThreeLetterISOLanguageName,
-                    channel.PreferredAudioLanguageCode,
-                    StringComparison.OrdinalIgnoreCase));
+            Option<CultureInfo> maybeCultureInfo = allCultures.Find(ci => string.Equals(
+                ci.ThreeLetterISOLanguageName,
+                channel.PreferredAudioLanguageCode,
+                StringComparison.OrdinalIgnoreCase));
 
             maybeCultureInfo.Match(
                 cultureInfo => processedChannels.Add(channel with { PreferredAudioLanguageCode = cultureInfo.EnglishName }),
@@ -257,4 +256,5 @@
         StreamingMode.TransportStreamHybrid => "MPEG-TS",
         _ => "MPEG-TS (Legacy)"
     };
+
 }

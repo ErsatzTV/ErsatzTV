@@ -101,7 +101,10 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
 
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
     {
-        ValidationResult result = await ValidateAsync(ValidationContext<FFmpegProfileEditViewModel>.CreateWithOptions((FFmpegProfileEditViewModel)model, x => x.IncludeProperties(propertyName)));
+        ValidationResult result = await ValidateAsync(
+            ValidationContext<FFmpegProfileEditViewModel>.CreateWithOptions(
+                (FFmpegProfileEditViewModel)model,
+                x => x.IncludeProperties(propertyName)));
         if (result.IsValid)
             return [];
         return result.Errors.Select(e => e.ErrorMessage);

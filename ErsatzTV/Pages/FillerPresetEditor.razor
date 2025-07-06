@@ -179,31 +179,30 @@
         if (IsEdit)
         {
             Option<FillerPresetViewModel> maybeFillerPreset = await Mediator.Send(new GetFillerPresetById(Id), _cts.Token);
-            maybeFillerPreset.IfSome(
-                fillerPreset =>
-                {
-                    _model.Id = fillerPreset.Id;
-                    _model.Name = fillerPreset.Name;
-                    _model.FillerKind = fillerPreset.FillerKind;
-                    _model.FillerMode = fillerPreset.FillerMode;
-                    _model.Duration = fillerPreset.Duration;
-                    _model.Count = fillerPreset.Count;
-                    _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
-                    _model.AllowWatermarks = fillerPreset.AllowWatermarks;
-                    _model.CollectionType = fillerPreset.CollectionType;
-                    _model.Collection = fillerPreset.CollectionId.HasValue
-                        ? _mediaCollections.Find(c => c.Id == fillerPreset.CollectionId.Value)
-                        : null;
-                    _model.MultiCollection = fillerPreset.MultiCollectionId.HasValue
-                        ? _multiCollections.Find(c => c.Id == fillerPreset.MultiCollectionId.Value)
-                        : null;
-                    _model.SmartCollection = fillerPreset.SmartCollectionId.HasValue
-                        ? _smartCollections.Find(c => c.Id == fillerPreset.SmartCollectionId.Value)
-                        : null;
-                    _model.MediaItem = fillerPreset.MediaItemId.HasValue
-                        ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
-                        : null;
-                });
+            maybeFillerPreset.IfSome(fillerPreset =>
+            {
+                _model.Id = fillerPreset.Id;
+                _model.Name = fillerPreset.Name;
+                _model.FillerKind = fillerPreset.FillerKind;
+                _model.FillerMode = fillerPreset.FillerMode;
+                _model.Duration = fillerPreset.Duration;
+                _model.Count = fillerPreset.Count;
+                _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
+                _model.AllowWatermarks = fillerPreset.AllowWatermarks;
+                _model.CollectionType = fillerPreset.CollectionType;
+                _model.Collection = fillerPreset.CollectionId.HasValue
+                    ? _mediaCollections.Find(c => c.Id == fillerPreset.CollectionId.Value)
+                    : null;
+                _model.MultiCollection = fillerPreset.MultiCollectionId.HasValue
+                    ? _multiCollections.Find(c => c.Id == fillerPreset.MultiCollectionId.Value)
+                    : null;
+                _model.SmartCollection = fillerPreset.SmartCollectionId.HasValue
+                    ? _smartCollections.Find(c => c.Id == fillerPreset.SmartCollectionId.Value)
+                    : null;
+                _model.MediaItem = fillerPreset.MediaItemId.HasValue
+                    ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
+                    : null;
+            });
         }
         else
         {

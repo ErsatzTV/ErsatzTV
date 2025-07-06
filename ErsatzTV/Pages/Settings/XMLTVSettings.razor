@@ -12,12 +12,12 @@
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">XMLTV</MudText>
-            <MudDivider Class="mb-6" />
+            <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>Days To Build</MudText>
                 </div>
-                <MudTextField @bind-Value="_xmltvSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))" Required="true" RequiredError="XMLTV days to build is required!" Adornment="Adornment.End" AdornmentText="days" />
+                <MudTextField @bind-Value="_xmltvSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))" Required="true" RequiredError="XMLTV days to build is required!" Adornment="Adornment.End" AdornmentText="days"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
@@ -33,18 +33,18 @@
 </MudForm>
 
 @code {
-	private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-	private XmltvSettingsViewModel _xmltvSettings = new();
+    private XmltvSettingsViewModel _xmltvSettings = new();
 
-	public void Dispose()
-	{
-		_cts.Cancel();
-		_cts.Dispose();
-	}
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
-	protected override async Task OnParametersSetAsync()
-	{
+    protected override async Task OnParametersSetAsync()
+    {
         _xmltvSettings = await Mediator.Send(new GetXmltvSettings(), _cts.Token);
     }
 
@@ -61,4 +61,5 @@
             },
             Right: _ => Snackbar.Add("Successfully saved xmltv settings", Severity.Success));
     }
+
 }

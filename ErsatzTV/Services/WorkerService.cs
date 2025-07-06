@@ -58,24 +58,24 @@ public class WorkerService : BackgroundService
                             await mediator.Send(refreshChannelData, stoppingToken);
                             break;
                         case BuildPlayout buildPlayout:
-                            {
-                                CancellationTokenSource cts = Debugger.IsAttached
-                                    ? new CancellationTokenSource(TimeSpan.FromMinutes(10))
-                                    : new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                        {
+                            CancellationTokenSource cts = Debugger.IsAttached
+                                ? new CancellationTokenSource(TimeSpan.FromMinutes(10))
+                                : new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
-                                var linkedTokenSource =
-                                    CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
+                            var linkedTokenSource =
+                                CancellationTokenSource.CreateLinkedTokenSource(cts.Token, stoppingToken);
 
-                                Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
-                                    buildPlayout,
-                                    linkedTokenSource.Token);
-                                buildPlayoutResult.BiIter(
-                                    _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
-                                    error => _logger.LogWarning(
-                                        "Unable to build playout {PlayoutId}: {Error}",
-                                        buildPlayout.PlayoutId,
-                                        error.Value));
-                            }
+                            Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
+                                buildPlayout,
+                                linkedTokenSource.Token);
+                            buildPlayoutResult.BiIter(
+                                _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
+                                error => _logger.LogWarning(
+                                    "Unable to build playout {PlayoutId}: {Error}",
+                                    buildPlayout.PlayoutId,
+                                    error.Value));
+                        }
                             break;
                         case TimeShiftOnDemandPlayout timeShiftOnDemandPlayout:
                             await mediator.Send(timeShiftOnDemandPlayout, stoppingToken);
@@ -95,6 +95,7 @@ public class WorkerService : BackgroundService
                                     addTraktList.TraktListUrl,
                                     error.Value);
                             }
+
                             break;
                         case DeleteTraktList deleteTraktList:
                             await mediator.Send(deleteTraktList, stoppingToken);

@@ -28,7 +28,10 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
 
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
     {
-        ValidationResult result = await ValidateAsync(ValidationContext<ChannelEditViewModel>.CreateWithOptions((ChannelEditViewModel)model, x => x.IncludeProperties(propertyName)));
+        ValidationResult result = await ValidateAsync(
+            ValidationContext<ChannelEditViewModel>.CreateWithOptions(
+                (ChannelEditViewModel)model,
+                x => x.IncludeProperties(propertyName)));
         if (result.IsValid)
             return [];
         return result.Errors.Select(e => e.ErrorMessage);

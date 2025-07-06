@@ -385,14 +385,13 @@
 
     private async Task SaveChanges()
     {
-        var items = _items.Map(
-            item => new ReplacePlayoutAlternateSchedule(
-                item.Id,
-                item.Index,
-                item.ProgramSchedule.Id,
-                item.DaysOfWeek,
-                item.DaysOfMonth,
-                item.MonthsOfYear)).ToList();
+        var items = _items.Map(item => new ReplacePlayoutAlternateSchedule(
+            item.Id,
+            item.Index,
+            item.ProgramSchedule.Id,
+            item.DaysOfWeek,
+            item.DaysOfMonth,
+            item.MonthsOfYear)).ToList();
 
         Seq<BaseError> errorMessages = await Mediator.Send(new ReplacePlayoutAlternateScheduleItems(Id, items), _cts.Token)
             .Map(e => e.LeftToSeq());

@@ -16,92 +16,96 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
-      <PackageReference Include="Bugsnag.AspNet.Core" Version="4.0.0" />
-      <PackageReference Include="FluentValidation" Version="12.0.0" />
-      <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
-      <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
-      <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
-      <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-      <PackageReference Include="Markdig" Version="0.41.3" />
-      <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.6" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.6" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.6" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="MudBlazor" Version="8.9.0" />
-      <PackageReference Include="NaturalSort.Extension" Version="4.3.0" />
-      <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
-      <PackageReference Include="Serilog" Version="4.3.0" />
-      <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-      <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
-      <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
-      <PackageReference Include="VueCliMiddleware" Version="6.0.0" />
+        <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
+        <PackageReference Include="Bugsnag.AspNet.Core" Version="4.0.0" />
+        <PackageReference Include="FluentValidation" Version="12.0.0" />
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+        <PackageReference Include="Heron.MudCalendar" Version="3.2.0" />
+        <PackageReference Include="HtmlSanitizer" Version="9.0.886" />
+        <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
+        <PackageReference Include="Markdig" Version="0.41.3" />
+        <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="9.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.14.15">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MudBlazor" Version="8.9.0" />
+        <PackageReference Include="NaturalSort.Extension" Version="4.3.0" />
+        <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
+        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+        <PackageReference Include="VueCliMiddleware" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ErsatzTV.Application\ErsatzTV.Application.csproj" />
-      <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
-      <ProjectReference Include="..\ErsatzTV.Infrastructure.MySql\ErsatzTV.Infrastructure.MySql.csproj" />
-      <ProjectReference Include="..\ErsatzTV.Infrastructure.Sqlite\ErsatzTV.Infrastructure.Sqlite.csproj" />
-      <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
-      <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Application\ErsatzTV.Application.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Infrastructure.MySql\ErsatzTV.Infrastructure.MySql.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Infrastructure.Sqlite\ErsatzTV.Infrastructure.Sqlite.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
+        <ProjectReference Include="..\ErsatzTV.Scanner\ErsatzTV.Scanner.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Resources\Fonts\Sen.ttf" />
-      <EmbeddedResource Include="Resources\background.png" />
-      <EmbeddedResource Include="Resources\Fonts\OPTIKabel-Heavy.otf" />
-      <EmbeddedResource Include="Resources\Fonts\Roboto-Regular.ttf" />
-      <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.js" />
-      <EmbeddedResource Include="Resources\Scripts\_episode.js" />
-      <EmbeddedResource Include="Resources\Scripts\_movie.js" />
-      <EmbeddedResource Include="Resources\song_album_cover_512.png" />
-      <EmbeddedResource Include="Resources\song_background_1.png" />
-      <EmbeddedResource Include="Resources\song_background_2.png" />
-      <EmbeddedResource Include="Resources\song_background_3.png" />
-      <EmbeddedResource Include="Resources\song_progress_overlay.png" />
-      <EmbeddedResource Include="Resources\song_progress_overlay_43.png" />
-      <EmbeddedResource Include="Resources\ErsatzTV.png" />
-      <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
-      <EmbeddedResource Include="Resources\Templates\_default.ass.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_ArtistTitle_LeftMiddle.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_ArtistTitleAlbum_CenterTop.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_channel.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_episode.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_movie.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_musicVideo.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_otherVideo.sbntxt" />
-      <EmbeddedResource Include="Resources\Templates\_song.sbntxt" />
+        <EmbeddedResource Include="Resources\Fonts\Sen.ttf" />
+        <EmbeddedResource Include="Resources\background.png" />
+        <EmbeddedResource Include="Resources\Fonts\OPTIKabel-Heavy.otf" />
+        <EmbeddedResource Include="Resources\Fonts\Roboto-Regular.ttf" />
+        <EmbeddedResource Include="Resources\Scripts\_threePartEpisodes.js" />
+        <EmbeddedResource Include="Resources\Scripts\_episode.js" />
+        <EmbeddedResource Include="Resources\Scripts\_movie.js" />
+        <EmbeddedResource Include="Resources\song_album_cover_512.png" />
+        <EmbeddedResource Include="Resources\song_background_1.png" />
+        <EmbeddedResource Include="Resources\song_background_2.png" />
+        <EmbeddedResource Include="Resources\song_background_3.png" />
+        <EmbeddedResource Include="Resources\song_progress_overlay.png" />
+        <EmbeddedResource Include="Resources\song_progress_overlay_43.png" />
+        <EmbeddedResource Include="Resources\ErsatzTV.png" />
+        <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
+        <EmbeddedResource Include="Resources\Templates\_default.ass.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_ArtistTitle_LeftMiddle.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_ArtistTitleAlbum_CenterTop.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_channel.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_episode.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_movie.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_musicVideo.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_otherVideo.sbntxt" />
+        <EmbeddedResource Include="Resources\Templates\_song.sbntxt" />
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\artwork\Ersatztv.icns">
-        <Link>Ersatztv.icns</Link>
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Content>
+        <Content Include="..\artwork\Ersatztv.icns">
+            <Link>Ersatztv.icns</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\FONT-LICENSE" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\css\open-iconic-bootstrap.min.css" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.eot" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.otf" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.svg" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.ttf" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.woff" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\ICON-LICENSE" />
-      <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\README.md" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\FONT-LICENSE" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\css\open-iconic-bootstrap.min.css" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.eot" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.otf" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.svg" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.ttf" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\font\fonts\open-iconic.woff" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\ICON-LICENSE" />
+        <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\README.md" />
     </ItemGroup>
 
-    <ProjectExtensions><VisualStudio><UserProperties client-app_4package_1json__JsonSchema="https://json.schemastore.org/phraseapp.json" /></VisualStudio></ProjectExtensions>
+    <ProjectExtensions>
+        <VisualStudio>
+            <UserProperties client-app_4package_1json__JsonSchema="https://json.schemastore.org/phraseapp.json" />
+        </VisualStudio>
+    </ProjectExtensions>
 
 </Project>

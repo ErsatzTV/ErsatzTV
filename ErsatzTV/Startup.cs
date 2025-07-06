@@ -111,34 +111,32 @@ public class Startup
     {
         BugsnagConfiguration bugsnagConfig = Configuration.GetSection("Bugsnag").Get<BugsnagConfiguration>();
         services.Configure<BugsnagConfiguration>(Configuration.GetSection("Bugsnag"));
-        services.Configure<ForwardedHeadersOptions>(
-            options =>
-            {
-                options.ForwardedHeaders = ForwardedHeaders.All;
-                options.ForwardLimit = 2;
-                options.KnownNetworks.Clear();
-                options.KnownProxies.Clear();
-            });
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.All;
+            options.ForwardLimit = 2;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
 
-        services.AddBugsnag(
-            configuration =>
-            {
-                configuration.ApiKey = bugsnagConfig.ApiKey;
-                configuration.ProjectNamespaces = new[] { "ErsatzTV" };
-                configuration.AppVersion = Assembly.GetEntryAssembly()
-                    ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-                    ?.InformationalVersion ?? "unknown";
-                configuration.AutoNotify = true;
+        services.AddBugsnag(configuration =>
+        {
+            configuration.ApiKey = bugsnagConfig.ApiKey;
+            configuration.ProjectNamespaces = new[] { "ErsatzTV" };
+            configuration.AppVersion = Assembly.GetEntryAssembly()
+                ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                ?.InformationalVersion ?? "unknown";
+            configuration.AutoNotify = true;
 
-                configuration.NotifyReleaseStages = new[] { "public", "develop" };
+            configuration.NotifyReleaseStages = new[] { "public", "develop" };
 
 #if DEBUG || DEBUG_NO_SYNC
                 configuration.ReleaseStage = "develop";
 #else
-                    // effectively "disable" by tweaking app config
-                    configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
+            // effectively "disable" by tweaking app config
+            configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
 #endif
-            });
+        });
 
         services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(FileSystemLayout.DataProtectionFolder));
 
@@ -148,12 +146,11 @@ public class Startup
 
         if (OidcHelper.IsEnabled)
         {
-            services.AddAuthentication(
-                    options =>
-                    {
-                        options.DefaultScheme = "cookie";
-                        options.DefaultChallengeScheme = "oidc";
-                    })
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = "cookie";
+                    options.DefaultChallengeScheme = "oidc";
+                })
                 .AddCookie(
                     "cookie",
                     options =>
@@ -234,8 +231,7 @@ public class Startup
 
         if (OidcHelper.IsEnabled || JwtHelper.IsEnabled)
         {
-            services.AddAuthorization(
-                options =>
+            services.AddAuthorization(options =>
                 {
                     if (OidcHelper.IsEnabled)
                     {
@@ -262,35 +258,32 @@ public class Startup
             );
         }
 
-        services.AddCors(
-            o => o.AddPolicy(
-                "AllowAll",
-                builder =>
-                {
-                    builder.AllowAnyOrigin()
-                        .AllowAnyMethod()
-                        .AllowAnyHeader();
-                }));
+        services.AddCors(o => o.AddPolicy(
+            "AllowAll",
+            builder =>
+            {
+                builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }));
 
         services.AddLocalization();
 
-        services.AddControllers(
-                options =>
-                {
-                    options.OutputFormatters.Insert(0, new ConcatPlaylistOutputFormatter());
-                    options.OutputFormatters.Insert(0, new ChannelPlaylistOutputFormatter());
-                    options.OutputFormatters.Insert(0, new ChannelGuideOutputFormatter());
-                    options.OutputFormatters.Insert(0, new DeviceXmlOutputFormatter());
-                    options.OutputFormatters.Insert(0, new HdhrJsonOutputFormatter());
-                })
-            .AddNewtonsoftJson(
-                opt =>
-                {
-                    opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                    opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                    opt.SerializerSettings.ContractResolver = new CustomContractResolver();
-                    opt.SerializerSettings.Converters.Add(new StringEnumConverter());
-                });
+        services.AddControllers(options =>
+            {
+                options.OutputFormatters.Insert(0, new ConcatPlaylistOutputFormatter());
+                options.OutputFormatters.Insert(0, new ChannelPlaylistOutputFormatter());
+                options.OutputFormatters.Insert(0, new ChannelGuideOutputFormatter());
+                options.OutputFormatters.Insert(0, new DeviceXmlOutputFormatter());
+                options.OutputFormatters.Insert(0, new HdhrJsonOutputFormatter());
+            })
+            .AddNewtonsoftJson(opt =>
+            {
+                opt.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                opt.SerializerSettings.ContractResolver = new CustomContractResolver();
+                opt.SerializerSettings.Converters.Add(new StringEnumConverter());
+            });
 
         services.AddScoped(_ => new ConditionalIptvAuthorizeFilter("JwtOnlyScheme"));
 
@@ -299,14 +292,13 @@ public class Startup
 
         services.AddMemoryCache();
 
-        services.AddRazorPages(
-            options =>
+        services.AddRazorPages(options =>
+        {
+            if (OidcHelper.IsEnabled)
             {
-                if (OidcHelper.IsEnabled)
-                {
-                    options.Conventions.AuthorizeFolder("/");
-                }
-            });
+                options.Conventions.AuthorizeFolder("/");
+            }
+        });
 
         services.AddServerSideBlazor()
             .AddHubOptions(hubOptions => hubOptions.MaximumReceiveMessageSize = 1024 * 1024);
@@ -396,33 +388,32 @@ public class Startup
             ServiceLifetime.Scoped,
             ServiceLifetime.Singleton);
 
-        services.AddDbContextFactory<TvContext>(
-            options =>
+        services.AddDbContextFactory<TvContext>(options =>
+        {
+            if (databaseProvider == Provider.Sqlite.Name)
             {
-                if (databaseProvider == Provider.Sqlite.Name)
-                {
-                    options.UseSqlite(
-                        sqliteConnectionString,
-                        o =>
-                        {
-                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                            o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
-                        });
-                }
+                options.UseSqlite(
+                    sqliteConnectionString,
+                    o =>
+                    {
+                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        o.MigrationsAssembly("ErsatzTV.Infrastructure.Sqlite");
+                    });
+            }
 
-                if (databaseProvider == Provider.MySql.Name)
-                {
-                    options.UseMySql(
-                        mySqlConnectionString,
-                        ServerVersion.AutoDetect(mySqlConnectionString),
-                        o =>
-                        {
-                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                            o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
-                        }
-                    );
-                }
-            });
+            if (databaseProvider == Provider.MySql.Name)
+            {
+                options.UseMySql(
+                    mySqlConnectionString,
+                    ServerVersion.AutoDetect(mySqlConnectionString),
+                    o =>
+                    {
+                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        o.MigrationsAssembly("ErsatzTV.Infrastructure.MySql");
+                    }
+                );
+            }
+        });
 
         if (databaseProvider == Provider.Sqlite.Name)
         {
@@ -481,52 +472,51 @@ public class Startup
         app.UseForwardedHeaders();
 
         //app.UseHttpLogging();
-        app.UseSerilogRequestLogging(
-            options =>
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.IncludeQueryInRequestPath = true;
+
+            // Emit debug-level events instead of the defaults
+            options.GetLevel = (httpContext, elapsed, ex) =>
             {
-                options.IncludeQueryInRequestPath = true;
-
-                // Emit debug-level events instead of the defaults
-                options.GetLevel = (httpContext, elapsed, ex) =>
+                if (ex is not null)
                 {
-                    if (ex is not null)
-                    {
-                        return LogEventLevel.Error;
-                    }
+                    return LogEventLevel.Error;
+                }
 
-                    if (httpContext.Response.StatusCode > 499)
-                    {
-                        return LogEventLevel.Error;
-                    }
-
-                    if (httpContext.Request.Path.ToUriComponent().StartsWith(
-                            "/iptv",
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        return LogEventLevel.Debug;
-                    }
-
-                    return LogEventLevel.Verbose;
-                };
-
-                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                if (httpContext.Response.StatusCode > 499)
                 {
-                    diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
-                    diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"]);
-                };
+                    return LogEventLevel.Error;
+                }
 
-                options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.00} ms from {UserAgent} at {RemoteIP}";
-            });
+                if (httpContext.Request.Path.ToUriComponent().StartsWith(
+                        "/iptv",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return LogEventLevel.Debug;
+                }
 
-        app.UseRequestLocalization(
-            options =>
+                return LogEventLevel.Verbose;
+            };
+
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
-                CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
-                string[] supportedCultures = cinfo.Select(t => t.Name).Distinct().ToArray();
-                options.AddSupportedCultures(supportedCultures)
-                    .AddSupportedUICultures(supportedCultures)
-                    .SetDefaultCulture("en-US");
-            });
+                diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
+                diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"]);
+            };
+
+            options.MessageTemplate =
+                "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.00} ms from {UserAgent} at {RemoteIP}";
+        });
+
+        app.UseRequestLocalization(options =>
+        {
+            CultureInfo[] cinfo = CultureInfo.GetCultures(CultureTypes.AllCultures & ~CultureTypes.NeutralCultures);
+            string[] supportedCultures = cinfo.Select(t => t.Name).Distinct().ToArray();
+            options.AddSupportedCultures(supportedCultures)
+                .AddSupportedUICultures(supportedCultures)
+                .SetDefaultCulture("en-US");
+        });
 
         app.UseStaticFiles();
 
@@ -558,19 +548,18 @@ public class Startup
 
         app.UseResponseCompression();
 
-        app.Use(
-            async (context, next) =>
+        app.Use(async (context, next) =>
+        {
+            if (!context.Request.Host.Value.StartsWith("localhost", StringComparison.OrdinalIgnoreCase) &&
+                !IsIptvPath(context.Request.Path) &&
+                context.Connection.LocalPort != Settings.UiPort)
             {
-                if (!context.Request.Host.Value.StartsWith("localhost", StringComparison.OrdinalIgnoreCase) &&
-                    !IsIptvPath(context.Request.Path) &&
-                    context.Connection.LocalPort != Settings.UiPort)
-                {
-                    context.Response.StatusCode = 404;
-                    return;
-                }
+                context.Response.StatusCode = 404;
+                return;
+            }
 
-                await next(context);
-            });
+            await next(context);
+        });
 
         app.MapWhen(
             ctx => !IsIptvPath(ctx.Request.Path),
@@ -586,13 +575,12 @@ public class Startup
 #pragma warning restore ASP0001
                 }
 
-                blazor.UseEndpoints(
-                    endpoints =>
-                    {
-                        endpoints.MapControllers();
-                        endpoints.MapBlazorHub();
-                        endpoints.MapFallbackToPage("/_Host");
-                    });
+                blazor.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                    endpoints.MapBlazorHub();
+                    endpoints.MapFallbackToPage("/_Host");
+                });
             });
 
         app.MapWhen(
@@ -726,13 +714,12 @@ public class Startup
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
         services.AddScoped<IMusicVideoCreditsGenerator, MusicVideoCreditsGenerator>();
         services.AddScoped<IGitHubApiClient, GitHubApiClient>();
-        services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(
-            _ =>
-            {
-                var sanitizer = new HtmlSanitizer();
-                sanitizer.AllowedAttributes.Add("class");
-                return sanitizer;
-            });
+        services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(_ =>
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedAttributes.Add("class");
+            return sanitizer;
+        });
         services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
         services.AddScoped<IEmbySecretStore, EmbySecretStore>();
         services.AddScoped<IScriptEngine, ScriptEngine>();
@@ -770,10 +757,8 @@ public class Startup
     {
         services.AddSingleton(
             Channel.CreateUnbounded<TMessageType>(new UnboundedChannelOptions { SingleReader = true }));
-        services.AddSingleton(
-            provider => provider.GetRequiredService<Channel<TMessageType>>().Reader);
-        services.AddSingleton(
-            provider => provider.GetRequiredService<Channel<TMessageType>>().Writer);
+        services.AddSingleton(provider => provider.GetRequiredService<Channel<TMessageType>>().Reader);
+        services.AddSingleton(provider => provider.GetRequiredService<Channel<TMessageType>>().Writer);
     }
 
     private static void CopyMacOsConfigFolderIfNeeded()

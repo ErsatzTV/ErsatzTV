@@ -13,42 +13,44 @@
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">HDHomeRun</MudText>
-            <MudDivider Class="mb-6" />
+            <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>UUID</MudText>
                 </div>
-                <MudTextField @bind-Value="_uuid" Disabled="true" />
+                <MudTextField @bind-Value="_uuid" Disabled="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>Tuner Count</MudText>
                 </div>
-                <MudTextField @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!" />
+                <MudTextField @bind-Value="_tunerCount" Validation="@(new Func<int, string>(ValidateTunerCount))" Required="true" RequiredError="Tuner count is required!"/>
             </MudStack>
         </MudContainer>
     </div>
 </MudForm>
 
 @code {
-	private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
     private MudForm _form;
-	private bool _hdhrSuccess;
-	private int _tunerCount;
-    [UsedImplicitly] private Guid _uuid;
+    private bool _hdhrSuccess;
+    private int _tunerCount;
 
-	public void Dispose()
-	{
-		_cts.Cancel();
-		_cts.Dispose();
-	}
+    [UsedImplicitly]
+    private Guid _uuid;
 
-	protected override async Task OnParametersSetAsync()
-	{
-		_tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _tunerCount = await Mediator.Send(new GetHDHRTunerCount(), _cts.Token);
         _uuid = await Mediator.Send(new GetHDHRUUID(), _cts.Token);
-		_hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
+        _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
     }
 
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
@@ -68,4 +70,5 @@
                 Right: _ => Snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
         }
     }
+
 }

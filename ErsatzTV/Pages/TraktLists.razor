@@ -89,15 +89,14 @@
         .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private void LockChanged(object sender, EventArgs e) =>
-        InvokeAsync(
-            async () =>
+        InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            if (_traktListsTable != null && !Locker.IsTraktLocked())
             {
-                StateHasChanged();
-                if (_traktListsTable != null && !Locker.IsTraktLocked())
-                {
-                    await _traktListsTable.ReloadServerData();
-                }
-            });
+                await _traktListsTable.ReloadServerData();
+            }
+        });
 
     private async Task MatchListItems(TraktListViewModel traktList)
     {

@@ -129,13 +129,11 @@
     {
         _model.HasChanges = false;
         _model.Paths = await Mediator.Send(new GetLocalLibraryPaths(Id), _cts.Token)
-            .Map(
-                list => list.Map(
-                    vm => new LocalLibraryPathEditViewModel
-                    {
-                        Id = vm.Id,
-                        Path = vm.Path
-                    }).ToList());
+            .Map(list => list.Map(vm => new LocalLibraryPathEditViewModel
+            {
+                Id = vm.Id,
+                Path = vm.Path
+            }).ToList());
     }
 
     private async Task MoveLibraryPath(LocalLibraryPathEditViewModel libraryPath)

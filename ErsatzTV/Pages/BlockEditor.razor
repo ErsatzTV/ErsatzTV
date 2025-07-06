@@ -482,16 +482,15 @@
 
     private ReplaceBlockItems GenerateReplaceRequest()
     {
-        var items = _block.Items.Map(
-            item => new ReplaceBlockItem(
-                item.Index,
-                item.CollectionType,
-                item.Collection?.Id,
-                item.MultiCollection?.Id,
-                item.SmartCollection?.Id,
-                item.MediaItem?.MediaItemId,
-                item.PlaybackOrder,
-                item.IncludeInProgramGuide)).ToList();
+        var items = _block.Items.Map(item => new ReplaceBlockItem(
+            item.Index,
+            item.CollectionType,
+            item.Collection?.Id,
+            item.MultiCollection?.Id,
+            item.SmartCollection?.Id,
+            item.MediaItem?.MediaItemId,
+            item.PlaybackOrder,
+            item.IncludeInProgramGuide)).ToList();
 
         _block.Minutes = _durationHours * 60 + _durationMinutes;
 

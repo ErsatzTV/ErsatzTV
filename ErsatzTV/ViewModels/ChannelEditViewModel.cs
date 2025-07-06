@@ -26,6 +26,7 @@ public class ChannelEditViewModel
     public string PreferredSubtitleLanguageCode { get; set; }
     public ChannelSubtitleMode SubtitleMode { get; set; }
     public ChannelMusicVideoCreditsMode MusicVideoCreditsMode { get; set; }
+
     public string MusicVideoCreditsTemplate
     {
         get => MusicVideoCreditsMode == ChannelMusicVideoCreditsMode.GenerateSubtitles
@@ -33,6 +34,7 @@ public class ChannelEditViewModel
             : null;
         set => _musicVideoCreditsTemplate = value;
     }
+
     public ChannelSongVideoMode SongVideoMode { get; set; }
     public ChannelActiveMode ActiveMode { get; set; }
 
@@ -44,7 +46,9 @@ public class ChannelEditViewModel
             Group,
             Categories,
             FFmpegProfileId,
-            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : new ArtworkContentTypeModel(ExternalLogoUrl, string.Empty),
+            string.IsNullOrWhiteSpace(ExternalLogoUrl)
+                ? Logo
+                : new ArtworkContentTypeModel(ExternalLogoUrl, string.Empty),
             StreamSelectorMode,
             StreamSelector,
             PreferredAudioLanguageCode,
@@ -67,7 +71,9 @@ public class ChannelEditViewModel
             Group,
             Categories,
             FFmpegProfileId,
-            string.IsNullOrWhiteSpace(ExternalLogoUrl) ? Logo : new ArtworkContentTypeModel(ExternalLogoUrl, string.Empty),
+            string.IsNullOrWhiteSpace(ExternalLogoUrl)
+                ? Logo
+                : new ArtworkContentTypeModel(ExternalLogoUrl, string.Empty),
             StreamSelectorMode,
             StreamSelector,
             PreferredAudioLanguageCode,

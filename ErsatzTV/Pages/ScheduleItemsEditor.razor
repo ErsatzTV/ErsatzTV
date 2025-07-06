@@ -681,37 +681,36 @@
 
     private async Task SaveChanges()
     {
-        var items = _schedule.Items.Map(
-            item => new ReplaceProgramScheduleItem(
-                item.Index,
-                item.StartType,
-                item.StartTime,
-                item.FixedStartTimeBehavior,
-                item.PlayoutMode,
-                item.CollectionType,
-                item.Collection?.Id,
-                item.MultiCollection?.Id,
-                item.SmartCollection?.Id,
-                item.MediaItem?.MediaItemId,
-                item.Playlist?.Id,
-                item.PlaybackOrder,
-                item.FillWithGroupMode,
-                item.MultipleCount,
-                item.PlayoutDuration,
-                item.TailMode,
-                item.DiscardToFillAttempts,
-                item.CustomTitle,
-                item.GuideMode,
-                item.PreRollFiller?.Id,
-                item.MidRollFiller?.Id,
-                item.PostRollFiller?.Id,
-                item.TailFiller?.Id,
-                item.FallbackFiller?.Id,
-                item.Watermark?.Id,
-                item.PreferredAudioLanguageCode,
-                item.PreferredAudioTitle,
-                item.PreferredSubtitleLanguageCode,
-                item.SubtitleMode)).ToList();
+        var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
+            item.Index,
+            item.StartType,
+            item.StartTime,
+            item.FixedStartTimeBehavior,
+            item.PlayoutMode,
+            item.CollectionType,
+            item.Collection?.Id,
+            item.MultiCollection?.Id,
+            item.SmartCollection?.Id,
+            item.MediaItem?.MediaItemId,
+            item.Playlist?.Id,
+            item.PlaybackOrder,
+            item.FillWithGroupMode,
+            item.MultipleCount,
+            item.PlayoutDuration,
+            item.TailMode,
+            item.DiscardToFillAttempts,
+            item.CustomTitle,
+            item.GuideMode,
+            item.PreRollFiller?.Id,
+            item.MidRollFiller?.Id,
+            item.PostRollFiller?.Id,
+            item.TailFiller?.Id,
+            item.FallbackFiller?.Id,
+            item.Watermark?.Id,
+            item.PreferredAudioLanguageCode,
+            item.PreferredAudioTitle,
+            item.PreferredSubtitleLanguageCode,
+            item.SubtitleMode)).ToList();
 
         Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items), _cts.Token).Map(e => e.LeftToSeq());
 
@@ -742,4 +741,5 @@
     {
         return _selectedItem != null && _selectedItem == element ? "selected" : string.Empty;
     }
+
 }

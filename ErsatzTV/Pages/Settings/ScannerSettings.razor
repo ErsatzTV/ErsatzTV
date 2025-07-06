@@ -12,32 +12,32 @@
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             <MudText Typo="Typo.h5" Class="mb-2">Scanner</MudText>
-            <MudDivider Class="mb-6" />
+            <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex justify-md-end">
                     <MudText>Library Refresh Interval</MudText>
                 </div>
-                <MudTextField @bind-Value="_libraryRefreshInterval" Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))" Required="true" RequiredError="Library refresh interval is required!" Adornment="Adornment.End" AdornmentText="hours" />
+                <MudTextField @bind-Value="_libraryRefreshInterval" Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))" Required="true" RequiredError="Library refresh interval is required!" Adornment="Adornment.End" AdornmentText="hours"/>
             </MudStack>
         </MudContainer>
     </div>
 </MudForm>
 
 @code {
-	private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
     private MudForm _form;
-	private bool _scannerSuccess;
-	private int _libraryRefreshInterval;
+    private bool _scannerSuccess;
+    private int _libraryRefreshInterval;
 
-	public void Dispose()
-	{
-		_cts.Cancel();
-		_cts.Dispose();
-	}
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
-	protected override async Task OnParametersSetAsync()
-	{
+    protected override async Task OnParametersSetAsync()
+    {
         _libraryRefreshInterval = await Mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
         _scannerSuccess = _libraryRefreshInterval is >= 0 and < 1_000_000;
     }
@@ -64,4 +64,5 @@
                 Right: _ => Snackbar.Add("Successfully saved scanner settings", Severity.Success));
         }
     }
+
 }

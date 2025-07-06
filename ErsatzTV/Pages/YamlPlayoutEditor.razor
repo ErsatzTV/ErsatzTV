@@ -119,4 +119,5 @@
             await Mediator.Send(new UpdateYamlPlayout(_playout.PlayoutId, result.Data as string ?? _playout.TemplateFile), _cts.Token);
         }
     }
+
 }

@@ -152,22 +152,20 @@ public class Program
 
         return Host.CreateDefaultBuilder(args)
             .ConfigureServices(services => services.AddSingleton(LoggingLevelSwitches))
-            .ConfigureWebHostDefaults(
-                webBuilder => webBuilder.UseStartup<Startup>()
-                    .UseConfiguration(Configuration)
-                    .UseKestrel(
-                        options =>
-                        {
-                            options.ListenAnyIP(Settings.UiPort);
+            .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>()
+                .UseConfiguration(Configuration)
+                .UseKestrel(options =>
+                {
+                    options.ListenAnyIP(Settings.UiPort);
 
-                            if (Settings.StreamingPort != Settings.UiPort)
-                            {
-                                options.ListenAnyIP(Settings.StreamingPort);
-                            }
+                    if (Settings.StreamingPort != Settings.UiPort)
+                    {
+                        options.ListenAnyIP(Settings.StreamingPort);
+                    }
 
-                            options.AddServerHeader = false;
-                        })
-                    .UseContentRoot(BasePath))
+                    options.AddServerHeader = false;
+                })
+                .UseContentRoot(BasePath))
             .UseSerilog();
     }
 }
