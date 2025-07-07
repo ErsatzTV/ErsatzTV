@@ -75,7 +75,7 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
         }
 
         bool isHevcOrH264 = videoStream.Codec is /*VideoFormat.Hevc or*/ VideoFormat.H264;
-        bool is10Bit = videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10;
+        bool is10Bit = videoStream.BitDepth == 10;
 
         // 10-bit hevc/h264 qsv decoders have issues, so use software
         if (decodeCapability == FFmpegCapability.Hardware && isHevcOrH264 && is10Bit)
@@ -336,18 +336,15 @@ public class QsvPipelineBuilder : SoftwarePipelineBuilder
                 // force p010/nv12 if we're still in hardware
                 if (currentState.FrameDataLocation == FrameDataLocation.Hardware)
                 {
-                    foreach (int bitDepth in currentState.PixelFormat.Map(pf => pf.BitDepth))
+                    if (currentState.BitDepth is 10 && formatForDownload is not PixelFormatYuv420P10Le)
                     {
-                        if (bitDepth is 10 && formatForDownload is not PixelFormatYuv420P10Le)
-                        {
-                            formatForDownload = new PixelFormatYuv420P10Le();
-                            currentState = currentState with { PixelFormat = Some(formatForDownload) };
-                        }
-                        else if (bitDepth is 8 && formatForDownload is not PixelFormatNv12)
-                        {
-                            formatForDownload = new PixelFormatNv12(formatForDownload.Name);
-                            currentState = currentState with { PixelFormat = Some(formatForDownload) };
-                        }
+                        formatForDownload = new PixelFormatYuv420P10Le();
+                        currentState = currentState with { PixelFormat = Some(formatForDownload) };
+                    }
+                    else if (currentState.BitDepth is 8 && formatForDownload is not PixelFormatNv12)
+                    {
+                        formatForDownload = new PixelFormatNv12(formatForDownload.Name);
+                        currentState = currentState with { PixelFormat = Some(formatForDownload) };
                     }
                 }
 
