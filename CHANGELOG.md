@@ -95,6 +95,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This only matters if you configured `ETV_UI_PORT` to be a different value, which makes UI endpoints inaccessible on the streaming port
 - Update Plex movie/other video plot ("summary") during library deep scan
 - Fix compatibility with ffmpeg 7.2+ when using NVIDIA accel and 10-bit source content
+- Fix some NVIDIA edge cases when media servers don't provide video bit depth information
 
 ## [25.2.0] - 2025-06-24
 ### Added

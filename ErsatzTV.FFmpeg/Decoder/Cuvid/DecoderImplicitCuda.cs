@@ -22,6 +22,6 @@ public class DecoderImplicitCuda : DecoderBase
             pixelFormat => pixelFormat.BitDepth == 8
                 ? nextState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) }
                 : nextState with { PixelFormat = new PixelFormatCuda(pixelFormat.Name, 10) },
-            () => nextState);
+            () => nextState with { PixelFormat = new PixelFormatNv12(FFmpegFormat.YUV420P) });
     }
 }

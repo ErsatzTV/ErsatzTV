@@ -166,7 +166,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
             currentState = decoder.NextState(currentState);
 
             // ffmpeg 7.2+ uses p016 internally for cuda, so convert to p010 for compatibility until min ver is 7.2
-            if (decoder is DecoderImplicitCuda && videoStream.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10)
+            if (decoder is DecoderImplicitCuda && videoStream.BitDepth == 10)
             {
                 var filter = new ScaleCudaFilter(
                     currentState with { PixelFormat = new PixelFormatP010() },
@@ -573,7 +573,7 @@ public class NvidiaPipelineBuilder : SoftwarePipelineBuilder
                 var pixelFormatFilter = new PixelFormatFilter(new PixelFormatYuva420P());
                 subtitle.FilterSteps.Add(pixelFormatFilter);
 
-                if (currentState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 8)
+                if (currentState.BitDepth == 8)
                 {
                     if (_ffmpegCapabilities.HasFilter(FFmpegKnownFilter.ScaleNpp))
                     {

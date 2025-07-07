@@ -198,7 +198,7 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
             _subtitleInputFile.Map(s => s is { IsImageBased: true, Method: SubtitleMethod.Burn }).IfNone(false),
             _subtitleInputFile.Map(s => s is { IsImageBased: false, Method: SubtitleMethod.Burn }).IfNone(false),
             desiredState.Deinterlaced,
-            desiredState.PixelFormat.Map(pf => pf.BitDepth).IfNone(8) == 10,
+            desiredState.BitDepth == 10,
             false,
             videoStream.ColorParams.IsHdr);
 
