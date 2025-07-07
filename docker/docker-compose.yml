@@ -1,15 +1,12 @@
-services:
+﻿services:
     ersatztv:
-        image: ghcr.io/ersatztv/ersatztv:develop
-        #build:
-        #    context: ..
-        #    dockerfile: docker/Dockerfile
-        #    args:
-        #        INFO_VERSION: "docker-compose-develop"
+        build:
+            context: ..
+            dockerfile: docker/Dockerfile
+            args:
+                INFO_VERSION: "docker-compose-develop"
         environment:
             TZ: America/Chicago
-            NVIDIA_VISIBLE_DEVICES: all
-            NVIDIA_DRIVER_CAPABILITIES: compute,utility,video
         ports:
             - "8409:8409"
         volumes:
@@ -17,12 +14,5 @@ services:
             #- /media/shared:/media/shared:ro
         tmpfs:
             - /transcode
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          count: 1
-                          capabilities: [gpu]
 volumes:
     ersatztv:
