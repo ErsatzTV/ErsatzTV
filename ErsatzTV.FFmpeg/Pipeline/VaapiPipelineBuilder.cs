@@ -177,9 +177,10 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
         currentState = SetScale(videoInputFile, videoStream, context, ffmpegState, desiredState, currentState);
         // _logger.LogDebug("After scale: {PixelFormat}", currentState.PixelFormat);
 
+        bool isHdrTonemap = videoStream.ColorParams.IsHdr;
         currentState = SetTonemap(videoInputFile, videoStream, ffmpegState, desiredState, currentState);
 
-        currentState = SetPad(videoInputFile, desiredState, currentState);
+        currentState = SetPad(videoInputFile, desiredState, currentState, isHdrTonemap);
         // _logger.LogDebug("After pad: {PixelFormat}", currentState.PixelFormat);
 
         currentState = SetCrop(videoInputFile, desiredState, currentState);
@@ -532,13 +533,24 @@ public class VaapiPipelineBuilder : SoftwarePipelineBuilder
     private static FrameState SetPad(
         VideoInputFile videoInputFile,
         FrameState desiredState,
-        FrameState currentState)
+        FrameState currentState,
+        bool isHdrTonemap)
     {
         if (desiredState.CroppedSize.IsNone && currentState.PaddedSize != desiredState.PaddedSize)
         {
-            var padStep = new PadVaapiFilter(currentState, desiredState.PaddedSize);
-            currentState = padStep.NextState(currentState);
-            videoInputFile.FilterSteps.Add(padStep);
+            // pad_vaapi seems to pad with green when input is HDR, so use software pad here
+            if (isHdrTonemap)
+            {
+                var padStep = new PadFilter(currentState, desiredState.PaddedSize);
+                currentState = padStep.NextState(currentState);
+                videoInputFile.FilterSteps.Add(padStep);
+            }
+            else
+            {
+                var padStep = new PadVaapiFilter(currentState, desiredState.PaddedSize);
+                currentState = padStep.NextState(currentState);
+                videoInputFile.FilterSteps.Add(padStep);
+            }
         }
 
         return currentState;
