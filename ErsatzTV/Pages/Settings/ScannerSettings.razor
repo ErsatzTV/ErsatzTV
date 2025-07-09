@@ -14,7 +14,7 @@
             <MudText Typo="Typo.h5" Class="mb-2">Scanner</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Library Refresh Interval</MudText>
                 </div>
                 <MudTextField @bind-Value="_libraryRefreshInterval" Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))" Required="true" RequiredError="Library refresh interval is required!" Adornment="Adornment.End" AdornmentText="hours"/>

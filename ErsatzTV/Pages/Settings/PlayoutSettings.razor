@@ -14,13 +14,13 @@
             <MudText Typo="Typo.h5" Class="mb-2">Playout</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Days To Build</MudText>
                 </div>
                 <MudTextField @bind-Value="_playoutSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidatePlayoutDaysToBuild))" Required="true" RequiredError="Playout days to build is required!" Adornment="Adornment.End" AdornmentText="days"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Skip Missing Items</MudText>
                 </div>
                 <MudCheckBox @bind-Value="_playoutSettings.SkipMissingItems" Dense="true">

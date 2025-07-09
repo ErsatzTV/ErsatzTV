@@ -27,31 +27,31 @@
         <MudText Typo="Typo.h5" Class="mb-2">@(IsEdit ? "Edit Channel" : "Add Channel")</MudText>
         <MudDivider Class="mb-6"/>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Number</MudText>
             </div>
             <MudTextField @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Name</MudText>
             </div>
             <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Group</MudText>
             </div>
             <MudTextField @bind-Value="_model.Group" For="@(() => _model.Group)"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Categories</MudText>
             </div>
             <MudTextField @bind-Value="_model.Categories" For="@(() => _model.Categories)" HelperText="Comma-separated list of categories"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Active Mode</MudText>
             </div>
             <MudSelect @bind-Value="_model.ActiveMode" For="@(() => _model.ActiveMode)">
@@ -61,7 +61,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Progress Mode</MudText>
             </div>
             <MudSelect @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)">
@@ -70,7 +70,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Streaming Mode</MudText>
             </div>
             <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
@@ -82,7 +82,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>FFmpeg Profile</MudText>
             </div>
             <MudSelect @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
@@ -94,7 +94,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Stream Selector Mode</MudText>
             </div>
             <MudSelect @bind-Value="_model.StreamSelectorMode" For="@(() => _model.StreamSelectorMode)">
@@ -105,7 +105,7 @@
         @if (_model.StreamSelectorMode is ChannelStreamSelectorMode.Default)
         {
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Preferred Audio Language</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.PreferredAudioLanguageCode"
@@ -119,13 +119,13 @@
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Preferred Audio Title</MudText>
                 </div>
                 <MudTextField @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Preferred Subtitle Language</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.PreferredSubtitleLanguageCode"
@@ -139,7 +139,7 @@
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Subtitle Mode</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
@@ -153,7 +153,7 @@
         else
         {
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Stream Selector</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.StreamSelector"
@@ -167,7 +167,7 @@
             </MudStack>
         }
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Music Video Credits Mode</MudText>
             </div>
             <MudSelect @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
@@ -176,7 +176,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Music Video Credits Template</MudText>
             </div>
             <MudSelect @bind-Value="_model.MusicVideoCreditsTemplate"
@@ -190,7 +190,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Song Video Mode</MudText>
             </div>
             <MudSelect @bind-Value="_model.SongVideoMode" For="@(() => _model.SongVideoMode)">
@@ -199,10 +199,10 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Logo</MudText>
             </div>
-            <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
+            <InputFile id="fileInput" OnChange="UploadLogo" style="display: none;"/>
             <MudButton HtmlTag="label"
                        Variant="Variant.Filled"
                        Color="Color.Primary"
@@ -212,13 +212,13 @@
             </MudButton>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>External Logo URL</MudText>
             </div>
             <MudTextField @bind-Value="_model.ExternalLogoUrl" For="@(() => _model.ExternalLogoUrl)"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Logo Preview</MudText>
             </div>
             @if (!string.IsNullOrWhiteSpace(_model.Logo?.Path) || !string.IsNullOrWhiteSpace(_model.ExternalLogoUrl))
@@ -227,7 +227,7 @@
             }
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Watermark</MudText>
             </div>
             <MudSelect @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
@@ -241,7 +241,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Fallback Filler</MudText>
             </div>
             <MudSelect @bind-Value="_model.FallbackFillerId" For="@(() => _model.FallbackFillerId)" Clearable="true">

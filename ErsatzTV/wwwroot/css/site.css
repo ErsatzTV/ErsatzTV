@@ -153,6 +153,7 @@
 
 .form-field-stack > div.d-flex {
     width: 300px;
+    justify-content: flex-start;
 }
 
 .form-field-stack div.mud-input-control {
