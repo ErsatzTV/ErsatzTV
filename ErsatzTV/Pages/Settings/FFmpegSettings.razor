@@ -21,19 +21,19 @@
             <MudText Typo="Typo.h5" Class="mb-2">FFmpeg</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>FFmpeg Path</MudText>
                 </div>
                 <MudTextField @bind-Value="_ffmpegSettings.FFmpegPath" HelperText="The full path to the ffmpeg executable file" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFmpeg path is required!"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>FFprobe Path</MudText>
                 </div>
                 <MudTextField @bind-Value="_ffmpegSettings.FFprobePath" HelperText="The full path to the ffprobe executable file" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFprobe path is required!"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Default FFmpeg Profile</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegSettings.DefaultFFmpegProfileId" HelperText="The FFmpeg Profile to use when creating new channels">
@@ -44,7 +44,7 @@
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Preferred Audio Language</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegSettings.PreferredAudioLanguageCode" Required="true" RequiredError="Preferred Language Code is required!">
@@ -55,25 +55,25 @@
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Use Embedded Subtitles</MudText>
                 </div>
                 <MudCheckBox @bind-Value="_ffmpegSettings.UseEmbeddedSubtitles" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Extract Embedded (Text) Subtitles</MudText>
                 </div>
                 <MudCheckBox @bind-Value="_ffmpegSettings.ExtractEmbeddedSubtitles" Disabled="@(_ffmpegSettings.UseEmbeddedSubtitles == false)" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Save Troubleshooting Reports To Disk</MudText>
                 </div>
                 <MudCheckBox @bind-Value="_ffmpegSettings.SaveReports" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Global Watermark</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegSettings.GlobalWatermarkId" Clearable="true">
@@ -85,7 +85,7 @@
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Global Fallback Filler</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegSettings.GlobalFallbackFillerId" Clearable="true">
@@ -97,25 +97,25 @@
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>HLS Segmenter Idle Timeout</MudText>
                 </div>
                 <MudTextField @bind-Value="_ffmpegSettings.HlsSegmenterIdleTimeout" Validation="@(new Func<int, string>(ValidateHlsSegmenterIdleTimeout))" Required="true" RequiredError="HLS Segmenter idle timeout is required!" Adornment="Adornment.End" AdornmentText="seconds" HelperText="The number of seconds to continue transcoding a channel while no requests have been received from any client"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Work-Ahead HLS Segmenter Limit</MudText>
                 </div>
                 <MudTextField @bind-Value="_ffmpegSettings.WorkAheadSegmenterLimit" Validation="@(new Func<int, string>(ValidateWorkAheadSegmenterLimit))" Required="true" RequiredError="Work-ahead HLS Segmenter limit is required!" HelperText="The number of segmenters (channels) that will work-ahead (transcode at maximum speed) simultaneously, if multiple channels are being watched"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>HLS Segmenter Initial Segment Count</MudText>
                 </div>
                 <MudTextField @bind-Value="_ffmpegSettings.InitialSegmentCount" Validation="@(new Func<int, string>(ValidateInitialSegmentCount))" Required="true" RequiredError="HLS Segmenter initial segment count is required!" HelperText="Delays stream start until the specified number of (4-second) segments have been transcoded; a larger number will mean slower initial playback, but potentially less buffering"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>HLS Direct Output Format</MudText>
                 </div>
                 <MudSelect @bind-Value="_ffmpegSettings.HlsDirectOutputFormat" Clearable="true">

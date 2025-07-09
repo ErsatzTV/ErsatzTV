@@ -17,13 +17,13 @@
             <MudText Typo="Typo.h5" Class="mb-2">Schedule</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Name</MudText>
                 </div>
                 <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Schedule name is required!"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Keep Multi-Part Episodes Together</MudText>
                 </div>
                 <MudCheckBox @bind-Value="@_model.KeepMultiPartEpisodesTogether" For="@(() => _model.KeepMultiPartEpisodesTogether)" Dense="true">
@@ -31,7 +31,7 @@
                 </MudCheckBox>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Treat Collections As Shows</MudText>
                 </div>
                 <MudCheckBox @bind-Value="@_model.TreatCollectionsAsShows"
@@ -41,7 +41,7 @@
                 </MudCheckBox>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Shuffle Schedule Items</MudText>
                 </div>
                 <MudCheckBox @bind-Value="@_model.ShuffleScheduleItems" For="@(() => _model.ShuffleScheduleItems)" Dense="true">
@@ -49,13 +49,13 @@
                 </MudCheckBox>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Random Start Point</MudText>
                 </div>
                 <MudCheckBox @bind-Value="@_model.RandomStartPoint" For="@(() => _model.RandomStartPoint)" Dense="true"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Fixed Start Time Behavior</MudText>
                 </div>
                 <MudSelect @bind-Value="@_model.FixedStartTimeBehavior" For="@(() => _model.FixedStartTimeBehavior)">

@@ -27,19 +27,19 @@
         <MudText Typo="Typo.h5" Class="mb-2">General</MudText>
         <MudDivider Class="mb-6"/>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Name</MudText>
             </div>
             <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Immediate="true"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Thread Count</MudText>
             </div>
             <MudTextField @bind-Value="@_model.ThreadCount" For="@(() => _model.ThreadCount)"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Preferred Resolution</MudText>
             </div>
             <MudSelect @bind-Value="_model.Resolution" For="@(() => _model.Resolution)">
@@ -50,7 +50,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Scaling Behavior</MudText>
             </div>
             <MudSelect @bind-Value="_model.ScalingBehavior" For="@(() => _model.ScalingBehavior)">
@@ -62,7 +62,7 @@
         <MudText Typo="Typo.h5" Class="mb-2">Video</MudText>
         <MudDivider Class="mb-6"/>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Format</MudText>
             </div>
             <MudSelect @bind-Value="_model.VideoFormat" For="@(() => _model.VideoFormat)">
@@ -72,7 +72,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Profile</MudText>
             </div>
             <MudSelect @bind-Value="_model.VideoProfile"
@@ -84,7 +84,7 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Preset</MudText>
             </div>
             @{
@@ -104,13 +104,13 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Allow B-Frames</MudText>
             </div>
             <MudCheckBox @bind-Value="@_model.AllowBFrames" For="@(() => _model.AllowBFrames)" Dense="true"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Bit Depth</MudText>
             </div>
             <MudSelect @bind-Value="_model.BitDepth" For="@(() => _model.BitDepth)">
@@ -119,19 +119,19 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Bitrate</MudText>
             </div>
             <MudTextField @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Buffer Size</MudText>
             </div>
             <MudTextField @bind-Value="_model.VideoBufferSize" For="@(() => _model.VideoBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Hardware Acceleration</MudText>
             </div>
             <MudSelect @bind-Value="_model.HardwareAcceleration" For="@(() => _model.HardwareAcceleration)">
@@ -146,7 +146,7 @@
             @if (_model.HardwareAcceleration is HardwareAccelerationKind.Vaapi)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex justify-md-end">
+                    <div class="d-flex">
                         <MudText>VAAPI Driver</MudText>
                     </div>
                     <MudSelect @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
@@ -157,7 +157,7 @@
                     </MudSelect>
                 </MudStack>
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex justify-md-end">
+                    <div class="d-flex">
                         <MudText>VAAPI Display</MudText>
                     </div>
                     <MudSelect @bind-Value="_model.VaapiDisplay" For="@(() => _model.VaapiDisplay)">
@@ -172,7 +172,7 @@
             @if (_model.HardwareAcceleration is HardwareAccelerationKind.Vaapi or HardwareAccelerationKind.Qsv)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                    <div class="d-flex justify-md-end">
+                    <div class="d-flex">
                         <MudText>@(_model.HardwareAcceleration == HardwareAccelerationKind.Vaapi ? "VAAPI Device" : "QSV Device")</MudText>
                     </div>
                     <MudSelect @bind-Value="_model.VaapiDevice" For="@(() => _model.VaapiDevice)">
@@ -188,7 +188,7 @@
         @if (_model.HardwareAcceleration == HardwareAccelerationKind.Qsv)
         {
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>QSV Extra Hardware Frames</MudText>
                 </div>
                 <MudTextField @bind-Value="_model.QsvExtraHardwareFrames" For="@(() => _model.QsvExtraHardwareFrames)"/>
@@ -197,7 +197,7 @@
         else
         {
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Tonemap Algorithm</MudText>
                 </div>
                 <MudSelect @bind-Value="_model.TonemapAlgorithm" For="@(() => _model.TonemapAlgorithm)">
@@ -209,13 +209,13 @@
             </MudStack>
         }
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Normalize Frame Rate</MudText>
             </div>
             <MudCheckBox @bind-Value="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)" Dense="true"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Auto Deinterlace Video</MudText>
             </div>
             <MudCheckBox @bind-Value="@_model.DeinterlaceVideo" For="@(() => _model.DeinterlaceVideo)" Dense="true"/>
@@ -223,7 +223,7 @@
         <MudText Typo="Typo.h5" Class="mb-2">Audio</MudText>
         <MudDivider Class="mb-6"/>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Format</MudText>
             </div>
             <MudSelect @bind-Value="_model.AudioFormat" For="@(() => _model.AudioFormat)">
@@ -232,31 +232,31 @@
             </MudSelect>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Bitrate</MudText>
             </div>
             <MudTextField @bind-Value="_model.AudioBitrate" For="@(() => _model.AudioBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Buffer Size</MudText>
             </div>
             <MudTextField @bind-Value="_model.AudioBufferSize" For="@(() => _model.AudioBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Channels</MudText>
             </div>
             <MudTextField @bind-Value="_model.AudioChannels" For="@(() => _model.AudioChannels)"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Sample Rate</MudText>
             </div>
             <MudTextField @bind-Value="_model.AudioSampleRate" For="@(() => _model.AudioSampleRate)" Adornment="Adornment.End" AdornmentText="kHz"/>
         </MudStack>
         <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex justify-md-end">
+            <div class="d-flex">
                 <MudText>Normalize Loudness</MudText>
             </div>
             <MudSelect @bind-Value="_model.NormalizeLoudnessMode" For="@(() => _model.NormalizeLoudnessMode)">

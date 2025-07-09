@@ -2,6 +2,7 @@
 using ErsatzTV.FFmpeg.State;
 using ErsatzTV.ViewModels;
 using FluentValidation;
+using FluentValidation.Results;
 
 namespace ErsatzTV.Validators;
 
@@ -42,4 +43,18 @@ public class WatermarkEditViewModelValidator : AbstractValidator<WatermarkEditVi
             .LessThanOrEqualTo(100)
             .When(vm => vm.Mode != ChannelWatermarkMode.None);
     }
+
+    public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+    {
+        ValidationResult result = await ValidateAsync(
+            ValidationContext<WatermarkEditViewModel>.CreateWithOptions(
+                (WatermarkEditViewModel)model,
+                x => x.IncludeProperties(propertyName)));
+        if (result.IsValid)
+        {
+            return [];
+        }
+
+        return result.Errors.Select(e => e.ErrorMessage);
+    };
 }

@@ -4,154 +4,181 @@
 @using ErsatzTV.Application.Images
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.FFmpeg.State
+@using ErsatzTV.Validators
+@using FluentValidation.Results
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<WatermarkEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div style="max-width: 400px;">
-        @if (_editContext is not null)
-        {
-            <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-                <FluentValidationValidator/>
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h5">@(IsEdit ? "Edit Watermark" : "Add Watermark")</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                        <MudSelect Class="mt-3" Label="Mode" @bind-Value="_model.Mode"
-                                   For="@(() => _model.Mode)">
-                            <MudSelectItem Value="@(ChannelWatermarkMode.None)">None</MudSelectItem>
-                            <MudSelectItem Value="@(ChannelWatermarkMode.Permanent)">Permanent</MudSelectItem>
-                            <MudSelectItem Value="@(ChannelWatermarkMode.Intermittent)">Intermittent</MudSelectItem>
-                        </MudSelect>
-                        <MudSelect Class="mt-3" Label="Image Source" @bind-Value="_model.ImageSource"
-                                   For="@(() => _model.ImageSource)"
-                                   Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
-                            <MudSelectItem Value="@(ChannelWatermarkImageSource.Custom)">Custom</MudSelectItem>
-                            <MudSelectItem Value="@(ChannelWatermarkImageSource.ChannelLogo)">Channel Logo</MudSelectItem>
-                        </MudSelect>
-                        <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
-                            <MudItem xs="6">
-                                <InputFile id="watermarkFileInput" OnChange="UploadWatermark" style="display: none;"/>
-                                @if (!string.IsNullOrWhiteSpace(_model.Image?.Path) && _model.ImageSource == ChannelWatermarkImageSource.Custom)
-                                {
-                                    <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")" Style="max-height: 50px"/>
-                                }
-                                <ValidationMessage For="@(() => _model.Image)" style="color: #f44336 !important;"/>
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudButton Class="ml-auto" HtmlTag="label"
-                                           Variant="Variant.Filled"
-                                           Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.CloudUpload"
-                                           Disabled="@(_model.ImageSource != ChannelWatermarkImageSource.Custom)"
-                                           for="watermarkFileInput">
-                                    Upload Image
-                                </MudButton>
-                            </MudItem>
-                        </MudGrid>
-                        <MudSelect Class="mt-3" Label="Location" @bind-Value="_model.Location"
-                                   For="@(() => _model.Location)"
-                                   Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
-                            <MudSelectItem Value="@(WatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.BottomMiddle)">Bottom Middle</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.LeftMiddle)">Left Middle</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.TopLeft)">Top Left</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.TopMiddle)">Top Middle</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.TopRight)">Top Right</MudSelectItem>
-                            <MudSelectItem Value="@(WatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
-                        </MudSelect>
-                        <MudCheckBox Class="mt-3" Label="Place Within Source Content"
-                                     @bind-Value="_model.PlaceWithinSourceContent"
-                                     For="@(() => _model.PlaceWithinSourceContent)"
-                                     Disabled="@(_model.Mode == ChannelWatermarkMode.None)"/>
-                        <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
-                            <MudItem xs="6">
-                                <MudSelect Label="Size" @bind-Value="_model.Size"
-                                           For="@(() => _model.Size)"
-                                           Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
-                                    <MudSelectItem Value="@(WatermarkSize.Scaled)">Scaled</MudSelectItem>
-                                    <MudSelectItem Value="@(WatermarkSize.ActualSize)">Actual Size</MudSelectItem>
-                                </MudSelect>
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudTextField Label="Width" @bind-Value="_model.Width"
-                                              For="@(() => _model.Width)"
-                                              Adornment="Adornment.End"
-                                              AdornmentText="%"
-                                              Disabled="@(_model.Mode == ChannelWatermarkMode.None || _model.Size == WatermarkSize.ActualSize)"
-                                              Immediate="true"/>
-                            </MudItem>
-                        </MudGrid>
-                        <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
-                            <MudItem xs="6">
-                                <MudTextField Label="Horizontal Margin" @bind-Value="_model.HorizontalMargin"
-                                              For="@(() => _model.HorizontalMargin)"
-                                              Adornment="Adornment.End"
-                                              AdornmentText="%"
-                                              Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
-                                              Immediate="true"/>
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudTextField Label="Vertical Margin" @bind-Value="_model.VerticalMargin"
-                                              For="@(() => _model.VerticalMargin)"
-                                              Adornment="Adornment.End"
-                                              AdornmentText="%"
-                                              Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
-                                              Immediate="true"/>
-                            </MudItem>
-                        </MudGrid>
-                        <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
-                            <MudItem xs="6">
-                                <MudSelect Label="Frequency" @bind-Value="_model.FrequencyMinutes"
-                                           For="@(() => _model.FrequencyMinutes)"
-                                           Disabled="@(_model.Mode != ChannelWatermarkMode.Intermittent)">
-                                    <MudSelectItem Value="5">5 minutes</MudSelectItem>
-                                    <MudSelectItem Value="10">10 minutes</MudSelectItem>
-                                    <MudSelectItem Value="15">15 minutes</MudSelectItem>
-                                    <MudSelectItem Value="20">20 minutes</MudSelectItem>
-                                    <MudSelectItem Value="30">30 minutes</MudSelectItem>
-                                    <MudSelectItem Value="60">60 minutes</MudSelectItem>
-                                </MudSelect>
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudTextField Label="Duration" @bind-Value="_model.DurationSeconds"
-                                              For="@(() => _model.DurationSeconds)"
-                                              Adornment="Adornment.End"
-                                              AdornmentText="seconds"
-                                              Disabled="@(_model.Mode != ChannelWatermarkMode.Intermittent)"
-                                              Immediate="true"/>
-                            </MudItem>
-                        </MudGrid>
-                        <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
-                            <MudItem xs="6">
-                                <MudTextField Label="Opacity" @bind-Value="_model.Opacity"
-                                              For="@(() => _model.Opacity)"
-                                              Adornment="Adornment.End"
-                                              AdornmentText="%"
-                                              Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
-                                              Immediate="true"/>
-                            </MudItem>
-                            <MudItem xs="6"/>
-                        </MudGrid>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                            @(IsEdit ? "Save Changes" : "Add Watermark")
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </EditForm>
-        }
-    </div>
-</MudContainer>
+<MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
+<MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Watermark" : "Add Watermark")</MudButton>
+</MudPaper>
+<div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+        <MudText Typo="Typo.h5" Class="mb-2">Watermark</MudText>
+        <MudDivider Class="mb-6"/>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Name</MudText>
+            </div>
+            <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Mode</MudText>
+            </div>
+            <MudSelect @bind-Value="_model.Mode" For="@(() => _model.Mode)">
+                <MudSelectItem Value="@(ChannelWatermarkMode.None)">None</MudSelectItem>
+                <MudSelectItem Value="@(ChannelWatermarkMode.Permanent)">Permanent</MudSelectItem>
+                <MudSelectItem Value="@(ChannelWatermarkMode.Intermittent)">Intermittent</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Image Source</MudText>
+            </div>
+            <MudSelect @bind-Value="_model.ImageSource"
+                       For="@(() => _model.ImageSource)"
+                       Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
+                <MudSelectItem Value="@(ChannelWatermarkImageSource.Custom)">Custom</MudSelectItem>
+                <MudSelectItem Value="@(ChannelWatermarkImageSource.ChannelLogo)">Channel Logo</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Image</MudText>
+            </div>
+            <InputFile id="watermarkFileInput" OnChange="UploadWatermark" style="display: none;"/>
+            <MudButton HtmlTag="label"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                       Disabled="@(_model.ImageSource != ChannelWatermarkImageSource.Custom)"
+                       for="watermarkFileInput">
+                Upload Image
+            </MudButton>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Image Preview</MudText>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(_model.Image?.Path) && _model.ImageSource == ChannelWatermarkImageSource.Custom)
+            {
+                <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")" Style="max-height: 50px"/>
+            }
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Location</MudText>
+            </div>
+            <MudSelect @bind-Value="_model.Location"
+                       For="@(() => _model.Location)"
+                       Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
+                <MudSelectItem Value="@(WatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.BottomMiddle)">Bottom Middle</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.LeftMiddle)">Left Middle</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.TopLeft)">Top Left</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.TopMiddle)">Top Middle</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.TopRight)">Top Right</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Place Within Source Content</MudText>
+            </div>
+            <MudCheckBox @bind-Value="_model.PlaceWithinSourceContent"
+                         For="@(() => _model.PlaceWithinSourceContent)"
+                         Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                         Dense="true"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Size</MudText>
+            </div>
+            <MudSelect @bind-Value="_model.Size"
+                       For="@(() => _model.Size)"
+                       Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
+                <MudSelectItem Value="@(WatermarkSize.Scaled)">Scaled</MudSelectItem>
+                <MudSelectItem Value="@(WatermarkSize.ActualSize)">Actual Size</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Width</MudText>
+            </div>
+            <MudTextField For="@(() => _model.Width)"
+                          Adornment="Adornment.End"
+                          AdornmentText="%"
+                          Disabled="@(_model.Mode == ChannelWatermarkMode.None || _model.Size == WatermarkSize.ActualSize)"
+                          Immediate="true" />
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Horizontal Margin</MudText>
+            </div>
+            <MudTextField @bind-Value="_model.HorizontalMargin"
+                          For="@(() => _model.HorizontalMargin)"
+                          Adornment="Adornment.End"
+                          AdornmentText="%"
+                          Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                          Immediate="true"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Vertical Margin</MudText>
+            </div>
+            <MudTextField @bind-Value="_model.VerticalMargin"
+                          For="@(() => _model.VerticalMargin)"
+                          Adornment="Adornment.End"
+                          AdornmentText="%"
+                          Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                          Immediate="true"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Frequency</MudText>
+            </div>
+            <MudSelect @bind-Value="_model.FrequencyMinutes"
+                       For="@(() => _model.FrequencyMinutes)"
+                       Disabled="@(_model.Mode != ChannelWatermarkMode.Intermittent)">
+                <MudSelectItem Value="5">5 minutes</MudSelectItem>
+                <MudSelectItem Value="10">10 minutes</MudSelectItem>
+                <MudSelectItem Value="15">15 minutes</MudSelectItem>
+                <MudSelectItem Value="20">20 minutes</MudSelectItem>
+                <MudSelectItem Value="30">30 minutes</MudSelectItem>
+                <MudSelectItem Value="60">60 minutes</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Duration</MudText>
+            </div>
+            <MudTextField @bind-Value="_model.DurationSeconds"
+                          For="@(() => _model.DurationSeconds)"
+                          Adornment="Adornment.End"
+                          AdornmentText="seconds"
+                          Disabled="@(_model.Mode != ChannelWatermarkMode.Intermittent)"
+                          Immediate="true"/>
+        </MudStack>
+        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+            <div class="d-flex">
+                <MudText>Opacity</MudText>
+            </div>
+            <MudTextField @bind-Value="_model.Opacity"
+                          For="@(() => _model.Opacity)"
+                          Adornment="Adornment.End"
+                          AdornmentText="%"
+                          Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                          Immediate="true"/>
+        </MudStack>
+    </MudContainer>
+</div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -160,8 +187,8 @@
     public int Id { get; set; }
 
     private WatermarkEditViewModel _model = new();
-    private EditContext _editContext;
-    private ValidationMessageStore _messageStore;
+    private readonly WatermarkEditViewModelValidator _validator = new();
+    private MudForm _form;
 
     public void Dispose()
     {
@@ -196,17 +223,15 @@
                 PlaceWithinSourceContent = false
             };
         }
-
-        _editContext = new EditContext(_model);
-        _messageStore = new ValidationMessageStore(_editContext);
     }
 
     private bool IsEdit => Id != 0;
 
     private async Task HandleSubmitAsync()
     {
-        _messageStore.Clear();
-        if (_editContext.Validate())
+        await _form.Validate();
+        ValidationResult result = await _validator.ValidateAsync(_model, _cts.Token);
+        if (result.IsValid)
         {
             Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() : (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
@@ -231,8 +256,6 @@
                 relativeFileName =>
                 {
                     _model.Image = new ArtworkContentTypeModel(relativeFileName, e.File.ContentType);
-                    _messageStore.Clear();
-                    _editContext.Validate();
                     StateHasChanged();
                 },
                 error =>

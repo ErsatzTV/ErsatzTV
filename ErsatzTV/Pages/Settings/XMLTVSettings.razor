@@ -14,13 +14,13 @@
             <MudText Typo="Typo.h5" Class="mb-2">XMLTV</MudText>
             <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>Days To Build</MudText>
                 </div>
                 <MudTextField @bind-Value="_xmltvSettings.DaysToBuild" Validation="@(new Func<int, string>(ValidateXmltvDaysToBuild))" Required="true" RequiredError="XMLTV days to build is required!" Adornment="Adornment.End" AdornmentText="days"/>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex justify-md-end">
+                <div class="d-flex">
                     <MudText>XMLTV Time Zone</MudText>
                 </div>
                 <MudSelect @bind-Value="_xmltvSettings.TimeZone">
