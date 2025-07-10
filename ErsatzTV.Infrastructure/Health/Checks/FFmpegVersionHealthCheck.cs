@@ -27,14 +27,14 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
         {
-            return FailResult("Unable to locate ffmpeg");
+            return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg");
         }
 
         Option<ConfigElement> maybeFFprobePath =
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath);
         if (maybeFFprobePath.IsNone)
         {
-            return FailResult("Unable to locate ffprobe");
+            return FailResult("Unable to locate ffprobe", "Unable to locate ffprobe");
         }
 
         foreach (ConfigElement ffmpegPath in maybeFFmpegPath)
@@ -42,7 +42,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             Option<string> maybeVersion = await GetVersion(ffmpegPath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
-                return WarningResult("Unable to determine ffmpeg version");
+                return WarningResult("Unable to determine ffmpeg version", "Unable to determine ffmpeg version");
             }
 
             foreach (string version in maybeVersion)
@@ -59,7 +59,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             Option<string> maybeVersion = await GetVersion(ffprobePath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
-                return WarningResult("Unable to determine ffprobe version");
+                return WarningResult("Unable to determine ffprobe version", "Unable to determine ffprobe version");
             }
 
             foreach (string version in maybeVersion)
@@ -71,7 +71,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             }
         }
 
-        return new HealthCheckResult("FFmpeg Version", HealthCheckStatus.Pass, string.Empty, None);
+        return new HealthCheckResult("FFmpeg Version", HealthCheckStatus.Pass, string.Empty, string.Empty, None);
     }
 
     private Option<HealthCheckResult> ValidateVersion(string version, string app)
@@ -81,7 +81,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             version.StartsWith("5.", StringComparison.OrdinalIgnoreCase) ||
             version.StartsWith("6.", StringComparison.OrdinalIgnoreCase))
         {
-            return FailResult($"{app} version {version} is too old; please install 7.1.1!");
+            return FailResult($"{app} version {version} is too old; please install 7.1.1!", $"{app} version is too old");
         }
 
         if (!version.StartsWith("7.1.1", StringComparison.OrdinalIgnoreCase) &&
@@ -90,7 +90,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             version != BundledVersionVaapi)
         {
             return WarningResult(
-                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!");
+                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!", $"{app} version is unexpected");
         }
 
         return None;

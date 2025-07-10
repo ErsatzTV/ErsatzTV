@@ -71,7 +71,8 @@ public class VaapiDriverHealthCheck(
                 if (capabilities is VaapiHardwareCapabilities { EntrypointCount: 0 } or NoHardwareCapabilities)
                 {
                     return FailResult(
-                        $"FFmpeg Profile {profile.Name} is using device and driver combination ({profile.VaapiDevice} and {profile.VaapiDriver}) that reports no capabilities. Hardware Acceleration WILL NOT WORK as configured.");
+                        $"FFmpeg Profile {profile.Name} is using device and driver combination ({profile.VaapiDevice} and {profile.VaapiDriver}) that reports no capabilities. Hardware Acceleration WILL NOT WORK as configured.",
+                        "Hardware acceleration WILL NOT WORK...");
                 }
             }
         }
@@ -83,7 +84,8 @@ public class VaapiDriverHealthCheck(
 
         return defaultProfiles.Count != 0
             ? InfoResult(
-                $"{defaultProfiles.Count} FFmpeg Profile{(defaultProfiles.Count > 1 ? "s are" : " is")} set to use Default VAAPI Driver; selecting iHD (Gen 8+) or i965 (up to Gen 9) may offer better performance with Intel iGPU")
+                $"{defaultProfiles.Count} FFmpeg Profile{(defaultProfiles.Count > 1 ? "s are" : " is")} set to use Default VAAPI Driver; selecting iHD (Gen 8+) or i965 (up to Gen 9) may offer better performance with Intel iGPU",
+                "Default VAAPI driver is not optimal")
             : OkResult();
     }
 

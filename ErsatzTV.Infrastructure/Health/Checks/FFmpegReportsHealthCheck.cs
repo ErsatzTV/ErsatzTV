@@ -25,7 +25,8 @@ public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthChe
             {
                 return Result(
                     HealthCheckStatus.Warning,
-                    "FFmpeg troubleshooting reports are enabled and may use a lot of disk space");
+                    "FFmpeg troubleshooting reports are enabled and may use a lot of disk space",
+                    "FFmpeg troubleshooting reports are enabled");
             }
         }
 

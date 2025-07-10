@@ -60,6 +60,7 @@ public class HealthCheckService : IHealthCheckService
                     c.Title,
                     HealthCheckStatus.Fail,
                     "Health check failure; see logs",
+                    "Health check failure",
                     None);
                 return TryAsync(() => c.Check(cancellationToken)).IfFail(ex => LogAndReturn(ex, failedResult));
             })

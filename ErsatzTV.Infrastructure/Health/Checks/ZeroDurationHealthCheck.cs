@@ -63,7 +63,9 @@ public class ZeroDurationHealthCheck : BaseHealthCheck, IZeroDurationHealthCheck
 
             var files = string.Join(", ", paths);
 
-            return WarningResult($"There are {all.Count} files with zero duration, including the following: {files}");
+            return WarningResult(
+                $"There are {all.Count} files with zero duration, including the following: {files}",
+                $"There are {all.Count} files with zero duration");
         }
 
         return OkResult();

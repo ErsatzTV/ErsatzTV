@@ -9,26 +9,26 @@ public abstract class BaseHealthCheck
 {
     public abstract string Title { get; }
 
-    protected HealthCheckResult Result(HealthCheckStatus status, string message) =>
-        new(Title, status, message, None);
+    protected HealthCheckResult Result(HealthCheckStatus status, string message, string briefMessage) =>
+        new(Title, status, message, briefMessage, None);
 
     protected HealthCheckResult NotApplicableResult() =>
-        new(Title, HealthCheckStatus.NotApplicable, string.Empty, None);
+        new(Title, HealthCheckStatus.NotApplicable, string.Empty, string.Empty, None);
 
     protected HealthCheckResult OkResult() =>
-        new(Title, HealthCheckStatus.Pass, string.Empty, None);
+        new(Title, HealthCheckStatus.Pass, string.Empty, string.Empty,  None);
 
-    protected HealthCheckResult FailResult(string message) =>
-        new(Title, HealthCheckStatus.Fail, message, None);
+    protected HealthCheckResult FailResult(string message, string briefMessage) =>
+        new(Title, HealthCheckStatus.Fail, message, briefMessage, None);
 
-    protected HealthCheckResult WarningResult(string message) =>
-        new(Title, HealthCheckStatus.Warning, message, None);
+    protected HealthCheckResult WarningResult(string message, string briefMessage) =>
+        new(Title, HealthCheckStatus.Warning, message, briefMessage, None);
 
-    protected HealthCheckResult WarningResult(string message, string link) =>
-        new(Title, HealthCheckStatus.Warning, message, link);
+    protected HealthCheckResult WarningResult(string message, string briefMessage, string link) =>
+        new(Title, HealthCheckStatus.Warning, message, briefMessage, link);
 
-    protected HealthCheckResult InfoResult(string message) =>
-        new(Title, HealthCheckStatus.Info, message, None);
+    protected HealthCheckResult InfoResult(string message, string briefMessage) =>
+        new(Title, HealthCheckStatus.Info, message, briefMessage, None);
 
     protected static async Task<string> GetProcessOutput(
         string path,

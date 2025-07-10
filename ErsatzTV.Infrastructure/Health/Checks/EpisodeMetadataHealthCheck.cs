@@ -38,7 +38,8 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
             var folders = string.Join(", ", paths);
 
             return WarningResult(
-                $"There are {episodes.Count} episodes with missing metadata, including in the following folders: {folders}");
+                $"There are {episodes.Count} episodes with missing metadata, including in the following folders: {folders}",
+                $"There are {episodes.Count} episodes with missing metadata");
         }
 
         return OkResult();

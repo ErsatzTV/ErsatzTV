@@ -20,11 +20,12 @@ public class ErrorReportsHealthCheck : BaseHealthCheck, IErrorReportsHealthCheck
         {
             return Result(
                     HealthCheckStatus.Pass,
-                    "Automated error reporting is enabled, thank you! To disable, edit the file appsettings.json or set the Bugsnag:Enable environment variable to false")
+                    "Automated error reporting is enabled, thank you! To disable, edit the file appsettings.json or set the Bugsnag:Enable environment variable to false",
+                    "Automated error reporting is enabled, thank you!")
                 .AsTask();
         }
 
-        return InfoResult("Automated error reporting is disabled. Please enable to support bug fixing efforts!")
+        return InfoResult("Automated error reporting is disabled. Please enable to support bug fixing efforts!", "Automated error reporting is disabled")
             .AsTask();
     }
 }

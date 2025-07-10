@@ -84,21 +84,26 @@
                             </div>
                         </MudTd>
                         <MudTd>
-                            @if (context.Link.IsSome)
-                            {
-                                foreach (string link in context.Link)
+                            <MudHidden Breakpoint="Breakpoint.Xs">
+                                @if (context.Link.IsSome)
                                 {
-                                    <MudLink Href="@link">
-                                        @context.Message
-                                    </MudLink>
+                                    foreach (string link in context.Link)
+                                    {
+                                        <MudLink Href="@link">
+                                            @context.Message
+                                        </MudLink>
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                <MudText>
-                                    @context.Message
-                                </MudText>
-                            }
+                                else
+                                {
+                                    <MudText>
+                                        @context.Message
+                                    </MudText>
+                                }
+                            </MudHidden>
+                            <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
+                                @context.BriefMessage
+                            </MudHidden>
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
