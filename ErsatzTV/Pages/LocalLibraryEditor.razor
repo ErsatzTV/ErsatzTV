@@ -9,68 +9,79 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div style="max-width: 400px;">
-        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Local Library" : "Add Local Library")</MudText>
-
-        <EditForm EditContext="_editContext" OnSubmit="@SaveChangesAsync">
-            <FluentValidationValidator/>
-            <MudCard>
-                <MudCardContent>
-                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudSelect Disabled="IsEdit" Label="Media Kind" @bind-Value="_model.MediaKind" For="@(() => _model.MediaKind)">
-                        @foreach (LibraryMediaKind mediaKind in Enum.GetValues<LibraryMediaKind>())
-                        {
-                            <MudSelectItem Value="@mediaKind">@mediaKind</MudSelectItem>
-                        }
-                    </MudSelect>
-                    <MudTextField Class="mt-3" Label="Path" @bind-Value="_newPath.Path" For="@(() => _newPath.Path)"/>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddLibraryPath())" Class="ml-2">
-                        Add Path
-                    </MudButton>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
-                        Save Changes
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </EditForm>
-    </div>
-
-    <MudTable Hover="true" Items="_model.Paths" Dense="true" Class="mt-6">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Library Paths</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col style="width: 120px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Path</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Path">@context.Path</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Move Library Path">
-                        <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
-                                       Disabled="@(_model.Id == 0 || context.Id == 0 || Locker.IsLibraryLocked(_model.Id))"
-                                       OnClick="@(() => MoveLibraryPath(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Library Path">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(() => DeleteLibraryPath(context))">
-                        </MudIconButton>
-                    </MudTooltip>
+<MudForm Model="@_model" @bind-IsValid="@_success" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="SaveChangesAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Local Library" : "Add Local Library")</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Local Library</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
                 </div>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudContainer>
-
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Local library name is required!"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Media Kind</MudText>
+                </div>
+                <MudSelect Disabled="IsEdit" @bind-Value="_model.MediaKind" For="@(() => _model.MediaKind)">
+                    @foreach (LibraryMediaKind mediaKind in Enum.GetValues<LibraryMediaKind>())
+                    {
+                        <MudSelectItem Value="@mediaKind">@mediaKind</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Path</MudText>
+                </div>
+                <MudTextField @bind-Value="_newPath.Path" For="@(() => _newPath.Path)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddLibraryPath())" StartIcon="@Icons.Material.Filled.Add">
+                    Add Path
+                </MudButton>
+            </MudStack>
+            <MudTable Hover="true" Items="_model.Paths" Class="mt-6">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Library Paths</MudText>
+                </ToolBarContent>
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Path</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Path</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Move Library Path">
+                                <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
+                                               Disabled="@(_model.Id == 0 || context.Id == 0 || Locker.IsLibraryLocked(_model.Id))"
+                                               OnClick="@(() => MoveLibraryPath(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Library Path">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(() => DeleteLibraryPath(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -80,8 +91,7 @@
 
     private readonly LocalLibraryEditViewModel _model = new();
     private readonly LocalLibraryPathEditViewModel _newPath = new();
-    private EditContext _editContext;
-    private ValidationMessageStore _messageStore;
+    private bool _success;
 
     private bool IsEdit => Id != 0;
 
@@ -117,9 +127,6 @@
     protected override void OnInitialized()
     {
         Locker.OnLibraryChanged += LockChanged;
-
-        _editContext = new EditContext(_model);
-        _messageStore = new ValidationMessageStore(_editContext);
     }
 
     private void LockChanged(object sender, EventArgs e) =>
@@ -143,7 +150,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<MoveLocalLibraryPathDialog>("Move Local Library Path", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is LocalLibraryViewModel library)
+        if (result is { Canceled: false, Data: LocalLibraryViewModel library })
         {
             var request = new MoveLocalLibraryPath(libraryPath.Id, library.Id);
             Either<BaseError, Unit> moveResult = await Mediator.Send(request, _cts.Token);
@@ -177,7 +184,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             _model.HasChanges = true;
             _model.Paths.Remove(libraryPath);
@@ -186,6 +193,17 @@
 
     private void AddLibraryPath()
     {
+        if (string.IsNullOrWhiteSpace(_newPath.Path))
+        {
+            return;
+        }
+
+        if (!Directory.Exists(_newPath.Path))
+        {
+            Snackbar.Add("Path must exist on filesystem", Severity.Error);
+            return;
+        }
+
         if (!string.IsNullOrWhiteSpace(_newPath.Path) && _model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
         {
             _model.HasChanges = true;
@@ -201,8 +219,7 @@
 
     private async Task SaveChangesAsync()
     {
-        _messageStore.Clear();
-        if (_editContext.Validate())
+        if (_success)
         {
             Either<BaseError, LocalLibraryViewModel> result = IsEdit
                 ? await Mediator.Send(
