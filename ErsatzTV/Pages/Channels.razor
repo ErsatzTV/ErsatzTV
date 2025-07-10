@@ -10,107 +10,114 @@
 @inject NavigationManager NavigationManager
 @inject IFFmpegSegmenterService SegmenterService
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true"
-              @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ChannelViewModel>>>(ServerReload))"
-              @ref="_table">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Channels</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col style="width: 60px;"/>
-            <col/>
-            <col style="width: 15%"/>
-            <col style="width: 15%"/>
-            <col style="width: 15%"/>
-            <col style="width: 15%"/>
-            <col style="width: 240px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number, CultureInfo.InvariantCulture))">Number</MudTableSortLabel>
-            </MudTh>
-            <MudTh>Logo</MudTh>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<ChannelViewModel, object>(x => x.Name)">Name</MudTableSortLabel>
-            </MudTh>
-            <MudTh>Language</MudTh>
-            <MudTh>Mode</MudTh>
-            <MudTh>FFmpeg Profile</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Number">@context.Number</MudTd>
-            <MudTd DataLabel="Logo">
-                @if (!string.IsNullOrWhiteSpace(context.Logo?.Path))
-                {
-                    <MudElement HtmlTag="img" src="@context.Logo.UrlWithContentType" Style="max-height: 50px"/>
-                }
-                else
-                {
-                    <MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.WebEncodedName}")" Style="max-height: 50px"/>
-                }
-            </MudTd>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Language">@context.PreferredAudioLanguageCode</MudTd>
-            <MudTd DataLabel="Mode">@GetStreamingMode(context.StreamingMode)</MudTd>
-            <MudTd DataLabel="FFmpeg Profile">
-                @if (context.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
-                {
-                    @_ffmpegProfiles.Find(p => p.Id == context.FFmpegProfileId)?.Name
-                }
-            </MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    @if (CanPreviewChannel(context))
-                    {
-                        <MudTooltip Text="Preview Channel">
-                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
-                                           OnClick="@(_ => PreviewChannel(context))">
-                            </MudIconButton>
-                        </MudTooltip>
-                    }
-                    else
-                    {
-                        <MudTooltip Text="Channel preview requires playout, MPEG-TS/HLS Segmenter, and H264/AAC">
-                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Disabled="true">
-                            </MudIconButton>
-                        </MudTooltip>
-                    }
-                    @if (SegmenterService.IsActive(context.Number))
-                    {
-                        <MudTooltip Text="Stop Transcode Session">
-                            <MudIconButton Icon="@Icons.Material.Filled.Stop"
-                                           OnClick="@(_ => StopChannel(context))">
-                            </MudIconButton>
-                        </MudTooltip>
-                    }
-                    else
-                    {
-                        <div style="width: 48px"></div>
-                    }
-                    <MudTooltip Text="Edit Channel">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Href="@($"channels/{context.Id}")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Channel">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(_ => DeleteChannelAsync(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="channels/add" Class="mt-4">
-        Add Channel
-    </MudButton>
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" StartIcon="@Icons.Material.Filled.Add" Href="channels/add">
+            Add Channel
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Channels</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_rowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ChannelViewModel>>>(ServerReload))"
+                      @ref="_table">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col style="width: 60px;"/>
+                        <col/>
+                        <col style="width: 15%"/>
+                        <col style="width: 15%"/>
+                        <col style="width: 15%"/>
+                        <col style="width: 15%"/>
+                        <col style="width: 240px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>
+                        <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number, CultureInfo.InvariantCulture))">Number</MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>Logo</MudTh>
+                    <MudTh>
+                        <MudTableSortLabel SortBy="new Func<ChannelViewModel, object>(x => x.Name)">Name</MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>Language</MudTh>
+                    <MudTh>Mode</MudTh>
+                    <MudTh>FFmpeg Profile</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Number">@context.Number</MudTd>
+                    <MudTd DataLabel="Logo">
+                        @if (!string.IsNullOrWhiteSpace(context.Logo?.Path))
+                        {
+                            <MudElement HtmlTag="img" src="@context.Logo.UrlWithContentType" Style="max-height: 50px"/>
+                        }
+                        else
+                        {
+                            <MudElement HtmlTag="img" src="@($"iptv/logos/gen?text={context.WebEncodedName}")" Style="max-height: 50px"/>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Language">@context.PreferredAudioLanguageCode</MudTd>
+                    <MudTd DataLabel="Mode">@GetStreamingMode(context.StreamingMode)</MudTd>
+                    <MudTd DataLabel="FFmpeg Profile">
+                        @if (context.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
+                        {
+                            @_ffmpegProfiles.Find(p => p.Id == context.FFmpegProfileId)?.Name
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            @if (CanPreviewChannel(context))
+                            {
+                                <MudTooltip Text="Preview Channel">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircle"
+                                                   OnClick="@(_ => PreviewChannel(context))">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="Channel preview requires playout, MPEG-TS/HLS Segmenter, and H264/AAC">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Disabled="true">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            }
+                            @if (SegmenterService.IsActive(context.Number))
+                            {
+                                <MudTooltip Text="Stop Transcode Session">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Stop"
+                                                   OnClick="@(_ => StopChannel(context))">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <div style="width: 48px"></div>
+                            }
+                            <MudTooltip Text="Edit Channel">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"channels/{context.Id}")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Channel">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteChannelAsync(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -209,7 +216,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Channel", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteChannel(channel.Id), _cts.Token);
             if (_table != null)
