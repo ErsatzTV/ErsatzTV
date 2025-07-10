@@ -78,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - FFmpeg Profile editor
   - Schedule editor
   - Watermark editor
+  - Local library editor
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
