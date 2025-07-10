@@ -7,68 +7,84 @@
 @inherits MultiSelectBase<SongList>
 @inject NavigationManager NavigationManager
 
-<MudPaper Square="true" Style="display: flex; height: 64px; width: 100%; z-index: 100;">
-    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
-        @if (IsSelectMode())
-        {
-            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
-            <div style="margin-left: auto">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@(_ => AddSelectionToCollection())">
-                    Add To Collection
-                </MudButton>
-                <MudButton Class="ml-3"
-                           Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
-                           OnClick="@(_ => AddSelectionToPlaylist())">
-                    Add To Playlist
-                </MudButton>
-                <MudButton Class="ml-3"
-                           Variant="Variant.Filled"
-                           Color="Color.Secondary"
-                           StartIcon="@Icons.Material.Filled.Check"
-                           OnClick="@(_ => ClearSelection())">
-                    Clear Selection
-                </MudButton>
-            </div>
-        }
-        else
-        {
-            <MudText Style="margin-bottom: auto; margin-top: auto; width: 33%">@_query</MudText>
-            <div style="max-width: 300px; width: 33%;">
-                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
-                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
-                                   OnClick="@PrevPage"
-                                   Disabled="@(PageNumber <= 1)">
-                    </MudIconButton>
-                    <MudText Style="flex-grow: 1"
-                             Align="Align.Center">
-                        @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
-                    </MudText>
-                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
-                    </MudIconButton>
-                </MudPaper>
-            </div>
-        }
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100;">
+        <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+            @if (IsSelectMode())
+            {
+                <div style="align-items: center; display: flex; width: 100%;">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+                </div>
+                <div style="margin-left: auto" class="d-none d-md-flex">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@(_ => AddSelectionToCollection())">
+                        Add To Collection
+                    </MudButton>
+                    <MudButton Class="ml-3"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                               OnClick="@(_ => AddSelectionToPlaylist())">
+                        Add To Playlist
+                    </MudButton>
+                    <MudButton Class="ml-3"
+                               Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Check"
+                               OnClick="@(_ => ClearSelection())">
+                        Clear Selection
+                    </MudButton>
+                </div>
+                <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                    <div class="flex-grow-1"></div>
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                        <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add To Collection" OnClick="@AddSelectionToCollection"/>
+                        <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add To Playlist" OnClick="AddSelectionToPlaylist"/>
+                        <MudMenuItem Icon="@Icons.Material.Filled.Check" Label="Clear Selection" OnClick="ClearSelection"/>
+                    </MudMenu>
+                </div>
+            }
+            else
+            {
+                <div style="align-items: center; display: flex; width: 100%">
+                    <MudText Style="width: 33%" Class="d-none d-md-flex">@_query</MudText>
+                    <div style="max-width: 300px; margin-left: auto; margin-right: auto;">
+                        <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                            <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                           OnClick="@PrevPage"
+                                           Disabled="@(PageNumber <= 1)">
+                            </MudIconButton>
+                            <MudText Style="flex-grow: 1"
+                                     Align="Align.Center">
+                                @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
+                            </MudText>
+                            <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                           OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
+                            </MudIconButton>
+                        </MudPaper>
+                    </div>
+                </div>
+            }
+        </div>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudStack Row="true" Wrap="Wrap.Wrap">
+                <FragmentLetterAnchor TCard="SongCardViewModel" Cards="@_data.Cards">
+                    <MediaCard Data="@context"
+                               Href=""
+                               ArtworkKind="ArtworkKind.Thumbnail"
+                               AddToCollectionClicked="@AddToCollection"
+                               SelectClicked="@(e => SelectClicked(context, e))"
+                               IsSelected="@IsSelected(context)"
+                               IsSelectMode="@IsSelectMode()"/>
+                </FragmentLetterAnchor>
+            </MudStack>
+        </MudContainer>
     </div>
-</MudPaper>
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        <FragmentLetterAnchor TCard="SongCardViewModel" Cards="@_data.Cards">
-            <MediaCard Data="@context"
-                       Href=""
-                       ArtworkKind="ArtworkKind.Thumbnail"
-                       AddToCollectionClicked="@AddToCollection"
-                       SelectClicked="@(e => SelectClicked(context, e))"
-                       IsSelected="@IsSelected(context)"
-                       IsSelectMode="@IsSelectMode()"/>
-        </FragmentLetterAnchor>
-    </MudContainer>
-</MudContainer>
+</MudForm>
 @if (_data.PageMap is not null)
 {
     <LetterBar PageMap="@_data.PageMap"
@@ -146,7 +162,7 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+            if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
                 var request = new AddSongToCollection(collection.Id, song.SongId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
