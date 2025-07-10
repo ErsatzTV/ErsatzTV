@@ -11,103 +11,109 @@
 @inject IMediator Mediator
 @inject SystemStartup SystemStartup;
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    @if (!SystemStartup.IsDatabaseReady)
-    {
-        <MudCard>
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h4">Database is initializing</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudText>Please wait, this may take a few minutes.</MudText>
-                <MudText>This page will automatically refresh when the database is ready.</MudText>
-            </MudCardContent>
-            <MudCardActions>
-                <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
-            </MudCardActions>
-        </MudCard>
-    }
-    else if (!SystemStartup.IsSearchIndexReady)
-    {
-        <MudCard>
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h4">Search Index is initializing</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudText>Please wait, this may take a few minutes.</MudText>
-                <MudText>This page will automatically refresh when the search index is ready.</MudText>
-            </MudCardContent>
-            <MudCardActions>
-                <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
-            </MudCardActions>
-        </MudCard>
-    }
-    else
-    {
-        <MudTable Hover="true"
-                  Dense="true"
-                  ServerData="@(new Func<TableState, CancellationToken, Task<TableData<HealthCheckResult>>>(ServerReload))"
-                  @ref="_table">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Health Checks</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Check</MudTh>
-                <MudTh>Message</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Check">
-                    <div style="align-items: center; display: flex; flex-direction: row;">
-                        @if (context.Status == HealthCheckStatus.Fail)
-                        {
-                            <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
-                        }
-                        else if (context.Status == HealthCheckStatus.Warning)
-                        {
-                            <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
-                        }
-                        else if (context.Status == HealthCheckStatus.Info)
-                        {
-                            <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
-                        }
-                        else
-                        {
-                            <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
-                        }
-                        <div class="ml-2">@context.Title</div>
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Message">
-                    @if (context.Link.IsSome)
-                    {
-                        foreach (string link in context.Link)
-                        {
-                            <MudLink Href="@link">
-                                @context.Message
-                            </MudLink>
-                        }
-                    }
-                    else
-                    {
-                        <MudText>
-                            @context.Message
-                        </MudText>
-                    }
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
-        <MudCard Class="mt-6" Style="max-height: 600px; overflow: auto">
-            <MudCardContent Class="release-notes mud-typography mud-typography-body1">
-                <MarkdownView Content="@_releaseNotes"/>
-            </MudCardContent>
-        </MudCard>
-        <MudText Class="mt-6">Full changelog is available on <MudLink Href="https://github.com/ErsatzTV/ErsatzTV/blob/main/CHANGELOG.md">GitHub</MudLink></MudText>
-    }
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            @if (!SystemStartup.IsDatabaseReady)
+            {
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h4">Database is initializing</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText>Please wait, this may take a few minutes.</MudText>
+                        <MudText>This page will automatically refresh when the database is ready.</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
+                    </MudCardActions>
+                </MudCard>
+            }
+            else if (!SystemStartup.IsSearchIndexReady)
+            {
+                <MudCard>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h4">Search Index is initializing</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText>Please wait, this may take a few minutes.</MudText>
+                        <MudText>This page will automatically refresh when the search index is ready.</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
+                    </MudCardActions>
+                </MudCard>
+            }
+            else
+            {
+                <MudText Typo="Typo.h5" Class="mb-2">Health Checks</MudText>
+                <MudDivider Class="mb-6"/>
+                <MudTable Hover="true"
+                          Dense="true"
+                          Breakpoint="Breakpoint.None"
+                          ServerData="@(new Func<TableState, CancellationToken, Task<TableData<HealthCheckResult>>>(ServerReload))"
+                          @ref="_table">
+                    <HeaderContent>
+                        <MudTh>Check</MudTh>
+                        <MudTh>Message</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <div style="align-items: center; display: flex; flex-direction: row;">
+                                @if (context.Status == HealthCheckStatus.Fail)
+                                {
+                                    <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
+                                }
+                                else if (context.Status == HealthCheckStatus.Warning)
+                                {
+                                    <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
+                                }
+                                else if (context.Status == HealthCheckStatus.Info)
+                                {
+                                    <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
+                                }
+                                else
+                                {
+                                    <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
+                                }
+                                <div class="ml-2">@context.Title</div>
+                            </div>
+                        </MudTd>
+                        <MudTd>
+                            @if (context.Link.IsSome)
+                            {
+                                foreach (string link in context.Link)
+                                {
+                                    <MudLink Href="@link">
+                                        @context.Message
+                                    </MudLink>
+                                }
+                            }
+                            else
+                            {
+                                <MudText>
+                                    @context.Message
+                                </MudText>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                <MudCard Class="mt-6">
+                    <MudCardHeader>
+                        <MudText Class="mt-6">Full changelog is available on <MudLink Href="https://github.com/ErsatzTV/ErsatzTV/blob/main/CHANGELOG.md" Target="_blank">GitHub</MudLink></MudText>
+                    </MudCardHeader>
+                    <MudCardContent Class="release-notes mud-typography mud-typography-body1">
+                        <MarkdownView Content="@_releaseNotes"/>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
