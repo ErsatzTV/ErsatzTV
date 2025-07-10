@@ -5,68 +5,75 @@
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_watermarks">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Watermarks</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col/>
-            <col/>
-            <col style="width: 180px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Image</MudTh>
-            <MudTh>Mode</MudTh>
-            <MudTh>Location</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Image">
-                @if (!string.IsNullOrWhiteSpace(context.Image?.Path))
-                {
-                    <MudElement HtmlTag="img" src="@($"artwork/watermarks/{context.Image.UrlWithContentType}")" Style="max-height: 50px"/>
-                }
-                else if (context.ImageSource == ChannelWatermarkImageSource.ChannelLogo)
-                {
-                    <MudText>[channel logo]</MudText>
-                }
-            </MudTd>
-            <MudTd DataLabel="Mode">
-                @context.Mode
-            </MudTd>
-            <MudTd DataLabel="Location">
-                @context.Location
-            </MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Edit Watermark">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Href="@($"watermarks/{context.Id}")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Copy Watermark">
-                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                       OnClick="@(_ => CopyWatermarkAsync(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Watermark">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(_ => DeleteWatermarkAsync(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="watermarks/add" Class="mt-4">
-        Add Watermark
-    </MudButton>
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" StartIcon="@Icons.Material.Filled.Add" Href="watermarks/add">
+            Add Watermark
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Watermarks</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true" Items="_watermarks">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col/>
+                        <col/>
+                        <col/>
+                        <col style="width: 180px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Image</MudTh>
+                    <MudTh>Mode</MudTh>
+                    <MudTh>Location</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Image">
+                        @if (!string.IsNullOrWhiteSpace(context.Image?.Path))
+                        {
+                            <MudElement HtmlTag="img" src="@($"artwork/watermarks/{context.Image.UrlWithContentType}")" Style="max-height: 50px"/>
+                        }
+                        else if (context.ImageSource == ChannelWatermarkImageSource.ChannelLogo)
+                        {
+                            <MudText>[channel logo]</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Mode">
+                        @context.Mode
+                    </MudTd>
+                    <MudTd DataLabel="Location">
+                        @context.Location
+                    </MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Watermark">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"watermarks/{context.Id}")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Copy Watermark">
+                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                               OnClick="@(_ => CopyWatermarkAsync(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Watermark">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteWatermarkAsync(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -91,7 +98,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Watermark", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteWatermark(watermark.Id), _cts.Token);
             await LoadWatermarksAsync();
@@ -105,7 +112,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<CopyWatermarkDialog>("Copy Watermark", parameters, options);
         DialogResult dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled && dialogResult.Data is WatermarkViewModel data)
+        if (dialogResult is { Canceled: false, Data: WatermarkViewModel data })
         {
             NavigationManager.NavigateTo($"/watermarks/{data.Id}");
         }

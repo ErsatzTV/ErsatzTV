@@ -159,3 +159,7 @@
 .form-field-stack div.mud-input-control {
     max-width: 500px;
 }
+
+.mud-table-smalldevices-sortselect {
+    display: none !important;
+}
