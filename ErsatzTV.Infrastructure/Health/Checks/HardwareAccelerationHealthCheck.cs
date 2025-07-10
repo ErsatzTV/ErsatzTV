@@ -38,7 +38,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
         {
-            return FailResult("Unable to locate ffmpeg");
+            return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg");
         }
 
         string version = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -67,7 +67,9 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
 
         if (accelerationKinds.Count == 0)
         {
-            return InfoResult("No compatible hardware acceleration kinds are supported by ffmpeg");
+            return InfoResult(
+                "No compatible hardware acceleration kinds are supported by ffmpeg",
+                "FFmpeg does not support hardware acceleration");
         }
 
         Option<HealthCheckResult> maybeResult = await VerifyProfilesUseAcceleration(accelerationKinds);
@@ -94,7 +96,8 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
             var accel = string.Join(", ", accelerationKinds);
             var channels = string.Join(", ", badChannels.Map(c => $"{c.Number} - {c.Name}"));
             return WarningResult(
-                $"The following channels use ffmpeg profiles that are not configured for hardware acceleration ({accel}): {channels}");
+                $"The following channels use ffmpeg profiles that are not configured for hardware acceleration ({accel}): {channels}",
+                $"{channels.Length} channels are not configured for hardware acceleration");
         }
 
         return None;

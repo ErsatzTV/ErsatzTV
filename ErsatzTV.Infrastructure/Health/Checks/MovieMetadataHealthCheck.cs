@@ -38,7 +38,8 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
             var folders = string.Join(", ", paths);
 
             return WarningResult(
-                $"There are {movies.Count} movies with missing metadata, including in the following folders: {folders}");
+                $"There are {movies.Count} movies with missing metadata, including in the following folders: {folders}",
+                $"There are {movies.Count} movies with missing metadata");
         }
 
         return OkResult();
