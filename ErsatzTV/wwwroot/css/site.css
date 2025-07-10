@@ -128,7 +128,11 @@
 
 .release-notes > ul { margin-top: 10px; }
 
-.release-notes ul > li { margin-left: 30px; }
+.release-notes ul > li {
+    margin-left: 30px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
 
 .release-notes h3 { margin-top: 20px; }
 
