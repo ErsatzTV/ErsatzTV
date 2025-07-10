@@ -6,41 +6,48 @@
 @inject ISnackbar Snackbar
 @inject IEntityLocker Locker
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_libraries" Dense="true">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col style="width: 100px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<RemoteMediaSourceLibraryEditViewModel, object>(x => x.Name)">
-                    Name
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<RemoteMediaSourceLibraryEditViewModel, object>(x => x.MediaKind)">
-                    Media Kind
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>Synchronize</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
-            <MudTd DataLabel="Synchronize">
-                <MudSwitch T="bool" @bind-Value="@context.ShouldSyncItems" Color="Color.Primary"/>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
-        Save Changes
-    </MudButton>
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" StartIcon="@Icons.Material.Filled.Save" OnClick="@(_ => SaveChanges())">
+            Save Changes
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2"><b>@_source.Name</b> Libraries</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true" Items="_libraries" Dense="true">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col/>
+                        <col style="width: 100px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>
+                        <MudTableSortLabel SortBy="new Func<RemoteMediaSourceLibraryEditViewModel, object>(x => x.Name)">
+                            Name
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>
+                        <MudTableSortLabel SortBy="new Func<RemoteMediaSourceLibraryEditViewModel, object>(x => x.MediaKind)">
+                            Media Kind
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>Synchronize</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
+                    <MudTd DataLabel="Synchronize">
+                        <MudSwitch T="bool" @bind-Value="@context.ShouldSyncItems" Color="Color.Primary"/>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();

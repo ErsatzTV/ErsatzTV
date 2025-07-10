@@ -7,76 +7,82 @@
 @inject IDialogService Dialog
 @inject IEntityLocker Locker
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Dense="true" Items="_mediaSources">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">@Name Media Sources</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col style="width: 120px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Address</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Address">@context.Address</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Refresh Libraries">
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@(Locker.IsRemoteMediaSourceLocked<TMediaSource>())"
-                                       OnClick="@(_ => RefreshLibraries(context.Id))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Edit Libraries">
-                        <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
-                                       Href="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/libraries")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Edit Path Replacements">
-                        <MudIconButton Icon="@Icons.Material.Filled.Folder"
-                                       Href="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/paths")">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-    @if (_mediaSources.Any())
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Error"
-                   OnClick="@(_ => Disconnect())"
-                   Class="mt-4">
-            Disconnect @Name
-        </MudButton>
-    }
-    else
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
-                   Class="mt-4">
-            Connect @Name
-        </MudButton>
-    }
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        @if (_mediaSources.Any())
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       OnClick="@(_ => Disconnect())"
+                       Class="ml-8">
+                Disconnect @Name
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
+                       Class="ml-8">
+                Connect @Name
+            </MudButton>
+        }
 
-    @if (_mediaSources.Any() && !_isAuthorized)
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Secondary"
-                   Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
-                   Class="ml-4 mt-4">
-            Fix @Name Connection
-        </MudButton>
-    }
-
-</MudContainer>
+        @if (_mediaSources.Any() && !_isAuthorized)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       Href="@($"media/sources/{Name.ToLowerInvariant()}/edit")"
+                       Class="ml-4">
+                Fix @Name Connection
+            </MudButton>
+        }
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">@Name Media Sources</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true" Dense="true" Items="_mediaSources">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Address</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd Style="overflow-wrap: anywhere;">@context.Address</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Refresh Libraries">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Disabled="@(Locker.IsRemoteMediaSourceLocked<TMediaSource>())"
+                                               OnClick="@(_ => RefreshLibraries(context.Id))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Libraries">
+                                <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
+                                               Href="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/libraries")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Path Replacements">
+                                <MudIconButton Icon="@Icons.Material.Filled.Folder"
+                                               Href="@($"media/sources/{Name.ToLowerInvariant()}/{context.Id}/paths")">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -121,7 +127,7 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
         IDialogReference dialog = await Dialog.ShowAsync<DisconnectRemoteMediaSourceDialog>($"Disconnect {Name}", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             if (Locker.LockRemoteMediaSource<TMediaSource>())
             {

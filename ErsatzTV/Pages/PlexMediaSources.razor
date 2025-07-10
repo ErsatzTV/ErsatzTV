@@ -11,79 +11,85 @@
 @inject IPlexSecretStore PlexSecretStore
 @inject ChannelWriter<IScannerBackgroundServiceRequest> ScannerWorkerChannel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable T="PlexMediaSourceViewModel" Hover="true" Dense="true" Items="_mediaSources">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Plex Media Sources</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col style="width: 120px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Address</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Address">@context.Address</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Refresh Libraries">
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@(Locker.IsPlexLocked())"
-                                       OnClick="@(_ => RefreshLibraries(context.Id))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Edit Libraries">
-                        <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
-                                       Href="@($"media/sources/plex/{context.Id}/libraries")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Edit Path Replacements">
-                        <MudIconButton Icon="@Icons.Material.Filled.Folder"
-                                       Href="@($"media/sources/plex/{context.Id}/paths")">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-    @if (_mediaSources.Any())
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Error"
-                   OnClick="@(_ => SignOutOfPlex())"
-                   Disabled="@Locker.IsPlexLocked()"
-                   Class="mt-4">
-            Sign out of plex
-        </MudButton>
-    }
-    else
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   OnClick="@(_ => AddPlexMediaSource())"
-                   Disabled="@Locker.IsPlexLocked()"
-                   Class="mt-4">
-            Sign in to plex
-        </MudButton>
-    }
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        @if (_mediaSources.Any())
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       OnClick="@(_ => SignOutOfPlex())"
+                       Disabled="@Locker.IsPlexLocked()"
+                       Class="ml-8">
+                Sign out of plex
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="@(_ => AddPlexMediaSource())"
+                       Disabled="@Locker.IsPlexLocked()"
+                       Class="ml-8">
+                Sign in to plex
+            </MudButton>
+        }
 
-    @if (_mediaSources.Any() && !_isAuthorized)
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Secondary"
-                   OnClick="@(_ => AddPlexMediaSource())"
-                   Disabled="@Locker.IsPlexLocked()"
-                   Class="ml-4 mt-4">
-            Fix Plex Credentials
-        </MudButton>
-    }
-
-</MudContainer>
+        @if (_mediaSources.Any() && !_isAuthorized)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       OnClick="@(_ => AddPlexMediaSource())"
+                       Disabled="@Locker.IsPlexLocked()"
+                       Class="ml-4">
+                Fix Plex Credentials
+            </MudButton>
+        }
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Plex Media Sources</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable T="PlexMediaSourceViewModel" Hover="true" Dense="true" Items="_mediaSources">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Address</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd Style="overflow-wrap: anywhere;">@context.Address</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Refresh Libraries">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Disabled="@(Locker.IsPlexLocked())"
+                                               OnClick="@(_ => RefreshLibraries(context.Id))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Libraries">
+                                <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
+                                               Href="@($"media/sources/plex/{context.Id}/libraries")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Path Replacements">
+                                <MudIconButton Icon="@Icons.Material.Filled.Folder"
+                                               Href="@($"media/sources/plex/{context.Id}/paths")">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private List<PlexMediaSourceViewModel> _mediaSources = new();
@@ -106,7 +112,7 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
         IDialogReference dialog = await Dialog.ShowAsync<SignOutOfPlexDialog>("Sign out of Plex", options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             if (Locker.LockPlex())
             {
@@ -126,7 +132,7 @@
                 {
                     try
                     {
-                        await JsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" });
+                        await JsRuntime.InvokeAsync<object>("open", [url, "_blank"]);
                     }
                     catch (Exception)
                     {
@@ -145,8 +151,15 @@
 
     private async void PlexChanged(object sender, EventArgs e)
     {
-        await InvokeAsync(LoadMediaSources);
-        await InvokeAsync(StateHasChanged);
+        try
+        {
+            await InvokeAsync(LoadMediaSources);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
     }
 
     private async Task RefreshLibraries(int mediaSourceId) =>
