@@ -19,17 +19,22 @@
         <img src="@($"artwork/fanart/{_artist.FanArt}")" alt="fan art"/>
     }
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
-    <div style="display: flex; flex-direction: row;" class="mb-6">
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px">
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
         @if (!string.IsNullOrWhiteSpace(_artist.Thumbnail))
         {
-            <img class="mud-elevation-2 mr-6"
-                 style="border-radius: 4px; flex-shrink: 0; height: 220px; width: 220px"
-                 src="@($"artwork/thumbnails/{_artist.Thumbnail}")" alt="artist thumbnail"/>
+            <MudImage Elevation="2" Src="@($"artwork/thumbnails/{_artist.Thumbnail}")" Class="rounded-lg" Style="height: 220px; width: 220px; margin-left: auto; margin-right: auto;" />
         }
         <div style="display: flex; flex-direction: column; height: 100%">
-            <MudText Typo="Typo.h2" Class="media-item-title">@_artist.Name</MudText>
-            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_artist.Disambiguation</MudText>
+            <MudStack Row="false">
+                <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
+                    <MudText Typo="Typo.h4" Class="media-item-title">@_artist?.Name</MudText>
+                </MudHidden>
+                <MudHidden Invert="true" Breakpoint="Breakpoint.MdAndUp">
+                    <MudText Typo="Typo.h2" Class="media-item-title">@_artist?.Name</MudText>
+                </MudHidden>
+                <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_artist.Disambiguation</MudText>
+            </MudStack>
             @if (!string.IsNullOrWhiteSpace(_artist.Biography))
             {
                 <MudCard Elevation="2" Class="mb-6">
@@ -47,23 +52,22 @@
                     </MudCardContent>
                 </MudCard>
             }
-            <div>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="@AddToCollection">
                     Add To Collection
                 </MudButton>
-                <MudButton Class="ml-3"
-                           Variant="Variant.Filled"
+                <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Schedule"
                            OnClick="@AddToSchedule">
                     Add To Schedule
                 </MudButton>
-            </div>
+            </MudStack>
         </div>
-    </div>
+    </MudStack>
     <MudCard Class="mb-6">
         <MudCardContent>
             @if (_sortedLanguages.Any())
@@ -118,86 +122,110 @@
     </MudCard>
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
-    @foreach (MusicVideoCardViewModel musicVideo in _musicVideos.Cards)
-    {
-        <MudCard Class="mb-6" Style="display: flex; flex-direction: column">
-            <div id="@($"music-video-{musicVideo.MusicVideoId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
-                @if (!string.IsNullOrWhiteSpace(musicVideo.Poster))
-                {
-                    <MudPaper style="display: flex; flex-direction: column; position: relative">
-                        <MudCardMedia Image="@($"artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
-                        @if (musicVideo.State == MediaItemState.FileNotFound)
-                        {
-                            <div style="position: absolute; right: 10px; top: 8px;">
-                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
-                            </div>
-                        }
-                        else if (musicVideo.State == MediaItemState.Unavailable)
-                        {
-                            <div style="position: absolute; right: 10px; top: 8px;">
-                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
-                            </div>
-                        }
-                    </MudPaper>
-                }
-                else
-                {
-                    <div style="display: flex; height: 220px; position: relative; width: 293px;">
-                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
-                        @if (musicVideo.State == MediaItemState.FileNotFound)
-                        {
-                            <div style="position: absolute; right: 10px; top: 8px;">
-                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
-                            </div>
-                        }
-                        else if (musicVideo.State == MediaItemState.Unavailable)
-                        {
-                            <div style="position: absolute; right: 10px; top: 8px;">
-                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
-                            </div>
-                        }
-                    </div>
-                }
-                <MudCardContent Class="ml-3">
-                    <div style="display: flex; flex-direction: column; height: 100%">
-                        <MudText Typo="Typo.h4">@musicVideo.Title</MudText>
-                        @if (!string.IsNullOrWhiteSpace(musicVideo.Album))
-                        {
-                            <div style="display: flex; flex-direction: row">
-                                <MudText GutterBottom="true">Album:&nbsp;</MudText>
-                                <MudLink Href="@(@$"album:""{musicVideo.Album}""".GetRelativeSearchQuery())">@musicVideo.Album</MudLink>
-                            </div>
-                        }
-                        <MudText Style="flex-grow: 1">@musicVideo.Plot</MudText>
-                        <div class="mt-6">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="@(_ => AddMusicVideoToCollection(musicVideo))">
-                                Add To Collection
-                            </MudButton>
+    <MudStack Row="false" Spacing="6">
+        @foreach (MusicVideoCardViewModel musicVideo in _musicVideos.Cards)
+        {
+            <MudCard>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" id="@($"music-video-{musicVideo.MusicVideoId}")">
+                    @if (!string.IsNullOrWhiteSpace(musicVideo.Poster))
+                    {
+                        <div style="display: flex; flex-direction: column; position: relative">
+                            <MudImage Src="@($"artwork/thumbnails/{musicVideo.Poster}")" Style="height: 220px; max-width: 265px; margin-left: auto; margin-right: auto;"/>
+                            @if (musicVideo.State == MediaItemState.FileNotFound)
+                            {
+                                <div style="position: absolute; right: 10px; top: 8px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                                </div>
+                            }
+                            else if (musicVideo.State == MediaItemState.Unavailable)
+                            {
+                                <div style="position: absolute; right: 10px; top: 8px;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
+                                </div>
+                            }
                         </div>
+                    }
+                    else
+                    {
+                        <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
+                            @if (musicVideo.State is not MediaItemState.Normal and not MediaItemState.RemoteOnly)
+                            {
+                                <div style="display: flex; position: relative; height: 220px; width: 265px; ">
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
+                                    @if (musicVideo.State == MediaItemState.FileNotFound)
+                                    {
+                                        <div style="position: absolute; right: 10px; top: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                                        </div>
+                                    }
+                                    else if (musicVideo.State == MediaItemState.Unavailable)
+                                    {
+                                        <div style="position: absolute; right: 10px; top: 8px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </MudHidden>
+                        <MudHidden Invert="true" Breakpoint="Breakpoint.MdAndUp">
+                            <div style="display: flex; position: relative; height: 220px; width: 265px; ">
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" />
+                                @if (musicVideo.State == MediaItemState.FileNotFound)
+                                {
+                                    <div style="position: absolute; right: 10px; top: 8px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                                    </div>
+                                }
+                                else if (musicVideo.State == MediaItemState.Unavailable)
+                                {
+                                    <div style="position: absolute; right: 10px; top: 8px;">
+                                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
+                                    </div>
+                                }
+                            </div>
+                        </MudHidden>
+                    }
+                    <MudCardContent>
+                        <div style="display: flex; flex-direction: column; height: 100%">
+                            <MudText Typo="Typo.h4">@musicVideo.Title</MudText>
+                            @if (!string.IsNullOrWhiteSpace(musicVideo.Album))
+                            {
+                                <div style="display: flex; flex-direction: row">
+                                    <MudText GutterBottom="true">Album:&nbsp;</MudText>
+                                    <MudLink Href="@(@$"album:""{musicVideo.Album}""".GetRelativeSearchQuery())">@musicVideo.Album</MudLink>
+                                </div>
+                            }
+                            <MudText Style="flex-grow: 1">@musicVideo.Plot</MudText>
+                            <div class="mt-6">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Add"
+                                           OnClick="@(_ => AddMusicVideoToCollection(musicVideo))">
+                                    Add To Collection
+                                </MudButton>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudStack>
+                @if (musicVideo.State == MediaItemState.FileNotFound)
+                {
+                    <div class="ml-3 mt-3 mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
+                        <MudText>File Not Found:&nbsp;</MudText>
+                        <MudText>@musicVideo.Path</MudText>
                     </div>
-                </MudCardContent>
-            </div>
-            @if (musicVideo.State == MediaItemState.FileNotFound)
-            {
-                <div class="ml-3 mt-3 mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
-                    <MudText>File Not Found:&nbsp;</MudText>
-                    <MudText>@musicVideo.Path</MudText>
-                </div>
-            }
-            else if (musicVideo.State == MediaItemState.Unavailable)
-            {
-                <div class="ml-3 mt-3 mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
-                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
-                    <MudText>Unavailable:&nbsp;</MudText>
-                    <MudText>@musicVideo.LocalPath</MudText>
-                </div>
-            }
-        </MudCard>
-    }
+                }
+                else if (musicVideo.State == MediaItemState.Unavailable)
+                {
+                    <div class="ml-3 mt-3 mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                        <MudText>Unavailable:&nbsp;</MudText>
+                        <MudText>@musicVideo.LocalPath</MudText>
+                    </div>
+                }
+            </MudCard>
+        }
+    </MudStack>
 </MudContainer>
 
 @code {
@@ -242,7 +270,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             await Mediator.Send(new AddArtistToCollection(collection.Id, ArtistId), _cts.Token);
             NavigationManager.NavigateTo($"media/collections/{collection.Id}");
@@ -256,7 +284,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is ProgramScheduleViewModel schedule)
+        if (result is { Canceled: false, Data: ProgramScheduleViewModel schedule })
         {
             await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, null, PlaybackOrder.Shuffle, FillWithGroupMode.None, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
             NavigationManager.NavigateTo($"schedules/{schedule.Id}/items");
@@ -270,7 +298,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
             Either<BaseError, Unit> addResult = await Mediator.Send(request, _cts.Token);

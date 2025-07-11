@@ -187,7 +187,7 @@ internal static class Mapper
                         e.EpisodeMetadata.Head(),
                         maybeJellyfin,
                         maybeEmby,
-                        false,
+                        true,
                         string.Empty))
                     .ToList(),
                 collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
