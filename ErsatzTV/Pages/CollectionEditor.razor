@@ -7,25 +7,23 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div style="max-width: 400px;">
-        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Collection" : "Add Collection")</MudText>
-
-        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-            <FluentValidationValidator/>
-            <MudCard>
-                <MudCardContent>
-                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
-                        @(IsEdit ? "Save Changes" : "Add Collection")
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </EditForm>
+<MudForm @ref="_form" @bind-IsValid="@_success" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Collection" : "Add Collection")</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Collection</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)" Required="true" RequiredError="Schedule name is required!"/>
+            </MudStack>
+        </MudContainer>
     </div>
-</MudContainer>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -34,8 +32,8 @@
     public int Id { get; set; }
 
     private readonly CollectionEditViewModel _model = new();
-    private EditContext _editContext;
-    private ValidationMessageStore _messageStore;
+    private MudForm _form;
+    private bool _success;
 
     public void Dispose()
     {
@@ -60,18 +58,12 @@
         }
     }
 
-    protected override void OnInitialized()
-    {
-        _editContext = new EditContext(_model);
-        _messageStore = new ValidationMessageStore(_editContext);
-    }
-
     private bool IsEdit => Id != 0;
 
     private async Task HandleSubmitAsync()
     {
-        _messageStore.Clear();
-        if (_editContext.Validate())
+        await _form.Validate();
+        if (_success)
         {
             Seq<BaseError> errorMessage = IsEdit ? (await Mediator.Send(new UpdateCollection(Id, _model.Name), _cts.Token)).LeftToSeq() : (await Mediator.Send(new CreateCollection(_model.Name), _cts.Token)).LeftToSeq();
 
