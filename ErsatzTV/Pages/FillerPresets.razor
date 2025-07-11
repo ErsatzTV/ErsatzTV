@@ -94,7 +94,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Filler Preset", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteFillerPreset(fillerPreset.Id), _cts.Token);
             if (_fillerPresetsTable != null)
