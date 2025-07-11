@@ -138,7 +138,7 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+            if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
                 var request = new AddSeasonToCollection(collection.Id, season.TelevisionSeasonId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);

@@ -152,7 +152,7 @@
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
             IDialogReference dialog = await Dialog.ShowAsync<AddTraktListDialog>("Add Trakt List", options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled && result.Data is string url)
+            if (result is { Canceled: false, Data: string url })
             {
                 await WorkerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
             }

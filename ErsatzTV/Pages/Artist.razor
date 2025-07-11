@@ -270,7 +270,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             await Mediator.Send(new AddArtistToCollection(collection.Id, ArtistId), _cts.Token);
             NavigationManager.NavigateTo($"media/collections/{collection.Id}");
@@ -284,7 +284,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is ProgramScheduleViewModel schedule)
+        if (result is { Canceled: false, Data: ProgramScheduleViewModel schedule })
         {
             await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, null, PlaybackOrder.Shuffle, FillWithGroupMode.None, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
             NavigationManager.NavigateTo($"schedules/{schedule.Id}/items");
@@ -298,7 +298,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
             Either<BaseError, Unit> addResult = await Mediator.Send(request, _cts.Token);
