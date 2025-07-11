@@ -6,130 +6,146 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="media/collections/add">
-            Add Collection
-        </MudButton>
-        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Href="media/multi-collections/add">
-            Add Multi Collection
-        </MudButton>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+            <div style="margin-right: auto" class="d-none d-md-flex">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="media/collections/add">
+                    Add Collection
+                </MudButton>
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Href="media/multi-collections/add">
+                    Add Multi Collection
+                </MudButton>
+            </div>
+            <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                <div class="flex-grow-1"></div>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add Collection" Href="media/collections/add"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Multi Collection" Href="media/multi-collections/add"/>
+                </MudMenu>
+            </div>
+        </div>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Collections</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_collectionsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
+                      Dense="true"
+                      @ref="_collectionsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"media/collections/{context.Id}")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteMediaCollection(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            <MudText Typo="Typo.h5" Class="mt-6 mb-2">Multi Collections</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_multiCollectionsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))"
+                      Dense="true"
+                      @ref="_multiCollectionsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"media/multi-collections/{context.Id}/edit")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteMultiCollection(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            <MudText Typo="Typo.h5" Class="mt-6 mb-2">Smart Collections</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
+                      Dense="true"
+                      @ref="_smartCollectionsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 120px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@context.Query.GetRelativeSearchQuery()">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Collection">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteSmartCollection(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            <div class="mt-6"></div>
+        </MudContainer>
     </div>
-    <MudTable Class="mt-4"
-              Hover="true"
-              @bind-RowsPerPage="@_collectionsRowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
-              Dense="true"
-              @ref="_collectionsTable">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Collections</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col style="width: 120px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Edit Collection">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Href="@($"media/collections/{context.Id}")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Collection">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(_ => DeleteMediaCollection(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-    <MudTable Class="mt-4"
-              Hover="true"
-              @bind-RowsPerPage="@_multiCollectionsRowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))"
-              Dense="true"
-              @ref="_multiCollectionsTable">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Multi Collections</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col style="width: 120px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Edit Collection">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Href="@($"media/multi-collections/{context.Id}/edit")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Collection">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(_ => DeleteMultiCollection(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-    <MudTable Class="mt-4"
-              Hover="true"
-              @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
-              Dense="true"
-              @ref="_smartCollectionsTable">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Smart Collections</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col style="width: 120px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Edit Collection">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Href="@context.Query.GetRelativeSearchQuery()">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Collection">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(_ => DeleteSmartCollection(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-</MudContainer>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -167,7 +183,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteCollection(collection.Id), _cts.Token);
             if (_collectionsTable != null)
@@ -184,7 +200,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Multi Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteMultiCollection(collection.Id), _cts.Token);
             if (_multiCollectionsTable != null)
@@ -201,7 +217,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Smart Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteSmartCollection(collection.Id), _cts.Token);
             if (_smartCollectionsTable != null)

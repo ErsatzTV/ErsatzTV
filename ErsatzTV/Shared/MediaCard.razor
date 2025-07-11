@@ -1,6 +1,5 @@
 ﻿@using ErsatzTV.Application.MediaCards
 @using static Prelude
-@inject IMediator Mediator
 @inject NavigationManager NavigationManager
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
@@ -78,7 +77,7 @@
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
         @(Title ?? Data.Title)
     </MudText>
-    <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
+    <MudText Typo="Typo.body2" Align="Align.Center" Class="media-card-title mud-text-secondary">
         @(Subtitle ?? Data.Subtitle)
     </MudText>
 </div>
