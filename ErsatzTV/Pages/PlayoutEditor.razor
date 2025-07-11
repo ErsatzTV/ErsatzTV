@@ -3,88 +3,98 @@
 @using System.Globalization
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Validators
+@using FluentValidation.Results
 @implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ILogger<PlayoutEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">
-        @switch (Kind)
-        {
-            case PlayoutKind.ExternalJson:
-                <span>Add External Json Playout</span>
-                break;
-            case PlayoutKind.Yaml:
-                <span>Add YAML Playout</span>
-                break;
-            case PlayoutKind.Block:
-                <span>Add Block Playout</span>
-                break;
-            default:
-                <span>Add Playout</span>
-                break;
-        }
-    </MudText>
-    <div style="max-width: 400px;">
-        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-            <FluentValidationValidator/>
-            <MudCard>
-                <MudCardContent>
-                    <MudSelect T="ChannelViewModel"
-                               Label="Channel"
-                               @bind-value="_model.Channel"
-                               HelperText="Disabled channels already have a playout">
-                        @foreach (ChannelViewModel channel in _channels)
-                        {
-                            <MudSelectItem Disabled="@(channel.PlayoutCount > 0)" Value="@channel">
-                                @($"{channel.Number} - {channel.Name}")
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                    @switch (Kind)
+<MudForm @ref="_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Class="ml-8" OnClick="HandleSubmitAsync" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add">
+            @switch (Kind)
+            {
+                case PlayoutKind.ExternalJson:
+                    @:Add External Json Playout
+                    break;
+                case PlayoutKind.Yaml:
+                    @:Add YAML Playout
+                    break;
+                case PlayoutKind.Block:
+                    @:Add Block Playout
+                    break;
+                default:
+                    @:Add Playout
+                    break;
+            }
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Playout</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Channel</MudText>
+                </div>
+                <MudSelect T="ChannelViewModel" @bind-value="_model.Channel" HelperText="Disabled channels already have a playout">
+                    @foreach (ChannelViewModel channel in _channels)
                     {
-                        case PlayoutKind.ExternalJson:
-                            <MudTextField Label="External Json File" @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
-                            break;
-                        case PlayoutKind.Yaml:
-                            <MudTextField Label="YAML File" @bind-Value="_model.YamlFile" For="@(() => _model.YamlFile)"/>
-                            break;
-                        case PlayoutKind.Block:
-                            break;
-                        default:
-                            <MudSelect Class="mt-3"
-                                       T="ProgramScheduleViewModel"
-                                       Label="Schedule"
-                                       @bind-value="_model.ProgramSchedule">
-                                @foreach (ProgramScheduleViewModel schedule in _programSchedules)
-                                {
-                                    <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                            break;
+                        <MudSelectItem Disabled="@(channel.PlayoutCount > 0)" Value="@channel">
+                            @($"{channel.Number} - {channel.Name}")
+                        </MudSelectItem>
                     }
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                        Add Playout
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </EditForm>
+                </MudSelect>
+            </MudStack>
+            @switch (Kind)
+            {
+                case PlayoutKind.ExternalJson:
+                    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                        <div class="d-flex">
+                            <MudText>External Json File</MudText>
+                        </div>
+                        <MudTextField @bind-Value="_model.ExternalJsonFile" For="@(() => _model.ExternalJsonFile)"/>
+                    </MudStack>
+                    break;
+                case PlayoutKind.Yaml:
+                    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                        <div class="d-flex">
+                            <MudText>YAML File</MudText>
+                        </div>
+                        <MudTextField @bind-Value="_model.YamlFile" For="@(() => _model.YamlFile)"/>
+                    </MudStack>
+                    break;
+                case PlayoutKind.Block:
+                    break;
+                default:
+                    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                        <div class="d-flex">
+                            <MudText>Schedule</MudText>
+                        </div>
+                        <MudSelect T="ProgramScheduleViewModel" @bind-value="_model.ProgramSchedule">
+                            @foreach (ProgramScheduleViewModel schedule in _programSchedules)
+                            {
+                                <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudStack>
+                    break;
+            }
+        </MudContainer>
     </div>
-</MudContainer>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
 
     private readonly PlayoutEditViewModel _model = new();
+    private readonly PlayoutEditViewModelValidator _validator = new();
+    private MudForm _form;
+
     private List<ChannelViewModel> _channels = [];
     private List<ProgramScheduleViewModel> _programSchedules = [];
-
-    private EditContext _editContext;
-    private ValidationMessageStore _messageStore;
 
     [Parameter]
     public string Kind { get; set; }
@@ -109,16 +119,11 @@
         }
     }
 
-    protected override void OnInitialized()
-    {
-        _editContext = new EditContext(_model);
-        _messageStore = new ValidationMessageStore(_editContext);
-    }
-
     private async Task HandleSubmitAsync()
     {
-        _messageStore.Clear();
-        if (_editContext.Validate())
+        await _form.Validate();
+        ValidationResult result = await _validator.ValidateAsync(_model, _cts.Token);
+        if (result.IsValid)
         {
             Seq<BaseError> errorMessage = (await Mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
