@@ -9,53 +9,25 @@
 @inject IMediator Mediator
 @inject IEntityLocker EntityLocker;
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Edit YAML Playout - @_channelName</MudText>
-    <MudGrid>
-        <MudItem xs="4">
-            <div style="max-width: 400px;" class="mr-4">
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h5">YAML File</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => EditYamlFile())" Class="mt-4">
-                            Edit YAML File
-                        </MudButton>
-                    </MudCardContent>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px;" class="mb-6">
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h5">Playout Items and History</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <!-- reset will erase all items -->
-                        <!--
-                        <div>
-                            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(_ => EraseItems(eraseHistory: false))" Class="mt-4">
-                                Erase Items
-                            </MudButton>
-                        </div>
-                        -->
-                        <div>
-                            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))" Class="mt-4">
-                                Erase Items and History
-                            </MudButton>
-                        </div>
-                    </MudCardContent>
-                </MudCard>
-            </div>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudText Class="ml-8" >Edit YAML Playout - @_channelName</MudText>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">YAML File</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => EditYamlFile())">
+                Edit YAML File
+            </MudButton>
+            <MudText Typo="Typo.h5" Class="mt-6 mb-2">Playout Items and History</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))">
+                Erase Items and History
+            </MudButton>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();

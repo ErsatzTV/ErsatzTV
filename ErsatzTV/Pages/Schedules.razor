@@ -7,91 +7,100 @@
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true"
-              Dense="true"
-              SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))"
-              @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleViewModel>>>(ServerReload))"
-              @ref="_table">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Schedules</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col style="width: 240px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<ProgramScheduleViewModel, object>(x => x.Name)">
-                    Name
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Edit Properties">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Href="@($"schedules/{context.Id}")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Edit Schedule Items">
-                        <MudIconButton Icon="@Icons.Material.Filled.FormatListNumbered"
-                                       Href="@($"schedules/{context.Id}/items")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Copy Schedule">
-                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                       OnClick="@(_ => CopySchedule(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Schedule">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       OnClick="@(_ => DeleteSchedule(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="schedules/add" Class="mt-4">
-        Add Schedule
-    </MudButton>
-
-    @if (_selectedSchedule != null)
-    {
-        <MudTable Hover="true"
-                  Class="mt-8"
-                  @bind-RowsPerPage="@_detailRowsPerPage"
-                  ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleItemViewModel>>>(DetailServerReload))"
-                  @ref="_detailTable">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Start Time</MudTh>
-                <MudTh>Collection</MudTh>
-                <MudTh>Playout Mode</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Start Time">
-                    @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
-                </MudTd>
-                <MudTd DataLabel="Collection">@context.Name</MudTd>
-                <MudTd DataLabel="Playout Mode">@context.PlayoutMode</MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager/>
-            </PagerContent>
-        </MudTable>
-    }
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" StartIcon="@Icons.Material.Filled.Add" Href="schedules/add">
+            Add Schedule
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Schedules</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      Dense="true"
+                      Breakpoint="Breakpoint.None"
+                      SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))"
+                      @bind-RowsPerPage="@_rowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleViewModel>>>(ServerReload))"
+                      @ref="_table">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col style="width: 240px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>
+                        <MudTableSortLabel SortBy="new Func<ProgramScheduleViewModel, object>(x => x.Name)">
+                            Name
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Properties">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Href="@($"schedules/{context.Id}")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Schedule Items">
+                                <MudIconButton Icon="@Icons.Material.Filled.FormatListNumbered"
+                                               Href="@($"schedules/{context.Id}/items")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Copy Schedule">
+                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                               OnClick="@(_ => CopySchedule(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Schedule">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               OnClick="@(_ => DeleteSchedule(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+            @if (_selectedSchedule != null)
+            {
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <MudTable Hover="true"
+                              Class="mt-8"
+                              @bind-RowsPerPage="@_detailRowsPerPage"
+                              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<ProgramScheduleItemViewModel>>>(DetailServerReload))"
+                              @ref="_detailTable">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh>Start Time</MudTh>
+                            <MudTh>Collection</MudTh>
+                            <MudTh>Playout Mode</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Start Time">
+                                @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
+                            </MudTd>
+                            <MudTd DataLabel="Collection">@context.Name</MudTd>
+                            <MudTd DataLabel="Playout Mode">@context.PlayoutMode</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager/>
+                        </PagerContent>
+                    </MudTable>
+                </MudHidden>
+            }
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -132,7 +141,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Schedule", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             await Mediator.Send(new DeleteProgramSchedule(programSchedule.Id), _cts.Token);
             if (_table != null)
@@ -154,7 +163,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<CopyScheduleDialog>("Copy Schedule", parameters, options);
         DialogResult dialogResult = await dialog.Result;
-        if (!dialogResult.Canceled && dialogResult.Data is ProgramScheduleViewModel data)
+        if (dialogResult is { Canceled: false, Data: ProgramScheduleViewModel data })
         {
             NavigationManager.NavigateTo($"schedules/{data.Id}/items");
         }

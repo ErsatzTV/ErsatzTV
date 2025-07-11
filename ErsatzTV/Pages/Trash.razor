@@ -623,7 +623,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             var request = new DeleteItemsFromDatabase(
                 movieIds.Append(showIds)

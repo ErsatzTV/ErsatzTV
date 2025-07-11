@@ -19,241 +19,241 @@
 @inject IMediator Mediator
 
 <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Style="max-height: 100%">
-<MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Channel" : "Add Channel")</MudButton>
-</MudPaper>
-<div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
-    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-        <MudText Typo="Typo.h5" Class="mb-2">Channel</MudText>
-        <MudDivider Class="mb-6"/>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Number</MudText>
-            </div>
-            <MudTextField @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Name</MudText>
-            </div>
-            <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Group</MudText>
-            </div>
-            <MudTextField @bind-Value="_model.Group" For="@(() => _model.Group)"/>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Categories</MudText>
-            </div>
-            <MudTextField @bind-Value="_model.Categories" For="@(() => _model.Categories)" HelperText="Comma-separated list of categories"/>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Active Mode</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.ActiveMode" For="@(() => _model.ActiveMode)">
-                <MudSelectItem Value="@(ChannelActiveMode.Active)">Active</MudSelectItem>
-                <MudSelectItem Value="@(ChannelActiveMode.Hidden)">Hidden</MudSelectItem>
-                <MudSelectItem Value="@(ChannelActiveMode.Inactive)">Inactive</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Progress Mode</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)">
-                <MudSelectItem Value="@(ChannelProgressMode.Always)">Always</MudSelectItem>
-                <MudSelectItem Value="@(ChannelProgressMode.OnDemand)">On Demand</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Streaming Mode</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
-                <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
-                <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
-                <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
-                <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
-                <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterV2)">HLS Segmenter V2</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>FFmpeg Profile</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
-                       Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)">
-                @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
-                {
-                    <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
-                }
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Stream Selector Mode</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.StreamSelectorMode" For="@(() => _model.StreamSelectorMode)">
-                <MudSelectItem Value="@(ChannelStreamSelectorMode.Default)">Default</MudSelectItem>
-                <MudSelectItem Value="@(ChannelStreamSelectorMode.Custom)">Custom</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-        @if (_model.StreamSelectorMode is ChannelStreamSelectorMode.Default)
-        {
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Channel" : "Add Channel")</MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Channel</MudText>
+            <MudDivider Class="mb-6"/>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Preferred Audio Language</MudText>
+                    <MudText>Number</MudText>
                 </div>
-                <MudSelect @bind-Value="_model.PreferredAudioLanguageCode"
-                           For="@(() => _model.PreferredAudioLanguageCode)"
-                           Clearable="true">
-                    <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                    @foreach (LanguageCodeViewModel culture in _availableCultures)
+                <MudTextField @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Group</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Group" For="@(() => _model.Group)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Categories</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Categories" For="@(() => _model.Categories)" HelperText="Comma-separated list of categories"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Active Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.ActiveMode" For="@(() => _model.ActiveMode)">
+                    <MudSelectItem Value="@(ChannelActiveMode.Active)">Active</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelActiveMode.Hidden)">Hidden</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelActiveMode.Inactive)">Inactive</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Progress Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.ProgressMode" For="@(() => _model.ProgressMode)">
+                    <MudSelectItem Value="@(ChannelProgressMode.Always)">Always</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelProgressMode.OnDemand)">On Demand</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Streaming Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
+                    <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
+                    <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
+                    <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenterV2)">HLS Segmenter V2</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>FFmpeg Profile</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
+                           Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)">
+                    @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
                     {
-                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                        <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                 <div class="d-flex">
-                    <MudText>Preferred Audio Title</MudText>
+                    <MudText>Stream Selector Mode</MudText>
                 </div>
-                <MudTextField @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
-            </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Preferred Subtitle Language</MudText>
-                </div>
-                <MudSelect @bind-Value="_model.PreferredSubtitleLanguageCode"
-                           For="@(() => _model.PreferredSubtitleLanguageCode)"
-                           Clearable="true">
-                    <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
-                    @foreach (LanguageCodeViewModel culture in _availableCultures)
-                    {
-                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                    }
+                <MudSelect @bind-Value="_model.StreamSelectorMode" For="@(() => _model.StreamSelectorMode)">
+                    <MudSelectItem Value="@(ChannelStreamSelectorMode.Default)">Default</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelStreamSelectorMode.Custom)">Custom</MudSelectItem>
                 </MudSelect>
             </MudStack>
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Subtitle Mode</MudText>
-                </div>
-                <MudSelect @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
-                    <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
-                    <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-        }
-        else
-        {
-            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-                <div class="d-flex">
-                    <MudText>Stream Selector</MudText>
-                </div>
-                <MudSelect @bind-Value="_model.StreamSelector"
-                           For="@(() => _model.StreamSelector)">
-                    <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
-                    @foreach (string selector in _streamSelectors)
-                    {
-                        <MudSelectItem T="string" Value="@selector">@selector</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudStack>
-        }
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Music Video Credits Mode</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
-                <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
-                <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Music Video Credits Template</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.MusicVideoCreditsTemplate"
-                       For="@(() => _model.MusicVideoCreditsTemplate)"
-                       Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.GenerateSubtitles)">
-                <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
-                @foreach (string template in _musicVideoCreditsTemplates)
-                {
-                    <MudSelectItem T="string" Value="@template">@template</MudSelectItem>
-                }
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Song Video Mode</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.SongVideoMode" For="@(() => _model.SongVideoMode)">
-                <MudSelectItem Value="@(ChannelSongVideoMode.Default)">Default</MudSelectItem>
-                <MudSelectItem Value="@(ChannelSongVideoMode.WithProgress)">With Progress</MudSelectItem>
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Logo</MudText>
-            </div>
-            <InputFile id="fileInput" OnChange="UploadLogo" style="display: none;"/>
-            <MudButton HtmlTag="label"
-                       Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.CloudUpload"
-                       for="fileInput">
-                Upload Logo
-            </MudButton>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>External Logo URL</MudText>
-            </div>
-            <MudTextField @bind-Value="_model.ExternalLogoUrl" For="@(() => _model.ExternalLogoUrl)"/>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Logo Preview</MudText>
-            </div>
-            @if (!string.IsNullOrWhiteSpace(_model.Logo?.Path) || !string.IsNullOrWhiteSpace(_model.ExternalLogoUrl))
+            @if (_model.StreamSelectorMode is ChannelStreamSelectorMode.Default)
             {
-                <MudElement HtmlTag="img" src="@(string.IsNullOrWhiteSpace(_model.ExternalLogoUrl) ? _model.Logo.UrlWithContentType : _model.ExternalLogoUrl)" Style="max-height: 50px"/>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Preferred Audio Language</MudText>
+                    </div>
+                    <MudSelect @bind-Value="_model.PreferredAudioLanguageCode"
+                               For="@(() => _model.PreferredAudioLanguageCode)"
+                               Clearable="true">
+                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                        @foreach (LanguageCodeViewModel culture in _availableCultures)
+                        {
+                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Preferred Audio Title</MudText>
+                    </div>
+                    <MudTextField @bind-Value="_model.PreferredAudioTitle" For="@(() => _model.PreferredAudioTitle)"/>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Preferred Subtitle Language</MudText>
+                    </div>
+                    <MudSelect @bind-Value="_model.PreferredSubtitleLanguageCode"
+                               For="@(() => _model.PreferredSubtitleLanguageCode)"
+                               Clearable="true">
+                        <MudSelectItem Value="@((string)null)">(none)</MudSelectItem>
+                        @foreach (LanguageCodeViewModel culture in _availableCultures)
+                        {
+                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Subtitle Mode</MudText>
+                    </div>
+                    <MudSelect @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                        <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
+                    </MudSelect>
+                </MudStack>
             }
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Watermark</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
-                       Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
-                       Clearable="true">
-                <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
-                @foreach (WatermarkViewModel watermark in _watermarks)
+            else
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Stream Selector</MudText>
+                    </div>
+                    <MudSelect @bind-Value="_model.StreamSelector"
+                               For="@(() => _model.StreamSelector)">
+                        <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
+                        @foreach (string selector in _streamSelectors)
+                        {
+                            <MudSelectItem T="string" Value="@selector">@selector</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            }
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Music Video Credits Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.MusicVideoCreditsMode" For="@(() => _model.MusicVideoCreditsMode)">
+                    <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.None)">None</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelMusicVideoCreditsMode.GenerateSubtitles)">Generate Subtitles</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Music Video Credits Template</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.MusicVideoCreditsTemplate"
+                           For="@(() => _model.MusicVideoCreditsTemplate)"
+                           Disabled="@(_model.MusicVideoCreditsMode != ChannelMusicVideoCreditsMode.GenerateSubtitles)">
+                    <MudSelectItem T="string" Value="@((string)null)">(none)</MudSelectItem>
+                    @foreach (string template in _musicVideoCreditsTemplates)
+                    {
+                        <MudSelectItem T="string" Value="@template">@template</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Song Video Mode</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.SongVideoMode" For="@(() => _model.SongVideoMode)">
+                    <MudSelectItem Value="@(ChannelSongVideoMode.Default)">Default</MudSelectItem>
+                    <MudSelectItem Value="@(ChannelSongVideoMode.WithProgress)">With Progress</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Logo</MudText>
+                </div>
+                <InputFile id="fileInput" OnChange="UploadLogo" style="display: none;"/>
+                <MudButton HtmlTag="label"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                           for="fileInput">
+                    Upload Logo
+                </MudButton>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>External Logo URL</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.ExternalLogoUrl" For="@(() => _model.ExternalLogoUrl)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Logo Preview</MudText>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(_model.Logo?.Path) || !string.IsNullOrWhiteSpace(_model.ExternalLogoUrl))
                 {
-                    <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                    <MudElement HtmlTag="img" src="@(string.IsNullOrWhiteSpace(_model.ExternalLogoUrl) ? _model.Logo.UrlWithContentType : _model.ExternalLogoUrl)" Style="max-height: 50px"/>
                 }
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
-            <div class="d-flex">
-                <MudText>Fallback Filler</MudText>
-            </div>
-            <MudSelect @bind-Value="_model.FallbackFillerId" For="@(() => _model.FallbackFillerId)" Clearable="true">
-                <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
-                @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
-                {
-                    <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
-                }
-            </MudSelect>
-        </MudStack>
-    </MudContainer>
-</div>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Watermark</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
+                           Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
+                           Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                    @foreach (WatermarkViewModel watermark in _watermarks)
+                    {
+                        <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Fallback Filler</MudText>
+                </div>
+                <MudSelect @bind-Value="_model.FallbackFillerId" For="@(() => _model.FallbackFillerId)" Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
+                    @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
+                    {
+                        <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </MudContainer>
+    </div>
 </MudForm>
 
 @code {
