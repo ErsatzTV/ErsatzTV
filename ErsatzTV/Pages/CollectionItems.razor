@@ -136,7 +136,7 @@
                          Typo="Typo.h4"
                          Style="scroll-margin-top: 160px"
                          UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
-                    Television Shows
+                    Shows
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
@@ -160,7 +160,7 @@
                          Typo="Typo.h4"
                          Style="scroll-margin-top: 160px"
                          UserAttributes="@(new Dictionary<string, object> { { "id", "seasons" } })">
-                    Television Seasons
+                    Seasons
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
@@ -186,7 +186,7 @@
                          Typo="Typo.h4"
                          Style="scroll-margin-top: 160px"
                          UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
-                    Television Episodes
+                    Episodes
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
@@ -195,10 +195,8 @@
                     {
                         <MediaCard Data="@card"
                                    Href="@($"media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
-                                   Title="@card.ShowTitle"
-                                   Subtitle="@card.Title"
+                                   Subtitle="@($"{card.ShowTitle} - S{card.Season} E{card.Episode}")"
                                    DeleteClicked="@(_ => RemoveEpisodeFromCollection(card))"
-                                   ArtworkKind="@ArtworkKind.Thumbnail"
                                    SelectColor="@Color.Error"
                                    SelectClicked="@(e => SelectClicked(card, e))"
                                    IsSelected="@IsSelected(card)"
