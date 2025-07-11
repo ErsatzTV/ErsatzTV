@@ -5,20 +5,22 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudGrid>
-        <MudItem xs="8">
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Images</MudText>
+            <MudDivider Class="mb-6"/>
             <MudCard>
                 <MudTreeView T="ImageTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
                     <ItemTemplate Context="item">
                         <MudTreeViewItem T="ImageTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
                             <BodyContent>
-                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <div style="justify-self: start;">
+                                <div style="display: flex; align-items: center; width: 100%">
+                                    <div style="justify-self: start; flex: 1">
                                         <MudText>@item.Value.Text</MudText>
                                     </div>
-                                    <div style="justify-self: end;">
-                                        <span>@item.Value.EndText</span>
+                                    <div style="display: flex; align-items: center; justify-self: end;">
+                                        <span class="d-none d-sm-flex">@item.Value.EndText</span>
                                         <MudTooltip Text="Edit Image Folder Duration" ShowOnHover="true" ShowOnClick="false" ShowOnFocus="false">
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                            OnClick="@(_ => EditImageFolderDuration(item.Value))">
@@ -29,6 +31,7 @@
                                             if (!string.IsNullOrWhiteSpace(query))
                                             {
                                                 <MudIconButton
+                                                    Class="d-none d-sm-flex"
                                                     Icon="@Icons.Material.Filled.Search"
                                                     Href="@($"search?query={query}")"/>
                                             }
@@ -40,9 +43,9 @@
                     </ItemTemplate>
                 </MudTreeView>
             </MudCard>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -90,7 +93,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<EditImageFolderDurationDialog>("Edit Image Folder Duration", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             double? duration = await Mediator.Send(new UpdateImageFolderDuration(item.LibraryFolderId, result.Data as double?), _cts.Token);
             item.UpdateDuration(duration);

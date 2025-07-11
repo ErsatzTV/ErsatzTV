@@ -27,23 +27,12 @@
         }
     }
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
-    <div style="display: flex; flex-direction: row;" class="mb-6">
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px">
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
         @if (!string.IsNullOrWhiteSpace(_movie?.Poster))
         {
-            <div class="mr-6" style="display: flex; flex-direction: column; max-height: 440px; position: relative">
-                @if (_movie.Poster.StartsWith("http://") || _movie.Poster.StartsWith("https://"))
-                {
-                    <img class="mud-elevation-2"
-                         style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                         src="@_movie.Poster" alt="movie poster"/>
-                }
-                else
-                {
-                    <img class="mud-elevation-2"
-                         style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                         src="@($"artwork/posters/{_movie.Poster}")" alt="movie poster"/>
-                }
+            <div style="display: flex; flex-direction: column; max-height: 325px; position: relative">
+                <MudImage Src="@GetPosterUrl(_movie.Poster)" Class="rounded-lg" Style="max-height: 325px" ObjectFit="ObjectFit.Contain" />
                 @if (_movie.MediaItemState == MediaItemState.FileNotFound)
                 {
                     <div style="position: absolute; right: 10px; top: 8px;">
@@ -59,8 +48,15 @@
             </div>
         }
         <div style="display: flex; flex-direction: column; height: 100%">
-            <MudText Typo="Typo.h2" Class="media-item-title">@_movie?.Title</MudText>
-            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_movie?.Year</MudText>
+            <MudStack Row="false">
+                <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
+                    <MudText Typo="Typo.h4" Class="media-item-title">@_movie?.Title</MudText>
+                </MudHidden>
+                <MudHidden Invert="true" Breakpoint="Breakpoint.MdAndUp">
+                    <MudText Typo="Typo.h2" Class="media-item-title">@_movie?.Title</MudText>
+                </MudHidden>
+                <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_movie?.Year</MudText>
+            </MudStack>
             @if (!string.IsNullOrWhiteSpace(_movie?.Plot))
             {
                 <MudCard Elevation="2" Class="mb-6">
@@ -69,34 +65,28 @@
                     </MudCardContent>
                 </MudCard>
             }
-            <div>
-                <MudButton Class="mb-6"
-                           Variant="Variant.Filled"
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
+                <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="@AddToCollection">
                     Add To Collection
                 </MudButton>
-            </div>
-            <div>
-                <MudButton Class="mb-6"
-                           Variant="Variant.Filled"
+                <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
                            OnClick="@AddToPlaylist">
                     Add To Playlist
                 </MudButton>
-            </div>
-            <div>
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Secondary"
                            StartIcon="@Icons.Material.Filled.Info"
                            OnClick="@ShowInfo">
                     Show Media Info
                 </MudButton>
-            </div>
+            </MudStack>
         </div>
-    </div>
+    </MudStack>
     @if (_movie?.MediaItemState == MediaItemState.FileNotFound)
     {
         <MudCard Class="mb-6">
@@ -121,7 +111,7 @@
             </MudCardContent>
         </MudCard>
     }
-    <MudCard Class="mb-6">
+    <MudCard Class="mt-6 mb-6">
         <MudCardContent>
             @if (_sortedContentRatings.Any())
             {
@@ -214,14 +204,14 @@
 {
     <MudContainer MaxWidth="MaxWidth.Large">
         <MudText Class="mb-4">Actors</MudText>
-    </MudContainer>
-    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-        @foreach (ActorCardViewModel actor in _movie.Actors)
-        {
-            <MediaCard Data="@actor"
-                       Href="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
-                       ArtworkKind="ArtworkKind.Thumbnail"/>
-        }
+        <MudStack Row="true" Wrap="Wrap.Wrap">
+            @foreach (ActorCardViewModel actor in _movie.Actors)
+            {
+                <MediaCard Data="@actor"
+                           Href="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
+                           ArtworkKind="ArtworkKind.Thumbnail"/>
+            }
+        </MudStack>
     </MudContainer>
 }
 
@@ -296,7 +286,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             await Mediator.Send(new AddMovieToCollection(collection.Id, MovieId), _cts.Token);
             NavigationManager.NavigateTo($"media/collections/{collection.Id}");
@@ -310,7 +300,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        if (result is { Canceled: false, Data: PlaylistViewModel playlist })
         {
             await Mediator.Send(new AddMovieToPlaylist(playlist.Id, MovieId), _cts.Token);
             NavigationManager.NavigateTo($"media/playlists/{playlist.Id}");
@@ -334,6 +324,11 @@
             IDialogReference dialog = await Dialog.ShowAsync<MediaItemInfoDialog>(_movie.Title, parameters, options);
             DialogResult _ = await dialog.Result;
         }
+    }
+
+    private static string GetPosterUrl(string poster)
+    {
+        return poster.StartsWith("http://") || poster.StartsWith("https://") ? poster : $"artwork/posters/{poster}";
     }
 
 }

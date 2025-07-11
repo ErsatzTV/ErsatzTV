@@ -1,0 +1,108 @@
+@using System.Globalization
+
+<div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+    @if (IsSelectMode())
+    {
+        <div style="align-items: center; display: flex; width: 100%;">
+            <div style="flex: 1;">
+                <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            </div>
+            <div style="margin-left: auto" class="d-none d-md-flex">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PlaylistAdd"
+                           OnClick="@(_ => AddSelectionToPlaylist())">
+                    Add To Playlist
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+            <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                <div class="flex-grow-1"></div>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Add" Label="Add To Collection" OnClick="@AddSelectionToCollection"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add To Playlist" OnClick="AddSelectionToPlaylist"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Check" Label="Clear Selection" OnClick="ClearSelection"/>
+                </MudMenu>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div style="align-items: center; display: flex; width: 100%">
+            <div style="flex: 1">
+                <MudText Class="d-none d-md-flex">@Query</MudText>
+            </div>
+            <div>
+                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                   OnClick="@PrevPage"
+                                   Disabled="@(PageNumber <= 1)">
+                    </MudIconButton>
+                    <MudText Style="flex-grow: 1"
+                             Align="Align.Center">
+                        @PaddedString(Math.Min((PageNumber - 1) * PageSize + 1, TotalCount), TotalCount) - @PaddedString(Math.Min(TotalCount, PageNumber * PageSize), TotalCount) of @TotalCount
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= TotalCount)">
+                    </MudIconButton>
+                </MudPaper>
+            </div>
+            <div style="flex: 1"></div>
+        </div>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public string Query { get; set; }
+
+    [Parameter]
+    public int PageNumber { get; set; }
+
+    [Parameter]
+    public int PageSize { get; set; }
+
+    [Parameter]
+    public int TotalCount { get; set; }
+
+    [Parameter]
+    public EventCallback PrevPage { get; set; }
+
+    [Parameter]
+    public EventCallback NextPage { get; set; }
+
+    [Parameter]
+    public Func<bool> IsSelectMode { get; set; }
+
+    [Parameter]
+    public Func<string> SelectionLabel { get; set; }
+
+    [Parameter]
+    public Func<Task> AddSelectionToCollection { get; set; }
+
+    [Parameter]
+    public Func<Task> AddSelectionToPlaylist { get; set; }
+
+    [Parameter]
+    public Action ClearSelection { get; set; }
+
+    private static MarkupString PaddedString(int value, int maximum)
+    {
+        int length = maximum.ToString(CultureInfo.InvariantCulture).Length;
+        return (MarkupString)value.ToString(CultureInfo.InvariantCulture).PadLeft(length, ' ').Replace(" ", "&nbsp;");
+    }
+}

@@ -26,26 +26,19 @@
         }
     }
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
-    <div style="display: flex; flex-direction: row;" class="mb-6">
-        @if (!string.IsNullOrWhiteSpace(_show?.Poster))
-        {
-            if (_show.Poster.StartsWith("http://") || _show.Poster.StartsWith("https://"))
-            {
-                <img class="mud-elevation-2 mr-6"
-                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                     src="@_show.Poster" alt="movie poster"/>
-            }
-            else
-            {
-                <img class="mud-elevation-2 mr-6"
-                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                     src="@($"artwork/posters/{_show.Poster}")" alt="movie poster"/>
-            }
-        }
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 100px">
+    <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Spacing="6">
+        <MudImage Src="@GetPosterUrl(_show.Poster)" Class="rounded-lg" Style="max-height: 325px" ObjectFit="ObjectFit.Contain" />
         <div style="display: flex; flex-direction: column; height: 100%">
-            <MudText Typo="Typo.h2" Class="media-item-title">@_show?.Title</MudText>
-            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_show?.Year</MudText>
+            <MudStack Row="false">
+                <MudHidden Invert="true" Breakpoint="Breakpoint.SmAndDown">
+                    <MudText Typo="Typo.h4" Class="media-item-title">@_show?.Title</MudText>
+                </MudHidden>
+                <MudHidden Invert="true" Breakpoint="Breakpoint.MdAndUp">
+                    <MudText Typo="Typo.h2" Class="media-item-title">@_show?.Title</MudText>
+                </MudHidden>
+                <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_show?.Year</MudText>
+            </MudStack>
             @if (!string.IsNullOrWhiteSpace(_show?.Plot))
             {
                 <MudCard Elevation="2" Class="mb-6">
@@ -54,31 +47,29 @@
                     </MudCardContent>
                 </MudCard>
             }
-            <div>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="mb-6">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="@AddToCollection">
                     Add To Collection
                 </MudButton>
-                <MudButton Class="ml-3"
-                           Variant="Variant.Filled"
+                <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.PlaylistAdd"
                            OnClick="@AddToPlaylist">
                     Add To Playlist
                 </MudButton>
-                <MudButton Class="ml-3"
-                           Variant="Variant.Filled"
+                <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Schedule"
                            OnClick="@AddToSchedule">
                     Add To Schedule
                 </MudButton>
-            </div>
+            </MudStack>
         </div>
-    </div>
-    <MudCard Class="mb-6">
+    </MudStack>
+    <MudCard Class="mt-6 mb-6">
         <MudCardContent>
             @if (_sortedContentRatings.Any())
             {
@@ -157,29 +148,27 @@
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudText Class="mb-4">Seasons</MudText>
-</MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-    @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
+    <MudStack Row="true" Wrap="Wrap.Wrap">
+        @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
+        {
+            <MediaCard Data="@card" Placeholder="@card.Placeholder"
+                       Href="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
+                       AddToCollectionClicked="@AddSeasonToCollection"/>
+        }
+    </MudStack>
+    @if ((_show?.Actors?.Count ?? 0) > 0)
     {
-        <MediaCard Data="@card" Placeholder="@card.Placeholder"
-                   Href="@($"media/tv/seasons/{card.TelevisionSeasonId}")"
-                   AddToCollectionClicked="@AddSeasonToCollection"/>
+        <MudText Class="mb-4">Actors</MudText>
+        <MudStack Row="true" Wrap="Wrap.Wrap">
+            @foreach (ActorCardViewModel actor in _show.Actors)
+            {
+                <MediaCard Data="@actor"
+                           Href="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
+                           ArtworkKind="ArtworkKind.Thumbnail"/>
+            }
+        </MudStack>
     }
 </MudContainer>
-@if ((_show?.Actors?.Count ?? 0) > 0)
-{
-    <MudContainer MaxWidth="MaxWidth.Large">
-        <MudText Class="mb-4">Actors</MudText>
-    </MudContainer>
-    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-        @foreach (ActorCardViewModel actor in _show.Actors)
-        {
-            <MediaCard Data="@actor"
-                       Href="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
-                       ArtworkKind="ArtworkKind.Thumbnail"/>
-        }
-    </MudContainer>
-}
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -195,8 +184,8 @@
     private List<string> _sortedGenres = [];
     private List<string> _sortedTags = [];
 
-    private int _pageSize => 100;
-    private readonly int _pageNumber = 1;
+    private static int PageSize => 100;
+    private const int PageNumber = 1;
 
     private TelevisionSeasonCardResultsViewModel _data = new(0, new List<TelevisionSeasonCardViewModel>(), null);
 
@@ -222,7 +211,7 @@
             _sortedNetworks = _show.Networks.OrderBy(n => n).ToList();
         }
 
-        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize), _cts.Token);
+        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, PageNumber, PageSize), _cts.Token);
     }
 
     private async Task AddToCollection()
@@ -232,7 +221,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             await Mediator.Send(new AddShowToCollection(collection.Id, ShowId), _cts.Token);
             NavigationManager.NavigateTo($"media/collections/{collection.Id}");
@@ -246,7 +235,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        if (result is { Canceled: false, Data: PlaylistViewModel playlist })
         {
             await Mediator.Send(new AddShowToPlaylist(playlist.Id, ShowId), _cts.Token);
             NavigationManager.NavigateTo($"media/playlists/{playlist.Id}");
@@ -260,7 +249,7 @@
 
         IDialogReference dialog = await Dialog.ShowAsync<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is ProgramScheduleViewModel schedule)
+        if (result is { Canceled: false, Data: ProgramScheduleViewModel schedule })
         {
             await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionShow, null, null, null, ShowId, null, PlaybackOrder.Shuffle, FillWithGroupMode.None, null, null, TailMode.None, null, null, GuideMode.Normal, null, null, null, null, null, null, null, null, null, null), _cts.Token);
             NavigationManager.NavigateTo($"schedules/{schedule.Id}/items");
@@ -276,7 +265,7 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+            if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
             {
                 var request = new AddSeasonToCollection(collection.Id, season.TelevisionSeasonId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request, _cts.Token);
@@ -289,6 +278,11 @@
                     Right: _ => Snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+    }
+
+    private static string GetPosterUrl(string poster)
+    {
+        return poster.StartsWith("http://") || poster.StartsWith("https://") ? poster : $"artwork/posters/{poster}";
     }
 
 }
