@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.ViewModels;
 using FluentValidation;
+using FluentValidation.Results;
 
 namespace ErsatzTV.Validators;
 
@@ -39,4 +40,18 @@ public class FillerPresetEditViewModelValidator : AbstractValidator<FillerPreset
                 .TelevisionShow or ProgramScheduleItemCollectionType.TelevisionSeason,
             () => RuleFor(fp => fp.MediaItem).NotNull());
     }
+
+    public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+    {
+        ValidationResult result = await ValidateAsync(
+            ValidationContext<FillerPresetEditViewModel>.CreateWithOptions(
+                (FillerPresetEditViewModel)model,
+                x => x.IncludeProperties(propertyName)));
+        if (result.IsValid)
+        {
+            return [];
+        }
+
+        return result.Errors.Select(e => e.ErrorMessage);
+    };
 }

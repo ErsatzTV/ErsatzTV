@@ -7,68 +7,74 @@
 @inject IEntityLocker Locker
 @inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div>
-        <MudButton Variant="Variant.Filled"
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Class="ml-8"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Variant="Variant.Filled"
                    Color="Color.Primary"
                    Disabled="@Locker.IsTraktLocked()"
                    OnClick="@(_ => AddTraktList())">
             Add Trakt List
         </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Trakt Lists</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudTable Hover="true"
+                      @bind-RowsPerPage="@_traktListsRowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<TraktListViewModel>>>(ServerReloadTraktLists))"
+                      Dense="true"
+                      @ref="_traktListsTable">
+                <ColGroup>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <col/>
+                        <col/>
+                        <col/>
+                        <col style="width: 180px;"/>
+                    </MudHidden>
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>Id</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Match Status</MudTh>
+                    <MudTh/>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Slug</MudTd>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.MatchCount of @context.ItemCount</MudTd>
+                    <MudTd>
+                        <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Search Trakt List">
+                                <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                               Disabled="@Locker.IsTraktLocked()"
+                                               Href="@($"search?query=trakt_list%3a{context.TraktId}")">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Match Trakt List Items">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Disabled="@Locker.IsTraktLocked()"
+                                               OnClick="@(_ => MatchListItems(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Trakt List">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Disabled="@Locker.IsTraktLocked()"
+                                               OnClick="@(_ => DeleteTraktList(context))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+        </MudContainer>
     </div>
-    <MudTable Class="mt-4"
-              Hover="true"
-              @bind-RowsPerPage="@_traktListsRowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<TraktListViewModel>>>(ServerReloadTraktLists))"
-              Dense="true"
-              @ref="_traktListsTable">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Trakt Lists</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col/>
-            <col style="width: 180px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>Id</MudTh>
-            <MudTh>Name</MudTh>
-            <MudTh>Match Status</MudTh>
-            <MudTh/>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Id">@context.Slug</MudTd>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Match Status">@context.MatchCount of @context.ItemCount</MudTd>
-            <MudTd>
-                <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Search Trakt List">
-                        <MudIconButton Icon="@Icons.Material.Filled.Search"
-                                       Disabled="@Locker.IsTraktLocked()"
-                                       Href="@($"search?query=trakt_list%3a{context.TraktId}")">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Match Trakt List Items">
-                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@Locker.IsTraktLocked()"
-                                       OnClick="@(_ => MatchListItems(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="Delete Trakt List">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Disabled="@Locker.IsTraktLocked()"
-                                       OnClick="@(_ => DeleteTraktList(context))">
-                        </MudIconButton>
-                    </MudTooltip>
-                </div>
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-</MudContainer>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -115,7 +121,7 @@
 
             IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Trakt List", parameters, options);
             DialogResult result = await dialog.Result;
-            if (!result.Canceled)
+            if (result is { Canceled: false })
             {
                 await WorkerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
             }
