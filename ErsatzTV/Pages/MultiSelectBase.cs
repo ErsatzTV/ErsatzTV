@@ -48,6 +48,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     {
         SelectedItems.Clear();
         _recentlySelected = None;
+        StateHasChanged();
     }
 
     protected virtual Task RefreshData() => Task.CompletedTask;
@@ -125,7 +126,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         IDialogReference dialog =
             await Dialog.ShowAsync<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is MediaCollectionViewModel collection)
+        if (result is { Canceled: false, Data: MediaCollectionViewModel collection })
         {
             var request = new AddItemsToCollection(
                 collection.Id,
@@ -170,7 +171,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
             parameters,
             options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled)
+        if (result is { Canceled: false })
         {
             var itemIds = SelectedItems.Map(vm => vm.MediaItemId).ToList();
 
@@ -208,7 +209,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         IDialogReference dialog =
             await Dialog.ShowAsync<AddToPlaylistDialog>("Add To Playlist", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Canceled && result.Data is PlaylistViewModel playlist)
+        if (result is { Canceled: false, Data: PlaylistViewModel playlist })
         {
             var request = new AddItemsToPlaylist(
                 playlist.Id,
