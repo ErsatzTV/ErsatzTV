@@ -17,4 +17,5 @@ public class BlockItem
     public SmartCollection SmartCollection { get; set; }
     public PlaybackOrder PlaybackOrder { get; set; }
     public bool IncludeInProgramGuide { get; set; }
+    public bool DisableWatermarks { get; set; }
 }

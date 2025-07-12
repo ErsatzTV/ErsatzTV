@@ -628,6 +628,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 List<string> subLanguages = await searchRepository.GetSubLanguagesForShow(show);
                 await AddSubLanguages(searchRepository, doc, subLanguages);
 
+                AddCollections(doc, show.Collections);
+
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                 {
                     foreach (string contentRating in (metadata.ContentRating ?? string.Empty).Split("/")
@@ -772,6 +774,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
                 List<string> subLanguages = await searchRepository.GetSubLanguagesForSeason(season);
                 await AddSubLanguages(searchRepository, doc, subLanguages);
 
+                AddCollections(doc, season.Collections);
+
                 if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
                 {
                     foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
@@ -853,6 +857,8 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 List<string> subLanguages = await searchRepository.GetSubLanguagesForArtist(artist);
                 await AddSubLanguages(searchRepository, doc, subLanguages);
+
+                AddCollections(doc, artist.Collections);
 
                 doc.Add(
                     new StringField(

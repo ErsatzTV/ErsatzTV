@@ -54,7 +54,8 @@ public class ReplaceBlockItemsHandler(IDbContextFactory<TvContext> dbContextFact
             SmartCollectionId = item.SmartCollectionId,
             MediaItemId = item.MediaItemId,
             PlaybackOrder = item.PlaybackOrder,
-            IncludeInProgramGuide = item.IncludeInProgramGuide
+            IncludeInProgramGuide = item.IncludeInProgramGuide,
+            DisableWatermarks = item.DisableWatermarks
         };
 
     private static Task<Validation<BaseError, Block>> Validate(TvContext dbContext, ReplaceBlockItems request) =>

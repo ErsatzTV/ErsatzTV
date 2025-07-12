@@ -13,4 +13,5 @@ public record BlockItemViewModel(
     SmartCollectionViewModel SmartCollection,
     NamedMediaItemViewModel MediaItem,
     PlaybackOrder PlaybackOrder,
-    bool IncludeInProgramGuide);
+    bool IncludeInProgramGuide,
+    bool DisableWatermarks);

@@ -2146,6 +2146,9 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("CollectionType")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("DisableWatermarks")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IncludeInProgramGuide")
                         .HasColumnType("INTEGER");
 

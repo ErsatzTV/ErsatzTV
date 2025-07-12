@@ -10,4 +10,5 @@ public record ReplaceBlockItem(
     int? SmartCollectionId,
     int? MediaItemId,
     PlaybackOrder PlaybackOrder,
-    bool IncludeInProgramGuide);
+    bool IncludeInProgramGuide,
+    bool DisableWatermarks);

@@ -60,6 +60,8 @@ public class BlockItemEditViewModel : INotifyPropertyChanged
 
     public bool IncludeInProgramGuide { get; set; }
 
+    public bool DisableWatermarks { get; set; }
+
     public event PropertyChangedEventHandler PropertyChanged;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) =>
