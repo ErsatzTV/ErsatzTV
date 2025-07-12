@@ -145,6 +145,10 @@
     font-weight: bold;
 }
 
+.form-field-stack .mud-input-adornment-text {
+    font-weight: unset;
+}
+
 .form-field-stack ul.mud-treeview .mud-typography {
     font-weight: unset;
 }
