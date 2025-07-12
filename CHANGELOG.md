@@ -72,6 +72,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `remaining_duration`: duration of the content after this mid-roll point, in seconds
     - `point`: the position of the mid-roll point, in seconds
     - `num`: the mid-roll point number, starting with 1
+- Add `Disable Watermarks` checkbox to block items
+  - Block items that have this checked will never display a watermark, even with Deco set to override watermark
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders

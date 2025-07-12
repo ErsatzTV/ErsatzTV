@@ -167,6 +167,7 @@ public class BlockPlayoutBuilder(
                         InPoint = TimeSpan.Zero,
                         OutPoint = itemDuration,
                         FillerKind = blockItem.IncludeInProgramGuide ? FillerKind.None : FillerKind.GuideMode,
+                        DisableWatermarks = blockItem.DisableWatermarks,
                         //CustomTitle = scheduleItem.CustomTitle,
                         //WatermarkId = scheduleItem.WatermarkId,
                         //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,

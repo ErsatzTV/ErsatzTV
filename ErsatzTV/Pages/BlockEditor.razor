@@ -77,6 +77,7 @@
                 <MudTh>Collection</MudTh>
                 <MudTh>Playback Order</MudTh>
                 <MudTh>Show In EPG</MudTh>
+                <MudTh>Disable Watermarks</MudTh>
                 <MudTh/>
                 <MudTh/>
                 <MudTh/>
@@ -95,6 +96,9 @@
                 </MudTd>
                 <MudTd>
                     <MudCheckBox T="bool" Value="@context.IncludeInProgramGuide" ValueChanged="@(e => UpdateEPG(context, e))"/>
+                </MudTd>
+                <MudTd>
+                    <MudCheckBox T="bool" Value="@context.DisableWatermarks" ValueChanged="@(e => UpdateWatermark(context, e))"/>
                 </MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
@@ -406,7 +410,8 @@
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
-            IncludeInProgramGuide = item.IncludeInProgramGuide
+            IncludeInProgramGuide = item.IncludeInProgramGuide,
+            DisableWatermarks = item.DisableWatermarks
         };
 
     private void AddBlockItem()
@@ -433,7 +438,8 @@
             MultiCollection = item.MultiCollection,
             SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
-            IncludeInProgramGuide = item.IncludeInProgramGuide
+            IncludeInProgramGuide = item.IncludeInProgramGuide,
+            DisableWatermarks = item.DisableWatermarks
         };
 
         foreach (BlockItemEditViewModel i in _block.Items.Filter(bi => bi.Index >= newItem.Index))
@@ -490,7 +496,8 @@
             item.SmartCollection?.Id,
             item.MediaItem?.MediaItemId,
             item.PlaybackOrder,
-            item.IncludeInProgramGuide)).ToList();
+            item.IncludeInProgramGuide,
+            item.DisableWatermarks)).ToList();
 
         _block.Minutes = _durationHours * 60 + _durationMinutes;
 
@@ -504,5 +511,7 @@
     }
 
     private static void UpdateEPG(BlockItemEditViewModel context, bool includeInProgramGuide) => context.IncludeInProgramGuide = includeInProgramGuide;
+
+    private static void UpdateWatermark(BlockItemEditViewModel context, bool disableWatermarks) => context.DisableWatermarks = disableWatermarks;
 
 }

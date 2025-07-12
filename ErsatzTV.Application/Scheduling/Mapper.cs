@@ -31,7 +31,8 @@ internal static class Mapper
                 _ => null
             },
             blockItem.PlaybackOrder,
-            blockItem.IncludeInProgramGuide);
+            blockItem.IncludeInProgramGuide,
+            blockItem.DisableWatermarks);
 
     internal static TemplateGroupViewModel ProjectToViewModel(TemplateGroup templateGroup) =>
         new(templateGroup.Id, templateGroup.Name, templateGroup.Templates.Count);

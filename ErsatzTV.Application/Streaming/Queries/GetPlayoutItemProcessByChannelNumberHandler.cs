@@ -689,6 +689,11 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
     private WatermarkResult GetPlayoutItemWatermark(PlayoutItem playoutItem, DateTimeOffset now)
     {
+        if (playoutItem.DisableWatermarks)
+        {
+            return new DisableWatermark();
+        }
+
         DecoEntries decoEntries = GetDecoEntries(playoutItem.Playout, now);
 
         // first, check deco template / active deco
