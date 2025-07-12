@@ -178,6 +178,33 @@
                     </MudSelect>
                 </MudStack>
             }
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Expression</MudText>
+                </div>
+                <MudTextField @bind-Value="_model.Expression"
+                              For="@(() => _model.Expression)"
+                              Disabled="@(_model.FillerKind is not FillerKind.MidRoll)"
+                              HelperText="For mid-roll filler, only add filler when this expression evaluates to true for a given mid-roll point."/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="gap-md-8 mb-5">
+                <div class="d-flex" style="width: 300px"></div>
+                <MudText Typo="Typo.body2">
+                    <span style="font-weight: bold;">total_points</span>: total number of potential mid-roll points
+                    <br />
+                    <span style="font-weight: bold;">total_duration</span>: total duration of the content, in seconds
+                    <br />
+                    <span style="font-weight: bold;">total_progress</span>: normalized position from 0 to 1
+                    <br />
+                    <span style="font-weight: bold;">last_mid_filler</span>: seconds since last mid-roll filler
+                    <br />
+                    <span style="font-weight: bold;">remaining_duration</span>: duration of the content after this mid-roll point, in seconds
+                    <br />
+                    <span style="font-weight: bold;">point</span>: the position of the mid-roll point, in seconds
+                    <br />
+                    <span style="font-weight: bold;">num</span>: the mid-roll point number, starting with 1
+                </MudText>
+            </MudStack>
         </MudContainer>
     </div>
 </MudForm>
@@ -246,6 +273,7 @@
                 _model.MediaItem = fillerPreset.MediaItemId.HasValue
                     ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
                     : null;
+                _model.Expression = fillerPreset.Expression;
             });
         }
         else

@@ -248,7 +248,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         if (allFiller.Count(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue) > 1)
         {
             Logger.LogError("Multiple pad-to-nearest-minute values are invalid; no filler will be used");
-            return new List<PlayoutItem> { playoutItem };
+            return [playoutItem];
         }
 
         // missing pad-to-nearest-minute value is invalid; use no filler
@@ -259,7 +259,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             Logger.LogError(
                 "Pad filler ({Filler}) without pad-to-nearest-minute value is invalid; no filler will be used",
                 invalidPadFiller.Name);
-            return new List<PlayoutItem> { playoutItem };
+            return [playoutItem];
         }
 
         List<MediaChapter> effectiveChapters = chapters;
@@ -353,14 +353,21 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             foreach (FillerPreset filler in allFiller.Filter(f =>
                          f.FillerKind == FillerKind.MidRoll && f.FillerMode != FillerMode.Pad))
             {
+                List<MediaChapter> filteredChapters = FillerExpression.FilterChapters(filler, effectiveChapters, playoutItem);
+                if (filteredChapters.Count <= 1)
+                {
+                    result.Add(playoutItem);
+                    continue;
+                }
+
                 switch (filler.FillerMode)
                 {
                     case FillerMode.Duration when filler.Duration.HasValue:
                         IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        for (var i = 0; i < effectiveChapters.Count; i++)
+                        for (var i = 0; i < filteredChapters.Count; i++)
                         {
-                            result.Add(playoutItem.ForChapter(effectiveChapters[i]));
-                            if (i < effectiveChapters.Count - 1)
+                            result.Add(playoutItem.ForChapter(filteredChapters[i]));
+                            if (i < filteredChapters.Count - 1)
                             {
                                 result.AddRange(
                                     AddDurationFiller(
@@ -379,10 +386,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         break;
                     case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        for (var i = 0; i < effectiveChapters.Count; i++)
+                        for (var i = 0; i < filteredChapters.Count; i++)
                         {
-                            result.Add(playoutItem.ForChapter(effectiveChapters[i]));
-                            if (i < effectiveChapters.Count - 1)
+                            result.Add(playoutItem.ForChapter(filteredChapters[i]));
+                            if (i < filteredChapters.Count - 1)
                             {
                                 result.AddRange(
                                     AddCountFiller(
@@ -400,10 +407,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         break;
                     case FillerMode.RandomCount when filler.Count.HasValue:
                         IMediaCollectionEnumerator e3 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        for (var i = 0; i < effectiveChapters.Count; i++)
+                        for (var i = 0; i < filteredChapters.Count; i++)
                         {
-                            result.Add(playoutItem.ForChapter(effectiveChapters[i]));
-                            if (i < effectiveChapters.Count - 1)
+                            result.Add(playoutItem.ForChapter(filteredChapters[i]));
+                            if (i < filteredChapters.Count - 1)
                             {
                                 result.AddRange(
                                     AddRandomCountFiller(
@@ -471,10 +478,19 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         {
             var totalDuration = TimeSpan.FromTicks(result.Sum(pi => (pi.Finish - pi.Start).Ticks));
 
+            List<MediaChapter> filteredChapters =
+                FillerExpression.FilterChapters(padFiller, effectiveChapters, playoutItem);
+
+            FillerKind fillerKind = padFiller.FillerKind;
+            if (filteredChapters.Count <= 1 && effectiveChapters.Count > 1)
+            {
+                fillerKind = FillerKind.PostRoll;
+            }
+
             // add primary content to totalDuration only if it hasn't already been added
             if (result.All(pi => pi.MediaItemId != playoutItem.MediaItemId))
             {
-                totalDuration += TimeSpan.FromTicks(effectiveChapters.Sum(c => (c.EndTime - c.StartTime).Ticks));
+                totalDuration += TimeSpan.FromTicks(filteredChapters.Sum(c => (c.EndTime - c.StartTime).Ticks));
             }
 
             int currentMinute = (playoutItem.StartOffset + totalDuration).Minute;
@@ -510,7 +526,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             //     playoutItem.StartOffset,
             //     targetTime);
 
-            switch (padFiller.FillerKind)
+            switch (fillerKind)
             {
                 case FillerKind.PreRoll:
                     IMediaCollectionEnumerator pre1 = enumerators[CollectionKey.ForFillerPreset(padFiller)];
@@ -550,19 +566,19 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             padFiller.AllowWatermarks,
                             log,
                             cancellationToken));
-                    TimeSpan average = effectiveChapters.Count <= 1
+                    TimeSpan average = filteredChapters.Count <= 1
                         ? remainingToFill
-                        : remainingToFill / (effectiveChapters.Count - 1);
+                        : remainingToFill / (filteredChapters.Count - 1);
                     TimeSpan filled = TimeSpan.Zero;
 
                     // remove post-roll to add after mid-roll/content
                     var postRoll = result.Where(i => i.FillerKind == FillerKind.PostRoll).ToList();
                     result.RemoveAll(i => i.FillerKind == FillerKind.PostRoll);
 
-                    for (var i = 0; i < effectiveChapters.Count; i++)
+                    for (var i = 0; i < filteredChapters.Count; i++)
                     {
-                        result.Add(playoutItem.ForChapter(effectiveChapters[i]));
-                        if (i < effectiveChapters.Count - 1)
+                        result.Add(playoutItem.ForChapter(filteredChapters[i]));
+                        if (i < filteredChapters.Count - 1)
                         {
                             TimeSpan current = TimeSpan.Zero;
                             while (current < average && filled < remainingToFill)
@@ -586,7 +602,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                         playoutBuilderState,
                                         enumerators,
                                         scheduleItem,
-                                        i < effectiveChapters.Count - 1 ? maxThisBreak : leftOverall,
+                                        i < filteredChapters.Count - 1 ? maxThisBreak : leftOverall,
                                         cancellationToken);
 
                                     foreach (PlayoutItem fallback in maybeFallback)

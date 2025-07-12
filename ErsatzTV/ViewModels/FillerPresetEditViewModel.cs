@@ -30,6 +30,11 @@ public class FillerPresetEditViewModel
             {
                 FillerMode = FillerMode.None;
             }
+
+            if (_fillerKind is not FillerKind.MidRoll)
+            {
+                Expression = string.Empty;
+            }
         }
     }
 
@@ -81,6 +86,8 @@ public class FillerPresetEditViewModel
     public MultiCollectionViewModel MultiCollection { get; set; }
     public SmartCollectionViewModel SmartCollection { get; set; }
 
+    public string Expression { get; set; }
+
     public IRequest<Either<BaseError, Unit>> ToEdit() =>
         new UpdateFillerPreset(
             Id,
@@ -95,7 +102,8 @@ public class FillerPresetEditViewModel
             Collection?.Id,
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
-            SmartCollection?.Id);
+            SmartCollection?.Id,
+            Expression);
 
     public IRequest<Either<BaseError, Unit>> ToUpdate() =>
         new CreateFillerPreset(
@@ -110,7 +118,8 @@ public class FillerPresetEditViewModel
             Collection?.Id,
             MediaItem?.MediaItemId,
             MultiCollection?.Id,
-            SmartCollection?.Id);
+            SmartCollection?.Id,
+            Expression);
 
     private static TimeSpan FixDuration(TimeSpan duration) =>
         duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;

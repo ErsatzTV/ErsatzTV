@@ -16,4 +16,5 @@ public record FillerPresetViewModel(
     int? CollectionId,
     int? MediaItemId,
     int? MultiCollectionId,
-    int? SmartCollectionId);
+    int? SmartCollectionId,
+    string Expression);

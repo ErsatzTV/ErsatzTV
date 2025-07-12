@@ -17,7 +17,7 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.6")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -708,6 +708,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("time(6)");
+
+                    b.Property<string>("Expression")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("FillerKind")
                         .HasColumnType("int");
