@@ -1,4 +1,5 @@
 using ErsatzTV.Application.Scheduling;
+using ErsatzTV.Application.Tree;
 using MudBlazor;
 
 namespace ErsatzTV.ViewModels;
@@ -14,7 +15,24 @@ public class TemplateTreeItemViewModel
         Icon = Icons.Material.Filled.Folder;
     }
 
+    public TemplateTreeItemViewModel(TreeGroupViewModel templateGroup)
+    {
+        Text = templateGroup.Name;
+        TreeItems = templateGroup.Children.Map(t => new TreeItemData<TemplateTreeItemViewModel>
+            { Value = new TemplateTreeItemViewModel(t) }).ToList();
+        TemplateGroupId = templateGroup.Id;
+        Icon = Icons.Material.Filled.Folder;
+    }
+
     public TemplateTreeItemViewModel(TemplateViewModel template)
+    {
+        Text = template.Name;
+        TreeItems = [];
+        CanExpand = false;
+        TemplateId = template.Id;
+    }
+
+    public TemplateTreeItemViewModel(TreeItemViewModel template)
     {
         Text = template.Name;
         TreeItems = [];

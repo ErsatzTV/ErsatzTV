@@ -1,3 +1,4 @@
+using ErsatzTV.Application.Tree;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -5,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.MediaCollections;
 
 public class GetPlaylistTreeHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<GetPlaylistTree, PlaylistTreeViewModel>
+    : IRequestHandler<GetPlaylistTree, TreeViewModel>
 {
-    public async Task<PlaylistTreeViewModel> Handle(
+    public async Task<TreeViewModel> Handle(
         GetPlaylistTree request,
         CancellationToken cancellationToken)
     {

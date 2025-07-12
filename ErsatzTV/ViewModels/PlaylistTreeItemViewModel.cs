@@ -1,4 +1,5 @@
 using ErsatzTV.Application.MediaCollections;
+using ErsatzTV.Application.Tree;
 using MudBlazor;
 
 namespace ErsatzTV.ViewModels;
@@ -14,11 +15,11 @@ public class PlaylistTreeItemViewModel
         Icon = Icons.Material.Filled.Folder;
     }
 
-    public PlaylistTreeItemViewModel(PlaylistTreePlaylistGroupViewModel playlistGroup)
+    public PlaylistTreeItemViewModel(TreeGroupViewModel playlistGroup)
     {
         Text = playlistGroup.Name;
         EndText = string.Empty;
-        TreeItems = playlistGroup.Playlists.Map(p => new TreeItemData<PlaylistTreeItemViewModel>
+        TreeItems = playlistGroup.Children.Map(p => new TreeItemData<PlaylistTreeItemViewModel>
             { Value = new PlaylistTreeItemViewModel(p) }).ToList();
         PlaylistGroupId = playlistGroup.Id;
         Icon = Icons.Material.Filled.Folder;
@@ -32,7 +33,7 @@ public class PlaylistTreeItemViewModel
         PlaylistId = playlist.Id;
     }
 
-    public PlaylistTreeItemViewModel(PlaylistTreePlaylistViewModel playlist)
+    public PlaylistTreeItemViewModel(TreeItemViewModel playlist)
     {
         Text = playlist.Name;
         TreeItems = [];

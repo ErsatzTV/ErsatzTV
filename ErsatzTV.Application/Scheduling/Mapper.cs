@@ -1,10 +1,18 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Application.Tree;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Application.Scheduling;
 
 internal static class Mapper
 {
+    internal static TreeViewModel ProjectToViewModel(List<TemplateGroup> templateGroups) =>
+        new(
+            templateGroups.Map(tg => new TreeGroupViewModel(
+                tg.Id,
+                tg.Name,
+                tg.Templates.Map(t => new TreeItemViewModel(t.Id, t.Name)).ToList())).ToList());
+
     internal static BlockTreeViewModel ProjectToViewModel(List<BlockGroup> blockGroups) =>
         new(
             blockGroups.Map(bg => new BlockTreeBlockGroupViewModel(

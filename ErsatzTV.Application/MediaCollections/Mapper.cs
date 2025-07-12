@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Application.Tree;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaCollections;
 
@@ -46,12 +47,12 @@ internal static class Mapper
             multiCollectionSmartItem.ScheduleAsGroup,
             multiCollectionSmartItem.PlaybackOrder);
 
-    internal static PlaylistTreeViewModel ProjectToViewModel(List<PlaylistGroup> playlistGroups) =>
+    internal static TreeViewModel ProjectToViewModel(List<PlaylistGroup> playlistGroups) =>
         new(
-            playlistGroups.Map(bg => new PlaylistTreePlaylistGroupViewModel(
+            playlistGroups.Map(bg => new TreeGroupViewModel(
                 bg.Id,
                 bg.Name,
-                bg.Playlists.Map(b => new PlaylistTreePlaylistViewModel(b.Id, b.Name)).ToList())).ToList());
+                bg.Playlists.Map(b => new TreeItemViewModel(b.Id, b.Name)).ToList())).ToList());
 
     internal static PlaylistGroupViewModel ProjectToViewModel(PlaylistGroup playlistGroup) =>
         new(playlistGroup.Id, playlistGroup.Name, playlistGroup.Playlists.Count);

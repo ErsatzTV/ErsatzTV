@@ -1,5 +1,6 @@
 @page "/media/playlists"
 @using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.Tree
 @implements IDisposable
 @inject ILogger<Playlists> Logger
 @inject ISnackbar Snackbar
@@ -108,8 +109,8 @@
         _playlistGroups = await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token);
 
         _treeItems.Clear();
-        PlaylistTreeViewModel tree = await Mediator.Send(new GetPlaylistTree(), _cts.Token);
-        foreach (PlaylistTreePlaylistGroupViewModel group in tree.Groups)
+        TreeViewModel tree = await Mediator.Send(new GetPlaylistTree(), _cts.Token);
+        foreach (TreeGroupViewModel group in tree.Groups)
         {
             _treeItems.Add(new TreeItemData<PlaylistTreeItemViewModel> { Value = new PlaylistTreeItemViewModel(group) });
         }
@@ -176,6 +177,10 @@
             {
                 await Mediator.Send(new DeletePlaylistGroup(playlistGroupId), _cts.Token);
                 _treeItems.RemoveAll(i => i.Value?.PlaylistGroupId == playlistGroupId);
+                if (_selectedPlaylistGroup?.Id == playlistGroupId)
+                {
+                    _selectedPlaylistGroup = null;
+                }
 
                 _playlistGroups = await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);

@@ -176,6 +176,10 @@
             {
                 await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
                 _treeItems.RemoveAll(i => i.Value?.BlockGroupId == blockGroupId);
+                if (_selectedBlockGroup?.Id == blockGroupId)
+                {
+                    _selectedBlockGroup = null;
+                }
 
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
