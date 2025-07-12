@@ -19,4 +19,5 @@ public class FillerPreset
     public MultiCollection MultiCollection { get; set; }
     public int? SmartCollectionId { get; set; }
     public SmartCollection SmartCollection { get; set; }
+    public string Expression { get; set; }
 }

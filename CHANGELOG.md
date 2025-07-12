@@ -63,6 +63,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - `random % 4 + 1` will play between 1 and 4 items
         - `2` (similar to before this change) will play exactly two items
 - Show health check warning and error badges in nav menu
+- Add `Expression` for mid-roll filler to allow custom logic for using or skipping chapter markers
+  - The following parameters can be used:
+    - `total_points`: total number of potential mid-roll points
+    - `total_duration`: total duration of the content, in seconds
+    - `total_progress`: normalized position from 0 to 1
+    - `last_mid_filler`: seconds since last mid-roll filler
+    - `remaining_duration`: duration of the content after this mid-roll point, in seconds
+    - `point`: the position of the mid-roll point, in seconds
+    - `num`: the mid-roll point number, starting with 1
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders

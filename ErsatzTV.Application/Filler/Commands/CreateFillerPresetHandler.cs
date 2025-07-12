@@ -36,7 +36,8 @@ public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Eit
                 CollectionId = request.CollectionId,
                 MediaItemId = request.MediaItemId,
                 MultiCollectionId = request.MultiCollectionId,
-                SmartCollectionId = request.SmartCollectionId
+                SmartCollectionId = request.SmartCollectionId,
+                Expression = request.FillerKind is FillerKind.MidRoll ? request.Expression : null
             };
 
             await dbContext.FillerPresets.AddAsync(fillerPreset, cancellationToken);
