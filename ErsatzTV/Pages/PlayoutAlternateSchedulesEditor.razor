@@ -12,20 +12,27 @@
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="ml-6" StartIcon="@Icons.Material.Filled.Save">
-            Save Alternate Schedules
-        </MudButton>
-    </MudPaper>
-    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">Add Content</MudText>
-            <MudDivider Class="mb-6"/>
-            <div class="mb-5">
-                <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddAlternateSchedule())">
+        <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%; align-items: center" class="ml-6 mr-6">
+            <div class="d-none d-md-flex">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" StartIcon="@Icons.Material.Filled.Save">
+                    Save Alternate Schedules
+                </MudButton>
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddAlternateSchedule())" StartIcon="@Icons.Material.Filled.PlaylistAdd">
                     Add Alternate Schedule
                 </MudButton>
             </div>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">@_channelName - Content</MudText>
+            <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
+                <div class="flex-grow-1"></div>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Alternate Schedules" OnClick="@SaveChanges"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Alternate Schedule" OnClick="AddAlternateSchedule"/>
+                </MudMenu>
+            </div>
+        </div>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">@_channelName - Content</MudText>
             <MudDivider Class="mb-6"/>
             <MudText Typo="Typo.body2" Class="mb-6">In priority order from top to bottom. The bottom entry will *always* match all days and all months, as a catch-all.</MudText>
             <MudTable Hover="true" Items="_items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem" RowClassFunc="@SelectedRowClassFunc">
