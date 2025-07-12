@@ -27,7 +27,7 @@
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Block" OnClick="@SaveChanges"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Block" OnClick="SaveChanges"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Block Item" OnClick="AddBlockItem"/>
                     <MudMenuItem Icon="@Icons.Material.Filled.Preview" Label="Preview Block Playout" OnClick="PreviewPlayout"/>
                 </MudMenu>
@@ -159,7 +159,7 @@
                         <div class="d-flex">
                             <MudText>Collection</MudText>
                         </div>
-                        <MudAutocomplete Class="mt-3" T="MediaCollectionViewModel"
+                        <MudAutocomplete T="MediaCollectionViewModel"
                                          @bind-Value="_selectedItem.Collection" SearchFunc="@SearchCollections"
                                          ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
                             <MoreItemsTemplate>
@@ -176,7 +176,7 @@
                         <div class="d-flex">
                             <MudText>Multi Collection</MudText>
                         </div>
-                        <MudAutocomplete Class="mt-3" T="MultiCollectionViewModel"
+                        <MudAutocomplete T="MultiCollectionViewModel"
                                          @bind-Value="_selectedItem.MultiCollection" SearchFunc="@SearchMultiCollections"
                                          ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
                             <MoreItemsTemplate>
@@ -193,7 +193,7 @@
                         <div class="d-flex">
                             <MudText>Smart Collection</MudText>
                         </div>
-                        <MudAutocomplete Class="mt-3" T="SmartCollectionViewModel"
+                        <MudAutocomplete T="SmartCollectionViewModel"
                                          @bind-Value="_selectedItem.SmartCollection" SearchFunc="@SearchSmartCollections"
                                          ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
                             <MoreItemsTemplate>
@@ -210,7 +210,7 @@
                         <div class="d-flex">
                             <MudText>Television Show</MudText>
                         </div>
-                        <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel"
+                        <MudAutocomplete T="NamedMediaItemViewModel"
                                          @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchTelevisionShows"
                                          ToStringFunc="@(c => c?.Name)" Placeholder="Type to search...">
                             <MoreItemsTemplate>
@@ -227,7 +227,7 @@
                         <div class="d-flex">
                             <MudText>Television Season</MudText>
                         </div>
-                        <MudAutocomplete Class="mt-3" T="NamedMediaItemViewModel"
+                        <MudAutocomplete T="NamedMediaItemViewModel"
                                          @bind-Value="_selectedItem.MediaItem" SearchFunc="@SearchTelevisionSeasons"
                                          ToStringFunc="@(c => c?.Name)" Placeholder="Type to search..."
                                          MaxItems="20">
