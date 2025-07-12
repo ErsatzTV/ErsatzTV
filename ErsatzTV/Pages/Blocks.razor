@@ -6,50 +6,53 @@
 @inject IMediator Mediator
 @inject IDialogService Dialog
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Blocks</MudText>
-    <MudGrid>
-        <MudItem xs="4">
-            <div style="max-width: 400px;" class="mr-4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudTextField Class="mt-3 mx-3" Label="Block Group Name" @bind-Value="_blockGroupName" For="@(() => _blockGroupName)"/>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockGroup())" Class="ml-4 mb-4">
-                            Add Block Group
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px;" class="mb-6">
-                <MudCard>
-                    <MudCardContent>
-                        <div class="mx-4">
-                            <MudSelect Label="Block Group" @bind-Value="_selectedBlockGroup" Class="mt-3">
-                                @foreach (BlockGroupViewModel blockGroup in _blockGroups)
-                                {
-                                    <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudTextField Class="mt-3" Label="Block Name" @bind-Value="_blockName" For="@(() => _blockName)"/>
-                        </div>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlock())" Class="ml-4 mb-4">
-                            Add Block
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="8">
-            <MudCard>
-                <MudTreeView T="BlockTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Block Groups</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block Group Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_blockGroupName" For="@(() => _blockGroupName)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockGroup())" StartIcon="@Icons.Material.Filled.Add">
+                    Add Block Group
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-6 mb-2">Blocks</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block Group</MudText>
+                </div>
+                <MudSelect @bind-Value="_selectedBlockGroup">
+                    @foreach (BlockGroupViewModel blockGroup in _blockGroups)
+                    {
+                        <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_blockName" For="@(() => _blockName)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlock())" StartIcon="@Icons.Material.Filled.Add">
+                    Add Block
+                </MudButton>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudTreeView T="BlockTreeItemViewModel" Items="@_treeItems" Hover="true" Style="width: 100%">
                     <ItemTemplate Context="item">
-                        <MudTreeViewItem T="BlockTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
+                        <MudTreeViewItem T="BlockTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" Value="@item.Value">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudGrid Justify="Justify.FlexStart">
@@ -75,14 +78,14 @@
                         </MudTreeViewItem>
                     </ItemTemplate>
                 </MudTreeView>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private List<TreeItemData<BlockTreeItemViewModel>> TreeItems { get; set; } = [];
+    private readonly List<TreeItemData<BlockTreeItemViewModel>> _treeItems = [];
     private List<BlockGroupViewModel> _blockGroups = [];
     private BlockGroupViewModel _selectedBlockGroup;
     private string _blockGroupName;
@@ -96,14 +99,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadBlockGroups();
+        await ReloadBlockTree();
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task ReloadBlockGroups()
+    private async Task ReloadBlockTree()
     {
         _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
-        TreeItems = _blockGroups.Map(g => new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(g) }).ToList();
+
+        _treeItems.Clear();
+        BlockTreeViewModel tree = await Mediator.Send(new GetBlockTree(), _cts.Token);
+        foreach (BlockTreeBlockGroupViewModel group in tree.Groups)
+        {
+            _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(group) });
+        }
     }
 
     private async Task AddBlockGroup()
@@ -120,7 +129,7 @@
 
             foreach (BlockGroupViewModel blockGroup in result.RightToSeq())
             {
-                TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(blockGroup) });
+                _treeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(blockGroup) });
                 _blockGroupName = null;
 
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
@@ -143,7 +152,7 @@
 
             foreach (BlockViewModel block in result.RightToSeq())
             {
-                foreach (BlockTreeItemViewModel item in TreeItems.Map(i => i.Value).Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
+                foreach (BlockTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.BlockGroupId == _selectedBlockGroup.Id))
                 {
                     item.TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(block) });
                 }
@@ -152,20 +161,6 @@
                 await InvokeAsync(StateHasChanged);
             }
         }
-    }
-
-    private async Task<IReadOnlyCollection<TreeItemData<BlockTreeItemViewModel>>> LoadServerData(BlockTreeItemViewModel parentNode)
-    {
-        foreach (int blockGroupId in Optional(parentNode.BlockGroupId))
-        {
-            List<BlockViewModel> result = await Mediator.Send(new GetBlocksByBlockGroupId(blockGroupId), _cts.Token);
-            foreach (BlockViewModel block in result)
-            {
-                parentNode.TreeItems.Add(new TreeItemData<BlockTreeItemViewModel> { Value = new BlockTreeItemViewModel(block) });
-            }
-        }
-
-        return parentNode.TreeItems;
     }
 
     private async Task DeleteItem(BlockTreeItemViewModel treeItem)
@@ -180,7 +175,7 @@
             if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteBlockGroup(blockGroupId), _cts.Token);
-                TreeItems.RemoveAll(i => i.Value?.BlockGroupId == blockGroupId);
+                _treeItems.RemoveAll(i => i.Value?.BlockGroupId == blockGroupId);
 
                 _blockGroups = await Mediator.Send(new GetAllBlockGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
@@ -197,7 +192,7 @@
             if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteBlock(blockId), _cts.Token);
-                foreach (BlockTreeItemViewModel parent in TreeItems.Map(i => i.Value))
+                foreach (BlockTreeItemViewModel parent in _treeItems.Map(i => i.Value))
                 {
                     parent.TreeItems.RemoveAll(i => i.Value == treeItem);
                 }

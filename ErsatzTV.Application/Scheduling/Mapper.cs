@@ -5,8 +5,17 @@ namespace ErsatzTV.Application.Scheduling;
 
 internal static class Mapper
 {
+    internal static BlockTreeViewModel ProjectToViewModel(List<BlockGroup> blockGroups)
+    {
+        return new BlockTreeViewModel(
+            blockGroups.Map(bg => new BlockTreeBlockGroupViewModel(
+                bg.Id,
+                bg.Name,
+                bg.Blocks.Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes)).ToList())).ToList());
+    }
+
     internal static BlockGroupViewModel ProjectToViewModel(BlockGroup blockGroup) =>
-        new(blockGroup.Id, blockGroup.Name, blockGroup.Blocks.Count);
+        new(blockGroup.Id, blockGroup.Name);
 
     internal static BlockViewModel ProjectToViewModel(Block block) =>
         new(block.Id, block.Name, block.Minutes, block.StopScheduling);

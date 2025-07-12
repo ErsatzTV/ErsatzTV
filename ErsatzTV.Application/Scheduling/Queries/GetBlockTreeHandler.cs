@@ -4,17 +4,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Scheduling;
 
-public class GetAllBlockGroupsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    : IRequestHandler<GetAllBlockGroups, List<BlockGroupViewModel>>
+public class GetBlockTreeHandler(IDbContextFactory<TvContext> dbContextFactory)
+    : IRequestHandler<GetBlockTree, BlockTreeViewModel>
 {
-    public async Task<List<BlockGroupViewModel>> Handle(GetAllBlockGroups request, CancellationToken cancellationToken)
+    public async Task<BlockTreeViewModel> Handle(GetBlockTree request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<BlockGroup> blockGroups = await dbContext.BlockGroups
             .AsNoTracking()
+            .Include(g => g.Blocks)
             .ToListAsync(cancellationToken);
 
-        return blockGroups.Map(Mapper.ProjectToViewModel).ToList();
+        return Mapper.ProjectToViewModel(blockGroups);
     }
 }
