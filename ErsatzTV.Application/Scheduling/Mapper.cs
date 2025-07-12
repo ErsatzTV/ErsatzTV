@@ -6,6 +6,13 @@ namespace ErsatzTV.Application.Scheduling;
 
 internal static class Mapper
 {
+    internal static TreeViewModel ProjectToViewModel(List<DecoTemplateGroup> decoTemplateGroups) =>
+        new(
+            decoTemplateGroups.Map(dtg => new TreeGroupViewModel(
+                dtg.Id,
+                dtg.Name,
+                dtg.DecoTemplates.Map(dt => new TreeItemViewModel(dt.Id, dt.Name)).ToList())).ToList());
+
     internal static TreeViewModel ProjectToViewModel(List<DecoGroup> decoGroups) =>
         new(
             decoGroups.Map(dg => new TreeGroupViewModel(
