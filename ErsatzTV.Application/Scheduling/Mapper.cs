@@ -1,12 +1,41 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Application.Tree;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Scheduling;
 
 namespace ErsatzTV.Application.Scheduling;
 
 internal static class Mapper
 {
+    internal static TreeViewModel ProjectToViewModel(List<DecoTemplateGroup> decoTemplateGroups) =>
+        new(
+            decoTemplateGroups.Map(dtg => new TreeGroupViewModel(
+                dtg.Id,
+                dtg.Name,
+                dtg.DecoTemplates.Map(dt => new TreeItemViewModel(dt.Id, dt.Name)).ToList())).ToList());
+
+    internal static TreeViewModel ProjectToViewModel(List<DecoGroup> decoGroups) =>
+        new(
+            decoGroups.Map(dg => new TreeGroupViewModel(
+                dg.Id,
+                dg.Name,
+                dg.Decos.Map(d => new TreeItemViewModel(d.Id, d.Name)).ToList())).ToList());
+
+    internal static TreeViewModel ProjectToViewModel(List<TemplateGroup> templateGroups) =>
+        new(
+            templateGroups.Map(tg => new TreeGroupViewModel(
+                tg.Id,
+                tg.Name,
+                tg.Templates.Map(t => new TreeItemViewModel(t.Id, t.Name)).ToList())).ToList());
+
+    internal static BlockTreeViewModel ProjectToViewModel(List<BlockGroup> blockGroups) =>
+        new(
+            blockGroups.Map(bg => new BlockTreeBlockGroupViewModel(
+                bg.Id,
+                bg.Name,
+                bg.Blocks.Map(b => new BlockTreeBlockViewModel(b.Id, b.Name, b.Minutes)).ToList())).ToList());
+
     internal static BlockGroupViewModel ProjectToViewModel(BlockGroup blockGroup) =>
-        new(blockGroup.Id, blockGroup.Name, blockGroup.Blocks.Count);
+        new(blockGroup.Id, blockGroup.Name);
 
     internal static BlockViewModel ProjectToViewModel(Block block) =>
         new(block.Id, block.Name, block.Minutes, block.StopScheduling);

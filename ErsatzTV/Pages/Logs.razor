@@ -1,54 +1,64 @@
 ﻿@page "/system/logs"
+@using System.Globalization
 @using ErsatzTV.Application.Configuration
 @using ErsatzTV.Application.Logs
 @implements IDisposable
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable FixedHeader="true"
-              @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, CancellationToken, Task<TableData<LogEntryViewModel>>>(ServerReload))"
-              Dense="true"
-              @ref="_table">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">Logs</MudText>
-            <MudSpacer/>
-            <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0">
-            </MudTextField>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel T="LogEntryViewModel" SortLabel="Timestamp">
-                    Timestamp
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel T="LogEntryViewModel" SortLabel="Level">
-                    Level
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>Message</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
-            <MudTd DataLabel="Level">@context.Level</MudTd>
-            <MudTd DataLabel="Message">@context.Message</MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>No matching records found</MudText>
-        </NoRecordsContent>
-        <LoadingContent>
-            <MudText>Loading...</MudText>
-        </LoadingContent>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-</MudContainer>
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Logs</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Search</MudText>
+                </div>
+                <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" />
+            </MudStack>
+            <MudTable FixedHeader="true"
+                      @bind-RowsPerPage="@_rowsPerPage"
+                      ServerData="@(new Func<TableState, CancellationToken, Task<TableData<LogEntryViewModel>>>(ServerReload))"
+                      Dense="true"
+                      Class="mt-10"
+                      @ref="_table">
+                <HeaderContent>
+                    <MudTh>
+                        <MudTableSortLabel T="LogEntryViewModel" SortLabel="Timestamp">
+                            Timestamp
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>
+                        <MudTableSortLabel T="LogEntryViewModel" SortLabel="Level">
+                            Level
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>Message</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Timestamp.ToString("G", _dtf)</MudTd>
+                    <MudTd>@context.Level</MudTd>
+                    <MudTd>@context.Message</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No matching records found</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading...</MudText>
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager/>
+                </PagerContent>
+            </MudTable>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
+
+    private readonly DateTimeFormatInfo _dtf = CultureInfo.CurrentUICulture.DateTimeFormat;
 
     private MudTable<LogEntryViewModel> _table;
     private int _rowsPerPage = 10;

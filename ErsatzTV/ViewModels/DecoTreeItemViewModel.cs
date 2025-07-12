@@ -1,4 +1,5 @@
 using ErsatzTV.Application.Scheduling;
+using ErsatzTV.Application.Tree;
 using MudBlazor;
 
 namespace ErsatzTV.ViewModels;
@@ -10,12 +11,28 @@ public class DecoTreeItemViewModel
         Text = decoGroup.Name;
         EndText = string.Empty;
         TreeItems = [];
-        CanExpand = decoGroup.DecoCount > 0;
+        DecoGroupId = decoGroup.Id;
+        Icon = Icons.Material.Filled.Folder;
+    }
+
+    public DecoTreeItemViewModel(TreeGroupViewModel decoGroup)
+    {
+        Text = decoGroup.Name;
+        TreeItems = decoGroup.Children.Map(d => new TreeItemData<DecoTreeItemViewModel>
+            { Value = new DecoTreeItemViewModel(d) }).ToList();
         DecoGroupId = decoGroup.Id;
         Icon = Icons.Material.Filled.Folder;
     }
 
     public DecoTreeItemViewModel(DecoViewModel deco)
+    {
+        Text = deco.Name;
+        TreeItems = [];
+        CanExpand = false;
+        DecoId = deco.Id;
+    }
+
+    public DecoTreeItemViewModel(TreeItemViewModel deco)
     {
         Text = deco.Name;
         TreeItems = [];

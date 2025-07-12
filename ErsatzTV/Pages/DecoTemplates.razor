@@ -1,59 +1,63 @@
 @page "/deco-templates"
 @using ErsatzTV.Application.Scheduling
+@using ErsatzTV.Application.Tree
 @implements IDisposable
 @inject ILogger<DecoTemplates> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IDialogService Dialog
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Deco Templates</MudText>
-    <MudGrid>
-        <MudItem xs="4">
-            <div style="max-width: 400px;" class="mr-4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudTextField Class="mt-3 mx-3" Label="Deco Template Group Name" @bind-Value="_decoTemplateGroupName" For="@(() => _decoTemplateGroupName)"/>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoTemplateGroup())" Class="ml-4 mb-4">
-                            Add Deco Template Group
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px;" class="mb-6">
-                <MudCard>
-                    <MudCardContent>
-                        <div class="mx-4">
-                            <MudSelect Label="Deco Template Group" @bind-Value="_selectedDecoTemplateGroup" Class="mt-3">
-                                @foreach (DecoTemplateGroupViewModel decoTemplateGroup in _decoTemplateGroups)
-                                {
-                                    <MudSelectItem Value="@decoTemplateGroup">@decoTemplateGroup.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudTextField Class="mt-3" Label="Deco Template Name" @bind-Value="_decoTemplateName" For="@(() => _decoTemplateName)"/>
-                        </div>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoTemplate())" Class="ml-4 mb-4">
-                            Add Deco Template
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="8">
-            <MudCard>
-                <MudTreeView T="DecoTemplateTreeItemViewModel" ServerData="LoadServerData" Items="@TreeItems" Hover="true" ExpandOnClick="true">
+<MudForm Style="max-height: 100%">
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Deco Template Groups</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco Template Group Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_decoTemplateGroupName" For="@(() => _decoTemplateGroupName)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoTemplateGroup())" StartIcon="@Icons.Material.Filled.Add">
+                    Add Deco Template Group
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Deco Templates</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco Template Group</MudText>
+                </div>
+                <MudSelect @bind-Value="_selectedDecoTemplateGroup">
+                    @foreach (DecoTemplateGroupViewModel decoTemplateGroup in _decoTemplateGroups)
+                    {
+                        <MudSelectItem Value="@decoTemplateGroup">@decoTemplateGroup.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco Template Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_decoTemplateName" For="@(() => _decoTemplateName)"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoTemplate())" StartIcon="@Icons.Material.Filled.Add">
+                    Add Deco Template
+                </MudButton>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudTreeView T="DecoTemplateTreeItemViewModel" Items="@_treeItems" Hover="true" Style="width: 100%">
                     <ItemTemplate Context="item">
-                        <MudTreeViewItem T="DecoTemplateTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" CanExpand="@item.Value.CanExpand" Value="@item.Value">
+                        <MudTreeViewItem T="DecoTemplateTreeItemViewModel" Items="@item.Value!.TreeItems" Icon="@item.Value.Icon" Value="@item.Value">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                     <MudGrid Justify="Justify.FlexStart">
-                                        <MudItem xs="8">
+                                        <MudItem xs="5">
                                             <MudText>@item.Value.Text</MudText>
                                         </MudItem>
                                     </MudGrid>
@@ -69,14 +73,14 @@
                         </MudTreeViewItem>
                     </ItemTemplate>
                 </MudTreeView>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    private List<TreeItemData<DecoTemplateTreeItemViewModel>> TreeItems { get; set; } = [];
+    private readonly List<TreeItemData<DecoTemplateTreeItemViewModel>> _treeItems = [];
     private List<DecoTemplateGroupViewModel> _decoTemplateGroups = [];
     private DecoTemplateGroupViewModel _selectedDecoTemplateGroup;
     private string _decoTemplateGroupName;
@@ -90,14 +94,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await ReloadDecoTemplateGroups();
+        await ReloadDecoTemplateTree();
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task ReloadDecoTemplateGroups()
+    private async Task ReloadDecoTemplateTree()
     {
         _decoTemplateGroups = await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token);
-        TreeItems = _decoTemplateGroups.Map(g => new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(g) }).ToList();
+
+        _treeItems.Clear();
+        TreeViewModel tree = await Mediator.Send(new GetDecoTemplateTree(), _cts.Token);
+        foreach (TreeGroupViewModel group in tree.Groups)
+        {
+            _treeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(group) });
+        }
     }
 
     private async Task AddDecoTemplateGroup()
@@ -109,12 +119,12 @@
             foreach (BaseError error in result.LeftToSeq())
             {
                 Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error adding deco template group: {Error}", error.Value);
+                Logger.LogError("Unexpected error adding decoTemplate group: {Error}", error.Value);
             }
 
             foreach (DecoTemplateGroupViewModel decoTemplateGroup in result.RightToSeq())
             {
-                TreeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplateGroup) });
+                _treeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplateGroup) });
                 _decoTemplateGroupName = null;
 
                 _decoTemplateGroups = await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token);
@@ -132,12 +142,12 @@
             foreach (BaseError error in result.LeftToSeq())
             {
                 Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error adding deco template: {Error}", error.Value);
+                Logger.LogError("Unexpected error adding decoTemplate: {Error}", error.Value);
             }
 
             foreach (DecoTemplateViewModel decoTemplate in result.RightToSeq())
             {
-                foreach (DecoTemplateTreeItemViewModel item in TreeItems.Map(i => i.Value).Where(item => item.DecoTemplateGroupId == _selectedDecoTemplateGroup.Id))
+                foreach (DecoTemplateTreeItemViewModel item in _treeItems.Map(i => i.Value).Where(item => item.DecoTemplateGroupId == _selectedDecoTemplateGroup.Id))
                 {
                     item.TreeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplate) });
                 }
@@ -148,33 +158,23 @@
         }
     }
 
-    private async Task<IReadOnlyCollection<TreeItemData<DecoTemplateTreeItemViewModel>>> LoadServerData(DecoTemplateTreeItemViewModel parentNode)
-    {
-        foreach (int decoTemplateGroupId in Optional(parentNode.DecoTemplateGroupId))
-        {
-            List<DecoTemplateViewModel> result = await Mediator.Send(new GetDecoTemplatesByDecoTemplateGroupId(decoTemplateGroupId), _cts.Token);
-            foreach (DecoTemplateViewModel decoTemplate in result)
-            {
-                parentNode.TreeItems.Add(new TreeItemData<DecoTemplateTreeItemViewModel> { Value = new DecoTemplateTreeItemViewModel(decoTemplate) });
-            }
-        }
-
-        return parentNode.TreeItems;
-    }
-
     private async Task DeleteItem(DecoTemplateTreeItemViewModel treeItem)
     {
         foreach (int decoTemplateGroupId in Optional(treeItem.DecoTemplateGroupId))
         {
-            var parameters = new DialogParameters { { "EntityType", "Deco Template group" }, { "EntityName", treeItem.Text } };
+            var parameters = new DialogParameters { { "EntityType", "decoTemplate group" }, { "EntityName", treeItem.Text } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Deco Template Group", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete DecoTemplate Group", parameters, options);
             DialogResult result = await dialog.Result;
             if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteDecoTemplateGroup(decoTemplateGroupId), _cts.Token);
-                TreeItems.RemoveAll(i => i.Value?.DecoTemplateGroupId == decoTemplateGroupId);
+                _treeItems.RemoveAll(i => i.Value?.DecoTemplateGroupId == decoTemplateGroupId);
+                if (_selectedDecoTemplateGroup?.Id == decoTemplateGroupId)
+                {
+                    _selectedDecoTemplateGroup = null;
+                }
 
                 _decoTemplateGroups = await Mediator.Send(new GetAllDecoTemplateGroups(), _cts.Token);
                 await InvokeAsync(StateHasChanged);
@@ -183,15 +183,15 @@
 
         foreach (int decoTemplateId in Optional(treeItem.DecoTemplateId))
         {
-            var parameters = new DialogParameters { { "EntityType", "Deco Template" }, { "EntityName", treeItem.Text } };
+            var parameters = new DialogParameters { { "EntityType", "decoTemplate" }, { "EntityName", treeItem.Text } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete Deco Template", parameters, options);
+            IDialogReference dialog = await Dialog.ShowAsync<DeleteDialog>("Delete DecoTemplate", parameters, options);
             DialogResult result = await dialog.Result;
             if (result is not null && !result.Canceled)
             {
                 await Mediator.Send(new DeleteDecoTemplate(decoTemplateId), _cts.Token);
-                foreach (DecoTemplateTreeItemViewModel parent in TreeItems.Map(i => i.Value))
+                foreach (DecoTemplateTreeItemViewModel parent in _treeItems.Map(i => i.Value))
                 {
                     parent.TreeItems.RemoveAll(i => i.Value == treeItem);
                 }
