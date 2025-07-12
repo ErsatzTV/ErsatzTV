@@ -10,12 +10,29 @@ public class PlaylistTreeItemViewModel
         Text = playlistGroup.Name;
         EndText = string.Empty;
         TreeItems = [];
-        CanExpand = playlistGroup.PlaylistCount > 0;
+        PlaylistGroupId = playlistGroup.Id;
+        Icon = Icons.Material.Filled.Folder;
+    }
+
+    public PlaylistTreeItemViewModel(PlaylistTreePlaylistGroupViewModel playlistGroup)
+    {
+        Text = playlistGroup.Name;
+        EndText = string.Empty;
+        TreeItems = playlistGroup.Playlists.Map(p => new TreeItemData<PlaylistTreeItemViewModel>
+            { Value = new PlaylistTreeItemViewModel(p) }).ToList();
         PlaylistGroupId = playlistGroup.Id;
         Icon = Icons.Material.Filled.Folder;
     }
 
     public PlaylistTreeItemViewModel(PlaylistViewModel playlist)
+    {
+        Text = playlist.Name;
+        TreeItems = [];
+        CanExpand = false;
+        PlaylistId = playlist.Id;
+    }
+
+    public PlaylistTreeItemViewModel(PlaylistTreePlaylistViewModel playlist)
     {
         Text = playlist.Name;
         TreeItems = [];

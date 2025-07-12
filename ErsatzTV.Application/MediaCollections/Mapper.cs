@@ -46,6 +46,13 @@ internal static class Mapper
             multiCollectionSmartItem.ScheduleAsGroup,
             multiCollectionSmartItem.PlaybackOrder);
 
+    internal static PlaylistTreeViewModel ProjectToViewModel(List<PlaylistGroup> playlistGroups) =>
+        new(
+            playlistGroups.Map(bg => new PlaylistTreePlaylistGroupViewModel(
+                bg.Id,
+                bg.Name,
+                bg.Playlists.Map(b => new PlaylistTreePlaylistViewModel(b.Id, b.Name)).ToList())).ToList());
+
     internal static PlaylistGroupViewModel ProjectToViewModel(PlaylistGroup playlistGroup) =>
         new(playlistGroup.Id, playlistGroup.Name, playlistGroup.Playlists.Count);
 

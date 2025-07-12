@@ -145,6 +145,10 @@
     font-weight: bold;
 }
 
+.form-field-stack ul.mud-treeview .mud-typography {
+    font-weight: unset;
+}
+
 .form-field-stack .mud-typography,
 .mud-form .mud-typography-h5 {
     color: rgba(255, 255, 255, 0.90);
