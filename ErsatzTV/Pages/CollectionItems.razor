@@ -116,7 +116,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap" UserAttributes="@(new Dictionary<string, object> { { "id", "sortable-collection" } })">
+                <MudStack Row="true" Wrap="Wrap.Wrap" UserAttributes="@(new Dictionary<string, object> { { "id", "sortable-collection" } })" Class="mb-10">
                     @foreach (MovieCardViewModel card in OrderMovies(_data.MovieCards))
                     {
                         <MediaCard Data="@card"
@@ -140,7 +140,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
                     {
                         <MediaCard Data="@card"
@@ -164,7 +164,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
                     {
                         <MediaCard Data="@card"
@@ -190,7 +190,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
                     {
                         <MediaCard Data="@card"
@@ -215,7 +215,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (ArtistCardViewModel card in _data.ArtistCards.OrderBy(e => e.SortTitle))
                     {
                         <MediaCard Data="@card"
@@ -240,7 +240,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (MusicVideoCardViewModel card in _data.MusicVideoCards.OrderBy(e => e.SortTitle))
                     {
                         <MediaCard Data="@card"
@@ -265,7 +265,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (OtherVideoCardViewModel card in _data.OtherVideoCards.OrderBy(e => e.SortTitle))
                     {
                         <MediaCard Data="@card"
@@ -290,7 +290,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (SongCardViewModel card in _data.SongCards.OrderBy(e => e.SortTitle))
                     {
                         <MediaCard Data="@card"
@@ -315,7 +315,7 @@
                 </MudText>
                 <MudDivider Class="mb-6"/>
 
-                <MudStack Row="true" Wrap="Wrap.Wrap">
+                <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-10">
                     @foreach (ImageCardViewModel card in _data.ImageCards.OrderBy(e => e.SortTitle))
                     {
                         <MediaCard Data="@card"

@@ -14,4 +14,6 @@ public record PlayoutNameViewModel(
     TimeSpan? DbDailyRebuildTime)
 {
     public Option<TimeSpan> DailyRebuildTime => Optional(DbDailyRebuildTime);
+
+    public string TemplateFile { get; set; } = TemplateFile;
 }

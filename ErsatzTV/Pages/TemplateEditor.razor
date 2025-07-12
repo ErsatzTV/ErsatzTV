@@ -7,87 +7,89 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Edit Template</MudText>
-    <MudGrid>
-        <MudItem xs="4">
-            <div style="max-width: 400px">
-                <MudCard>
-                    <MudCardContent>
-                        <MudTextField Label="Name" @bind-Value="_template.Name" For="@(() => _template.Name)"/>
-                    </MudCardContent>
-                </MudCard>
-            </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
-                Save Changes
-            </MudButton>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px">
-                <MudCard>
-                    <MudCardContent>
-                        <MudSelect T="BlockGroupViewModel"
-                                   Label="Block Group"
-                                   ValueChanged="@(vm => UpdateBlockGroupItems(vm))">
-                            @foreach (BlockGroupViewModel blockGroup in _blockGroups)
-                            {
-                                <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect Class="mt-3"
-                                   T="BlockViewModel"
-                                   Label="Block"
-                                   @bind-value="_selectedBlock">
-                            @foreach (BlockViewModel block in _blocks)
-                            {
-                                <MudSelectItem Value="@block">@block.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect Class="mt-3"
-                                   T="DateTime"
-                                   Label="Start Time On Or After"
-                                   @bind-value="_selectedBlockStart">
-                            @foreach (DateTime startTime in _startTimes)
-                            {
-                                <MudSelectItem Value="@startTime">
-                                    @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockToTemplate())" Disabled="@(_selectedBlock is null)">
-                            Add Block To Template
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px">
-                <MudCard>
-                    <MudCardContent>
-                        <MudSelect T="TemplateItemEditViewModel"
-                                   Label="Block To Remove"
-                                   @bind-Value="_blockToRemove">
-                            <MudSelectItem Value="@((TemplateItemEditViewModel)null)">(none)</MudSelectItem>
-                            @foreach (TemplateItemEditViewModel item in _template.Items.OrderBy(i => i.Start))
-                            {
-                                <MudSelectItem Value="@item">@item.Start.ToShortTimeString() - @item.Text</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => RemoveBlockFromTemplate())" Disabled="@(_blockToRemove is null)">
-                            Remove Block From Template
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="8">
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="@(_ => SaveChanges())" StartIcon="@Icons.Material.Filled.Save">
+            Save Template
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">General</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_template.Name" For="@(() => _template.Name)"/>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Add Content</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block Group</MudText>
+                </div>
+                <MudSelect T="BlockGroupViewModel" ValueChanged="@(vm => UpdateBlockGroupItems(vm))">
+                    @foreach (BlockGroupViewModel blockGroup in _blockGroups)
+                    {
+                        <MudSelectItem Value="@blockGroup">@blockGroup.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block</MudText>
+                </div>
+                <MudSelect T="BlockViewModel" @bind-value="_selectedBlock">
+                    @foreach (BlockViewModel block in _blocks)
+                    {
+                        <MudSelectItem Value="@block">@block.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Start Time On Or After</MudText>
+                </div>
+                <MudSelect T="DateTime" @bind-value="_selectedBlockStart">
+                    @foreach (DateTime startTime in _startTimes)
+                    {
+                        <MudSelectItem Value="@startTime">
+                            @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddBlockToTemplate())" Disabled="@(_selectedBlock is null)" StartIcon="@Icons.Material.Filled.Add">
+                    Add Block To Template
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Remove Content</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Block To Remove</MudText>
+                </div>
+                <MudSelect T="TemplateItemEditViewModel" @bind-Value="_blockToRemove">
+                    <MudSelectItem Value="@((TemplateItemEditViewModel)null)">(none)</MudSelectItem>
+                    @foreach (TemplateItemEditViewModel item in _template.Items.OrderBy(i => i.Start))
+                    {
+                        <MudSelectItem Value="@item">@item.Start.ToShortTimeString() - @item.Text</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => RemoveBlockFromTemplate())" Disabled="@(_blockToRemove is null)" StartIcon="@Icons.Material.Filled.Remove">
+                    Remove Block From Template
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Content</MudText>
+            <MudDivider Class="mb-6"/>
             <MudCalendar T="CalendarItem"
-                         Class="mt-4"
+                         Class="mb-6"
                          Items="@_template.Items"
                          ShowMonth="false"
                          ShowWeek="false"
@@ -99,9 +101,9 @@
                          EnableDragItems="true"
                          EnableResizeItems="false"
                          ItemChanged="@(ci => CalendarItemChanged(ci))"/>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -113,7 +115,7 @@
     public int Id { get; set; }
 
     private TemplateItemsEditViewModel _template = new();
-    private TemplateItemEditViewModel _blockToRemove = new();
+    private TemplateItemEditViewModel _blockToRemove;
     private BlockGroupViewModel _selectedBlockGroup;
     private BlockViewModel _selectedBlock;
     private DateTime _selectedBlockStart;

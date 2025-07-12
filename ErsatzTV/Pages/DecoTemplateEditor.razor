@@ -7,112 +7,115 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Edit Deco Template</MudText>
-    <MudGrid>
-        <MudItem xs="4">
-            <div style="max-width: 400px">
-                <MudCard>
-                    <MudCardContent>
-                        <MudTextField Label="Name" @bind-Value="_decoTemplate.Name" For="@(() => _decoTemplate.Name)"/>
-                    </MudCardContent>
-                </MudCard>
-            </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
-                Save Changes
-            </MudButton>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px">
-                <MudCard>
-                    <MudCardContent>
-                        <MudSelect T="DecoGroupViewModel"
-                                   Label="Deco Group"
-                                   ValueChanged="@(vm => UpdateDecoGroupItems(vm))">
-                            @foreach (DecoGroupViewModel decoGroup in _decoGroups)
-                            {
-                                <MudSelectItem Value="@decoGroup">@decoGroup.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect Class="mt-3"
-                                   T="DecoViewModel"
-                                   Label="Deco"
-                                   @bind-value="_selectedDeco">
-                            @foreach (DecoViewModel deco in _decos)
-                            {
-                                <MudSelectItem Value="@deco">@deco.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect Class="mt-3"
-                                   T="DateTime"
-                                   Label="Start Time On Or After"
-                                   @bind-value="_selectedDecoStart">
-                            @foreach (DateTime startTime in _startTimes)
-                            {
-                                <MudSelectItem Value="@startTime">
-                                    @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
-                            <MudItem xs="6">
-                                <MudTextField T="int"
-                                              Label="Duration"
-                                              @bind-Value="_durationHours"
-                                              Adornment="Adornment.End"
-                                              AdornmentText="hours"/>
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudSelect T="int" @bind-Value="_durationMinutes" Adornment="Adornment.End" AdornmentText="minutes">
-                                    <MudSelectItem Value="0"/>
-                                    <MudSelectItem Value="5"/>
-                                    <MudSelectItem Value="10"/>
-                                    <MudSelectItem Value="15"/>
-                                    <MudSelectItem Value="20"/>
-                                    <MudSelectItem Value="25"/>
-                                    <MudSelectItem Value="30"/>
-                                    <MudSelectItem Value="35"/>
-                                    <MudSelectItem Value="40"/>
-                                    <MudSelectItem Value="45"/>
-                                    <MudSelectItem Value="50"/>
-                                    <MudSelectItem Value="55"/>
-                                </MudSelect>
-                            </MudItem>
-                        </MudGrid>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoToDecoTemplate())" Disabled="@(_selectedDeco is null)">
-                            Add Deco To Deco Template
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="4">
-            <div style="max-width: 400px">
-                <MudCard>
-                    <MudCardContent>
-                        <MudSelect T="DecoTemplateItemEditViewModel"
-                                   Label="Deco To Remove"
-                                   @bind-Value="_decoToRemove">
-                            <MudSelectItem Value="@((DecoTemplateItemEditViewModel)null)">(none)</MudSelectItem>
-                            @foreach (DecoTemplateItemEditViewModel item in _decoTemplate.Items.OrderBy(i => i.Start))
-                            {
-                                <MudSelectItem Value="@item">@item.Start.ToShortTimeString() - @item.Text</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => RemoveDecoFromDecoTemplate())" Disabled="@(_decoToRemove is null)">
-                            Remove Deco From Deco Template
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </div>
-        </MudItem>
-        <MudItem xs="8">
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="@(_ => SaveChanges())" StartIcon="@Icons.Material.Filled.Save">
+            Save Deco Template
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">General</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Name</MudText>
+                </div>
+                <MudTextField @bind-Value="_decoTemplate.Name" For="@(() => _decoTemplate.Name)"/>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Add Content</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco Group</MudText>
+                </div>
+                <MudSelect T="DecoGroupViewModel" ValueChanged="@(vm => UpdateDecoGroupItems(vm))">
+                    @foreach (DecoGroupViewModel decoGroup in _decoGroups)
+                    {
+                        <MudSelectItem Value="@decoGroup">@decoGroup.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco</MudText>
+                </div>
+                <MudSelect T="DecoViewModel" @bind-value="_selectedDeco">
+                    @foreach (DecoViewModel deco in _decos)
+                    {
+                        <MudSelectItem Value="@deco">@deco.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Start Time On Or After</MudText>
+                </div>
+                <MudSelect T="DateTime" @bind-value="_selectedDecoStart">
+                    @foreach (DateTime startTime in _startTimes)
+                    {
+                        <MudSelectItem Value="@startTime">
+                            @startTime.ToString(CultureInfo.CurrentUICulture.DateTimeFormat.ShortTimePattern)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Duration</MudText>
+                </div>
+                <MudTextField T="int"
+                              @bind-Value="_durationHours"
+                              Adornment="Adornment.End"
+                              AdornmentText="hours"/>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudSelect T="int" @bind-Value="_durationMinutes" Adornment="Adornment.End" AdornmentText="minutes">
+                    <MudSelectItem Value="0"/>
+                    <MudSelectItem Value="5"/>
+                    <MudSelectItem Value="10"/>
+                    <MudSelectItem Value="15"/>
+                    <MudSelectItem Value="20"/>
+                    <MudSelectItem Value="25"/>
+                    <MudSelectItem Value="30"/>
+                    <MudSelectItem Value="35"/>
+                    <MudSelectItem Value="40"/>
+                    <MudSelectItem Value="45"/>
+                    <MudSelectItem Value="50"/>
+                    <MudSelectItem Value="55"/>
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddDecoToDecoTemplate())" Disabled="@(_selectedDeco is null)" StartIcon="@Icons.Material.Filled.Add">
+                    Add Deco To Template
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Remove Content</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Deco To Remove</MudText>
+                </div>
+                <MudSelect T="DecoTemplateItemEditViewModel" @bind-Value="_decoToRemove">
+                    <MudSelectItem Value="@((DecoTemplateItemEditViewModel)null)">(none)</MudSelectItem>
+                    @foreach (DecoTemplateItemEditViewModel item in _decoTemplate.Items.OrderBy(i => i.Start))
+                    {
+                        <MudSelectItem Value="@item">@item.Start.ToShortTimeString() - @item.Text</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => RemoveDecoFromDecoTemplate())" Disabled="@(_decoToRemove is null)" StartIcon="@Icons.Material.Filled.Remove">
+                    Remove Deco From Template
+                </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Content</MudText>
+            <MudDivider Class="mb-6"/>
             <MudCalendar T="CalendarItem"
-                         Class="mt-4"
+                         Class="mb-6"
                          Items="@_decoTemplate.Items"
                          ShowMonth="false"
                          ShowWeek="false"
@@ -124,9 +127,9 @@
                          EnableDragItems="true"
                          EnableResizeItems="false"
                          ItemChanged="@(ci => CalendarItemChanged(ci))"/>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();

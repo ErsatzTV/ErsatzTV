@@ -3,28 +3,38 @@
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Scheduling
 @implements IDisposable
-@inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IEntityLocker EntityLocker;
+@inject ILogger<YamlPlayoutEditor> Logger
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudText Class="ml-8" >Edit YAML Playout - @_channelName</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="@(_ => SaveChanges())" StartIcon="@Icons.Material.Filled.Save">
+            Save YAML File
+        </MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            <MudText Typo="Typo.h5" Class="mb-2">YAML File</MudText>
+            <MudText Typo="Typo.h5" Class="mb-2">@_channelName - YAML Playout</MudText>
             <MudDivider Class="mb-6"/>
-            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => EditYamlFile())">
-                Edit YAML File
-            </MudButton>
-            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playout Items and History</MudText>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>YAML File</MudText>
+                </div>
+                <MudTextField @bind-Value="@_playout.TemplateFile" For="@(() => _playout.TemplateFile)"/>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Maintenance</MudText>
             <MudDivider Class="mb-6"/>
-            <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))">
-                Erase Items and History
-            </MudButton>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Playout Items and History</MudText>
+                </div>
+                <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))" StartIcon="@Icons.Material.Filled.Delete">
+                    Erase Items and History
+                </MudButton>
+            </MudStack>
         </MudContainer>
     </div>
 </MudForm>
@@ -74,22 +84,26 @@
         Snackbar.Add(message, Severity.Info);
     }
 
-    private async Task EditYamlFile()
+    private async Task SaveChanges()
     {
         if (_playout is null)
         {
             return;
         }
 
-        var parameters = new DialogParameters { { "YamlFile", $"{_playout.TemplateFile}" } };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge };
+        Either<BaseError, PlayoutNameViewModel> result =
+            await Mediator.Send(new UpdateYamlPlayout(_playout.PlayoutId, _playout.TemplateFile), _cts.Token);
 
-        IDialogReference dialog = await Dialog.ShowAsync<EditYamlFileDialog>("Edit YAML File", parameters, options);
-        DialogResult result = await dialog.Result;
-        if (result is not null && !result.Canceled)
-        {
-            await Mediator.Send(new UpdateYamlPlayout(_playout.PlayoutId, result.Data as string ?? _playout.TemplateFile), _cts.Token);
-        }
+        result.Match(
+            _ =>
+            {
+                Snackbar.Add($"Saved YAML file for playout {_channelName}", Severity.Success);
+            },
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving YAML file: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving YAML file: {Error}", error.Value);
+            });
     }
 
 }
