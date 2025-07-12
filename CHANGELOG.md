@@ -83,13 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove some limits on multithreading that are no longer needed with latest ffmpeg
   - Mixed transcoding (software decode, hardware filters/encode) can now use multiple decode threads
 - Split main `Settings` page into multiple pages
-- Update form layout to be less cramped and to work better on mobile
-  - All new (split) settings pages
-  - Channel editor
-  - FFmpeg Profile editor
-  - Schedule editor
-  - Watermark editor
-  - Local library editor
+- Update UI layout on most pages to be less cramped and to work better on mobile
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
