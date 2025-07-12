@@ -20,7 +20,7 @@
             <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => EditYamlFile())">
                 Edit YAML File
             </MudButton>
-            <MudText Typo="Typo.h5" Class="mt-6 mb-2">Playout Items and History</MudText>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playout Items and History</MudText>
             <MudDivider Class="mb-6"/>
             <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))">
                 Erase Items and History
