@@ -432,7 +432,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     PadToNearestMinute = 60,
                     CollectionId = 2,
                     Collection = collectionTwo,
-                    Expression = "chapter_num % 2 == 0"
+                    Expression = "num % 2 == 0"
                 },
                 PostRollFiller = new FillerPreset
                 {
