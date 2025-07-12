@@ -6,84 +6,80 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IEntityLocker EntityLocker;
+@inject ILogger<BlockPlayoutEditor> Logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Edit Block Playout - @_channelName</MudText>
-    <MudGrid Class="mt-4">
-        <MudCard Class="mr-6 mb-6" Style="width: 400px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h5">Playout Templates</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" Href="@($"playouts/{Id}/templates")" Class="mt-4">
+<MudForm Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="@(_ => SaveDefaultDeco())" StartIcon="@Icons.Material.Filled.Save">
+            Save Default Deco
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">@_channelName - Block Playout</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Playout Templates</MudText>
+                </div>
+                <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Primary" Href="@($"playouts/{Id}/templates")" StartIcon="@Icons.Material.Filled.Edit">
                     Edit Templates
                 </MudButton>
-            </MudCardContent>
-        </MudCard>
-        <MudCard Class="mr-6 mb-6" Style="width: 400px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h5">Playout Items and History</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <div>
-                    <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(_ => EraseItems(eraseHistory: false))" Class="mt-4">
-                        Erase Items
-                    </MudButton>
+            </MudStack>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Default Deco</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Enable Default Deco</MudText>
                 </div>
-                <div>
-                    <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))" Class="mt-4">
-                        Erase Items and History
-                    </MudButton>
+                <MudCheckBox @bind-Value="_enableDefaultDeco" Color="Color.Primary" Dense="true"/>
+            </MudStack>
+            @if (_enableDefaultDeco)
+            {
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Deco Group</MudText>
+                    </div>
+                    <MudSelect T="DecoGroupViewModel"
+                               Value="@_selectedDefaultDecoGroup"
+                               ValueChanged="@(vm => UpdateDefaultDecoTemplateGroupItems(vm))">
+                        @foreach (DecoGroupViewModel decoGroup in _decoGroups)
+                        {
+                            <MudSelectItem Value="@decoGroup">@decoGroup.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
+                        <MudText>Deco</MudText>
+                    </div>
+                    <MudSelect @bind-Value="_defaultDeco" For="@(() => _defaultDeco)">
+                        @foreach (DecoViewModel deco in _decos)
+                        {
+                            <MudSelectItem Value="@deco">@deco.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+            }
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">Maintenance</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Playout Items and History</MudText>
                 </div>
-            </MudCardContent>
-        </MudCard>
-        <MudCard Class="mr-6 mb-6" Style="width: 400px">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h5">Default Deco</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudElement HtmlTag="div" Class="mt-3">
-                    <MudSwitch T="bool" Label="Enable Default Deco" @bind-Value="_enableDefaultDeco" Color="Color.Primary"/>
-                </MudElement>
-                @if (_enableDefaultDeco)
-                {
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudSelect T="DecoGroupViewModel"
-                                   Label="Deco Group"
-                                   Value="@_selectedDefaultDecoGroup"
-                                   ValueChanged="@(vm => UpdateDefaultDecoTemplateGroupItems(vm))">
-                            @foreach (DecoGroupViewModel decoGroup in _decoGroups)
-                            {
-                                <MudSelectItem Value="@decoGroup">@decoGroup.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudElement>
-                    <MudElement HtmlTag="div" Class="mt-2">
-                        <MudSelect Label="Deco"
-                                   @bind-Value="_defaultDeco"
-                                   For="@(() => _defaultDeco)">
-                            @foreach (DecoViewModel deco in _decos)
-                            {
-                                <MudSelectItem Value="@deco">@deco.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudElement>
-                }
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveDefaultDeco())">
-                    Save Changes
+                <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Warning" OnClick="@(_ => EraseItems(eraseHistory: false))" StartIcon="@Icons.Material.Filled.Delete">
+                    Erase Items
                 </MudButton>
-            </MudCardActions>
-        </MudCard>
-    </MudGrid>
-</MudContainer>
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex"></div>
+                <MudButton Disabled="@EntityLocker.IsPlayoutLocked(Id)" Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => EraseItems(eraseHistory: true))" StartIcon="@Icons.Material.Filled.Delete">
+                    Erase Items and History
+                </MudButton>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -152,7 +148,17 @@
     private async Task SaveDefaultDeco()
     {
         int? decoId = _enableDefaultDeco ? _defaultDeco?.Id : null;
-        await Mediator.Send(new UpdateDefaultDeco(Id, decoId), _cts.Token);
+        Option<BaseError> result = await Mediator.Send(new UpdateDefaultDeco(Id, decoId), _cts.Token);
+        result.Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving default deco: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving default deco: {Error}", error.Value);
+            },
+            () =>
+            {
+                Snackbar.Add($"Saved default deco for playout {_channelName}", Severity.Success);
+            });
     }
 
 }
