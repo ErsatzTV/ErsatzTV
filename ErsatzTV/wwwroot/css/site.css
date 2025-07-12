@@ -167,3 +167,7 @@
 .mud-table-smalldevices-sortselect {
     display: none !important;
 }
+
+.selected {
+    background-color: #009000 !important;
+}

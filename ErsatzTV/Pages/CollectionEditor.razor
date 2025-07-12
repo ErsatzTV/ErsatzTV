@@ -9,7 +9,7 @@
 
 <MudForm @ref="_form" @bind-IsValid="@_success" Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-8" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Collection" : "Add Collection")</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="HandleSubmitAsync" StartIcon="@(IsEdit ? Icons.Material.Filled.Save : Icons.Material.Filled.Add)">@(IsEdit ? "Save Collection" : "Add Collection")</MudButton>
     </MudPaper>
     <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
