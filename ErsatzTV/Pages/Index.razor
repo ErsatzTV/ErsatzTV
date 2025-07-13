@@ -55,8 +55,7 @@
                 <MudTable Hover="true"
                           Dense="true"
                           Breakpoint="Breakpoint.None"
-                          ServerData="@(new Func<TableState, CancellationToken, Task<TableData<HealthCheckResult>>>(ServerReload))"
-                          @ref="_table">
+                          ServerData="@(new Func<TableState, CancellationToken, Task<TableData<HealthCheckResult>>>(ServerReload))">
                     <HeaderContent>
                         <MudTh>Check</MudTh>
                         <MudTh>Message</MudTh>
@@ -87,9 +86,9 @@
                             <MudHidden Breakpoint="Breakpoint.Xs">
                                 @if (context.Link.IsSome)
                                 {
-                                    foreach (string link in context.Link)
+                                    foreach (HealthCheckLink link in context.Link)
                                     {
-                                        <MudLink Href="@link">
+                                        <MudLink Href="@link.Link">
                                             @context.Message
                                         </MudLink>
                                     }
@@ -102,7 +101,21 @@
                                 }
                             </MudHidden>
                             <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
-                                @context.BriefMessage
+                                @if (context.Link.IsSome)
+                                {
+                                    foreach (HealthCheckLink link in context.Link)
+                                    {
+                                        <MudLink Href="@link.Link">
+                                            @context.BriefMessage
+                                        </MudLink>
+                                    }
+                                }
+                                else
+                                {
+                                    <MudText>
+                                        @context.BriefMessage
+                                    </MudText>
+                                }
                             </MudHidden>
                         </MudTd>
                     </RowTemplate>
@@ -124,7 +137,6 @@
     private readonly CancellationTokenSource _cts = new();
 
     private string _releaseNotes;
-    private MudTable<HealthCheckResult> _table;
 
     protected override void OnInitialized()
     {
