@@ -57,7 +57,8 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
 
             return WarningResult(
                 $"There are {count} items that do not exist on disk, including the following: {files}",
-                "media/trash");
+                $"There are {count} items that do not exist on disk",
+                new HealthCheckLink("media/trash"));
         }
 
         return OkResult();
