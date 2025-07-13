@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `Expression` for mid-roll filler to allow custom logic for using or skipping chapter markers
   - The following parameters can be used:
     - `total_points`: total number of potential mid-roll points
+    - `matched_points`: number of mid-roll points that have already matched the expression
     - `total_duration`: total duration of the content, in seconds
     - `total_progress`: normalized position from 0 to 1
     - `last_mid_filler`: seconds since last mid-roll filler

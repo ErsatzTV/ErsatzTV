@@ -22,6 +22,7 @@ public static class FillerExpression
 
         double lastFiller = start.TotalSeconds - 99999.0;
         double contentDuration = (playoutItem.FinishOffset - playoutItem.StartOffset).TotalSeconds;
+        var matches = 0;
 
         for (var index = 0; index < chapterPoints.Count; index++)
         {
@@ -29,6 +30,7 @@ public static class FillerExpression
             var expression = new Expression(fillerPreset.Expression);
             int chapterNum = index + 1;
             double sinceLastFiller = chapterPoint.TotalSeconds - lastFiller;
+            int matchedPoints = matches;
             expression.EvaluateParameter += (name, e) =>
             {
                 e.Result = name switch
@@ -38,6 +40,7 @@ public static class FillerExpression
                     "total_duration" => contentDuration,
                     "total_progress" => chapterPoint.TotalSeconds / end.TotalSeconds,
                     "remaining_duration" => contentDuration - chapterPoint.TotalSeconds,
+                    "matched_points" => matchedPoints,
                     "point" => chapterPoint.TotalSeconds,
                     "num" => chapterNum,
                     _ => e.Result
@@ -46,6 +49,7 @@ public static class FillerExpression
 
             if (expression.Evaluate() as bool? == true)
             {
+                matches += 1;
                 lastFiller = chapterPoint.TotalSeconds;
                 newChapters.Add(effectiveChapters[index]);
             }
