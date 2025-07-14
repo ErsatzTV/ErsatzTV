@@ -84,6 +84,7 @@ public class YamlPlayoutPadUntilHandler(EnumeratorCache enumeratorCache) : YamlP
                 padUntil.OfflineTail,
                 GetFillerKind(padUntil),
                 padUntil.CustomTitle,
+                padUntil.DisableWatermarks,
                 enumerator,
                 fallbackEnumerator,
                 logger);

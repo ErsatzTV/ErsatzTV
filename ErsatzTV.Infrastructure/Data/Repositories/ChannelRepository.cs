@@ -44,4 +44,17 @@ public class ChannelRepository : IChannelRepository
             .Include(c => c.Playouts)
             .ToListAsync();
     }
+
+    public async Task<Option<ChannelWatermark>> GetWatermarkByName(string name)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<ChannelWatermark> maybeWatermarks = await dbContext.ChannelWatermarks
+            .Where(cw => EF.Functions.Like(
+                EF.Functions.Collate(cw.Name, TvContext.CaseInsensitiveCollation),
+                $"%{name}%"))
+            .ToListAsync();
+
+        return maybeWatermarks.HeadOrNone();
+    }
 }

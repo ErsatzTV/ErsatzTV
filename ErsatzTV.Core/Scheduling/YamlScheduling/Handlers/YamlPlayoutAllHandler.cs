@@ -44,7 +44,7 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                         OutPoint = itemDuration,
                         FillerKind = GetFillerKind(all),
                         CustomTitle = string.IsNullOrWhiteSpace(all.CustomTitle) ? null : all.CustomTitle,
-                        //WatermarkId = scheduleItem.WatermarkId,
+                        DisableWatermarks = all.DisableWatermarks,
                         //PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
                         //PreferredAudioTitle = scheduleItem.PreferredAudioTitle,
                         //PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
@@ -56,6 +56,11 @@ public class YamlPlayoutAllHandler(EnumeratorCache enumeratorCache) : YamlPlayou
                         //CollectionKey = JsonConvert.SerializeObject(collectionKey, JsonSettings),
                         //CollectionEtag = collectionEtags[collectionKey]
                     };
+
+                    foreach (int watermarkId in context.GetChannelWatermarkId())
+                    {
+                        playoutItem.WatermarkId = watermarkId;
+                    }
 
                     context.Playout.Items.Add(playoutItem);
                     context.AdvanceGuideGroup();

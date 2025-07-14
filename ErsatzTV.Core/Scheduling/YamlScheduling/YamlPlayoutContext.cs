@@ -9,6 +9,7 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     private int _guideGroup = guideGroup;
     private bool _guideGroupLocked;
     private int _instructionIndex;
+    private Option<int> _channelWatermarkId;
 
     public Playout Playout { get; } = playout;
 
@@ -69,4 +70,16 @@ public class YamlPlayoutContext(Playout playout, YamlPlayoutDefinition definitio
     }
 
     public void UnlockGuideGroup() => _guideGroupLocked = false;
+
+    public void SetChannelWatermarkId(int id)
+    {
+        _channelWatermarkId = id;
+    }
+
+    public void ClearChannelWatermarkId()
+    {
+        _channelWatermarkId = Option<int>.None;
+    }
+
+    public Option<int> GetChannelWatermarkId() => _channelWatermarkId;
 }
