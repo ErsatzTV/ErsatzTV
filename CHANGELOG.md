@@ -62,6 +62,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
         - `count / 2` will play half of the items in the content
         - `random % 4 + 1` will play between 1 and 4 items
         - `2` (similar to before this change) will play exactly two items
+- YAML playout: add `disable_watermarks` property to all content instructions
+  - This property defaults to `false` (meaning watermarks are allowed by default)
+  - Setting to `true` will prevent watermarks from ever appearing over the content
+- YAML playout: add `watermark` instruction
+  - With value of `true` and `name` property, will override the watermark in the playout to the watermark with the provided name
+  - With value of `false`, will restore default watermark value (channel watermark, global watermark)
 - Show health check warning and error badges in nav menu
 - Add `Expression` for mid-roll filler to allow custom logic for using or skipping chapter markers
   - The following parameters can be used:

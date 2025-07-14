@@ -61,6 +61,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                 duration.OfflineTail,
                 GetFillerKind(duration),
                 duration.CustomTitle,
+                duration.DisableWatermarks,
                 enumerator,
                 fallbackEnumerator,
                 logger);
@@ -82,6 +83,7 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
         bool offlineTail,
         FillerKind fillerKind,
         string customTitle,
+        bool disableWatermarks,
         IMediaCollectionEnumerator enumerator,
         Option<IMediaCollectionEnumerator> fallbackEnumerator,
         ILogger<YamlPlayoutBuilder> logger)
@@ -103,9 +105,14 @@ public class YamlPlayoutDurationHandler(EnumeratorCache enumeratorCache) : YamlP
                     OutPoint = itemDuration,
                     GuideGroup = context.PeekNextGuideGroup(),
                     FillerKind = fillerKind,
-                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle
-                    //DisableWatermarks = !allowWatermarks
+                    CustomTitle = string.IsNullOrWhiteSpace(customTitle) ? null : customTitle,
+                    DisableWatermarks = disableWatermarks
                 };
+
+                foreach (int watermarkId in context.GetChannelWatermarkId())
+                {
+                    playoutItem.WatermarkId = watermarkId;
+                }
 
                 if (remainingToFill - itemDuration >= TimeSpan.Zero || !stopBeforeEnd)
                 {

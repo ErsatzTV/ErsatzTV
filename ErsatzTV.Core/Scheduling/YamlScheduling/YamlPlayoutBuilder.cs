@@ -17,6 +17,7 @@ public class YamlPlayoutBuilder(
     ILocalFileSystem localFileSystem,
     IConfigElementRepository configElementRepository,
     IMediaCollectionRepository mediaCollectionRepository,
+    IChannelRepository channelRepository,
     ILogger<YamlPlayoutBuilder> logger)
     : IYamlPlayoutBuilder
 {
@@ -274,7 +275,7 @@ public class YamlPlayoutBuilder(
         }
     }
 
-    private static Option<IYamlPlayoutHandler> GetHandlerForInstruction(
+    private Option<IYamlPlayoutHandler> GetHandlerForInstruction(
         Dictionary<YamlPlayoutInstruction, IYamlPlayoutHandler> handlers,
         EnumeratorCache enumeratorCache,
         YamlPlayoutInstruction instruction)
@@ -289,6 +290,7 @@ public class YamlPlayoutBuilder(
             YamlPlayoutRepeatInstruction => new YamlPlayoutRepeatHandler(),
             YamlPlayoutWaitUntilInstruction => new YamlPlayoutWaitUntilHandler(),
             YamlPlayoutEpgGroupInstruction => new YamlPlayoutEpgGroupHandler(),
+            YamlPlayoutWatermarkInstruction => new YamlPlayoutWatermarkHandler(channelRepository),
             YamlPlayoutShuffleSequenceInstruction => new YamlPlayoutShuffleSequenceHandler(),
 
             YamlPlayoutSkipItemsInstruction => new YamlPlayoutSkipItemsHandler(enumeratorCache),
@@ -341,6 +343,7 @@ public class YamlPlayoutBuilder(
                         { "count", typeof(YamlPlayoutCountInstruction) },
                         { "duration", typeof(YamlPlayoutDurationInstruction) },
                         { "epg_group", typeof(YamlPlayoutEpgGroupInstruction) },
+                        { "watermark", typeof(YamlPlayoutWatermarkInstruction) },
                         { "pad_to_next", typeof(YamlPlayoutPadToNextInstruction) },
                         { "pad_until", typeof(YamlPlayoutPadUntilInstruction) },
                         { "repeat", typeof(YamlPlayoutRepeatInstruction) },

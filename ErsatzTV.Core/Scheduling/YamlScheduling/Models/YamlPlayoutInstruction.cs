@@ -14,6 +14,9 @@ public class YamlPlayoutInstruction
     [YamlMember(Alias = "custom_title", ApplyNamingConventions = false)]
     public string CustomTitle { get; set; }
 
+    [YamlMember(Alias = "disable_watermarks", ApplyNamingConventions = false)]
+    public bool DisableWatermarks { get; set; } = false;
+
     [YamlIgnore]
     public string SequenceKey { get; set; }
 
