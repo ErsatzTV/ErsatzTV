@@ -17,12 +17,10 @@ public class EndpointValidatorService : BackgroundService
     {
         await Task.Yield();
 
-        string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
-
         _logger.LogInformation(
             "Server will listen on streaming port {StreamingPort}, UI port {UiPort} - try UI at {UI}",
             Settings.StreamingPort,
             Settings.UiPort,
-            $"http://localhost:{Settings.UiPort}{baseUrl}");
+            $"http://localhost:{Settings.UiPort}{SystemEnvironment.BaseUrl}");
     }
 }

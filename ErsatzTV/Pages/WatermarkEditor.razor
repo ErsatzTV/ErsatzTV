@@ -67,7 +67,9 @@
                 </div>
                 @if (!string.IsNullOrWhiteSpace(_model.Image?.Path) && _model.ImageSource == ChannelWatermarkImageSource.Custom)
                 {
-                    <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")" Style="max-height: 50px"/>
+                    <div class="d-flex" style="max-height: 50px">
+                        <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image.UrlWithContentType}")" />
+                    </div>
                 }
             </MudStack>
             <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
@@ -250,7 +252,7 @@
         try
         {
             Either<BaseError, string> maybeCacheFileName = await Mediator.Send(
-                new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Watermark, e.File.ContentType),
+                new SaveArtworkToDisk(e.File.OpenReadStream(SystemEnvironment.MaximumUploadMb * 1024 * 1024), ArtworkKind.Watermark, e.File.ContentType),
                 _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
@@ -266,8 +268,8 @@
         }
         catch (IOException)
         {
-            Snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
-            Logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
+            Snackbar.Add($"Watermark exceeds maximum allowed file size of {SystemEnvironment.MaximumUploadMb} MB", Severity.Error);
+            Logger.LogError("Watermark exceeds maximum allowed file size of {MaximumUploadMb} MB", SystemEnvironment.MaximumUploadMb);
         }
         catch (Exception ex)
         {

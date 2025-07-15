@@ -451,7 +451,7 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        string baseUrl = Environment.GetEnvironmentVariable("ETV_BASE_URL");
+        string baseUrl = SystemEnvironment.BaseUrl;
         if (!string.IsNullOrWhiteSpace(baseUrl))
         {
             try
