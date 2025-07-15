@@ -48,8 +48,7 @@ public class PlexTvApiClient : IPlexTvApiClient
 
                 IEnumerable<PlexResource> ownedServers = allServers;
 
-                string allowSharedServers = Environment.GetEnvironmentVariable("ETV_ALLOW_SHARED_PLEX_SERVERS");
-                if (string.IsNullOrWhiteSpace(allowSharedServers))
+                if (!SystemEnvironment.AllowSharedPlexServers)
                 {
                     ownedServers = ownedServers.Filter(r => r.Owned);
                 }

@@ -75,7 +75,7 @@ public static class FileSystemLayout
                 Environment.SpecialFolderOption.DoNotVerify),
             "ersatztv");
 
-        string customConfigFolder = Environment.GetEnvironmentVariable("ETV_CONFIG_FOLDER");
+        string customConfigFolder = SystemEnvironment.ConfigFolder;
         bool useCustomConfigFolder = !string.IsNullOrWhiteSpace(customConfigFolder);
 
         if (useCustomConfigFolder && isDocker)
@@ -101,7 +101,7 @@ public static class FileSystemLayout
                 Environment.SpecialFolderOption.DoNotVerify),
             "etv-transcode");
 
-        string customTranscodeFolder = Environment.GetEnvironmentVariable("ETV_TRANSCODE_FOLDER");
+        string customTranscodeFolder = SystemEnvironment.TranscodeFolder;
         bool useCustomTranscodeFolder = !string.IsNullOrWhiteSpace(customTranscodeFolder);
 
         if (useCustomTranscodeFolder && isDocker)
