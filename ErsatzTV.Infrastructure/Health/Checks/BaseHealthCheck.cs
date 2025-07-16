@@ -21,6 +21,9 @@ public abstract class BaseHealthCheck
     protected HealthCheckResult FailResult(string message, string briefMessage) =>
         new(Title, HealthCheckStatus.Fail, message, briefMessage, None);
 
+    protected HealthCheckResult FailResult(string message, string briefMessage, HealthCheckLink link) =>
+        new(Title, HealthCheckStatus.Fail, message, briefMessage, link);
+
     protected HealthCheckResult WarningResult(string message, string briefMessage) =>
         new(Title, HealthCheckStatus.Warning, message, briefMessage, None);
 

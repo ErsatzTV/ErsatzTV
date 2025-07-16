@@ -23,18 +23,20 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
+        var link = new HealthCheckLink("https://github.com/ErsatzTV/ErsatzTV-ffmpeg/releases/tag/7.1.1");
+
         Option<ConfigElement> maybeFFmpegPath =
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
         {
-            return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg");
+            return FailResult("Unable to locate ffmpeg", "Unable to locate ffmpeg", link);
         }
 
         Option<ConfigElement> maybeFFprobePath =
             await _configElementRepository.GetConfigElement(ConfigElementKey.FFprobePath);
         if (maybeFFprobePath.IsNone)
         {
-            return FailResult("Unable to locate ffprobe", "Unable to locate ffprobe");
+            return FailResult("Unable to locate ffprobe", "Unable to locate ffprobe", link);
         }
 
         foreach (ConfigElement ffmpegPath in maybeFFmpegPath)
@@ -42,12 +44,12 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             Option<string> maybeVersion = await GetVersion(ffmpegPath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
-                return WarningResult("Unable to determine ffmpeg version", "Unable to determine ffmpeg version");
+                return WarningResult("Unable to determine ffmpeg version", "Unable to determine ffmpeg version", link);
             }
 
             foreach (string version in maybeVersion)
             {
-                foreach (HealthCheckResult result in ValidateVersion(version, "ffmpeg"))
+                foreach (HealthCheckResult result in ValidateVersion(version, "ffmpeg", link))
                 {
                     return result;
                 }
@@ -59,12 +61,12 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             Option<string> maybeVersion = await GetVersion(ffprobePath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
-                return WarningResult("Unable to determine ffprobe version", "Unable to determine ffprobe version");
+                return WarningResult("Unable to determine ffprobe version", "Unable to determine ffprobe version", link);
             }
 
             foreach (string version in maybeVersion)
             {
-                foreach (HealthCheckResult result in ValidateVersion(version, "ffprobe"))
+                foreach (HealthCheckResult result in ValidateVersion(version, "ffprobe", link))
                 {
                     return result;
                 }
@@ -74,14 +76,14 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         return new HealthCheckResult("FFmpeg Version", HealthCheckStatus.Pass, string.Empty, string.Empty, None);
     }
 
-    private Option<HealthCheckResult> ValidateVersion(string version, string app)
+    private Option<HealthCheckResult> ValidateVersion(string version, string app, HealthCheckLink link)
     {
         if (version.StartsWith("3.", StringComparison.OrdinalIgnoreCase) ||
             version.StartsWith("4.", StringComparison.OrdinalIgnoreCase) ||
             version.StartsWith("5.", StringComparison.OrdinalIgnoreCase) ||
             version.StartsWith("6.", StringComparison.OrdinalIgnoreCase))
         {
-            return FailResult($"{app} version {version} is too old; please install 7.1.1!", $"{app} version is too old");
+            return FailResult($"{app} version {version} is too old; please install 7.1.1!", $"{app} version is too old", link);
         }
 
         if (!version.StartsWith("7.1.1", StringComparison.OrdinalIgnoreCase) &&
@@ -90,7 +92,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
             version != BundledVersionVaapi)
         {
             return WarningResult(
-                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!", $"{app} version is unexpected");
+                $"{app} version {version} is unexpected and may have problems; please install 7.1.1!", $"{app} version is unexpected", link);
         }
 
         return None;
