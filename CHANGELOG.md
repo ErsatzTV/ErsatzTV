@@ -83,6 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Block items that have this checked will never display a watermark, even with Deco set to override watermark
 - Add `ETV_MAXIMUM_UPLOAD_MB` environment variable to allow uploading large watermarks
   - Default value is 10
+- Update ffmpeg health check to link to ErsatzTV-FFmpeg release that contains binaries for win64, linux64, linuxarm64
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
