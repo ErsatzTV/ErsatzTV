@@ -327,6 +327,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.PtsOffset,
                 request.TargetFramerate,
                 disableWatermarks,
+                Option<string>.None,
                 _ => { });
 
             var result = new PlayoutItemProcessModel(process, duration, finish, true);

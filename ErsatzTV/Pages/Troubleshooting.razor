@@ -7,50 +7,65 @@
 @inject IMediator Mediator
 @inject IJSRuntime JsRuntime
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudExpansionPanels>
-        <MudExpansionPanel Text="General" Class="mb-6">
-            <div class="overflow-y-scroll" style="max-height: 500px">
-                <pre>
-                    <code @ref="_troubleshootingView">@_troubleshootingInfo</code>
-                </pre>
+<MudForm>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Playback</MudText>
+            <MudDivider Class="mb-6"/>
+            <div class="mb-6">
+                <MudLink Href="system/troubleshooting/playback">Playback Troubleshooting</MudLink>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_troubleshootingView)">
-                Copy
-            </MudButton>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="NVIDIA Capabilities" Class="mb-6">
-            <div class="overflow-y-scroll" style="max-height: 500px">
-                <pre>
-                    <code @ref="_nvidiaView">@_nvidiaCapabilities</code>
-                </pre>
-            </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_nvidiaView)">
-                Copy
-            </MudButton>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="QSV Capabilities" Class="mb-6">
-            <div class="overflow-y-scroll" style="max-height: 500px">
-                <pre>
-                    <code @ref="_qsvView">@_qsvCapabilities</code>
-                </pre>
-            </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_qsvView)">
-                Copy
-            </MudButton>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="VAAPI Capabilities">
-            <div class="overflow-y-scroll" style="max-height: 500px">
-                <pre>
-                    <code @ref="_vaapiView">@_vaapiCapabilities</code>
-                </pre>
-            </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_vaapiView)">
-                Copy
-            </MudButton>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-</MudContainer>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">General</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudExpansionPanel Class="mb-6">
+                <div class="overflow-y-scroll" style="max-height: 500px">
+                    <pre>
+                        <code @ref="_troubleshootingView">@_troubleshootingInfo</code>
+                    </pre>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_troubleshootingView)">
+                    Copy
+                </MudButton>
+            </MudExpansionPanel>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">NVIDIA Capabilities</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudExpansionPanel Class="mb-6">
+                <div class="overflow-y-scroll" style="max-height: 500px">
+                    <pre>
+                        <code @ref="_nvidiaView">@_nvidiaCapabilities</code>
+                    </pre>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_nvidiaView)">
+                    Copy
+                </MudButton>
+            </MudExpansionPanel>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">QSV Capabilities</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudExpansionPanel Class="mb-6">
+                <div class="overflow-y-scroll" style="max-height: 500px">
+                    <pre>
+                        <code @ref="_qsvView">@_qsvCapabilities</code>
+                    </pre>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_qsvView)">
+                    Copy
+                </MudButton>
+            </MudExpansionPanel>
+            <MudText Typo="Typo.h5" Class="mt-10 mb-2">VAAPI Capabilities</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudExpansionPanel Class="mb-6">
+                <div class="overflow-y-scroll" style="max-height: 500px">
+                    <pre>
+                        <code @ref="_vaapiView">@_vaapiCapabilities</code>
+                    </pre>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => CopyToClipboard(_vaapiView)">
+                    Copy
+                </MudButton>
+            </MudExpansionPanel>
+        </MudContainer>
+    </div>
+</MudForm>
 
 @code {
     private readonly CancellationTokenSource _cts = new();

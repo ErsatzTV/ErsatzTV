@@ -84,6 +84,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `ETV_MAXIMUM_UPLOAD_MB` environment variable to allow uploading large watermarks
   - Default value is 10
 - Update ffmpeg health check to link to ErsatzTV-FFmpeg release that contains binaries for win64, linux64, linuxarm64
+- Add `Playback Troubleshooting` page
+  - This tool lets you play specific content without needing a test channel or schedule
+  - You can specify
+    - The media item id (found in ETV media info, and ETV movie URLs)
+    - The ffmpeg profile to use
+    - The watermark to use (if any)
+  - Clicking `Play` will play the specified content using the desired settings
+  - Clicking `Download Results` will generate a zip archive containing:
+    - The FFmpeg report of the playback attempt
+    - The media info for the content
+    - The `Troubleshooting` > `General` output
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders

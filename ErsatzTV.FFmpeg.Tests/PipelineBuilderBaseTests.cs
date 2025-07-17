@@ -95,7 +95,8 @@ public class PipelineBuilderBaseTests
             Option<int>.None,
             false,
             false,
-            "clip");
+            "clip",
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
@@ -191,7 +192,8 @@ public class PipelineBuilderBaseTests
             Option<int>.None,
             false,
             false,
-            "clip");
+            "clip",
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
@@ -343,7 +345,8 @@ public class PipelineBuilderBaseTests
             Option<int>.None,
             false,
             false,
-            "clip");
+            "clip",
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
@@ -433,7 +436,8 @@ public class PipelineBuilderBaseTests
             Option<int>.None,
             false,
             false,
-            "clip");
+            "clip",
+            false);
 
         var builder = new SoftwarePipelineBuilder(
             new DefaultFFmpegCapabilities(),
