@@ -95,6 +95,8 @@
                 {
                     info.Version,
                     Environment = info.Environment.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value),
+                    info.Cpus,
+                    info.VideoControllers,
                     info.Health,
                     info.FFmpegSettings,
                     info.Channels,

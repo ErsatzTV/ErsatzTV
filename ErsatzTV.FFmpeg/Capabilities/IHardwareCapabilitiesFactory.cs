@@ -21,4 +21,8 @@ public interface IHardwareCapabilitiesFactory
     Task<Option<string>> GetVaapiOutput(string display, Option<string> vaapiDriver, string vaapiDevice);
 
     Task<List<string>> GetVaapiDisplays();
+
+    List<CpuModel> GetCpuList();
+
+    List<VideoControllerModel> GetVideoControllerList();
 }

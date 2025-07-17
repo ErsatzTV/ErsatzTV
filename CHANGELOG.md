@@ -105,6 +105,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Mixed transcoding (software decode, hardware filters/encode) can now use multiple decode threads
 - Split main `Settings` page into multiple pages
 - Update UI layout on all pages to be less cramped and to work better on mobile
+- Add CPU and Video Controller info to `Troubleshooting` > `General` output
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

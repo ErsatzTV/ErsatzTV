@@ -41,6 +41,8 @@ public class StartTroubleshootingPlaybackHandler(
                     Environment = request.TroubleshootingInfo.Environment.OrderBy(x => x.Key)
                         .ToDictionary(x => x.Key, x => x.Value),
                     request.TroubleshootingInfo.Health,
+                    request.TroubleshootingInfo.Cpus,
+                    request.TroubleshootingInfo.VideoControllers,
                     request.TroubleshootingInfo.FFmpegSettings,
                     request.TroubleshootingInfo.FFmpegProfiles,
                     request.TroubleshootingInfo.Watermarks

@@ -152,9 +152,14 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             }
         }
 
+        List<CpuModel> cpuList = _hardwareCapabilitiesFactory.GetCpuList();
+        List<VideoControllerModel> videoControllerList = _hardwareCapabilitiesFactory.GetVideoControllerList();
+
         return new TroubleshootingInfo(
             version,
             environment,
+            cpuList,
+            videoControllerList,
             healthCheckSummaries,
             ffmpegSettings,
             activeFFmpegProfiles,
