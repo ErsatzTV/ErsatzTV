@@ -58,6 +58,14 @@
           if (Hls.isSupported()) {
             var hls = new Hls({
               debug: true,
+              manifestLoadPolicy: {
+                default: {
+                  maxTimeToFirstByteMs: Infinity,
+                  maxLoadTimeMs: 60000,
+                  timeoutRetry: null,
+                  errorRetry: null
+                },
+              },
             });
             $('#video').data('hls', hls);
             hls.loadSource(uri);

@@ -8,6 +8,7 @@ public static class FileSystemLayout
     public static readonly string AppDataFolder;
 
     public static readonly string TranscodeFolder;
+    public static readonly string TranscodeTroubleshootingFolder;
 
     public static readonly string DataProtectionFolder;
     public static readonly string LogsFolder;
@@ -120,6 +121,7 @@ public static class FileSystemLayout
         }
 
         TranscodeFolder = useCustomTranscodeFolder ? customTranscodeFolder : defaultTranscodeFolder;
+        TranscodeTroubleshootingFolder = Path.Combine(TranscodeFolder, ".troubleshooting");
 
         DataProtectionFolder = Path.Combine(AppDataFolder, "data-protection");
         LogsFolder = Path.Combine(AppDataFolder, "logs");

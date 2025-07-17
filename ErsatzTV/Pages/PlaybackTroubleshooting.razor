@@ -2,11 +2,15 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Core.Notifications
+@using MediatR.Courier
 @implements IDisposable
 @inject IMediator Mediator
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 @inject IEntityLocker Locker
+@inject ICourier Courier;
+@inject ISnackbar Snackbar;
 
 <MudForm Style="max-height: 100%">
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
@@ -109,7 +113,11 @@
         _cts.Dispose();
     }
 
-    protected override void OnInitialized() => Locker.OnTroubleshootingPlaybackChanged += LockChanged;
+    protected override void OnInitialized()
+    {
+        Locker.OnTroubleshootingPlaybackChanged += LockChanged;
+        Courier.Subscribe<PlaybackTroubleshootingCompletedNotification>(HandleTroubleshootingCompleted);
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -126,13 +134,14 @@
 
     private async Task PreviewChannel()
     {
-        Locker.LockTroubleshootingPlayback();
-        _hasPlayed = true;
-
         var uri = new UriBuilder(NavigationManager.ToAbsoluteUri(NavigationManager.Uri));
         uri.Path = uri.Path.Replace("/system/troubleshooting/playback", "/api/troubleshoot/playback.m3u8");
         uri.Query = $"?mediaItem={_mediaItemId}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}";
         await JsRuntime.InvokeVoidAsync("previewChannel", uri.ToString());
+
+        await Task.Delay(TimeSpan.FromSeconds(1));
+
+        _hasPlayed = true;
     }
 
     private async Task OnMediaItemIdChanged(int? mediaItemId)
@@ -160,6 +169,18 @@
     private async Task DownloadResults()
     {
         await JsRuntime.InvokeVoidAsync("window.open", $"api/troubleshoot/playback/archive?mediaItem={_mediaItemId ?? 0}&ffmpegProfile={_ffmpegProfileId}&watermark={_watermarkId ?? 0}");
+    }
+
+    private void HandleTroubleshootingCompleted(PlaybackTroubleshootingCompletedNotification result)
+    {
+        if (result.ExitCode == 0)
+        {
+            Snackbar.Add("FFmpeg troubleshooting process exited successfully", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add($"FFmpeg troubleshooting process exited with code {result.ExitCode}", Severity.Warning);
+        }
     }
 
 }

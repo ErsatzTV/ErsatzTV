@@ -9,6 +9,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Infrastructure.Data;
@@ -25,6 +26,7 @@ public class PrepareTroubleshootingPlaybackHandler(
     IEmbyPathReplacementService embyPathReplacementService,
     IFFmpegProcessService ffmpegProcessService,
     ILocalFileSystem localFileSystem,
+    IEntityLocker entityLocker,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, Command>>
 {
@@ -45,10 +47,15 @@ public class PrepareTroubleshootingPlaybackHandler(
         string ffprobePath,
         FFmpegProfile ffmpegProfile)
     {
-        string transcodeFolder = Path.Combine(FileSystemLayout.TranscodeFolder, ".troubleshooting");
+        if (entityLocker.IsTroubleshootingPlaybackLocked())
+        {
+            return BaseError.New("Troubleshooting playback is locked");
+        }
 
-        localFileSystem.EnsureFolderExists(transcodeFolder);
-        localFileSystem.EmptyFolder(transcodeFolder);
+        entityLocker.LockTroubleshootingPlayback();
+
+        localFileSystem.EnsureFolderExists(FileSystemLayout.TranscodeTroubleshootingFolder);
+        localFileSystem.EmptyFolder(FileSystemLayout.TranscodeTroubleshootingFolder);
 
         ChannelSubtitleMode subtitleMode = ChannelSubtitleMode.None;
 
@@ -108,7 +115,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             0,
             None,
             false,
-            transcodeFolder,
+            FileSystemLayout.TranscodeTroubleshootingFolder,
             _ => { });
 
         return process;
