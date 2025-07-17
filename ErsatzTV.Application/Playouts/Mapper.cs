@@ -6,7 +6,7 @@ internal static class Mapper
 {
     internal static PlayoutItemViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
         new(
-            GetDisplayTitle(playoutItem),
+            GetDisplayTitle(playoutItem.MediaItem, playoutItem.ChapterTitle),
             playoutItem.StartOffset,
             playoutItem.FinishOffset,
             playoutItem.GetDisplayDuration());
@@ -21,9 +21,11 @@ internal static class Mapper
             programScheduleAlternate.DaysOfMonth,
             programScheduleAlternate.MonthsOfYear);
 
-    internal static string GetDisplayTitle(PlayoutItem playoutItem)
+    internal static string GetDisplayTitle(MediaItem mediaItem, Option<string> maybeChapterTitle)
     {
-        switch (playoutItem.MediaItem)
+        string chapterTitle = maybeChapterTitle.IfNone(string.Empty);
+
+        switch (mediaItem)
         {
             case Episode e:
                 string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
@@ -37,9 +39,9 @@ internal static class Mapper
 
                 var numbersString = $"e{string.Join('e', episodeNumbers.Map(n => $"{n:00}"))}";
                 var titlesString = $"{string.Join('/', episodeTitles)}";
-                if (!string.IsNullOrWhiteSpace(playoutItem.ChapterTitle))
+                if (!string.IsNullOrWhiteSpace(chapterTitle))
                 {
-                    titlesString += $" ({playoutItem.ChapterTitle})";
+                    titlesString += $" ({chapterTitle})";
                 }
 
                 return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
@@ -50,16 +52,16 @@ internal static class Mapper
                     .Map(am => $"{am.Title} - ").IfNone(string.Empty);
                 return mv.MusicVideoMetadata.HeadOrNone()
                     .Map(mvm => $"{artistName}{mvm.Title}")
-                    .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                    .Map(s => string.IsNullOrWhiteSpace(chapterTitle)
                         ? s
-                        : $"{s} ({playoutItem.ChapterTitle})")
+                        : $"{s} ({chapterTitle})")
                     .IfNone("[unknown music video]");
             case OtherVideo ov:
                 return ov.OtherVideoMetadata.HeadOrNone()
                     .Map(ovm => ovm.Title ?? string.Empty)
-                    .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                    .Map(s => string.IsNullOrWhiteSpace(chapterTitle)
                         ? s
-                        : $"{s} ({playoutItem.ChapterTitle})")
+                        : $"{s} ({chapterTitle})")
                     .IfNone("[unknown video]");
             case Song s:
                 string songArtist = s.SongMetadata.HeadOrNone()
@@ -67,9 +69,9 @@ internal static class Mapper
                     .IfNone(string.Empty);
                 return s.SongMetadata.HeadOrNone()
                     .Map(sm => $"{songArtist}{sm.Title ?? string.Empty}")
-                    .Map(t => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle)
+                    .Map(t => string.IsNullOrWhiteSpace(chapterTitle)
                         ? t
-                        : $"{s} ({playoutItem.ChapterTitle})")
+                        : $"{s} ({chapterTitle})")
                     .IfNone("[unknown song]");
             case Image i:
                 return i.ImageMetadata.HeadOrNone().Map(im => im.Title ?? string.Empty).IfNone("[unknown image]");

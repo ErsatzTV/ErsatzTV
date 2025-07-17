@@ -379,6 +379,7 @@ public class TranscodingTests
             0,
             None,
             false,
+            Option<string>.None,
             _ => { });
 
         // Console.WriteLine($"ffmpeg arguments {process.Arguments}");
@@ -655,6 +656,7 @@ public class TranscodingTests
             0,
             None,
             false,
+            Option<string>.None,
             PipelineAction);
 
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");

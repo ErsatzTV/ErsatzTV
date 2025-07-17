@@ -2,7 +2,9 @@
 using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Streaming;
+using ErsatzTV.Application.Troubleshooting;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using MediatR;
 
 namespace ErsatzTV.Services;
 
@@ -46,6 +48,12 @@ public class FFmpegWorkerService : BackgroundService
                             {
                                 _ffmpegSegmenterService.TouchChannel(parent.Name);
                             }
+
+                            break;
+
+                        case StartTroubleshootingPlayback startTroubleshootingPlayback:
+                            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                            await mediator.Send(startTroubleshootingPlayback, stoppingToken);
 
                             break;
                     }

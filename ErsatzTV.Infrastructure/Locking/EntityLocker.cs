@@ -15,6 +15,7 @@ public class EntityLocker(IMediator mediator) : IEntityLocker
     private bool _plex;
     private bool _plexCollections;
     private bool _trakt;
+    private bool _troubleshootingPlayback;
 
     public event EventHandler OnLibraryChanged;
     public event EventHandler OnPlexChanged;
@@ -23,6 +24,7 @@ public class EntityLocker(IMediator mediator) : IEntityLocker
     public event EventHandler OnEmbyCollectionsChanged;
     public event EventHandler OnJellyfinCollectionsChanged;
     public event EventHandler OnPlexCollectionsChanged;
+    public event EventHandler OnTroubleshootingPlaybackChanged;
 
     public bool LockLibrary(int libraryId)
     {
@@ -232,4 +234,30 @@ public class EntityLocker(IMediator mediator) : IEntityLocker
     }
 
     public bool IsPlayoutLocked(int playoutId) => _lockedPlayouts.ContainsKey(playoutId);
+
+    public bool LockTroubleshootingPlayback()
+    {
+        if (!_troubleshootingPlayback)
+        {
+            _troubleshootingPlayback = true;
+            OnTroubleshootingPlaybackChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool UnlockTroubleshootingPlayback()
+    {
+        if (_troubleshootingPlayback)
+        {
+            _troubleshootingPlayback = false;
+            OnTroubleshootingPlaybackChanged?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool IsTroubleshootingPlaybackLocked() => _troubleshootingPlayback;
 }

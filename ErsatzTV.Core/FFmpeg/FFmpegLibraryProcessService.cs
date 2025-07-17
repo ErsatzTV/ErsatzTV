@@ -73,6 +73,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate,
         bool disableWatermarks,
+        Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction)
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
@@ -422,7 +423,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             qsvExtraHardwareFrames,
             videoVersion is BackgroundImageMediaVersion { IsSongWithProgress: true },
             false,
-            GetTonemapAlgorithm(playbackSettings));
+            GetTonemapAlgorithm(playbackSettings),
+            channel.UniqueId == Guid.Empty);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
@@ -436,7 +438,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             VaapiDisplayName(hwAccel, vaapiDisplay),
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
-            FileSystemLayout.FFmpegReportsFolder,
+            await customReportsFolder.IfNoneAsync(FileSystemLayout.FFmpegReportsFolder),
             FileSystemLayout.FontsCacheFolder,
             ffmpegPath);
 
@@ -578,7 +580,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             qsvExtraHardwareFrames,
             false,
             false,
-            GetTonemapAlgorithm(playbackSettings));
+            GetTonemapAlgorithm(playbackSettings),
+            channel.UniqueId == Guid.Empty);
 
         var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(0, "ass", StreamKind.Video);
 
@@ -774,7 +777,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             Optional(channel.FFmpegProfile.QsvExtraHardwareFrames),
             false,
             false,
-            GetTonemapAlgorithm(playbackSettings));
+            GetTonemapAlgorithm(playbackSettings),
+            channel.UniqueId == Guid.Empty);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 

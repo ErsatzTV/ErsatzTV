@@ -334,7 +334,8 @@ public abstract class PipelineBuilderBase : IPipelineBuilder
                                 segmentTemplate,
                                 playlistPath,
                                 ffmpegState.PtsOffset == 0,
-                                ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv));
+                                ffmpegState.EncoderHardwareAccelerationMode is HardwareAccelerationMode.Qsv,
+                                ffmpegState.IsTroubleshooting));
                     }
                 }
 

@@ -41,6 +41,9 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
                 .ThenInclude(mv => mv.Streams)
                 .Include(i => (i as Episode).EpisodeMetadata)
                 .ThenInclude(mv => mv.Subtitles)
+                .Include(i => (i as Episode).Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Include(i => (i as OtherVideo).OtherVideoMetadata)
                 .ThenInclude(mv => mv.Subtitles)
                 .Include(i => (i as OtherVideo).MediaVersions)
@@ -78,6 +81,8 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
 
     private static MediaItemInfo Project(MediaItem mediaItem)
     {
+        string displayTitle = Playouts.Mapper.GetDisplayTitle(mediaItem, Option<string>.None);
+
         MediaVersion version = mediaItem.GetHeadVersion();
 
         string serverName = mediaItem.LibraryPath.Library.MediaSource switch
@@ -123,6 +128,7 @@ public class GetMediaItemInfoHandler : IRequestHandler<GetMediaItemInfo, Either<
 
         return new MediaItemInfo(
             mediaItem.Id,
+            displayTitle,
             mediaItem.GetType().Name,
             mediaItem.LibraryPath.Library.GetType().Name,
             serverName,

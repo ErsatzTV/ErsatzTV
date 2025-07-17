@@ -4,6 +4,7 @@ namespace ErsatzTV.Application.MediaItems;
 
 public record MediaItemInfo(
     int Id,
+    string Title,
     string Kind,
     string LibraryKind,
     string ServerName,

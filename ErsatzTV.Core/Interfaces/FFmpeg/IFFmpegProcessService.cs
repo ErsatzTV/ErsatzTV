@@ -39,6 +39,7 @@ public interface IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate,
         bool disableWatermarks,
+        Option<string> customReportsFolder,
         Action<FFmpegPipeline> pipelineAction);
 
     Task<Command> ForError(
