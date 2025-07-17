@@ -28,6 +28,11 @@ public class ArchiveTroubleshootingResultsHandler(ILocalFileSystem localFileSyst
             {
                 zipArchive.CreateEntryFromFile(file, fileName);
             }
+
+            if (fileName.Contains("capabilities", StringComparison.OrdinalIgnoreCase))
+            {
+                zipArchive.CreateEntryFromFile(file, fileName);
+            }
         }
 
         return Task.FromResult(hasReport ? tempFile : Option<string>.None);
