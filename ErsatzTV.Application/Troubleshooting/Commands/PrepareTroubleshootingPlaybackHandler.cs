@@ -1,4 +1,5 @@
 using CliWrap;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -13,6 +14,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Troubleshooting;
 
@@ -22,7 +24,8 @@ public class PrepareTroubleshootingPlaybackHandler(
     IJellyfinPathReplacementService jellyfinPathReplacementService,
     IEmbyPathReplacementService embyPathReplacementService,
     IFFmpegProcessService ffmpegProcessService,
-    ILocalFileSystem localFileSystem)
+    ILocalFileSystem localFileSystem,
+    ILogger<PrepareTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, Command>>
 {
     public async Task<Either<BaseError, Command>> Handle(PrepareTroubleshootingPlayback request, CancellationToken cancellationToken)
@@ -30,11 +33,12 @@ public class PrepareTroubleshootingPlaybackHandler(
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(dbContext, request);
         return await validation.Match(
-            tuple => GetProcess(tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
+            tuple => GetProcess(dbContext, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
             error => Task.FromResult<Either<BaseError, Command>>(error.Join()));
     }
 
     private async Task<Either<BaseError, Command>> GetProcess(
+        TvContext dbContext,
         MediaItem mediaItem,
         string ffmpegPath,
         string ffprobePath,
@@ -49,7 +53,12 @@ public class PrepareTroubleshootingPlaybackHandler(
 
         MediaVersion version = mediaItem.GetHeadVersion();
 
-        string mediaPath = await GetMediaItemPath(mediaItem);
+        string mediaPath = await GetMediaItemPath(dbContext, mediaItem);
+        if (string.IsNullOrEmpty(mediaPath))
+        {
+            logger.LogWarning("Media item {MediaItemId} does not exist on disk; cannot troubleshoot.", mediaItem.Id);
+            return BaseError.New("Media item does not exist on disk");
+        }
 
         DateTimeOffset now = DateTimeOffset.Now;
 
@@ -180,7 +189,74 @@ public class PrepareTroubleshootingPlaybackHandler(
             .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId)
             .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
 
-    private async Task<string> GetMediaItemPath(MediaItem mediaItem)
+    private async Task<string> GetMediaItemPath(
+        TvContext dbContext,
+        MediaItem mediaItem)
+    {
+        string path = await GetLocalPath(mediaItem);
+
+        // check filesystem first
+        if (localFileSystem.FileExists(path))
+        {
+            return path;
+        }
+
+        // attempt to remotely stream plex
+        MediaFile file = mediaItem.GetHeadVersion().MediaFiles.Head();
+        switch (file)
+        {
+            case PlexMediaFile pmf:
+                Option<int> maybeId = await dbContext.Connection.QuerySingleOrDefaultAsync<int>(
+                        @"SELECT PMS.Id FROM PlexMediaSource PMS
+                  INNER JOIN Library L on PMS.Id = L.MediaSourceId
+                  INNER JOIN LibraryPath LP on L.Id = LP.LibraryId
+                  WHERE LP.Id = @LibraryPathId",
+                        new { mediaItem.LibraryPathId })
+                    .Map(Optional);
+
+                foreach (int plexMediaSourceId in maybeId)
+                {
+                    logger.LogDebug(
+                        "Attempting to stream Plex file {PlexFileName} using key {PlexKey}",
+                        pmf.Path,
+                        pmf.Key);
+
+                    return $"http://localhost:{Settings.StreamingPort}/media/plex/{plexMediaSourceId}/{pmf.Key}";
+                }
+
+                break;
+        }
+
+        // attempt to remotely stream jellyfin
+        Option<string> jellyfinItemId = mediaItem switch
+        {
+            JellyfinEpisode e => e.ItemId,
+            JellyfinMovie m => m.ItemId,
+            _ => None
+        };
+
+        foreach (string itemId in jellyfinItemId)
+        {
+            return $"http://localhost:{Settings.StreamingPort}/media/jellyfin/{itemId}";
+        }
+
+        // attempt to remotely stream emby
+        Option<string> embyItemId = mediaItem switch
+        {
+            EmbyEpisode e => e.ItemId,
+            EmbyMovie m => m.ItemId,
+            _ => None
+        };
+
+        foreach (string itemId in embyItemId)
+        {
+            return $"http://localhost:{Settings.StreamingPort}/media/emby/{itemId}";
+        }
+
+        return null;
+    }
+
+    private async Task<string> GetLocalPath(MediaItem mediaItem)
     {
         MediaVersion version = mediaItem.GetHeadVersion();
         MediaFile file = version.MediaFiles.Head();

@@ -58,6 +58,14 @@ public class OutputFormatHls : IPipelineStep
                 _segmentTemplate
             ];
 
+            if (_isTroubleshooting)
+            {
+                result.AddRange(
+                [
+                    "-hls_playlist_type", "vod"
+                ]);
+            }
+
             string pdt = _isTroubleshooting ? string.Empty : "program_date_time+omit_endlist+";
 
             if (_isFirstTranscode)
@@ -75,14 +83,6 @@ public class OutputFormatHls : IPipelineStep
                     "-hls_flags", $"{pdt}append_list+discont_start+independent_segments",
                     "-mpegts_flags", "+initial_discontinuity",
                     _playlistPath
-                ]);
-            }
-
-            if (_isTroubleshooting)
-            {
-                result.AddRange(
-                [
-                    "-hls_playlist_type", "vod"
                 ]);
             }
 

@@ -12,6 +12,8 @@ public class StartTroubleshootingPlaybackHandler(
 {
     public async Task Handle(StartTroubleshootingPlayback request, CancellationToken cancellationToken)
     {
+        logger.LogDebug("ffmpeg troubleshooting arguments {FFmpegArguments}", request.Command.Arguments);
+
         BufferedCommandResult result = await request.Command
             .WithValidation(CommandResultValidation.None)
             .ExecuteBufferedAsync(cancellationToken);
