@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ErsatzTV.Application.FFmpegProfiles;
@@ -63,18 +62,10 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var channelFFmpegProfiles = channels
-            .Map(c => c.FFmpegProfileId)
-            .ToImmutableHashSet();
-
         List<FFmpegProfile> ffmpegProfiles = await dbContext.FFmpegProfiles
             .AsNoTracking()
             .Include(p => p.Resolution)
             .ToListAsync(cancellationToken);
-
-        var activeFFmpegProfiles = ffmpegProfiles
-            .Filter(f => channelFFmpegProfiles.Contains(f.Id))
-            .ToList();
 
         List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
             .AsNoTracking()
@@ -152,12 +143,17 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             }
         }
 
+        List<CpuModel> cpuList = _hardwareCapabilitiesFactory.GetCpuList();
+        List<VideoControllerModel> videoControllerList = _hardwareCapabilitiesFactory.GetVideoControllerList();
+
         return new TroubleshootingInfo(
             version,
             environment,
+            cpuList,
+            videoControllerList,
             healthCheckSummaries,
             ffmpegSettings,
-            activeFFmpegProfiles,
+            ffmpegProfiles,
             channels,
             channelWatermarks,
             nvidiaCapabilities,

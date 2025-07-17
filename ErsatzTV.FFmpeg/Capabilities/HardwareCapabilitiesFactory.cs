@@ -9,6 +9,7 @@ using ErsatzTV.FFmpeg.Capabilities.Qsv;
 using ErsatzTV.FFmpeg.Capabilities.Vaapi;
 using ErsatzTV.FFmpeg.GlobalOption.HardwareAcceleration;
 using ErsatzTV.FFmpeg.Runtime;
+using Hardware.Info;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -207,6 +208,40 @@ public class HardwareCapabilitiesFactory : IHardwareCapabilitiesFactory
         return string.IsNullOrWhiteSpace(result.StandardOutput)
             ? ["drm"]
             : result.StandardOutput.Trim().Split("\n").Skip(1).Map(s => s.Trim()).ToList();
+    }
+
+    public List<CpuModel> GetCpuList()
+    {
+        try
+        {
+            var hardwareInfo = new HardwareInfo();
+            hardwareInfo.RefreshCPUList();
+            return hardwareInfo.CpuList.Map(c => new CpuModel(c.Manufacturer, c.Name)).ToList();
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+
+        return [];
+    }
+
+    public List<VideoControllerModel> GetVideoControllerList()
+    {
+        try
+        {
+            var hardwareInfo = new HardwareInfo();
+            hardwareInfo.RefreshVideoControllerList();
+            return hardwareInfo.VideoControllerList
+                .Map(v => new VideoControllerModel(v.Manufacturer, v.Name))
+                .ToList();
+        }
+        catch (Exception)
+        {
+            // do nothing
+        }
+
+        return [];
     }
 
     private async Task<IReadOnlySet<string>> GetFFmpegCapabilities(
