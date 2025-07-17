@@ -33,12 +33,13 @@ public class PrepareTroubleshootingPlaybackHandler(
         await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Tuple<MediaItem, string, string, FFmpegProfile>> validation = await Validate(dbContext, request);
         return await validation.Match(
-            tuple => GetProcess(dbContext, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
+            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4),
             error => Task.FromResult<Either<BaseError, Command>>(error.Join()));
     }
 
     private async Task<Either<BaseError, Command>> GetProcess(
         TvContext dbContext,
+        PrepareTroubleshootingPlayback request,
         MediaItem mediaItem,
         string ffmpegPath,
         string ffprobePath,
@@ -58,6 +59,13 @@ public class PrepareTroubleshootingPlaybackHandler(
         {
             logger.LogWarning("Media item {MediaItemId} does not exist on disk; cannot troubleshoot.", mediaItem.Id);
             return BaseError.New("Media item does not exist on disk");
+        }
+
+        Option<ChannelWatermark> maybeWatermark = Option<ChannelWatermark>.None;
+        if (request.WatermarkId > 0)
+        {
+            maybeWatermark = await dbContext.ChannelWatermarks
+                .SelectOneAsync(cw => cw.Id, cw => cw.Id == request.WatermarkId);
         }
 
         DateTimeOffset now = DateTimeOffset.Now;
@@ -87,7 +95,7 @@ public class PrepareTroubleshootingPlaybackHandler(
             now,
             now + duration,
             now,
-            Option<ChannelWatermark>.None,
+            maybeWatermark,
             Option<ChannelWatermark>.None,
             ffmpegProfile.VaapiDisplay,
             ffmpegProfile.VaapiDriver,
