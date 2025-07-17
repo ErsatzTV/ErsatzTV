@@ -90,7 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - The media item id (found in ETV media info, and ETV movie URLs)
     - The ffmpeg profile to use
     - The watermark to use (if any)
-  - Clicking `Play` will play the specified content using the desired settings
+  - Clicking `Play` will play up to 30 seconds of the specified content using the desired settings
   - Clicking `Download Results` will generate a zip archive containing:
     - The FFmpeg report of the playback attempt
     - The media info for the content

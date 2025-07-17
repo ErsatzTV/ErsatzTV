@@ -76,6 +76,10 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             .Filter(f => channelFFmpegProfiles.Contains(f.Id))
             .ToList();
 
+        List<ChannelWatermark> channelWatermarks = await dbContext.ChannelWatermarks
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
         string nvidiaCapabilities = null;
         string qsvCapabilities = null;
         string vaapiCapabilities = null;
@@ -155,6 +159,7 @@ public class GetTroubleshootingInfoHandler : IRequestHandler<GetTroubleshootingI
             ffmpegSettings,
             activeFFmpegProfiles,
             channels,
+            channelWatermarks,
             nvidiaCapabilities,
             qsvCapabilities,
             vaapiCapabilities);
