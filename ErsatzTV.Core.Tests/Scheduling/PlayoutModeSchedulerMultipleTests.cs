@@ -89,6 +89,108 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
     }
 
     [Test]
+    public void Should_Schedule_Multi_Part_Size_Correctly()
+    {
+        var season = new Season { ShowId = 1 };
+
+        var collectionOne = new Collection
+        {
+            Id = 1,
+            Name = "Episode collection",
+            MediaItems =
+            [
+                new Episode
+                {
+                    Id = 1,
+                    EpisodeMetadata = [new EpisodeMetadata { Title = "Episode One (1)" }],
+                    MediaVersions = [new MediaVersion { Duration = TimeSpan.FromHours(1), Chapters = [] }],
+                    Season = season
+                },
+                new Episode
+                {
+                    Id = 2,
+                    EpisodeMetadata = [new EpisodeMetadata { Title = "Episode Two (2)" }],
+                    MediaVersions = [new MediaVersion { Duration = TimeSpan.FromHours(1), Chapters = [] }],
+                    Season = season
+                },
+                new Episode
+                {
+                    Id = 3,
+                    EpisodeMetadata = [new EpisodeMetadata { Title = "Episode Three" }],
+                    MediaVersions = [new MediaVersion { Duration = TimeSpan.FromHours(1), Chapters = [] }],
+                    Season = season
+                }
+            ]
+        };
+
+        var scheduleItem = new ProgramScheduleItemMultiple
+        {
+            Id = 1,
+            Index = 1,
+            CollectionType = ProgramScheduleItemCollectionType.Collection,
+            Collection = collectionOne,
+            CollectionId = collectionOne.Id,
+            StartTime = TimeSpan.FromHours(1),
+            PlaybackOrder = PlaybackOrder.Chronological,
+            TailFiller = null,
+            FallbackFiller = null,
+            Count = 0,
+            MultipleMode = MultipleMode.MultiEpisodeGroupSize,
+            CustomTitle = "CustomTitle"
+        };
+
+        var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
+            new List<ProgramScheduleItem> { scheduleItem },
+            new CollectionEnumeratorState());
+
+        var enumerator = new ChronologicalMediaCollectionEnumerator(
+            collectionOne.MediaItems,
+            new CollectionEnumeratorState());
+
+        var collectionItemCount = new Dictionary<CollectionKey, int>
+        {
+            { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems.Count }
+        }.ToMap();
+
+        PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
+
+        var scheduler = new PlayoutModeSchedulerMultiple(collectionItemCount, Substitute.For<ILogger>());
+        (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+            startState,
+            CollectionEnumerators(scheduleItem, enumerator),
+            scheduleItem,
+            NextScheduleItem,
+            HardStop(scheduleItemsEnumerator),
+            _cancellationToken);
+
+        playoutBuilderState.CurrentTime.ShouldBe(startState.CurrentTime.AddHours(3));
+        playoutItems.Last().FinishOffset.ShouldBe(playoutBuilderState.CurrentTime);
+
+        playoutBuilderState.NextGuideGroup.ShouldBe(2); // one guide group here because of custom title
+        playoutBuilderState.DurationFinish.IsNone.ShouldBeTrue();
+        playoutBuilderState.InFlood.ShouldBeFalse();
+        playoutBuilderState.MultipleRemaining.IsNone.ShouldBeTrue();
+        playoutBuilderState.InDurationFiller.ShouldBeFalse();
+        playoutBuilderState.ScheduleItemsEnumerator.State.Index.ShouldBe(0);
+
+        enumerator.State.Index.ShouldBe(2);
+
+        playoutItems.Count.ShouldBe(2);
+
+        playoutItems[0].MediaItemId.ShouldBe(1);
+        playoutItems[0].StartOffset.ShouldBe(startState.CurrentTime.AddHours(1));
+        playoutItems[0].GuideGroup.ShouldBe(1);
+        playoutItems[0].FillerKind.ShouldBe(FillerKind.None);
+        playoutItems[0].CustomTitle.ShouldBe("CustomTitle");
+
+        playoutItems[1].MediaItemId.ShouldBe(2);
+        playoutItems[1].StartOffset.ShouldBe(startState.CurrentTime.AddHours(2));
+        playoutItems[1].GuideGroup.ShouldBe(1);
+        playoutItems[1].FillerKind.ShouldBe(FillerKind.None);
+        playoutItems[1].CustomTitle.ShouldBe("CustomTitle");
+    }
+
+    [Test]
     public void Should_Fill_Exactly_To_Next_Schedule_Item()
     {
         Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));

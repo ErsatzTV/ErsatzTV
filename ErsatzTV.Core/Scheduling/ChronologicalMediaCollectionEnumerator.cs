@@ -8,6 +8,7 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
 {
     private readonly Lazy<Option<TimeSpan>> _lazyMinimumDuration;
     private readonly List<MediaItem> _sortedMediaItems;
+    private readonly Lazy<Dictionary<int, int>> _lazyMediaItemGroupSize;
 
     public ChronologicalMediaCollectionEnumerator(
         IEnumerable<MediaItem> mediaItems,
@@ -18,6 +19,8 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
         _sortedMediaItems = mediaItems.OrderBy(identity, new ChronologicalMediaComparer()).ToList();
         _lazyMinimumDuration = new Lazy<Option<TimeSpan>>(() =>
             _sortedMediaItems.Bind(i => i.GetNonZeroDuration()).OrderBy(identity).HeadOrNone());
+
+        _lazyMediaItemGroupSize = new Lazy<Dictionary<int, int>>(CalculateMediaItemGroupSizes);
 
         State = new CollectionEnumeratorState { Seed = state.Seed };
 
@@ -31,6 +34,24 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
         {
             MoveNext();
         }
+    }
+
+    private Dictionary<int, int> CalculateMediaItemGroupSizes()
+    {
+        var result = new Dictionary<int, int>();
+
+        List<GroupedMediaItem> groupedItems = MultiPartEpisodeGrouper.GroupMediaItems(_sortedMediaItems, false);
+        foreach (GroupedMediaItem group in groupedItems)
+        {
+            int size = group.Additional.Count + 1;
+            result[group.First.Id] = size;
+            foreach (MediaItem additional in group.Additional)
+            {
+                result[additional.Id] = size;
+            }
+        }
+
+        return result;
     }
 
     public void ResetState(CollectionEnumeratorState state) =>
@@ -47,4 +68,7 @@ public sealed class ChronologicalMediaCollectionEnumerator : IMediaCollectionEnu
     public Option<TimeSpan> MinimumDuration => _lazyMinimumDuration.Value;
 
     public int Count => _sortedMediaItems.Count;
+
+    public int GroupSizeForMediaItem(MediaItem mediaItem) =>
+        _lazyMediaItemGroupSize.Value.GetValueOrDefault(mediaItem.Id, 1);
 }

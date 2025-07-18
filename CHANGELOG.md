@@ -111,6 +111,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Count`: same behavior as before, requires a number of media items to play and will always schedule the same number
   - `Collection Size`: similar to count of zero before, will play all media items from the collection before continuing to the next schedule item
   - `Playlist Item Size`: will play all media items from the current playlist item before continuing to the next schedule item
+  - `Multi-Episode Group Size`: will play all media items from the current multi-part episode group, or one ungrouped media item
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

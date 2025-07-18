@@ -20,6 +20,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     private int _playoutDurationHours;
     private int _playoutDurationMinutes;
     private TimeSpan? _startTime;
+    private PlaybackOrder _playbackOrder;
 
     public int Id { get; set; }
     public int Index { get; set; }
@@ -61,10 +62,17 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
                 MediaItem = null;
                 SmartCollection = null;
 
+                if (_collectionType != ProgramScheduleItemCollectionType.Playlist &&
+                    MultipleMode is MultipleMode.PlaylistItemSize)
+                {
+                    MultipleMode = MultipleMode.Count;
+                }
+
                 OnPropertyChanged(nameof(Collection));
                 OnPropertyChanged(nameof(MultiCollection));
                 OnPropertyChanged(nameof(MediaItem));
                 OnPropertyChanged(nameof(SmartCollection));
+                OnPropertyChanged(nameof(MultiCollection));
             }
 
             if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
@@ -102,7 +110,28 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
         _ => string.Empty
     };
 
-    public PlaybackOrder PlaybackOrder { get; set; }
+    public PlaybackOrder PlaybackOrder
+    {
+        get => _playbackOrder;
+        set
+        {
+            if (value == _playbackOrder)
+            {
+                return;
+            }
+
+            _playbackOrder = value;
+
+            if (_playbackOrder is not PlaybackOrder.Chronological && MultipleMode is MultipleMode.MultiEpisodeGroupSize)
+            {
+                MultipleMode = MultipleMode.Count;
+            }
+
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanFillWithGroups));
+            OnPropertyChanged(nameof(MultipleMode));
+        }
+    }
 
     public MultipleMode MultipleMode { get; set; }
 

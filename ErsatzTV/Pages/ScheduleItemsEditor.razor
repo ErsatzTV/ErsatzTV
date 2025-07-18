@@ -31,6 +31,9 @@
                             case MultipleMode.PlaylistItemSize:
                                 mode = "Playlist Item Size";
                                 break;
+                            case MultipleMode.MultiEpisodeGroupSize:
+                                mode = "Multi-Episode Group Size";
+                                break;
                             case MultipleMode.Count:
                             default:
                                 mode += $" ({_selectedItem.MultipleCount})";
@@ -109,6 +112,9 @@
                                         break;
                                     case MultipleMode.PlaylistItemSize:
                                         @:Playlist Item Size
+                                        break;
+                                    case MultipleMode.MultiEpisodeGroupSize:
+                                        @:Multi-Episode Group Size
                                         break;
                                     case MultipleMode.Count:
                                     default:
@@ -379,6 +385,7 @@
                     </div>
                     <MudSelect @bind-Value="@_selectedItem.MultipleMode" For="@(() => _selectedItem.MultipleMode)">
                         <MudSelectItem Value="MultipleMode.Count">Count</MudSelectItem>
+
                         @if (_selectedItem.CollectionType is not ProgramScheduleItemCollectionType.Playlist)
                         {
                             <MudSelectItem Value="MultipleMode.CollectionSize">Collection Size</MudSelectItem>
@@ -386,6 +393,11 @@
                         else
                         {
                             <MudSelectItem Value="MultipleMode.PlaylistItemSize">Playlist Item Size</MudSelectItem>
+                        }
+
+                        @if (_selectedItem.PlaybackOrder is PlaybackOrder.Chronological)
+                        {
+                            <MudSelectItem Value="MultipleMode.MultiEpisodeGroupSize">Multi-Episode Group Size</MudSelectItem>
                         }
                     </MudSelect>
                 </MudStack>
