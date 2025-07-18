@@ -346,7 +346,7 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         }
     }
 
-    private static async Task WriteBlockPlayoutXml(
+    private async Task WriteBlockPlayoutXml(
         RefreshChannelData request,
         List<PlayoutItem> sorted,
         XmlTemplateContext templateContext,
@@ -358,6 +358,10 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
         XmlMinifier minifier,
         XmlWriter xml)
     {
+        XmltvTimeZone xmltvTimeZone = await _configElementRepository
+            .GetValue<XmltvTimeZone>(ConfigElementKey.XmltvTimeZone)
+            .IfNoneAsync(XmltvTimeZone.Local);
+
         var groups = sorted.GroupBy(s => new { s.GuideStart, s.GuideFinish, s.GuideGroup });
         foreach (var group in groups)
         {
@@ -373,7 +377,12 @@ public class RefreshChannelDataHandler : IRequestHandler<RefreshChannelData>
 
             TimeSpan perItem = groupDuration / itemsToInclude.Count;
 
-            DateTimeOffset currentStart = new DateTimeOffset(groupStart, TimeSpan.Zero).ToLocalTime();
+            DateTimeOffset currentStart = xmltvTimeZone switch
+            {
+                XmltvTimeZone.Utc => new DateTimeOffset(groupStart, TimeSpan.Zero),
+                _ => new DateTimeOffset(groupStart, TimeSpan.Zero).ToLocalTime()
+            };
+
             DateTimeOffset currentFinish = currentStart + perItem;
 
             foreach (PlayoutItem item in itemsToInclude)
