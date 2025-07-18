@@ -841,6 +841,113 @@ public class PlayoutBuilderTests
         }
 
         [Test]
+        public async Task FloodContent_Should_FloodAroundFixedContent_Multiple_With_Gap()
+        {
+            var floodCollection = new Collection
+            {
+                Id = 1,
+                Name = "Flood Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromMinutes(50), new DateTime(2020, 1, 1)),
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
+                }
+            };
+
+            var fixedCollection = new Collection
+            {
+                Id = 2,
+                Name = "Fixed Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
+                    TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (floodCollection.Id, floodCollection.MediaItems.ToList()),
+                    (fixedCollection.Id, fixedCollection.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemFlood
+                {
+                    Id = 1,
+                    Index = 1,
+                    Collection = floodCollection,
+                    CollectionId = floodCollection.Id,
+                    StartTime = null,
+                    PlaybackOrder = PlaybackOrder.Chronological
+                },
+                new ProgramScheduleItemMultiple
+                {
+                    Id = 2,
+                    Index = 2,
+                    Collection = fixedCollection,
+                    CollectionId = fixedCollection.Id,
+                    StartTime = TimeSpan.FromHours(3),
+                    Count = 2,
+                    PlaybackOrder = PlaybackOrder.Chronological
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                ProgramScheduleAnchors = new List<PlayoutProgramScheduleAnchor>(),
+                Items = new List<PlayoutItem>(),
+                ProgramScheduleAlternates = new List<ProgramScheduleAlternate>(),
+                FillGroupIndices = []
+            };
+
+            IConfigElementRepository configRepo = Substitute.For<IConfigElementRepository>();
+            var televisionRepo = new FakeTelevisionRepository();
+            IArtistRepository artistRepo = Substitute.For<IArtistRepository>();
+            IMultiEpisodeShuffleCollectionEnumeratorFactory factory =
+                Substitute.For<IMultiEpisodeShuffleCollectionEnumeratorFactory>();
+            ILocalFileSystem localFileSystem = Substitute.For<ILocalFileSystem>();
+            var builder = new PlayoutBuilder(
+                Substitute.For<IPlayoutTimeShifter>(),
+                configRepo,
+                fakeRepository,
+                televisionRepo,
+                artistRepo,
+                factory,
+                localFileSystem,
+                _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(7);
+
+            Playout result = await builder.Build(playout, PlayoutBuildMode.Reset, start, finish, _cancellationToken);
+
+            result.Items.Count.ShouldBe(6);
+
+            result.Items[0].StartOffset.TimeOfDay.ShouldBe(TimeSpan.Zero);
+            result.Items[0].MediaItemId.ShouldBe(1);
+            result.Items[1].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromMinutes(50));
+            result.Items[1].MediaItemId.ShouldBe(2);
+            result.Items[2].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromMinutes(50 + 60));
+            result.Items[2].MediaItemId.ShouldBe(1);
+
+            result.Items[3].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(3));
+            result.Items[3].MediaItemId.ShouldBe(3);
+            result.Items[4].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(5));
+            result.Items[4].MediaItemId.ShouldBe(4);
+
+            result.Items[5].StartOffset.TimeOfDay.ShouldBe(TimeSpan.FromHours(6));
+            result.Items[5].MediaItemId.ShouldBe(2);
+
+            result.Anchor.NextStartOffset.ShouldBe(HoursAfterMidnight(7));
+        }
+
+        [Test]
         public async Task FloodContent_Should_FloodWithFixedStartTime()
         {
             var floodCollection = new Collection
