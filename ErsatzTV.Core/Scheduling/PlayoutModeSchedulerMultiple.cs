@@ -61,6 +61,18 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                         };
                     }
                     break;
+                case MultipleMode.MultiEpisodeGroupSize:
+                    if (contentEnumerator is ChronologicalMediaCollectionEnumerator chronologicalEnumerator)
+                    {
+                        foreach (MediaItem current in contentEnumerator.Current)
+                        {
+                            nextState = nextState with
+                            {
+                                MultipleRemaining = chronologicalEnumerator.GroupSizeForMediaItem(current)
+                            };
+                        }
+                    }
+                    break;
             }
         }
 

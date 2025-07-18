@@ -13,5 +13,5 @@ public enum MultipleMode
 
     // from one item (not a multi-episode) to however many multi-episodes are linked together
     // is this limited to chronological and season/episode?
-    MultiEpisodeSize = 3
+    MultiEpisodeGroupSize = 3
 }
