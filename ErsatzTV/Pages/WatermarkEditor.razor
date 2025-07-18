@@ -113,7 +113,8 @@
                 <div class="d-flex">
                     <MudText>Width</MudText>
                 </div>
-                <MudTextField For="@(() => _model.Width)"
+                <MudTextField @bind-Value="_model.Width"
+                              For="@(() => _model.Width)"
                               Adornment="Adornment.End"
                               AdornmentText="%"
                               Disabled="@(_model.Mode == ChannelWatermarkMode.None || _model.Size == WatermarkSize.ActualSize)"

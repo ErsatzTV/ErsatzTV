@@ -116,6 +116,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Collection Size`: similar to count of zero before, will play all media items from the collection before continuing to the next schedule item
   - `Playlist Item Size`: will play all media items from the current playlist item before continuing to the next schedule item
   - `Multi-Episode Group Size`: will play all media items from the current multi-part episode group, or one ungrouped media item
+- Change watermark width and margins to allow decimals
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
@@ -138,7 +139,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix VAAPI tonemap failure
 - Fix green bars after VAAPI tonemap
 - Fix bug where playout mode `Multiple` would ignore fixed start time
-- Fix block playout EPG generation to use XMLTV Time Zone setting
+- Fix block playout EPG generation to use `XMLTV Time Zone` setting
 
 ## [25.2.0] - 2025-06-24
 ### Added
