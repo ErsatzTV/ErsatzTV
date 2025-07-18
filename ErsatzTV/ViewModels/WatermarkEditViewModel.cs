@@ -36,9 +36,9 @@ public class WatermarkEditViewModel
     public ChannelWatermarkImageSource ImageSource { get; set; }
     public WatermarkLocation Location { get; set; }
     public WatermarkSize Size { get; set; }
-    public int Width { get; set; }
-    public int HorizontalMargin { get; set; }
-    public int VerticalMargin { get; set; }
+    public double Width { get; set; }
+    public double HorizontalMargin { get; set; }
+    public double VerticalMargin { get; set; }
     public int FrequencyMinutes { get; set; }
     public int DurationSeconds { get; set; }
     public int Opacity { get; set; }

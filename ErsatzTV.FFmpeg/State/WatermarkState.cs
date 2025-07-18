@@ -4,9 +4,9 @@ public record WatermarkState(
     Option<List<WatermarkFadePoint>> MaybeFadePoints,
     WatermarkLocation Location,
     WatermarkSize Size,
-    int WidthPercent,
-    int HorizontalMarginPercent,
-    int VerticalMarginPercent,
+    double WidthPercent,
+    double HorizontalMarginPercent,
+    double VerticalMarginPercent,
     int Opacity,
     bool PlaceWithinSourceContent);
 

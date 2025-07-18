@@ -18,19 +18,19 @@ public class WatermarkEditViewModelValidator : AbstractValidator<WatermarkEditVi
             .When(vm => vm.ImageSource == ChannelWatermarkImageSource.Custom);
 
         RuleFor(x => x.Width)
-            .GreaterThan(0)
-            .LessThanOrEqualTo(100)
+            .GreaterThan(0.0)
+            .LessThanOrEqualTo(100.0)
             .When(vm => vm.Mode != ChannelWatermarkMode.None &&
                         vm.Size == WatermarkSize.Scaled);
 
         RuleFor(x => x.HorizontalMargin)
-            .GreaterThanOrEqualTo(0)
-            .LessThanOrEqualTo(50)
+            .GreaterThanOrEqualTo(0.0)
+            .LessThanOrEqualTo(50.0)
             .When(vm => vm.Mode != ChannelWatermarkMode.None);
 
         RuleFor(x => x.VerticalMargin)
-            .GreaterThanOrEqualTo(0)
-            .LessThanOrEqualTo(50)
+            .GreaterThanOrEqualTo(0.0)
+            .LessThanOrEqualTo(50.0)
             .When(vm => vm.Mode != ChannelWatermarkMode.None);
 
         RuleFor(x => x.DurationSeconds)

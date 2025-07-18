@@ -320,8 +320,8 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("FrequencyMinutes")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("HorizontalMarginPercent")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("HorizontalMarginPercent")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Image")
                         .HasColumnType("TEXT");
@@ -350,11 +350,11 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
                     b.Property<int>("Size")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("VerticalMarginPercent")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("VerticalMarginPercent")
+                        .HasColumnType("REAL");
 
-                    b.Property<int>("WidthPercent")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("WidthPercent")
+                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 

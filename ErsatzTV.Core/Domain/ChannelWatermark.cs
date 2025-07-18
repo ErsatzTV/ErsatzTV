@@ -12,9 +12,9 @@ public class ChannelWatermark
     public string OriginalContentType { get; set; }
     public WatermarkLocation Location { get; set; }
     public WatermarkSize Size { get; set; }
-    public int WidthPercent { get; set; }
-    public int HorizontalMarginPercent { get; set; }
-    public int VerticalMarginPercent { get; set; }
+    public double WidthPercent { get; set; }
+    public double HorizontalMarginPercent { get; set; }
+    public double VerticalMarginPercent { get; set; }
     public int FrequencyMinutes { get; set; }
     public int DurationSeconds { get; set; }
     public int Opacity { get; set; }
