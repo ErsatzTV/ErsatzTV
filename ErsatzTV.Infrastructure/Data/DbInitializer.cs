@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Reflection;
+using Dapper;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Infrastructure.Data;
@@ -8,6 +9,8 @@ public static class DbInitializer
 {
     public static async Task<Unit> Initialize(TvContext context, CancellationToken cancellationToken)
     {
+        await context.Connection.ExecuteAsync("PRAGMA journal_mode=WAL", cancellationToken);
+
         if (!context.LanguageCodes.Any())
         {
             var assembly = Assembly.GetEntryAssembly();
