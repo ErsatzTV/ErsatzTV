@@ -71,10 +71,17 @@ public abstract class ProgramScheduleItemCommandBase
             case PlayoutMode.One:
                 break;
             case PlayoutMode.Multiple:
-                if (item.MultipleCount.GetValueOrDefault() < 0)
+                if (item.MultipleMode is MultipleMode.PlaylistItemSize &&
+                    item.CollectionType is not ProgramScheduleItemCollectionType.Playlist)
                 {
                     return BaseError.New(
-                        "[MultipleCount] must be greater than or equal to 0 for playout mode 'multiple'");
+                        "[MultipleMode] cannot be [PlaylistItemSize] when collection is not a playlist");
+                }
+
+                if (item.MultipleMode is MultipleMode.Count && item.MultipleCount.GetValueOrDefault() < 1)
+                {
+                    return BaseError.New(
+                        "[MultipleCount] must be greater than 0 for playout mode 'multiple / count'");
                 }
 
                 break;
@@ -248,7 +255,8 @@ public abstract class ProgramScheduleItemCommandBase
                 PlaylistId = item.PlaylistId,
                 PlaybackOrder = item.PlaybackOrder,
                 FillWithGroupMode = item.FillWithGroupMode,
-                Count = item.MultipleCount.GetValueOrDefault(),
+                MultipleMode = item.MultipleMode,
+                Count = item.MultipleMode is MultipleMode.Count ? item.MultipleCount.GetValueOrDefault() : 0,
                 CustomTitle = item.CustomTitle,
                 GuideMode = item.GuideMode,
                 PreRollFillerId = item.PreRollFillerId,

@@ -1503,7 +1503,7 @@ public class PlayoutBuilderTests
         }
 
         [Test]
-        public async Task Auto_Zero_MultipleCount()
+        public async Task Multiple_Mode_Collection_Size()
         {
             var collectionOne = new Collection
             {
@@ -1543,6 +1543,7 @@ public class PlayoutBuilderTests
                     CollectionId = collectionOne.Id,
                     StartTime = null,
                     Count = 0,
+                    MultipleMode = MultipleMode.CollectionSize,
                     PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemMultiple
@@ -1553,6 +1554,7 @@ public class PlayoutBuilderTests
                     CollectionId = collectionTwo.Id,
                     StartTime = null,
                     Count = 0,
+                    MultipleMode = MultipleMode.CollectionSize,
                     PlaybackOrder = PlaybackOrder.Chronological
                 }
             };

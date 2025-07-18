@@ -106,10 +106,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Split main `Settings` page into multiple pages
 - Update UI layout on all pages to be less cramped and to work better on mobile
 - Add CPU and Video Controller info to `Troubleshooting` > `General` output
-- Expand special zero-count case for `Multiple` playout mode with playlists
-  - This configuration will automatically maintain the multiple count so that it is equal to the number of items in each playlist item
-  - This configuration should be used if you want to play every media item in a playlist item exactly once before advancing
 - Enable write-ahead logging (WAL) mode on SQLite databases
+- Add `Multiple Mode` option to schedule items editor and remove support for count values of zero
+  - `Count`: same behavior as before, requires a number of media items to play and will always schedule the same number
+  - `Collection Size`: similar to count of zero before, will play all media items from the collection before continuing to the next schedule item
+  - `Playlist Item Size`: will play all media items from the current playlist item before continuing to the next schedule item
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices

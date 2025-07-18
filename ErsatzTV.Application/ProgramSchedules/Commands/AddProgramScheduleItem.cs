@@ -18,6 +18,7 @@ public record AddProgramScheduleItem(
     int? PlaylistId,
     PlaybackOrder PlaybackOrder,
     FillWithGroupMode FillWithGroupMode,
+    MultipleMode MultipleMode,
     int? MultipleCount,
     TimeSpan? PlayoutDuration,
     TailMode TailMode,

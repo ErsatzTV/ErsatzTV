@@ -23,6 +23,7 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         NamedMediaItemViewModel mediaItem,
         PlaybackOrder playbackOrder,
         FillWithGroupMode fillWithGroupMode,
+        MultipleMode multipleMode,
         int count,
         string customTitle,
         GuideMode guideMode,
@@ -61,8 +62,13 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         preferredAudioLanguageCode,
         preferredAudioTitle,
         preferredSubtitleLanguageCode,
-        subtitleMode) =>
+        subtitleMode)
+    {
+        MultipleMode = multipleMode;
         Count = count;
+    }
+
+    public MultipleMode MultipleMode { get; set; }
 
     public int Count { get; }
 }

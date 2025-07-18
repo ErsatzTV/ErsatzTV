@@ -16,6 +16,7 @@ public interface IProgramScheduleItemRequest
     PlayoutMode PlayoutMode { get; }
     PlaybackOrder PlaybackOrder { get; }
     FillWithGroupMode FillWithGroupMode { get; }
+    MultipleMode MultipleMode { get; }
     int? MultipleCount { get; }
     TimeSpan? PlayoutDuration { get; }
     TailMode TailMode { get; }
