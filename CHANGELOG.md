@@ -138,6 +138,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix VAAPI tonemap failure
 - Fix green bars after VAAPI tonemap
 - Fix bug where playout mode `Multiple` would ignore fixed start time
+- Fix block playout EPG generation to use XMLTV Time Zone setting
 
 ## [25.2.0] - 2025-06-24
 ### Added

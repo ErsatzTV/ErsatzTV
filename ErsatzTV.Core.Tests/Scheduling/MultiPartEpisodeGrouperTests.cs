@@ -57,7 +57,9 @@ public class MultiPartEpisodeGrouperTests
 
     [Test]
     [TestCase("The Meddlers (Part One)", "The Meddlers (Part Two)", "The Meddlers (Part Three)")]
-    [TestCase("S01E01 The Slaves of Jedikiah, Part 1", "S01E02 The Slaves of Jedikiah, Part 2", "S01E03 The Slaves of Jedikiah, Part 3")]
+    [TestCase("The Slaves of Jedikiah, Part 1", "The Slaves of Jedikiah, Part 2", "The Slaves of Jedikiah, Part 3")]
+    [TestCase("An Unearthly Child: An Unearthly Child (1)", "An Unearthly Child: The Cave of Skulls (2)", "An Unearthly Child: The Forest of Fear (3)")]
+    [TestCase("The Savages (1)", "The Savages (2)", "The Savages (3)")]
     public void All_Grouped(string one, string two, string three)
     {
         var mediaItems = new List<MediaItem>
