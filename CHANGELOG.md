@@ -109,6 +109,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Expand special zero-count case for `Multiple` playout mode with playlists
   - This configuration will automatically maintain the multiple count so that it is equal to the number of items in each playlist item
   - This configuration should be used if you want to play every media item in a playlist item exactly once before advancing
+- Enable write-ahead logging (WAL) mode on SQLite databases
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
