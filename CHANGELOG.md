@@ -95,6 +95,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - The FFmpeg report of the playback attempt
     - The media info for the content
     - The `Troubleshooting` > `General` output
+- Support `(Part [english number])` name suffixes for multi-part episode grouping, for example:
+  - `Awesome Episode (Part One)`
+  - `Better Episode (Part Two)`
+  - `Not So Great (Part Three)`
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
