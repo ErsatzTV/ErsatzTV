@@ -33,6 +33,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             TailFiller = null,
             FallbackFiller = null,
             Count = 0,
+            MultipleMode = MultipleMode.CollectionSize,
             CustomTitle = "CustomTitle"
         };
 

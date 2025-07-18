@@ -104,6 +104,8 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
 
     public PlaybackOrder PlaybackOrder { get; set; }
 
+    public MultipleMode MultipleMode { get; set; }
+
     public int? MultipleCount
     {
         get => PlayoutMode == PlayoutMode.Multiple ? _multipleCount : null;

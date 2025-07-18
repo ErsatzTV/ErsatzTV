@@ -3488,6 +3488,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<int>("Count")
                         .HasColumnType("int");
 
+                    b.Property<int>("MultipleMode")
+                        .HasColumnType("int");
+
                     b.ToTable("ProgramScheduleMultipleItem", (string)null);
                 });
 

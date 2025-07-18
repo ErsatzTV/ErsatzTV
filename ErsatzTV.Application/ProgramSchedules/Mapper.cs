@@ -155,6 +155,7 @@ internal static class Mapper
                     },
                     multiple.PlaybackOrder,
                     multiple.FillWithGroupMode,
+                    multiple.MultipleMode,
                     multiple.Count,
                     multiple.CustomTitle,
                     multiple.GuideMode,

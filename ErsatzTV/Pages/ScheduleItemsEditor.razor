@@ -21,9 +21,21 @@
                 {
                     string start = _selectedItem.StartType == StartType.Fixed ? _selectedItem.StartTime == null ? string.Empty : DateTime.Today.Add(_selectedItem.StartTime.Value).ToShortTimeString() : "Dynamic";
                     var mode = _selectedItem.PlayoutMode.ToString();
-                    @if (_selectedItem.PlayoutMode == PlayoutMode.Multiple && _selectedItem.MultipleCount.HasValue)
+                    @if (_selectedItem.PlayoutMode is PlayoutMode.Multiple)
                     {
-                        mode += $" ({_selectedItem.MultipleCount})";
+                        switch (_selectedItem.MultipleMode)
+                        {
+                            case MultipleMode.CollectionSize:
+                                mode = "Collection Size";
+                                break;
+                            case MultipleMode.PlaylistItemSize:
+                                mode = "Playlist Item Size";
+                                break;
+                            case MultipleMode.Count:
+                            default:
+                                mode += $" ({_selectedItem.MultipleCount})";
+                                break;
+                        }
                     }
 
                     var result = $"{_schedule.Name} ({start} - {_selectedItem.CollectionName} - {mode})";
@@ -88,10 +100,25 @@
                     </MudTd>
                     <MudTd DataLabel="Playout Mode">
                         <MudText Typo="@Typo.body2">
-                            @context.PlayoutMode
-                            @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
+                            @if (context.PlayoutMode is PlayoutMode.Multiple)
                             {
-                                @($" ({context.MultipleCount})")
+                                switch (context.MultipleMode)
+                                {
+                                    case MultipleMode.CollectionSize:
+                                        @:Collection Size
+                                        break;
+                                    case MultipleMode.PlaylistItemSize:
+                                        @:Playlist Item Size
+                                        break;
+                                    case MultipleMode.Count:
+                                    default:
+                                        @($"Multiple ({context.MultipleCount})")
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                @context.PlayoutMode
                             }
                         </MudText>
                     </MudTd>
@@ -348,11 +375,27 @@
                 </MudStack>
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
+                        <MudText>Multiple Mode</MudText>
+                    </div>
+                    <MudSelect @bind-Value="@_selectedItem.MultipleMode" For="@(() => _selectedItem.MultipleMode)">
+                        <MudSelectItem Value="MultipleMode.Count">Count</MudSelectItem>
+                        @if (_selectedItem.CollectionType is not ProgramScheduleItemCollectionType.Playlist)
+                        {
+                            <MudSelectItem Value="MultipleMode.CollectionSize">Collection Size</MudSelectItem>
+                        }
+                        else
+                        {
+                            <MudSelectItem Value="MultipleMode.PlaylistItemSize">Playlist Item Size</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                    <div class="d-flex">
                         <MudText>Multiple Count</MudText>
                     </div>
                     <MudTextField @bind-Value="@_selectedItem.MultipleCount"
                                   For="@(() => _selectedItem.MultipleCount)"
-                                  Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
+                                  Disabled="@(_selectedItem.PlayoutMode is not PlayoutMode.Multiple || _selectedItem.MultipleMode is not MultipleMode.Count)"/>
                 </MudStack>
                 <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
                     <div class="d-flex">
@@ -723,6 +766,7 @@
         switch (item)
         {
             case ProgramScheduleItemMultipleViewModel multiple:
+                result.MultipleMode = multiple.MultipleMode;
                 result.MultipleCount = multiple.Count;
                 break;
             case ProgramScheduleItemDurationViewModel duration:
@@ -786,6 +830,7 @@
             PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
             SubtitleMode = item.SubtitleMode,
 
+            MultipleMode = item.MultipleMode,
             MultipleCount = item.MultipleCount,
             PlayoutDuration = item.PlayoutDuration,
             TailMode = item.TailMode,
@@ -841,6 +886,7 @@
             item.Playlist?.Id,
             item.PlaybackOrder,
             item.FillWithGroupMode,
+            item.MultipleMode,
             item.MultipleCount,
             item.PlayoutDuration,
             item.TailMode,

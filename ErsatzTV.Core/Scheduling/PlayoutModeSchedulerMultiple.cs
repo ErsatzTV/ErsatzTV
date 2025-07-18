@@ -42,22 +42,25 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
         if (nextState.MultipleRemaining == 0)
         {
-            // playlist count of zero means play all media items in the current playlist item
-            if (contentEnumerator is PlaylistEnumerator { CurrentEnumeratorPlayAll: true } playlistEnumerator)
+            switch (scheduleItem.MultipleMode)
             {
-                nextState = nextState with
-                {
-                    MultipleRemaining = playlistEnumerator
-                        .ChildEnumerators[playlistEnumerator.EnumeratorIndex]
-                        .Enumerator.Count
-                };
-            }
-            else
-            {
-                nextState = nextState with
-                {
-                    MultipleRemaining = _collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
-                };
+                case MultipleMode.CollectionSize:
+                    nextState = nextState with
+                    {
+                        MultipleRemaining = _collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
+                    };
+                    break;
+                case MultipleMode.PlaylistItemSize:
+                    if (contentEnumerator is PlaylistEnumerator { CurrentEnumeratorPlayAll: true } playlistEnumerator)
+                    {
+                        nextState = nextState with
+                        {
+                            MultipleRemaining = playlistEnumerator
+                                .ChildEnumerators[playlistEnumerator.EnumeratorIndex]
+                                .Enumerator.Count
+                        };
+                    }
+                    break;
             }
         }
 
