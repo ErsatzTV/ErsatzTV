@@ -24,6 +24,8 @@ public class PlaylistEnumerator : IMediaCollectionEnumerator
 
     public ImmutableList<PlaylistEnumeratorCollectionKey> ChildEnumerators { get; private set; }
 
+    public bool CurrentEnumeratorPlayAll => _playAll[EnumeratorIndex];
+
     public int EnumeratorIndex { get; private set; }
 
     public void ResetState(CollectionEnumeratorState state) =>

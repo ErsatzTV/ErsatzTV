@@ -33,19 +33,34 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
         PlayoutBuilderState nextState = playoutBuilderState with
         {
+            CurrentTime = firstStart,
             MultipleRemaining = playoutBuilderState.MultipleRemaining.IfNone(scheduleItem.Count)
         };
 
-        if (nextState.MultipleRemaining == 0)
-        {
-            nextState = nextState with
-            {
-                MultipleRemaining = _collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
-            };
-        }
-
         IMediaCollectionEnumerator contentEnumerator =
             collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
+
+        if (nextState.MultipleRemaining == 0)
+        {
+            // playlist count of zero means play all media items in the current playlist item
+            if (contentEnumerator is PlaylistEnumerator { CurrentEnumeratorPlayAll: true } playlistEnumerator)
+            {
+                nextState = nextState with
+                {
+                    MultipleRemaining = playlistEnumerator
+                        .ChildEnumerators[playlistEnumerator.EnumeratorIndex]
+                        .Enumerator.Count
+                };
+            }
+            else
+            {
+                nextState = nextState with
+                {
+                    MultipleRemaining = _collectionItemCount[CollectionKey.ForScheduleItem(scheduleItem)]
+                };
+            }
+        }
+
         while (contentEnumerator.Current.IsSome && nextState.MultipleRemaining > 0 &&
                nextState.CurrentTime < hardStop)
         {

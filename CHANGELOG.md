@@ -106,6 +106,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Split main `Settings` page into multiple pages
 - Update UI layout on all pages to be less cramped and to work better on mobile
 - Add CPU and Video Controller info to `Troubleshooting` > `General` output
+- Expand special zero-count case for `Multiple` playout mode with playlists
+  - This configuration will automatically maintain the multiple count so that it is equal to the number of items in each playlist item
+  - This configuration should be used if you want to play every media item in a playlist item exactly once before advancing
 
 ### Fixed
 - Fix QSV acceleration in docker with older Intel devices
@@ -127,6 +130,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix some NVIDIA edge cases when media servers don't provide video bit depth information
 - Fix VAAPI tonemap failure
 - Fix green bars after VAAPI tonemap
+- Fix bug where playout mode `Multiple` would ignore fixed start time
 
 ## [25.2.0] - 2025-06-24
 ### Added
