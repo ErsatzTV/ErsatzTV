@@ -4,7 +4,7 @@ using LanguageExt.UnsafeValueAccess;
 
 namespace ErsatzTV.Core.Scheduling;
 
-public static class MultiPartEpisodeGrouper
+public static partial class MultiPartEpisodeGrouper
 {
     public static List<GroupedMediaItem> GroupMediaItems(IList<MediaItem> mediaItems, bool treatCollectionsAsShows)
     {
@@ -118,29 +118,25 @@ public static class MultiPartEpisodeGrouper
     {
         foreach (EpisodeMetadata metadata in e.EpisodeMetadata.HeadOrNone())
         {
-            const string PATTERN = @"^.*\((\d+)\)( - .*)?$";
-            Match match = Regex.Match(metadata.Title ?? string.Empty, PATTERN);
+            Match match = Pattern1Regex().Match(metadata.Title ?? string.Empty);
             if (match.Success && int.TryParse(match.Groups[1].Value, out int value1))
             {
                 return value1;
             }
 
-            const string PATTERN_2 = @"^.*\(?Part (\d+)\)?$";
-            Match match2 = Regex.Match(metadata.Title ?? string.Empty, PATTERN_2);
+            Match match2 = Pattern2Regex().Match(metadata.Title ?? string.Empty);
             if (match2.Success && int.TryParse(match2.Groups[1].Value, out int value2))
             {
                 return value2;
             }
 
-            const string PATTERN_3 = @"^.*\(([MDCLXVI]+)\)( - .*)?$";
-            Match match3 = Regex.Match(metadata.Title ?? string.Empty, PATTERN_3);
+            Match match3 = Pattern3Regex().Match(metadata.Title ?? string.Empty);
             if (match3.Success && TryParseRoman(match3.Groups[1].Value, out int value3))
             {
                 return value3;
             }
 
-            const string PATTERN_4 = @"^.*Part (\w+)$";
-            Match match4 = Regex.Match(metadata.Title ?? string.Empty, PATTERN_4);
+            Match match4 = Pattern4Regex().Match(metadata.Title ?? string.Empty);
             if (match4.Success && TryParseEnglish(match4.Groups[1].Value, out int value4))
             {
                 return value4;
@@ -229,4 +225,16 @@ public static class MultiPartEpisodeGrouper
                 return false;
         }
     }
+
+    [GeneratedRegex(@"^.*\((\d+)\)( - .*)?$")]
+    private static partial Regex Pattern1Regex();
+
+    [GeneratedRegex(@"^.*\(?Part (\d+)\)?$")]
+    private static partial Regex Pattern2Regex();
+
+    [GeneratedRegex(@"^.*\(([MDCLXVI]+)\)( - .*)?$")]
+    private static partial Regex Pattern3Regex();
+
+    [GeneratedRegex(@"^.*\(?Part (\w+)\)?$")]
+    private static partial Regex Pattern4Regex();
 }
