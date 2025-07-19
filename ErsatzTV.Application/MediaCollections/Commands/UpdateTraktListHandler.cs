@@ -1,12 +1,17 @@
+using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class UpdateTraktListHandler(IDbContextFactory<TvContext> dbContextFactory)
+public class UpdateTraktListHandler(
+    IDbContextFactory<TvContext> dbContextFactory,
+    IEntityLocker entityLocker,
+    ChannelWriter<IBackgroundServiceRequest> workerChannel)
     : IRequestHandler<UpdateTraktList, Option<BaseError>>
 {
     public async Task<Option<BaseError>> Handle(UpdateTraktList request, CancellationToken cancellationToken)
@@ -42,11 +47,16 @@ public class UpdateTraktListHandler(IDbContextFactory<TvContext> dbContextFactor
                             PlaylistGroup = traktListGroup
                         };
 
+                        traktList.Playlist = playlist;
+
                         await dbContext.Playlists.AddAsync(playlist, cancellationToken);
                         await dbContext.SaveChangesAsync(cancellationToken);
                     }
 
-                    // TODO: write sync playlist message to worker channel
+                    if (entityLocker.LockTrakt())
+                    {
+                        await workerChannel.WriteAsync(new MatchTraktListItems(traktList.Id), cancellationToken);
+                    }
                 }
                 else if (traktList.PlaylistId is not null)
                 {

@@ -81,10 +81,10 @@
                         </MudText>
                     </MudTd>
                     <MudTd DataLabel="Play All">
-                        <MudCheckBox T="bool" Value="@context.PlayAll" ValueChanged="@(e => UpdatePlayAll(context, e))"/>
+                        <MudCheckBox T="bool" Value="@context.PlayAll" ValueChanged="@(e => UpdatePlayAll(context, e))" Disabled="@(_playlist.IsSystem)"/>
                     </MudTd>
                     <MudTd DataLabel="Show In EPG">
-                        <MudCheckBox T="bool" Value="@context.IncludeInProgramGuide" ValueChanged="@(e => UpdateEPG(context, e))"/>
+                        <MudCheckBox T="bool" Value="@context.IncludeInProgramGuide" ValueChanged="@(e => UpdateEPG(context, e))" Disabled="@(_playlist.IsSystem)"/>
                     </MudTd>
                     <MudTd>
                         <div class="d-flex">

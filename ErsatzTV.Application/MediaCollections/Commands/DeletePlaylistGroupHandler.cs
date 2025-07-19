@@ -18,6 +18,11 @@ public class DeletePlaylistGroupHandler(IDbContextFactory<TvContext> dbContextFa
 
         foreach (PlaylistGroup playlistGroup in maybePlaylistGroup)
         {
+            if (playlistGroup.IsSystem)
+            {
+                return BaseError.New("Cannot delete system playlist group");
+            }
+
             dbContext.PlaylistGroups.Remove(playlistGroup);
             await dbContext.SaveChangesAsync(cancellationToken);
         }

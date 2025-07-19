@@ -58,7 +58,7 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
 
         // if we get a url, ensure it's for trakt.tv
         Match match = Uri.IsWellFormedUriString(request.TraktListUrl, UriKind.Absolute)
-            ? UriTraktListRegex().Match(request.TraktListUrl)
+            ? MatchTraktListUrl(request.TraktListUrl)
             : ShorthandTraktListRegex().Match(request.TraktListUrl);
 
         if (match.Success)
@@ -71,6 +71,17 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         return BaseError.New("Invalid Trakt list url");
     }
 
+    private static Match MatchTraktListUrl(string traktListUrl)
+    {
+        Match match = UriTraktListRegex().Match(traktListUrl);
+        if (!match.Success)
+        {
+            match = UriTraktListRegex2().Match(traktListUrl);
+        }
+
+        return match;
+    }
+
     private async Task<Either<BaseError, Unit>> DoAdd(Parameters parameters)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -80,6 +91,7 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
 
         foreach (TraktList list in maybeList.RightToSeq())
         {
+            list.User = parameters.User.ToLowerInvariant();
             maybeList = await SaveList(dbContext, list);
         }
 
@@ -99,6 +111,9 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
 
     [GeneratedRegex(@"https:\/\/trakt\.tv\/users\/([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
     private static partial Regex UriTraktListRegex();
+
+    [GeneratedRegex(@"https:\/\/trakt\.tv\/lists\/([\w\-_]+)\/([\w\-_]+)")]
+    private static partial Regex UriTraktListRegex2();
 
     [GeneratedRegex(@"([\w\-_]+)\/(?:lists\/)?([\w\-_]+)")]
     private static partial Regex ShorthandTraktListRegex();

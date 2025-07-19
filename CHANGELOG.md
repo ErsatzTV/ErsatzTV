@@ -100,6 +100,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Better Episode (Part Two)`
   - `Not So Great (Part Three)`
 - Add Trakt List option `Auto Refresh` to automatically update list from trakt.tv once each day
+- Add Trakt List option `Generate Playlist` to automatically generate ETV Playlist from matched Trakt List items
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
@@ -141,6 +142,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix green bars after VAAPI tonemap
 - Fix bug where playout mode `Multiple` would ignore fixed start time
 - Fix block playout EPG generation to use `XMLTV Time Zone` setting
+- Fix adding "official" Trakt lists
 
 ## [25.2.0] - 2025-06-24
 ### Added

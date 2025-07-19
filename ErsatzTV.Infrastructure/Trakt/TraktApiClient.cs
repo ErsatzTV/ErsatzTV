@@ -13,15 +13,12 @@ namespace ErsatzTV.Infrastructure.Trakt;
 public class TraktApiClient : ITraktApiClient
 {
     private readonly ILogger<TraktApiClient> _logger;
-    private readonly ITraktApi _traktApi;
     private readonly IOptions<TraktConfiguration> _traktConfiguration;
 
     public TraktApiClient(
-        ITraktApi traktApi,
         IOptions<TraktConfiguration> traktConfiguration,
         ILogger<TraktApiClient> logger)
     {
-        _traktApi = traktApi;
         _traktConfiguration = traktConfiguration;
         _logger = logger;
     }
@@ -30,10 +27,9 @@ public class TraktApiClient : ITraktApiClient
     {
         try
         {
-            TraktListResponse response = await JsonService().GetUserList(
-                _traktConfiguration.Value.ClientId,
-                user,
-                list);
+            TraktListResponse response = string.Equals(user, "official", StringComparison.OrdinalIgnoreCase)
+                ? await JsonService().GetOfficialList(_traktConfiguration.Value.ClientId, list)
+                : await JsonService().GetUserList(_traktConfiguration.Value.ClientId, user, list);
 
             return new TraktList
             {
@@ -62,10 +58,9 @@ public class TraktApiClient : ITraktApiClient
         {
             var result = new List<TraktListItemWithGuids>();
 
-            List<TraktListItemResponse> apiItems = await _traktApi.GetUserListItems(
-                _traktConfiguration.Value.ClientId,
-                user,
-                list);
+            List<TraktListItemResponse> apiItems = string.Equals(user, "official", StringComparison.OrdinalIgnoreCase)
+                ? await JsonService().GetOfficialListItems(_traktConfiguration.Value.ClientId, list)
+                : await JsonService().GetUserListItems(_traktConfiguration.Value.ClientId, user, list);
 
             foreach (TraktListItemResponse apiItem in apiItems)
             {
