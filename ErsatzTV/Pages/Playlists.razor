@@ -72,7 +72,11 @@
                                         {
                                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" Href="@($"media/playlists/{playlistId}")"/>
                                         }
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" OnClick="@(_ => DeleteItem(item.Value))"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Medium"
+                                                       Color="Color.Inherit"
+                                                       Disabled="@item.Value.IsSystem"
+                                                       OnClick="@(_ => DeleteItem(item.Value))"/>
                                     </div>
                                 </div>
                             </BodyContent>
@@ -128,12 +132,9 @@
                 Logger.LogError("Unexpected error adding playlist group: {Error}", error.Value);
             }
 
-            foreach (PlaylistGroupViewModel playlistGroup in result.RightToSeq())
+            foreach (PlaylistGroupViewModel _ in result.RightToSeq())
             {
-                _treeItems.Add(new TreeItemData<PlaylistTreeItemViewModel> { Value = new PlaylistTreeItemViewModel(playlistGroup) });
-                _playlistGroupName = null;
-
-                _playlistGroups = await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token);
+                await ReloadPlaylistTree();
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -175,7 +176,13 @@
             DialogResult result = await dialog.Result;
             if (result is not null && !result.Canceled)
             {
-                await Mediator.Send(new DeletePlaylistGroup(playlistGroupId), _cts.Token);
+                Option<BaseError> deleteResult = await Mediator.Send(new DeletePlaylistGroup(playlistGroupId), _cts.Token);
+                foreach (BaseError error in deleteResult)
+                {
+                    Snackbar.Add(error.ToString(), Severity.Error);
+                    return;
+                }
+
                 _treeItems.RemoveAll(i => i.Value?.PlaylistGroupId == playlistGroupId);
                 if (_selectedPlaylistGroup?.Id == playlistGroupId)
                 {
@@ -196,7 +203,13 @@
             DialogResult result = await dialog.Result;
             if (result is not null && !result.Canceled)
             {
-                await Mediator.Send(new DeletePlaylist(playlistId), _cts.Token);
+                Option<BaseError> deleteResult = await Mediator.Send(new DeletePlaylist(playlistId), _cts.Token);
+                foreach (BaseError error in deleteResult)
+                {
+                    Snackbar.Add(error.ToString(), Severity.Error);
+                    return;
+                }
+
                 foreach (PlaylistTreeItemViewModel parent in _treeItems.Map(i => i.Value))
                 {
                     parent.TreeItems.RemoveAll(i => i.Value == treeItem);

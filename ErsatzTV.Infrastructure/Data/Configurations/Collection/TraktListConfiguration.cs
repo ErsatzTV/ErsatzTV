@@ -14,5 +14,11 @@ public class TraktListConfiguration : IEntityTypeConfiguration<TraktList>
             .WithOne(i => i.TraktList)
             .HasForeignKey(i => i.TraktListId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(i => i.Playlist)
+            .WithMany()
+            .HasForeignKey(i => i.PlaylistId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
     }
 }

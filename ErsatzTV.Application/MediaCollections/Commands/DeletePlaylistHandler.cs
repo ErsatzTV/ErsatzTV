@@ -18,6 +18,11 @@ public class DeletePlaylistHandler(IDbContextFactory<TvContext> dbContextFactory
 
         foreach (Playlist playlist in maybePlaylist)
         {
+            if (playlist.IsSystem)
+            {
+                return BaseError.New("Cannot delete system (generated) playlist");
+            }
+
             dbContext.Playlists.Remove(playlist);
             await dbContext.SaveChangesAsync(cancellationToken);
         }

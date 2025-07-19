@@ -7,4 +7,5 @@ public record TraktListViewModel(
     string Name,
     int ItemCount,
     int MatchCount,
-    bool AutoRefresh);
+    bool AutoRefresh,
+    bool GeneratePlaylist);

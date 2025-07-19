@@ -13,6 +13,7 @@ public class PlaylistTreeItemViewModel
         TreeItems = [];
         PlaylistGroupId = playlistGroup.Id;
         Icon = Icons.Material.Filled.Folder;
+        IsSystem = playlistGroup.IsSystem;
     }
 
     public PlaylistTreeItemViewModel(TreeGroupViewModel playlistGroup)
@@ -23,6 +24,7 @@ public class PlaylistTreeItemViewModel
             { Value = new PlaylistTreeItemViewModel(p) }).ToList();
         PlaylistGroupId = playlistGroup.Id;
         Icon = Icons.Material.Filled.Folder;
+        IsSystem = playlistGroup.IsSystem;
     }
 
     public PlaylistTreeItemViewModel(PlaylistViewModel playlist)
@@ -31,6 +33,7 @@ public class PlaylistTreeItemViewModel
         TreeItems = [];
         CanExpand = false;
         PlaylistId = playlist.Id;
+        IsSystem = playlist.IsSystem;
     }
 
     public PlaylistTreeItemViewModel(TreeItemViewModel playlist)
@@ -39,6 +42,7 @@ public class PlaylistTreeItemViewModel
         TreeItems = [];
         CanExpand = false;
         PlaylistId = playlist.Id;
+        IsSystem = playlist.IsSystem;
     }
 
     public string Text { get; }
@@ -52,6 +56,8 @@ public class PlaylistTreeItemViewModel
     public int? PlaylistId { get; }
 
     public int? PlaylistGroupId { get; }
+
+    public bool IsSystem { get; }
 
     public List<TreeItemData<PlaylistTreeItemViewModel>> TreeItems { get; }
 }

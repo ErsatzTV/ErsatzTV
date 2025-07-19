@@ -19,4 +19,16 @@ public interface ITraktApi
         string clientId,
         string user,
         string list);
+
+    [Get("/lists/{list}")]
+    Task<TraktListResponse> GetOfficialList(
+        [Header("trakt-api-key")]
+        string clientId,
+        string list);
+
+    [Get("/lists/{list}/items")]
+    Task<List<TraktListItemResponse>> GetOfficialListItems(
+        [Header("trakt-api-key")]
+        string clientId,
+        string list);
 }

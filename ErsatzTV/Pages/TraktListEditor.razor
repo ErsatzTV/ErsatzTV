@@ -30,6 +30,14 @@
                     <MudText Typo="Typo.caption" Style="font-weight: normal">Update list from trakt.tv once each day</MudText>
                 </MudCheckBox>
             </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Generate Playlist</MudText>
+                </div>
+                <MudCheckBox @bind-Value="@_model.GeneratePlaylist" For="@(() => _model.GeneratePlaylist)" Dense="true">
+                    <MudText Typo="Typo.caption" Style="font-weight: normal">Generate a playlist from the sorted trakt list items</MudText>
+                </MudCheckBox>
+            </MudStack>
         </MudContainer>
     </div>
 </MudForm>
@@ -59,6 +67,7 @@
                 _model.Id = viewModel.Id;
                 _model.Slug = viewModel.Slug;
                 _model.AutoRefresh = viewModel.AutoRefresh;
+                _model.GeneratePlaylist = viewModel.GeneratePlaylist;
             },
             () => NavigationManager.NavigateTo("404"));
     }
@@ -68,7 +77,7 @@
         await _form.Validate();
         if (_success)
         {
-            var request = new UpdateTraktList(_model.Id, _model.AutoRefresh);
+            var request = new UpdateTraktList(_model.Id, _model.AutoRefresh, _model.GeneratePlaylist);
             Option<BaseError> result = await Mediator.Send(request, _cts.Token);
             foreach (BaseError error in result)
             {

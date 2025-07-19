@@ -44,6 +44,8 @@ public abstract class TraktCommandBase
         dbContext.TraktLists
             .Include(l => l.Items)
             .ThenInclude(i => i.Guids)
+            .Include(tl => tl.Playlist)
+            .ThenInclude(tl => tl.Items)
             .SelectOneAsync(c => c.Id, c => c.Id == traktListId)
             .Map(o => o.ToValidation<BaseError>($"TraktList {traktListId} does not exist."));
 
@@ -172,6 +174,45 @@ public abstract class TraktCommandBase
                         }
 
                         break;
+                }
+
+                if (list.GeneratePlaylist)
+                {
+                    if (item.MediaItemId is not null)
+                    {
+                        // found matching item - sync as playlist item
+                        PlaylistItem playlistItem = list.Playlist.Items.FirstOrDefault(i => i.Index == item.Rank);
+                        if (playlistItem is null)
+                        {
+                            playlistItem = new PlaylistItem
+                            {
+                                Index = item.Rank,
+                                PlaylistId = list.Playlist.Id,
+                                Playlist = list.Playlist,
+                                IncludeInProgramGuide = true
+                            };
+
+                            await dbContext.PlaylistItems.AddAsync(playlistItem);
+                        }
+
+                        playlistItem.CollectionType = item.Kind switch
+                        {
+                            TraktListItemKind.Movie => ProgramScheduleItemCollectionType.Movie,
+                            TraktListItemKind.Show => ProgramScheduleItemCollectionType.TelevisionShow,
+                            TraktListItemKind.Season => ProgramScheduleItemCollectionType.TelevisionSeason,
+                            _ => ProgramScheduleItemCollectionType.Episode
+                        };
+
+                        playlistItem.MediaItemId = item.MediaItemId;
+                    }
+                    else
+                    {
+                        // could not find item; remove playlist item if present
+                        foreach (PlaylistItem maybeItem in list.Playlist.Items.Find(i => i.Index == item.Rank))
+                        {
+                            list.Playlist.Items.Remove(maybeItem);
+                        }
+                    }
                 }
             }
 
