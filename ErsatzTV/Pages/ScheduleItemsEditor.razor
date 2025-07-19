@@ -383,7 +383,9 @@
                     <div class="d-flex">
                         <MudText>Multiple Mode</MudText>
                     </div>
-                    <MudSelect @bind-Value="@_selectedItem.MultipleMode" For="@(() => _selectedItem.MultipleMode)">
+                    <MudSelect @bind-Value="@_selectedItem.MultipleMode"
+                               For="@(() => _selectedItem.MultipleMode)"
+                               Disabled="@(_selectedItem.PlayoutMode is not PlayoutMode.Multiple)">
                         <MudSelectItem Value="MultipleMode.Count">Count</MudSelectItem>
 
                         @if (_selectedItem.CollectionType is not ProgramScheduleItemCollectionType.Playlist)
