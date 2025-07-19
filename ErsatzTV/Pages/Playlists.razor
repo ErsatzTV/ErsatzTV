@@ -128,12 +128,9 @@
                 Logger.LogError("Unexpected error adding playlist group: {Error}", error.Value);
             }
 
-            foreach (PlaylistGroupViewModel playlistGroup in result.RightToSeq())
+            foreach (PlaylistGroupViewModel _ in result.RightToSeq())
             {
-                _treeItems.Add(new TreeItemData<PlaylistTreeItemViewModel> { Value = new PlaylistTreeItemViewModel(playlistGroup) });
-                _playlistGroupName = null;
-
-                _playlistGroups = await Mediator.Send(new GetAllPlaylistGroups(), _cts.Token);
+                await ReloadPlaylistTree();
                 await InvokeAsync(StateHasChanged);
             }
         }

@@ -16,6 +16,8 @@ public class GetPlaylistTreeHandler(IDbContextFactory<TvContext> dbContextFactor
 
         List<PlaylistGroup> playlistGroups = await dbContext.PlaylistGroups
             .AsNoTracking()
+            .OrderByDescending(pg => pg.IsSystem)
+            .ThenBy(pg => pg.Name)
             .Include(g => g.Playlists)
             .ToListAsync(cancellationToken);
 

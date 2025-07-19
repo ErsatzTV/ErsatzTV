@@ -48,6 +48,18 @@ public static class DbInitializer
             await context.SaveChangesAsync(cancellationToken);
         }
 
+        if (!context.PlaylistGroups.Any(pg => pg.IsSystem))
+        {
+            var pg = new PlaylistGroup
+            {
+                Name = "Trakt Lists",
+                IsSystem = true
+            };
+
+            await context.PlaylistGroups.AddAsync(pg, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
         if (context.Resolutions.Any(x => x.Width == 1920))
         {
             return Unit.Default;

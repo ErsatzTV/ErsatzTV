@@ -1,5 +1,7 @@
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
@@ -13,11 +15,47 @@ public class UpdateTraktListHandler(IDbContextFactory<TvContext> dbContextFactor
         {
             await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-            await dbContext.TraktLists
-                .Where(tl => tl.Id == request.Id)
-                .ExecuteUpdateAsync(
-                    u => u.SetProperty(p => p.AutoRefresh, p => request.AutoRefresh),
-                    cancellationToken);
+            Option<TraktList> maybeTraktList = await dbContext.TraktLists
+                .Include(tl => tl.Playlist)
+                .SelectOneAsync(t => t.Id, t => t.Id == request.Id);
+
+            foreach (TraktList traktList in maybeTraktList)
+            {
+                traktList.AutoRefresh = request.AutoRefresh;
+                traktList.GeneratePlaylist = request.GeneratePlaylist;
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                if (request.GeneratePlaylist)
+                {
+                    if (traktList.PlaylistId is null)
+                    {
+                        PlaylistGroup traktListGroup = await dbContext.PlaylistGroups
+                            .Filter(pg => pg.IsSystem)
+                            .FirstOrDefaultAsync(cancellationToken);
+
+                        var playlist = new Playlist
+                        {
+                            IsSystem = true,
+                            Name = $"{traktList.User}/{traktList.List}",
+                            PlaylistGroupId = traktListGroup.Id,
+                            PlaylistGroup = traktListGroup
+                        };
+
+                        await dbContext.Playlists.AddAsync(playlist, cancellationToken);
+                        await dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
+                    // TODO: write sync playlist message to worker channel
+                }
+                else if (traktList.PlaylistId is not null)
+                {
+                    // delete playlist
+                    await dbContext.Playlists
+                        .Where(p => p.Id == traktList.PlaylistId)
+                        .ExecuteDeleteAsync(cancellationToken);
+                }
+            }
 
             return Option<BaseError>.None;
         }

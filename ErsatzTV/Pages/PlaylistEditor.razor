@@ -13,22 +13,22 @@
     <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
         <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%; align-items: center" class="ml-6 mr-6">
             <div class="d-none d-md-flex">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveChanges" StartIcon="@Icons.Material.Filled.Save">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@SaveChanges" StartIcon="@Icons.Material.Filled.Save" Disabled="@(_playlist.IsSystem)">
                     Save Playlist
                 </MudButton>
-                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="AddPlaylistItem" StartIcon="@Icons.Material.Filled.PlaylistAdd">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Default" OnClick="@AddPlaylistItem" StartIcon="@Icons.Material.Filled.PlaylistAdd" Disabled="@(_playlist.IsSystem)">
                     Add Playlist Item
                 </MudButton>
-                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Secondary" OnClick="PreviewPlayout" StartIcon="@Icons.Material.Filled.Preview">
+                <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Secondary" OnClick="@PreviewPlayout" StartIcon="@Icons.Material.Filled.Preview">
                     Preview Playlist Playout
                 </MudButton>
             </div>
             <div style="align-items: center; display: flex; margin-left: auto;" class="d-md-none">
                 <div class="flex-grow-1"></div>
                 <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Playlist" OnClick="SaveChanges"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Playlist Item" OnClick="AddPlaylistItem"/>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Preview" Label="Preview Playlist Playout" OnClick="PreviewPlayout"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Save" Label="Save Playlist" OnClick="@SaveChanges" Disabled="@(_playlist.IsSystem)"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.PlaylistAdd" Label="Add Playlist Item" OnClick="@AddPlaylistItem" Disabled="@(_playlist.IsSystem)"/>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Preview" Label="Preview Playlist Playout" OnClick="@PreviewPlayout"/>
                 </MudMenu>
             </div>
         </div>
@@ -41,7 +41,7 @@
                 <div class="d-flex">
                     <MudText>Name</MudText>
                 </div>
-                <MudTextField @bind-Value="_playlist.Name" For="@(() => _playlist.Name)"/>
+                <MudTextField @bind-Value="_playlist.Name" For="@(() => _playlist.Name)" Disabled="@(_playlist.IsSystem)"/>
             </MudStack>
             <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playlist Items</MudText>
             <MudDivider Class="mb-6"/>
@@ -89,24 +89,26 @@
                     <MudTd>
                         <div class="d-flex">
                             <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                           OnClick="@(_ => CopyItem(context))">
+                                           OnClick="@(_ => CopyItem(context))"
+                                           Disabled="@(_playlist.IsSystem)">
                             </MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
                                            OnClick="@(_ => MoveItemUp(context))"
-                                           Disabled="@(_playlist.Items.All(x => x.Index >= context.Index))">
+                                           Disabled="@(_playlist.IsSystem || _playlist.Items.All(x => x.Index >= context.Index))">
                             </MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
                                            OnClick="@(_ => MoveItemDown(context))"
-                                           Disabled="@(_playlist.Items.All(x => x.Index <= context.Index))">
+                                           Disabled="@(_playlist.IsSystem || _playlist.Items.All(x => x.Index <= context.Index))">
                             </MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           OnClick="@(_ => RemovePlaylistItem(context))">
+                                           OnClick="@(_ => RemovePlaylistItem(context))"
+                                           Disabled="@(_playlist.IsSystem)">
                             </MudIconButton>
                         </div>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
-            @if (_selectedItem is not null)
+            @if (!_playlist.IsSystem && _selectedItem is not null)
             {
                 <MudText Typo="Typo.h5" Class="mt-10 mb-2">Playlist Item</MudText>
                 <MudDivider Class="mb-6"/>
@@ -350,6 +352,7 @@
             _playlist = new PlaylistItemsEditViewModel
             {
                 Name = playlist.Name,
+                IsSystem = playlist.IsSystem,
                 Items = []
             };
         }

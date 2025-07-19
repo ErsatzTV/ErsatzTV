@@ -1623,6 +1623,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");
 
@@ -1644,6 +1647,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .HasColumnType("varchar(255)");
@@ -3090,6 +3096,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("GeneratePlaylist")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<int>("ItemCount")
                         .HasColumnType("int");
 
@@ -3105,6 +3114,9 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("PlaylistId")
+                        .HasColumnType("int");
+
                     b.Property<int>("TraktId")
                         .HasColumnType("int");
 
@@ -3112,6 +3124,8 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PlaylistId");
 
                     b.ToTable("TraktList", (string)null);
                 });
@@ -5090,6 +5104,16 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                         .WithMany("Tags")
                         .HasForeignKey("SongMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Playlist");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.TraktListItem", b =>

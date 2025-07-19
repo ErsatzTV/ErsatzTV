@@ -31,7 +31,8 @@ internal static class Mapper
             traktList.Name,
             traktList.ItemCount,
             traktList.Items.Count(i => i.MediaItemId.HasValue),
-            traktList.AutoRefresh);
+            traktList.AutoRefresh,
+            traktList.GeneratePlaylist);
 
     private static MultiCollectionItemViewModel ProjectToViewModel(MultiCollectionItem multiCollectionItem) =>
         new(
@@ -59,7 +60,7 @@ internal static class Mapper
         new(playlistGroup.Id, playlistGroup.Name, playlistGroup.Playlists.Count);
 
     internal static PlaylistViewModel ProjectToViewModel(Playlist playlist) =>
-        new(playlist.Id, playlist.PlaylistGroupId, playlist.Name);
+        new(playlist.Id, playlist.PlaylistGroupId, playlist.Name, playlist.IsSystem);
 
     internal static PlaylistItemViewModel ProjectToViewModel(PlaylistItem playlistItem) =>
         new(
