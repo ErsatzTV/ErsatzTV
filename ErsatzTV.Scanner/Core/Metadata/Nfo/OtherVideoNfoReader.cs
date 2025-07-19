@@ -28,11 +28,11 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
         {
-            return await Read(s);
+            return await Read(s, fileName);
         }
     }
 
-    internal async Task<Either<BaseError, OtherVideoNfo>> Read(Stream input)
+    internal async Task<Either<BaseError, OtherVideoNfo>> Read(Stream input, string fileName)
     {
         OtherVideoNfo? nfo = null;
 
@@ -60,55 +60,81 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                                 nfo = new OtherVideoNfo();
                                 break;
                             case "title":
-                                await ReadStringContent(reader, nfo, (movie, title) => movie.Title = title);
+                                await ReadStringContent(reader, nfo, (movie, title) => movie.Title = title, fileName);
                                 break;
                             case "sorttitle":
-                                await ReadStringContent(reader, nfo, (movie, sortTitle) => movie.SortTitle = sortTitle);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (movie, sortTitle) => movie.SortTitle = sortTitle,
+                                    fileName);
                                 break;
                             case "outline":
-                                await ReadStringContent(reader, nfo, (movie, outline) => movie.Outline = outline);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (movie, outline) => movie.Outline = outline,
+                                    fileName);
                                 break;
                             case "year":
-                                await ReadIntContent(reader, nfo, (movie, year) => movie.Year = year);
+                                await ReadIntContent(reader, nfo, (movie, year) => movie.Year = year, fileName);
                                 break;
                             case "mpaa":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (movie, contentRating) => movie.ContentRating = contentRating);
+                                    (movie, contentRating) => movie.ContentRating = contentRating, fileName);
                                 break;
                             case "premiered":
                                 await ReadDateTimeContent(
                                     reader,
                                     nfo,
-                                    (movie, premiered) => movie.Premiered = premiered);
+                                    (movie, premiered) => movie.Premiered = premiered,
+                                    fileName);
                                 break;
                             case "plot":
-                                await ReadStringContent(reader, nfo, (movie, plot) => movie.Plot = plot);
+                                await ReadStringContent(reader, nfo, (movie, plot) => movie.Plot = plot, fileName);
                                 break;
                             case "genre":
-                                await ReadStringContent(reader, nfo, (movie, genre) => movie.Genres.Add(genre));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (movie, genre) => movie.Genres.Add(genre),
+                                    fileName);
                                 break;
                             case "tag":
-                                await ReadStringContent(reader, nfo, (movie, tag) => movie.Tags.Add(tag));
+                                await ReadStringContent(reader, nfo, (movie, tag) => movie.Tags.Add(tag), fileName);
                                 break;
                             case "studio":
-                                await ReadStringContent(reader, nfo, (movie, studio) => movie.Studios.Add(studio));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (movie, studio) => movie.Studios.Add(studio),
+                                    fileName);
                                 break;
                             case "actor":
-                                ReadActor(reader, nfo, (movie, actor) => movie.Actors.Add(actor));
+                                ReadActor(reader, nfo, (movie, actor) => movie.Actors.Add(actor), fileName);
                                 break;
                             case "credits":
-                                await ReadStringContent(reader, nfo, (movie, writer) => movie.Writers.Add(writer));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (movie, writer) => movie.Writers.Add(writer),
+                                    fileName);
                                 break;
                             case "director":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (movie, director) => movie.Directors.Add(director));
+                                    (movie, director) => movie.Directors.Add(director),
+                                    fileName);
                                 break;
                             case "uniqueid":
-                                await ReadUniqueId(reader, nfo, (movie, uniqueid) => movie.UniqueIds.Add(uniqueid));
+                                await ReadUniqueId(
+                                    reader,
+                                    nfo,
+                                    (movie, uniqueid) => movie.UniqueIds.Add(uniqueid),
+                                    fileName);
                                 break;
                         }
 
@@ -123,12 +149,12 @@ public class OtherVideoNfoReader : NfoReader<OtherVideoNfo>, IOtherVideoNfoReade
                 }
             }
 
-            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+            return Optional(nfo).ToEither<BaseError>(new FailedToReadNfo());
         }
         catch (XmlException)
         {
-            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
-            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+            _logger.LogWarning("Invalid XML detected in file {FileName}; returning incomplete metadata", fileName);
+            return Optional(nfo).ToEither<BaseError>(new FailedToReadNfo());
         }
         catch (Exception ex)
         {

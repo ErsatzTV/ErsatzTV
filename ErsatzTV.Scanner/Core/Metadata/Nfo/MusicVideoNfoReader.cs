@@ -28,11 +28,11 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
         {
-            return await Read(s);
+            return await Read(s, fileName);
         }
     }
 
-    internal async Task<Either<BaseError, MusicVideoNfo>> Read(Stream input)
+    internal async Task<Either<BaseError, MusicVideoNfo>> Read(Stream input, string fileName)
     {
         MusicVideoNfo? nfo = null;
 
@@ -56,46 +56,74 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (musicVideo, artist) => musicVideo.Artists.Add(artist));
+                                    (musicVideo, artist) => musicVideo.Artists.Add(artist),
+                                    fileName);
                                 break;
                             case "title":
-                                await ReadStringContent(reader, nfo, (musicVideo, title) => musicVideo.Title = title);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, title) => musicVideo.Title = title,
+                                    fileName);
                                 break;
                             case "album":
-                                await ReadStringContent(reader, nfo, (musicVideo, album) => musicVideo.Album = album);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, album) => musicVideo.Album = album,
+                                    fileName);
                                 break;
                             case "plot":
-                                await ReadStringContent(reader, nfo, (musicVideo, plot) => musicVideo.Plot = plot);
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, plot) => musicVideo.Plot = plot,
+                                    fileName);
                                 break;
                             case "track":
-                                await ReadIntContent(reader, nfo, (musicVideo, track) => musicVideo.Track = track);
+                                await ReadIntContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, track) => musicVideo.Track = track,
+                                    fileName);
                                 break;
                             case "year":
-                                await ReadIntContent(reader, nfo, (musicVideo, year) => musicVideo.Year = year);
+                                await ReadIntContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, year) => musicVideo.Year = year,
+                                    fileName);
                                 break;
                             case "aired":
-                                await ReadDateTimeContent(reader, nfo, (show, aired) => show.Aired = aired);
+                                await ReadDateTimeContent(reader, nfo, (show, aired) => show.Aired = aired, fileName);
                                 break;
                             case "genre":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (musicVideo, genre) => musicVideo.Genres.Add(genre));
+                                    (musicVideo, genre) => musicVideo.Genres.Add(genre),
+                                    fileName);
                                 break;
                             case "tag":
-                                await ReadStringContent(reader, nfo, (musicVideo, tag) => musicVideo.Tags.Add(tag));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (musicVideo, tag) => musicVideo.Tags.Add(tag),
+                                    fileName);
                                 break;
                             case "studio":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (musicVideo, studio) => musicVideo.Studios.Add(studio));
+                                    (musicVideo, studio) => musicVideo.Studios.Add(studio),
+                                    fileName);
                                 break;
                             case "director":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (musicVideo, director) => musicVideo.Directors.Add(director));
+                                    (musicVideo, director) => musicVideo.Directors.Add(director),
+                                    fileName);
                                 break;
                         }
 
@@ -110,12 +138,12 @@ public class MusicVideoNfoReader : NfoReader<MusicVideoNfo>, IMusicVideoNfoReade
                 }
             }
 
-            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+            return Optional(nfo).ToEither<BaseError>(new FailedToReadNfo());
         }
         catch (XmlException)
         {
-            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
-            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+            _logger.LogWarning("Invalid XML detected in file {FileName}; returning incomplete metadata", fileName);
+            return Optional(nfo).ToEither<BaseError>(new FailedToReadNfo());
         }
         catch (Exception ex)
         {

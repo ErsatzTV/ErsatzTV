@@ -27,7 +27,7 @@ public class MovieNfoReaderTests
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream, string.Empty);
 
         result.IsLeft.ShouldBeTrue();
     }
@@ -37,7 +37,7 @@ public class MovieNfoReaderTests
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<movie></movie>"));
 
-        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -50,7 +50,7 @@ public class MovieNfoReaderTests
                 @"<movie></movie>
 https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -168,7 +168,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     <dateadded>2021-03-26 11:35:50</dateadded>
 </movie>"));
 
-        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
 
@@ -227,7 +227,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<movie><tag>Test Tag</tag></movie>"));
 
-        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (MovieNfo nfo in result.RightToSeq())
@@ -242,7 +242,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"<movie><outline>Test Outline</outline></movie>"));
 
-        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream);
+        Either<BaseError, MovieNfo> result = await _movieNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (MovieNfo nfo in result.RightToSeq())

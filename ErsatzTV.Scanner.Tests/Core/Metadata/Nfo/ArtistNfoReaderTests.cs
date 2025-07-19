@@ -42,7 +42,7 @@ public class ArtistNfoReaderTests
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream, string.Empty);
 
         result.IsLeft.ShouldBeTrue();
     }
@@ -52,7 +52,7 @@ public class ArtistNfoReaderTests
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<artist></artist>"));
 
-        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -65,7 +65,7 @@ public class ArtistNfoReaderTests
                 @"<artist></artist>
 https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -119,7 +119,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     <path>F:\Music\ArtistInfoKodi\Billy Joel</path>
 </artist>")));
 
-        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
 
@@ -165,7 +165,7 @@ Joel attended Hicksville High School in 1967, but he did not graduate with his c
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(@"<artist><disambiguation>Test Disambiguation</disambiguation></artist>"));
 
-        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream);
+        Either<BaseError, ArtistNfo> result = await _artistNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (ArtistNfo nfo in result.RightToSeq())
