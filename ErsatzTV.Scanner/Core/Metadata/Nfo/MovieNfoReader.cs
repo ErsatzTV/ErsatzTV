@@ -99,6 +99,13 @@ public class MovieNfoReader : NfoReader<MovieNfo>, IMovieNfoReader
                             case "tag":
                                 await ReadStringContent(reader, nfo, (movie, tag) => movie.Tags.Add(tag), fileName);
                                 break;
+                            case "country":
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (movie, country) => movie.Countries.Add(country),
+                                    fileName);
+                                break;
                             case "studio":
                                 await ReadStringContent(
                                     reader,

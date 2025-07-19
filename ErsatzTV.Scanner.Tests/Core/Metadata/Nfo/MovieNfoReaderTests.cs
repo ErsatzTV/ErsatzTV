@@ -191,6 +191,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
             // nfo.Tagline.ShouldBeNullOrEmpty();
             nfo.Genres.ShouldBeEquivalentTo(new List<string> { "SuperHero" });
             nfo.Tags.ShouldBeEquivalentTo(new List<string> { "TV Recording" });
+            nfo.Countries.ShouldBeEquivalentTo(new List<string> { "USA" });
             nfo.Studios.ShouldBeEquivalentTo(new List<string> { "Warner Bros. Pictures" });
             nfo.Actors.ShouldBeEquivalentTo(
                 new List<ActorNfo>

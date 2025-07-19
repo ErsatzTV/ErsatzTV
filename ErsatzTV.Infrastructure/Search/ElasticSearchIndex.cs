@@ -320,8 +320,12 @@ public class ElasticSearchIndex : ISearchIndex
                     AddedDate = GetAddedDate(metadata.DateAdded),
                     Plot = metadata.Plot ?? string.Empty,
                     Genre = metadata.Genres.Map(g => g.Name).ToList(),
-                    Tag = metadata.Tags.Map(t => t.Name).ToList(),
-                    TagFull = metadata.Tags.Map(t => t.Name).ToList(),
+                    Tag = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name)
+                        .ToList(),
+                    TagFull = metadata.Tags.Where(t => string.IsNullOrWhiteSpace(t.ExternalTypeId)).Map(t => t.Name)
+                        .ToList(),
+                    Country = metadata.Tags.Where(t => t.ExternalTypeId == Tag.NfoCountryTypeId).Map(t => t.Name)
+                        .ToList(),
                     Studio = metadata.Studios.Map(s => s.Name).ToList(),
                     Actor = metadata.Actors.Map(a => a.Name).ToList(),
                     Director = metadata.Directors.Map(d => d.Name).ToList(),

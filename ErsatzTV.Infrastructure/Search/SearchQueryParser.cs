@@ -19,6 +19,7 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
     {
         using var defaultAnalyzer = new CustomAnalyzer(LuceneSearchIndex.AppLuceneVersion);
         using var keywordAnalyzer = new KeywordAnalyzer();
+        using var lowercaseKeywordAnalyzer = new LowercaseKeywordAnalyzer(LuceneSearchIndex.AppLuceneVersion);
         var customAnalyzers = new Dictionary<string, Analyzer>
         {
             // StringField should use KeywordAnalyzer
@@ -38,7 +39,8 @@ public partial class SearchQueryParser(ISmartCollectionCache smartCollectionCach
             { LuceneSearchIndex.VideoCodecField, keywordAnalyzer },
             { LuceneSearchIndex.VideoDynamicRangeField, keywordAnalyzer },
             { LuceneSearchIndex.TagFullField, keywordAnalyzer },
-            { LuceneSearchIndex.CollectionField, keywordAnalyzer },
+
+            { LuceneSearchIndex.CollectionField, lowercaseKeywordAnalyzer },
 
             { LuceneSearchIndex.PlotField, new StandardAnalyzer(LuceneSearchIndex.AppLuceneVersion) }
         };

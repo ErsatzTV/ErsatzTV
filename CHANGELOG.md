@@ -101,6 +101,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Not So Great (Part Three)`
 - Add Trakt List option `Auto Refresh` to automatically update list from trakt.tv once each day
 - Add Trakt List option `Generate Playlist` to automatically generate ETV Playlist from matched Trakt List items
+- Read `country` field from movie NFO files and include in search index as `country`
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
@@ -143,6 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where playout mode `Multiple` would ignore fixed start time
 - Fix block playout EPG generation to use `XMLTV Time Zone` setting
 - Fix adding "official" Trakt lists
+- Fix searching for `collection` names with spaces or other special characters, e.g. `collection:"Movies - Action"`
 
 ## [25.2.0] - 2025-06-24
 ### Added
