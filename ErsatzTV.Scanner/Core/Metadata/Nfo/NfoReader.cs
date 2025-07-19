@@ -37,7 +37,7 @@ public abstract class NfoReader<T> : NfoReaderBase
         return ms;
     }
 
-    protected async Task ReadStringContent(XmlReader reader, T? nfo, Action<T, string> action)
+    protected async Task ReadStringContent(XmlReader reader, T? nfo, Action<T, string> action, string fileName)
     {
         try
         {
@@ -49,11 +49,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading string content from NFO {ElementName}", reader.Name);
+            _logger.LogWarning(ex, "Error reading string content from NFO {ElementName} file {FileName}", reader.Name, fileName);
         }
     }
 
-    protected async Task ReadIntContent(XmlReader reader, T? nfo, Action<T, int> action)
+    protected async Task ReadIntContent(XmlReader reader, T? nfo, Action<T, int> action, string fileName)
     {
         try
         {
@@ -64,11 +64,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading int content from NFO {ElementName}", reader.Name);
+            _logger.LogWarning(ex, "Error reading int content from NFO {ElementName} file {FileName}", reader.Name, fileName);
         }
     }
 
-    protected async Task ReadDateTimeContent(XmlReader reader, T? nfo, Action<T, DateTime> action)
+    protected async Task ReadDateTimeContent(XmlReader reader, T? nfo, Action<T, DateTime> action, string fileName)
     {
         try
         {
@@ -81,11 +81,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading date content from NFO {ElementName}", reader.Name);
+            _logger.LogWarning(ex, "Error reading date content from NFO {ElementName} file {FileName}", reader.Name, fileName);
         }
     }
 
-    protected void ReadActor(XmlReader reader, T? nfo, Action<T, ActorNfo> action)
+    protected void ReadActor(XmlReader reader, T? nfo, Action<T, ActorNfo> action, string fileName)
     {
         try
         {
@@ -123,11 +123,11 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading actor content from NFO {ElementName}", reader.Name);
+            _logger.LogWarning(ex, "Error reading actor content from NFO {ElementName} file {FileName}", reader.Name, fileName);
         }
     }
 
-    protected async Task ReadUniqueId(XmlReader reader, T? nfo, Action<T, UniqueIdNfo> action)
+    protected async Task ReadUniqueId(XmlReader reader, T? nfo, Action<T, UniqueIdNfo> action, string fileName)
     {
         try
         {
@@ -146,7 +146,7 @@ public abstract class NfoReader<T> : NfoReaderBase
         }
         catch (XmlException ex)
         {
-            _logger.LogWarning(ex, "Error reading uniqueid content from NFO {ElementName}", reader.Name);
+            _logger.LogWarning(ex, "Error reading uniqueid content from NFO {ElementName} file {FileName}", reader.Name, fileName);
         }
     }
 }

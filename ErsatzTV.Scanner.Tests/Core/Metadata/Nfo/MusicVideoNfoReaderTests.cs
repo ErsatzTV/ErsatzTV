@@ -27,7 +27,7 @@ public class MusicVideoNfoReaderTests
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsLeft.ShouldBeTrue();
     }
@@ -37,7 +37,7 @@ public class MusicVideoNfoReaderTests
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@"<musicvideo></musicvideo>"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -50,7 +50,7 @@ public class MusicVideoNfoReaderTests
                 @"<musicvideo></musicvideo>
 https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -113,7 +113,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     <dateadded>2018-09-10 09:46:06</dateadded>
 </musicvideo>")));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
 
@@ -140,7 +140,7 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(@"<musicvideo><tag>Test Tag</tag></musicvideo>"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (MusicVideoNfo nfo in result.RightToSeq())
@@ -155,7 +155,7 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(@"<musicvideo><aired>2022-02-03</aired></musicvideo>"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (MusicVideoNfo nfo in result.RightToSeq())
@@ -174,7 +174,7 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(@"<musicvideo><studio>Test Studio</studio></musicvideo>"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (MusicVideoNfo nfo in result.RightToSeq())
@@ -189,7 +189,7 @@ Le groupe a également enregistré une version espagnole de ce titre, La reina d
         await using var stream = new MemoryStream(
             Encoding.UTF8.GetBytes(@"<musicvideo><director>Test Director</director></musicvideo>"));
 
-        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream);
+        Either<BaseError, MusicVideoNfo> result = await _musicVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (MusicVideoNfo nfo in result.RightToSeq())

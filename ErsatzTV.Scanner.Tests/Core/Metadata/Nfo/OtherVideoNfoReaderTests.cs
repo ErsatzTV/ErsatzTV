@@ -27,7 +27,7 @@ public class OtherVideoNfoReaderTests
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@"https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream, string.Empty);
 
         result.IsLeft.ShouldBeTrue();
     }
@@ -40,7 +40,7 @@ public class OtherVideoNfoReaderTests
     {
         await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}></{topLevel}>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -56,7 +56,7 @@ public class OtherVideoNfoReaderTests
                 @$"<{topLevel}></{topLevel}>
 https://www.themoviedb.org/movie/11-star-wars"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
     }
@@ -177,7 +177,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
     <dateadded>2021-03-26 11:35:50</dateadded>
 </{topLevel}>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
 
@@ -240,7 +240,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}><tag>Test Tag</tag></{topLevel}>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (OtherVideoNfo nfo in result.RightToSeq())
@@ -258,7 +258,7 @@ https://www.themoviedb.org/movie/11-star-wars"));
         await using var stream =
             new MemoryStream(Encoding.UTF8.GetBytes(@$"<{topLevel}><outline>Test Outline</outline></{topLevel}>"));
 
-        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream);
+        Either<BaseError, OtherVideoNfo> result = await _otherVideoNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (OtherVideoNfo nfo in result.RightToSeq())

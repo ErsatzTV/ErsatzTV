@@ -28,11 +28,11 @@ public class ArtistNfoReader : NfoReader<ArtistNfo>, IArtistNfoReader
         // ReSharper disable once ConvertToUsingDeclaration
         await using (Stream s = await SanitizedStreamForFile(fileName))
         {
-            return await Read(s);
+            return await Read(s, fileName);
         }
     }
 
-    internal async Task<Either<BaseError, ArtistNfo>> Read(Stream input)
+    internal async Task<Either<BaseError, ArtistNfo>> Read(Stream input, string fileName)
     {
         ArtistNfo? nfo = null;
 
@@ -53,28 +53,42 @@ public class ArtistNfoReader : NfoReader<ArtistNfo>, IArtistNfoReader
                                 nfo = new ArtistNfo();
                                 break;
                             case "name":
-                                await ReadStringContent(reader, nfo, (artist, name) => artist.Name = name);
+                                await ReadStringContent(reader, nfo, (artist, name) => artist.Name = name, fileName);
                                 break;
                             case "disambiguation":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (artist, disambiguation) => artist.Disambiguation = disambiguation);
+                                    (artist, disambiguation) => artist.Disambiguation = disambiguation,
+                                    fileName);
                                 break;
                             case "genre":
-                                await ReadStringContent(reader, nfo, (artist, genre) => artist.Genres.Add(genre));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (artist, genre) => artist.Genres.Add(genre),
+                                    fileName);
                                 break;
                             case "style":
-                                await ReadStringContent(reader, nfo, (artist, style) => artist.Styles.Add(style));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (artist, style) => artist.Styles.Add(style),
+                                    fileName);
                                 break;
                             case "mood":
-                                await ReadStringContent(reader, nfo, (artist, mood) => artist.Moods.Add(mood));
+                                await ReadStringContent(
+                                    reader,
+                                    nfo,
+                                    (artist, mood) => artist.Moods.Add(mood),
+                                    fileName);
                                 break;
                             case "biography":
                                 await ReadStringContent(
                                     reader,
                                     nfo,
-                                    (artist, biography) => artist.Biography = biography);
+                                    (artist, biography) => artist.Biography = biography,
+                                    fileName);
                                 break;
                         }
 
@@ -89,12 +103,12 @@ public class ArtistNfoReader : NfoReader<ArtistNfo>, IArtistNfoReader
                 }
             }
 
-            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+            return Optional(nfo).ToEither<BaseError>(new FailedToReadNfo());
         }
         catch (XmlException)
         {
-            _logger.LogWarning("Invalid XML detected; returning incomplete metadata");
-            return Optional(nfo).ToEither((BaseError)new FailedToReadNfo());
+            _logger.LogWarning("Invalid XML detected in file {FileName}; returning incomplete metadata", fileName);
+            return Optional(nfo).ToEither<BaseError>(new FailedToReadNfo());
         }
         catch (Exception ex)
         {

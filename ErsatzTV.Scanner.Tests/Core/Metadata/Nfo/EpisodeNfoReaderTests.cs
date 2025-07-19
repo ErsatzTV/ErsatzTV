@@ -46,7 +46,7 @@ public class EpisodeNfoReaderTests
 <episodedetails>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -75,7 +75,7 @@ public class EpisodeNfoReaderTests
   <season>1</season>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -100,7 +100,7 @@ public class EpisodeNfoReaderTests
   <uniqueid default=""false"" type=""imdb"">tt54321</uniqueid>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -123,7 +123,7 @@ public class EpisodeNfoReaderTests
   <mpaa/>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -147,7 +147,7 @@ public class EpisodeNfoReaderTests
   <mpaa>US:Something / US:SomethingElse</mpaa>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -169,7 +169,7 @@ public class EpisodeNfoReaderTests
   <plot/>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -190,7 +190,7 @@ public class EpisodeNfoReaderTests
   <plot>Some Plot</plot>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -220,7 +220,7 @@ public class EpisodeNfoReaderTests
   </actor>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -249,7 +249,7 @@ public class EpisodeNfoReaderTests
   <credits>Writer 3</credits>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -276,7 +276,7 @@ public class EpisodeNfoReaderTests
   <director>Director 3</director>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -304,7 +304,7 @@ public class EpisodeNfoReaderTests
   <genre>Genre 3</genre>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -330,7 +330,7 @@ public class EpisodeNfoReaderTests
   <tag>Tag 3</tag>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
         foreach (List<EpisodeNfo> list in result.RightToSeq())
@@ -431,7 +431,7 @@ public class EpisodeNfoReaderTests
     <dateadded>2021-02-02 11:57:44</dateadded>
 </episodedetails>"));
 
-        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream);
+        Either<BaseError, List<EpisodeNfo>> result = await _episodeNfoReader.Read(stream, string.Empty);
 
         result.IsRight.ShouldBeTrue();
 
