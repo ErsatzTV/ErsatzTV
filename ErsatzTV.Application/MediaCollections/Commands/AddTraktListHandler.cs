@@ -42,12 +42,20 @@ public partial class AddTraktListHandler : TraktCommandBase, IRequestHandler<Add
         }
         finally
         {
-            _entityLocker.UnlockTrakt();
+            if (request.Unlock)
+            {
+                _entityLocker.UnlockTrakt();
+            }
         }
     }
 
     private static Validation<BaseError, Parameters> ValidateUrl(AddTraktList request)
     {
+        if (!string.IsNullOrWhiteSpace(request.User) && !string.IsNullOrWhiteSpace(request.List))
+        {
+            return new Parameters(request.User, request.List);
+        }
+
         // if we get a url, ensure it's for trakt.tv
         Match match = Uri.IsWellFormedUriString(request.TraktListUrl, UriKind.Absolute)
             ? UriTraktListRegex().Match(request.TraktListUrl)

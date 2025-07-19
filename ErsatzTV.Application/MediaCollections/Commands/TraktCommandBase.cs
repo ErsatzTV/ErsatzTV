@@ -92,6 +92,7 @@ public abstract class TraktCommandBase
 
                 list.Items.RemoveAll(toRemove.Contains);
                 list.Items.AddRange(toAdd.Map(a => ProjectItem(list, a)));
+                list.LastUpdate = DateTime.UtcNow;
 
                 foreach (TraktListItem existing in toUpdate)
                 {
@@ -180,6 +181,9 @@ public abstract class TraktCommandBase
             }
 
             _searchIndex.Commit();
+
+            list.LastMatch = DateTime.UtcNow;
+            await dbContext.SaveChangesAsync();
 
             return list;
         }

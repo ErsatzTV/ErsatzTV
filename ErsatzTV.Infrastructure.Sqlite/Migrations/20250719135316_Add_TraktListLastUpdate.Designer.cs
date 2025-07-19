@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20250719135316_Add_TraktListLastUpdate")]
+    partial class Add_TraktListLastUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
@@ -2941,9 +2944,6 @@ namespace ErsatzTV.Infrastructure.Sqlite.Migrations
 
                     b.Property<int>("ItemCount")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("LastMatch")
-                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LastUpdate")
                         .HasColumnType("TEXT");

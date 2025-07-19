@@ -125,6 +125,7 @@ public class SchedulerService : BackgroundService
             await ScanJellyfinMediaSources(cancellationToken);
             await ScanEmbyMediaSources(cancellationToken);
 #endif
+            await RefreshTraktLists(cancellationToken);
             await MatchTraktLists(cancellationToken);
 
             await ReleaseMemory(cancellationToken);
@@ -320,12 +321,38 @@ public class SchedulerService : BackgroundService
         }
     }
 
+    private async Task RefreshTraktLists(CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+        DateTime target = DateTime.UtcNow.AddDays(-1);
+
+        List<TraktList> traktLists = await dbContext.TraktLists
+            .Filter(tl => tl.AutoRefresh && (tl.LastUpdate == null || tl.LastUpdate <= target))
+            .ToListAsync(cancellationToken);
+
+        if (traktLists.Count != 0 && _entityLocker.LockTrakt())
+        {
+            TraktList last = traktLists.Last();
+            foreach (TraktList list in traktLists)
+            {
+                await _workerChannel.WriteAsync(
+                    AddTraktList.Existing(list.User, list.List, list == last),
+                    cancellationToken);
+            }
+        }
+    }
+
     private async Task MatchTraktLists(CancellationToken cancellationToken)
     {
         using IServiceScope scope = _serviceScopeFactory.CreateScope();
         TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
+        DateTime target = DateTime.UtcNow.AddHours(-1);
+
         List<TraktList> traktLists = await dbContext.TraktLists
+            .Filter(tl => tl.LastMatch == null || tl.LastMatch <= target)
             .ToListAsync(cancellationToken);
 
         if (traktLists.Count != 0 && _entityLocker.LockTrakt())

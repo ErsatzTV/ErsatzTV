@@ -32,7 +32,7 @@
                         <col/>
                         <col/>
                         <col/>
-                        <col style="width: 180px;"/>
+                        <col style="width: 240px;"/>
                     </MudHidden>
                 </ColGroup>
                 <HeaderContent>
@@ -47,6 +47,12 @@
                     <MudTd>@context.MatchCount of @context.ItemCount</MudTd>
                     <MudTd>
                         <div style="align-items: center; display: flex;">
+                            <MudTooltip Text="Edit Trakt List Properties">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Disabled="@Locker.IsTraktLocked()"
+                                               Href="@($"media/trakt/lists/{context.Id}")">
+                                </MudIconButton>
+                            </MudTooltip>
                             <MudTooltip Text="Search Trakt List">
                                 <MudIconButton Icon="@Icons.Material.Filled.Search"
                                                Disabled="@Locker.IsTraktLocked()"
@@ -160,7 +166,7 @@
             DialogResult result = await dialog.Result;
             if (result is { Canceled: false, Data: string url })
             {
-                await WorkerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
+                await WorkerChannel.WriteAsync(Application.MediaCollections.AddTraktList.FromUrl(url), _cts.Token);
             }
             else
             {

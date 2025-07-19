@@ -99,6 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Awesome Episode (Part One)`
   - `Better Episode (Part Two)`
   - `Not So Great (Part Three)`
+- Add Trakt List option `Auto Refresh` to automatically update list from trakt.tv once each day
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
