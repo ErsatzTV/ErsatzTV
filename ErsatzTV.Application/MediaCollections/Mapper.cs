@@ -30,7 +30,8 @@ internal static class Mapper
             $"{traktList.User}/{traktList.List}",
             traktList.Name,
             traktList.ItemCount,
-            traktList.Items.Count(i => i.MediaItemId.HasValue));
+            traktList.Items.Count(i => i.MediaItemId.HasValue),
+            traktList.AutoRefresh);
 
     private static MultiCollectionItemViewModel ProjectToViewModel(MultiCollectionItem multiCollectionItem) =>
         new(

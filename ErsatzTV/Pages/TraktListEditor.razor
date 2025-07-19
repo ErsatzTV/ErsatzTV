@@ -1,0 +1,86 @@
+﻿@page "/media/trakt/lists/{Id:int}"
+@using ErsatzTV.Application.MediaCollections
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ILogger<ScheduleEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<MudForm @ref="_form" @bind-IsValid="@_success" Style="max-height: 100%">
+    <MudPaper Square="true" Style="display: flex; height: 64px; min-height: 64px; width: 100%; z-index: 100; align-items: center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-6" OnClick="@HandleSubmitAsync" StartIcon="@Icons.Material.Filled.Save">
+            Save Trakt List
+        </MudButton>
+    </MudPaper>
+    <div class="d-flex flex-column" style="height: 100vh; overflow-x: auto">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+            <MudText Typo="Typo.h5" Class="mb-2">Trakt List</MudText>
+            <MudDivider Class="mb-6"/>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Id</MudText>
+                </div>
+                <MudTextField Value="_model.Slug" Disabled="true" />
+            </MudStack>
+            <MudStack Row="true" Breakpoint="Breakpoint.SmAndDown" Class="form-field-stack gap-md-8 mb-5">
+                <div class="d-flex">
+                    <MudText>Automatic Refresh</MudText>
+                </div>
+                <MudCheckBox @bind-Value="@_model.AutoRefresh" For="@(() => _model.AutoRefresh)" Dense="true">
+                    <MudText Typo="Typo.caption" Style="font-weight: normal">Update list from trakt.tv once each day</MudText>
+                </MudCheckBox>
+            </MudStack>
+        </MudContainer>
+    </div>
+</MudForm>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private readonly TraktListEditViewModel _model = new();
+    private MudForm _form;
+    private bool _success;
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Option<TraktListViewModel> maybeTraktList = await Mediator.Send(new GetTraktListById(Id), _cts.Token);
+        maybeTraktList.Match(
+            viewModel =>
+            {
+                _model.Id = viewModel.Id;
+                _model.Slug = viewModel.Slug;
+                _model.AutoRefresh = viewModel.AutoRefresh;
+            },
+            () => NavigationManager.NavigateTo("404"));
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        await _form.Validate();
+        if (_success)
+        {
+            var request = new UpdateTraktList(_model.Id, _model.AutoRefresh);
+            Option<BaseError> result = await Mediator.Send(request, _cts.Token);
+            foreach (BaseError error in result)
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving trakt list: {Error}", error.Value);
+            }
+
+            if (result.IsNone)
+            {
+                NavigationManager.NavigateTo("/media/trakt/lists");
+            }
+        }
+    }
+
+}

@@ -3084,11 +3084,20 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AutoRefresh")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
                     b.Property<int>("ItemCount")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastMatch")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("LastUpdate")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("List")
                         .HasColumnType("longtext");
