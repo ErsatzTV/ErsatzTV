@@ -88,6 +88,9 @@ public class ElasticSearchItem : MinimalElasticSearchItem
     [JsonPropertyName(LuceneSearchIndex.TagFullField)]
     public List<string> TagFull { get; set; }
 
+    [JsonPropertyName(LuceneSearchIndex.CountryField)]
+    public List<string> Country { get; set; }
+
     [JsonPropertyName(LuceneSearchIndex.StudioField)]
     public List<string> Studio { get; set; }
 

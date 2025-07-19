@@ -35,6 +35,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     internal const string GenreField = "genre";
     internal const string TagField = "tag";
     internal const string TagFullField = "tag_full";
+    internal const string CountryField = "country";
     internal const string PlotField = "plot";
     internal const string LibraryNameField = "library_name";
     internal const string LibraryIdField = "library_id";
@@ -116,7 +117,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
         return Task.FromResult(directoryExists && fileExists);
     }
 
-    public int Version => 47;
+    public int Version => 48;
 
     public async Task<bool> Initialize(
         ILocalFileSystem localFileSystem,
@@ -473,8 +474,15 @@ public sealed class LuceneSearchIndex : ISearchIndex
 
                 foreach (Tag tag in metadata.Tags)
                 {
-                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                    doc.Add(new StringField(TagFullField, tag.Name, Field.Store.NO));
+                    if (tag.ExternalTypeId == Tag.NfoCountryTypeId)
+                    {
+                        doc.Add(new TextField(CountryField, tag.Name, Field.Store.NO));
+                    }
+                    else
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                        doc.Add(new StringField(TagFullField, tag.Name, Field.Store.NO));
+                    }
                 }
 
                 foreach (Studio studio in metadata.Studios)
@@ -1465,7 +1473,7 @@ public sealed class LuceneSearchIndex : ISearchIndex
     {
         foreach (Collection collection in collections)
         {
-            doc.Add(new StringField(CollectionField, collection.Name.ToLowerInvariant(), Field.Store.NO));
+            doc.Add(new TextField(CollectionField, collection.Name.ToLowerInvariant(), Field.Store.NO));
         }
     }
 

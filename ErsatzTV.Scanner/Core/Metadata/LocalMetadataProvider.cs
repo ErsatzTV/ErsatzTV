@@ -1333,6 +1333,16 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     releaseDate = premiered;
                 }
 
+                var tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList();
+                foreach (string country in nfo.Countries)
+                {
+                    tags.Add(new Tag
+                    {
+                        Name = country,
+                        ExternalTypeId = Tag.NfoCountryTypeId
+                    });
+                }
+
                 return new MovieMetadata
                 {
                     MetadataKind = MetadataKind.Sidecar,
@@ -1347,7 +1357,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Outline = nfo.Outline,
                     // Tagline = nfo.Tagline,
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                    Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                    Tags = tags,
                     Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
                     Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
                     Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
