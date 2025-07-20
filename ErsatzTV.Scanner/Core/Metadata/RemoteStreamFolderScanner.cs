@@ -170,8 +170,6 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                         remoteStreamFolder);
                 }
 
-                _logger.LogDebug("UPDATE: Etag has changed for folder {Folder}", remoteStreamFolder);
-
                 var hasErrors = false;
 
                 foreach (string file in allFiles.OrderBy(identity))

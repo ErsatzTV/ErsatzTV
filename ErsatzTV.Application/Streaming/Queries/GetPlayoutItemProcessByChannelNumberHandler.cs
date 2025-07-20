@@ -603,6 +603,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         // check filesystem first
         if (_localFileSystem.FileExists(path))
         {
+            if (playoutItem.MediaItem is RemoteStream remoteStream)
+            {
+                path = !string.IsNullOrWhiteSpace(remoteStream.Url)
+                    ? remoteStream.Url
+                    : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
+            }
+
             return new PlayoutItemWithPath(playoutItem, path);
         }
 

@@ -158,14 +158,16 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     private static async Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
     {
         string[] arguments =
-        {
+        [
             "-hide_banner",
             "-print_format", "json",
             "-show_format",
             "-show_streams",
             "-show_chapters",
             "-i", filePath
-        };
+        ];
+
+        //_logger.LogDebug("ffprobe arguments {FFProbeArguments}", arguments);
 
         BufferedCommandResult probe = await Cli.Wrap(ffprobePath)
             .WithArguments(arguments)
@@ -484,10 +486,9 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
         if (mediaItem is RemoteStream remoteStream)
         {
-            if (!string.IsNullOrWhiteSpace(remoteStream.Url))
-            {
-                path = remoteStream.Url;
-            }
+            path = !string.IsNullOrWhiteSpace(remoteStream.Url)
+                ? remoteStream.Url
+                : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
         }
 
         return Task.FromResult(path);

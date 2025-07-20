@@ -2,6 +2,7 @@
 using CliWrap;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
+using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Application.Plex;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Application.Subtitles.Queries;
@@ -52,6 +53,60 @@ public class InternalController : ControllerBase
             default:
                 return await GetTsLegacyStream(channelNumber, mode);
         }
+    }
+
+    [HttpGet("ffmpeg/remote-stream/{remoteStreamId}")]
+    public async Task<IActionResult> GetRemoteStream(int remoteStreamId, CancellationToken cancellationToken)
+    {
+        Option<RemoteStreamViewModel> maybeRemoteStream =
+            await _mediator.Send(new GetRemoteStreamById(remoteStreamId), cancellationToken);
+
+        foreach (RemoteStreamViewModel remoteStream in maybeRemoteStream)
+        {
+            if (!string.IsNullOrWhiteSpace(remoteStream.Url))
+            {
+                return new RedirectResult(remoteStream.Url);
+            }
+
+            if (!string.IsNullOrWhiteSpace(remoteStream.Script))
+            {
+                string[] split =  remoteStream.Script.Split(" ");
+                if (split.Length > 0)
+                {
+                    Command command = Cli.Wrap(split.Head());
+                    if (split.Length > 1)
+                    {
+                        command = command.WithArguments(split.Tail());
+                    }
+
+                    var process = new FFmpegProcess
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = command.TargetFilePath,
+                            Arguments = command.Arguments,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = false,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        }
+                    };
+
+                    HttpContext.Response.RegisterForDispose(process);
+
+                    foreach ((string key, string value) in command.EnvironmentVariables)
+                    {
+                        process.StartInfo.Environment[key] = value;
+                    }
+
+                    process.Start();
+                    return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
+                }
+            }
+        }
+
+        return NotFound();
+
     }
 
     [HttpGet("/media/plex/{plexMediaSourceId:int}/{*path}")]

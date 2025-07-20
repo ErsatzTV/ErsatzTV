@@ -234,10 +234,9 @@ public class PrepareTroubleshootingPlaybackHandler(
         {
             if (mediaItem is RemoteStream remoteStream)
             {
-                if (!string.IsNullOrWhiteSpace(remoteStream.Url))
-                {
-                    path = remoteStream.Url;
-                }
+                path = !string.IsNullOrWhiteSpace(remoteStream.Url)
+                    ? remoteStream.Url
+                    : $"http://localhost:{Settings.StreamingPort}/ffmpeg/remote-stream/{remoteStream.Id}";
             }
 
             return path;

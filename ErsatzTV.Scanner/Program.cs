@@ -81,8 +81,12 @@ public class Program
         }
     }
 
-    private static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
+    private static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        Settings.UiPort = SystemEnvironment.UiPort;
+        Settings.StreamingPort = SystemEnvironment.StreamingPort;
+
+        return Host.CreateDefaultBuilder(args)
             .ConfigureServices((context, services) =>
             {
                 string databaseProvider = context.Configuration.GetValue("provider", Provider.Sqlite.Name) ??
@@ -249,6 +253,7 @@ public class Program
                 services.AddHostedService<Worker>();
             })
             .UseSerilog();
+    }
 
     private class BugsnagNoopClient : IClient
     {

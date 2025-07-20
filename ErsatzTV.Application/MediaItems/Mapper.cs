@@ -32,6 +32,9 @@ internal static class Mapper
     internal static NamedMediaItemViewModel ProjectToViewModel(Image image) =>
         new(image.Id, image.ImageMetadata.HeadOrNone().Match(i => i.Title, () => "???"));
 
+    internal static RemoteStreamViewModel ProjectToViewModel(RemoteStream remoteStream) =>
+        new(remoteStream.Id, remoteStream.Url, remoteStream.Script);
+
     private static string MovieTitle(Movie movie)
     {
         var title = "???";
