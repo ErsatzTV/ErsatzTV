@@ -102,6 +102,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add Trakt List option `Auto Refresh` to automatically update list from trakt.tv once each day
 - Add Trakt List option `Generate Playlist` to automatically generate ETV Playlist from matched Trakt List items
 - Read `country` field from movie NFO files and include in search index as `country`
+- Add *experimental* and *incomplete* `Remote Stream` library kind
+    - Remote Stream libraries have fallback metadata added like Other Video libraries (every folder is a tag)
+    - Remote Stream library items consist of YAML (`.yml`) files with the following fields
+      - `url`: the URL of the content that can be played directly by ffmpeg
+      - `script`: the process name and arguments for a command that will output content to stdout
+      - `duration`: when the content is "live" and does not have duration metadata, this must be provided to allow scheduling
+    - The remote stream definition (YAML file) may provide either a `url` or a `script`
+      - If both are provided, `url` will be used
 
 ### Changed
 - Allow `Other Video` libraries and `Image` libraries to use the same folders
