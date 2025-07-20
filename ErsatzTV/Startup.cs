@@ -709,6 +709,7 @@ public class Startup
         services.AddScoped<IMultiEpisodeShuffleCollectionEnumeratorFactory,
             MultiEpisodeShuffleCollectionEnumeratorFactory>();
         services.AddScoped<IChannelLogoGenerator, ChannelLogoGenerator>();
+        services.AddScoped<IRemoteStreamParser, RemoteStreamParser>();
 
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<IPipelineBuilderFactory, PipelineBuilderFactory>();

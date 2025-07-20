@@ -24,6 +24,7 @@ public interface IMediaCollectionRepository
     Task<List<OtherVideo>> GetOtherVideo(int id);
     Task<List<Song>> GetSong(int id);
     Task<List<Image>> GetImage(int id);
+    Task<List<RemoteStream>> GetRemoteStream(int id);
     Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id);
     Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(int? collectionId, int? smartCollectionId);
     Task<List<int>> PlayoutIdsUsingCollection(int collectionId);

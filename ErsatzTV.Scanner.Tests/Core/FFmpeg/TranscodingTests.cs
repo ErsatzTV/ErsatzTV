@@ -12,6 +12,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Capabilities;
@@ -342,6 +343,7 @@ public class TranscodingTests
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository,
             new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
+            Substitute.For<IRemoteStreamParser>(),
             Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
@@ -468,6 +470,7 @@ public class TranscodingTests
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository,
             new LocalFileSystem(Substitute.For<IClient>(), LoggerFactory.CreateLogger<LocalFileSystem>()),
+            Substitute.For<IRemoteStreamParser>(),
             Substitute.For<IClient>(),
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 

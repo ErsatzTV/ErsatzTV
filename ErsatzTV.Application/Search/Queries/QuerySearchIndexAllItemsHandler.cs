@@ -4,17 +4,9 @@ using ErsatzTV.Infrastructure.Search;
 
 namespace ErsatzTV.Application.Search;
 
-public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexAllItems, SearchResultAllItemsViewModel>
+public class QuerySearchIndexAllItemsHandler(IClient client, ISearchIndex searchIndex)
+    : IRequestHandler<QuerySearchIndexAllItems, SearchResultAllItemsViewModel>
 {
-    private readonly IClient _client;
-    private readonly ISearchIndex _searchIndex;
-
-    public QuerySearchIndexAllItemsHandler(IClient client, ISearchIndex searchIndex)
-    {
-        _client = client;
-        _searchIndex = searchIndex;
-    }
-
     public async Task<SearchResultAllItemsViewModel> Handle(
         QuerySearchIndexAllItems request,
         CancellationToken cancellationToken) =>
@@ -27,9 +19,10 @@ public class QuerySearchIndexAllItemsHandler : IRequestHandler<QuerySearchIndexA
             await GetIds(LuceneSearchIndex.MusicVideoType, request.Query),
             await GetIds(LuceneSearchIndex.OtherVideoType, request.Query),
             await GetIds(LuceneSearchIndex.SongType, request.Query),
-            await GetIds(LuceneSearchIndex.ImageType, request.Query));
+            await GetIds(LuceneSearchIndex.ImageType, request.Query),
+            await GetIds(LuceneSearchIndex.RemoteStreamType, request.Query));
 
     private async Task<List<int>> GetIds(string type, string query) =>
-        (await _searchIndex.Search(_client, $"type:{type} AND ({query})", string.Empty, 0, 0)).Items.Map(i => i.Id)
+        (await searchIndex.Search(client, $"type:{type} AND ({query})", string.Empty, 0, 0)).Items.Map(i => i.Id)
         .ToList();
 }

@@ -60,6 +60,7 @@ public class AddItemsToCollectionHandler :
             .Append(request.OtherVideoIds)
             .Append(request.SongIds)
             .Append(request.ImageIds)
+            .Append(request.RemoteStreamIds)
             .ToList();
 
         var toAddIds = allItems.Where(item => collection.MediaItems.All(mi => mi.Id != item)).ToList();

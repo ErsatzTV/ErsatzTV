@@ -219,7 +219,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                             null,
                             null,
                             remoteStreamIds.ToArray(),
-                            Array.Empty<int>()),
+                            []),
                         cancellationToken);
                 }
                 else if (Path.GetFileName(path).StartsWith("._", StringComparison.OrdinalIgnoreCase))
@@ -231,7 +231,7 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                             libraryPath.LibraryId,
                             null,
                             null,
-                            Array.Empty<int>(),
+                            [],
                             remoteStreamIds.ToArray()),
                         cancellationToken);
                 }

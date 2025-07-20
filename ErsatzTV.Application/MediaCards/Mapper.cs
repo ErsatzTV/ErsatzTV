@@ -155,6 +155,15 @@ internal static class Mapper
             string.Empty, // TODO: thumbnail?
             imageMetadata.Image.State);
 
+    internal static RemoteStreamCardViewModel ProjectToViewModel(RemoteStreamMetadata remoteStreamMetadata) =>
+        new(
+            remoteStreamMetadata.RemoteStreamId,
+            remoteStreamMetadata.Title,
+            remoteStreamMetadata.OriginalTitle,
+            remoteStreamMetadata.SortTitle,
+            string.Empty, // TODO: thumbnail?
+            remoteStreamMetadata.RemoteStream.State);
+
     internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
         new(
             artistMetadata.ArtistId,
@@ -199,7 +208,9 @@ internal static class Mapper
                     .ToList(),
                 collection.MediaItems.OfType<Song>().Map(s => ProjectToViewModel(s.SongMetadata.Head()))
                     .ToList(),
-                collection.MediaItems.OfType<Image>().Map(i => ProjectToViewModel(i.ImageMetadata.Head())).ToList())
+                collection.MediaItems.OfType<Image>().Map(i => ProjectToViewModel(i.ImageMetadata.Head())).ToList(),
+                collection.MediaItems.OfType<RemoteStream>().Map(i => ProjectToViewModel(i.RemoteStreamMetadata.Head()))
+                    .ToList())
             { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 
     internal static ActorCardViewModel ProjectToViewModel(

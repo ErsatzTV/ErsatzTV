@@ -13,6 +13,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Repositories.Caching;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
@@ -29,6 +30,7 @@ using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Infrastructure.Sqlite.Data;
+using ErsatzTV.Infrastructure.Streaming;
 using ErsatzTV.Scanner.Core.Emby;
 using ErsatzTV.Scanner.Core.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
@@ -198,6 +200,7 @@ public class Program
                 services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
                 services.AddScoped<IFFmpegPngService, FFmpegPngService>();
                 services.AddScoped<IRuntimeInfo, RuntimeInfo>();
+                services.AddScoped<IRemoteStreamParser, RemoteStreamParser>();
 
                 services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
                 services.AddScoped<IPlexOtherVideoLibraryScanner, PlexOtherVideoLibraryScanner>();

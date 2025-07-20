@@ -12,4 +12,5 @@ public record AddItemsToPlaylist(
     List<int> MusicVideoIds,
     List<int> OtherVideoIds,
     List<int> SongIds,
-    List<int> ImageIds) : IRequest<Either<BaseError, Unit>>;
+    List<int> ImageIds,
+    List<int> RemoteStreamIds) : IRequest<Either<BaseError, Unit>>;

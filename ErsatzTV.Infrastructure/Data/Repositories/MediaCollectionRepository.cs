@@ -56,6 +56,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                         mediaItems.AddRange(await GetOtherVideoItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetSongItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetImageItems(dbContext, collectionId));
+                        mediaItems.AddRange(await GetRemoteStreamItems(dbContext, collectionId));
                     }
 
                     break;
@@ -144,6 +145,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
                     {
                         mediaItems.AddRange(await GetImageItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
+
+                case ProgramScheduleItemCollectionType.RemoteStream:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
                     }
 
                     break;
@@ -194,6 +203,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                         mediaItems.AddRange(await GetOtherVideoItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetSongItems(dbContext, collectionId));
                         mediaItems.AddRange(await GetImageItems(dbContext, collectionId));
+                        mediaItems.AddRange(await GetRemoteStreamItems(dbContext, collectionId));
                     }
 
                     break;
@@ -285,6 +295,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
+
+                case ProgramScheduleItemCollectionType.RemoteStream:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        mediaItems.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
             }
 
             result.Add(playlistItem, mediaItems);
@@ -318,6 +336,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         result.AddRange(await GetOtherVideoItems(dbContext, id));
         result.AddRange(await GetSongItems(dbContext, id));
         result.AddRange(await GetImageItems(dbContext, id));
+        result.AddRange(await GetRemoteStreamItems(dbContext, id));
 
         return result.Distinct().ToList();
     }
@@ -361,6 +380,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
                 result.AddRange(await GetSongItems(dbContext, collectionId));
                 result.AddRange(await GetImageItems(dbContext, collectionId));
+                result.AddRange(await GetRemoteStreamItems(dbContext, collectionId));
             }
 
             foreach (int smartCollectionId in multiCollection.SmartCollections.Map(c => c.Id))
@@ -482,6 +502,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .Map(i => i.Id)
             .ToList();
         result.AddRange(await GetImageItems(dbContext, imageIds));
+
+        var remoteStreamIds = searchResults.Items
+            .Filter(i => i.Type == LuceneSearchIndex.RemoteStreamType)
+            .Map(i => i.Id)
+            .ToList();
+        result.AddRange(await GetRemoteStreamItems(dbContext, remoteStreamIds));
 
         return result.DistinctBy(x => x.Id).ToList();
     }
@@ -636,6 +662,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                         result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
                         result.AddRange(await GetSongItems(dbContext, collectionId));
                         result.AddRange(await GetImageItems(dbContext, collectionId));
+                        result.AddRange(await GetRemoteStreamItems(dbContext, collectionId));
                     }
 
                     break;
@@ -727,6 +754,14 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                     }
 
                     break;
+
+                case ProgramScheduleItemCollectionType.RemoteStream:
+                    foreach (int mediaItemId in Optional(playlistItem.MediaItemId))
+                    {
+                        result.AddRange(await GetRemoteStreamItems(dbContext, [mediaItemId]));
+                    }
+
+                    break;
             }
         }
 
@@ -767,6 +802,12 @@ public class MediaCollectionRepository : IMediaCollectionRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await GetImageItems(dbContext, [id]);
+    }
+
+    public async Task<List<RemoteStream>> GetRemoteStream(int id)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await GetRemoteStreamItems(dbContext, [id]);
     }
 
     public async Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(
@@ -1136,7 +1177,7 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return await GetImageItems(dbContext, ids);
     }
 
-    private static Task<List<Image>> GetImageItems(TvContext dbContext, IEnumerable<int> songIds) =>
+    private static Task<List<Image>> GetImageItems(TvContext dbContext, IEnumerable<int> imageIds) =>
         dbContext.Images
             .Include(m => m.ImageMetadata)
             .ThenInclude(im => im.Subtitles)
@@ -1144,7 +1185,29 @@ public class MediaCollectionRepository : IMediaCollectionRepository
             .ThenInclude(mv => mv.Chapters)
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .Filter(m => songIds.Contains(m.Id))
+            .Filter(m => imageIds.Contains(m.Id))
+            .ToListAsync();
+
+    private static async Task<List<RemoteStream>> GetRemoteStreamItems(TvContext dbContext, int collectionId)
+    {
+        IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
+            @"SELECT i.Id FROM CollectionItem ci
+            INNER JOIN RemoteStream i ON i.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+            new { CollectionId = collectionId });
+
+        return await GetRemoteStreamItems(dbContext, ids);
+    }
+
+    private static Task<List<RemoteStream>> GetRemoteStreamItems(TvContext dbContext, IEnumerable<int> remoteStreamIds) =>
+        dbContext.RemoteStreams
+            .Include(m => m.RemoteStreamMetadata)
+            .ThenInclude(im => im.Subtitles)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.Chapters)
+            .Include(m => m.MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Filter(m => remoteStreamIds.Contains(m.Id))
             .ToListAsync();
 
     private static async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)

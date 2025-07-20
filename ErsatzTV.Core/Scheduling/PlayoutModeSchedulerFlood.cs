@@ -47,6 +47,20 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             }
 
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+            // never block scheduling when there is only one schedule item (with fixed start and flood)
+            DateTimeOffset peekScheduleItemStart =
+                scheduleItem.Id != peekScheduleItem.Id && peekScheduleItem.StartType == StartType.Fixed
+                    ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
+                    : DateTimeOffset.MaxValue;
+
+            if (itemDuration == TimeSpan.Zero && mediaItem is RemoteStream)
+            {
+                itemDuration = itemStartTime != peekScheduleItemStart && peekScheduleItemStart < hardStop
+                    ? peekScheduleItemStart - itemStartTime
+                    : hardStop - itemStartTime;
+            }
+
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
             var playoutItem = new PlayoutItem
@@ -68,12 +82,6 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
                 SubtitleMode = scheduleItem.SubtitleMode
             };
-
-            // never block scheduling when there is only one schedule item (with fixed start and flood)
-            DateTimeOffset peekScheduleItemStart =
-                scheduleItem.Id != peekScheduleItem.Id && peekScheduleItem.StartType == StartType.Fixed
-                    ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
-                    : DateTimeOffset.MaxValue;
 
             var enumeratorStates = new Dictionary<CollectionKey, CollectionEnumeratorState>();
             foreach ((CollectionKey key, IMediaCollectionEnumerator enumerator) in collectionEnumerators)

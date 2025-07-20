@@ -54,6 +54,7 @@ public class DatabaseCleanerService(
               and Id not in (select Id from `Song`)
               and Id not in (select Id from `Artist`)
               and Id not in (select Id from `Image`)
+              and Id not in (select Id from `RemoteStream`)
             """);
 
     private static async Task GenerateFallbackMetadata(

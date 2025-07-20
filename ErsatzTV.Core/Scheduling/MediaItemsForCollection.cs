@@ -83,6 +83,13 @@ public static class MediaItemsForCollection
                 }
 
                 break;
+            case ProgramScheduleItemCollectionType.RemoteStream:
+                foreach (int mediaItemId in Optional(collectionKey.MediaItemId))
+                {
+                    result.AddRange(await mediaCollectionRepository.GetRemoteStream(mediaItemId));
+                }
+
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(collectionKey));
         }

@@ -70,7 +70,11 @@ public static class FFmpegPlaybackSettingsCalculator
 
         if (now != start || inPoint != TimeSpan.Zero)
         {
-            result.StreamSeek = now - start + inPoint;
+            // cannot seek into live stream
+            if (videoVersion.Duration > TimeSpan.Zero)
+            {
+                result.StreamSeek = now - start + inPoint;
+            }
         }
 
         switch (streamingMode)
