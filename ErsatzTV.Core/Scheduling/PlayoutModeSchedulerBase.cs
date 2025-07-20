@@ -207,6 +207,14 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         MediaVersion version = mediaItem.GetHeadVersion();
+
+        if (mediaItem is RemoteStream remoteStream)
+        {
+            return version.Duration == TimeSpan.Zero && remoteStream.Duration.HasValue
+                ? remoteStream.Duration.Value
+                : version.Duration;
+        }
+
         return version.Duration;
     }
 

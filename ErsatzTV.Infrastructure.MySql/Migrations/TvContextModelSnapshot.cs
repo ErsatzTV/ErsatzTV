@@ -3474,6 +3474,18 @@ namespace ErsatzTV.Infrastructure.MySql.Migrations
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
 
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("time(6)");
+
+                    b.Property<string>("FallbackQuery")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Script")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("longtext");
+
                     b.ToTable("RemoteStream", (string)null);
                 });
 

@@ -10,9 +10,12 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.MediaSources;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Streaming;
 using ErsatzTV.Scanner.Core.Interfaces.FFmpeg;
 using ErsatzTV.Scanner.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace ErsatzTV.Scanner.Core.Metadata;
 
@@ -71,6 +74,10 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
     {
         try
         {
+            IDeserializer deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+
             decimal progressSpread = progressMax - progressMin;
 
             var foldersCompleted = 0;
@@ -171,9 +178,10 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
                 {
                     Either<BaseError, MediaItemScanResult<RemoteStream>> maybeVideo = await _remoteStreamRepository
                         .GetOrAdd(libraryPath, knownFolder, file)
+                        .BindT(video => ParseRemoteStreamDefinition(video, deserializer, cancellationToken))
                         .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                         .BindT(video => UpdateLibraryFolderId(video, knownFolder))
-                        .BindT(video => UpdateMetadata(video))
+                        .BindT(UpdateMetadata)
                         //.BindT(video => UpdateThumbnail(video, cancellationToken))
                         //.BindT(UpdateSubtitles)
                         .BindT(FlagNormal);
@@ -259,6 +267,75 @@ public class RemoteStreamFolderScanner : LocalFolderScanner, IRemoteStreamFolder
         }
 
         return video;
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> ParseRemoteStreamDefinition(
+        MediaItemScanResult<RemoteStream> result,
+        IDeserializer deserializer,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            RemoteStream remoteStream = result.Item;
+
+            string path = remoteStream.GetHeadVersion().MediaFiles.Head().Path;
+            string yaml = await File.ReadAllTextAsync(path, cancellationToken);
+            YamlRemoteStreamDefinition definition = deserializer.Deserialize<YamlRemoteStreamDefinition>(yaml);
+
+            bool updated = false;
+            if (remoteStream.Url != definition.Url)
+            {
+                remoteStream.Url = definition.Url;
+                updated = true;
+            }
+
+            if (remoteStream.Script != definition.Script)
+            {
+                remoteStream.Script = definition.Script;
+                updated = true;
+            }
+
+            if (TimeSpan.TryParse(definition.Duration, out TimeSpan duration))
+            {
+                if (remoteStream.Duration != duration)
+                {
+                    remoteStream.Duration = duration;
+                    updated = true;
+                }
+            }
+            else
+            {
+                if (remoteStream.Duration is not null)
+                {
+                    remoteStream.Duration = null;
+                    updated = true;
+                }
+            }
+
+            if (remoteStream.FallbackQuery != definition.FallbackQuery)
+            {
+                remoteStream.FallbackQuery = definition.FallbackQuery;
+                updated = true;
+            }
+
+            if (string.IsNullOrEmpty(remoteStream.Url) && string.IsNullOrEmpty(remoteStream.Script))
+            {
+                return BaseError.New($"`url` or `script` is required in remote stream definition file {path}");
+            }
+
+            if (updated)
+            {
+                await _remoteStreamRepository.UpdateDefinition(remoteStream);
+                result.IsUpdated = true;
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> UpdateMetadata(

@@ -14,4 +14,5 @@ public interface IRemoteStreamRepository
     Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
     Task<bool> AddTag(RemoteStreamMetadata metadata, Tag tag);
     Task<List<RemoteStreamMetadata>> GetRemoteStreamsForCards(List<int> ids);
+    Task UpdateDefinition(RemoteStream remoteStream);
 }

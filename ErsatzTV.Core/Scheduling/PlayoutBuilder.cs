@@ -860,7 +860,9 @@ public class PlayoutBuilder : IPlayoutBuilder
                     Song s => await s.MediaVersions.Map(v => v.Duration).HeadOrNone()
                         .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                     Image => false,
-                    RemoteStream => false,
+                    RemoteStream rs => await rs.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                                           .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero
+                                       && (!rs.Duration.HasValue || rs.Duration.Value == TimeSpan.Zero),
                     _ => true
                 };
 

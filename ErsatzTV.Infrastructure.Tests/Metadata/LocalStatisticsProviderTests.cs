@@ -2,7 +2,6 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Streaming;
 using ErsatzTV.Infrastructure.Metadata;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -22,7 +21,6 @@ public class LocalStatisticsProviderTests
         var provider = new LocalStatisticsProvider(
             Substitute.For<IMetadataRepository>(),
             Substitute.For<ILocalFileSystem>(),
-            Substitute.For<IRemoteStreamParser>(),
             Substitute.For<IClient>(),
             Substitute.For<ILogger<LocalStatisticsProvider>>());
 

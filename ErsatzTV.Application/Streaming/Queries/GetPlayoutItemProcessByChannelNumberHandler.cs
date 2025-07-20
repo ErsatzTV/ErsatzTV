@@ -35,7 +35,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IMusicVideoCreditsGenerator _musicVideoCreditsGenerator;
-    private readonly IRemoteStreamParser _remoteStreamParser;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
     private readonly ITelevisionRepository _televisionRepository;
@@ -53,7 +52,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         IArtistRepository artistRepository,
         ISongVideoGenerator songVideoGenerator,
         IMusicVideoCreditsGenerator musicVideoCreditsGenerator,
-        IRemoteStreamParser remoteStreamParser,
         ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
         : base(dbContextFactory)
     {
@@ -68,7 +66,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         _artistRepository = artistRepository;
         _songVideoGenerator = songVideoGenerator;
         _musicVideoCreditsGenerator = musicVideoCreditsGenerator;
-        _remoteStreamParser = remoteStreamParser;
         _logger = logger;
     }
 
@@ -296,12 +293,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             if (playoutItemWithPath.PlayoutItem.MediaItem is Image)
             {
                 audioPath = string.Empty;
-            }
-
-            if (playoutItemWithPath.PlayoutItem.MediaItem is RemoteStream)
-            {
-                videoPath = await _remoteStreamParser.ParseRemoteStream(videoPath);
-                audioPath = videoPath;
             }
 
             bool saveReports = await dbContext.ConfigElements

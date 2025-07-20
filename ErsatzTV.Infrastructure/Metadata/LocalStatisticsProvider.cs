@@ -11,7 +11,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Streaming;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using File = TagLib.File;
@@ -22,20 +21,17 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 {
     private readonly IClient _client;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly IRemoteStreamParser _remoteStreamParser;
     private readonly ILogger<LocalStatisticsProvider> _logger;
     private readonly IMetadataRepository _metadataRepository;
 
     public LocalStatisticsProvider(
         IMetadataRepository metadataRepository,
         ILocalFileSystem localFileSystem,
-        IRemoteStreamParser remoteStreamParser,
         IClient client,
         ILogger<LocalStatisticsProvider> logger)
     {
         _metadataRepository = metadataRepository;
         _localFileSystem = localFileSystem;
-        _remoteStreamParser = remoteStreamParser;
         _client = client;
         _logger = logger;
     }
@@ -482,16 +478,19 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             _ => VideoScanKind.Unknown
         };
 
-    private async Task<string> PathForMediaItem(MediaItem mediaItem)
+    private static Task<string> PathForMediaItem(MediaItem mediaItem)
     {
         string path = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
 
-        if (mediaItem is RemoteStream)
+        if (mediaItem is RemoteStream remoteStream)
         {
-            path = await _remoteStreamParser.ParseRemoteStream(path);
+            if (!string.IsNullOrWhiteSpace(remoteStream.Url))
+            {
+                path = remoteStream.Url;
+            }
         }
 
-        return path;
+        return Task.FromResult(path);
     }
 
     // ReSharper disable InconsistentNaming

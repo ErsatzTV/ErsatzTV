@@ -200,7 +200,6 @@ public class Program
                 services.AddScoped<IOtherVideoNfoReader, OtherVideoNfoReader>();
                 services.AddScoped<IFFmpegPngService, FFmpegPngService>();
                 services.AddScoped<IRuntimeInfo, RuntimeInfo>();
-                services.AddScoped<IRemoteStreamParser, RemoteStreamParser>();
 
                 services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
                 services.AddScoped<IPlexOtherVideoLibraryScanner, PlexOtherVideoLibraryScanner>();

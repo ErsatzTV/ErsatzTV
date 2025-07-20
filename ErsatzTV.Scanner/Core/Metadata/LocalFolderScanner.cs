@@ -51,7 +51,7 @@ public abstract class LocalFolderScanner
 
     public static readonly ImmutableHashSet<string> RemoteStreamExtensions = new[]
     {
-        "strm"
+        "yml"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     private readonly IClient _client;

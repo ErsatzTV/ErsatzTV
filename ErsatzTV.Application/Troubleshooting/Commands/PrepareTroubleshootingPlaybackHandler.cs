@@ -28,7 +28,6 @@ public class PrepareTroubleshootingPlaybackHandler(
     IFFmpegProcessService ffmpegProcessService,
     ILocalFileSystem localFileSystem,
     IEntityLocker entityLocker,
-    IRemoteStreamParser remoteStreamParser,
     ILogger<PrepareTroubleshootingPlaybackHandler> logger)
     : IRequestHandler<PrepareTroubleshootingPlayback, Either<BaseError, Command>>
 {
@@ -233,9 +232,12 @@ public class PrepareTroubleshootingPlaybackHandler(
         // check filesystem first
         if (localFileSystem.FileExists(path))
         {
-            if (mediaItem is RemoteStream)
+            if (mediaItem is RemoteStream remoteStream)
             {
-                path = await remoteStreamParser.ParseRemoteStream(path);
+                if (!string.IsNullOrWhiteSpace(remoteStream.Url))
+                {
+                    path = remoteStream.Url;
+                }
             }
 
             return path;

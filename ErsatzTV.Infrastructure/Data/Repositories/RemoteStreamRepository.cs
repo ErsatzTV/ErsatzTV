@@ -116,6 +116,18 @@ public class RemoteStreamRepository(
             .ToListAsync();
     }
 
+    public async Task UpdateDefinition(RemoteStream remoteStream)
+    {
+        await using TvContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        await dbContext.RemoteStreams
+            .Where(rs => rs.Id == remoteStream.Id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(rs => rs.Url, remoteStream.Url)
+                .SetProperty(rs => rs.Script, remoteStream.Script)
+                .SetProperty(rs => rs.Duration, remoteStream.Duration)
+                .SetProperty(rs => rs.FallbackQuery, remoteStream.FallbackQuery));
+    }
+
     private async Task<Either<BaseError, MediaItemScanResult<RemoteStream>>> AddRemoteStream(
         TvContext dbContext,
         int libraryPathId,
