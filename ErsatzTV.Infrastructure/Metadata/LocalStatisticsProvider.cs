@@ -337,7 +337,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
                     FFprobeStreamData videoStream = json.streams?
                         .Where(s => s.codec_type == "video")
-                        .OrderByDescending(s => ParseBitRate(s.bit_rate))
+                        .OrderByDescending(ParseBitRate)
                         .FirstOrDefault();
                     if (videoStream != null)
                     {
@@ -497,11 +497,19 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         return Task.FromResult(path);
     }
 
-    private static long ParseBitRate(string bitRate)
+    private static long ParseBitRate(FFprobeStreamData stream)
     {
-        if (long.TryParse(bitRate, out long result))
+        if (long.TryParse(stream.bit_rate, out long result))
         {
             return result;
+        }
+
+        if (stream.tags?.variantBitrate is not null)
+        {
+            if (long.TryParse(stream.tags.variantBitrate, out result))
+            {
+                return result;
+            }
         }
 
         return 0;
@@ -556,9 +564,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         string album,
         string track,
         string genre,
-        string date)
+        string date,
+        [property: JsonProperty(PropertyName = "variant_bitrate")]
+        string variantBitrate)
     {
-        public static readonly FFprobeTags Empty = new(null, null, null, null, null, null, null, null, null, null);
+        public static readonly FFprobeTags Empty = new(null, null, null, null, null, null, null, null, null, null, null);
     }
     // ReSharper restore InconsistentNaming
 }
